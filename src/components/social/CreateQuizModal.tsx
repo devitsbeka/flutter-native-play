@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 import confetti from "canvas-confetti";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
-import { GameStyleQuestionEditor } from "./GameStyleQuestionEditor";
+import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion } from "./GameStyleQuestionEditor";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 interface GeneratedQuestion {
   question_text: string;
@@ -151,6 +151,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
+  const [editorQuestions, setEditorQuestions] = useState<EditorQuestion[]>([]);
   const [title, setTitle] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [selectedGradient, setSelectedGradient] = useState(COVER_GRADIENTS[0]);
@@ -220,6 +221,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     setAnswerFormat("4_answers");
     setDifficulty("mixed");
     setQuestions([]);
+    setEditorQuestions([]);
     setTitle("");
     setGenerationProgress(0);
     setSelectedGradient(COVER_GRADIENTS[Math.floor(Math.random() * COVER_GRADIENTS.length)]);
@@ -315,6 +317,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       });
 
       setQuestions(uniqueQuestions);
+      setEditorQuestions(convertToEditorQuestions(uniqueQuestions));
       setTitle(data?.suggestedTitle || `${subject} ტრივია`);
       
       setTimeout(() => setStep(5), 300);
@@ -331,6 +334,12 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     }
   };
 
+  // Handler for when editor questions change - sync back to GeneratedQuestion format
+  const handleEditorQuestionsChange = (newEditorQuestions: EditorQuestion[]) => {
+    setEditorQuestions(newEditorQuestions);
+    setQuestions(convertToGeneratedQuestions(newEditorQuestions));
+  };
+
   const handlePost = async () => {
     if (!user) {
       toast({
@@ -343,6 +352,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
     setIsPosting(true);
     try {
+      // Convert editor questions to the format needed for saving
+      const questionsToSave = convertToGeneratedQuestions(editorQuestions);
+      
       const hashtags = subject
         .split(/[\s,]+/)
         .filter(word => word.length > 2)
@@ -350,7 +362,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         .map(word => `#${word.replace(/[^a-zA-Zა-ჰ0-9]/g, "")}`);
 
       // Get icon from first question if available
-      const iconSlug = questions[0]?.icon_slug || null;
+      const iconSlug = editorQuestions[0]?.iconSlug || null;
 
       const { error } = await supabase.from("user_quiz_posts").insert([{
         user_id: user.id,
@@ -359,9 +371,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         hashtags,
         cover_image: coverImageUrl,
         cover_gradient: selectedGradient,
-        question_count: questions.length,
+        question_count: questionsToSave.length,
         answer_format: answerFormat,
-        questions: JSON.parse(JSON.stringify(questions)),
+        questions: JSON.parse(JSON.stringify(questionsToSave)),
         icon_slug: iconSlug,
         is_public: isPublic,
       }]);
@@ -726,10 +738,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       case 5:
         return (
           <GameStyleQuestionEditor
-            questions={questions}
-            onQuestionsChange={setQuestions}
-            onClose={() => setStep(4)}
-            onPublish={handlePost}
+            questions={editorQuestions}
+            onQuestionsChange={handleEditorQuestionsChange}
+            onBack={() => setStep(4)}
+            onSave={handlePost}
             subject={subject}
             answerFormat={answerFormat}
             title={title}
@@ -738,7 +750,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             selectedGradient={selectedGradient}
             isPublic={isPublic}
             onPublicChange={setIsPublic}
-            isPosting={isPosting}
+            isSaving={isPosting}
             onRegenerateCover={handleGenerateCover}
             isGeneratingCover={isGeneratingCoverLocal}
             coverGenerationCount={coverGenerationCount}
@@ -753,13 +765,13 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   if (!open) return null;
 
   // Step 5 uses a fullscreen editor, render it separately
-  if (step === 5 && questions.length > 0) {
+  if (step === 5 && editorQuestions.length > 0) {
     return (
       <GameStyleQuestionEditor
-        questions={questions}
-        onQuestionsChange={setQuestions}
-        onClose={() => setStep(4)}
-        onPublish={handlePost}
+        questions={editorQuestions}
+        onQuestionsChange={handleEditorQuestionsChange}
+        onBack={() => setStep(4)}
+        onSave={handlePost}
         subject={subject}
         answerFormat={answerFormat}
         title={title}
@@ -768,7 +780,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         selectedGradient={selectedGradient}
         isPublic={isPublic}
         onPublicChange={setIsPublic}
-        isPosting={isPosting}
+        isSaving={isPosting}
         onRegenerateCover={handleGenerateCover}
         isGeneratingCover={isGeneratingCoverLocal}
         coverGenerationCount={coverGenerationCount}
