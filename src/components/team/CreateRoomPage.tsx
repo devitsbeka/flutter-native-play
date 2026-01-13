@@ -922,7 +922,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 space-y-3"
+                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-4 space-y-3"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-white font-semibold">აირჩიე ტიპი</p>
