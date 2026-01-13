@@ -309,9 +309,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
 
             {/* Continue button */}
             <ChunkyButton
+              variant="whitePurple"
               onClick={() => setStep(2)}
               disabled={!subject.trim()}
-              className="w-full bg-white text-[#6B5B95] hover:bg-white/90"
+              className="w-full"
             >
               შემდეგი
               <ChevronRight className="w-5 h-5 ml-2" />
@@ -360,7 +361,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 <ChevronLeft className="w-4 h-4" />
                 უკან
               </button>
-              <ChunkyButton onClick={() => setStep(3)} className="flex-1 bg-white text-[#6B5B95]">
+              <ChunkyButton variant="whitePurple" onClick={() => setStep(3)} className="flex-1">
                 შემდეგი
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
@@ -407,7 +408,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 <ChevronLeft className="w-4 h-4" />
                 უკან
               </button>
-              <ChunkyButton onClick={() => setStep(4)} className="flex-1 bg-white text-[#6B5B95]">
+              <ChunkyButton variant="whitePurple" onClick={() => setStep(4)} className="flex-1">
                 შემდეგი
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
@@ -491,9 +492,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 უკან
               </button>
               <ChunkyButton 
+                variant="whitePurple"
                 onClick={generateQuestions} 
                 disabled={isGenerating} 
-                className="flex-1 bg-white text-[#6B5B95]"
+                className="flex-1"
               >
                 {isGenerating ? (
                   <>
@@ -664,8 +666,9 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           {step === 5 && (
             <div className="fixed bottom-0 left-0 right-0 p-5 pt-3 safe-bottom">
               <ChunkyButton
+                variant="whitePurple"
                 onClick={handleStartGame}
-                className="w-full bg-white text-[#6B5B95] shadow-xl"
+                className="w-full shadow-xl"
                 size="lg"
               >
                 <Play className="w-5 h-5 mr-2" />
