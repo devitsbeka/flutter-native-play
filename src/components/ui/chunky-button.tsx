@@ -157,6 +157,9 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
     const [isHovered, setIsHovered] = React.useState(false);
     const styles = variantStyles[variant];
     const depth = depthSizes[size];
+    
+    // Detect if device supports hover (desktop) vs touch-only (mobile)
+    const canHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
 
     return (
       <motion.button
@@ -166,7 +169,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
           "relative inline-flex items-center justify-center gap-2.5 font-semibold",
           "disabled:opacity-50 disabled:pointer-events-none",
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "overflow-visible",
+          "overflow-visible origin-center",
           styles.face,
           styles.textColor,
           sizeStyles[size],
@@ -174,6 +177,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
         )}
         style={{
           transform: isPressed ? `translateY(${depth - 2}px)` : "translateY(0px)",
+          willChange: "transform",
           boxShadow: isPressed 
             ? `
               inset 0 2px 4px 0 rgba(0,0,0,0.15),
@@ -193,7 +197,7 @@ export const ChunkyButton = React.forwardRef<HTMLButtonElement, ChunkyButtonProp
           touchAction: "manipulation",
           ...style,
         }}
-        whileHover={{ scale: disabled ? 1 : 1.02 }}
+        whileHover={canHover && !disabled ? { scale: 1.02 } : undefined}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         disabled={disabled}
         onClick={onClick}
