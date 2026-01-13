@@ -951,9 +951,9 @@ export function GameStyleQuestionEditor({
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"
             >
-              <h3 className="text-lg font-bold text-center mb-2">წაშლა?</h3>
+              <h3 className="text-lg font-bold text-center mb-2">წავშალო კითხვა?</h3>
               <p className="text-muted-foreground text-center text-sm mb-6">
-                ნამდვილად გსურს ამ კითხვის წაშლა?
+                კითხვა უკან ვერ დაბრუნდება
               </p>
               <div className="flex gap-3">
                 <button
