@@ -529,17 +529,21 @@ export function GameStylePersonalTrivia({
     setGeneratingIndex(index);
     
     try {
-      // Get existing question texts to avoid duplicates
+      // Get ALL existing question texts including current one to avoid similar results
       const existingQuestions = questions
-        .filter((q, i) => i !== index && q.question.trim())
+        .filter(q => q.question.trim())
         .map(q => q.question);
+
+      // Generate random seed for variety on each click
+      const randomSeed = Math.random().toString(36).substring(2, 10);
 
       const { data, error } = await supabase.functions.invoke('generate-single-question', {
         body: { 
-          subject: title || 'საინტერესო ფაქტები',
+          subject: title || 'ოჯახი და მეგობრები',
           answerFormat: '4_answers',
           difficulty: 'medium',
           existingQuestions,
+          randomSeed,
         }
       });
       
