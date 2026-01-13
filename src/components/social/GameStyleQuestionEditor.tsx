@@ -736,30 +736,6 @@ export function GameStyleQuestionEditor({
                 {index + 1}/{questions.length}
               </div>
 
-              {/* AI Generate Button - Top Right */}
-              <button
-                onClick={() => handleGenerateAI(index)}
-                disabled={isGeneratingAI}
-                className={cn(
-                  "absolute top-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-all disabled:opacity-50",
-                  question.backgroundImageUrl ? "right-14" : "right-3"
-                )}
-              >
-                {isGeneratingAI && generatingIndex === index ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : question.question.trim() ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>სცადე სხვა</span>
-                  </>
-                ) : (
-                  <>
-                    <Lightbulb className="w-3.5 h-3.5" />
-                    <span>იდეა</span>
-                  </>
-                )}
-              </button>
-
               {/* Icon */}
                   <div className="flex justify-center mb-3 pt-4">
                     <QuestionIconPicker

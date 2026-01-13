@@ -180,7 +180,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             <img
               src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
               alt=""
-              style={{ width: large ? 72 : 38, height: large ? 72 : 38 }}
+              style={{ width: large ? 94 : 50, height: large ? 94 : 50 }}
               className="object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -193,7 +193,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             )}
           </>
         ) : (
-          <ImageIcon style={{ width: large ? 48 : 29, height: large ? 48 : 29 }} className="text-muted-foreground" />
+          <ImageIcon style={{ width: large ? 62 : 38, height: large ? 62 : 38 }} className="text-muted-foreground" />
         )}
       </button>
 
