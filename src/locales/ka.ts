@@ -177,6 +177,11 @@ export const ka = {
     comingSoon: "მალე დაემატება!",
     player: "მოთამაშე",
     points: "ქულა",
+    menuTitle: "მენიუ",
+    play: "ითამაშე",
+    discover: "აღმოაჩინე",
+    leaderboard: "ლიდერბორდი",
+    triviaLive: "Trivia Live",
   },
 
   // ==========================================

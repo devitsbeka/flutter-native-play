@@ -703,6 +703,7 @@ export default function Index() {
               vipLoading={vipLoading}
               onWatchAdClick={() => setShowWatchAdModal(true)}
               isGuest={!user}
+              hidden={isSideMenuOpen}
             />
           </div>
           </div>
@@ -724,6 +725,7 @@ export default function Index() {
             vipLoading={vipLoading}
             onWatchAdClick={() => setShowWatchAdModal(true)}
             isGuest={!user}
+            hidden={isSideMenuOpen}
           />
         </div>
       </div>

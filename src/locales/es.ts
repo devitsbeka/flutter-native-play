@@ -156,6 +156,11 @@ export const es: KaTranslations = {
     comingSoon: "¡Próximamente!",
     player: "Jugador",
     points: "puntos",
+    menuTitle: "Menú",
+    play: "Jugar",
+    discover: "Descubrir",
+    leaderboard: "Clasificación",
+    triviaLive: "Trivia Live",
   },
   sound: {
     title: "Ajustes de sonido",

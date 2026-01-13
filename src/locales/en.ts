@@ -179,6 +179,11 @@ export const en: KaTranslations = {
     comingSoon: "Coming soon!",
     player: "Player",
     points: "points",
+    menuTitle: "Menu",
+    play: "Play",
+    discover: "Discover",
+    leaderboard: "Leaderboard",
+    triviaLive: "Trivia Live",
   },
 
   // ==========================================
