@@ -431,6 +431,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           await sendInvitation(friendId, room.id);
         }
         
+        // Small delay to ensure DB writes complete before navigation
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
         // If this is a challenge, also send a notification to the challenged user
         if (challengeUserId && !acceptedFriends.find(f => f.friendId === challengeUserId)) {
           // The user may not be in friends list, so add them as participant
@@ -469,6 +472,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               sender_id: user.id,
             }
           );
+          
+          // Small delay to ensure DB writes complete
+          await new Promise(resolve => setTimeout(resolve, 150));
         }
       }
     } catch (error) {
