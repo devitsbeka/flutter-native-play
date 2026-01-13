@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
+import { useQueryClient } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 import { removeDuplicatesFromBatch } from "@/utils/duplicateDetection";
 import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion } from "./GameStyleQuestionEditor";
@@ -142,6 +143,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const { user } = useAuth();
   const { toast } = useToast();
   const { startCoverGeneration, isGenerating: isGeneratingCover } = useBackgroundGeneration();
+  const queryClient = useQueryClient();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -391,6 +393,12 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         title: "წარმატება! 🎉",
         description: "შენი Trivia გამოქვეყნდა!",
       });
+
+      // Invalidate queries to refresh the trivia list immediately
+      queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
+      queryClient.invalidateQueries({ queryKey: ["my-collections"] });
 
       handleClose();
       onQuizCreated?.();

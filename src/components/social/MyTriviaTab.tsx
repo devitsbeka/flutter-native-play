@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2 } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -150,16 +150,20 @@ function getGradientProps(gradient: string) {
 }
 
 // Expandable collection card
-function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound, onPlay }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void; onPlay?: (quiz: any, allQuizzes?: any[]) => void }) {
+function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound, onPlay, isNew }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void; onPlay?: (quiz: any, allQuizzes?: any[]) => void; isNew?: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
   const gradientProps = getGradientProps(collection.cover_gradient);
 
+  // Tilt animation for new items - random left or right tilt
+  const tiltDirection = collection.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0, rotate: 0 }}
+      transition={isNew ? { type: "spring", stiffness: 300, damping: 20 } : undefined}
       className="bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
     >
       {/* Collection Header - Clickable */}
@@ -319,14 +323,17 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ post, profile, index, onEdit, onPlay }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void }) {
+function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, isNew }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; isNew?: boolean }) {
   const gradientProps = getGradientProps(post.cover_gradient);
+
+  // Tilt animation for new items - random left or right tilt
+  const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
+      initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0, rotate: 0 }}
+      transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
       className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
     >
       {/* Edit Button */}
@@ -436,6 +443,47 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     collectionId: string;
     roundNumber: number;
   } | null>(null);
+
+  // Track known item IDs to detect new items for tilt animation
+  const knownItemIdsRef = useRef<Set<string>>(new Set());
+  const [newItemIds, setNewItemIds] = useState<Set<string>>(new Set());
+
+  // Update known items when data changes - detect newly added items
+  useEffect(() => {
+    if (!myPosts && !myCollections) return;
+    
+    const allCurrentIds = new Set<string>();
+    myPosts?.forEach(post => allCurrentIds.add(post.id));
+    myCollections?.forEach(col => allCurrentIds.add(col.id));
+    
+    // Find items that are new (not in our known set)
+    const newIds = new Set<string>();
+    allCurrentIds.forEach(id => {
+      if (!knownItemIdsRef.current.has(id)) {
+        newIds.add(id);
+      }
+    });
+    
+    // Update new items state if we found any
+    if (newIds.size > 0) {
+      setNewItemIds(newIds);
+      
+      // Clear "new" status after animation completes
+      const timer = setTimeout(() => {
+        setNewItemIds(new Set());
+      }, 1000);
+      
+      // Update known items
+      allCurrentIds.forEach(id => knownItemIdsRef.current.add(id));
+      
+      return () => clearTimeout(timer);
+    }
+    
+    // Update known items on first load
+    if (knownItemIdsRef.current.size === 0) {
+      allCurrentIds.forEach(id => knownItemIdsRef.current.add(id));
+    }
+  }, [myPosts, myCollections]);
 
   const isLoading = postsLoading || collectionsLoading || draftsLoading;
 
@@ -640,6 +688,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
                 setAddingToCollection({ collectionId, roundNumber })
               }
               onPlay={onPlay}
+              isNew={newItemIds.has(item.data.id)}
             />
           ) : (
             <StandaloneQuizCard 
@@ -649,6 +698,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               index={index} 
               onEdit={(post) => setEditingRound(post)}
               onPlay={onPlay}
+              isNew={newItemIds.has(item.data.id)}
             />
           )
         ))}

@@ -233,7 +233,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       )
       .subscribe();
     
-    // Subscribe to participants
+    // Subscribe to participants with callback to handle status
     const participantsChannel = supabase
       .channel(`participants-${roomId}`)
       .on(
@@ -241,7 +241,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${roomId}` },
         () => fetchParticipants(roomId)
       )
-      .subscribe();
+      .subscribe((status) => {
+        // When subscription is ready, do an initial fetch to ensure we have latest data
+        if (status === 'SUBSCRIBED') {
+          fetchParticipants(roomId);
+        }
+      });
 
     // Subscribe to profiles changes to update avatars in real-time
     const profilesChannel = supabase

@@ -335,6 +335,35 @@ export type FeedItem = { type: 'standalone'; post: SamplePost } | { type: 'colle
 
 export function useMyQuizPosts() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Set up real-time subscription for instant updates when user creates new trivia
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('my-quiz-posts-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'user_quiz_posts', filter: `user_id=eq.${user.id}` },
+        () => {
+          // Invalidate to refetch with new data - the animation will be handled by the component
+          queryClient.invalidateQueries({ queryKey: ["my-quiz-posts", user.id] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'user_quiz_posts', filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["my-quiz-posts", user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   return useQuery({
     queryKey: ["my-quiz-posts", user?.id],
