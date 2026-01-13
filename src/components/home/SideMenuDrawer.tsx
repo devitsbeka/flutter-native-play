@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, LogOut, User, Menu } from "lucide-react";
+import { ChevronLeft, LogOut, User, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,6 +15,7 @@ import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+import { PlayCategoryModal } from "@/components/leaderboard/PlayCategoryModal";
 
 // Icon imports for menu items
 import iconRewards from "@/assets/icons/icon-coin-purse.png";
@@ -50,6 +51,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
 
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
@@ -111,6 +113,21 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     navigate("/");
   };
 
+  const handlePlayClick = () => {
+    setIsPlayModalOpen(true);
+  };
+
+  const handleCategorySelect = (categoryId: string | null) => {
+    setIsPlayModalOpen(false);
+    onClose();
+    if (categoryId) {
+      navigate(`/category/${categoryId}`);
+    } else {
+      // Random category - navigate to leaderboard or random game
+      navigate('/leaderboard');
+    }
+  };
+
   // Build menu items with translations
   const menuItems = menuItemsConfig.map(item => ({
     ...item,
@@ -128,6 +145,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
+      <PlayCategoryModal 
+        open={isPlayModalOpen} 
+        onOpenChange={setIsPlayModalOpen}
+        onSelectCategory={handleCategorySelect}
+      />
       
       <AnimatePresence>
         {isOpen && (
@@ -138,19 +160,17 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             className="fixed inset-0 z-50 bg-background flex flex-col"
           >
             {/* Fixed Header */}
-            <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-              <button
-                onClick={onClose}
-                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-              </button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Menu className="w-4 h-4 text-primary" />
-                </div>
-                <h2 className="text-lg font-bold text-foreground">{t("menu.title") || "მენიუ"}</h2>
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+                </button>
+                <h2 className="text-lg font-bold text-foreground">{t("menu.menuTitle")}</h2>
               </div>
+              <LanguageSwitcher compact />
             </div>
 
             {/* Scrollable Content */}
@@ -194,13 +214,21 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 )}
               </div>
 
-              {/* Language Switcher */}
-              <div className="px-4 py-3 border-b border-border/30">
-                <LanguageSwitcher />
+              {/* Big Play Button */}
+              <div className="px-4 py-4">
+                <motion.button
+                  onClick={handlePlayClick}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/30"
+                >
+                  <Play className="w-6 h-6 fill-current" />
+                  {t("menu.play")}
+                </motion.button>
               </div>
 
               {/* Grid Menu */}
-              <div className="p-4">
+              <div className="p-4 pt-0">
                 <div className="grid grid-cols-3 gap-2">
                   {menuItems.map((item, index) => (
                     <motion.button
