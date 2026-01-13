@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, Copy, Trash2, Check, Loader2, Plus, Edit3, ImageIcon, PartyPopper } from "lucide-react";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -12,31 +12,25 @@ import useEmblaCarousel from "embla-carousel-react";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
-// Example questions for the "Idea" button
-const EXAMPLE_QUESTIONS = [
-  "როდის მიდის ნინო პარიზში?",
-  "რამდენი ძაღლი ჰყავს გიორგის?",
-  "რა არის ბექას საყვარელი საჭმელი?",
-  "სად დაიბადა დედა?",
-  "რა ფერის მანქანა აქვს გიოს?",
-  "რამდენი წლის არის ბებია?",
-  "რომელ ქალაქში ცხოვრობს დათო?",
-  "რა არის მამის საყვარელი ფილმი?",
-  "ვინ მოიგო პირველი თამაში?",
-  "რომელ წელს გავიცანით ერთმანეთი?",
-  "სად შევხვდით პირველად?",
-  "ვინ აგვიანებს ყოველთვის?",
-  "ვინ არის ყველაზე მხიარული?",
-  "რა არის ჩემი საყვარელი ფერი?",
-  "რომელი სეზონი მომწონს ყველაზე მეტად?",
-];
+interface Answer {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
 
 interface PersonalQuestion {
   id: string;
   question: string;
-  answers: string[];
-  correctIndex: number;
+  answers: Answer[];
   iconSlug?: string;
+  backgroundImageUrl?: string;
+}
+
+interface ValidationError {
+  questionIndex: number;
+  field: "question" | "answer";
+  answerIndex?: number;
+  message: string;
 }
 
 interface GameStylePersonalTriviaProps {
@@ -59,6 +53,160 @@ interface GameStylePersonalTriviaProps {
   } | null;
 }
 
+// Draggable Answer Item Component
+function DraggableAnswerItem({
+  answer,
+  onEdit,
+  onSetCorrect,
+  isEditing,
+  editValue,
+  onEditChange,
+  onEditBlur,
+  onEditKeyDown,
+  inputRef,
+  answerMax,
+  letter,
+  hasError,
+}: {
+  answer: Answer;
+  onEdit: () => void;
+  onSetCorrect: () => void;
+  isEditing: boolean;
+  editValue: string;
+  onEditChange: (value: string) => void;
+  onEditBlur: () => void;
+  onEditKeyDown: (e: React.KeyboardEvent) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
+  answerMax: number;
+  letter: string;
+  hasError: boolean;
+}) {
+  const dragControls = useDragControls();
+
+  if (isEditing) {
+    if (answer.isCorrect) {
+      return (
+        <Reorder.Item value={answer} dragListener={false} dragControls={dragControls}>
+          <div className={cn(
+            "flex items-center gap-3 p-3 rounded-2xl bg-emerald-500 shadow-[0_4px_0_0_#059669]",
+            hasError && "ring-2 ring-red-500 animate-pulse"
+          )}>
+            <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-emerald-500 font-bold flex-shrink-0">
+              <Check className="w-5 h-5" />
+            </span>
+            <Input
+              ref={inputRef}
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onBlur={onEditBlur}
+              onKeyDown={onEditKeyDown}
+              className="flex-1 bg-white/20 border-0 text-white placeholder:text-white/50 font-semibold"
+              maxLength={answerMax}
+              placeholder="სწორი პასუხი..."
+            />
+            <span className="text-xs text-white/70">{editValue.length}/{answerMax}</span>
+          </div>
+        </Reorder.Item>
+      );
+    } else {
+      return (
+        <Reorder.Item value={answer} dragListener={false} dragControls={dragControls}>
+          <div className={cn(
+            "flex items-center gap-3 p-3 rounded-2xl bg-white shadow-[0_4px_0_0_#d1d5db]",
+            hasError && "ring-2 ring-red-500 animate-pulse"
+          )}>
+            <span className="w-11 h-11 rounded-full bg-[#7DD3FC] flex items-center justify-center text-white font-bold flex-shrink-0">
+              {letter}:
+            </span>
+            <Input
+              ref={inputRef}
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onBlur={onEditBlur}
+              onKeyDown={onEditKeyDown}
+              className="flex-1 border-0 font-semibold"
+              maxLength={answerMax}
+              placeholder="პასუხი..."
+            />
+            <span className="text-xs text-muted-foreground">{editValue.length}/{answerMax}</span>
+          </div>
+        </Reorder.Item>
+      );
+    }
+  }
+
+  return (
+    <Reorder.Item
+      value={answer}
+      dragControls={dragControls}
+      whileDrag={{
+        scale: 1.02,
+        boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+        zIndex: 50,
+      }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+    >
+      <motion.div
+        className={cn(
+          "flex items-center gap-3 p-3 rounded-2xl text-left group transition-all",
+          answer.isCorrect 
+            ? "bg-emerald-500 shadow-[0_4px_0_0_#059669]" 
+            : "bg-white shadow-[0_4px_0_0_#d1d5db] hover:bg-gray-50",
+          hasError && "ring-2 ring-red-500 animate-pulse"
+        )}
+        layout
+      >
+        {/* Clickable circle to set as correct */}
+        <button
+          onClick={onSetCorrect}
+          className={cn(
+            "w-11 h-11 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors",
+            answer.isCorrect 
+              ? "bg-white text-emerald-500" 
+              : "bg-[#7DD3FC] hover:bg-emerald-400 text-white"
+          )}
+          title={answer.isCorrect ? "სწორი პასუხი" : "დააჭირე სწორად დასაყენებლად"}
+        >
+          {answer.isCorrect ? <Check className="w-5 h-5" /> : `${letter}:`}
+        </button>
+        
+        {/* Clickable text to edit */}
+        <button
+          onClick={onEdit}
+          className="flex-1 text-left"
+        >
+          <span className={cn(
+            "font-semibold min-h-[24px] flex items-center",
+            answer.isCorrect ? "text-white" : "text-slate-700"
+          )}>
+            {answer.text || (
+              <span className={answer.isCorrect ? "text-white/70" : "text-slate-400"}>
+                {answer.isCorrect ? "სწორი პასუხი..." : "პასუხი..."}
+              </span>
+            )}
+          </span>
+        </button>
+        
+        <Edit3 className={cn(
+          "w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity",
+          answer.isCorrect ? "text-white/50" : "text-muted-foreground"
+        )} />
+        
+        {/* Drag handle */}
+        <div
+          onPointerDown={(e) => dragControls.start(e)}
+          className={cn(
+            "cursor-grab active:cursor-grabbing p-1 -mr-1 touch-none",
+            answer.isCorrect ? "text-white/60" : "text-slate-400"
+          )}
+        >
+          <GripVertical className="w-5 h-5" />
+        </div>
+      </motion.div>
+    </Reorder.Item>
+  );
+}
+
 export function GameStylePersonalTrivia({
   isOpen,
   onClose,
@@ -68,30 +216,48 @@ export function GameStylePersonalTrivia({
   const { toast } = useToast();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [editingField, setEditingField] = useState<"question" | "correct" | number | null>(null);
+  const [editingField, setEditingField] = useState<"question" | string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [title, setTitle] = useState(initialData?.title || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize questions
+  // Initialize questions with new Answer structure
   const [questions, setQuestions] = useState<PersonalQuestion[]>(() => {
     if (initialData?.questions) {
       return initialData.questions.map((q, idx) => ({
         id: `init-${idx}`,
         question: q.question_text,
-        answers: [q.correct_answer, ...q.incorrect_answers],
-        correctIndex: 0,
+        answers: [
+          { id: `a-${idx}-0`, text: q.correct_answer, isCorrect: true },
+          ...q.incorrect_answers.map((ans, i) => ({ id: `a-${idx}-${i+1}`, text: ans, isCorrect: false }))
+        ],
         iconSlug: q.icon_slug || undefined,
       }));
     }
-    return [{ id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }];
+    return [{
+      id: "1",
+      question: "",
+      answers: [
+        { id: "a-1-0", text: "", isCorrect: true },
+        { id: "a-1-1", text: "", isCorrect: false },
+        { id: "a-1-2", text: "", isCorrect: false },
+        { id: "a-1-3", text: "", isCorrect: false },
+      ],
+    }];
   });
 
   // Character limits
   const QUESTION_MAX = 65;
   const ANSWER_MAX = 25;
+
+  // Letters for answer labels
+  const letters = ["ა", "ბ", "გ", "დ"];
 
   // Sync carousel index
   useEffect(() => {
@@ -110,39 +276,38 @@ export function GameStylePersonalTrivia({
 
   // Focus input when editing
   useEffect(() => {
-    if (editingField !== null && inputRef.current) {
-      inputRef.current.focus();
+    if (editingField !== null) {
+      if (editingField === "question" && textareaRef.current) {
+        textareaRef.current.focus();
+      } else if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }
+  }, [editingField]);
+
+  // Clear error when user starts editing
+  useEffect(() => {
+    if (editingField !== null) {
+      setErrorField(null);
     }
   }, [editingField]);
 
   const currentQuestion = questions[currentIndex];
 
-  const handleInsertIdea = () => {
-    const randomIdea = EXAMPLE_QUESTIONS[Math.floor(Math.random() * EXAMPLE_QUESTIONS.length)];
-    const newQuestions = [...questions];
-    newQuestions[currentIndex] = {
-      ...newQuestions[currentIndex],
-      question: randomIdea,
-    };
-    setQuestions(newQuestions);
-    
-    toast({
-      title: "💡 იდეა ჩაისვა!",
-      duration: 2000,
-    });
-  };
-
   const handleAddQuestion = () => {
     const newQuestion: PersonalQuestion = {
       id: `new-${Date.now()}`,
       question: "",
-      answers: ["", "", "", ""],
-      correctIndex: 0,
+      answers: [
+        { id: `a-${Date.now()}-0`, text: "", isCorrect: true },
+        { id: `a-${Date.now()}-1`, text: "", isCorrect: false },
+        { id: `a-${Date.now()}-2`, text: "", isCorrect: false },
+        { id: `a-${Date.now()}-3`, text: "", isCorrect: false },
+      ],
     };
     const newQuestions = [...questions, newQuestion];
     setQuestions(newQuestions);
     
-    // Navigate to the new question
     setTimeout(() => {
       emblaApi?.scrollTo(newQuestions.length - 1);
     }, 100);
@@ -157,6 +322,10 @@ export function GameStylePersonalTrivia({
     const duplicated: PersonalQuestion = {
       ...currentQuestion,
       id: `dup-${Date.now()}`,
+      answers: currentQuestion.answers.map((a, i) => ({
+        ...a,
+        id: `a-dup-${Date.now()}-${i}`,
+      })),
     };
     const newQuestions = [...questions];
     newQuestions.splice(currentIndex + 1, 0, duplicated);
@@ -206,7 +375,7 @@ export function GameStylePersonalTrivia({
     setQuestions(newQuestions);
   };
 
-  const startEditing = (field: "question" | "correct" | number, value: string) => {
+  const startEditing = (field: "question" | string, value: string) => {
     setEditingField(field);
     setEditValue(value);
   };
@@ -219,19 +388,13 @@ export function GameStylePersonalTrivia({
 
     if (editingField === "question") {
       question.question = editValue.slice(0, QUESTION_MAX);
-    } else if (editingField === "correct") {
-      const newAnswers = [...question.answers];
-      newAnswers[question.correctIndex] = editValue.slice(0, ANSWER_MAX);
-      question.answers = newAnswers;
-    } else if (typeof editingField === "number") {
-      const newAnswers = [...question.answers];
-      // editingField is the visual index (0-2 for incorrect answers)
-      // We need to map it to the actual answer index
-      const incorrectIndices = question.answers.map((_, i) => i).filter(i => i !== question.correctIndex);
-      const actualIndex = incorrectIndices[editingField];
-      if (actualIndex !== undefined) {
-        newAnswers[actualIndex] = editValue.slice(0, ANSWER_MAX);
-        question.answers = newAnswers;
+    } else {
+      // editingField is the answer id
+      const answerIndex = question.answers.findIndex(a => a.id === editingField);
+      if (answerIndex !== -1) {
+        question.answers = question.answers.map((a, i) => 
+          i === answerIndex ? { ...a, text: editValue.slice(0, ANSWER_MAX) } : a
+        );
       }
     }
 
@@ -241,56 +404,199 @@ export function GameStylePersonalTrivia({
     setEditValue("");
   };
 
-  const setCorrectAnswer = (visualIndex: number) => {
-    // visualIndex 0 = current correct (already set), 1-3 = incorrect answers
-    if (visualIndex === 0) return; // Already correct
-    
+  const setCorrectAnswer = (answerId: string) => {
     const newQuestions = [...questions];
     const question = { ...newQuestions[currentIndex] };
     
-    // Get incorrect answer indices
-    const incorrectIndices = question.answers.map((_, i) => i).filter(i => i !== question.correctIndex);
-    const newCorrectIndex = incorrectIndices[visualIndex - 1];
+    question.answers = question.answers.map(a => ({
+      ...a,
+      isCorrect: a.id === answerId,
+    }));
     
-    if (newCorrectIndex !== undefined) {
-      question.correctIndex = newCorrectIndex;
-      newQuestions[currentIndex] = question;
-      setQuestions(newQuestions);
-    }
+    newQuestions[currentIndex] = question;
+    setQuestions(newQuestions);
   };
 
-  const handleSave = () => {
-    const validQuestions = questions.filter(q => 
-      q.question.trim() && 
-      q.answers.every(a => a.trim())
-    );
+  const handleReorder = (newOrder: Answer[]) => {
+    const newQuestions = [...questions];
+    newQuestions[currentIndex] = {
+      ...newQuestions[currentIndex],
+      answers: newOrder,
+    };
+    setQuestions(newQuestions);
+  };
 
-    if (validQuestions.length === 0) {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
       toast({
         title: "შეცდომა",
-        description: "შეავსეთ მინიმუმ 1 სრული კითხვა",
+        description: "მხოლოდ სურათის ატვირთვაა შესაძლებელი",
         variant: "destructive",
       });
       return;
     }
 
-    const formattedQuestions = validQuestions.map(q => ({
-      question_text: q.question,
-      correct_answer: q.answers[q.correctIndex],
-      incorrect_answers: q.answers.filter((_, i) => i !== q.correctIndex),
-      icon_slug: q.iconSlug || null,
-    }));
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "შეცდომა",
+        description: "სურათი ძალიან დიდია (მაქს. 5MB)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `trivia-bg-${Date.now()}.${fileExt}`;
+      const filePath = `trivia-backgrounds/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('trivia-backgrounds')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        // Bucket might not exist, try to use a generic bucket or handle gracefully
+        console.error('Upload error:', uploadError);
+        
+        // Create a local URL for preview (fallback)
+        const localUrl = URL.createObjectURL(file);
+        const newQuestions = [...questions];
+        newQuestions[currentIndex] = {
+          ...newQuestions[currentIndex],
+          backgroundImageUrl: localUrl,
+        };
+        setQuestions(newQuestions);
+        
+        toast({
+          title: "📷 სურათი დაემატა",
+          description: "ლოკალური preview",
+          duration: 2000,
+        });
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('trivia-backgrounds')
+        .getPublicUrl(filePath);
+
+      const newQuestions = [...questions];
+      newQuestions[currentIndex] = {
+        ...newQuestions[currentIndex],
+        backgroundImageUrl: publicUrl,
+      };
+      setQuestions(newQuestions);
+
+      toast({
+        title: "📷 სურათი აიტვირთა!",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "შეცდომა",
+        description: "სურათის ატვირთვა ვერ მოხერხდა",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeBackgroundImage = () => {
+    const newQuestions = [...questions];
+    newQuestions[currentIndex] = {
+      ...newQuestions[currentIndex],
+      backgroundImageUrl: undefined,
+    };
+    setQuestions(newQuestions);
+  };
+
+  const validateQuestions = (): ValidationError[] => {
+    const errors: ValidationError[] = [];
+    
+    questions.forEach((q, idx) => {
+      if (!q.question.trim()) {
+        errors.push({
+          questionIndex: idx,
+          field: "question",
+          message: "კითხვა არ არის შევსებული",
+        });
+      }
+      
+      q.answers.forEach((answer, answerIdx) => {
+        if (!answer.text.trim()) {
+          errors.push({
+            questionIndex: idx,
+            field: "answer",
+            answerIndex: answerIdx,
+            message: `პასუხი არ არის შევსებული`,
+          });
+        }
+      });
+    });
+    
+    return errors;
+  };
+
+  const handleSave = () => {
+    const errors = validateQuestions();
+    
+    if (errors.length > 0) {
+      const firstError = errors[0];
+      
+      // Navigate to the slide with error
+      emblaApi?.scrollTo(firstError.questionIndex);
+      
+      // Set error field for visual indication
+      const question = questions[firstError.questionIndex];
+      setErrorField({
+        questionIndex: firstError.questionIndex,
+        field: firstError.field,
+        answerId: firstError.field === "answer" && firstError.answerIndex !== undefined 
+          ? question.answers[firstError.answerIndex]?.id 
+          : undefined,
+      });
+      
+      // Show toast with error message
+      toast({
+        title: "⚠️ შეცდომა",
+        description: `კითხვა ${firstError.questionIndex + 1}: ${firstError.message}`,
+        variant: "destructive",
+      });
+      
+      return;
+    }
+
+    const formattedQuestions = questions.map(q => {
+      const correctAnswer = q.answers.find(a => a.isCorrect);
+      const incorrectAnswers = q.answers.filter(a => !a.isCorrect);
+      
+      return {
+        question_text: q.question,
+        correct_answer: correctAnswer?.text || "",
+        incorrect_answers: incorrectAnswers.map(a => a.text),
+        icon_slug: q.iconSlug || null,
+      };
+    });
 
     onSave(formattedQuestions, title || "MyTrivia Party");
     onClose();
   };
 
-  const letters = ["ა", "ბ", "გ", "დ"];
-
-  // Get incorrect answers for display
-  const getIncorrectAnswers = () => {
-    if (!currentQuestion) return [];
-    return currentQuestion.answers.filter((_, i) => i !== currentQuestion.correctIndex);
+  // Get letter for answer based on its position in the reordered list
+  const getLetterForAnswer = (answers: Answer[], answerId: string): string => {
+    const index = answers.findIndex(a => a.id === answerId);
+    return letters[index] || "?";
   };
 
   if (!isOpen) return null;
@@ -304,8 +610,8 @@ export function GameStylePersonalTrivia({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-[#6B5B95] flex flex-col"
         >
-          {/* Header with Title */}
-          <div className="pt-[env(safe-area-inset-top,8px)] px-4 py-3 flex items-center justify-between">
+          {/* Header with Title - Added more top spacing */}
+          <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
             <button
               onClick={onClose}
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
@@ -354,22 +660,13 @@ export function GameStylePersonalTrivia({
           {/* Action Toolbar - same height buttons */}
           <div className="px-4 pb-3">
             <div className="flex items-center justify-center gap-2">
-              {/* Idea Button */}
-              <button
-                onClick={handleInsertIdea}
-                className="h-10 flex items-center gap-2 px-4 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all"
-              >
-                <Sparkles className="w-4 h-4" />
-                იდეა
-              </button>
-
               {/* Icon Picker */}
               <QuestionIconPicker
                 selectedSlug={currentQuestion?.iconSlug || null}
                 onSelect={handleIconChange}
                 questionText={currentQuestion?.question}
-                correctAnswer={currentQuestion?.answers[currentQuestion?.correctIndex]}
-                incorrectAnswers={getIncorrectAnswers()}
+                correctAnswer={currentQuestion?.answers.find(a => a.isCorrect)?.text}
+                incorrectAnswers={currentQuestion?.answers.filter(a => !a.isCorrect).map(a => a.text)}
               />
 
               {/* Duplicate Button */}
@@ -390,6 +687,15 @@ export function GameStylePersonalTrivia({
             </div>
           </div>
 
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+
           {/* Carousel */}
           <div className="flex-1 overflow-hidden" ref={emblaRef}>
             <div className="flex h-full">
@@ -398,146 +704,140 @@ export function GameStylePersonalTrivia({
                   key={question.id}
                   className="flex-[0_0_100%] min-w-0 px-4 flex flex-col"
                 >
-                  {/* Question Card */}
-                  <div className="bg-[#5A4A7A] rounded-3xl p-5 shadow-lg mb-4">
-                    {/* Icon */}
-                    <div className="flex justify-center mb-4">
-                      {question.iconSlug ? (
-                        <img
-                          src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
+                  {/* Question Card with optional background image */}
+                  <div className="relative rounded-3xl overflow-hidden shadow-lg mb-4">
+                    {/* Background Image */}
+                    {question.backgroundImageUrl && (
+                      <>
+                        <img 
+                          src={question.backgroundImageUrl} 
+                          className="absolute inset-0 w-full h-full object-cover"
                           alt=""
-                          className="w-16 h-16 object-contain"
                         />
-                      ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center">
-                          <ImageIcon className="w-8 h-8 text-white/50" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Timer bar (decorative) */}
-                    <div className="mb-4 h-2 bg-white/30 rounded-full overflow-hidden">
-                      <div className="h-full w-full bg-white rounded-full" />
-                    </div>
-
-                    {/* Question Text - Editable */}
-                    {editingField === "question" && index === currentIndex ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={saveEdit}
-                          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && saveEdit()}
-                          className="min-h-[80px] text-center text-lg font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50 resize-none"
-                          maxLength={QUESTION_MAX}
-                          placeholder="შეიყვანე კითხვა..."
-                        />
-                        <div className="text-xs text-white/60 text-center">
-                          {editValue.length}/{QUESTION_MAX}
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => startEditing("question", question.question)}
-                        className="w-full text-center group"
-                      >
-                        <p className="text-xl font-bold text-white leading-relaxed group-hover:text-white/80 transition-colors min-h-[60px] flex items-center justify-center">
-                          {question.question || <span className="text-white/50">დააჭირე კითხვის დასამატებლად...</span>}
-                        </p>
-                        <Edit3 className="w-4 h-4 text-white/50 mx-auto mt-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
+                        {/* Purple gradient overlay for readability */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#5A4A7A]/80 via-[#5A4A7A]/70 to-[#5A4A7A]/90" />
+                        {/* Remove background button */}
+                        <button
+                          onClick={removeBackgroundImage}
+                          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
-                  </div>
-
-                  {/* Answer Buttons */}
-                  <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto pb-4">
-                    {/* Correct Answer */}
-                    {editingField === "correct" && index === currentIndex ? (
-                      <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-500 shadow-[0_4px_0_0_#059669]">
-                        <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-emerald-500 font-bold flex-shrink-0">
-                          <Check className="w-5 h-5" />
-                        </span>
-                        <Input
-                          ref={inputRef as React.RefObject<HTMLInputElement>}
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={saveEdit}
-                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                          className="flex-1 bg-white/20 border-0 text-white placeholder:text-white/50 font-semibold"
-                          maxLength={ANSWER_MAX}
-                          placeholder="სწორი პასუხი..."
-                        />
-                        <span className="text-xs text-white/70">{editValue.length}/{ANSWER_MAX}</span>
+                    
+                    {/* Content */}
+                    <div className={cn(
+                      "relative z-10 p-5",
+                      !question.backgroundImageUrl && "bg-[#5A4A7A]"
+                    )}>
+                      {/* Icon - smaller */}
+                      <div className="flex justify-center mb-3">
+                        {question.iconSlug ? (
+                          <img
+                            src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
+                            alt=""
+                            className="w-12 h-12 object-contain"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 text-white/50" />
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => startEditing("correct", question.answers[question.correctIndex])}
-                        className="flex items-center gap-4 p-3 rounded-2xl bg-emerald-500 shadow-[0_4px_0_0_#059669] text-left group hover:brightness-105 transition-all"
-                      >
-                        <span className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-emerald-500 font-bold flex-shrink-0">
-                          <Check className="w-5 h-5" />
-                        </span>
-                        <span className="flex-1 font-semibold text-white min-h-[24px] flex items-center">
-                          {question.answers[question.correctIndex] || <span className="text-white/70">სწორი პასუხი...</span>}
-                        </span>
-                        <Edit3 className="w-4 h-4 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    )}
 
-                    {/* Incorrect Answers - Clickable to set as correct */}
-                    {getIncorrectAnswers().map((answer, answerIndex) => (
-                      editingField === answerIndex && index === currentIndex ? (
-                        <div key={answerIndex} className="flex items-center gap-3 p-3 rounded-2xl bg-white shadow-[0_4px_0_0_#d1d5db]">
-                          <span className="w-11 h-11 rounded-full bg-[#7DD3FC] flex items-center justify-center text-white font-bold flex-shrink-0">
-                            {letters[answerIndex + 1]}:
-                          </span>
-                          <Input
-                            ref={inputRef as React.RefObject<HTMLInputElement>}
+                      {/* Question Text - Editable */}
+                      {editingField === "question" && index === currentIndex ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            ref={textareaRef}
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
                             onBlur={saveEdit}
-                            onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                            className="flex-1 border-0 font-semibold"
-                            maxLength={ANSWER_MAX}
-                            placeholder={`არასწორი პასუხი ${answerIndex + 1}...`}
+                            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && saveEdit()}
+                            className="min-h-[70px] text-center text-lg font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50 resize-none"
+                            maxLength={QUESTION_MAX}
+                            placeholder="შეიყვანე კითხვა..."
                           />
-                          <span className="text-xs text-muted-foreground">{editValue.length}/{ANSWER_MAX}</span>
+                          <div className="text-xs text-white/60 text-center">
+                            {editValue.length}/{QUESTION_MAX}
+                          </div>
                         </div>
                       ) : (
-                        <div
-                          key={answerIndex}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-white shadow-[0_4px_0_0_#d1d5db] text-left group hover:bg-gray-50 transition-all"
+                        <button
+                          onClick={() => startEditing("question", question.question)}
+                          className={cn(
+                            "w-full text-center group",
+                            errorField?.questionIndex === index && errorField?.field === "question" && "animate-pulse"
+                          )}
                         >
-                          {/* Clickable circle to set as correct */}
-                          <button
-                            onClick={() => setCorrectAnswer(answerIndex + 1)}
-                            className="w-11 h-11 rounded-full bg-[#7DD3FC] hover:bg-emerald-400 flex items-center justify-center text-white font-bold flex-shrink-0 transition-colors"
-                            title="დააჭირე სწორად დასაყენებლად"
-                          >
-                            {letters[answerIndex + 1]}:
-                          </button>
-                          {/* Clickable text to edit */}
-                          <button
-                            onClick={() => startEditing(answerIndex, answer)}
-                            className="flex-1 text-left"
-                          >
-                            <span className="font-semibold text-slate-700 min-h-[24px] flex items-center">
-                              {answer || <span className="text-slate-400">არასწორი პასუხი {answerIndex + 1}...</span>}
-                            </span>
-                          </button>
-                          <Edit3 className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                      )
-                    ))}
+                          <p className={cn(
+                            "text-xl font-bold text-white leading-relaxed group-hover:text-white/80 transition-colors min-h-[50px] flex items-center justify-center",
+                            errorField?.questionIndex === index && errorField?.field === "question" && "text-red-300"
+                          )}>
+                            {question.question || <span className="text-white/50">დააჭირე კითხვის დასამატებლად...</span>}
+                          </p>
+                          <Edit3 className="w-4 h-4 text-white/50 mx-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      )}
+
+                      {/* Upload Button - inside question card at bottom */}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-50"
+                      >
+                        {isUploading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            იტვირთება...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            ფოტოს ატვირთვა
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Reorderable Answer Buttons */}
+                  <Reorder.Group
+                    axis="y"
+                    values={question.answers}
+                    onReorder={(newOrder) => {
+                      if (index === currentIndex) {
+                        handleReorder(newOrder);
+                      }
+                    }}
+                    className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto pb-4"
+                  >
+                    {question.answers.map((answer) => (
+                      <DraggableAnswerItem
+                        key={answer.id}
+                        answer={answer}
+                        onEdit={() => startEditing(answer.id, answer.text)}
+                        onSetCorrect={() => setCorrectAnswer(answer.id)}
+                        isEditing={editingField === answer.id && index === currentIndex}
+                        editValue={editValue}
+                        onEditChange={setEditValue}
+                        onEditBlur={saveEdit}
+                        onEditKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                        inputRef={inputRef}
+                        answerMax={ANSWER_MAX}
+                        letter={getLetterForAnswer(question.answers, answer.id)}
+                        hasError={errorField?.questionIndex === index && errorField?.answerId === answer.id}
+                      />
+                    ))}
+                  </Reorder.Group>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Navigation Dots */}
-          <div className="flex justify-center gap-1.5 py-3 overflow-x-auto px-4">
+          {/* Navigation Dots - with more spacing */}
+          <div className="flex justify-center gap-1.5 py-4 overflow-x-auto px-4">
             {questions.map((_, index) => (
               <button
                 key={index}
@@ -550,8 +850,8 @@ export function GameStylePersonalTrivia({
             ))}
           </div>
 
-          {/* Footer with Save Button */}
-          <div className="px-4 pb-[env(safe-area-inset-bottom,16px)] pt-2">
+          {/* Footer with Save Button - More bottom spacing */}
+          <div className="px-4 pb-[calc(env(safe-area-inset-bottom,16px)+12px)] pt-2">
             <ChunkyButton 
               onClick={handleSave}
               className="w-full"
