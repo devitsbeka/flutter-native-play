@@ -46,6 +46,7 @@ const ChestTimer = ({ timeLeft, t }: { timeLeft: string; t: (key: string) => str
 );
 
 export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalProps) {
+  // Hook must be inside LanguageProvider (which wraps entire app in App.tsx)
   const { t } = useLanguage();
   const { recordChestReward } = useRewards();
   const { canClaimChest, chestTimeLeft, refreshTimers } = useRewardTimers();
