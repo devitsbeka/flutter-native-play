@@ -661,30 +661,6 @@ export function GameStyleQuestionEditor({
       {/* Header Content (for round tabs) */}
       {headerContent}
 
-          {/* Action Toolbar */}
-      <div className="px-4 pb-3">
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all disabled:opacity-50"
-          >
-            {isUploading ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Image className="w-4 h-4" />
-            )}
-          </button>
-
-          <button
-            onClick={handleDuplicate}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all"
-          >
-            <Copy className="w-4 h-4" />
-          </button>
-
-        </div>
-      </div>
 
       <input
         ref={fileInputRef}
@@ -728,6 +704,30 @@ export function GameStyleQuestionEditor({
               {/* Question Counter */}
               <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
                 {index + 1}/{questions.length}
+              </div>
+
+              {/* Action Buttons - Top Right */}
+              <div className={cn(
+                "absolute top-3 flex items-center gap-1.5 z-20",
+                question.backgroundImageUrl ? "right-14" : "right-3"
+              )}>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="h-8 w-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Image className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={handleDuplicate}
+                  className="h-8 w-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               {/* Icon */}

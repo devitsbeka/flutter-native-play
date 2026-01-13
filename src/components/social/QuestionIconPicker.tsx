@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X, ImageIcon, AlertTriangle, ChevronLeft, RefreshCw } from "lucide-react";
+import { Search, X, Smile, AlertTriangle, ChevronLeft, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -193,7 +193,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             )}
           </>
         ) : (
-          <ImageIcon style={{ width: large ? 62 : 38, height: large ? 62 : 38 }} className="text-muted-foreground" />
+          <Smile style={{ width: large ? 62 : 38, height: large ? 62 : 38 }} className="text-muted-foreground" />
         )}
       </button>
 
