@@ -48,53 +48,53 @@ function isValidQuestion(q: GeneratedQuestion, isTrueFalse: boolean = false): bo
   return true;
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+// Build system prompt for TRIVIA mode (factual questions about topics)
+function buildTriviaPrompt(subject: string, difficulty: string, isTrueFalse: boolean): string {
+  return `You are an expert trivia question generator for a Georgian quiz app.
 
-  try {
-    const { subject, answerFormat = "4_answers", difficulty = "medium", existingQuestions = [], randomSeed = "" } = await req.json();
+🎯 TOPIC: "${subject}"
 
-    if (!subject) {
-      return new Response(
-        JSON.stringify({ error: "Subject is required" }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+GENERATE: Factual trivia questions with FACTUAL answers about the topic.
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+📚 QUESTION STYLES FOR TRIVIA:
+1. "რომელმა..." (Which one...)
+2. "რა წელს..." (In what year...)
+3. "ვინ არის/იყო..." (Who is/was...)
+4. "რომელი ქვეყანა..." (Which country...)
+5. "რა არის..." (What is...)
+6. "სად მდებარეობს..." (Where is located...)
 
-    const isTrueFalse = answerFormat === "true_false";
-    
-    // Personal question categories to rotate through for variety
-    const personalCategories = [
-      { theme: "ნიშან-თვისებები და ხასიათი", examples: ["ვინ არის ყველაზე დრამატული?", "ვინ არის ყველაზე მომთმენი?", "ვინ ატირდებოდა ფილმზე?"] },
-      { theme: "ჩვევები და მანერები", examples: ["ვინ ხვრინავს ძილში?", "ვინ ლაპარაკობს ძილში?", "ვინ თითს წყალში არ ჩაუშვებს?"] },
-      { theme: "კულინარია და საჭმელი", examples: ["ვინ მიაკითხავდა მაცივარს შუაღამეს?", "ვის უყვარს ყველაზე მეტად ხაჭაპური?", "ვინ ჭამს ყველაზე ნელა?"] },
-      { theme: "ტელეფონი და სოციალური", examples: ["ვის ტელეფონი მუდამ დამჯდარია?", "ვინ გამოაგზავნის ხმოვან მესიჯებს?", "ვინ არ პასუხობს ზარებს?"] },
-      { theme: "დაგვიანება და დრო", examples: ["ვინ დააგვიანებდა შეხვედრაზე?", "ვინ მოვიდოდა პირველი?", "ვინ იტყოდა '5 წუთში ვიქნები'?"] },
-      { theme: "დავიწყება და შეცდომები", examples: ["ვინ დაივიწყებდა საფულეს სახლში?", "ვინ დაივიწყებდა დაბადების დღეს?", "ვინ დაკარგავდა გასაღებებს?"] },
-      { theme: "საყვარელი საქმიანობები", examples: ["ვინ უყურებს ყველაზე მეტ სერიალს?", "ვინ იძინებს ყველაზე გვიან?", "ვინ არის ყველაზე ძილმოყვარე?"] },
-      { theme: "ფრაზები და გამონათქვამები", examples: ["ვინ იტყოდა: 'ერთი წუთით'?", "ვინ იტყოდა: 'მე ვიცოდი'?", "ვინ გაიმეორებდა ერთ ხუმრობას?"] },
-    ];
-    
-    // Pick random category based on seed for variety
-    const seedNum = randomSeed ? parseInt(randomSeed, 36) : Math.floor(Math.random() * 1000000);
-    const categoryIndex = Math.abs(seedNum) % personalCategories.length;
-    const focusCategory = personalCategories[categoryIndex];
-    
-    // Build existing questions context to avoid duplicates
-    const existingContext = existingQuestions.length > 0 
-      ? `\n\n🚫 QUESTIONS TO AVOID (generate something COMPLETELY DIFFERENT):\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
-      : '';
+💡 EXAMPLES for trivia topics:
+- Topic: "ჩემპიონთა ლიგა" → "ვინ მოიგო ჩემპიონთა ლიგა 2022-ში?" with answers: "რეალ მადრიდი", "მანჩ. სითი", "ლივერპული", "ბაიერნი"
+- Topic: "გეოგრაფია" → "რომელი ქვეყნის დედაქალაქია პარიზი?" with answers: "საფრანგეთი", "გერმანია", "იტალია", "ესპანეთი"
+- Topic: "ისტორია" → "რა წელს დასრულდა მეორე მსოფლიო ომი?" with answers: "1945", "1944", "1946", "1943"
 
-    console.log(`Generating with focus category: ${focusCategory.theme}, seed: ${randomSeed}`);
+❌ DO NOT generate personal/family questions like "ვინ არის ყველაზე დრამატული?" or answers like "მამა", "დედა", "ბებია"
 
-const systemPrompt = `You are a CREATIVE party game question generator for friends & family. Your goal is to create FUN, PERSONAL questions that spark laughter and memories.
+⚠️ GRAMMAR RULES - CRITICAL:
+- All Georgian text MUST be grammatically correct
+- Double-check spelling of all Georgian words
+- Use proper Georgian verb conjugations
+- Questions must be natural-sounding Georgian sentences
+
+LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
+LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
+
+${isTrueFalse ? `TRUE/FALSE format - 1 correct and 1 incorrect answer` : `4 MULTIPLE CHOICE answers - 1 correct and 3 incorrect`}
+
+JSON FORMAT:
+{
+  "question_text": "...",
+  "correct_answer": "...",
+  "incorrect_answers": ["...", "...", "..."],
+  "difficulty": "${difficulty}",
+  "icon_keywords": ["relevant", "topic", "keywords"]
+}`;
+}
+
+// Build system prompt for PERSONAL mode (family/friends questions)
+function buildPersonalPrompt(subject: string, difficulty: string, isTrueFalse: boolean, focusCategory: { theme: string; examples: string[] }): string {
+  return `You are a CREATIVE party game question generator for friends & family. Your goal is to create FUN, PERSONAL questions that spark laughter and memories.
 
 🎲 FOCUS THEME FOR THIS QUESTION: "${focusCategory.theme}"
 Examples for this theme:
@@ -152,8 +152,80 @@ JSON FORMAT:
   "difficulty": "${difficulty}",
   "icon_keywords": ["family", "friends"]
 }`;
+}
 
-    const userPrompt = `🎲 Generate 1 UNIQUE, FUN question about: "${subject}"
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { 
+      subject, 
+      answerFormat = "4_answers", 
+      difficulty = "medium", 
+      existingQuestions = [], 
+      randomSeed = "",
+      mode = "personal" // NEW: "trivia" or "personal"
+    } = await req.json();
+
+    if (!subject) {
+      return new Response(
+        JSON.stringify({ error: "Subject is required" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    const isTrueFalse = answerFormat === "true_false";
+    
+    // Personal question categories to rotate through for variety (only used in personal mode)
+    const personalCategories = [
+      { theme: "ნიშან-თვისებები და ხასიათი", examples: ["ვინ არის ყველაზე დრამატული?", "ვინ არის ყველაზე მომთმენი?", "ვინ ატირდებოდა ფილმზე?"] },
+      { theme: "ჩვევები და მანერები", examples: ["ვინ ხვრინავს ძილში?", "ვინ ლაპარაკობს ძილში?", "ვინ თითს წყალში არ ჩაუშვებს?"] },
+      { theme: "კულინარია და საჭმელი", examples: ["ვინ მიაკითხავდა მაცივარს შუაღამეს?", "ვის უყვარს ყველაზე მეტად ხაჭაპური?", "ვინ ჭამს ყველაზე ნელა?"] },
+      { theme: "ტელეფონი და სოციალური", examples: ["ვის ტელეფონი მუდამ დამჯდარია?", "ვინ გამოაგზავნის ხმოვან მესიჯებს?", "ვინ არ პასუხობს ზარებს?"] },
+      { theme: "დაგვიანება და დრო", examples: ["ვინ დააგვიანებდა შეხვედრაზე?", "ვინ მოვიდოდა პირველი?", "ვინ იტყოდა '5 წუთში ვიქნები'?"] },
+      { theme: "დავიწყება და შეცდომები", examples: ["ვინ დაივიწყებდა საფულეს სახლში?", "ვინ დაივიწყებდა დაბადების დღეს?", "ვინ დაკარგავდა გასაღებებს?"] },
+      { theme: "საყვარელი საქმიანობები", examples: ["ვინ უყურებს ყველაზე მეტ სერიალს?", "ვინ იძინებს ყველაზე გვიან?", "ვინ არის ყველაზე ძილმოყვარე?"] },
+      { theme: "ფრაზები და გამონათქვამები", examples: ["ვინ იტყოდა: 'ერთი წუთით'?", "ვინ იტყოდა: 'მე ვიცოდი'?", "ვინ გაიმეორებდა ერთ ხუმრობას?"] },
+    ];
+    
+    // Pick random category based on seed for variety
+    const seedNum = randomSeed ? parseInt(randomSeed, 36) : Math.floor(Math.random() * 1000000);
+    const categoryIndex = Math.abs(seedNum) % personalCategories.length;
+    const focusCategory = personalCategories[categoryIndex];
+    
+    // Build existing questions context to avoid duplicates
+    const existingContext = existingQuestions.length > 0 
+      ? `\n\n🚫 QUESTIONS TO AVOID (generate something COMPLETELY DIFFERENT):\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
+      : '';
+
+    // Choose prompt based on mode
+    let systemPrompt: string;
+    if (mode === "trivia") {
+      systemPrompt = buildTriviaPrompt(subject, difficulty, isTrueFalse);
+      console.log(`Generating TRIVIA question about: ${subject}`);
+    } else {
+      systemPrompt = buildPersonalPrompt(subject, difficulty, isTrueFalse, focusCategory);
+      console.log(`Generating PERSONAL question with focus category: ${focusCategory.theme}, seed: ${randomSeed}`);
+    }
+
+    const userPrompt = mode === "trivia"
+      ? `🎯 Generate 1 UNIQUE, FACTUAL trivia question about: "${subject}"
+${existingContext}
+
+⚡ IMPORTANT: 
+- Generate factual questions with REAL answers about the topic
+- DO NOT generate personal/family questions
+- Answers should be facts, names, places, dates, etc. - NOT person types like "მამა", "დედა"
+- VERIFY Georgian grammar and spelling before responding
+Return ONLY valid JSON.`
+      : `🎲 Generate 1 UNIQUE, FUN question about: "${subject}"
 Focus on theme: ${focusCategory.theme}
 ${existingContext}
 
@@ -164,7 +236,7 @@ ${existingContext}
 - The question MUST be grammatically perfect in Georgian
 Return ONLY valid JSON.`;
 
-    console.log(`Generating single ${answerFormat} question about: ${subject}`);
+    console.log(`Mode: ${mode}, Subject: ${subject}, Format: ${answerFormat}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -257,7 +329,7 @@ Return ONLY valid JSON.`;
       icon_slug: iconSlug,
     };
 
-    console.log(`Successfully generated question with icon: ${iconSlug}`);
+    console.log(`Successfully generated ${mode} question with icon: ${iconSlug}`);
 
     return new Response(
       JSON.stringify(result),

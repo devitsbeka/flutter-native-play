@@ -522,6 +522,7 @@ export function GameStyleQuestionEditor({
           answerFormat,
           difficulty: 'medium',
           existingQuestions,
+          mode: 'trivia', // Factual questions for Trivia/Collection mode
         }
       });
       

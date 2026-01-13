@@ -545,6 +545,7 @@ export function GameStylePersonalTrivia({
           difficulty: 'medium',
           existingQuestions,
           randomSeed,
+          mode: 'personal', // Personal/family questions for MyTrivia Party
         }
       });
       
