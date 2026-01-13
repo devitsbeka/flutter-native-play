@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -804,18 +804,27 @@ export function GameStyleQuestionEditor({
         </div>
       </div>
 
-      {/* Navigation Dots */}
-      <div className="flex justify-center gap-1.5 py-4 overflow-x-auto px-4">
-        {questions.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => emblaApi?.scrollTo(index)}
-            className={cn(
-              "w-2 h-2 rounded-full transition-all flex-shrink-0",
-              index === currentIndex ? "w-6 bg-white" : "bg-white/40"
-            )}
-          />
-        ))}
+      {/* Navigation Dots with Swipe Hint */}
+      <div className="flex justify-center items-center gap-2 py-4 px-4">
+        {/* Left swipe hint */}
+        <ChevronLeft className="w-4 h-4 text-white/40 animate-pulse" />
+        
+        {/* Dots */}
+        <div className="flex gap-1.5 overflow-x-auto">
+          {questions.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all flex-shrink-0",
+                index === currentIndex ? "w-6 bg-white" : "bg-white/40"
+              )}
+            />
+          ))}
+        </div>
+        
+        {/* Right swipe hint */}
+        <ChevronRight className="w-4 h-4 text-white/40 animate-pulse" />
       </div>
 
       {/* Footer with Cover Preview (if applicable) or Save Button */}
