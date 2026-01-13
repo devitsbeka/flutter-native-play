@@ -73,10 +73,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   // Handle trophy click (desktop)
   const handleTrophyClick = useCallback((clickedTier: number) => {
-    if (clickedTier <= userTier) {
-      onTierSelect?.(clickedTier);
-    }
-  }, [userTier, onTierSelect]);
+    onTierSelect?.(clickedTier);
+  }, [onTierSelect]);
 
   // Mobile swipe handler
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
@@ -86,12 +84,12 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     const swipedLeft = info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold;
     const swipedRight = info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold;
     
-    if (swipedLeft && tier < 3 && tier + 1 <= userTier) {
+    if (swipedLeft && tier < 3) {
       onTierSelect?.(tier + 1);
     } else if (swipedRight && tier > 1) {
       onTierSelect?.(tier - 1);
     }
-  }, [tier, userTier, onTierSelect]);
+  }, [tier, onTierSelect]);
 
   // Keyboard navigation support
   useEffect(() => {
@@ -103,7 +101,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         }
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        if (tier < 3 && tier + 1 <= userTier) {
+        if (tier < 3) {
           onTierSelect?.(tier + 1);
         }
       }
@@ -111,7 +109,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tier, userTier, onTierSelect]);
+  }, [tier, onTierSelect]);
 
   return (
     <motion.div
@@ -140,19 +138,17 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         {isDesktop ? (
           /* DESKTOP/TABLET: Show all 3 trophies at their podium positions */
           <div className="absolute inset-0 w-full h-full">
-            {Object.entries(DESKTOP_TROPHY_CONFIG).map(([tierKey, config]) => {
+          {Object.entries(DESKTOP_TROPHY_CONFIG).map(([tierKey, config]) => {
               const tierNum = parseInt(tierKey);
               const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
               const isActive = tierNum === tier;
-              const isLocked = tierNum > userTier;
               const label = language === 'ka' ? meta.labelKa : meta.label;
               
               return (
                 <motion.button
                   key={tierKey}
                   onClick={() => handleTrophyClick(tierNum)}
-                  disabled={isLocked}
-                  className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'} group`}
+                  className="absolute cursor-pointer group"
                   style={{
                     left: config.left,
                     top: config.top,
@@ -161,11 +157,11 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                   }}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ 
-                    opacity: isLocked ? 0.3 : 1, 
+                    opacity: 1, 
                     scale: isActive ? 1.1 : 1,
                   }}
-                  whileHover={!isLocked ? { scale: isActive ? 1.15 : 1.08 } : {}}
-                  whileTap={!isLocked ? { scale: 0.95 } : {}}
+                  whileHover={{ scale: isActive ? 1.15 : 1.08 }}
+                  whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   <img 
@@ -173,7 +169,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                     alt={label}
                     className={`w-full h-auto select-none pointer-events-none transition-all duration-300 ${
                       isActive ? 'drop-shadow-2xl' : 'drop-shadow-lg'
-                    } ${isLocked ? 'grayscale' : ''}`}
+                    }`}
                     draggable={false}
                   />
                   {/* Floating label on hover */}
