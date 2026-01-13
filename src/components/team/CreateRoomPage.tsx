@@ -19,7 +19,7 @@ import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
 import { MyTriviasPickerModal } from "@/components/team/MyTriviasPickerModal";
-import { PersonalTriviaModal } from "@/components/team/PersonalTriviaModal";
+import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -1164,8 +1164,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         onSelect={handleMyTriviaSelect}
       />
 
-      {/* Personal Trivia Modal */}
-      <PersonalTriviaModal
+      {/* Personal Trivia Modal - Game UI Style */}
+      <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}
         onClose={() => setShowPersonalTriviaModal(false)}
         onSave={handlePersonalTriviaSave}
