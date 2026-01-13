@@ -945,8 +945,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
+                      <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                        <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium text-white">ტრივია</p>
@@ -961,8 +961,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={iconCollections} alt="" className="w-7 h-7 object-contain" />
+                      <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                        <img src={iconCollections} alt="" className="w-9 h-9 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium text-white">კოლექცია</p>
@@ -977,8 +977,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                        <img src={iconGroupOfPeople} alt="" className="w-7 h-7 object-contain" />
+                      <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                        <img src={iconGroupOfPeople} alt="" className="w-9 h-9 object-contain" />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium text-white">MyTrivia Party</p>
