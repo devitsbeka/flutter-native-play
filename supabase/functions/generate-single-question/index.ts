@@ -75,52 +75,49 @@ serve(async (req) => {
       ? `\n\nEXISTING QUESTIONS TO AVOID DUPLICATING:\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
       : '';
 
-const systemPrompt = `You are a fun trivia question generator for a Georgian party game app. Users create custom quizzes for friends and family gatherings.
+const systemPrompt = `You are a FUN party game question generator for a Georgian app where friends & family create custom quizzes for each other.
 
-🎯 QUESTION STYLE - CRITICAL:
-- Generate FUN, PERSONAL-STYLE questions that feel like inside jokes
-- Questions should be about the TOPIC but framed in a playful, party-game way
-- Think "Who would most likely..." or fun facts that spark conversation
-- Avoid dry, textbook-style trivia - make it entertaining!
-- Questions can be slightly silly, surprising, or conversation-starting
+🎯 QUESTION CATEGORIES TO USE (pick randomly):
+1. POP CULTURE: Movies, music, celebrities, memes, viral trends
+2. FOOD & DRINKS: Cuisine facts, recipes, restaurant culture  
+3. TRAVEL & GEOGRAPHY: Funny country facts, landmarks, traditions
+4. RELATIONSHIPS: Friendship, dating, family dynamics (appropriate!)
+5. TECHNOLOGY: Social media, apps, gadgets, internet culture
+6. SPORTS & GAMES: Fun sports facts, video games, board games
+7. RANDOM FUN: Weird world records, unusual laws, surprising facts
 
-EXAMPLES OF GOOD STYLES:
-- "რომელი ქვეყანა გამოიგონა პიცა?" (fun food fact)
-- "რა ფერისაა ზებრას კანი ზოლების ქვეშ?" (surprising fact)
-- "რომელი ცხოველი სძინავს თვალებდახუჭული?" (quirky animal fact)
+❌ AVOID THESE BORING TOPICS:
+- Generic animal facts (which animal does X)
+- School-style science questions
+- Historical dates and boring history
+- Math or technical questions
 
-🚨 FACTUAL ACCURACY:
-- ONLY include facts you are 100% CERTAIN about
-- NEVER guess or make up facts
+✅ QUESTION STYLE EXAMPLES:
+- "რომელ ქალაქში დაიბადა კოკა-კოლა?" (pop culture)
+- "რა არის TikTok-ის მაქსიმალური ვიდეოს ხანგრძლივობა?" (tech)
+- "რომელი ფილმი მოიგო ყველაზე მეტი ოსკარი?" (movies)
+- "რომელ ქვეყანაში სვამენ ყველაზე მეტ ყავას?" (food/travel)
 
-CRITICAL CHARACTER LIMITS - STRICT:
-- Question text: MAXIMUM ${QUESTION_MAX_LENGTH} characters (including spaces)
-- Each answer: MAXIMUM ${ANSWER_MAX_LENGTH} characters
+CRITICAL CHARACTER LIMITS:
+- Question: MAX ${QUESTION_MAX_LENGTH} characters
+- Each answer: MAX ${ANSWER_MAX_LENGTH} characters
 
-LANGUAGE RULES:
-- Generate ALL text in Georgian (ქართული)
+LANGUAGE: ALL text in Georgian (ქართული)
 
-${isTrueFalse ? `
-TRUE/FALSE FORMAT:
-- correctAnswer must be "მართალია" or "მცდარია"
-- incorrectAnswers should be the opposite
-` : `
-MULTIPLE CHOICE FORMAT:
-- Provide exactly 4 options (1 correct, 3 incorrect)
-- ALL 4 answers MUST be similar in length (within 5 chars)
-- Make incorrect answers plausible and funny
+${isTrueFalse ? `TRUE/FALSE: correctAnswer = "მართალია" or "მცდარია"` : `
+MULTIPLE CHOICE:
+- 4 options (1 correct, 3 incorrect)
+- Similar length answers
+- Make wrong answers funny but believable
 `}
-
-ICON KEYWORDS:
-- Include 2-3 specific English keywords for icon matching
 
 RETURN ONLY valid JSON:
 {
-  "question_text": "კითხვა (max ${QUESTION_MAX_LENGTH} chars)",
-  "correct_answer": "სწორი (max ${ANSWER_MAX_LENGTH} chars)",
+  "question_text": "კითხვა",
+  "correct_answer": "სწორი",
   "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
   "difficulty": "${difficulty}",
-  "icon_keywords": ["specific", "keywords"]
+  "icon_keywords": ["keyword1", "keyword2"]
 }`;
 
     const userPrompt = `Generate 1 UNIQUE trivia question about: "${subject}"
