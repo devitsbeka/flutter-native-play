@@ -54,7 +54,7 @@ serve(async (req) => {
   }
 
   try {
-    const { subject, answerFormat = "4_answers", difficulty = "medium", existingQuestions = [] } = await req.json();
+    const { subject, answerFormat = "4_answers", difficulty = "medium", existingQuestions = [], randomSeed = "" } = await req.json();
 
     if (!subject) {
       return new Response(
@@ -70,68 +70,79 @@ serve(async (req) => {
 
     const isTrueFalse = answerFormat === "true_false";
     
+    // Personal question categories to rotate through for variety
+    const personalCategories = [
+      { theme: "ნიშან-თვისებები და ხასიათი", examples: ["ვინ არის ყველაზე დრამატული?", "ვინ არის ყველაზე მომთმენი?", "ვინ ატირდებოდა ფილმზე?"] },
+      { theme: "ჩვევები და მანერები", examples: ["ვინ ხვრინავს ძილში?", "ვინ ლაპარაკობს ძილში?", "ვინ თითს წყალში არ ჩაუშვებს?"] },
+      { theme: "კულინარია და საჭმელი", examples: ["ვინ მიაკითხავდა მაცივარს შუაღამეს?", "ვის უყვარს ყველაზე მეტად ხაჭაპური?", "ვინ ჭამს ყველაზე ნელა?"] },
+      { theme: "ტელეფონი და სოციალური", examples: ["ვის ტელეფონი მუდამ დამჯდარია?", "ვინ გამოაგზავნის ხმოვან მესიჯებს?", "ვინ არ პასუხობს ზარებს?"] },
+      { theme: "დაგვიანება და დრო", examples: ["ვინ დააგვიანებდა შეხვედრაზე?", "ვინ მოვიდოდა პირველი?", "ვინ იტყოდა '5 წუთში ვიქნები'?"] },
+      { theme: "დავიწყება და შეცდომები", examples: ["ვინ დაივიწყებდა საფულეს სახლში?", "ვინ დაივიწყებდა დაბადების დღეს?", "ვინ დაკარგავდა გასაღებებს?"] },
+      { theme: "საყვარელი საქმიანობები", examples: ["ვინ უყურებს ყველაზე მეტ სერიალს?", "ვინ იძინებს ყველაზე გვიან?", "ვინ არის ყველაზე ძილმოყვარე?"] },
+      { theme: "ფრაზები და გამონათქვამები", examples: ["ვინ იტყოდა: 'ერთი წუთით'?", "ვინ იტყოდა: 'მე ვიცოდი'?", "ვინ გაიმეორებდა ერთ ხუმრობას?"] },
+    ];
+    
+    // Pick random category based on seed for variety
+    const seedNum = randomSeed ? parseInt(randomSeed, 36) : Math.floor(Math.random() * 1000000);
+    const categoryIndex = Math.abs(seedNum) % personalCategories.length;
+    const focusCategory = personalCategories[categoryIndex];
+    
     // Build existing questions context to avoid duplicates
     const existingContext = existingQuestions.length > 0 
-      ? `\n\nEXISTING QUESTIONS TO AVOID DUPLICATING:\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
+      ? `\n\n🚫 QUESTIONS TO AVOID (generate something COMPLETELY DIFFERENT):\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
       : '';
 
-const systemPrompt = `You are a PERSONAL party game question generator for friends & family gatherings. Generate questions that feel like INSIDE JOKES about the group.
+    console.log(`Generating with focus category: ${focusCategory.theme}, seed: ${randomSeed}`);
 
-🎯 QUESTION TYPES TO GENERATE:
-1. "ვინ არის ჯგუფში ყველაზე..." (Who in the group is most likely to...)
-2. "ვის უყვარს ყველაზე მეტად..." (Who loves X the most...)
-3. "ვინ იტყოდა ამას:" (Who would say this quote:)
-4. "რას აკეთებს [X] როცა..." (What does someone do when...)
-5. "ვის შეუძლია..." (Who can do X...)
-6. "რა არის [X]-ს საყვარელი..." (What is someone's favorite...)
-7. "ვინ დაივიწყებდა..." (Who would forget...)
-8. "ვისთვის არის ტიპიური..." (Who is known for...)
+const systemPrompt = `You are a CREATIVE party game question generator for friends & family. Your goal is to create FUN, PERSONAL questions that spark laughter and memories.
 
-✅ GOOD QUESTION EXAMPLES:
-- "ვინ არის ჯგუფში ყველაზე ძილმოყვარე?"
-- "ვინ გამოაგზავნიდა შეცდომით მესიჯს?"
-- "ვის უყვარს ყველაზე მეტად პიცა?"
-- "ვინ დააგვიანებდა შეხვედრაზე?"
-- "ვინ იტყოდა: 'ერთი წუთით'?"
-- "ვის ტელეფონი მუდამ დამჯდარია?"
-- "ვინ არის ყველაზე დრამატული?"
-- "ვინ დაივიწყებდა დაბადების დღეს?"
+🎲 FOCUS THEME FOR THIS QUESTION: "${focusCategory.theme}"
+Examples for this theme:
+${focusCategory.examples.map(e => `- ${e}`).join('\n')}
 
-❌ DO NOT GENERATE:
-- Educational/trivia facts about the world
-- Animal facts, science, history, geography
-- Celebrity or pop culture questions
-- Any "correct answer" style questions
+🎯 QUESTION STYLES TO USE:
+1. "ვინ არის ყველაზე..." (Who is the most...)
+2. "ვის უყვარს..." (Who loves...)
+3. "ვინ გააკეთებდა..." (Who would do...)
+4. "ვინ იტყოდა..." (Who would say...)
+5. "ვინ დაივიწყებდა..." (Who would forget...)
+6. "ვისთვის არის ტიპიური..." (What's typical for...)
 
-💡 ANSWER FORMAT:
-- Answers should be PERSON TYPES or DESCRIPTIONS
-- Example answers: "დედა", "საუკეთესო მეგობარი", "უმცროსი და", "ბებია", "მე თვითონ", "ყველა ერთად"
+💡 BE CREATIVE! Think about:
+- Funny habits people have
+- Embarrassing moments
+- Personality quirks
+- Daily life situations
+- Family inside jokes
 
-CHARACTER LIMITS:
-- Question: MAX ${QUESTION_MAX_LENGTH} chars
-- Answer: MAX ${ANSWER_MAX_LENGTH} chars
+❌ AVOID:
+- Educational/trivia facts
+- Celebrity questions
+- General knowledge
 
-LANGUAGE: Georgian (ქართული)
+💡 ANSWERS should be person types:
+"დედა", "მამა", "ბებია", "საუკეთესო მეგობარი", "მე თვითონ", "ყველა ერთად", "უმცროსი და/ძმა", "უფროსი და/ძმა"
 
-${isTrueFalse ? `TRUE/FALSE: use "მართალია" / "მცდარია"` : `
-MULTIPLE CHOICE: 4 fun answer options about different people/types
-`}
+LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
+LANGUAGE: Georgian only
 
-RETURN ONLY JSON:
+${isTrueFalse ? `TRUE/FALSE format` : `4 MULTIPLE CHOICE answers`}
+
+JSON FORMAT:
 {
-  "question_text": "ვინ არის ჯგუფში...",
-  "correct_answer": "პასუხი 1",
-  "incorrect_answers": ["პასუხი 2", "პასუხი 3", "პასუხი 4"],
+  "question_text": "...",
+  "correct_answer": "...",
+  "incorrect_answers": ["...", "...", "..."],
   "difficulty": "${difficulty}",
   "icon_keywords": ["family", "friends"]
 }`;
 
-    const userPrompt = `Generate 1 UNIQUE trivia question about: "${subject}"
-Difficulty: ${difficulty}
+    const userPrompt = `🎲 Generate 1 UNIQUE, FUN question about: "${subject}"
+Focus on theme: ${focusCategory.theme}
 ${existingContext}
 
-CRITICAL: Create a DIFFERENT question from any listed above.
-ALL text in Georgian. Questions max ${QUESTION_MAX_LENGTH} chars, answers max ${ANSWER_MAX_LENGTH} chars.
+⚡ IMPORTANT: Generate something COMPLETELY NEW and DIFFERENT!
+Be creative - think of funny, nostalgic, or slightly embarrassing situations.
 Return ONLY valid JSON.`;
 
     console.log(`Generating single ${answerFormat} question about: ${subject}`);
