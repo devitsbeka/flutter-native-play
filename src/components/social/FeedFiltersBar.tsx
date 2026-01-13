@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, ChevronDown, X, Hash } from "lucide-react";
+import { Search, Filter, ChevronDown, X, Hash, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ interface FeedFiltersBarProps {
   onSearchQueryChange: (query: string) => void;
   selectedHashtag?: string | null;
   onClearHashtag?: () => void;
+  onAddClick?: () => void;
 }
 
 const filterOptions: { value: SortFilter; label: string }[] = [
@@ -46,6 +47,7 @@ export function FeedFiltersBar({
   onSearchQueryChange,
   selectedHashtag,
   onClearHashtag,
+  onAddClick,
 }: FeedFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -53,50 +55,8 @@ export function FeedFiltersBar({
 
   return (
     <div className="px-4 pt-0 pb-2">
-      <div className="flex items-center justify-between gap-3">
-        {/* Active Hashtag Chip */}
-        {selectedHashtag && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
-            <Hash className="w-3.5 h-3.5 text-primary" />
-            <span className="text-sm font-medium text-primary">{selectedHashtag}</span>
-            <button 
-              onClick={onClearHashtag}
-              className="p-0.5 rounded-full hover:bg-primary/20 transition-colors"
-            >
-              <X className="w-3.5 h-3.5 text-primary" />
-            </button>
-          </div>
-        )}
-        {/* Filter Dropdown - hide when hashtag active to save space */}
-        {!selectedHashtag && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">{currentLabel}</span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="start" 
-            className="w-48 bg-popover border border-border shadow-lg z-50"
-          >
-            <DropdownMenuRadioGroup value={sortFilter} onValueChange={(v) => onSortFilterChange(v as SortFilter)}>
-              {filterOptions.map((option) => (
-                <DropdownMenuRadioItem 
-                  key={option.value} 
-                  value={option.value}
-                  className="cursor-pointer"
-                >
-                  {option.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        )}
-
-        {/* Search Section */}
+      <div className="flex items-center gap-2">
+        {/* Search button - left side */}
         <AnimatePresence mode="wait">
           {isSearchOpen ? (
             <motion.div
@@ -137,16 +97,76 @@ export function FeedFiltersBar({
               </button>
             </motion.div>
           ) : (
-            <motion.button
-              key="search-button"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-xl bg-muted"
-            >
-              <Search className="w-5 h-5 text-muted-foreground" />
-            </motion.button>
+            <>
+              {/* Search button */}
+              <motion.button
+                key="search-button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSearchOpen(true)}
+                className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 flex items-center justify-center flex-shrink-0"
+              >
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </motion.button>
+
+              {/* Active Hashtag Chip */}
+              {selectedHashtag && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
+                  <Hash className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-sm font-medium text-primary">{selectedHashtag}</span>
+                  <button 
+                    onClick={onClearHashtag}
+                    className="p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5 text-primary" />
+                  </button>
+                </div>
+              )}
+
+              {/* Filter Dropdown - hide when hashtag active to save space */}
+              {!selectedHashtag && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">{currentLabel}</span>
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="start" 
+                    className="w-48 bg-popover border border-border shadow-lg z-50"
+                  >
+                    <DropdownMenuRadioGroup value={sortFilter} onValueChange={(v) => onSortFilterChange(v as SortFilter)}>
+                      {filterOptions.map((option) => (
+                        <DropdownMenuRadioItem 
+                          key={option.value} 
+                          value={option.value}
+                          className="cursor-pointer"
+                        >
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              <div className="flex-1" />
+
+              {/* Add button - right side */}
+              {onAddClick && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={onAddClick}
+                  className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm flex-shrink-0"
+                >
+                  <Plus className="h-5 w-5" />
+                </motion.button>
+              )}
+            </>
           )}
         </AnimatePresence>
       </div>
