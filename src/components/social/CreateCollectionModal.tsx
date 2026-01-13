@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Loader2, Sparkles, ChevronLeft, Check, Edit2, Save, ChevronUp, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Sparkles, ChevronLeft, Save, CheckCircle2 } from "lucide-react";
 import iconCollections from "@/assets/icon-collections.png";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,11 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { QuestionIconPicker } from "./QuestionIconPicker";
-import { CoverImagePicker } from "./CoverImagePicker";
-import { RoundTabs } from "./RoundTabs";
 import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion } from "./GameStyleQuestionEditor";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
@@ -915,249 +910,60 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const renderStep3 = () => {
     if (!generatedData) return null;
 
-    const currentRound = generatedData.rounds[currentRoundIndex];
-    const isExpanded = (qIdx: number) => 
-      expandedQuestion?.roundIdx === currentRoundIndex && expandedQuestion?.questionIdx === qIdx;
+    // Render round tabs as header content for GameStyleQuestionEditor
+    const roundTabsHeader = (
+      <div className="px-4 pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          {generatedData.rounds.map((round, index) => (
+            <button
+              key={index}
+              onClick={() => handleRoundChange(index)}
+              className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${
+                currentRoundIndex === index
+                  ? "bg-emerald-500 text-white shadow-lg"
+                  : "bg-white/30 text-white hover:bg-white/40"
+              }`}
+            >
+              Round {index + 1}
+            </button>
+          ))}
+        </div>
+        {/* Dots indicator */}
+        <div className="flex justify-center gap-1.5 mt-2">
+          {generatedData.rounds.map((_, index) => (
+            <div
+              key={index}
+              className={`h-2.5 w-2.5 rounded-full transition-all ${
+                currentRoundIndex === index ? "bg-white" : "bg-white/40"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    );
 
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="space-y-5"
-      >
-        {/* Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
-            <Sparkles className="w-10 h-10 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-2">კოლექცია მზადაა! 🎉</h3>
-          <p className="text-white/70">შეამოწმე და გამოაქვეყნე</p>
-        </div>
-
-        {/* Cover Image Section */}
-        <div>
-          <label className="text-sm font-medium text-white mb-2 block">გარეკანი</label>
-          <CoverImagePicker
-            currentImage={generatedData.coverImage}
-            currentGradient={coverGradient}
-            onImageChange={(url) => setGeneratedData(prev => ({ ...prev!, coverImage: url }))}
-            onGradientChange={setCoverGradient}
-            title={title}
-            suggestPrompt={rounds.map(r => r.subject).filter(Boolean).join(", ")}
-          />
-        </div>
-
-        {/* Editable Title */}
-        <div>
-          <label className="text-sm font-medium text-white mb-2 block">სახელი</label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="კოლექციის სახელი"
-            className="w-full text-base h-12 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
-          />
-        </div>
-
-        {/* Round Tabs for Questions */}
-        <div>
-          <label className="text-sm font-medium text-white mb-3 block">კითხვები</label>
-          
-          {/* Round selector tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-3">
-            {generatedData.rounds.map((round, index) => (
-              <button
-                key={index}
-                onClick={() => handleRoundChange(index)}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                  currentRoundIndex === index
-                    ? "bg-white text-[#6B5B95] shadow-lg"
-                    : "bg-white/20 text-white hover:bg-white/30"
-                }`}
-              >
-                რაუნდი {index + 1}
-              </button>
-            ))}
-          </div>
-
-          {/* Current round subject */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-bold text-white">{currentRound?.subject}</span>
-            <span className="text-xs text-white/70">{currentRound?.questions.length} კითხვა</span>
-          </div>
-          
-          {/* Questions list for current round */}
-          <div className="space-y-2">
-            {currentRound?.questions.map((question, questionIdx) => (
-              <div 
-                key={questionIdx}
-                className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden border border-white/20"
-              >
-                {/* Question Header - Always visible */}
-                <button
-                  onClick={() => setExpandedQuestion(
-                    isExpanded(questionIdx) ? null : { roundIdx: currentRoundIndex, questionIdx }
-                  )}
-                  className="w-full p-3 flex items-start gap-2 text-left hover:bg-white/5 transition-colors"
-                >
-                  {/* Icon */}
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                    {question.icon_slug ? (
-                      <DynamicIcon slug={question.icon_slug} size={20} />
-                    ) : (
-                      <span className="text-white/50 text-xs">?</span>
-                    )}
-                  </div>
-                  
-                  {/* Question Preview */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white line-clamp-2">{question.question_text}</p>
-                    <p className="text-xs text-green-400 mt-1">✓ {question.correct_answer}</p>
-                  </div>
-                  
-                  {/* Expand Icon */}
-                  <div className="p-1">
-                    {isExpanded(questionIdx) ? (
-                      <ChevronUp className="w-4 h-4 text-white/70" />
-                    ) : (
-                      <Edit2 className="w-4 h-4 text-white/70" />
-                    )}
-                  </div>
-                </button>
-                
-                {/* Expanded Edit Form */}
-                <AnimatePresence>
-                  {isExpanded(questionIdx) && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-3 pb-3 space-y-3 border-t border-white/20 pt-3">
-                        {/* Icon Picker */}
-                        <div>
-                          <label className="text-xs text-white/70 mb-1.5 block">აიქონი</label>
-                          <QuestionIconPicker
-                            selectedSlug={question.icon_slug || ""}
-                            onSelect={(slug) => updateGeneratedQuestion(currentRoundIndex, questionIdx, { icon_slug: slug })}
-                            questionText={question.question_text}
-                          />
-                        </div>
-                        
-                        {/* Question Text */}
-                        <div>
-                          <label className="text-xs text-white/70 mb-1.5 block">კითხვა</label>
-                          <Textarea
-                            value={question.question_text}
-                            onChange={(e) => updateGeneratedQuestion(currentRoundIndex, questionIdx, { question_text: e.target.value })}
-                            className="text-sm rounded-xl resize-none border-0 bg-white/95 text-slate-800"
-                            rows={2}
-                          />
-                        </div>
-                        
-                        {/* Correct Answer */}
-                        <div>
-                          <label className="text-xs text-green-400 mb-1.5 block">სწორი პასუხი</label>
-                          <Input
-                            value={question.correct_answer}
-                            onChange={(e) => updateGeneratedQuestion(currentRoundIndex, questionIdx, { correct_answer: e.target.value })}
-                            className="text-sm rounded-xl border-0 bg-white/95 text-slate-800"
-                          />
-                        </div>
-                        
-                        {/* Incorrect Answers */}
-                        <div>
-                          <label className="text-xs text-red-400 mb-1.5 block">არასწორი პასუხები</label>
-                          <div className="space-y-2">
-                            {question.incorrect_answers.map((answer, answerIdx) => (
-                              <Input
-                                key={answerIdx}
-                                value={answer}
-                                onChange={(e) => updateIncorrectAnswer(currentRoundIndex, questionIdx, answerIdx, e.target.value)}
-                                className="text-sm rounded-xl border-0 bg-white/95 text-slate-800"
-                                placeholder={`პასუხი ${answerIdx + 1}`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {/* Done Button */}
-                        <button
-                          onClick={() => setExpandedQuestion(null)}
-                          className="w-full py-2 bg-white/20 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-1 hover:bg-white/30 transition-colors"
-                        >
-                          <Check className="w-4 h-4" />
-                          დასრულება
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Visibility Toggle */}
-        <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-          <span className="text-sm font-medium text-white">საჯარო</span>
-          <button
-            onClick={() => setIsPublic(!isPublic)}
-            className={`w-12 h-7 rounded-full transition-colors ${
-              isPublic ? "bg-white" : "bg-white/30"
-            }`}
-          >
-            <motion.div
-              animate={{ x: isPublic ? 22 : 4 }}
-              className={`w-5 h-5 rounded-full shadow-md ${isPublic ? "bg-[#6B5B95]" : "bg-white"}`}
-            />
-          </button>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          {/* Save as Draft Button */}
-          <button
-            onClick={handleSaveDraft}
-            disabled={isSavingDraft}
-            className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-white/30 transition-colors"
-          >
-            {isSavingDraft ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                ინახება...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                დრაფტად შენახვა
-              </>
-            )}
-          </button>
-
-          {/* Publish Button */}
-          <ChunkyButton
-            variant="whitePurple"
-            onClick={handlePublish}
-            disabled={isPosting}
-            className="w-full"
-            size="lg"
-          >
-            {isPosting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                იქვეყნება...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5 mr-2" />
-                გამოქვეყნება
-              </>
-            )}
-          </ChunkyButton>
-        </div>
-      </motion.div>
+      <GameStyleQuestionEditor
+        questions={editorQuestions}
+        onQuestionsChange={handleEditorQuestionsChange}
+        title={title}
+        onTitleChange={setTitle}
+        onSave={handlePublish}
+        onBack={() => setStep(1)}
+        saveButtonText={isPosting ? "იქვეყნება..." : "გამოქვეყნება"}
+        showTitleEditor={true}
+        subject={generatedData.rounds[currentRoundIndex]?.subject}
+        answerFormat={rounds[currentRoundIndex]?.answerFormat || "4_answers"}
+        headerContent={roundTabsHeader}
+        isSaving={isPosting}
+        coverImageUrl={generatedData.coverImage}
+        selectedGradient={coverGradient}
+        isPublic={isPublic}
+        onPublicChange={setIsPublic}
+        onRegenerateCover={regenerateCover}
+        isGeneratingCover={isGeneratingCover}
+        coverGenerationCount={generatedData.coverGenerationCount}
+      />
     );
   };
 
@@ -1166,73 +972,79 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-[#6B5B95]"
-        >
-          {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 safe-top">
-            <div className="flex items-center justify-between px-4 py-3">
-              {step > 1 && !isGenerating ? (
-                <button 
-                  onClick={() => setStep(step - 1)} 
-                  className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-              ) : (
-                <button 
-                  onClick={handleClose} 
-                  className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-              )}
-              
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex gap-1.5">
-                  {[1, 2, 3].map((s) => (
-                    <div
-                      key={s}
-                      className={`h-2 rounded-full transition-all ${
-                        s === step ? "w-6 bg-white" : s < step ? "w-2 bg-white/50" : "w-2 bg-white/20"
-                      }`}
-                    />
-                  ))}
+        <>
+          {/* Step 3 uses GameStyleQuestionEditor which is its own full-screen component */}
+          {step === 3 ? (
+            renderStep3()
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-[#6B5B95]"
+            >
+              {/* Fixed Header */}
+              <div className="fixed top-0 left-0 right-0 z-50 safe-top">
+                <div className="flex items-center justify-between px-4 py-3">
+                  {step > 1 && !isGenerating ? (
+                    <button 
+                      onClick={() => setStep(step - 1)} 
+                      className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={handleClose} 
+                      className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-white" />
+                    </button>
+                  )}
+                  
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3].map((s) => (
+                        <div
+                          key={s}
+                          className={`h-2 rounded-full transition-all ${
+                            s === step ? "w-6 bg-white" : s < step ? "w-2 bg-white/50" : "w-2 bg-white/20"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    {/* Auto-save indicator */}
+                    {lastAutoSaved && !isGenerating && !isPosting && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-1 text-[10px] text-white/80"
+                      >
+                        <CheckCircle2 className="w-3 h-3" />
+                        შენახულია
+                      </motion.div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
+                    <Sparkles className="w-4 h-4 text-white" />
+                    <span className="text-xs font-semibold text-white">AI</span>
+                  </div>
                 </div>
-                {/* Auto-save indicator */}
-                {lastAutoSaved && !isGenerating && !isPosting && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-1 text-[10px] text-white/80"
-                  >
-                    <CheckCircle2 className="w-3 h-3" />
-                    შენახულია
-                  </motion.div>
-                )}
               </div>
-              
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
-                <Sparkles className="w-4 h-4 text-white" />
-                <span className="text-xs font-semibold text-white">AI</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Scrollable Content */}
-          <div className="h-full overflow-y-auto pt-[60px] pb-6 safe-top">
-            <div className="p-5">
-              <AnimatePresence mode="wait">
-                {step === 1 && renderStep1()}
-                {step === 2 && renderStep2()}
-                {step === 3 && renderStep3()}
-              </AnimatePresence>
-            </div>
-          </div>
-        </motion.div>
+              {/* Scrollable Content */}
+              <div className="h-full overflow-y-auto pt-[60px] pb-6 safe-top">
+                <div className="p-5">
+                  <AnimatePresence mode="wait">
+                    {step === 1 && renderStep1()}
+                    {step === 2 && renderStep2()}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </>
       )}
     </AnimatePresence>
   );
