@@ -157,14 +157,11 @@ export default function Leaderboards() {
             className="w-full h-full"
           >
             <CarouselContent className="-ml-0">
-              {LEAGUES.map((league) => {
-                const isLocked = league.tier > userTier;
-                
-                return (
+            {LEAGUES.map((league) => (
                   <CarouselItem key={league.tier} className="pl-0">
                     <LeagueContent
                       tier={league.tier}
-                      isLocked={isLocked}
+                      isLocked={false}
                       league={league}
                       userTier={userTier}
                       leaderboard={leaderboard}
@@ -175,8 +172,7 @@ export default function Leaderboards() {
                       isCurrentTier={league.tier === activeTier}
                     />
                   </CarouselItem>
-                );
-              })}
+              ))}
             </CarouselContent>
           </Carousel>
         )}
