@@ -302,9 +302,9 @@ export function GameStylePersonalTrivia({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-gradient-to-b from-[#9B8AC4] to-[#8B7AB8] flex flex-col"
+          className="fixed inset-0 z-50 bg-[#6B5B95] flex flex-col"
         >
-          {/* Header */}
+          {/* Header with Title */}
           <div className="pt-[env(safe-area-inset-top,8px)] px-4 py-3 flex items-center justify-between">
             <button
               onClick={onClose}
@@ -313,10 +313,29 @@ export function GameStylePersonalTrivia({
               <ChevronLeft className="w-6 h-6 text-white" />
             </button>
             
-            <div className="flex items-center gap-2 text-white">
-              <PartyPopper className="w-5 h-5" />
-              <span className="text-lg font-bold">{currentIndex + 1}/{questions.length}</span>
-            </div>
+            {/* Title in center */}
+            {isEditingTitle ? (
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => setIsEditingTitle(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+                autoFocus
+                className="max-w-[180px] bg-white/20 border-white/30 text-white placeholder:text-white/70 font-bold text-center"
+                placeholder="თამაშის სახელი..."
+              />
+            ) : (
+              <button 
+                onClick={() => setIsEditingTitle(true)}
+                className="flex items-center gap-2 text-white"
+              >
+                <PartyPopper className="w-5 h-5" />
+                <span className="font-bold truncate max-w-[150px]">
+                  {title || "თამაშის სახელი..."}
+                </span>
+                <Edit3 className="w-4 h-4 text-white/70" />
+              </button>
+            )}
 
             {/* Add Question Button */}
             <button
@@ -327,13 +346,18 @@ export function GameStylePersonalTrivia({
             </button>
           </div>
 
-          {/* Action Toolbar */}
+          {/* Question Counter */}
+          <div className="text-center text-white/80 text-sm font-medium pb-2">
+            {currentIndex + 1}/{questions.length}
+          </div>
+
+          {/* Action Toolbar - same height buttons */}
           <div className="px-4 pb-3">
             <div className="flex items-center justify-center gap-2">
               {/* Idea Button */}
               <button
                 onClick={handleInsertIdea}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all"
+                className="h-10 flex items-center gap-2 px-4 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all"
               >
                 <Sparkles className="w-4 h-4" />
                 იდეა
@@ -351,7 +375,7 @@ export function GameStylePersonalTrivia({
               {/* Duplicate Button */}
               <button
                 onClick={handleDuplicate}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all"
+                className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all"
               >
                 <Copy className="w-4 h-4" />
               </button>
@@ -359,7 +383,7 @@ export function GameStylePersonalTrivia({
               {/* Delete Button */}
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/20 hover:bg-red-500/50 text-white text-sm font-medium transition-all"
+                className="h-10 w-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-red-500/50 text-white transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -375,7 +399,7 @@ export function GameStylePersonalTrivia({
                   className="flex-[0_0_100%] min-w-0 px-4 flex flex-col"
                 >
                   {/* Question Card */}
-                  <div className="bg-[#7B6BA8] rounded-3xl p-5 shadow-lg mb-4">
+                  <div className="bg-[#5A4A7A] rounded-3xl p-5 shadow-lg mb-4">
                     {/* Icon */}
                     <div className="flex justify-center mb-4">
                       {question.iconSlug ? (
@@ -461,7 +485,7 @@ export function GameStylePersonalTrivia({
                       </button>
                     )}
 
-                    {/* Incorrect Answers */}
+                    {/* Incorrect Answers - Clickable to set as correct */}
                     {getIncorrectAnswers().map((answer, answerIndex) => (
                       editingField === answerIndex && index === currentIndex ? (
                         <div key={answerIndex} className="flex items-center gap-3 p-3 rounded-2xl bg-white shadow-[0_4px_0_0_#d1d5db]">
@@ -481,19 +505,29 @@ export function GameStylePersonalTrivia({
                           <span className="text-xs text-muted-foreground">{editValue.length}/{ANSWER_MAX}</span>
                         </div>
                       ) : (
-                        <button
+                        <div
                           key={answerIndex}
-                          onClick={() => startEditing(answerIndex, answer)}
-                          className="flex items-center gap-4 p-3 rounded-2xl bg-white shadow-[0_4px_0_0_#d1d5db] text-left group hover:bg-gray-50 transition-all"
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-white shadow-[0_4px_0_0_#d1d5db] text-left group hover:bg-gray-50 transition-all"
                         >
-                          <span className="w-11 h-11 rounded-full bg-[#7DD3FC] flex items-center justify-center text-white font-bold flex-shrink-0">
+                          {/* Clickable circle to set as correct */}
+                          <button
+                            onClick={() => setCorrectAnswer(answerIndex + 1)}
+                            className="w-11 h-11 rounded-full bg-[#7DD3FC] hover:bg-emerald-400 flex items-center justify-center text-white font-bold flex-shrink-0 transition-colors"
+                            title="დააჭირე სწორად დასაყენებლად"
+                          >
                             {letters[answerIndex + 1]}:
-                          </span>
-                          <span className="flex-1 font-semibold text-slate-700 min-h-[24px] flex items-center">
-                            {answer || <span className="text-slate-400">არასწორი პასუხი {answerIndex + 1}...</span>}
-                          </span>
+                          </button>
+                          {/* Clickable text to edit */}
+                          <button
+                            onClick={() => startEditing(answerIndex, answer)}
+                            className="flex-1 text-left"
+                          >
+                            <span className="font-semibold text-slate-700 min-h-[24px] flex items-center">
+                              {answer || <span className="text-slate-400">არასწორი პასუხი {answerIndex + 1}...</span>}
+                            </span>
+                          </button>
                           <Edit3 className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
+                        </div>
                       )
                     ))}
                   </div>
@@ -516,42 +550,15 @@ export function GameStylePersonalTrivia({
             ))}
           </div>
 
-          {/* Footer with Title & Save */}
-          <div className="px-4 pb-[env(safe-area-inset-bottom,16px)] pt-2 space-y-3">
-            {/* Title Input */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/10 border border-white/20">
-              <PartyPopper className="w-6 h-6 text-white flex-shrink-0" />
-              {isEditingTitle ? (
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={() => setIsEditingTitle(false)}
-                  onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-                  autoFocus
-                  className="flex-1 bg-white/20 border-white/30 text-white placeholder:text-white/70 font-bold"
-                  placeholder="თამაშის სახელი..."
-                />
-              ) : (
-                <button 
-                  onClick={() => setIsEditingTitle(true)}
-                  className="flex-1 text-left flex items-center gap-2 group"
-                >
-                  <span className="font-bold text-white truncate">
-                    {title || "თამაშის სახელი..."}
-                  </span>
-                  <Edit3 className="w-4 h-4 text-white/70 group-hover:text-white transition-colors flex-shrink-0" />
-                </button>
-              )}
-            </div>
-
-            {/* Save Button */}
+          {/* Footer with Save Button */}
+          <div className="px-4 pb-[env(safe-area-inset-bottom,16px)] pt-2">
             <ChunkyButton 
               onClick={handleSave}
               className="w-full"
               variant="success"
             >
               <Check className="w-5 h-5 mr-2" />
-              დაწყება
+              შენახვა
             </ChunkyButton>
           </div>
 
