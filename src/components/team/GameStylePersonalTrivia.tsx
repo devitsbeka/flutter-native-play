@@ -528,28 +528,36 @@ export function GameStylePersonalTrivia({
     setGeneratingIndex(index);
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-trivia-question', {
+      // Get existing question texts to avoid duplicates
+      const existingQuestions = questions
+        .filter((q, i) => i !== index && q.question.trim())
+        .map(q => q.question);
+
+      const { data, error } = await supabase.functions.invoke('generate-single-question', {
         body: { 
-          topic: title || 'general trivia',
-          language: 'ka'
+          subject: title || 'საინტერესო ფაქტები',
+          answerFormat: '4_answers',
+          difficulty: 'medium',
+          existingQuestions,
         }
       });
       
       if (error) throw error;
       
-      if (data?.question) {
+      if (data?.question_text) {
         const newQuestions = [...questions];
         newQuestions[index] = {
           ...newQuestions[index],
-          question: data.question.text || data.question.question_text || "",
+          question: data.question_text || "",
           answers: [
-            { id: `a-ai-${Date.now()}-0`, text: data.question.correct_answer || "", isCorrect: true },
-            ...(data.question.incorrect_answers || []).slice(0, 3).map((ans: string, i: number) => ({
+            { id: `a-ai-${Date.now()}-0`, text: data.correct_answer || "", isCorrect: true },
+            ...(data.incorrect_answers || []).slice(0, 3).map((ans: string, i: number) => ({
               id: `a-ai-${Date.now()}-${i+1}`,
               text: ans,
               isCorrect: false,
             })),
           ],
+          iconSlug: data.icon_slug || undefined,
         };
         setQuestions(newQuestions);
         
@@ -557,12 +565,14 @@ export function GameStylePersonalTrivia({
           title: "✨ კითხვა შეივსო!",
           duration: 2000,
         });
+      } else {
+        throw new Error("No question data returned");
       }
     } catch (error) {
       console.error('AI generation error:', error);
       toast({
         title: "შეცდომა",
-        description: "AI გენერაცია ვერ მოხერხდა",
+        description: "AI გენერაცია ვერ მოხერხდა. სცადეთ თავიდან.",
         variant: "destructive",
       });
     } finally {
@@ -849,7 +859,7 @@ export function GameStylePersonalTrivia({
                         ) : (
                           <>
                             <Sparkles className="w-4 h-4" />
-                            AI შევსება
+                            შექმენი AI-ით
                           </>
                         )}
                       </button>
