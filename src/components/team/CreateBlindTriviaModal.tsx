@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, Lock, Play, RefreshCw } from "lucide-react";
+import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
+import { GameStyleQuestionEditor, convertToEditorQuestions, EditorQuestion, convertToGeneratedQuestions } from "@/components/social/GameStyleQuestionEditor";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -31,11 +32,10 @@ const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string
   { value: "hard", emoji: "🔴", label: "რთული", description: "ექსპერტებს" },
 ];
 
-const QUESTION_COUNTS = [5, 10, 15, 20];
+const QUESTION_COUNTS = [5, 10, 15];
 
 // Creative topic pool - specific, fun topics that inspire users
 const TRIVIA_TOPIC_POOL = [
-  // Entertainment
   { label: "Friends", icon_slug: "television" },
   { label: "Star Wars", icon_slug: "rocket" },
   { label: "Marvel", icon_slug: "superhero" },
@@ -44,54 +44,18 @@ const TRIVIA_TOPIC_POOL = [
   { label: "Breaking Bad", icon_slug: "chemistry" },
   { label: "Netflix სერიალები", icon_slug: "film-reel" },
   { label: "Disney ფილმები", icon_slug: "castle" },
-  { label: "The Office", icon_slug: "briefcase" },
-  { label: "Stranger Things", icon_slug: "flashlight" },
-  { label: "ანიმე", icon_slug: "ninja" },
-  { label: "პიქსარი", icon_slug: "lamp" },
-  // Sports
   { label: "NBA ლეგენდები", icon_slug: "basketball" },
   { label: "ჩემპიონთა ლიგა", icon_slug: "trophy" },
   { label: "Formula 1", icon_slug: "racing-car" },
-  { label: "ოლიმპიური თამაშები", icon_slug: "medal" },
-  { label: "მსოფლიო ჩემპიონატი", icon_slug: "soccer-ball" },
-  { label: "UFC/MMA", icon_slug: "boxing-glove" },
-  { label: "ტენისის ვარსკვლავები", icon_slug: "tennis" },
-  // Music
   { label: "K-Pop", icon_slug: "music-note" },
   { label: "Taylor Swift", icon_slug: "microphone" },
   { label: "BTS", icon_slug: "star" },
-  { label: "Queen", icon_slug: "crown" },
-  { label: "90s მუსიკა", icon_slug: "vinyl" },
-  { label: "Hip-Hop ლეგენდები", icon_slug: "headphones" },
-  { label: "რეპერები", icon_slug: "microphone-stand" },
-  { label: "როკ მუსიკა", icon_slug: "guitar" },
-  // Pop Culture & Gaming
   { label: "მემები", icon_slug: "smiley" },
-  { label: "TikTok ტრენდები", icon_slug: "smartphone" },
   { label: "Minecraft", icon_slug: "cube" },
-  { label: "GTA", icon_slug: "car" },
-  { label: "FIFA/EA Sports", icon_slug: "gamepad" },
-  { label: "PlayStation ექსკლუზივები", icon_slug: "controller" },
-  { label: "ნინტენდო", icon_slug: "joystick" },
-  // Knowledge & Science
   { label: "კოსმოსი და ვარსკვლავები", icon_slug: "planet" },
-  { label: "ფსიქოლოგია", icon_slug: "brain" },
-  { label: "ბერძნული მითოლოგია", icon_slug: "greek-helmet" },
-  { label: "დინოზავრები", icon_slug: "dinosaur" },
-  { label: "ადამიანის სხეული", icon_slug: "heart" },
-  { label: "ქიმია", icon_slug: "flask" },
-  // Georgian specific
   { label: "საქართველოს ისტორია", icon_slug: "flag" },
   { label: "ქართული კერძები", icon_slug: "food" },
-  { label: "ქართული ღვინო", icon_slug: "wine" },
-  { label: "ქართველი სახეები", icon_slug: "person" },
-  // Fun categories
   { label: "ცხოველთა სამყარო", icon_slug: "paw" },
-  { label: "სუპერ მანქანები", icon_slug: "sports-car" },
-  { label: "მზარეულის საიდუმლო", icon_slug: "chef-hat" },
-  { label: "მსოფლიო რეკორდები", icon_slug: "trophy" },
-  { label: "გამოცანები", icon_slug: "puzzle" },
-  { label: "სახალისო ფაქტები", icon_slug: "lightbulb" },
 ];
 
 interface TopicSuggestion {
@@ -107,12 +71,15 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
-  const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
+  const [answerFormat] = useState<"4_answers" | "true_false">("4_answers");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("mixed");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
-  const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [title, setTitle] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  
+  // Editor state
+  const [editorQuestions, setEditorQuestions] = useState<EditorQuestion[]>([]);
   
   // Topic suggestions state
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
@@ -121,11 +88,9 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
   const fetchTopicSuggestions = useCallback(async () => {
     setIsLoadingTopics(true);
     
-    // Shuffle and pick 6 random topics
     const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 6);
     
-    // Fetch icons from database
     const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
     
     const { data: icons } = await supabase
@@ -147,7 +112,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     setIsLoadingTopics(false);
   }, []);
 
-  // Reset on open
   useEffect(() => {
     if (open) {
       resetForm();
@@ -159,11 +123,11 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     setStep(1);
     setSubject("");
     setQuestionCount(10);
-    setAnswerFormat("4_answers");
     setDifficulty("mixed");
-    setQuestions([]);
     setTitle("");
     setGenerationProgress(0);
+    setEditorQuestions([]);
+    setIsPublic(true);
   };
 
   const handleClose = () => {
@@ -175,7 +139,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     setIsGenerating(true);
     setGenerationProgress(0);
     
-    // Simulate progress
     const progressInterval = setInterval(() => {
       setGenerationProgress(prev => Math.min(prev + Math.random() * 15, 90));
     }, 500);
@@ -195,17 +158,18 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
         throw new Error("კითხვები ვერ დაგენერირდა");
       }
 
-      // Celebrate!
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
 
-      setQuestions(generatedQuestions);
+      // Convert to editor format
+      const converted = convertToEditorQuestions(generatedQuestions);
+      setEditorQuestions(converted);
       setTitle(data?.suggestedTitle || `${subject} ტრივია`);
       
-      setTimeout(() => setStep(5), 300);
+      setTimeout(() => setStep(4), 300);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
@@ -220,17 +184,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
   };
 
   const handleStartGame = () => {
+    // Convert back to GeneratedQuestion format
+    const questions = convertToGeneratedQuestions(editorQuestions);
     onTriviaReady(questions, title, subject);
     handleClose();
-  };
-
-  const getDifficultyLabel = (difficulty?: string) => {
-    switch (difficulty) {
-      case 'easy': return 'მარტივი';
-      case 'medium': return 'საშუალო';
-      case 'hard': return 'რთული';
-      default: return 'შერეული';
-    }
   };
 
   const renderStep = () => {
@@ -243,7 +200,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             exit={{ opacity: 0, y: -20 }}
             className="space-y-5"
           >
-            {/* Header */}
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
                 <img src={triviaBuzzer} alt="Create Trivia" className="w-14 h-14 object-contain" />
@@ -252,7 +208,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               <p className="text-white/70">რა თემაზე გსურს კითხვები?</p>
             </div>
 
-            {/* Input field - Primary focus */}
             <div className="space-y-4">
               <Input
                 value={subject}
@@ -261,7 +216,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 className="w-full text-base h-14 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
               />
               
-              {/* Suggestion chips with refresh */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-white/80">💡 იდეები:</span>
@@ -307,7 +261,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               </div>
             </div>
 
-            {/* Continue button */}
             <ChunkyButton
               variant="whitePurple"
               onClick={() => setStep(2)}
@@ -329,59 +282,11 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">სირთულე 🎯</h3>
-              <p className="text-white/70">რა სირთულის კითხვები გინდა?</p>
+              <h3 className="text-2xl font-bold text-white mb-2">რამდენი კითხვა? 🎯</h3>
+              <p className="text-white/70">აირჩიე რაოდენობა და სირთულე</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {DIFFICULTY_OPTIONS.map((option) => (
-                <motion.button
-                  key={option.value}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setDifficulty(option.value)}
-                  className={`p-4 rounded-2xl transition-all text-center ${
-                    difficulty === option.value
-                      ? "bg-white text-[#6B5B95] shadow-lg"
-                      : "bg-white/20 text-white hover:bg-white/30"
-                  }`}
-                >
-                  <span className="text-3xl block mb-2">{option.emoji}</span>
-                  <span className="font-bold block">{option.label}</span>
-                  <span className="text-xs opacity-70">{option.description}</span>
-                </motion.button>
-              ))}
-            </div>
-
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setStep(1)} 
-                className="flex-1 h-12 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                უკან
-              </button>
-              <ChunkyButton variant="whitePurple" onClick={() => setStep(3)} className="flex-1">
-                შემდეგი
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </ChunkyButton>
-            </div>
-          </motion.div>
-        );
-
-      case 3:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-5"
-          >
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">რამდენი კითხვა? 🤔</h3>
-              <p className="text-white/70">აირჩიე რაოდენობა</p>
-            </div>
-
+            {/* Question Count */}
             <div className="flex justify-center gap-3">
               {QUESTION_COUNTS.map((count) => (
                 <motion.button
@@ -389,7 +294,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setQuestionCount(count)}
-                  className={`w-16 h-16 rounded-2xl font-bold text-xl transition-all ${
+                  className={`w-20 h-20 rounded-2xl font-bold text-2xl transition-all ${
                     questionCount === count
                       ? "bg-white text-[#6B5B95] shadow-lg"
                       : "bg-white/20 text-white hover:bg-white/30"
@@ -400,92 +305,28 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               ))}
             </div>
 
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setStep(2)} 
-                className="flex-1 h-12 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                უკან
-              </button>
-              <ChunkyButton variant="whitePurple" onClick={() => setStep(4)} className="flex-1">
-                შემდეგი
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </ChunkyButton>
-            </div>
-          </motion.div>
-        );
-
-      case 4:
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-5"
-          >
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-white mb-2">ფორმატი ⚡</h3>
-              <p className="text-white/70">როგორი კითხვები გინდა?</p>
-            </div>
-
-            <div className="space-y-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setAnswerFormat("4_answers")}
-                className={`w-full p-4 rounded-2xl transition-all text-left flex items-center gap-4 ${
-                  answerFormat === "4_answers"
-                    ? "bg-white text-[#6B5B95] shadow-lg"
-                    : "bg-white/20 text-white hover:bg-white/30"
-                }`}
-              >
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                  answerFormat === "4_answers" ? "bg-[#6B5B95]/10" : "bg-white/10"
-                }`}>
-                  <span className="text-2xl">🎯</span>
-                </div>
-                <div className="flex-1">
-                  <div className="font-bold">4 ვარიანტი</div>
-                  <div className={`text-sm ${answerFormat === "4_answers" ? "text-[#6B5B95]/70" : "text-white/70"}`}>
-                    კლასიკური Quiz ფორმატი
-                  </div>
-                </div>
-                {answerFormat === "4_answers" && (
-                  <Check className="w-6 h-6 text-[#6B5B95]" />
-                )}
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setAnswerFormat("true_false")}
-                className={`w-full p-4 rounded-2xl transition-all text-left flex items-center gap-4 ${
-                  answerFormat === "true_false"
-                    ? "bg-white text-[#6B5B95] shadow-lg"
-                    : "bg-white/20 text-white hover:bg-white/30"
-                }`}
-              >
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                  answerFormat === "true_false" ? "bg-[#6B5B95]/10" : "bg-white/10"
-                }`}>
-                  <span className="text-2xl">✅</span>
-                </div>
-                <div className="flex-1">
-                  <div className="font-bold">მართალი / მცდარი</div>
-                  <div className={`text-sm ${answerFormat === "true_false" ? "text-[#6B5B95]/70" : "text-white/70"}`}>
-                    სწრაფი True/False
-                  </div>
-                </div>
-                {answerFormat === "true_false" && (
-                  <Check className="w-6 h-6 text-[#6B5B95]" />
-                )}
-              </motion.button>
+            {/* Difficulty */}
+            <div className="grid grid-cols-4 gap-2">
+              {DIFFICULTY_OPTIONS.map((option) => (
+                <motion.button
+                  key={option.value}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setDifficulty(option.value)}
+                  className={`p-3 rounded-2xl transition-all text-center ${
+                    difficulty === option.value
+                      ? "bg-white text-[#6B5B95] shadow-lg"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  }`}
+                >
+                  <span className="text-2xl block mb-1">{option.emoji}</span>
+                  <span className="text-xs font-medium block">{option.label}</span>
+                </motion.button>
+              ))}
             </div>
 
             <div className="flex gap-3">
               <button 
-                onClick={() => setStep(3)} 
+                onClick={() => setStep(1)} 
                 className="flex-1 h-12 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -533,83 +374,35 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           </motion.div>
         );
 
-      case 5:
-        return (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="space-y-5"
-          >
-            {/* Success header */}
-            <div className="text-center">
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", bounce: 0.5 }}
-                className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4"
-              >
-                <Sparkles className="w-12 h-12 text-white" />
-              </motion.div>
-              <h3 className="text-3xl font-bold text-white mb-2">მზადაა! 🎉</h3>
-              <p className="text-white/80">{questions.length} კითხვა შეიქმნა</p>
-            </div>
-
-            {/* Hidden questions preview */}
-            <div className="space-y-2 max-h-56 overflow-y-auto">
-              {questions.slice(0, 5).map((_, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                    <Lock className="w-5 h-5 text-white/70" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-white">კითხვა {index + 1}</p>
-                    <p className="text-xs text-white/60">
-                      პასუხები დამალულია • {getDifficultyLabel(questions[index]?.difficulty)}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-              
-              {questions.length > 5 && (
-                <div className="flex items-center justify-center gap-2 py-2">
-                  <Lock className="w-4 h-4 text-white/60" />
-                  <span className="text-sm text-white/60">
-                    + {questions.length - 5} დამატებითი კითხვა
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Fun message */}
-            <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 text-center">
-              <p className="text-sm font-medium text-white">
-                🔐 პასუხები საიდუმლოა
-              </p>
-              <p className="text-xs text-white/70 mt-1">
-                ითამაშე და გაარკვიე პასუხები მეგობრებთან ერთად!
-              </p>
-            </div>
-
-          </motion.div>
-        );
-
       default:
         return null;
     }
   };
 
-  // Progress dots
-  const totalSteps = 5;
+  const totalSteps = 2;
   const progressDots = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   if (!open) return null;
+
+  // Step 4: Show GameStyleQuestionEditor
+  if (step === 4) {
+    return (
+      <GameStyleQuestionEditor
+        questions={editorQuestions}
+        onQuestionsChange={setEditorQuestions}
+        title={title}
+        onTitleChange={setTitle}
+        onSave={handleStartGame}
+        onBack={() => setStep(2)}
+        saveButtonText="მზადაა! 🚀"
+        showTitleEditor={true}
+        subject={subject}
+        answerFormat={answerFormat}
+        isPublic={isPublic}
+        onPublicChange={setIsPublic}
+      />
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -620,7 +413,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-[#6B5B95]"
         >
-          {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 z-50 safe-top">
             <div className="flex items-center justify-between px-4 py-3">
               <button 
@@ -630,7 +422,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                 <ChevronLeft className="w-6 h-6 text-white" />
               </button>
               
-              {/* Progress dots */}
               <div className="flex items-center gap-1.5">
                 {progressDots.map((dot) => (
                   <div
@@ -653,7 +444,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             </div>
           </div>
 
-          {/* Scrollable Content */}
           <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
             <div className="p-5">
               <AnimatePresence mode="wait">
@@ -661,21 +451,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
               </AnimatePresence>
             </div>
           </div>
-
-          {/* Fixed CTA footer for step 5 */}
-          {step === 5 && (
-            <div className="fixed bottom-0 left-0 right-0 p-5 pt-3 safe-bottom">
-              <ChunkyButton
-                variant="whitePurple"
-                onClick={handleStartGame}
-                className="w-full shadow-xl"
-                size="lg"
-              >
-                <Play className="w-5 h-5 mr-2" />
-                მზადაა! 🚀
-              </ChunkyButton>
-            </div>
-          )}
         </motion.div>
       )}
     </AnimatePresence>

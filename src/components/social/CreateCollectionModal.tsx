@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Loader2, Settings } from "lucide-react";
+import { Plus, Trash2, Loader2, ChevronLeft, Sparkles, Settings, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { GameStyleQuestionEditor, convertToGeneratedQuestions, EditorQuestion, createEmptyQuestion } from "./GameStyleQuestionEditor";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion, createEmptyQuestion } from "./GameStyleQuestionEditor";
+import confetti from "canvas-confetti";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 
@@ -33,35 +35,31 @@ const COVER_GRADIENTS = [
   "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
 ];
 
+const DEFAULT_QUESTIONS_PER_ROUND = 5;
+
 export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId }: CreateCollectionModalProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
+  const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
-  const [coverGradient, setCoverGradient] = useState(COVER_GRADIENTS[0]);
+  const [coverGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
   const [showRoundSettings, setShowRoundSettings] = useState(false);
   
-  // Rounds configuration
-  const [rounds, setRounds] = useState<CollectionRound[]>([
-    { subject: "რაუნდი 1", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }
-  ]);
+  // Step 1: Round names
+  const [roundNames, setRoundNames] = useState<string[]>(["", ""]);
   
-  // Questions per round - array of EditorQuestion arrays
-  const [roundQuestions, setRoundQuestions] = useState<EditorQuestion[][]>([
-    [createEmptyQuestion("4_answers")]
-  ]);
+  // Step 2: Generation progress
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<{current: number; total: number; currentRound: string}>({ current: 0, total: 0, currentRound: "" });
+  
+  // Step 3: Editor state
+  const [rounds, setRounds] = useState<CollectionRound[]>([]);
+  const [roundQuestions, setRoundQuestions] = useState<EditorQuestion[][]>([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
-  
-  // Initialize when modal opens
-  useEffect(() => {
-    if (open && roundQuestions.length === 0) {
-      setRoundQuestions([[createEmptyQuestion("4_answers")]]);
-      setRounds([{ subject: "რაუნდი 1", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }]);
-    }
-  }, [open]);
   
   // Load specific draft if draftId provided
   useEffect(() => {
@@ -69,6 +67,13 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       loadDraft(draftId);
     }
   }, [draftId, open]);
+
+  // Reset when modal opens without draft
+  useEffect(() => {
+    if (open && !draftId) {
+      resetForm();
+    }
+  }, [open, draftId]);
 
   const loadDraft = async (id: string) => {
     if (!user) return;
@@ -90,33 +95,40 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     setIsPublic(data.is_public ?? true);
     
     if (data.rounds_config) {
-      setRounds(data.rounds_config as unknown as CollectionRound[]);
+      const config = data.rounds_config as unknown as CollectionRound[];
+      setRounds(config);
+      setRoundNames(config.map(r => r.subject));
     }
     
     // Load saved questions if available
     if (data.generated_data && (data.generated_data as any).roundQuestions) {
       setRoundQuestions((data.generated_data as any).roundQuestions);
+      setStep(3); // Go directly to editor
     }
     
     toast.success("დრაფტი ჩაიტვირთა");
   };
 
   const resetForm = () => {
+    setStep(1);
     setTitle("");
     setIsPublic(true);
-    setRounds([{ subject: "რაუნდი 1", questionCount: 5, answerFormat: "4_answers", difficulty: "mixed" }]);
-    setRoundQuestions([[createEmptyQuestion("4_answers")]]);
+    setRoundNames(["", ""]);
+    setRounds([]);
+    setRoundQuestions([]);
     setIsPosting(false);
     setCurrentDraftId(null);
     setCurrentRoundIndex(0);
     setShowRoundSettings(false);
+    setIsGenerating(false);
+    setGenerationProgress({ current: 0, total: 0, currentRound: "" });
   };
 
   const handleClose = async () => {
-    // Auto-save draft if there's content
+    // Auto-save draft if there's content in editor
     const hasContent = roundQuestions.some(rq => rq.some(q => q.question.trim().length > 0));
     
-    if (user && hasContent && !isPosting) {
+    if (user && hasContent && !isPosting && step === 3) {
       try {
         const draftData = {
           user_id: user.id,
@@ -151,6 +163,92 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     onOpenChange(false);
   };
 
+  // Round name management
+  const addRoundName = () => {
+    if (roundNames.length < 5) {
+      setRoundNames([...roundNames, ""]);
+    }
+  };
+
+  const removeRoundName = (index: number) => {
+    if (roundNames.length > 1) {
+      setRoundNames(roundNames.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateRoundName = (index: number, value: string) => {
+    const updated = [...roundNames];
+    updated[index] = value;
+    setRoundNames(updated);
+  };
+
+  // Check if we can proceed to generation
+  const canGenerate = roundNames.filter(name => name.trim()).length >= 1;
+
+  // Generate questions for all rounds
+  const generateAllRounds = async () => {
+    const validRounds = roundNames.filter(name => name.trim());
+    if (validRounds.length === 0) return;
+
+    setIsGenerating(true);
+    setStep(2);
+    setGenerationProgress({ current: 0, total: validRounds.length, currentRound: validRounds[0] });
+
+    const generatedRounds: CollectionRound[] = [];
+    const allQuestions: EditorQuestion[][] = [];
+
+    try {
+      for (let i = 0; i < validRounds.length; i++) {
+        const roundName = validRounds[i];
+        setGenerationProgress({ current: i, total: validRounds.length, currentRound: roundName });
+
+        const { data, error } = await supabase.functions.invoke("generate-custom-quiz", {
+          body: { 
+            subject: roundName, 
+            questionCount: DEFAULT_QUESTIONS_PER_ROUND, 
+            answerFormat: "4_answers", 
+            difficulty: "mixed" 
+          },
+        });
+
+        if (error) throw error;
+
+        const generatedQuestions = data?.questions || [];
+        if (!generatedQuestions.length) {
+          throw new Error(`კითხვები ვერ დაგენერირდა: ${roundName}`);
+        }
+
+        generatedRounds.push({
+          subject: roundName,
+          questionCount: DEFAULT_QUESTIONS_PER_ROUND,
+          answerFormat: "4_answers",
+          difficulty: "mixed"
+        });
+
+        allQuestions.push(convertToEditorQuestions(generatedQuestions));
+      }
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      setRounds(generatedRounds);
+      setRoundQuestions(allQuestions);
+      setTitle(validRounds.length > 1 ? `${validRounds[0]} & ${validRounds.length - 1} სხვა` : validRounds[0]);
+      
+      setTimeout(() => setStep(3), 300);
+    } catch (error) {
+      console.error("Error generating quiz:", error);
+      toast.error(error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა");
+      setStep(1);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Editor handlers
   const addRound = () => {
     if (rounds.length < 5) {
       const newRoundNum = rounds.length + 1;
@@ -177,20 +275,17 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     }
   };
 
-  // Handle round switching
   const handleRoundChange = (newIndex: number) => {
     if (newIndex === currentRoundIndex) return;
     setCurrentRoundIndex(newIndex);
   };
 
-  // Handle questions change for current round
   const handleQuestionsChange = (newQuestions: EditorQuestion[]) => {
     const updated = [...roundQuestions];
     updated[currentRoundIndex] = newQuestions;
     setRoundQuestions(updated);
   };
 
-  // Validate all questions before publishing
   const validateAllQuestions = (): boolean => {
     for (let roundIdx = 0; roundIdx < roundQuestions.length; roundIdx++) {
       const questions = roundQuestions[roundIdx];
@@ -220,7 +315,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     setIsPosting(true);
 
     try {
-      // Create the collection
       const { data: collection, error: collectionError } = await supabase
         .from("quiz_collections")
         .insert({
@@ -236,7 +330,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
       if (collectionError) throw collectionError;
 
-      // Insert all quiz posts for each round
       for (let i = 0; i < rounds.length; i++) {
         const round = rounds[i];
         const questions = roundQuestions[i];
@@ -265,7 +358,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         if (postError) throw postError;
       }
 
-      // Delete draft if exists
       if (currentDraftId) {
         await supabase
           .from("collection_drafts")
@@ -288,11 +380,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     }
   };
 
-  // Get current round's questions
   const currentQuestions = roundQuestions[currentRoundIndex] || [];
   const currentRound = rounds[currentRoundIndex];
 
-  // Render round tabs as header content
+  // Round tabs header for editor
   const roundTabsHeader = (
     <div className="px-4 pb-2">
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -306,7 +397,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                 : "bg-white/30 text-white hover:bg-white/40"
             }`}
           >
-            Round {index + 1}
+            {round.subject || `Round ${index + 1}`}
           </button>
         ))}
         {rounds.length < 5 && (
@@ -317,8 +408,13 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             <Plus className="w-5 h-5" />
           </button>
         )}
+        <button
+          onClick={() => setShowRoundSettings(true)}
+          className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors ml-auto"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
       </div>
-      {/* Dots indicator */}
       <div className="flex justify-center gap-1.5 mt-2">
         {rounds.map((_, index) => (
           <div
@@ -352,7 +448,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           >
             <h3 className="text-lg font-bold text-white text-center">რაუნდის პარამეტრები</h3>
             
-            {/* Round Name */}
             <div>
               <label className="text-sm text-white/80 mb-2 block">სახელი</label>
               <Input
@@ -367,7 +462,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
               />
             </div>
 
-            {/* Difficulty */}
             <div>
               <label className="text-sm text-white/80 mb-2 block">სირთულე</label>
               <div className="flex gap-2">
@@ -396,7 +490,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
               </div>
             </div>
 
-            {/* Delete Round */}
             {rounds.length > 1 && (
               <button
                 onClick={() => {
@@ -424,25 +517,257 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
   if (!open) return null;
 
+  // Step 3: Question Editor
+  if (step === 3) {
+    return (
+      <>
+        <GameStyleQuestionEditor
+          questions={currentQuestions}
+          onQuestionsChange={handleQuestionsChange}
+          title={title || "კოლექცია"}
+          onTitleChange={setTitle}
+          onSave={handlePublish}
+          onBack={handleClose}
+          saveButtonText={isPosting ? "იქვეყნება..." : "გამოქვეყნება"}
+          showTitleEditor={true}
+          subject={currentRound?.subject || "კოლექცია"}
+          answerFormat={currentRound?.answerFormat || "4_answers"}
+          headerContent={roundTabsHeader}
+          isSaving={isPosting}
+          isPublic={isPublic}
+          onPublicChange={setIsPublic}
+        />
+        {renderRoundSettings()}
+      </>
+    );
+  }
+
+  // Step 1: Round Names Entry
+  // Step 2: Generation Progress
   return (
-    <>
-      <GameStyleQuestionEditor
-        questions={currentQuestions}
-        onQuestionsChange={handleQuestionsChange}
-        title={title || "კოლექცია"}
-        onTitleChange={setTitle}
-        onSave={handlePublish}
-        onBack={handleClose}
-        saveButtonText={isPosting ? "იქვეყნება..." : "გამოქვეყნება"}
-        showTitleEditor={true}
-        subject={currentRound?.subject || "კოლექცია"}
-        answerFormat={currentRound?.answerFormat || "4_answers"}
-        headerContent={roundTabsHeader}
-        isSaving={isPosting}
-        isPublic={isPublic}
-        onPublicChange={setIsPublic}
-      />
-      {renderRoundSettings()}
-    </>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-[#6B5B95]"
+      >
+        {/* Header */}
+        <div className="fixed top-0 left-0 right-0 z-50 safe-top">
+          <div className="flex items-center justify-between px-4 py-3">
+            <button 
+              onClick={handleClose} 
+              className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
+              disabled={isGenerating}
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+            
+            <div className="flex items-center gap-1.5">
+              {[1, 2].map((dot) => (
+                <div
+                  key={dot}
+                  className={`h-2 rounded-full transition-all ${
+                    dot === step
+                      ? "w-6 bg-white"
+                      : dot < step
+                      ? "w-2 bg-white/50"
+                      : "w-2 bg-white/20"
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
+              <Sparkles className="w-4 h-4 text-white" />
+              <span className="text-xs font-semibold text-white">AI</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+          <div className="p-5">
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.div
+                  key="step1"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-5"
+                >
+                  {/* Header */}
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
+                      <span className="text-4xl">📚</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">კოლექციის რაუნდები</h3>
+                    <p className="text-white/70">შეიყვანე რაუნდების თემები</p>
+                  </div>
+
+                  {/* Round name inputs */}
+                  <div className="space-y-3">
+                    {roundNames.map((name, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold flex-shrink-0">
+                          {index + 1}
+                        </div>
+                        <Input
+                          value={name}
+                          onChange={(e) => updateRoundName(index, e.target.value)}
+                          placeholder={`მაგ: ${index === 0 ? "სპორტი" : index === 1 ? "მუსიკა" : "ფილმები"}`}
+                          className="flex-1 h-12 text-base rounded-xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400"
+                        />
+                        {roundNames.length > 1 && (
+                          <button
+                            onClick={() => removeRoundName(index)}
+                            className="w-10 h-10 rounded-full bg-white/20 hover:bg-red-500/50 flex items-center justify-center text-white transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Add round button */}
+                  {roundNames.length < 5 && (
+                    <button
+                      onClick={addRoundName}
+                      className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
+                    >
+                      <Plus className="w-5 h-5" />
+                      დაამატე რაუნდი
+                    </button>
+                  )}
+
+                  {/* Info */}
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm text-center">
+                    <p className="text-sm text-white/80">
+                      ✨ AI დაგენერირებს <span className="font-bold">{DEFAULT_QUESTIONS_PER_ROUND} კითხვას</span> თითოეულ რაუნდზე
+                    </p>
+                  </div>
+
+                  {/* Generate button */}
+                  <ChunkyButton
+                    variant="whitePurple"
+                    onClick={generateAllRounds}
+                    disabled={!canGenerate}
+                    className="w-full"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    დაგენერირება
+                    <ChevronRight className="w-5 h-5 ml-2" />
+                  </ChunkyButton>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  {/* Header */}
+                  <div className="text-center">
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                      transition={{ type: "spring", duration: 0.6 }}
+                      className="inline-flex items-center justify-center w-24 h-24 mb-4 rounded-full bg-white/20 backdrop-blur-sm"
+                    >
+                      <Sparkles className="w-12 h-12 text-white" />
+                    </motion.div>
+                    <h3 className="text-2xl font-bold text-white mb-2">იქმნება კითხვები...</h3>
+                    <p className="text-white/70">{generationProgress.currentRound}</p>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="space-y-4">
+                    {roundNames.filter(n => n.trim()).map((name, index) => {
+                      const isComplete = index < generationProgress.current;
+                      const isCurrent = index === generationProgress.current;
+                      
+                      return (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`flex items-center gap-4 p-4 rounded-xl ${
+                            isComplete 
+                              ? "bg-emerald-500/30" 
+                              : isCurrent 
+                              ? "bg-white/20" 
+                              : "bg-white/10"
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                            isComplete 
+                              ? "bg-emerald-500 text-white" 
+                              : isCurrent 
+                              ? "bg-white text-[#6B5B95]" 
+                              : "bg-white/20 text-white/60"
+                          }`}>
+                            {isComplete ? (
+                              <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring" }}
+                              >
+                                ✓
+                              </motion.span>
+                            ) : (
+                              index + 1
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className={`font-medium ${isComplete || isCurrent ? "text-white" : "text-white/60"}`}>
+                              {name}
+                            </p>
+                            <p className={`text-sm ${isComplete ? "text-emerald-300" : isCurrent ? "text-white/70" : "text-white/40"}`}>
+                              {isComplete ? "მზადაა ✨" : isCurrent ? "გენერირება..." : "იცდის..."}
+                            </p>
+                          </div>
+                          {isCurrent && (
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Overall progress bar */}
+                  <div className="space-y-2">
+                    <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-white"
+                        initial={{ width: 0 }}
+                        animate={{ 
+                          width: `${((generationProgress.current + 0.5) / generationProgress.total) * 100}%` 
+                        }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
+                    <p className="text-center text-sm text-white/60">
+                      {generationProgress.current}/{generationProgress.total} რაუნდი
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
