@@ -145,12 +145,12 @@ export function ChallengeTypeModal({
                   <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10 pointer-events-none" />
                   
                   {/* Icon top-left */}
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-auto">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-auto pointer-events-none">
                     <img src={option.icon} alt="" className="w-7 h-7 object-contain" />
                   </div>
                   
                   {/* Text bottom-left */}
-                  <div className="mt-3">
+                  <div className="mt-3 pointer-events-none">
                     <p className="font-bold text-lg leading-tight">{option.title}</p>
                     <p className="text-sm text-white/80 mt-0.5">{option.description}</p>
                   </div>
