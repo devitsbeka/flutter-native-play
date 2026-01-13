@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellOff, Check, X } from 'lucide-react';
+import { Bell, BellOff, Check, X, ChevronDown, Trash2, ExternalLink } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -11,14 +11,32 @@ import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { UniversalBottomNav } from '@/components/layout/UniversalBottomNav';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
-import { NOTIFICATION_FILTER_CATEGORIES } from '@/config/notificationConfig';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
 import { MAP_VIDEOS } from '@/config/videoConfig';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-type FilterType = 'all' | 'unread' | 'social' | 'games';
+// Notification types that have actionable navigation
+const ACTIONABLE_TYPES = [
+  'room_invite',
+  'game_started',
+  'game_result',
+  'challenge',
+  'trivia_liked',
+  'trivia_saved',
+  'trivia_played',
+];
 
 function NotificationCard({
   notification,
@@ -49,7 +67,16 @@ function NotificationCard({
   
   const isFriendRequest = notification.type === 'friend_request';
   const isGameInvite = notification.type === 'challenge';
-  const hasActions = (isFriendRequest || isGameInvite) && isUnread;
+  const isRoomInvite = notification.type === 'room_invite';
+  const isGameStarted = notification.type === 'game_started';
+  const isGameResult = notification.type === 'game_result';
+  const isTriviaAction = ['trivia_liked', 'trivia_saved', 'trivia_played'].includes(notification.type);
+  
+  // Friend request and challenge have Accept/Decline buttons when unread
+  const hasDualActions = (isFriendRequest || isGameInvite) && isUnread;
+  // Room invite, game started, game result, trivia actions have a single action button
+  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaAction) && !hasDualActions;
+  
   const isLoading = actionLoading === notification.id;
 
   const handleAccept = (e: React.MouseEvent) => {
@@ -70,6 +97,19 @@ function NotificationCard({
     }
   };
 
+  const handleSingleAction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isUnread) onMarkRead(notification.id);
+    onNavigate(notification);
+  };
+
+  const getActionButtonLabel = () => {
+    if (isRoomInvite || isGameStarted) return 'შესვლა';
+    if (isGameResult) return 'ნახვა';
+    if (isTriviaAction) return 'ნახვა';
+    return 'გახსნა';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -80,10 +120,10 @@ function NotificationCard({
         isUnread
           ? "bg-card/90 backdrop-blur-sm border-l-primary"
           : "bg-card/70 backdrop-blur-sm border-l-transparent",
-        !hasActions && "cursor-pointer hover:bg-card"
+        !hasDualActions && !hasSingleAction && "cursor-pointer hover:bg-card"
       )}
       onClick={() => {
-        if (!hasActions) {
+        if (!hasDualActions && !hasSingleAction) {
           if (isUnread) onMarkRead(notification.id);
           onNavigate(notification);
         }
@@ -110,8 +150,8 @@ function NotificationCard({
             {timeAgo}
           </p>
 
-          {/* Action buttons for friend requests and game invites */}
-          {hasActions && (
+          {/* Dual action buttons for friend requests and game invites */}
+          {hasDualActions && (
             <div className="flex gap-2 mt-3">
               <motion.button
                 onClick={handleAccept}
@@ -135,7 +175,29 @@ function NotificationCard({
               </motion.button>
             </div>
           )}
+
+          {/* Single action button for other actionable notifications */}
+          {hasSingleAction && (
+            <div className="mt-3">
+              <motion.button
+                onClick={handleSingleAction}
+                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <ExternalLink className="w-4 h-4" />
+                {getActionButtonLabel()}
+              </motion.button>
+            </div>
+          )}
         </div>
+
+        {/* Unread indicator dot on right side */}
+        {isUnread && (
+          <div className="flex-shrink-0 mt-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -143,27 +205,25 @@ function NotificationCard({
 
 export default function Notifications() {
   const navigate = useNavigate();
-  const { t, language } = useLanguage();
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { language } = useLanguage();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, clearAllNotifications } = useNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
-  const [filter, setFilter] = useState<FilterType>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [displayLimit, setDisplayLimit] = useState(10);
+  const [clearingAll, setClearingAll] = useState(false);
 
   const dateLocale = language === 'ka' ? ka : enUS;
 
-  const filteredNotifications = notifications.filter((n) => {
-    switch (filter) {
-      case 'unread':
-        return !n.read_at;
-      case 'social':
-        return NOTIFICATION_FILTER_CATEGORIES.social.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.social[number]);
-      case 'games':
-        return NOTIFICATION_FILTER_CATEGORIES.games.includes(n.type as typeof NOTIFICATION_FILTER_CATEGORIES.games[number]);
-      default:
-        return true;
+  // Mark all as read when page loads
+  useEffect(() => {
+    if (unreadCount > 0) {
+      markAllAsRead();
     }
-  });
+  }, []);
+
+  const displayedNotifications = notifications.slice(0, displayLimit);
+  const hasMore = notifications.length > displayLimit;
 
   const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
     setActionLoading(notificationId);
@@ -253,6 +313,15 @@ export default function Notifications() {
           navigate('/profile');
         }
         break;
+      case 'trivia_liked':
+      case 'trivia_saved':
+      case 'trivia_played':
+        if (data?.trivia_id) {
+          navigate(`/explore?trivia=${data.trivia_id}`);
+        } else {
+          navigate('/explore');
+        }
+        break;
       case 'reward':
         navigate('/');
         break;
@@ -264,22 +333,24 @@ export default function Notifications() {
     }
   };
 
-  const filters: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'ყველა' },
-    { key: 'unread', label: 'წაუკითხავი' },
-    { key: 'social', label: 'სოციალური' },
-    { key: 'games', label: 'თამაშები' },
-  ];
-
-  // Mark all as read when page loads
-  useState(() => {
-    if (unreadCount > 0) {
-      markAllAsRead();
+  const handleClearAll = async () => {
+    setClearingAll(true);
+    try {
+      await clearAllNotifications();
+      toast.success("ყველა შეტყობინება წაიშალა");
+    } catch (error) {
+      toast.error("შეცდომა მოხდა");
+    } finally {
+      setClearingAll(false);
     }
-  });
+  };
+
+  const handleShowMore = () => {
+    setDisplayLimit((prev) => prev + 10);
+  };
 
   return (
-    <div className="min-h-screen pb-24 relative overflow-hidden">
+    <div className="min-h-screen pb-8 relative overflow-hidden">
       {/* Video Background */}
       <div className="fixed inset-0">
         <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
@@ -302,26 +373,6 @@ export default function Notifications() {
             <X className="w-5 h-5 text-foreground" />
           </button>
         </div>
-
-        {/* Filter tabs */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {filters.map((f) => (
-            <motion.button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={cn(
-                "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border",
-                filter === f.key
-                  ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/25"
-                  : "bg-card/80 backdrop-blur-sm text-foreground border-border/50 hover:bg-card"
-              )}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {f.label}
-            </motion.button>
-          ))}
-        </div>
       </div>
 
       {/* Content */}
@@ -331,26 +382,20 @@ export default function Notifications() {
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-muted-foreground mt-3">იტვირთება...</p>
           </div>
-        ) : filteredNotifications.length === 0 ? (
+        ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center py-12">
             <div className="w-20 h-20 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center mb-4">
               <BellOff className="w-10 h-10 text-muted-foreground" />
             </div>
             <h3 className="font-bold text-lg text-foreground mb-2">შეტყობინებები არ არის</h3>
             <p className="text-sm text-muted-foreground text-center max-w-[250px]">
-              {filter === 'unread'
-                ? "ყველა შეტყობინება წაკითხულია"
-                : filter === 'social'
-                ? "სოციალური აქტივობა არ არის"
-                : filter === 'games'
-                ? "თამაშის შეტყობინებები არ არის"
-                : "როცა რამე მოხდება, აქ გამოჩნდება"}
+              როცა რამე მოხდება, აქ გამოჩნდება
             </p>
           </div>
         ) : (
           <div className="space-y-2 px-2">
             <AnimatePresence mode="popLayout">
-              {filteredNotifications.map((notification) => (
+              {displayedNotifications.map((notification) => (
                 <NotificationCard
                   key={notification.id}
                   notification={notification}
@@ -365,11 +410,54 @@ export default function Notifications() {
                 />
               ))}
             </AnimatePresence>
+
+            {/* Show More Button */}
+            {hasMore && (
+              <motion.button
+                onClick={handleShowMore}
+                className="w-full flex items-center justify-center gap-2 py-3 mt-4 rounded-xl bg-card/80 backdrop-blur-sm text-foreground hover:bg-card transition-colors font-medium"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <ChevronDown className="w-5 h-5" />
+                მეტის ნახვა ({notifications.length - displayLimit} დარჩა)
+              </motion.button>
+            )}
+
+            {/* Clear All Button */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <motion.button
+                  className="w-full flex items-center justify-center gap-2 py-3 mt-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors font-medium"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  disabled={clearingAll}
+                >
+                  <Trash2 className="w-5 h-5" />
+                  ყველას წაშლა
+                </motion.button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-card border-border">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-foreground">შეტყობინებების წაშლა</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground">
+                    დარწმუნებული ხართ, რომ გსურთ ყველა შეტყობინების წაშლა? ეს მოქმედება შეუქცევადია.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-card border-border text-foreground hover:bg-muted">გაუქმება</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleClearAll}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    წაშლა
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
       </div>
-
-      <UniversalBottomNav />
     </div>
   );
 }
