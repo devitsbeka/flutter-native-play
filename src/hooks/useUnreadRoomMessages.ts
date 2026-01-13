@@ -65,16 +65,12 @@ export function useUnreadRoomMessages() {
     }
   }, [user]);
 
-  // Track mounted state
   useEffect(() => {
     isMountedRef.current = true;
+    fetchUnreadCounts();
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
-
-  useEffect(() => {
-    fetchUnreadCounts();
   }, [fetchUnreadCounts]);
 
   // Subscribe to new messages
