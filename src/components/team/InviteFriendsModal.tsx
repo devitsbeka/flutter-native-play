@@ -205,12 +205,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             >
               <ChevronLeft className="w-5 h-5 text-muted-foreground" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <UserPlus className="w-4 h-4 text-primary" />
-              </div>
-              <h2 className="text-lg font-bold text-foreground">მეგობრების მოწვევა</h2>
-            </div>
+            <h2 className="text-lg font-bold text-foreground">მეგობრების მოწვევა</h2>
           </div>
 
           {/* Scrollable Content */}
