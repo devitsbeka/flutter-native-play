@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Filter, Search, X, Check } from "lucide-react";
+import { ChevronDown, Filter, Search, X, Check, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ interface RoomFiltersBarProps {
   onSortChange: (sort: RoomSort) => void;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
+  onAddClick?: () => void;
 }
 
 const filterOptions: { value: RoomFilter; label: string }[] = [
@@ -44,6 +45,7 @@ export function RoomFiltersBar({
   onSortChange,
   searchQuery,
   onSearchQueryChange,
+  onAddClick,
 }: RoomFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -52,53 +54,7 @@ export function RoomFiltersBar({
 
   return (
     <div className="flex items-center gap-2 px-4 py-2">
-      {/* Combined Filter & Sort Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 min-w-0 flex-shrink">
-            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <span className="text-sm font-medium truncate">
-              {currentFilterLabel} • {currentSortLabel}
-            </span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
-          {filterOptions.map((option) => (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => onFilterChange(option.value)}
-              className={filter === option.value ? "bg-primary/10 text-primary" : ""}
-            >
-              <div className="flex items-center gap-2 w-full">
-                {filter === option.value && <Check className="h-4 w-4" />}
-                <span className={filter !== option.value ? "pl-6" : ""}>{option.label}</span>
-              </div>
-            </DropdownMenuItem>
-          ))}
-          
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuLabel className="text-xs text-muted-foreground">დალაგება</DropdownMenuLabel>
-          {sortOptions.map((option) => (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => onSortChange(option.value)}
-              className={sort === option.value ? "bg-primary/10 text-primary" : ""}
-            >
-              <div className="flex items-center gap-2 w-full">
-                {sort === option.value && <Check className="h-4 w-4" />}
-                <span className={sort !== option.value ? "pl-6" : ""}>{option.label}</span>
-              </div>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <div className="flex-1 min-w-0" />
-
-      {/* Search - fixed position */}
+      {/* Search button - left side */}
       <div className="flex-shrink-0">
         <AnimatePresence>
           {isSearchOpen ? (
@@ -138,6 +94,64 @@ export function RoomFiltersBar({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Combined Filter & Sort Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 min-w-0 flex-shrink">
+            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-sm font-medium truncate">
+              {currentFilterLabel}
+            </span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
+          {filterOptions.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => onFilterChange(option.value)}
+              className={filter === option.value ? "bg-primary/10 text-primary" : ""}
+            >
+              <div className="flex items-center gap-2 w-full">
+                {filter === option.value && <Check className="h-4 w-4" />}
+                <span className={filter !== option.value ? "pl-6" : ""}>{option.label}</span>
+              </div>
+            </DropdownMenuItem>
+          ))}
+          
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuLabel className="text-xs text-muted-foreground">დალაგება</DropdownMenuLabel>
+          {sortOptions.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => onSortChange(option.value)}
+              className={sort === option.value ? "bg-primary/10 text-primary" : ""}
+            >
+              <div className="flex items-center gap-2 w-full">
+                {sort === option.value && <Check className="h-4 w-4" />}
+                <span className={sort !== option.value ? "pl-6" : ""}>{option.label}</span>
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <div className="flex-1 min-w-0" />
+
+      {/* Add button - right side (replaces old search position) */}
+      {onAddClick && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={onAddClick}
+          className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm flex-shrink-0"
+        >
+          <Plus className="h-5 w-5" />
+        </motion.button>
+      )}
     </div>
   );
 }
