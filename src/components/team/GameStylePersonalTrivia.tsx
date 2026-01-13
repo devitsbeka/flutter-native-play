@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image } from "lucide-react";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
+import { QuestionIconPicker } from "@/components/social/QuestionIconPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import useEmblaCarousel from "embla-carousel-react";
@@ -368,10 +368,11 @@ export function GameStylePersonalTrivia({
     });
   };
 
-  const handleIconChange = (slug: string | null) => {
+  const handleIconChange = (slug: string | null, index?: number) => {
+    const targetIndex = index !== undefined ? index : currentIndex;
     const newQuestions = [...questions];
-    newQuestions[currentIndex] = {
-      ...newQuestions[currentIndex],
+    newQuestions[targetIndex] = {
+      ...newQuestions[targetIndex],
       iconSlug: slug || undefined,
     };
     setQuestions(newQuestions);
@@ -795,19 +796,15 @@ export function GameStylePersonalTrivia({
                       "relative z-10 p-5",
                       !question.backgroundImageUrl && "bg-[#5A4A7A]"
                     )}>
-                      {/* Icon - smaller */}
+                      {/* Icon - clickable to edit */}
                       <div className="flex justify-center mb-3">
-                        {question.iconSlug ? (
-                          <img
-                            src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
-                            alt=""
-                            className="w-12 h-12 object-contain"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-white/50" />
-                          </div>
-                        )}
+                        <QuestionIconPicker
+                          selectedSlug={question.iconSlug || null}
+                          onSelect={(slug) => handleIconChange(slug, index)}
+                          questionText={question.question}
+                          correctAnswer={question.answers.find(a => a.isCorrect)?.text}
+                          incorrectAnswers={question.answers.filter(a => !a.isCorrect).map(a => a.text)}
+                        />
                       </div>
 
                       {/* Question Text - Editable */}
@@ -858,8 +855,8 @@ export function GameStylePersonalTrivia({
                           </>
                         ) : (
                           <>
-                            <Sparkles className="w-4 h-4" />
-                            შექმენი AI-ით
+                            <Lightbulb className="w-4 h-4" />
+                            {question.question.trim() ? "სცადე სხვა" : "იდეა"}
                           </>
                         )}
                       </button>
