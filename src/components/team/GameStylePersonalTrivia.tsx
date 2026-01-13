@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw } from "lucide-react";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -800,16 +800,24 @@ export function GameStylePersonalTrivia({
                         {index + 1}/{questions.length}
                       </div>
 
-                      {/* AI Generate Button - top right, icon only */}
+                      {/* AI Generate Button - top right, positioned left of X button when bg exists */}
                       <button
-                        onClick={() => handleGenerateAI(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateAI(index);
+                        }}
                         disabled={isGeneratingAI}
-                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all disabled:opacity-50"
+                        className={cn(
+                          "absolute top-3 z-30 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all disabled:opacity-50",
+                          question.backgroundImageUrl ? "right-14" : "right-3"
+                        )}
                       >
                         {isGeneratingAI && generatingIndex === index ? (
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
+                        ) : question.question.trim() ? (
                           <RefreshCw className="w-4 h-4" />
+                        ) : (
+                          <Lightbulb className="w-4 h-4" />
                         )}
                       </button>
 
