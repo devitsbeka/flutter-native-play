@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X, ImageIcon, AlertTriangle, ChevronLeft } from "lucide-react";
+import { Search, X, ImageIcon, AlertTriangle, ChevronLeft, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [selectedIconData, setSelectedIconData] = useState<IconItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
+  const [suggestionSeed, setSuggestionSeed] = useState(0);
 
   const getIconUrl = (icon: IconItem): string => {
     if (icon.icon_url) return icon.icon_url;
@@ -68,34 +70,50 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
   }, [open, selectedSlug]);
 
   // Load suggestions based on question text
-  useEffect(() => {
-    if (!open || !questionText) {
+  const loadSuggestions = async (isRefresh = false) => {
+    if (!questionText) {
       setSuggestedIcons([]);
       return;
     }
 
-    const loadSuggestions = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-          body: { 
-            query: questionText, 
-            limit: 12,
-            correctAnswer: correctAnswer 
-          }
-        });
-        
-        if (!error && data?.icons) {
-          // Filter out icons that reveal the answer
-          const safeIcons = data.icons.filter((icon: IconItem) => isIconSafe(icon.slug));
-          setSuggestedIcons(safeIcons.slice(0, 8));
-        }
-      } catch (err) {
-        console.error("Error loading suggestions:", err);
-      }
-    };
+    if (isRefresh) {
+      setIsRefreshingSuggestions(true);
+    }
 
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+        body: { 
+          query: questionText, 
+          limit: 20,
+          correctAnswer: correctAnswer,
+          seed: isRefresh ? Date.now() : suggestionSeed,
+          shuffle: isRefresh
+        }
+      });
+      
+      if (!error && data?.icons) {
+        // Filter out icons that reveal the answer
+        const safeIcons = data.icons.filter((icon: IconItem) => isIconSafe(icon.slug));
+        setSuggestedIcons(safeIcons.slice(0, 8));
+      }
+    } catch (err) {
+      console.error("Error loading suggestions:", err);
+    } finally {
+      setIsRefreshingSuggestions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
     loadSuggestions();
   }, [open, questionText, correctAnswer]);
+
+  const handleRefreshSuggestions = () => {
+    setSuggestionSeed(Date.now());
+    loadSuggestions(true);
+  };
 
   // Search icons when query changes
   useEffect(() => {
@@ -234,7 +252,16 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                 {/* Suggestions section */}
                 {suggestedIcons.length > 0 && !searchQuery && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-3 px-1">შემოთავაზებული</p>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <p className="text-xs font-medium text-muted-foreground">შემოთავაზებული</p>
+                      <button
+                        onClick={handleRefreshSuggestions}
+                        disabled={isRefreshingSuggestions}
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-4 h-4 text-muted-foreground ${isRefreshingSuggestions ? 'animate-spin' : ''}`} />
+                      </button>
+                    </div>
                     <div className="grid grid-cols-4 gap-3">
                       {suggestedIcons.slice(0, 8).map((icon) => (
                         <button

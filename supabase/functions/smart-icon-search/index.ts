@@ -416,7 +416,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, limit = 50, questionContext, answerContext, correctAnswer } = await req.json();
+    const { query, limit = 50, questionContext, answerContext, correctAnswer, shuffle = false, seed } = await req.json();
     
     if (!query || query.trim().length < 2) {
       return new Response(
@@ -424,6 +424,8 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`Smart icon search: query="${query}", shuffle=${shuffle}, seed=${seed}`);
 
     // Prepare correct answer for filtering (transliterate if Georgian)
     let answerTerms: string[] = [];
@@ -596,7 +598,7 @@ serve(async (req) => {
     scoredIcons.sort((a, b) => b.score - a.score);
     
     // Filter out icons that would reveal the answer
-    const filteredIcons = scoredIcons.filter(icon => {
+    let filteredIcons = scoredIcons.filter(icon => {
       if (answerTerms.length === 0) return true;
       const slug = icon.slug.toLowerCase();
       const title = icon.title.toLowerCase();
@@ -613,6 +615,36 @@ serve(async (req) => {
       }
       return true;
     });
+    
+    // If shuffle is enabled, randomize the order of similarly-scored icons
+    if (shuffle && seed) {
+      // Use seeded pseudo-random shuffle for consistency
+      const seededRandom = (s: number) => {
+        const x = Math.sin(s) * 10000;
+        return x - Math.floor(x);
+      };
+      
+      // Group icons by score ranges and shuffle within groups
+      const scoreGroups: Record<number, typeof filteredIcons> = {};
+      filteredIcons.forEach(icon => {
+        const scoreGroup = Math.floor(icon.score / 20) * 20; // Group by 20-point ranges
+        if (!scoreGroups[scoreGroup]) scoreGroups[scoreGroup] = [];
+        scoreGroups[scoreGroup].push(icon);
+      });
+      
+      // Shuffle within each group
+      Object.values(scoreGroups).forEach(group => {
+        for (let i = group.length - 1; i > 0; i--) {
+          const j = Math.floor(seededRandom(seed + i) * (i + 1));
+          [group[i], group[j]] = [group[j], group[i]];
+        }
+      });
+      
+      // Reconstruct the array
+      filteredIcons = Object.entries(scoreGroups)
+        .sort(([a], [b]) => Number(b) - Number(a))
+        .flatMap(([, group]) => group);
+    }
     
     const topIcons = filteredIcons
       .filter(icon => icon.score > 0)
