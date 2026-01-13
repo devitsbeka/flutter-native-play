@@ -75,49 +75,55 @@ serve(async (req) => {
       ? `\n\nEXISTING QUESTIONS TO AVOID DUPLICATING:\n${existingQuestions.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}`
       : '';
 
-const systemPrompt = `You are a FUN party game question generator for a Georgian app where friends & family create custom quizzes for each other.
+const systemPrompt = `You are a PERSONAL party game question generator for friends & family gatherings. Generate questions that feel like INSIDE JOKES about the group.
 
-🎯 QUESTION CATEGORIES TO USE (pick randomly):
-1. POP CULTURE: Movies, music, celebrities, memes, viral trends
-2. FOOD & DRINKS: Cuisine facts, recipes, restaurant culture  
-3. TRAVEL & GEOGRAPHY: Funny country facts, landmarks, traditions
-4. RELATIONSHIPS: Friendship, dating, family dynamics (appropriate!)
-5. TECHNOLOGY: Social media, apps, gadgets, internet culture
-6. SPORTS & GAMES: Fun sports facts, video games, board games
-7. RANDOM FUN: Weird world records, unusual laws, surprising facts
+🎯 QUESTION TYPES TO GENERATE:
+1. "ვინ არის ჯგუფში ყველაზე..." (Who in the group is most likely to...)
+2. "ვის უყვარს ყველაზე მეტად..." (Who loves X the most...)
+3. "ვინ იტყოდა ამას:" (Who would say this quote:)
+4. "რას აკეთებს [X] როცა..." (What does someone do when...)
+5. "ვის შეუძლია..." (Who can do X...)
+6. "რა არის [X]-ს საყვარელი..." (What is someone's favorite...)
+7. "ვინ დაივიწყებდა..." (Who would forget...)
+8. "ვისთვის არის ტიპიური..." (Who is known for...)
 
-❌ AVOID THESE BORING TOPICS:
-- Generic animal facts (which animal does X)
-- School-style science questions
-- Historical dates and boring history
-- Math or technical questions
+✅ GOOD QUESTION EXAMPLES:
+- "ვინ არის ჯგუფში ყველაზე ძილმოყვარე?"
+- "ვინ გამოაგზავნიდა შეცდომით მესიჯს?"
+- "ვის უყვარს ყველაზე მეტად პიცა?"
+- "ვინ დააგვიანებდა შეხვედრაზე?"
+- "ვინ იტყოდა: 'ერთი წუთით'?"
+- "ვის ტელეფონი მუდამ დამჯდარია?"
+- "ვინ არის ყველაზე დრამატული?"
+- "ვინ დაივიწყებდა დაბადების დღეს?"
 
-✅ QUESTION STYLE EXAMPLES:
-- "რომელ ქალაქში დაიბადა კოკა-კოლა?" (pop culture)
-- "რა არის TikTok-ის მაქსიმალური ვიდეოს ხანგრძლივობა?" (tech)
-- "რომელი ფილმი მოიგო ყველაზე მეტი ოსკარი?" (movies)
-- "რომელ ქვეყანაში სვამენ ყველაზე მეტ ყავას?" (food/travel)
+❌ DO NOT GENERATE:
+- Educational/trivia facts about the world
+- Animal facts, science, history, geography
+- Celebrity or pop culture questions
+- Any "correct answer" style questions
 
-CRITICAL CHARACTER LIMITS:
-- Question: MAX ${QUESTION_MAX_LENGTH} characters
-- Each answer: MAX ${ANSWER_MAX_LENGTH} characters
+💡 ANSWER FORMAT:
+- Answers should be PERSON TYPES or DESCRIPTIONS
+- Example answers: "დედა", "საუკეთესო მეგობარი", "უმცროსი და", "ბებია", "მე თვითონ", "ყველა ერთად"
 
-LANGUAGE: ALL text in Georgian (ქართული)
+CHARACTER LIMITS:
+- Question: MAX ${QUESTION_MAX_LENGTH} chars
+- Answer: MAX ${ANSWER_MAX_LENGTH} chars
 
-${isTrueFalse ? `TRUE/FALSE: correctAnswer = "მართალია" or "მცდარია"` : `
-MULTIPLE CHOICE:
-- 4 options (1 correct, 3 incorrect)
-- Similar length answers
-- Make wrong answers funny but believable
+LANGUAGE: Georgian (ქართული)
+
+${isTrueFalse ? `TRUE/FALSE: use "მართალია" / "მცდარია"` : `
+MULTIPLE CHOICE: 4 fun answer options about different people/types
 `}
 
-RETURN ONLY valid JSON:
+RETURN ONLY JSON:
 {
-  "question_text": "კითხვა",
-  "correct_answer": "სწორი",
-  "incorrect_answers": ["არასწორი 1", "არასწორი 2", "არასწორი 3"],
+  "question_text": "ვინ არის ჯგუფში...",
+  "correct_answer": "პასუხი 1",
+  "incorrect_answers": ["პასუხი 2", "პასუხი 3", "პასუხი 4"],
   "difficulty": "${difficulty}",
-  "icon_keywords": ["keyword1", "keyword2"]
+  "icon_keywords": ["family", "friends"]
 }`;
 
     const userPrompt = `Generate 1 UNIQUE trivia question about: "${subject}"
