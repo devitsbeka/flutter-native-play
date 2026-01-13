@@ -60,27 +60,27 @@ export function ChallengeTypeModal({
   const navigate = useNavigate();
 
   const handleOptionSelect = (optionId: string) => {
-    // Close modal first
+    // Close modals first
     onClose();
-    
-    // Notify parent to close as well (e.g., PlayerProfileModal)
     onChallengeStart?.();
     
-    // Navigate to team page with challenge context
-    switch (optionId) {
-      case "random":
-        navigate(`/team?challenge=${targetUserId}&type=random`);
-        break;
-      case "library":
-        navigate(`/team?challenge=${targetUserId}&type=library`);
-        break;
-      case "my-trivias":
-        navigate(`/team?challenge=${targetUserId}&type=my-trivias`);
-        break;
-      case "create":
-        navigate(`/team?challenge=${targetUserId}&type=create`);
-        break;
-    }
+    // Small delay to ensure modals close before navigation
+    setTimeout(() => {
+      switch (optionId) {
+        case "random":
+          navigate(`/team?challenge=${targetUserId}&type=random`);
+          break;
+        case "library":
+          navigate(`/team?challenge=${targetUserId}&type=library`);
+          break;
+        case "my-trivias":
+          navigate(`/team?challenge=${targetUserId}&type=my-trivias`);
+          break;
+        case "create":
+          navigate(`/team?challenge=${targetUserId}&type=create`);
+          break;
+      }
+    }, 100);
   };
 
   if (!isOpen) return null;
