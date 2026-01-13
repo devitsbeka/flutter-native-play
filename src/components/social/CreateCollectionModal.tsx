@@ -12,6 +12,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { CoverImagePicker } from "./CoverImagePicker";
+import { RoundTabs } from "./RoundTabs";
+import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion } from "./GameStyleQuestionEditor";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 
@@ -84,6 +87,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   // Generated data for Step 3
   const [generatedData, setGeneratedData] = useState<GeneratedData | null>(null);
   const [expandedQuestion, setExpandedQuestion] = useState<{ roundIdx: number; questionIdx: number } | null>(null);
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
+  const [editorQuestions, setEditorQuestions] = useState<EditorQuestion[]>([]);
   
   // Load specific draft if draftId provided
   useEffect(() => {
@@ -234,6 +239,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     setIsGeneratingCover(false);
     setCurrentDraftId(null);
     setLastAutoSaved(null);
+    setCurrentRoundIndex(0);
+    setEditorQuestions([]);
   };
 
   const handleClose = async () => {
@@ -420,6 +427,12 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         setTitle(subjects);
       }
       
+      // Initialize editor questions with first round
+      setCurrentRoundIndex(0);
+      if (generatedRounds.length > 0) {
+        setEditorQuestions(convertToEditorQuestions(generatedRounds[0].questions));
+      }
+      
       setStep(3);
     } catch (error: any) {
       console.error("Error generating collection:", error);
@@ -488,6 +501,65 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     };
     
     setGeneratedData({ ...generatedData, rounds: newRounds });
+  };
+
+  // Handle round switching - save current questions before switching
+  const handleRoundChange = (newIndex: number) => {
+    if (!generatedData || newIndex === currentRoundIndex) return;
+    
+    // Save current editor questions back to generatedData
+    const updatedRounds = [...generatedData.rounds];
+    const convertedQuestions = convertToGeneratedQuestions(editorQuestions).map(q => ({
+      ...q,
+      difficulty: q.difficulty || "medium",
+      icon_slug: q.icon_slug || null,
+    }));
+    updatedRounds[currentRoundIndex] = {
+      ...updatedRounds[currentRoundIndex],
+      questions: convertedQuestions,
+    };
+    setGeneratedData({ ...generatedData, rounds: updatedRounds });
+    
+    // Load new round's questions into editor
+    setCurrentRoundIndex(newIndex);
+    setEditorQuestions(convertToEditorQuestions(generatedData.rounds[newIndex].questions));
+  };
+
+  // Handle editor questions change
+  const handleEditorQuestionsChange = (newQuestions: EditorQuestion[]) => {
+    setEditorQuestions(newQuestions);
+    
+    // Also update the generatedData in real-time
+    if (generatedData) {
+      const updatedRounds = [...generatedData.rounds];
+      const convertedQuestions = convertToGeneratedQuestions(newQuestions).map(q => ({
+        ...q,
+        difficulty: q.difficulty || "medium",
+        icon_slug: q.icon_slug || null,
+      }));
+      updatedRounds[currentRoundIndex] = {
+        ...updatedRounds[currentRoundIndex],
+        questions: convertedQuestions,
+      };
+      setGeneratedData({ ...generatedData, rounds: updatedRounds });
+    }
+  };
+
+  // Sync editor questions back before publishing
+  const syncEditorToGeneratedData = () => {
+    if (!generatedData) return generatedData;
+    
+    const updatedRounds = [...generatedData.rounds];
+    const convertedQuestions = convertToGeneratedQuestions(editorQuestions).map(q => ({
+      ...q,
+      difficulty: q.difficulty || "medium",
+      icon_slug: q.icon_slug || null,
+    }));
+    updatedRounds[currentRoundIndex] = {
+      ...updatedRounds[currentRoundIndex],
+      questions: convertedQuestions,
+    };
+    return { ...generatedData, rounds: updatedRounds };
   };
 
   const handleSaveDraft = async () => {
