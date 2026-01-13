@@ -736,8 +736,32 @@ export function GameStyleQuestionEditor({
                 {index + 1}/{questions.length}
               </div>
 
+              {/* AI Generate Button - Top Right */}
+              <button
+                onClick={() => handleGenerateAI(index)}
+                disabled={isGeneratingAI}
+                className={cn(
+                  "absolute top-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-xs font-medium transition-all disabled:opacity-50",
+                  question.backgroundImageUrl ? "right-14" : "right-3"
+                )}
+              >
+                {isGeneratingAI && generatingIndex === index ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : question.question.trim() ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>სცადე სხვა</span>
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="w-3.5 h-3.5" />
+                    <span>იდეა</span>
+                  </>
+                )}
+              </button>
+
               {/* Icon */}
-                  <div className="flex justify-center mb-3">
+                  <div className="flex justify-center mb-3 pt-4">
                     <QuestionIconPicker
                       selectedSlug={question.iconSlug || null}
                       onSelect={(slug) => handleIconChange(slug, index)}
@@ -781,25 +805,6 @@ export function GameStyleQuestionEditor({
                       <Edit3 className="w-4 h-4 text-white/50 mx-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   )}
-
-                  {/* AI Generate Button */}
-                  <button
-                    onClick={() => handleGenerateAI(index)}
-                    disabled={isGeneratingAI}
-                    className="mx-auto mt-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium transition-all disabled:opacity-50"
-                  >
-                    {isGeneratingAI && generatingIndex === index ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        გენერირება...
-                      </>
-                    ) : (
-                      <>
-                        <Lightbulb className="w-4 h-4" />
-                        {question.question.trim() ? "სცადე სხვა" : "იდეა"}
-                      </>
-                    )}
-                  </button>
                 </div>
               </div>
 
