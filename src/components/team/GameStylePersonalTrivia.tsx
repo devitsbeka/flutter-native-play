@@ -219,6 +219,7 @@ export function GameStylePersonalTrivia({
   const [editingField, setEditingField] = useState<"question" | string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [title, setTitle] = useState(initialData?.title || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -664,6 +665,32 @@ export function GameStylePersonalTrivia({
     return letters[index] || "?";
   };
 
+  // Check if user has made any progress
+  const hasProgress = useCallback((): boolean => {
+    // Check if title was changed
+    if (title.trim()) return true;
+    
+    // Check questions for any content
+    for (const q of questions) {
+      if (q.question.trim()) return true;
+      if (q.iconSlug) return true;
+      if (q.backgroundImageUrl) return true;
+      for (const answer of q.answers) {
+        if (answer.text.trim()) return true;
+      }
+    }
+    return false;
+  }, [title, questions]);
+
+  // Handle back button click
+  const handleBackClick = () => {
+    if (hasProgress()) {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -678,7 +705,7 @@ export function GameStylePersonalTrivia({
           {/* Header with Title - Added more top spacing */}
           <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
             <button
-              onClick={onClose}
+              onClick={handleBackClick}
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
             >
               <ChevronLeft className="w-6 h-6 text-white" />
@@ -971,6 +998,56 @@ export function GameStylePersonalTrivia({
                       className="flex-1"
                     >
                       წაშლა
+                    </ChunkyButton>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Exit Confirmation Modal */}
+          <AnimatePresence>
+            {showExitConfirm && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
+                onClick={() => setShowExitConfirm(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="bg-background rounded-2xl p-6 max-w-sm w-full space-y-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="text-center">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+                      <ChevronLeft className="w-6 h-6 text-amber-500" />
+                    </div>
+                    <h3 className="text-lg font-bold text-foreground">გასვლა?</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      შენი პროგრესი დაიკარგება
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <ChunkyButton
+                      variant="outline"
+                      onClick={() => setShowExitConfirm(false)}
+                      className="flex-1"
+                    >
+                      დარჩენა
+                    </ChunkyButton>
+                    <ChunkyButton
+                      variant="danger"
+                      onClick={() => {
+                        setShowExitConfirm(false);
+                        onClose();
+                      }}
+                      className="flex-1"
+                    >
+                      გასვლა
                     </ChunkyButton>
                   </div>
                 </motion.div>
