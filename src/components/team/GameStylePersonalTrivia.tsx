@@ -801,13 +801,14 @@ export function GameStylePersonalTrivia({
                       </div>
 
                       {/* Icon - clickable to edit */}
-                      <div className="flex justify-center mb-3">
+                      <div className="flex justify-center mb-3 relative z-20">
                         <QuestionIconPicker
                           selectedSlug={question.iconSlug || null}
                           onSelect={(slug) => handleIconChange(slug, index)}
                           questionText={question.question}
                           correctAnswer={question.answers.find(a => a.isCorrect)?.text}
                           incorrectAnswers={question.answers.filter(a => !a.isCorrect).map(a => a.text)}
+                          large
                         />
                       </div>
 
