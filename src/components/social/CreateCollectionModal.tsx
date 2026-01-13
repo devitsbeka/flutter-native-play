@@ -705,133 +705,143 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
   const renderStep1 = () => (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-5"
     >
-      <div className="text-center mb-6">
-        <img src={iconCollections} alt="" className="w-14 h-14 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-foreground">შექმენი კოლექცია</h3>
-        <p className="text-sm text-muted-foreground mt-1">რამდენიმე რაუნდი ერთად</p>
+      {/* Header */}
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
+          <img src={iconCollections} alt="Create Collection" className="w-14 h-14 object-contain" />
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-2">შექმენი კოლექცია ✨</h3>
+        <p className="text-white/70">რამდენიმე რაუნდი ერთად</p>
       </div>
 
-      {/* Rounds */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-medium text-foreground">რაუნდები ({rounds.length}/5)</label>
-          {rounds.length < 5 && (
+      {/* Round Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        {rounds.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentRoundIndex(index)}
+            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+              currentRoundIndex === index
+                ? "bg-white text-[#6B5B95] shadow-lg"
+                : "bg-white/20 text-white hover:bg-white/30"
+            }`}
+          >
+            რაუნდი {index + 1}
+          </button>
+        ))}
+        {rounds.length < 5 && (
+          <button
+            onClick={addRound}
+            className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Current Round Config Card */}
+      <motion.div
+        key={currentRoundIndex}
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 space-y-4 border border-white/20"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-white">რაუნდი {currentRoundIndex + 1}</span>
+          {rounds.length > 1 && (
             <button
-              onClick={addRound}
-              className="flex items-center gap-1 text-xs text-primary font-medium"
+              onClick={() => {
+                removeRound(currentRoundIndex);
+                if (currentRoundIndex >= rounds.length - 1) {
+                  setCurrentRoundIndex(Math.max(0, currentRoundIndex - 1));
+                }
+              }}
+              className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              დამატება
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
-        
-        <div className="space-y-4">
-          {rounds.map((round, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card border-2 border-border rounded-2xl shadow-sm overflow-hidden"
-            >
-              {/* Card Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-                <span className="text-sm font-bold text-foreground">რაუნდი {index + 1}</span>
-                {rounds.length > 1 && (
-                  <button
-                    onClick={() => removeRound(index)}
-                    className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              
-              {/* Card Content */}
-              <div className="p-4 space-y-3">
-                <Input
-                  value={round.subject}
-                  onChange={(e) => updateRound(index, "subject", e.target.value)}
-                  placeholder="თემა (მაგ: ფიზიკა, ფეხბურთი...)"
-                  className="rounded-xl text-sm h-11"
-                />
-                
-                <div className="flex gap-2">
-                  <select
-                    value={round.questionCount}
-                    onChange={(e) => updateRound(index, "questionCount", parseInt(e.target.value))}
-                    className="flex-1 bg-background rounded-xl px-3 py-2.5 text-sm border border-border"
-                  >
-                    <option value={5}>5 კითხვა</option>
-                    <option value={7}>7 კითხვა</option>
-                    <option value={10}>10 კითხვა</option>
-                  </select>
-                  
-                  <select
-                    value={round.answerFormat}
-                    onChange={(e) => updateRound(index, "answerFormat", e.target.value)}
-                    className="flex-1 bg-background rounded-xl px-3 py-2.5 text-sm border border-border"
-                  >
-                    <option value="4_answers">4 პასუხი</option>
-                    <option value="true_false">მართალი/მცდარი</option>
-                  </select>
-                </div>
 
-                {/* Difficulty Selector */}
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">სირთულე</label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: "mixed" as const, emoji: "🎲", label: "შერეული" },
-                      { value: "easy" as const, emoji: "🟢", label: "ადვილი" },
-                      { value: "medium" as const, emoji: "🟡", label: "საშუალო" },
-                      { value: "hard" as const, emoji: "🔴", label: "რთული" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => updateRound(index, "difficulty", opt.value)}
-                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-medium transition-all ${
-                          round.difficulty === opt.value
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-muted border border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <span className="block text-base">{opt.emoji}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+        <Input
+          value={rounds[currentRoundIndex]?.subject || ""}
+          onChange={(e) => updateRound(currentRoundIndex, "subject", e.target.value)}
+          placeholder="თემა (მაგ: ფიზიკა, ფეხბურთი...)"
+          className="w-full text-base h-14 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
+        />
+
+        <div className="flex gap-2">
+          <select
+            value={rounds[currentRoundIndex]?.questionCount || 5}
+            onChange={(e) => updateRound(currentRoundIndex, "questionCount", parseInt(e.target.value))}
+            className="flex-1 bg-white/95 rounded-xl px-3 py-3 text-sm text-slate-800 border-0 shadow-lg"
+          >
+            <option value={5}>5 კითხვა</option>
+            <option value={7}>7 კითხვა</option>
+            <option value={10}>10 კითხვა</option>
+          </select>
+
+          <select
+            value={rounds[currentRoundIndex]?.answerFormat || "4_answers"}
+            onChange={(e) => updateRound(currentRoundIndex, "answerFormat", e.target.value)}
+            className="flex-1 bg-white/95 rounded-xl px-3 py-3 text-sm text-slate-800 border-0 shadow-lg"
+          >
+            <option value="4_answers">4 პასუხი</option>
+            <option value="true_false">მართალი/მცდარი</option>
+          </select>
         </div>
-      </div>
+
+        {/* Difficulty Selector */}
+        <div>
+          <label className="text-xs text-white/80 mb-2 block">სირთულე</label>
+          <div className="flex gap-2">
+            {[
+              { value: "mixed" as const, emoji: "🎲" },
+              { value: "easy" as const, emoji: "🟢" },
+              { value: "medium" as const, emoji: "🟡" },
+              { value: "hard" as const, emoji: "🔴" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => updateRound(currentRoundIndex, "difficulty", opt.value)}
+                className={`flex-1 py-3 px-3 rounded-xl text-2xl font-medium transition-all ${
+                  rounds[currentRoundIndex]?.difficulty === opt.value
+                    ? "bg-white text-[#6B5B95] shadow-lg"
+                    : "bg-white/20 hover:bg-white/30"
+                }`}
+              >
+                {opt.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
 
       {/* Collection Title */}
       <div>
-        <label className="text-sm font-medium text-foreground mb-2 block">სახელი</label>
+        <label className="text-sm font-medium text-white mb-2 block">სახელი</label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="კოლექციის სახელი (არასავალდებულო)"
-          className="rounded-xl text-sm"
+          className="w-full text-base h-12 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="text-sm font-medium text-foreground mb-2 block">აღწერა</label>
+        <label className="text-sm font-medium text-white mb-2 block">აღწერა</label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="მოკლე აღწერა (არასავალდებულო)"
-          className="rounded-xl resize-none"
+          className="w-full px-5 py-3 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg resize-none"
           rows={2}
         />
       </div>
@@ -842,7 +852,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <button
           onClick={handleSaveDraft}
           disabled={isSavingDraft || !canProceed}
-          className="w-full py-3 rounded-xl bg-muted text-foreground font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-muted/80 transition-colors"
+          className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-white/30 transition-colors"
         >
           {isSavingDraft ? (
             <>
@@ -858,14 +868,16 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         </button>
 
         {/* Generate Button */}
-        <button
+        <ChunkyButton
+          variant="whitePurple"
           onClick={handleGenerate}
           disabled={!canProceed || isGenerating}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          className="w-full"
+          size="lg"
         >
-          <Sparkles className="w-5 h-5" />
+          <Sparkles className="w-5 h-5 mr-2" />
           შექმნა
-        </button>
+        </ChunkyButton>
       </div>
     </motion.div>
   );
@@ -876,43 +888,56 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       animate={{ opacity: 1, scale: 1 }}
       className="flex flex-col items-center justify-center py-12"
     >
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-6">
+      <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6">
         <Loader2 className="w-10 h-10 text-white animate-spin" />
       </div>
       
-      <h3 className="text-xl font-bold text-foreground mb-2">იქმნება კოლექცია...</h3>
-      <p className="text-muted-foreground mb-6">
+      <h3 className="text-xl font-bold text-white mb-2">იქმნება კოლექცია...</h3>
+      <p className="text-white/70 mb-6">
         {generationProgress.status} ({generationProgress.current} / {generationProgress.total})
       </p>
       
-      <div className="w-full max-w-xs bg-muted rounded-full h-2 overflow-hidden">
+      <div className="w-full max-w-xs bg-white/20 rounded-full h-2 overflow-hidden">
         <motion.div
-          className="h-full bg-gradient-to-r from-purple-500 to-indigo-600"
+          className="h-full bg-white"
           initial={{ width: 0 }}
           animate={{ width: `${(generationProgress.current / generationProgress.total) * 100}%` }}
           transition={{ duration: 0.5 }}
         />
       </div>
+      
+      <p className="text-sm text-center text-white/80 mt-4 animate-pulse">
+        ✨ AI ქმნის კითხვებს...
+      </p>
     </motion.div>
   );
 
   const renderStep3 = () => {
     if (!generatedData) return null;
 
-    const remainingCoverTries = 3 - generatedData.coverGenerationCount;
-    const isExpanded = (rIdx: number, qIdx: number) => 
-      expandedQuestion?.roundIdx === rIdx && expandedQuestion?.questionIdx === qIdx;
+    const currentRound = generatedData.rounds[currentRoundIndex];
+    const isExpanded = (qIdx: number) => 
+      expandedQuestion?.roundIdx === currentRoundIndex && expandedQuestion?.questionIdx === qIdx;
 
     return (
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
         className="space-y-5"
       >
+        {/* Header */}
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
+            <Sparkles className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2">კოლექცია მზადაა! 🎉</h3>
+          <p className="text-white/70">შეამოწმე და გამოაქვეყნე</p>
+        </div>
+
         {/* Cover Image Section */}
         <div>
-          <label className="text-sm font-medium text-foreground mb-2 block">გარეკანი</label>
+          <label className="text-sm font-medium text-white mb-2 block">გარეკანი</label>
           <CoverImagePicker
             currentImage={generatedData.coverImage}
             currentGradient={coverGradient}
@@ -925,150 +950,167 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
         {/* Editable Title */}
         <div>
-          <label className="text-sm font-medium text-foreground mb-2 block">სახელი</label>
+          <label className="text-sm font-medium text-white mb-2 block">სახელი</label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="კოლექციის სახელი"
-            className="rounded-xl"
+            className="w-full text-base h-12 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
           />
         </div>
 
-        {/* Questions Preview with Full Editing */}
-        <div className="space-y-4">
-          <label className="text-sm font-medium text-foreground block">კითხვები</label>
+        {/* Round Tabs for Questions */}
+        <div>
+          <label className="text-sm font-medium text-white mb-3 block">კითხვები</label>
           
-          {generatedData.rounds.map((round, roundIdx) => (
-            <div key={roundIdx} className="bg-muted rounded-xl p-3 space-y-2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-primary">რაუნდი {roundIdx + 1} - {round.subject}</span>
-                <span className="text-xs text-muted-foreground">{round.questions.length} კითხვა</span>
-              </div>
-              
-              {round.questions.map((question, questionIdx) => (
-                <div 
-                  key={questionIdx}
-                  className="bg-background rounded-lg overflow-hidden"
+          {/* Round selector tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3">
+            {generatedData.rounds.map((round, index) => (
+              <button
+                key={index}
+                onClick={() => handleRoundChange(index)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                  currentRoundIndex === index
+                    ? "bg-white text-[#6B5B95] shadow-lg"
+                    : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+              >
+                რაუნდი {index + 1}
+              </button>
+            ))}
+          </div>
+
+          {/* Current round subject */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-bold text-white">{currentRound?.subject}</span>
+            <span className="text-xs text-white/70">{currentRound?.questions.length} კითხვა</span>
+          </div>
+          
+          {/* Questions list for current round */}
+          <div className="space-y-2">
+            {currentRound?.questions.map((question, questionIdx) => (
+              <div 
+                key={questionIdx}
+                className="bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden border border-white/20"
+              >
+                {/* Question Header - Always visible */}
+                <button
+                  onClick={() => setExpandedQuestion(
+                    isExpanded(questionIdx) ? null : { roundIdx: currentRoundIndex, questionIdx }
+                  )}
+                  className="w-full p-3 flex items-start gap-2 text-left hover:bg-white/5 transition-colors"
                 >
-                  {/* Question Header - Always visible */}
-                  <button
-                    onClick={() => setExpandedQuestion(
-                      isExpanded(roundIdx, questionIdx) ? null : { roundIdx, questionIdx }
+                  {/* Icon */}
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                    {question.icon_slug ? (
+                      <DynamicIcon slug={question.icon_slug} size={20} />
+                    ) : (
+                      <span className="text-white/50 text-xs">?</span>
                     )}
-                    className="w-full p-3 flex items-start gap-2 text-left hover:bg-muted/50 transition-colors"
-                  >
-                    {/* Icon */}
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      {question.icon_slug ? (
-                        <DynamicIcon slug={question.icon_slug} size={20} />
-                      ) : (
-                        <span className="text-muted-foreground text-xs">?</span>
-                      )}
-                    </div>
-                    
-                    {/* Question Preview */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground line-clamp-2">{question.question_text}</p>
-                      <p className="text-xs text-green-600 mt-1">✓ {question.correct_answer}</p>
-                    </div>
-                    
-                    {/* Expand Icon */}
-                    <div className="p-1">
-                      {isExpanded(roundIdx, questionIdx) ? (
-                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <Edit2 className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </button>
+                  </div>
                   
-                  {/* Expanded Edit Form */}
-                  <AnimatePresence>
-                    {isExpanded(roundIdx, questionIdx) && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
-                          {/* Icon Picker */}
-                          <div>
-                            <label className="text-xs text-muted-foreground mb-1.5 block">აიქონი</label>
-                            <QuestionIconPicker
-                              selectedSlug={question.icon_slug || ""}
-                              onSelect={(slug) => updateGeneratedQuestion(roundIdx, questionIdx, { icon_slug: slug })}
-                              questionText={question.question_text}
-                            />
-                          </div>
-                          
-                          {/* Question Text */}
-                          <div>
-                            <label className="text-xs text-muted-foreground mb-1.5 block">კითხვა</label>
-                            <Textarea
-                              value={question.question_text}
-                              onChange={(e) => updateGeneratedQuestion(roundIdx, questionIdx, { question_text: e.target.value })}
-                              className="text-sm rounded-lg resize-none"
-                              rows={2}
-                            />
-                          </div>
-                          
-                          {/* Correct Answer */}
-                          <div>
-                            <label className="text-xs text-green-600 mb-1.5 block">სწორი პასუხი</label>
-                            <Input
-                              value={question.correct_answer}
-                              onChange={(e) => updateGeneratedQuestion(roundIdx, questionIdx, { correct_answer: e.target.value })}
-                              className="text-sm rounded-lg border-green-500/30 focus:border-green-500"
-                            />
-                          </div>
-                          
-                          {/* Incorrect Answers */}
-                          <div>
-                            <label className="text-xs text-destructive mb-1.5 block">არასწორი პასუხები</label>
-                            <div className="space-y-2">
-                              {question.incorrect_answers.map((answer, answerIdx) => (
-                                <Input
-                                  key={answerIdx}
-                                  value={answer}
-                                  onChange={(e) => updateIncorrectAnswer(roundIdx, questionIdx, answerIdx, e.target.value)}
-                                  className="text-sm rounded-lg"
-                                  placeholder={`პასუხი ${answerIdx + 1}`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* Done Button */}
-                          <button
-                            onClick={() => setExpandedQuestion(null)}
-                            className="w-full py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium flex items-center justify-center gap-1"
-                          >
-                            <Check className="w-4 h-4" />
-                            დასრულება
-                          </button>
-                        </div>
-                      </motion.div>
+                  {/* Question Preview */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white line-clamp-2">{question.question_text}</p>
+                    <p className="text-xs text-green-400 mt-1">✓ {question.correct_answer}</p>
+                  </div>
+                  
+                  {/* Expand Icon */}
+                  <div className="p-1">
+                    {isExpanded(questionIdx) ? (
+                      <ChevronUp className="w-4 h-4 text-white/70" />
+                    ) : (
+                      <Edit2 className="w-4 h-4 text-white/70" />
                     )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
-          ))}
+                  </div>
+                </button>
+                
+                {/* Expanded Edit Form */}
+                <AnimatePresence>
+                  {isExpanded(questionIdx) && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-3 pb-3 space-y-3 border-t border-white/20 pt-3">
+                        {/* Icon Picker */}
+                        <div>
+                          <label className="text-xs text-white/70 mb-1.5 block">აიქონი</label>
+                          <QuestionIconPicker
+                            selectedSlug={question.icon_slug || ""}
+                            onSelect={(slug) => updateGeneratedQuestion(currentRoundIndex, questionIdx, { icon_slug: slug })}
+                            questionText={question.question_text}
+                          />
+                        </div>
+                        
+                        {/* Question Text */}
+                        <div>
+                          <label className="text-xs text-white/70 mb-1.5 block">კითხვა</label>
+                          <Textarea
+                            value={question.question_text}
+                            onChange={(e) => updateGeneratedQuestion(currentRoundIndex, questionIdx, { question_text: e.target.value })}
+                            className="text-sm rounded-xl resize-none border-0 bg-white/95 text-slate-800"
+                            rows={2}
+                          />
+                        </div>
+                        
+                        {/* Correct Answer */}
+                        <div>
+                          <label className="text-xs text-green-400 mb-1.5 block">სწორი პასუხი</label>
+                          <Input
+                            value={question.correct_answer}
+                            onChange={(e) => updateGeneratedQuestion(currentRoundIndex, questionIdx, { correct_answer: e.target.value })}
+                            className="text-sm rounded-xl border-0 bg-white/95 text-slate-800"
+                          />
+                        </div>
+                        
+                        {/* Incorrect Answers */}
+                        <div>
+                          <label className="text-xs text-red-400 mb-1.5 block">არასწორი პასუხები</label>
+                          <div className="space-y-2">
+                            {question.incorrect_answers.map((answer, answerIdx) => (
+                              <Input
+                                key={answerIdx}
+                                value={answer}
+                                onChange={(e) => updateIncorrectAnswer(currentRoundIndex, questionIdx, answerIdx, e.target.value)}
+                                className="text-sm rounded-xl border-0 bg-white/95 text-slate-800"
+                                placeholder={`პასუხი ${answerIdx + 1}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {/* Done Button */}
+                        <button
+                          onClick={() => setExpandedQuestion(null)}
+                          className="w-full py-2 bg-white/20 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-1 hover:bg-white/30 transition-colors"
+                        >
+                          <Check className="w-4 h-4" />
+                          დასრულება
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Visibility Toggle */}
-        <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
-          <span className="text-sm font-medium">საჯარო</span>
+        <div className="flex items-center justify-between p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+          <span className="text-sm font-medium text-white">საჯარო</span>
           <button
             onClick={() => setIsPublic(!isPublic)}
             className={`w-12 h-7 rounded-full transition-colors ${
-              isPublic ? "bg-primary" : "bg-muted-foreground/30"
+              isPublic ? "bg-white" : "bg-white/30"
             }`}
           >
             <motion.div
               animate={{ x: isPublic ? 22 : 4 }}
-              className="w-5 h-5 bg-white rounded-full shadow-md"
+              className={`w-5 h-5 rounded-full shadow-md ${isPublic ? "bg-[#6B5B95]" : "bg-white"}`}
             />
           </button>
         </div>
@@ -1079,7 +1121,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           <button
             onClick={handleSaveDraft}
             disabled={isSavingDraft}
-            className="w-full py-3 rounded-xl bg-muted text-foreground font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-muted/80 transition-colors"
+            className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-white/30 transition-colors"
           >
             {isSavingDraft ? (
               <>
@@ -1095,23 +1137,25 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           </button>
 
           {/* Publish Button */}
-          <button
+          <ChunkyButton
+            variant="whitePurple"
             onClick={handlePublish}
             disabled={isPosting}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="w-full"
+            size="lg"
           >
             {isPosting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 იქვეყნება...
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-5 h-5 mr-2" />
                 გამოქვეყნება
               </>
             )}
-          </button>
+          </ChunkyButton>
         </div>
       </motion.div>
     );
@@ -1126,24 +1170,24 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-[#6B5B95]"
         >
           {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+          <div className="fixed top-0 left-0 right-0 z-50 safe-top">
             <div className="flex items-center justify-between px-4 py-3">
               {step > 1 && !isGenerating ? (
                 <button 
                   onClick={() => setStep(step - 1)} 
-                  className="p-2 -ml-2 hover:bg-muted rounded-xl"
+                  className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
                 >
-                  <ChevronLeft className="w-6 h-6 text-foreground" />
+                  <ChevronLeft className="w-6 h-6 text-white" />
                 </button>
               ) : (
                 <button 
                   onClick={handleClose} 
-                  className="p-2 -ml-2 hover:bg-muted rounded-xl"
+                  className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
                 >
-                  <ChevronLeft className="w-6 h-6 text-foreground" />
+                  <ChevronLeft className="w-6 h-6 text-white" />
                 </button>
               )}
               
@@ -1152,8 +1196,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   {[1, 2, 3].map((s) => (
                     <div
                       key={s}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        s === step ? "bg-primary" : s < step ? "bg-primary/50" : "bg-muted-foreground/30"
+                      className={`h-2 rounded-full transition-all ${
+                        s === step ? "w-6 bg-white" : s < step ? "w-2 bg-white/50" : "w-2 bg-white/20"
                       }`}
                     />
                   ))}
@@ -1163,7 +1207,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   <motion.div 
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-1 text-[10px] text-green-600"
+                    className="flex items-center gap-1 text-[10px] text-white/80"
                   >
                     <CheckCircle2 className="w-3 h-3" />
                     შენახულია
@@ -1171,9 +1215,9 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                 )}
               </div>
               
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-primary">AI</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
+                <Sparkles className="w-4 h-4 text-white" />
+                <span className="text-xs font-semibold text-white">AI</span>
               </div>
             </div>
           </div>
