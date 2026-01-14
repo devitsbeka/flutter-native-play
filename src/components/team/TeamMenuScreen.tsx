@@ -43,7 +43,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
     },
     ref
   ) {
-    const menuOptions: MenuOption[] = [
+    // Top row - horizontal compact cards
+    const topOptions: MenuOption[] = [
       {
         id: "create-room",
         imageIcon: danceFloor,
@@ -64,6 +65,10 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         glowColor: "rgba(139, 92, 246, 0.4)",
         onClick: onSelectTrivia,
       },
+    ];
+
+    // Middle grid - vertical cards
+    const menuOptions: MenuOption[] = [
       {
         id: "collection",
         imageIcon: iconCollections,
@@ -142,14 +147,54 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom">
-        {/* 2x2 Grid for main options */}
+        {/* Top Row - Two horizontal compact cards side by side */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {topOptions.map((option, index) => (
+            <motion.button
+              key={option.id}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={option.onClick}
+              className="relative p-3 rounded-2xl overflow-hidden text-left flex items-center gap-3"
+              style={{
+                background: "rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+              }}
+            >
+              {/* Glow effect */}
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 60%)`,
+                }}
+              />
+              
+              {/* Icon */}
+              <div className="relative shrink-0">
+                <img src={option.imageIcon} alt="" className="w-12 h-12 object-contain" />
+              </div>
+              
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-white text-sm mb-0.5">{option.title}</h3>
+                <p className="text-white/60 text-[10px] leading-tight truncate">{option.subtitle}</p>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* 2x2 Grid for middle options */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {menuOptions.map((option, index) => (
             <motion.button
               key={option.id}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: 0.1 + index * 0.05 }}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={option.onClick}
