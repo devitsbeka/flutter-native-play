@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, LogOut, User, Play, Compass, Store, Trophy, Headphones, ChevronDown, Settings, HelpCircle, Shield, Lock, Globe } from "lucide-react";
+import { ChevronLeft, LogOut, User, Play, Compass, Store, Trophy, Headphones, ChevronDown, Settings, HelpCircle, Shield, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -46,7 +46,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
-  const [settingsInitialView, setSettingsInitialView] = useState<"main" | "editName" | "changePassword" | "language">("main");
 
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
@@ -80,7 +79,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <DailyRewardsModal isOpen={isDailyRewardsOpen} onClose={() => setIsDailyRewardsOpen(false)} currentStreak={currentStreak} />
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <AvatarModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => { setIsSettingsOpen(false); setSettingsInitialView("main"); }} initialView={settingsInitialView} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
       <AnimatePresence>
@@ -301,51 +300,16 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="pl-4 flex flex-col gap-1">
-                      {/* Edit Name */}
+                      {/* Settings Page */}
                       <button
-                        onClick={() => {
-                          setSettingsInitialView("editName");
-                          setIsSettingsOpen(true);
-                        }}
+                        onClick={() => setIsSettingsOpen(true)}
                         className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
                       >
                         <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
                           <User className="w-4 h-4 text-muted-foreground" />
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          {t("settings.editName")}
-                        </span>
-                      </button>
-
-                      {/* Change Password */}
-                      <button
-                        onClick={() => {
-                          setSettingsInitialView("changePassword");
-                          setIsSettingsOpen(true);
-                        }}
-                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("settings.changePassword")}
-                        </span>
-                      </button>
-
-                      {/* Language */}
-                      <button
-                        onClick={() => {
-                          setSettingsInitialView("language");
-                          setIsSettingsOpen(true);
-                        }}
-                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <Globe className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("settings.language")}
+                          {t("settings.editProfile")}
                         </span>
                       </button>
 
