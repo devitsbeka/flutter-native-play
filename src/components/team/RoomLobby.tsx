@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
+import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -41,6 +42,7 @@ export function RoomLobby() {
 
   const { messages, sendMessage } = useRoomChat(room?.id || null);
   const { matches } = useRoomMatchHistory(room?.id || null);
+  const { sendInvitation } = useGameInvitations();
   const chatEndRef = useRef<HTMLDivElement>(null);
   
   // Calculate unread count
@@ -232,6 +234,43 @@ export function RoomLobby() {
     const success = await sendMessage(chatMessage);
     if (success) {
       setChatMessage("");
+    }
+  };
+
+  const handleResendInvitation = async (userId: string) => {
+    if (!room) return;
+    const success = await sendInvitation(userId, room.id, true);
+    if (success) {
+      toast.success("მოწვევა თავიდან გაიგზავნა!");
+    }
+  };
+
+  const handleRemoveParticipant = async (participantId: string) => {
+    if (!room || !isHost) return;
+    
+    try {
+      const participant = participants.find(p => p.id === participantId);
+      
+      // Delete from room_participants
+      await supabase
+        .from("room_participants")
+        .delete()
+        .eq("id", participantId);
+      
+      // Cancel any pending invitations
+      if (participant) {
+        await supabase
+          .from("game_invitations")
+          .update({ status: "expired" })
+          .eq("receiver_id", participant.user_id)
+          .eq("room_id", room.id)
+          .eq("status", "pending");
+      }
+      
+      toast.success("მოთამაშე წაიშალა ოთახიდან");
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      toast.error("წაშლა ვერ მოხერხდა");
     }
   };
 
@@ -461,6 +500,9 @@ export function RoomLobby() {
             participants={participants}
             matches={matches}
             currentUserId={user?.id}
+            isHost={isHost}
+            onResendInvitation={handleResendInvitation}
+            onRemoveParticipant={handleRemoveParticipant}
           />
 
           {/* Participants row */}

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Target, Users } from "lucide-react";
+import { Crown, Swords, Target, Users, Send, X } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -14,6 +14,9 @@ interface RoomScoreboardProps {
   currentUserId?: string;
   showHostCrown?: boolean;
   maxPlayers?: number;
+  isHost?: boolean;
+  onResendInvitation?: (userId: string) => void;
+  onRemoveParticipant?: (participantId: string) => void;
 }
 
 const getRankIcon = (rank: number) => {
@@ -29,7 +32,7 @@ const getRankIcon = (rank: number) => {
   }
 };
 
-export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers }: RoomScoreboardProps) {
+export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, onResendInvitation, onRemoveParticipant }: RoomScoreboardProps) {
   // Sort by total cumulative score (primary), then by total wins (secondary)
   const sortedParticipants = [...participants].sort(
     (a, b) => {
@@ -97,13 +100,35 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       {player.user_id === currentUserId ? "შენ" : player.nickname}
                     </p>
                     {isInvited ? (
-                      <motion.p 
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="text-xs text-white/40 mt-2 italic"
-                      >
-                        მოწვეული...
-                      </motion.p>
+                      <div className="mt-2">
+                        <motion.p 
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="text-xs text-white/40 italic"
+                        >
+                          მოწვეული...
+                        </motion.p>
+                        {isHost && (
+                          <div className="flex items-center justify-center gap-2 mt-2">
+                            <motion.button
+                              onClick={() => onResendInvitation?.(player.user_id)}
+                              className="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 flex items-center gap-1 text-xs text-primary"
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Send className="w-3 h-3" />
+                              თავიდან
+                            </motion.button>
+                            <motion.button
+                              onClick={() => onRemoveParticipant?.(player.id)}
+                              className="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 flex items-center gap-1 text-xs text-red-400"
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <X className="w-3 h-3" />
+                              წაშლა
+                            </motion.button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div className="flex flex-col items-center mt-2">
                         <div className="flex items-center gap-1">
@@ -187,12 +212,29 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                   </div>
                   
                   {/* Score + Rounds - fixed width, right aligned */}
-                  {!isInvited && (
+                  {!isInvited ? (
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <span className="font-bold text-white">{(p as any).total_score || 0}</span>
                       <span className="text-xs text-white/60">
                         ({p.total_rounds_played || 0}რ)
                       </span>
+                    </div>
+                  ) : isHost && (
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <motion.button
+                        onClick={() => onResendInvitation?.(p.user_id)}
+                        className="w-7 h-7 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center"
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <Send className="w-3.5 h-3.5 text-primary" />
+                      </motion.button>
+                      <motion.button
+                        onClick={() => onRemoveParticipant?.(p.id)}
+                        className="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center"
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <X className="w-3.5 h-3.5 text-red-400" />
+                      </motion.button>
                     </div>
                   )}
                 </div>
