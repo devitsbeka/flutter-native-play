@@ -14,6 +14,7 @@ import { LeagueCountdown } from "@/components/leaderboard/LeagueCountdown";
 import { LeaderboardHeroBackground } from "@/components/leaderboard/LeaderboardHeroBackground";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 import {
   Carousel,
@@ -282,81 +283,79 @@ function DesktopLeagueColumn({
 
   return (
     <motion.div
-      className={`backdrop-blur-sm rounded-2xl border overflow-hidden flex flex-col ${
-        isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
-      }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: tier * 0.1 }}
     >
-      {/* Header - left aligned */}
-      <div className="flex items-center justify-between py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
-        <div>
-          <h2 className="text-lg font-display text-foreground">{name}</h2>
+      <Card className={`backdrop-blur-sm overflow-hidden flex flex-col ${
+        isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
+      }`}>
+        <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
+          <CardTitle className="text-lg font-display text-foreground">{name}</CardTitle>
           {isUserTier && (
-            <span className="text-xs text-primary font-medium">შენი ლიგა</span>
+            <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
           )}
-        </div>
-      </div>
+        </CardHeader>
 
-      {/* Leaderboard List */}
-      <ScrollArea className="flex-1 h-[400px]">
-        <div className="px-3 pb-3 space-y-1">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : leaderboard.length === 0 ? (
-            <div className="text-center py-8">
-              <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
-            </div>
-          ) : (
-            (() => {
-              const userInTop10 = leaderboard.slice(0, 10).some(e => e.user_id === user?.id);
-              const userEntryOutside = !userInTop10 ? leaderboard.find(e => e.user_id === user?.id) : null;
-              // If user is outside top 10, show top 9 + user = 10 total
-              const top = userEntryOutside ? leaderboard.slice(0, 9) : leaderboard.slice(0, 10);
-              
-              return (
-                <>
-                  {top.map((entry, index) => {
-                    const isCurrentUser = entry.user_id === user?.id;
-                    return (
-                      <LeaguePlayerRow
-                        key={entry.user_id}
-                        entry={entry}
-                        isCurrentUser={isCurrentUser}
-                        index={index}
-                        previousRank={isCurrentUser ? previousRank : null}
-                        shouldAnimate={false}
-                        totalPlayers={leaderboard.length}
-                        isPromotionZone={tier < 5 && entry.rank <= 10}
-                        isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
-                      />
-                    );
-                  })}
-                  {userEntryOutside && (
+        <CardContent className="p-0 flex-1">
+          <ScrollArea className="h-[400px]">
+            <div className="px-3 pb-3">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : leaderboard.length === 0 ? (
+                <div className="text-center py-8">
+                  <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                </div>
+              ) : (
+                (() => {
+                  const userInTop10 = leaderboard.slice(0, 10).some(e => e.user_id === user?.id);
+                  const userEntryOutside = !userInTop10 ? leaderboard.find(e => e.user_id === user?.id) : null;
+                  const top = userEntryOutside ? leaderboard.slice(0, 9) : leaderboard.slice(0, 10);
+                  
+                  return (
                     <>
-                      <div className="text-center text-muted-foreground text-xs py-1">• • •</div>
-                      <LeaguePlayerRow
-                        entry={userEntryOutside}
-                        isCurrentUser={true}
-                        index={leaderboard.indexOf(userEntryOutside)}
-                        previousRank={previousRank}
-                        shouldAnimate={false}
-                        totalPlayers={leaderboard.length}
-                        isPromotionZone={false}
-                        isDemotionZone={tier > 1 && userEntryOutside.rank > leaderboard.length - 10}
-                      />
+                      {top.map((entry, index) => {
+                        const isCurrentUser = entry.user_id === user?.id;
+                        return (
+                          <LeaguePlayerRow
+                            key={entry.user_id}
+                            entry={entry}
+                            isCurrentUser={isCurrentUser}
+                            index={index}
+                            previousRank={isCurrentUser ? previousRank : null}
+                            shouldAnimate={false}
+                            totalPlayers={leaderboard.length}
+                            isPromotionZone={tier < 5 && entry.rank <= 10}
+                            isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
+                          />
+                        );
+                      })}
+                      {userEntryOutside && (
+                        <>
+                          <div className="text-center text-muted-foreground text-xs py-1">• • •</div>
+                          <LeaguePlayerRow
+                            entry={userEntryOutside}
+                            isCurrentUser={true}
+                            index={leaderboard.indexOf(userEntryOutside)}
+                            previousRank={previousRank}
+                            shouldAnimate={false}
+                            totalPlayers={leaderboard.length}
+                            isPromotionZone={false}
+                            isDemotionZone={tier > 1 && userEntryOutside.rank > leaderboard.length - 10}
+                          />
+                        </>
+                      )}
                     </>
-                  )}
-                </>
-              );
-            })()
-          )}
-        </div>
-      </ScrollArea>
+                  );
+                })()
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
