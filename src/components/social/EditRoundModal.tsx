@@ -435,7 +435,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex-1 flex flex-col pt-[80px] pb-[140px] overflow-hidden"
+                className="absolute inset-0 flex items-center justify-center pt-[100px] pb-[130px] overflow-hidden"
               >
                 {/* Swipe Carousel for Questions */}
                 <Carousel
@@ -444,9 +444,9 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                     align: "center",
                     loop: false,
                   }}
-                  className="flex-1 h-full"
+                  className="w-full"
                 >
-                  <CarouselContent className="h-full items-center">
+                  <CarouselContent>
                     {questions.map((q, index) => {
                       const answerInQuestion = hasAnswerInQuestion(q.question_text, q.correct_answer);
                       const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
@@ -454,7 +454,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
                       
                       return (
-                        <CarouselItem key={index} className="flex items-center justify-center px-4 h-full">
+                        <CarouselItem key={index} className="flex items-center justify-center px-4">
                           <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-4 space-y-3 shadow-xl max-h-[calc(100vh-240px)] overflow-y-auto">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
@@ -572,7 +572,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           </AnimatePresence>
 
           {/* Fixed Footer - Save Button (always visible) */}
-          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-6 space-y-2 safe-bottom ${
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-10 space-y-2 safe-bottom ${
             viewMode === "questions" 
               ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
               : "bg-background border-t border-border"
