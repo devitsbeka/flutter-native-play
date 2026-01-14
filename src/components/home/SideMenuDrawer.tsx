@@ -15,7 +15,8 @@ import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
-import { PlayCategoryModal } from "@/components/leaderboard/PlayCategoryModal";
+import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
+import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SideMenuDrawerProps {
@@ -42,7 +43,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
-  const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+  const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
+  const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
   const currentStreak = profile?.current_streak || 1;
@@ -60,18 +62,13 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   };
 
   const handlePlayClick = () => {
-    setIsPlayModalOpen(true);
+    setIsTeamMenuOpen(true);
   };
 
-  const handleCategorySelect = (categoryId: string | null) => {
-    setIsPlayModalOpen(false);
+  const handleCategorySelect = (category: { id: string; name: string }) => {
+    setIsCategorySelectorOpen(false);
     onClose();
-    if (categoryId) {
-      navigate(`/category/${categoryId}`);
-    } else {
-      // Random category - navigate to leaderboard or random game
-      navigate('/leaderboard');
-    }
+    navigate(`/category/${category.id}`);
   };
 
   if (!isOpen) return null;
@@ -85,10 +82,47 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
-      <PlayCategoryModal 
-        open={isPlayModalOpen} 
-        onOpenChange={setIsPlayModalOpen}
-        onSelectCategory={handleCategorySelect}
+      <AnimatePresence>
+        {isTeamMenuOpen && (
+          <TeamMenuScreen
+            onClose={() => setIsTeamMenuOpen(false)}
+            onSelectCreateRoom={() => {
+              setIsTeamMenuOpen(false);
+              onClose();
+              navigate('/create-room');
+            }}
+            onSelectTrivia={() => {
+              setIsTeamMenuOpen(false);
+              onClose();
+              navigate('/create-trivia');
+            }}
+            onSelectCollection={() => {
+              setIsTeamMenuOpen(false);
+              onClose();
+              navigate('/create-collection');
+            }}
+            onSelectPersonalTrivia={() => {
+              setIsTeamMenuOpen(false);
+              onClose();
+              navigate('/my-trivia-party');
+            }}
+            onSelectRandom={() => {
+              setIsTeamMenuOpen(false);
+              onClose();
+              navigate('/game');
+            }}
+            onSelectLibrary={() => {
+              setIsTeamMenuOpen(false);
+              setIsCategorySelectorOpen(true);
+            }}
+          />
+        )}
+      </AnimatePresence>
+      
+      <CategorySelectorModal
+        open={isCategorySelectorOpen}
+        onOpenChange={setIsCategorySelectorOpen}
+        onSelect={handleCategorySelect}
       />
       
       <AnimatePresence>
