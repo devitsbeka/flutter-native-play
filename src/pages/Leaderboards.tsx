@@ -290,8 +290,8 @@ function DesktopLeagueColumn({
       <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl ${
         isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
       }`}>
-        <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
-          <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name}</CardTitle>
+        <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
+          <CardTitle className="text-lg text-foreground uppercase" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name}</CardTitle>
           {isUserTier && (
             <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
           )}
