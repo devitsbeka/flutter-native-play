@@ -240,7 +240,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
       </div>
 
       {/* Content area - leaderboards pushed down */}
-      <div className="pt-[600px]">
+      <div className="pt-[520px]">
         {/* 3 Column Layout with trophies floating above */}
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-6">
