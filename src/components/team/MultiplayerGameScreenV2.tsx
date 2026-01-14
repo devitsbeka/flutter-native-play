@@ -349,7 +349,7 @@ export function MultiplayerGameScreenV2() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         /* True/False Layout - side by side cards */
-        <div className="flex-1 px-4 flex gap-3 items-start pt-2">
+        <div className="flex-1 px-4 flex gap-3 items-center justify-center">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
