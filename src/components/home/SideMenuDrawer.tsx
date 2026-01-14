@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, LogOut, User, Play, Compass, Store, Trophy, Headphones, ChevronDown, Settings, HelpCircle, Shield } from "lucide-react";
+import { ChevronLeft, LogOut, User, Play, Compass, Store, Trophy, Headphones, ChevronDown, Settings, HelpCircle, Shield, Lock, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -46,6 +46,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
+  const [settingsInitialView, setSettingsInitialView] = useState<"main" | "editName" | "changePassword" | "language">("main");
 
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
@@ -79,7 +80,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <DailyRewardsModal isOpen={isDailyRewardsOpen} onClose={() => setIsDailyRewardsOpen(false)} currentStreak={currentStreak} />
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <AvatarGeneratorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => { setIsSettingsOpen(false); setSettingsInitialView("main"); }} initialView={settingsInitialView} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
       <AnimatePresence>
@@ -131,10 +132,31 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col"
+            className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
           >
+            {/* Video background */}
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: "blur(8px)" }}
+              >
+                <source src="/videos/floating-blob.mp4" type="video/mp4" />
+              </video>
+              {/* White radial overlay */}
+              <div 
+                className="absolute inset-0"
+                style={{
+                  background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.6) 80%, rgba(255,255,255,1) 100%)",
+                }}
+              />
+            </div>
+
             {/* Fixed Header */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <div className="relative z-10 flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/80 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <button
                   onClick={onClose}
@@ -148,18 +170,21 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="relative z-10 flex-1 overflow-y-auto">
               {/* User Profile Section */}
               <div className="p-4 border-b border-border/30">
                 {user ? (
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-                    <div className="h-16 w-16 rounded-2xl bg-background/50 backdrop-blur flex items-center justify-center overflow-hidden ring-2 ring-primary/20">
+                    <button 
+                      onClick={() => setIsAvatarModalOpen(true)}
+                      className="h-16 w-16 rounded-2xl bg-background/50 backdrop-blur flex items-center justify-center overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
+                    >
                       <Avatar
                         imageUrl={profile?.avatar_url || undefined}
                         emoji={profile?.nickname?.charAt(0) || "👤"}
                         size="lg"
                       />
-                    </div>
+                    </button>
                     <div className="flex-1 min-w-0">
                       <p className="font-display text-xl font-bold text-foreground truncate">
                         {profile?.nickname || t("menu.player")}
@@ -188,76 +213,38 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 )}
               </div>
 
-              {/* Big Play Button - 3D Mint Style */}
+              {/* Big Play Button - Simplified 3D Mint Style */}
               <div className="px-4 py-4">
                 <motion.button
                   onClick={handlePlayClick}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98, y: 4 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98, y: 2 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   className="relative w-full overflow-hidden rounded-2xl"
                   style={{ height: 56 }}
                 >
-                  {/* Bottom depth layer */}
+                  {/* Bottom shadow/depth layer */}
                   <div
                     className="absolute inset-0 rounded-2xl"
                     style={{
-                      top: 6,
-                      background: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
+                      top: 4,
+                      background: "linear-gradient(180deg, #4BC9A0 0%, #3DB890 100%)",
                     }}
                   />
                   
-                  {/* Middle bevel layer */}
-                  <div
-                    className="absolute rounded-2xl"
-                    style={{
-                      inset: 0,
-                      top: 2,
-                      bottom: 8,
-                      background: "linear-gradient(180deg, #7EECC5 0%, #6ADDB5 100%)",
-                    }}
-                  />
-                  
-                  {/* Main face */}
+                  {/* Main face - simpler gradient */}
                   <div
                     className="absolute rounded-2xl overflow-hidden"
                     style={{
                       inset: 0,
-                      bottom: 10,
-                      background: "radial-gradient(circle at 40% 35%, #8AFFDA 0%, #6EFFC2 25%, #5EE8B5 50%, #4DD8A5 75%, #3FC99A 100%)",
+                      bottom: 4,
+                      background: "linear-gradient(180deg, #6ADDB5 0%, #5DD8B0 50%, #4BC9A0 100%)",
                     }}
                   >
-                    {/* Sparkle particles */}
-                    {[...Array(8)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="absolute rounded-full"
-                        style={{
-                          width: i % 2 === 0 ? 4 : 3,
-                          height: i % 2 === 0 ? 4 : 3,
-                          background: "rgba(180,255,220,0.95)",
-                          boxShadow: "0 0 6px rgba(150,255,210,0.9), 0 0 10px rgba(100,230,180,0.6)",
-                          left: `${10 + (i * 10)}%`,
-                          top: `${30 + ((i % 3) * 15)}%`,
-                        }}
-                        animate={{
-                          y: [-3, 3, -3],
-                          opacity: [0.5, 1, 0.5],
-                          scale: [0.8, 1.2, 0.8],
-                        }}
-                        transition={{
-                          duration: 1.5 + (i * 0.2),
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: i * 0.12,
-                        }}
-                      />
-                    ))}
-                    
                     {/* Button content */}
                     <div className="relative h-full flex items-center justify-center gap-3">
                       <Play className="w-6 h-6 fill-white text-white" />
-                      <span className="text-white font-bold text-lg" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
+                      <span className="text-white font-bold text-lg" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}>
                         {t("menu.play")}
                       </span>
                     </div>
@@ -314,6 +301,54 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="pl-4 flex flex-col gap-1">
+                      {/* Edit Name */}
+                      <button
+                        onClick={() => {
+                          setSettingsInitialView("editName");
+                          setIsSettingsOpen(true);
+                        }}
+                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("settings.editName")}
+                        </span>
+                      </button>
+
+                      {/* Change Password */}
+                      <button
+                        onClick={() => {
+                          setSettingsInitialView("changePassword");
+                          setIsSettingsOpen(true);
+                        }}
+                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("settings.changePassword")}
+                        </span>
+                      </button>
+
+                      {/* Language */}
+                      <button
+                        onClick={() => {
+                          setSettingsInitialView("language");
+                          setIsSettingsOpen(true);
+                        }}
+                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                          <Globe className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("settings.language")}
+                        </span>
+                      </button>
+
                       <button
                         onClick={() => setIsHelpOpen(true)}
                         className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
