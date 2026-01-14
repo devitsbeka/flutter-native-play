@@ -121,23 +121,22 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     >
       {/* Layer 1: Background Map Image */}
       {isDesktop ? (
-        /* DESKTOP/TABLET: Static background with clickable trophies */
+        /* DESKTOP/TABLET: Static background with clickable trophies - fixed aspect ratio */
         <div 
-          className="absolute inset-0 w-full" 
+          className="absolute inset-0 w-full flex items-center justify-center" 
           style={{ height: 'calc(100% + 100px)', top: '-100px' }}
         >
+          {/* Fixed aspect ratio container to keep trophies aligned */}
           <div
-            className="absolute inset-0 w-full h-full"
+            className="relative w-full h-full"
             style={{
               backgroundImage: `url(${leaderboardMap})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center top',
               backgroundRepeat: 'no-repeat',
             }}
-          />
-          
-          {/* Trophies for desktop */}
-          <div className="absolute inset-0 w-full h-full">
+          >
+            {/* Trophies positioned relative to the background */}
             {Object.entries(DESKTOP_TROPHY_CONFIG).map(([tierKey, config]) => {
               const tierNum = parseInt(tierKey);
               const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
@@ -154,6 +153,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                     top: config.top,
                     transform: 'translate(-50%, -100%)',
                     width: config.size,
+                    maxWidth: '220px',
+                    minWidth: '120px',
                   }}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ 
@@ -188,17 +189,17 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           </div>
         </div>
       ) : (
-        /* MOBILE: Swipeable background + trophy together */
+        /* MOBILE: Swipeable with smooth trophy centering */
         <motion.div 
           className="absolute inset-0 w-full touch-pan-y"
           style={{ height: 'calc(100% + 100px)', top: '-100px', cursor: 'grab' }}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
+          dragElastic={0.2}
           onDragEnd={handleDragEnd}
           whileDrag={{ cursor: 'grabbing' }}
         >
-          {/* Background image moves with drag */}
+          {/* Background image */}
           <div
             className="absolute inset-0 w-full h-full"
             style={{
@@ -209,28 +210,45 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             }}
           />
           
-          {/* Trophy moves with background */}
-          <AnimatePresence mode="wait">
+          {/* Trophy with smooth slide transition */}
+          <AnimatePresence mode="popLayout">
             {currentMeta && (
               <motion.div
                 key={tier}
                 className="absolute pointer-events-none"
                 style={{
-                  left: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].left,
+                  left: '50%',
                   top: `calc(${MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].top} + 100px)`,
-                  transform: 'translate(calc(-50% - 50px), -100%)',
                   width: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].size,
                   transformOrigin: 'center bottom',
                 }}
-                initial={{ scale: 0.3, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.2, opacity: 0 }}
-                transition={TROPHY_ENTER_SPRING}
+                initial={{ 
+                  x: tier > 2 ? 100 : tier < 2 ? -100 : 0,
+                  opacity: 0,
+                  scale: 0.8,
+                }}
+                animate={{ 
+                  x: '-50%',
+                  opacity: 1,
+                  scale: 1,
+                }}
+                exit={{ 
+                  x: tier > 2 ? -100 : tier < 2 ? 100 : 0,
+                  opacity: 0,
+                  scale: 0.8,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  mass: 0.8,
+                }}
               >
                 <img 
                   src={currentMeta.image} 
                   alt="" 
                   className="w-full h-auto select-none pointer-events-none drop-shadow-2xl"
+                  style={{ transform: 'translateX(-50px) translateY(-100%)' }}
                   draggable={false}
                 />
               </motion.div>
