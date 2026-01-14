@@ -209,9 +209,10 @@ export default function Leaderboards() {
   );
 }
 
-// Desktop: All 3 leaderboards side by side
+// Desktop: All 3 leaderboards side by side with hero background
 function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: string }) {
   const { language } = useLanguage();
+  const [viewingTier, setViewingTier] = useState(userTier || 1);
   
   // Fetch all 3 tiers
   const tier1 = useLeagueLeaderboard(1, region);
@@ -225,29 +226,35 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
   ];
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <LeaderboardHeroBackground
+      tier={viewingTier}
+      onTierSelect={setViewingTier}
+      userTier={userTier}
+    >
       {/* Global Countdown */}
       <div className="flex justify-center mb-6">
-        <div className="w-64">
+        <div className="w-80">
           <LeagueCountdown />
         </div>
       </div>
 
       {/* 3 Column Layout */}
-      <div className="grid grid-cols-3 gap-4">
-        {tiers.map(({ tier, data, name, nameKa }) => (
-          <DesktopLeagueColumn
-            key={tier}
-            tier={tier}
-            name={language === 'ka' ? nameKa : name}
-            leaderboard={data.leaderboard}
-            isLoading={data.isLoading}
-            userTier={userTier}
-            previousRank={data.previousRank}
-          />
-        ))}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-3 gap-4">
+          {tiers.map(({ tier, data, name, nameKa }) => (
+            <DesktopLeagueColumn
+              key={tier}
+              tier={tier}
+              name={language === 'ka' ? nameKa : name}
+              leaderboard={data.leaderboard}
+              isLoading={data.isLoading}
+              userTier={userTier}
+              previousRank={data.previousRank}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </LeaderboardHeroBackground>
   );
 }
 
