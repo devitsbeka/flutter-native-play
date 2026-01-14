@@ -89,22 +89,22 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             onSelectCreateRoom={() => {
               setIsTeamMenuOpen(false);
               onClose();
-              navigate('/create-room');
+              navigate('/team', { state: { openCreateRoom: true } });
             }}
             onSelectTrivia={() => {
               setIsTeamMenuOpen(false);
               onClose();
-              navigate('/create-trivia');
+              navigate('/team', { state: { openTrivia: true } });
             }}
             onSelectCollection={() => {
               setIsTeamMenuOpen(false);
               onClose();
-              navigate('/create-collection');
+              navigate('/team', { state: { openCollection: true } });
             }}
             onSelectPersonalTrivia={() => {
               setIsTeamMenuOpen(false);
               onClose();
-              navigate('/my-trivia-party');
+              navigate('/team', { state: { openPersonalTrivia: true } });
             }}
             onSelectRandom={() => {
               setIsTeamMenuOpen(false);
