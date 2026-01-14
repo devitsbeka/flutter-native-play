@@ -45,7 +45,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [coverGradient] = useState(COVER_GRADIENTS[0]);
-  const [isPublic, setIsPublic] = useState(true);
+  const [isPublic, setIsPublic] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
   const [showRoundSettings, setShowRoundSettings] = useState(false);
@@ -113,7 +113,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const resetForm = () => {
     setStep(1);
     setTitle("");
-    setIsPublic(true);
+    setIsPublic(false);
     setRoundNames(["", ""]);
     setRounds([]);
     setRoundQuestions([]);
@@ -529,7 +529,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           onTitleChange={setTitle}
           onSave={handlePublish}
           onBack={handleClose}
-          saveButtonText={isPosting ? "იქვეყნება..." : "გამოქვეყნება"}
+          saveButtonText={isPosting ? "ინახება..." : "შენახვა"}
           showTitleEditor={true}
           subject={currentRound?.subject || "კოლექცია"}
           answerFormat={currentRound?.answerFormat || "4_answers"}

@@ -11,6 +11,9 @@ import { EditRoundModal } from "./EditRoundModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
 import { useDrafts } from "@/hooks/useDrafts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Georgian time format helper
 function formatGeorgianTimeAgo(date: Date): string {
@@ -150,7 +153,7 @@ function getGradientProps(gradient: string) {
 }
 
 // Expandable collection card
-function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound, onPlay, isNew }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void; onPlay?: (quiz: any, allQuizzes?: any[]) => void; isNew?: boolean }) {
+function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound, onPlay, onPost, isNew, isPosting }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void; onPlay?: (quiz: any, allQuizzes?: any[]) => void; onPost?: (collection: any) => void; isNew?: boolean; isPosting?: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
@@ -257,6 +260,22 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
               <span>{collection.plays_count || 0}</span>
             </div>
             
+            {/* Post button - only show for private collections */}
+            {collection.is_public === false && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
+                disabled={isPosting}
+                className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isPosting ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Globe className="w-3 h-3" />
+                )}
+                <span>Post</span>
+              </button>
+            )}
+            
             {/* Expand/Collapse icon - Up when open, Down when closed */}
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               {isExpanded ? (
@@ -323,7 +342,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, isNew }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; isNew?: boolean }) {
+function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
   const gradientProps = getGradientProps(post.cover_gradient);
 
   // Tilt animation for new items - random left or right tilt
@@ -417,22 +436,41 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, isNew }: { p
             </div>
           </div>
           
-          <ChunkyButton 
-            size="sm" 
-            variant="secondary" 
-            className="text-xs"
-            onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
-          >
-            <Play className="w-3.5 h-3.5" />
-            <span>თამაში</span>
-          </ChunkyButton>
+          <div className="flex items-center gap-2">
+            {/* Post button - only show for private content */}
+            {post.is_public === false && (
+              <ChunkyButton 
+                size="sm" 
+                variant="primary" 
+                className="text-xs"
+                onClick={() => onPost?.(post)}
+                disabled={isPosting}
+              >
+                {isPosting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Globe className="w-3.5 h-3.5" />
+                )}
+                <span>Post</span>
+              </ChunkyButton>
+            )}
+            <ChunkyButton 
+              size="sm" 
+              variant="secondary" 
+              className="text-xs"
+              onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
+            >
+              <Play className="w-3.5 h-3.5" />
+              <span>თამაში</span>
+            </ChunkyButton>
+          </div>
         </div>
       </div>
     </motion.div>
   );
 }
-
 export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay }: MyTriviaTabProps) {
+  const queryClient = useQueryClient();
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { drafts, isLoading: draftsLoading, deleteDraft } = useDrafts();
@@ -443,6 +481,60 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     collectionId: string;
     roundNumber: number;
   } | null>(null);
+  const [postingItemId, setPostingItemId] = useState<string | null>(null);
+
+  // Mutation to publish content (make it public)
+  const postMutation = useMutation({
+    mutationFn: async ({ id, type }: { id: string; type: 'quiz' | 'collection' }) => {
+      setPostingItemId(id);
+      
+      if (type === 'collection') {
+        // Update collection
+        const { error: collectionError } = await supabase
+          .from('quiz_collections')
+          .update({ is_public: true })
+          .eq('id', id);
+        
+        if (collectionError) throw collectionError;
+        
+        // Also update all rounds in the collection
+        const { error: roundsError } = await supabase
+          .from('user_quiz_posts')
+          .update({ is_public: true })
+          .eq('collection_id', id);
+        
+        if (roundsError) throw roundsError;
+      } else {
+        // Update standalone quiz
+        const { error } = await supabase
+          .from('user_quiz_posts')
+          .update({ is_public: true })
+          .eq('id', id);
+        
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-quiz-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['my-collections'] });
+      queryClient.invalidateQueries({ queryKey: ['quiz-posts-with-profiles'] });
+      toast.success('კონტენტი გამოქვეყნდა! 🎉');
+      setPostingItemId(null);
+    },
+    onError: (error) => {
+      console.error('Error publishing content:', error);
+      toast.error('გამოქვეყნება ვერ მოხერხდა');
+      setPostingItemId(null);
+    }
+  });
+
+  const handlePostQuiz = (post: any) => {
+    postMutation.mutate({ id: post.id, type: 'quiz' });
+  };
+
+  const handlePostCollection = (collection: any) => {
+    postMutation.mutate({ id: collection.id, type: 'collection' });
+  };
 
   // Track known item IDs to detect new items for tilt animation
   const knownItemIdsRef = useRef<Set<string>>(new Set());
@@ -688,7 +780,9 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
                 setAddingToCollection({ collectionId, roundNumber })
               }
               onPlay={onPlay}
+              onPost={handlePostCollection}
               isNew={newItemIds.has(item.data.id)}
+              isPosting={postingItemId === item.data.id}
             />
           ) : (
             <StandaloneQuizCard 
@@ -698,7 +792,9 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               index={index} 
               onEdit={(post) => setEditingRound(post)}
               onPlay={onPlay}
+              onPost={handlePostQuiz}
               isNew={newItemIds.has(item.data.id)}
+              isPosting={postingItemId === item.data.id}
             />
           )
         ))}

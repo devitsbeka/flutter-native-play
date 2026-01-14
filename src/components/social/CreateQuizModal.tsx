@@ -160,7 +160,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [isGeneratingCoverLocal, setIsGeneratingCoverLocal] = useState(false);
   const [coverGenerationCount, setCoverGenerationCount] = useState(0);
-  const [isPublic, setIsPublic] = useState(true);
+  const [isPublic, setIsPublic] = useState(false);
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
@@ -230,7 +230,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     setCoverImageUrl(null);
     setIsGeneratingCoverLocal(false);
     setCoverGenerationCount(0);
-    setIsPublic(true);
+    setIsPublic(false);
     setSuggestedTitles([]);
     setIsEditingTitle(false);
   };
