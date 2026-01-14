@@ -844,7 +844,6 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       variant="primary"
-      iconEmoji="🎨"
       title={t("avatar.title")}
       subtitle={t("avatar.subtitle")}
       showSparkles
