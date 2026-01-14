@@ -38,7 +38,7 @@ export function CreateRoomScreen({
 }: CreateRoomScreenProps) {
   const [selectedType, setSelectedType] = useState<GameType | null>(null);
 
-  const mainOptions: GameOption[] = [
+  const allOptions: GameOption[] = [
     {
       id: "trivia",
       imageIcon: triviaBuzzer,
@@ -60,16 +60,12 @@ export function CreateRoomScreen({
       subtitle: "შენი კითხვები",
       glowColor: "rgba(236, 72, 153, 0.4)",
     },
-  ];
-
-  const bottomOptions: GameOption[] = [
     {
       id: "random",
       imageIcon: spinTheBottle,
       title: "შემთხვევითი კატეგორია",
       subtitle: "სწრაფი სტარტი",
       glowColor: "rgba(245, 158, 11, 0.4)",
-      fullWidth: true,
     },
     {
       id: "library",
@@ -77,7 +73,6 @@ export function CreateRoomScreen({
       title: "აირჩიე ბიბლიოთეკიდან",
       subtitle: "კატეგორიების არჩევა",
       glowColor: "rgba(139, 92, 246, 0.4)",
-      fullWidth: true,
     },
   ];
 
@@ -144,9 +139,9 @@ export function CreateRoomScreen({
           აირჩიე რას ითამაშებთ
         </motion.p>
 
-        {/* 2x2 Grid + 1 for main options */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {mainOptions.map((option, index) => (
+        {/* Grid for all options */}
+        <div className="grid grid-cols-2 gap-3">
+          {allOptions.map((option, index) => (
             <motion.button
               key={option.id}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -196,60 +191,6 @@ export function CreateRoomScreen({
           ))}
         </div>
 
-        {/* Full-width options */}
-        <div className="space-y-3">
-          {bottomOptions.map((option, index) => (
-            <motion.button
-              key={option.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 + index * 0.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setSelectedType(option.id)}
-              className={`relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4 transition-all ${
-                selectedType === option.id ? "ring-2 ring-white ring-offset-2 ring-offset-purple-600" : ""
-              }`}
-              style={{
-                background: selectedType === option.id 
-                  ? "rgba(255, 255, 255, 0.25)" 
-                  : "rgba(255, 255, 255, 0.12)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-              }}
-            >
-              {/* Glow effect */}
-              <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                  background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 50%)`,
-                }}
-              />
-              
-              {/* Selection indicator */}
-              {selectedType === option.id && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-3 right-3 w-5 h-5 rounded-full bg-white flex items-center justify-center"
-                >
-                  <div className="w-3 h-3 rounded-full bg-purple-600" />
-                </motion.div>
-              )}
-              
-              {/* Icon */}
-              <div className="relative shrink-0">
-                <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-base">{option.title}</h3>
-                <p className="text-white/60 text-xs">{option.subtitle}</p>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-
         {/* Hint */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -275,7 +216,7 @@ export function CreateRoomScreen({
           disabled={!selectedType}
           className="w-full"
         >
-          🎮 შექმენი ოთახი
+          შექმენი ოთახი
         </ChunkyButton>
       </motion.div>
     </motion.div>
