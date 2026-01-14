@@ -120,7 +120,7 @@ export default function Leaderboards() {
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
       <div className="lg:hidden flex-1 flex flex-col pb-28">
-        <LeaderboardHeroBackground>
+        <LeaderboardHeroBackground isMobile>
           {/* Countdown - top right */}
           <div className="absolute top-6 right-6 z-30">
             <div className="w-64">
@@ -128,8 +128,8 @@ export default function Leaderboards() {
             </div>
           </div>
 
-          {/* Swipeable Cards - centered */}
-          <div className="pt-[420px] px-4">
+          {/* Swipeable Cards - full width on active */}
+          <div className="pt-[calc(70vh-80px)] md:pt-[calc(60vh-80px)] px-4">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -146,9 +146,9 @@ export default function Leaderboards() {
                 }}
                 className="w-full"
               >
-                <CarouselContent className="-ml-4">
+                <CarouselContent className="-ml-2">
                   {LEAGUES.map((league) => (
-                    <CarouselItem key={league.tier} className="pl-4 basis-[85%] md:basis-[60%]">
+                    <CarouselItem key={league.tier} className="pl-2 basis-full">
                       <MobileLeagueCard
                         tier={league.tier}
                         name={language === 'ka' ? league.nameKa : league.name}
