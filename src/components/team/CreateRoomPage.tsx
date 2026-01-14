@@ -75,9 +75,17 @@ interface CreateRoomPageProps {
   challengeUserId?: string | null;
   defaultChallengeType?: "random" | "library" | "my-trivias" | "create" | null;
   autoOpenPersonalTrivia?: boolean;
+  preSelectedCategory?: {
+    id: string;
+    category_id: string;
+    name: string;
+    color: string;
+    image_url?: string | null;
+    total_levels: number;
+  } | null;
 }
 
-export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia }: CreateRoomPageProps) {
+export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType, autoOpenPersonalTrivia, preSelectedCategory }: CreateRoomPageProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -181,9 +189,32 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     generateRoomName();
   }, []);
 
+  // Handle pre-selected category from parent (library selection)
+  useEffect(() => {
+    if (preSelectedCategory && categories.length > 0) {
+      // Set the category directly without opening the modal
+      setSelectedCategory({
+        id: preSelectedCategory.id,
+        category_id: preSelectedCategory.category_id,
+        name: preSelectedCategory.name,
+        icon_slug: null,
+        color: preSelectedCategory.color,
+        image_url: preSelectedCategory.image_url,
+        total_levels: preSelectedCategory.total_levels,
+      });
+      setSelectionMode("library");
+    }
+  }, [preSelectedCategory, categories]);
+
   // Auto-trigger based on challenge type
   useEffect(() => {
     if (hasAutoTriggered || loadingCategories || categories.length === 0) return;
+    
+    // Skip if we have a pre-selected category (already handled above)
+    if (preSelectedCategory) {
+      setHasAutoTriggered(true);
+      return;
+    }
     
     if (defaultChallengeType) {
       setHasAutoTriggered(true);
@@ -204,7 +235,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           break;
       }
     }
-  }, [defaultChallengeType, hasAutoTriggered, loadingCategories, categories]);
+  }, [defaultChallengeType, hasAutoTriggered, loadingCategories, categories, preSelectedCategory]);
 
   // Select random category with animation
   const selectRandomCategory = async () => {
