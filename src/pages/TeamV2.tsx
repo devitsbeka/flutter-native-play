@@ -80,7 +80,7 @@ function TeamContentV2() {
       navigate(location.pathname, { replace: true, state: {} });
     }
     if (location.state?.openCreateRoom) {
-      setShowCreateRoomScreen(true);
+      setShowCreateModal(true);
       navigate(location.pathname, { replace: true, state: {} });
     }
     if (location.state?.openTrivia) {
