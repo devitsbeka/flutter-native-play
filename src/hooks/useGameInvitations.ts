@@ -121,7 +121,7 @@ export function useGameInvitations() {
 
   // Send a game invitation
   const sendInvitation = useCallback(
-    async (receiverId: string, roomId: string): Promise<boolean> => {
+    async (receiverId: string, roomId: string, allowResend = false): Promise<boolean> => {
       if (!user) return false;
 
       try {
@@ -137,8 +137,16 @@ export function useGameInvitations() {
           .single();
 
         if (existing) {
-          notify.info("მოწვევა უკვე გაგზავნილია", { icon: "📧" });
-          return false;
+          if (allowResend) {
+            // Expire the old invitation to allow resending
+            await supabase
+              .from("game_invitations")
+              .update({ status: "expired" })
+              .eq("id", existing.id);
+          } else {
+            notify.info("მოწვევა უკვე გაგზავნილია", { icon: "📧" });
+            return false;
+          }
         }
 
         const { error } = await supabase.from("game_invitations").insert({
