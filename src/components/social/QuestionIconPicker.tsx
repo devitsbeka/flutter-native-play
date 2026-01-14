@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, X, Smile, AlertTriangle, ChevronLeft, RefreshCw } from "lucide-react";
+import { Search, X, Smile, AlertTriangle, ChevronLeft, RefreshCw, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -221,14 +221,23 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                 e.currentTarget.style.display = 'none';
               }}
             />
-            {selectedIconUnsafe && (
+            {selectedIconUnsafe ? (
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-3 h-3 text-white" />
+              </div>
+            ) : (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
               </div>
             )}
           </>
         ) : (
-          <Smile style={{ width: large ? 50 : 32, height: large ? 50 : 32 }} className={large ? "text-white/60" : "text-muted-foreground"} />
+          <>
+            <Smile style={{ width: large ? 50 : 32, height: large ? 50 : 32 }} className={large ? "text-white/60" : "text-muted-foreground"} />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+              <Plus className="w-3 h-3 text-slate-600" />
+            </div>
+          </>
         )}
       </button>
 
