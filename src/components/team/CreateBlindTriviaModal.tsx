@@ -244,7 +244,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                         onClick={() => setSubject(topic.value)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
                           subject === topic.value
-                            ? "bg-white text-[#6B5B95] shadow-lg"
+                            ? "bg-white text-[#5B21B6] shadow-lg"
                             : "bg-white/20 text-white hover:bg-white/30"
                         }`}
                       >
@@ -286,7 +286,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                   onClick={() => setQuestionCount(count)}
                   className={`w-20 h-20 rounded-2xl font-bold text-2xl transition-all ${
                     questionCount === count
-                      ? "bg-white text-[#6B5B95] shadow-lg"
+                      ? "bg-white text-[#5B21B6] shadow-lg"
                       : "bg-white/20 text-white hover:bg-white/30"
                   }`}
                 >
@@ -304,7 +304,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
                   onClick={() => setDifficulty(option.value)}
                   className={`p-3 rounded-2xl transition-all text-center ${
                     difficulty === option.value
-                      ? "bg-white text-[#6B5B95] shadow-lg"
+                      ? "bg-white text-[#5B21B6] shadow-lg"
                       : "bg-white/20 text-white hover:bg-white/30"
                   }`}
                 >

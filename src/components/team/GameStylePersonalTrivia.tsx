@@ -810,7 +810,7 @@ export function GameStylePersonalTrivia({
                           alt=""
                         />
                         {/* Purple gradient overlay for readability */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#5A4A7A]/80 via-[#5A4A7A]/70 to-[#5A4A7A]/90" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#5B21B6]/80 via-[#5B21B6]/70 to-[#5B21B6]/90" />
                         {/* Remove background button */}
                         <button
                           onClick={removeBackgroundImage}
@@ -824,7 +824,7 @@ export function GameStylePersonalTrivia({
                     {/* Content */}
                     <div className={cn(
                       "relative z-10 p-5",
-                      !question.backgroundImageUrl && "bg-[#5A4A7A]"
+                      !question.backgroundImageUrl && "bg-[#5B21B6]"
                     )}>
                       {/* Question Counter */}
                       <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">

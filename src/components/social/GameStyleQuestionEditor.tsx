@@ -621,7 +621,8 @@ export function GameStyleQuestionEditor({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-[#6B5B95] flex flex-col"
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
     >
       {/* Header */}
       <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
@@ -697,7 +698,7 @@ export function GameStyleQuestionEditor({
                       className="absolute inset-0 w-full h-full object-cover"
                       alt=""
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#5A4A7A]/80 via-[#5A4A7A]/70 to-[#5A4A7A]/90" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#5B21B6]/80 via-[#5B21B6]/70 to-[#5B21B6]/90" />
                     <button
                       onClick={removeBackgroundImage}
                       className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
@@ -709,7 +710,7 @@ export function GameStyleQuestionEditor({
                 
             <div className={cn(
               "relative z-10 p-3",
-              !question.backgroundImageUrl && "bg-[#5A4A7A]"
+              !question.backgroundImageUrl && "bg-[#5B21B6]"
             )}>
               {/* Question Counter */}
               <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
