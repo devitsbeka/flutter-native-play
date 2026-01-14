@@ -201,8 +201,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
             className="space-y-5"
           >
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
-                <img src={iconGroupOfPeople} alt="Create MyTrivia Party" className="w-14 h-14 object-contain" />
+              <div className="inline-flex items-center justify-center mb-4">
+                <img src={iconGroupOfPeople} alt="Create MyTrivia Party" className="w-16 h-16 object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">შექმენი MyTrivia Party</h3>
               <p className="text-white/70">შენი კითხვები, შენი პასუხები</p>
@@ -423,7 +423,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-[#6B5B95]"
+          className="fixed inset-0 z-50"
+          style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
         >
           <div className="fixed top-0 left-0 right-0 z-50 safe-top">
             <div className="flex items-center justify-between px-4 py-3">
@@ -465,7 +466,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           </div>
 
           {/* Fixed bottom CTA */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-[#6B5B95] safe-bottom">
+          <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 safe-bottom" style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}>
             {renderBottomCTA()}
           </div>
         </motion.div>
