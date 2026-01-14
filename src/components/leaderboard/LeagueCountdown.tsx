@@ -53,26 +53,38 @@ function FlipDigit({ digit }: { digit: string }) {
     }
   }, [digit, currentDigit]);
 
+  const cardHeight = 40; // Total height in px
+  const halfHeight = cardHeight / 2;
+
   return (
-    <div className="relative w-7 h-10 text-xl font-bold select-none">
-      {/* Top half - shows current digit */}
+    <div 
+      className="relative font-bold select-none"
+      style={{ width: 28, height: cardHeight }}
+    >
+      {/* Top half - shows current digit (top half clipped) */}
       <div 
-        className="absolute inset-x-0 top-0 h-1/2 overflow-hidden rounded-t-md bg-foreground/5"
-        style={{ lineHeight: '40px' }}
+        className="absolute inset-x-0 top-0 overflow-hidden rounded-t-md bg-foreground/5"
+        style={{ height: halfHeight }}
       >
-        <span className="absolute w-full text-center text-foreground">
+        <div 
+          className="flex items-center justify-center text-foreground text-xl"
+          style={{ height: cardHeight }}
+        >
           {currentDigit}
-        </span>
+        </div>
       </div>
 
-      {/* Bottom half - shows current digit */}
+      {/* Bottom half - shows current digit (bottom half clipped) */}
       <div 
-        className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden rounded-b-md bg-foreground/10"
-        style={{ lineHeight: '0px' }}
+        className="absolute inset-x-0 overflow-hidden rounded-b-md bg-foreground/10"
+        style={{ top: halfHeight, height: halfHeight }}
       >
-        <span className="absolute w-full text-center text-foreground" style={{ top: '-20px' }}>
+        <div 
+          className="flex items-center justify-center text-foreground text-xl"
+          style={{ height: cardHeight, marginTop: -halfHeight }}
+        >
           {currentDigit}
-        </span>
+        </div>
       </div>
 
       {/* Divider line */}
@@ -81,33 +93,40 @@ function FlipDigit({ digit }: { digit: string }) {
       {/* Flipping animation overlay */}
       {isFlipping && (
         <>
-          {/* Top card flipping down */}
+          {/* Top card flipping down - shows previous digit */}
           <div 
-            className="absolute inset-x-0 top-0 h-1/2 overflow-hidden rounded-t-md bg-foreground/5 origin-bottom z-20"
+            className="absolute inset-x-0 top-0 overflow-hidden rounded-t-md bg-foreground/5 origin-bottom z-20"
             style={{ 
+              height: halfHeight,
               animation: 'flip-top 0.3s ease-in forwards',
               backfaceVisibility: 'hidden',
-              lineHeight: '40px'
             }}
           >
-            <span className="absolute w-full text-center text-foreground">
+            <div 
+              className="flex items-center justify-center text-foreground text-xl"
+              style={{ height: cardHeight }}
+            >
               {prevDigit}
-            </span>
+            </div>
           </div>
 
-          {/* Bottom card flipping up */}
+          {/* Bottom card flipping up - shows current digit */}
           <div 
-            className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden rounded-b-md bg-foreground/10 origin-top z-20"
+            className="absolute inset-x-0 overflow-hidden rounded-b-md bg-foreground/10 origin-top z-20"
             style={{ 
+              top: halfHeight,
+              height: halfHeight,
               animation: 'flip-bottom 0.3s ease-out 0.3s forwards',
               transform: 'rotateX(180deg)',
               backfaceVisibility: 'hidden',
-              lineHeight: '0px'
             }}
           >
-            <span className="absolute w-full text-center text-foreground" style={{ top: '-20px' }}>
+            <div 
+              className="flex items-center justify-center text-foreground text-xl"
+              style={{ height: cardHeight, marginTop: -halfHeight }}
+            >
               {currentDigit}
-            </span>
+            </div>
           </div>
         </>
       )}
