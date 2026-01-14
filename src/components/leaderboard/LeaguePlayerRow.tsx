@@ -57,10 +57,11 @@ export function LeaguePlayerRow({
   const rowHeight = 72;
   const initialOffset = rankDiff * rowHeight;
 
-  // Determine background styling based on zone
-  const getRowBackground = () => {
+  // Determine background and border styling based on zone
+  const getRowStyles = () => {
     if (isCurrentUser) {
-      return "bg-primary/10 shadow-sm";
+      // Current user: no fill, subtle 1px stroke, 18px border radius
+      return "border border-foreground/20";
     }
     if (isPromotionZone) {
       return "bg-emerald-500/5";
@@ -68,7 +69,7 @@ export function LeaguePlayerRow({
     if (isDemotionZone) {
       return "bg-destructive/5";
     }
-    return "bg-muted/30 hover:bg-muted/50";
+    return "hover:bg-muted/30";
   };
 
   // Get zone indicator color for the rank badge ring
@@ -80,7 +81,8 @@ export function LeaguePlayerRow({
 
   return (
     <motion.div
-      className={`flex items-center gap-3 py-3 px-3 rounded-2xl transition-colors ${getRowBackground()} ${isFixed ? "shadow-lg border border-border/50" : ""}`}
+      className={`flex items-center gap-3 py-3 px-3 transition-colors border-b border-border/40 last:border-b-0 ${getRowStyles()} ${isFixed ? "shadow-lg border border-border/50" : ""}`}
+      style={{ borderRadius: isCurrentUser ? 18 : 0 }}
       initial={
         shouldAnimate && rankDiff !== 0 
           ? { y: initialOffset, opacity: 0.8, scale: 0.98 } 
