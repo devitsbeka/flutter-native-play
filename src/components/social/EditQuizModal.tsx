@@ -435,8 +435,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
                       
                       return (
-                        <CarouselItem key={index} className="flex items-start justify-center pt-4 px-2">
-                          <div className="w-full max-w-sm bg-[#5A4A7A] rounded-2xl border border-white/10 p-6 space-y-5 shadow-xl">
+                        <CarouselItem key={index} className="flex items-center justify-center px-4">
+                          <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-5 space-y-4 shadow-xl">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
                               <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
@@ -450,7 +450,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             )}
                             
                             {/* Large Tappable Icon */}
-                            <div className="flex flex-col items-center gap-3">
+                            <div className="flex flex-col items-center gap-1.5">
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
@@ -460,7 +460,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                 large
                               />
                               {missingIcon && !hasCriticalIssue && (
-                                <span className="text-xs text-yellow-300">აიკონის დამატება</span>
+                                <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
                               )}
                             </div>
                             
@@ -552,26 +552,28 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
             )}
           </AnimatePresence>
 
-          {/* Fixed Footer - Save Button (only in info mode) */}
-          {viewMode === "info" && (
-            <div className="flex-shrink-0 p-4 border-t border-border bg-background">
-              <ChunkyButton
-                onClick={handleSave}
-                disabled={isSaving}
-                className="w-full"
-                size="lg"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    ინახება...
-                  </>
-                ) : (
-                  "შენახვა"
-                )}
-              </ChunkyButton>
-            </div>
-          )}
+          {/* Fixed Footer - Save Button (always visible) */}
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 ${
+            viewMode === "questions" 
+              ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
+              : "bg-background border-t border-border"
+          }`}>
+            <ChunkyButton
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full"
+              size="lg"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  ინახება...
+                </>
+              ) : (
+                "შენახვა"
+              )}
+            </ChunkyButton>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
