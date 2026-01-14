@@ -551,7 +551,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-[#6B5B95]"
+        className="fixed inset-0 z-50"
+        style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
       >
         {/* Header */}
         <div className="fixed top-0 left-0 right-0 z-50 safe-top">
@@ -600,8 +601,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                 >
                    {/* Header */}
                    <div className="text-center">
-                     <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
-                       <img src={iconCollections} alt="Create Collection" className="w-12 h-12 object-contain" />
+                     <div className="inline-flex items-center justify-center mb-4">
+                       <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
                      </div>
                      <h3 className="text-2xl font-bold text-white mb-2">შექმენი კოლექცია</h3>
                      <p className="text-white/70">ჩაწერე რა თემებზე გსურს რაუნდები</p>
