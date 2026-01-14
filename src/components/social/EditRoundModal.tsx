@@ -551,36 +551,40 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
             )}
           </AnimatePresence>
 
-          {/* Fixed Footer - Save Button (only in info mode) */}
-          {viewMode === "info" && (
-            <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 bg-background border-t border-border space-y-2">
-              {hasChanges && (
-                <p className="text-xs text-center text-amber-600 font-medium">
-                  ცვლილებები შესანახია
-                </p>
+          {/* Fixed Footer - Save Button (always visible) */}
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 space-y-2 ${
+            viewMode === "questions" 
+              ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
+              : "bg-background border-t border-border"
+          }`}>
+            {hasChanges && (
+              <p className={`text-xs text-center font-medium ${
+                viewMode === "questions" ? "text-yellow-200" : "text-amber-600"
+              }`}>
+                ცვლილებები შესანახია
+              </p>
+            )}
+            <ChunkyButton
+              onClick={handleSave}
+              disabled={isSaving || !hasChanges}
+              className={`w-full transition-all ${hasChanges ? "!bg-green-500 hover:!bg-green-600" : ""}`}
+              size="lg"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  ინახება...
+                </>
+              ) : hasChanges ? (
+                <>
+                  <Check className="w-5 h-5 mr-2" />
+                  შენახვა
+                </>
+              ) : (
+                "შენახვა"
               )}
-              <ChunkyButton
-                onClick={handleSave}
-                disabled={isSaving || !hasChanges}
-                className={`w-full transition-all ${hasChanges ? "!bg-green-500 hover:!bg-green-600" : ""}`}
-                size="lg"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    ინახება...
-                  </>
-                ) : hasChanges ? (
-                  <>
-                    <Check className="w-5 h-5 mr-2" />
-                    შენახვა
-                  </>
-                ) : (
-                  "შენახვა"
-                )}
-              </ChunkyButton>
-            </div>
-          )}
+            </ChunkyButton>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
