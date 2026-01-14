@@ -610,34 +610,32 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="flex gap-2 mt-3"
+                    className="flex justify-center gap-4 mt-3"
                   >
-                    <ChunkyButton
-                      variant="danger"
-                      size="sm"
+                    <motion.button
                       onClick={() => {
                         const gen = generations.find(g => g.id === selectedForAction);
                         if (gen) deleteAvatar(gen.id, gen.avatar_url);
                       }}
                       disabled={isLoading}
-                      className="flex-1"
-                      icon={<Trash2 className="w-4 h-4" />}
+                      className="w-12 h-12 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center transition-colors disabled:opacity-50"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      {t("common.delete")}
-                    </ChunkyButton>
-                    <ChunkyButton
-                      variant="primary"
-                      size="sm"
+                      <Trash2 className="w-5 h-5 text-destructive" />
+                    </motion.button>
+                    <motion.button
                       onClick={() => {
                         const gen = generations.find(g => g.id === selectedForAction);
                         if (gen) selectPreviousAvatar(gen.avatar_url);
                       }}
                       disabled={isLoading}
-                      className="flex-1"
-                      icon={<Check className="w-4 h-4" />}
+                      className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors disabled:opacity-50"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      {t("common.use")}
-                    </ChunkyButton>
+                      <Check className="w-5 h-5 text-primary" />
+                    </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>
