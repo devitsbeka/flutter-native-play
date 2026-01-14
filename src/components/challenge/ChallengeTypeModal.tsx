@@ -1,11 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Swords } from "lucide-react";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { useNavigate } from "react-router-dom";
-import storyDice from "@/assets/story-dice.png";
+import spinTheBottle from "@/assets/spin-the-bottle.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import iconCollections from "@/assets/icon-collections.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
+import danceFloor from "@/assets/dance-floor.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
 
 interface ChallengeTypeModalProps {
   isOpen: boolean;
@@ -19,34 +21,53 @@ interface ChallengeTypeModalProps {
   } | null;
 }
 
-const challengeOptions = [
+// Top section - full-width horizontal cards (Quick Play options)
+const topOptions = [
   {
     id: "random",
-    icon: storyDice,
-    title: "შემთხვევითი",
-    description: "რანდომ კატეგორია",
-    gradient: "from-purple-500 to-indigo-600",
+    imageIcon: spinTheBottle,
+    title: "შემთხვევითი კატეგორია",
+    subtitle: "სწრაფი სტარტი",
+    glowColor: "rgba(245, 158, 11, 0.4)",
   },
   {
     id: "library",
-    icon: secretBookcase,
-    title: "ბიბლიოთეკა",
-    description: "აირჩიე კატეგორია",
-    gradient: "from-blue-500 to-cyan-600",
+    imageIcon: secretBookcase,
+    title: "აირჩიე ბიბლიოთეკიდან",
+    subtitle: "კატეგორიების არჩევა",
+    glowColor: "rgba(139, 92, 246, 0.4)",
+  },
+];
+
+// Bottom 2x2 grid - Room creation flow
+const bottomOptions = [
+  {
+    id: "create-room",
+    imageIcon: danceFloor,
+    title: "ოთახი",
+    subtitle: "შექმენი სათამაშო ოთახი",
+    glowColor: "rgba(16, 185, 129, 0.4)",
+  },
+  {
+    id: "trivia",
+    imageIcon: triviaBuzzer,
+    title: "ტრივია",
+    subtitle: "1 რაუნდი",
+    glowColor: "rgba(139, 92, 246, 0.4)",
+  },
+  {
+    id: "collection",
+    imageIcon: iconCollections,
+    title: "კოლექცია",
+    subtitle: "რამდენიმე რაუნდი",
+    glowColor: "rgba(34, 211, 238, 0.4)",
   },
   {
     id: "my-trivias",
-    icon: iconCollections,
-    title: "ჩემი ტრივია",
-    description: "ტრივია/კოლექცია",
-    gradient: "from-amber-500 to-orange-600",
-  },
-  {
-    id: "create",
-    icon: triviaBuzzer,
-    title: "შექმნა",
-    description: "ახალი ტრივია",
-    gradient: "from-pink-500 to-rose-600",
+    imageIcon: iconGroupOfPeople,
+    title: "MyTrivia Party",
+    subtitle: "შენი კითხვები",
+    glowColor: "rgba(236, 72, 153, 0.4)",
   },
 ];
 
@@ -60,11 +81,9 @@ export function ChallengeTypeModal({
   const navigate = useNavigate();
 
   const handleOptionSelect = (optionId: string) => {
-    // Close modals first
     onClose();
     onChallengeStart?.();
     
-    // Small delay to ensure modals close before navigation
     setTimeout(() => {
       switch (optionId) {
         case "random":
@@ -73,11 +92,17 @@ export function ChallengeTypeModal({
         case "library":
           navigate(`/team?challenge=${targetUserId}&type=library`);
           break;
+        case "create-room":
+          navigate(`/team?challenge=${targetUserId}&type=create-room`);
+          break;
+        case "trivia":
+          navigate(`/team?challenge=${targetUserId}&type=trivia`);
+          break;
+        case "collection":
+          navigate(`/team?challenge=${targetUserId}&type=collection`);
+          break;
         case "my-trivias":
           navigate(`/team?challenge=${targetUserId}&type=my-trivias`);
-          break;
-        case "create":
-          navigate(`/team?challenge=${targetUserId}&type=create`);
           break;
       }
     }, 100);
@@ -92,24 +117,37 @@ export function ChallengeTypeModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[110] bg-background flex flex-col"
+          className="fixed inset-0 z-[110] flex flex-col"
+          style={{
+            background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
+          }}
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-4 safe-top">
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center"
             >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              <ChevronLeft className="w-5 h-5 text-white" />
             </button>
-            <h2 className="text-lg font-bold text-foreground">⚔️ გამოწვევა</h2>
+            <div className="flex items-center gap-2">
+              <Swords className="w-5 h-5 text-white/80" />
+              <h2 className="text-xl font-bold text-white">გამოწვევა</h2>
+            </div>
           </div>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-4 py-6">
             {/* Target User Info */}
             {targetUserProfile && (
-              <div className="flex items-center gap-3 mb-6 p-4 rounded-xl bg-muted/50">
+              <div 
+                className="flex items-center gap-3 mb-6 p-4 rounded-xl"
+                style={{
+                  background: "rgba(255, 255, 255, 0.12)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                }}
+              >
                 <SmartAvatar
                   avatarUrl={targetUserProfile.avatar_url}
                   animatedAvatarUrl={targetUserProfile.animated_avatar_url}
@@ -117,42 +155,87 @@ export function ChallengeTypeModal({
                   size="md"
                 />
                 <div>
-                  <p className="font-medium text-foreground">
+                  <p className="font-medium text-white">
                     {targetUserProfile.nickname}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-white/60">
                     აირჩიე რას ითამაშებთ
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Options Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {challengeOptions.map((option, index) => (
+            {/* Top section - Full-width horizontal cards */}
+            <div className="space-y-3 mb-4">
+              {topOptions.map((option, index) => (
                 <motion.button
                   key={option.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => handleOptionSelect(option.id)}
-                  className={`relative p-4 rounded-2xl bg-gradient-to-br ${option.gradient} text-white text-left overflow-hidden min-h-[140px] flex flex-col`}
+                  className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.12)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Decorative circles */}
-                  <div className="absolute top-1/2 -right-4 w-16 h-16 rounded-full bg-white/10 pointer-events-none" />
-                  <div className="absolute -bottom-2 right-4 w-10 h-10 rounded-full bg-white/10 pointer-events-none" />
+                  {/* Glow effect */}
+                  <div 
+                    className="absolute inset-0 opacity-20 pointer-events-none" 
+                    style={{
+                      background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 50%)`,
+                    }} 
+                  />
                   
-                  {/* Icon top-left */}
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-auto pointer-events-none">
-                    <img src={option.icon} alt="" className="w-7 h-7 object-contain" />
+                  <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <img src={option.imageIcon} alt="" className="w-10 h-10 object-contain" />
                   </div>
                   
-                  {/* Text bottom-left */}
-                  <div className="mt-3 pointer-events-none">
-                    <p className="font-bold text-lg leading-tight">{option.title}</p>
-                    <p className="text-sm text-white/80 mt-0.5">{option.description}</p>
+                  <div>
+                    <h3 className="font-bold text-white text-base">{option.title}</h3>
+                    <p className="text-white/60 text-xs">{option.subtitle}</p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+            {/* 2x2 Grid - Vertical cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {bottomOptions.map((option, index) => (
+                <motion.button
+                  key={option.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (index + topOptions.length) * 0.05 }}
+                  onClick={() => handleOptionSelect(option.id)}
+                  className="relative p-4 rounded-2xl overflow-hidden text-left min-h-[140px] flex flex-col"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.12)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {/* Glow effect */}
+                  <div 
+                    className="absolute inset-0 opacity-30 pointer-events-none" 
+                    style={{
+                      background: `radial-gradient(circle at top right, ${option.glowColor}, transparent 60%)`,
+                    }} 
+                  />
+                  
+                  <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center mb-auto">
+                    <img src={option.imageIcon} alt="" className="w-10 h-10 object-contain" />
+                  </div>
+                  
+                  <div className="mt-3">
+                    <h3 className="font-bold text-white text-base mb-0.5">{option.title}</h3>
+                    <p className="text-white/60 text-xs">{option.subtitle}</p>
                   </div>
                 </motion.button>
               ))}
