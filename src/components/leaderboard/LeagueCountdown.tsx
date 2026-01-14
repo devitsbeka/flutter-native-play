@@ -4,7 +4,6 @@ import { Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CountdownTime {
-  days: number;
   hours: number;
   minutes: number;
   seconds: number;
@@ -22,12 +21,14 @@ function getTimeUntilReset(): CountdownTime {
   const diff = nextSunday.getTime() - now.getTime();
   
   if (diff <= 0) {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    return { hours: 0, minutes: 0, seconds: 0 };
   }
   
+  // Convert everything to hours (including days)
+  const totalHours = Math.floor(diff / (1000 * 60 * 60));
+  
   return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    hours: totalHours,
     minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
     seconds: Math.floor((diff % (1000 * 60)) / 1000),
   };
@@ -150,7 +151,7 @@ function TimeUnit({ value, label }: { value: string; label?: string }) {
 }
 
 export function LeagueCountdown() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [time, setTime] = useState<CountdownTime>(getTimeUntilReset);
   
   useEffect(() => {
@@ -160,8 +161,6 @@ export function LeagueCountdown() {
     
     return () => clearInterval(interval);
   }, []);
-  
-  const daysLabel = language === 'ka' ? 'დღ' : 'd';
   
   return (
     <motion.div
@@ -173,10 +172,6 @@ export function LeagueCountdown() {
       </div>
       <div className="flex items-center justify-center gap-2">
         <Clock className="w-5 h-5 text-amber-500" />
-        
-        <TimeUnit value={time.days.toString()} label={daysLabel} />
-        
-        <span className="text-xl font-bold text-foreground/30">:</span>
         
         <TimeUnit value={padZero(time.hours)} />
         
