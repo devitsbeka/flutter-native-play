@@ -321,13 +321,14 @@ function DesktopLeagueColumn({
             </div>
           ) : (
             (() => {
-              const top10 = leaderboard.slice(0, 10);
-              const userInTop10 = top10.some(e => e.user_id === user?.id);
+              const userInTop10 = leaderboard.slice(0, 10).some(e => e.user_id === user?.id);
               const userEntryOutside = !userInTop10 ? leaderboard.find(e => e.user_id === user?.id) : null;
+              // If user is outside top 10, show top 9 + user = 10 total
+              const top = userEntryOutside ? leaderboard.slice(0, 9) : leaderboard.slice(0, 10);
               
               return (
                 <>
-                  {top10.map((entry, index) => {
+                  {top.map((entry, index) => {
                     const isCurrentUser = entry.user_id === user?.id;
                     return (
                       <LeaguePlayerRow
@@ -345,7 +346,7 @@ function DesktopLeagueColumn({
                   })}
                   {userEntryOutside && (
                     <>
-                      <div className="text-center text-muted-foreground text-xs py-2">• • •</div>
+                      <div className="text-center text-muted-foreground text-xs py-1">• • •</div>
                       <LeaguePlayerRow
                         entry={userEntryOutside}
                         isCurrentUser={true}
