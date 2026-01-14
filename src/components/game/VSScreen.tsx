@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
@@ -69,7 +69,8 @@ export function VSScreen() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { categories } = useCategories();
-  const { stakeAmount, deductStake } = useGameStake();
+  const { stakeAmount, deductStake, canPlay } = useGameStake();
+  const { startMatchmaking } = useGame();
   
   // Game stage state
   const [stage, setStage] = useState<GameStage>("finding-opponent");
@@ -227,6 +228,24 @@ export function VSScreen() {
     }
   };
 
+  // Handle refresh - re-spin for new opponent and category
+  const handleRefresh = () => {
+    // Reset local state
+    setStage("finding-opponent");
+    setSelectedCategory(null);
+    setCurrentCategoryIndex(0);
+    setStakeDeducted(false);
+    
+    // Shuffle category pool for new selection
+    if (categories.length > 0) {
+      const shuffled = [...categories].sort(() => Math.random() - 0.5);
+      setCategoryPool(shuffled.slice(0, Math.min(8, shuffled.length)));
+    }
+    
+    // Re-trigger matchmaking
+    startMatchmaking();
+  };
+
   const isOpponentLocked = stage !== "finding-opponent";
   const isCategoryLocked = stage === "category-found" || stage === "ready";
   const showStartButton = stage === "ready";
@@ -329,19 +348,8 @@ export function VSScreen() {
           <ArrowLeft className="w-6 h-6 text-white" strokeWidth={2.5} />
         </motion.button>
 
-        {/* Stake indicator */}
-        <motion.div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <img src={coinIcon} alt="" className="w-5 h-5" />
-          <span className="text-white font-bold text-sm">
-            {stakeDeducted ? `-${stakeAmount}` : stakeAmount}
-          </span>
-          <span className="text-white/70 text-xs">{t("game.stake")}</span>
-        </motion.div>
+        {/* Spacer for header balance */}
+        <div className="w-10" />
         
         <motion.button 
           className="p-2" 
@@ -397,12 +405,12 @@ export function VSScreen() {
 
           {/* Category - Center with Interactive Morphing Blobs */}
           <motion.div 
-            className="flex flex-col items-center justify-center gap-4 relative z-10"
+            className="flex flex-col items-center justify-center gap-3 relative z-10 mt-[5px]"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Combined Prize + Category Badge */}
+            {/* Combined Prize + Category Badge - merged coin info */}
             <AnimatePresence>
               {isOpponentLocked && (
                 <motion.div
@@ -416,12 +424,22 @@ export function VSScreen() {
                     boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
                   }}
                 >
+                  {/* Entry fee */}
+                  <img src={coinIcon} alt="" className="w-4 h-4 opacity-70" />
+                  <span className="text-sm text-white/70">-{stakeAmount}</span>
+                  
+                  {/* Arrow separator */}
+                  <span className="text-white/40 text-sm">→</span>
+                  
+                  {/* Win reward */}
                   <img src={coinIcon} alt="" className="w-5 h-5" />
                   <span className="text-lg font-black text-white">
                     {REWARDS.GAME_WIN_REWARD.toLocaleString()}
                   </span>
+                  
+                  {/* Category name */}
                   <span className="text-white/50 text-lg">•</span>
-                  <span className="text-white font-bold text-base truncate max-w-[160px]">
+                  <span className="text-white font-bold text-base truncate max-w-[140px]">
                     {selectedCategory?.name || currentCategory?.name || t("game.category")}
                   </span>
                 </motion.div>
@@ -435,6 +453,28 @@ export function VSScreen() {
               isLocked={isCategoryLocked}
               shouldAnimate={showCategorySlot && !isCategoryLocked}
             />
+
+            {/* Refresh button - only visible when category is locked */}
+            <AnimatePresence>
+              {isCategoryLocked && (
+                <motion.button
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full backdrop-blur-md"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
+                    border: "2px solid rgba(255,215,0,0.4)",
+                  }}
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ delay: 0.3 }}
+                  onClick={handleRefresh}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <RefreshCw className="w-4 h-4 text-white" />
+                  <span className="text-white font-bold text-sm">ახლიდან</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Player - Bottom Right */}
