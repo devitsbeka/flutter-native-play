@@ -276,18 +276,18 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
           
           {/* Buttons Row */}
           {collection.is_public === false && (
-            <div className="flex items-center justify-end mt-3">
+            <div className="flex items-center gap-3 mt-3">
               <button
                 onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
                 disabled={isPosting}
-                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {isPosting ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <Globe className="w-3 h-3" />
+                  <Globe className="w-3.5 h-3.5" />
                 )}
-                <span>Post</span>
+                <span>გამოაქვეყნე</span>
               </button>
             </div>
           )}
@@ -450,12 +450,12 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
         
         {/* Buttons Row */}
-        <div className="flex items-center justify-end gap-2 mt-3">
+        <div className="flex items-center gap-3 mt-3">
           {post.is_public === false && (
             <ChunkyButton 
               size="sm" 
               variant="primary" 
-              className="text-xs"
+              className="flex-1 text-xs"
               onClick={() => onPost?.(post)}
               disabled={isPosting}
             >
@@ -464,17 +464,17 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               ) : (
                 <Globe className="w-3.5 h-3.5" />
               )}
-              <span>Post</span>
+              <span>გამოაქვეყნე</span>
             </ChunkyButton>
           )}
           <ChunkyButton 
             size="sm" 
             variant="secondary" 
-            className="text-xs"
+            className="flex-1 text-xs"
             onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
           >
             <Play className="w-3.5 h-3.5" />
-            <span>თამაში</span>
+            <span>ითამაშე</span>
           </ChunkyButton>
         </div>
       </div>
@@ -581,13 +581,13 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
         
         {/* Buttons Row */}
-        <div className="flex items-center justify-end gap-2 mt-3">
+        <div className="flex items-center gap-3 mt-3">
           {/* Post button - only show for private content */}
           {post.is_public === false && (
             <ChunkyButton 
               size="sm" 
               variant="primary" 
-              className="text-xs"
+              className="flex-1 text-xs"
               onClick={() => onPost?.(post)}
               disabled={isPosting}
             >
@@ -596,17 +596,17 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               ) : (
                 <Globe className="w-3.5 h-3.5" />
               )}
-              <span>Post</span>
+              <span>გამოაქვეყნე</span>
             </ChunkyButton>
           )}
           <ChunkyButton 
             size="sm" 
             variant="secondary" 
-            className="text-xs"
+            className="flex-1 text-xs"
             onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
           >
             <Play className="w-3.5 h-3.5" />
-            <span>თამაში</span>
+            <span>ითამაშე</span>
           </ChunkyButton>
         </div>
       </div>
