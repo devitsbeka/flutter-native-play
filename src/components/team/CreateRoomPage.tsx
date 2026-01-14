@@ -556,7 +556,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
         {/* Room Name with Icon - AI generated */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">ოთახის სახელი</h2>
+          <h2 className="text-xs font-medium text-muted-foreground mb-2">შეარჩიე ოთახის სახელი</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
             {/* Icon from 9k library - clickable to open picker */}
             <button
@@ -635,7 +635,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         {/* Invite Friends - Horizontal Scroll */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები</h2>
+            <h2 className="text-xs font-medium text-muted-foreground">მოიწვიე მეგობრები სათამაშოდ</h2>
             {acceptedFriends.length > 5 && (
               <button 
                 onClick={() => setShowInviteModal(true)}
@@ -754,7 +754,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
         {/* 3 Option Cards - Vertical List with Descriptions */}
         <div>
-          <h2 className="text-xs font-medium text-muted-foreground mb-2">{t("team.category")}</h2>
+          <h2 className="text-xs font-medium text-muted-foreground mb-2">რას ითამაშებთ?</h2>
           
           <div className="space-y-3">
             {/* Random Option - Container that expands to show preview */}
