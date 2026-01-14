@@ -77,6 +77,7 @@ interface MyTriviaTabProps {
   searchQuery?: string;
   sortFilter?: SortFilter;
   onPlay?: (post: any, collectionPosts?: any[]) => void;
+  onEditingRoundChange?: (isEditing: boolean) => void;
 }
 
 // Compact quiz card for inside collections
@@ -610,7 +611,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
     </motion.div>
   );
 }
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay, onEditingRoundChange }: MyTriviaTabProps) {
   const queryClient = useQueryClient();
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
@@ -618,6 +619,11 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const { profile } = useAuth();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
+  
+  // Notify parent when editing round state changes
+  useEffect(() => {
+    onEditingRoundChange?.(!!editingRound);
+  }, [editingRound, onEditingRoundChange]);
   const [addingToCollection, setAddingToCollection] = useState<{
     collectionId: string;
     roundNumber: number;
@@ -986,6 +992,10 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         round={editingRound}
         isOpen={!!editingRound}
         onClose={() => setEditingRound(null)}
+        onAddRound={(collectionId, roundNumber) => {
+          setEditingRound(null);
+          setAddingToCollection({ collectionId, roundNumber });
+        }}
       />
 
       {/* Add Round to Collection Modal */}

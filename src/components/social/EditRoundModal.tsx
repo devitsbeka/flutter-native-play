@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon } from "lucide-react";
+import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -25,11 +25,12 @@ interface EditRoundModalProps {
   round: any | null;
   isOpen: boolean;
   onClose: () => void;
+  onAddRound?: (collectionId: string, nextRoundNumber: number) => void;
 }
 
 type ViewMode = "info" | "questions";
 
-export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) {
+export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRoundModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -407,6 +408,25 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                       )}
                     </AnimatePresence>
                   </div>
+
+                  {/* Add Round Button - Only if part of a collection */}
+                  {round.collection_id && onAddRound && (
+                    <div className="pt-4 border-t border-border">
+                      <button
+                        onClick={() => {
+                          const nextRoundNumber = (round.round_number || 1) + 1;
+                          onAddRound(round.collection_id, nextRoundNumber);
+                          onClose();
+                        }}
+                        className="w-full py-3 rounded-xl border-2 border-dashed border-primary/30 
+                                   bg-primary/5 hover:bg-primary/10 transition-colors 
+                                   flex items-center justify-center gap-2 text-primary"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span className="font-medium">რაუნდის დამატება</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -552,7 +572,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
           </AnimatePresence>
 
           {/* Fixed Footer - Save Button (always visible) */}
-          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 space-y-2 ${
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-8 space-y-2 safe-bottom ${
             viewMode === "questions" 
               ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
               : "bg-background border-t border-border"
