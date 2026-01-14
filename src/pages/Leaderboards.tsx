@@ -282,8 +282,8 @@ function DesktopLeagueColumn({
 
   return (
     <motion.div
-      className={`bg-card/50 backdrop-blur-sm rounded-2xl border overflow-hidden flex flex-col ${
-        isUserTier ? 'border-primary/50 ring-2 ring-primary/20' : 'border-border/30'
+      className={`backdrop-blur-sm rounded-2xl border overflow-hidden flex flex-col ${
+        isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
       }`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
