@@ -231,15 +231,17 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
       onTierSelect={setViewingTier}
       userTier={userTier}
     >
-      {/* Global Countdown */}
-      <div className="flex justify-center mb-6">
-        <div className="w-80">
-          <LeagueCountdown />
+      {/* Spacer to push content down */}
+      <div className="pt-[300px]">
+        {/* Global Countdown */}
+        <div className="flex justify-center mb-6">
+          <div className="w-80">
+            <LeagueCountdown />
+          </div>
         </div>
-      </div>
 
-      {/* 3 Column Layout */}
-      <div className="max-w-7xl mx-auto px-4">
+        {/* 3 Column Layout */}
+        <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-3 gap-4">
           {tiers.map(({ tier, data, name, nameKa }) => (
             <DesktopLeagueColumn
@@ -252,6 +254,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
               previousRank={data.previousRank}
             />
           ))}
+        </div>
         </div>
       </div>
     </LeaderboardHeroBackground>
