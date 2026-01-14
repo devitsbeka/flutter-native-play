@@ -701,7 +701,10 @@ export function GameStylePersonalTrivia({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-[#6B5B95] flex flex-col"
+          className="fixed inset-0 z-50 flex flex-col"
+          style={{
+            background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
+          }}
         >
           {/* Header with Title - Added more top spacing */}
           <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
