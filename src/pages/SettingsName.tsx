@@ -1,0 +1,92 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { User, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useNotificationModal } from "@/hooks/useNotificationModal";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Input } from "@/components/ui/input";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+
+export default function SettingsName() {
+  const { user, profile, fetchProfile } = useAuth();
+  const { notify } = useNotificationModal();
+  const { t } = useLanguage();
+
+  const [nickname, setNickname] = useState(profile?.nickname || "");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (profile?.nickname) {
+      setNickname(profile.nickname);
+    }
+  }, [profile?.nickname]);
+
+  const handleSave = async () => {
+    if (!user || !nickname.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ nickname: nickname.trim() })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      if (user) await fetchProfile(user.id);
+      notify.success(t("settings.nameChanged"), { icon: "✅" });
+    } catch (error: any) {
+      notify.error(t("errors.generic"), { description: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <PageHeader title={t("settings.editName")} />
+
+      <div className="p-4 pb-12 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card rounded-2xl border border-border p-6 space-y-4"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <User className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground">{t("settings.editName")}</h3>
+              <p className="text-sm text-muted-foreground">შეცვალე შენი სახელი</p>
+            </div>
+          </div>
+
+          <Input
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder={t("auth.usernamePlaceholder")}
+            className="h-12 rounded-xl"
+            maxLength={20}
+          />
+
+          <ChunkyButton
+            variant="mint"
+            size="lg"
+            className="w-full"
+            onClick={handleSave}
+            disabled={isLoading || !nickname.trim()}
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              t("common.save")
+            )}
+          </ChunkyButton>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
