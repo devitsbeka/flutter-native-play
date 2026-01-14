@@ -102,8 +102,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         }}
       />
 
-      {/* Desktop: All 3 trophies in a row */}
-      <div className="hidden md:flex relative z-20 justify-center items-end gap-4 pt-8 pb-4 px-4">
+      {/* Desktop: All 3 trophies in a row - hidden on lg since columns have trophies */}
+      <div className="hidden md:flex lg:hidden relative z-20 justify-center items-end gap-4 pt-8 pb-4 px-4">
         {([2, 3, 1] as const).map((tierNum) => {
           const meta = TROPHY_META[tierNum];
           const isActive = tierNum === tier;
