@@ -557,7 +557,12 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateRoomScreen(true)}
+                onAddClick={async () => {
+                  const room = await createRoom();
+                  if (room) {
+                    navigate(`/team?room=${room.room_code}`);
+                  }
+                }}
               />
             </div>
           )}
