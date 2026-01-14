@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -285,6 +285,7 @@ export function GameStyleQuestionEditor({
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showIdeaGlow, setShowIdeaGlow] = useState(true);
 
   const QUESTION_MAX = 65;
   const ANSWER_MAX = 25;
@@ -321,6 +322,15 @@ export function GameStyleQuestionEditor({
       setErrorField(null);
     }
   }, [editingField]);
+
+  // Glow effect every 5 seconds for idea button
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowIdeaGlow(true);
+      setTimeout(() => setShowIdeaGlow(false), 1500);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const currentQuestion = questions[currentIndex];
 
@@ -698,11 +708,11 @@ export function GameStyleQuestionEditor({
                 )}
                 
             <div className={cn(
-              "relative z-10 p-5",
+              "relative z-10 p-3",
               !question.backgroundImageUrl && "bg-[#5A4A7A]"
             )}>
               {/* Question Counter */}
-              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
+              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-medium">
                 {index + 1}/{questions.length}
               </div>
 
@@ -711,19 +721,57 @@ export function GameStyleQuestionEditor({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
                 className={cn(
-                  "absolute top-3 z-20 h-8 w-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all disabled:opacity-50",
-                  question.backgroundImageUrl ? "right-14" : "right-3"
+                  "absolute top-2 z-20 h-7 w-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-all disabled:opacity-50",
+                  question.backgroundImageUrl ? "right-12" : "right-2"
                 )}
               >
                 {isUploading ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <Image className="w-3.5 h-3.5" />
+                  <Image className="w-3 h-3" />
                 )}
               </button>
 
-              {/* Icon */}
-                  <div className="flex justify-center mb-3 pt-4">
+              {/* Empty State with Idea Button */}
+              {!question.question ? (
+                <div className="flex flex-col items-center justify-center py-4 pt-6">
+                  <div className="flex justify-center mb-2">
+                    <QuestionIconPicker
+                      selectedSlug={question.iconSlug || null}
+                      onSelect={(slug) => handleIconChange(slug, index)}
+                      questionText={question.question}
+                      correctAnswer={question.answers.find(a => a.isCorrect)?.text}
+                      incorrectAnswers={question.answers.filter(a => !a.isCorrect).map(a => a.text)}
+                    />
+                  </div>
+                  <Lightbulb className="w-10 h-10 text-white/40 mb-2" />
+                  <p className="text-white/60 text-sm mb-3">დააჭირე AI იდეას</p>
+                  <button
+                    onClick={() => handleGenerateAI(index)}
+                    disabled={isGeneratingAI}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold transition-all hover:scale-105 active:scale-95",
+                      showIdeaGlow && "animate-glow-pulse"
+                    )}
+                  >
+                    {isGeneratingAI && generatingIndex === index ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    იდეა
+                  </button>
+                  <button
+                    onClick={() => startEditing("question", "")}
+                    className="mt-2 text-xs text-white/50 hover:text-white/70 transition-colors"
+                  >
+                    ან დაწერე ხელით
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Icon */}
+                  <div className="flex justify-center mb-2 pt-2">
                     <QuestionIconPicker
                       selectedSlug={question.iconSlug || null}
                       onSelect={(slug) => handleIconChange(slug, index)}
@@ -735,14 +783,14 @@ export function GameStyleQuestionEditor({
 
                   {/* Question Text */}
                   {editingField === "question" && index === currentIndex ? (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Textarea
                         ref={textareaRef}
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={saveEdit}
                         onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && saveEdit()}
-                        className="min-h-[70px] text-center text-lg font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50 resize-none"
+                        className="min-h-[60px] text-center text-base font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50 resize-none"
                         maxLength={QUESTION_MAX}
                         placeholder="შეიყვანე კითხვა..."
                       />
@@ -759,14 +807,16 @@ export function GameStyleQuestionEditor({
                       )}
                     >
                       <p className={cn(
-                        "text-xl font-bold text-white leading-relaxed group-hover:text-white/80 transition-colors min-h-[50px] flex items-center justify-center",
+                        "text-lg font-bold text-white leading-snug group-hover:text-white/80 transition-colors min-h-[40px] flex items-center justify-center",
                         errorField?.questionIndex === index && errorField?.field === "question" && "text-red-300"
                       )}>
-                        {question.question || <span className="text-white/50">დააჭირე კითხვის დასამატებლად...</span>}
+                        {question.question}
                       </p>
-                      <Edit3 className="w-4 h-4 text-white/50 mx-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Edit3 className="w-3.5 h-3.5 text-white/50 mx-auto mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   )}
+                </>
+              )}
                 </div>
               </div>
 

@@ -208,14 +208,14 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             ? "!border-destructive !border-solid !bg-destructive/10" 
             : ""
         }`}
-        style={{ width: large ? 100 : 58, height: large ? 100 : 58 }}
+        style={{ width: large ? 100 : 48, height: large ? 100 : 48 }}
       >
         {selectedSlug ? (
           <>
             <img
               src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
               alt=""
-              style={{ width: large ? 80 : 50, height: large ? 80 : 50 }}
+              style={{ width: large ? 80 : 40, height: large ? 80 : 40 }}
               className="object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -228,7 +228,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             )}
           </>
         ) : (
-          <Smile style={{ width: large ? 50 : 38, height: large ? 50 : 38 }} className={large ? "text-white/60" : "text-muted-foreground"} />
+          <Smile style={{ width: large ? 50 : 32, height: large ? 50 : 32 }} className={large ? "text-white/60" : "text-muted-foreground"} />
         )}
       </button>
 
