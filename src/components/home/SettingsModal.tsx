@@ -12,15 +12,23 @@ import { GameModal } from "@/components/ui/game-modal";
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialView?: SettingsView;
 }
 
 type SettingsView = "main" | "editName" | "changePassword" | "language";
 
-export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, initialView }: SettingsModalProps) {
   const { user, profile, fetchProfile } = useAuth();
   const { notify } = useNotificationModal();
   const { language, setLanguage, t, languages } = useLanguage();
-  const [view, setView] = useState<SettingsView>("main");
+  const [view, setView] = useState<SettingsView>(initialView || "main");
+
+  // Set initial view when modal opens
+  useEffect(() => {
+    if (isOpen && initialView) {
+      setView(initialView);
+    }
+  }, [isOpen, initialView]);
   const [nickname, setNickname] = useState(profile?.nickname || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
