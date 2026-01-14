@@ -8,6 +8,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CreateRoomPage } from "@/components/team/CreateRoomPage";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
+import { GameStylePersonalTrivia } from "@/components/team/GameStylePersonalTrivia";
 import { JoinRoomModal } from "@/components/team/JoinRoomModal";
 import { RoomLobbyV2 } from "@/components/team/RoomLobbyV2";
 import { MultiplayerGameScreenV2 } from "@/components/team/MultiplayerGameScreenV2";
@@ -154,6 +155,7 @@ function TeamContentV2() {
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
   const [showBlindTriviaModal, setShowBlindTriviaModal] = useState(false);
+  const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
@@ -665,7 +667,7 @@ function TeamContentV2() {
             }}
             onSelectPersonalTrivia={() => {
               setShowTeamMenu(false);
-              setShowBlindTriviaModal(true);
+              setShowPersonalTriviaModal(true);
             }}
             onSelectRandom={() => {
               setShowTeamMenu(false);
@@ -691,7 +693,7 @@ function TeamContentV2() {
             }}
             onSelectPersonalTrivia={() => {
               setShowCreateRoomScreen(false);
-              setShowBlindTriviaModal(true);
+              setShowPersonalTriviaModal(true);
             }}
             onSelectRandom={() => {
               setShowCreateRoomScreen(false);
@@ -773,7 +775,15 @@ function TeamContentV2() {
           }
           setShowCreateCollectionModal(true);
         }}
-        onSelectPersonal={() => setShowBlindTriviaModal(true)}
+        onSelectPersonal={() => setShowPersonalTriviaModal(true)}
+      />
+      <GameStylePersonalTrivia
+        isOpen={showPersonalTriviaModal}
+        onClose={() => setShowPersonalTriviaModal(false)}
+        onSave={(questions, title) => {
+          setShowPersonalTriviaModal(false);
+          setActiveTab("my-content");
+        }}
       />
       <CreateBlindTriviaModal
         open={showBlindTriviaModal}
