@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useCurrency } from "@/hooks/useCurrency";
+import { shuffleArray } from "@/utils/shuffle";
 import { useAuth } from "@/contexts/AuthContext";
 import { REWARDS } from "@/config/rewardConfig";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
@@ -70,7 +71,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
 
   const shuffleAnswers = useCallback((question: Question) => {
     const allAnswers = [question.correct_answer, ...question.incorrect_answers];
-    return allAnswers.sort(() => Math.random() - 0.5);
+    return shuffleArray(allAnswers);
   }, []);
 
   useEffect(() => {

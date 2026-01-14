@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { shuffleArray } from "@/utils/shuffle";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,15 +60,19 @@ interface GameStyleQuestionEditorProps {
 
 // Convert from GeneratedQuestion format to EditorQuestion format
 export function convertToEditorQuestions(questions: GeneratedQuestion[]): EditorQuestion[] {
-  return questions.map((q, idx) => ({
-    id: `gen-${idx}-${Date.now()}`,
-    question: q.question_text,
-    answers: [
+  return questions.map((q, idx) => {
+    const answers = [
       { id: `a-${idx}-0`, text: q.correct_answer, isCorrect: true },
       ...q.incorrect_answers.map((ans, i) => ({ id: `a-${idx}-${i+1}`, text: ans, isCorrect: false }))
-    ],
-    iconSlug: q.icon_slug || undefined,
-  }));
+    ];
+    // Shuffle answers so correct answer isn't always first
+    return {
+      id: `gen-${idx}-${Date.now()}`,
+      question: q.question_text,
+      answers: shuffleArray(answers),
+      iconSlug: q.icon_slug || undefined,
+    };
+  });
 }
 
 // Convert from EditorQuestion format to GeneratedQuestion format
@@ -569,17 +574,19 @@ export function GameStyleQuestionEditor({
       
       if (data?.question_text) {
         const newQuestions = [...questions];
+        // Build answers array and shuffle to randomize correct answer position
+        const answersArray = [
+          { id: `a-ai-${Date.now()}-0`, text: data.correct_answer || "", isCorrect: true },
+          ...(data.incorrect_answers || []).slice(0, answerFormat === "true_false" ? 1 : 3).map((ans: string, i: number) => ({
+            id: `a-ai-${Date.now()}-${i+1}`,
+            text: ans,
+            isCorrect: false,
+          })),
+        ];
         newQuestions[index] = {
           ...newQuestions[index],
           question: data.question_text || "",
-          answers: [
-            { id: `a-ai-${Date.now()}-0`, text: data.correct_answer || "", isCorrect: true },
-            ...(data.incorrect_answers || []).slice(0, answerFormat === "true_false" ? 1 : 3).map((ans: string, i: number) => ({
-              id: `a-ai-${Date.now()}-${i+1}`,
-              text: ans,
-              isCorrect: false,
-            })),
-          ],
+          answers: shuffleArray(answersArray),
           iconSlug: data.icon_slug || undefined,
         };
         onQuestionsChange(newQuestions);

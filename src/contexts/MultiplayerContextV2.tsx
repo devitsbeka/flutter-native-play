@@ -5,6 +5,7 @@ import { TriviaQuestion } from "@/hooks/useTrivia";
 import { toast } from "sonner";
 import { getRandomGradient } from "@/config/roomGradients";
 import { getQuestions } from "@/services/questionService";
+import { shuffleArray } from "@/utils/shuffle";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 
 // Simplified 4-phase system
@@ -367,7 +368,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       if (customQuestions && customQuestions.length > 0) {
         await Promise.all(customQuestions.map((q, index) => {
           const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
-          const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+          const shuffledAnswers = shuffleArray(allAnswers);
           
           return supabase.from("room_questions").insert({
             room_id: room.id,
@@ -547,7 +548,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // Use existing custom questions - reshuffle answers for new game
           const questions: TriviaQuestion[] = existingQuestions.map((q: any) => {
             const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
-            const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+            const shuffledAnswers = shuffleArray(allAnswers);
             return {
               id: `${roomId}-${q.question_index}`,
               question: q.question_text,
@@ -836,7 +837,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // Reshuffle answers for new round
           const questions: TriviaQuestion[] = existingQuestions.map((q: any) => {
             const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
-            const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+            const shuffledAnswers = shuffleArray(allAnswers);
             return {
               id: `${roomId}-${q.question_index}`,
               question: q.question_text,
