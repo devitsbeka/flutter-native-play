@@ -292,7 +292,7 @@ function DesktopLeagueColumn({
       {/* Header - left aligned */}
       <div className="flex items-center justify-between py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
         <div>
-          <h2 className="text-lg font-bold text-foreground">{name}</h2>
+          <h2 className="text-lg font-display text-foreground">{name}</h2>
           {isUserTier && (
             <span className="text-xs text-primary font-medium">შენი ლიგა</span>
           )}
