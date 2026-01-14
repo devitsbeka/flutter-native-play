@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2 } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +49,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [selectedForAction, setSelectedForAction] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -139,6 +140,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       setUploadedImage(null);
       setGeneratedAvatar(null);
       setSelectedAvatar(null);
+      setSelectedForAction(null);
     }
   }, [isOpen, stopCamera]);
 
@@ -302,6 +304,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         throw result.error;
       }
       
+      setSelectedForAction(null);
       toast.success(t("avatar.avatarUpdated"));
       
       // Small delay to ensure state propagates before modal closes
@@ -311,6 +314,37 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     } catch (error) {
       console.error("Error updating avatar:", error);
       toast.error(t("errors.generationFailed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteAvatar = async (avatarId: string, avatarUrl: string) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Delete from avatar_generations table
+      const { error } = await supabase
+        .from('avatar_generations')
+        .delete()
+        .eq('id', avatarId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // If this was the current avatar, clear the profile avatar
+      if (profile?.avatar_url === avatarUrl) {
+        await updateProfile({ avatar_url: null, animated_avatar_url: null });
+      }
+      
+      // Refresh the list
+      await loadGenerations();
+      setSelectedForAction(null);
+      toast.success(t("avatar.avatarDeleted"));
+    } catch (error) {
+      console.error("Error deleting avatar:", error);
+      toast.error(t("errors.deleteFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -490,72 +524,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             )}
           </div>
 
-          {/* My Generated Avatars */}
-          {generations.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
-              <div className="grid grid-cols-5 gap-2">
-                {generations.slice(0, 10).map((gen) => (
-                  <motion.button
-                    key={gen.id}
-                    onClick={() => selectPreviousAvatar(gen.avatar_url)}
-                    disabled={isLoading}
-                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      gen.is_current ? "border-primary" : "border-border hover:border-primary/50"
-                    } disabled:opacity-50`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <img 
-                      src={gen.avatar_url} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover"
-                    />
-                    {gen.is_current && (
-                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-primary" />
-                      </div>
-                    )}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Default Avatars */}
-          <div>
-            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.defaultAvatars")}</p>
-            <div className="grid grid-cols-5 gap-2">
-              {DEFAULT_AVATARS.map((avatar, index) => {
-                const isSelected = profile?.avatar_url === avatar;
-                return (
-                  <motion.button
-                    key={index}
-                    onClick={() => selectDefaultAvatar(avatar)}
-                    disabled={isLoading}
-                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
-                      isSelected ? "border-amber-500" : "border-border hover:border-amber-400/50"
-                    } disabled:opacity-50`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <img 
-                      src={avatar} 
-                      alt={`Default avatar ${index + 1}`} 
-                      className="w-full h-full object-cover"
-                    />
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-amber-500/20 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-amber-500" />
-                      </div>
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Generate New Section */}
+          {/* Generate New Section - MOVED UP */}
           <div className="pt-2">
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.createNew")}</p>
             <div className="flex gap-3">
@@ -592,6 +561,121 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             onChange={handleFileSelect}
             className="hidden"
           />
+
+          {/* My Generated Avatars */}
+          {generations.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-foreground mb-2">{t("avatar.myAvatars")}</p>
+              <div className="grid grid-cols-5 gap-2">
+                {generations.slice(0, 10).map((gen) => (
+                  <motion.button
+                    key={gen.id}
+                    onClick={() => setSelectedForAction(
+                      selectedForAction === gen.id ? null : gen.id
+                    )}
+                    disabled={isLoading}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      selectedForAction === gen.id 
+                        ? "border-primary ring-2 ring-primary/30" 
+                        : gen.is_current 
+                          ? "border-primary" 
+                          : "border-border hover:border-primary/50"
+                    } disabled:opacity-50`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img 
+                      src={gen.avatar_url} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                    {gen.is_current && selectedForAction !== gen.id && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
+                    {selectedForAction === gen.id && (
+                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                        <Check className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+              
+              {/* Action buttons when avatar is selected */}
+              <AnimatePresence>
+                {selectedForAction && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex gap-2 mt-3"
+                  >
+                    <ChunkyButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => {
+                        const gen = generations.find(g => g.id === selectedForAction);
+                        if (gen) deleteAvatar(gen.id, gen.avatar_url);
+                      }}
+                      disabled={isLoading}
+                      className="flex-1"
+                      icon={<Trash2 className="w-4 h-4" />}
+                    >
+                      {t("common.delete")}
+                    </ChunkyButton>
+                    <ChunkyButton
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        const gen = generations.find(g => g.id === selectedForAction);
+                        if (gen) selectPreviousAvatar(gen.avatar_url);
+                      }}
+                      disabled={isLoading}
+                      className="flex-1"
+                      icon={<Check className="w-4 h-4" />}
+                    >
+                      {t("common.use")}
+                    </ChunkyButton>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Default Avatars */}
+          <div>
+            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.defaultAvatars")}</p>
+            <div className="grid grid-cols-5 gap-2">
+              {DEFAULT_AVATARS.map((avatar, index) => {
+                const isSelected = profile?.avatar_url === avatar;
+                return (
+                  <motion.button
+                    key={index}
+                    onClick={() => selectDefaultAvatar(avatar)}
+                    disabled={isLoading}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      isSelected ? "border-amber-500" : "border-border hover:border-amber-400/50"
+                    } disabled:opacity-50`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <img 
+                      src={avatar} 
+                      alt={`Default avatar ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-amber-500/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-amber-500" />
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       );
     }
