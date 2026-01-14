@@ -357,7 +357,8 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
-      className="relative bg-card rounded-2xl overflow-hidden shadow-lg"
+      onClick={() => onEdit(post)}
+      className="relative bg-card rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
       {/* Party Badge */}
@@ -493,7 +494,8 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
-      className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg"
+      onClick={() => onEdit(post)}
+      className="relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
     >
       {/* Edit Button */}
       <button 

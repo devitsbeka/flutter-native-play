@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, ReactNode, useRef } f
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModalContext } from "@/contexts/NotificationModalContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { t } from "@/lib/i18n";
 
@@ -38,6 +39,7 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
   const [activeJobs, setActiveJobs] = useState<GenerationJob[]>([]);
   const { user, updateProfile } = useAuth();
   const { showNotification } = useNotificationModalContext();
+  const queryClient = useQueryClient();
   const jobsRef = useRef<Map<string, GenerationJob>>(new Map());
 
   const updateJob = useCallback((id: string, updates: Partial<GenerationJob>) => {
@@ -262,6 +264,10 @@ export function BackgroundGenerationProvider({ children }: { children: ReactNode
           // Always auto-apply cover without blocking popup
           onComplete?.(data.imageUrl);
           toast.success("გარეკანი შეიქმნა! ✓");
+          
+          // Invalidate cache so My Trivia shows latest cover image if user saved
+          queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+          queryClient.invalidateQueries({ queryKey: ["cover-generations"] });
         }
 
         scheduleJobCleanup(jobId);
