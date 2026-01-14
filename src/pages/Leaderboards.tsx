@@ -118,64 +118,55 @@ export default function Leaderboards() {
         <DesktopLeaderboards userTier={userTier} region={region} />
       </div>
 
-      {/* Mobile/Tablet: Single leaderboard with trophy tabs */}
+      {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
       <div className="lg:hidden flex-1 flex flex-col pb-28">
-        {/* Hero Background with Map and Trophies */}
-        <LeaderboardHeroBackground
-          tier={activeTier || 1}
-          onTierSelect={handleSelectTier}
-          userTier={userTier}
-        >
-          {/* League Header */}
-          <div className="text-center py-2">
-            <h1 className="text-xl font-bold text-foreground">
-              {language === 'ka' ? currentLeague?.nameKa : currentLeague?.name}
-            </h1>
+        <LeaderboardHeroBackground>
+          {/* Countdown - top right */}
+          <div className="absolute top-6 right-6 z-30">
+            <div className="w-64">
+              <LeagueCountdown />
+            </div>
           </div>
 
-          {/* Countdown */}
-          <div className="px-4 pb-2">
-            <LeagueCountdown />
+          {/* Swipeable Cards - centered */}
+          <div className="pt-[420px] px-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <Carousel
+                setApi={setCarouselApi}
+                opts={{
+                  align: "center",
+                  loop: false,
+                  startIndex: (activeTier || 1) - 1,
+                  duration: 30,
+                  skipSnaps: false,
+                }}
+                className="w-full"
+              >
+                <CarouselContent className="-ml-4">
+                  {LEAGUES.map((league) => (
+                    <CarouselItem key={league.tier} className="pl-4 basis-[85%] md:basis-[60%]">
+                      <MobileLeagueCard
+                        tier={league.tier}
+                        name={language === 'ka' ? league.nameKa : league.name}
+                        isCurrentTier={league.tier === activeTier}
+                        leaderboard={leaderboard}
+                        user={user}
+                        userRowRef={userRowRef}
+                        previousRank={previousRank}
+                        userTier={userTier}
+                        viewingTier={viewingTier}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+            )}
           </div>
         </LeaderboardHeroBackground>
-
-        {/* Swipeable Leaderboard Content */}
-        <div className="flex-1 overflow-hidden">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <Carousel
-              setApi={setCarouselApi}
-              opts={{
-                align: "start",
-                loop: false,
-                startIndex: (activeTier || 1) - 1,
-                duration: 30,
-                skipSnaps: false,
-              }}
-              className="w-full h-full"
-            >
-              <CarouselContent className="-ml-0">
-                {LEAGUES.map((league) => (
-                  <CarouselItem key={league.tier} className="pl-0">
-                    <MobileLeagueContent
-                      tier={league.tier}
-                      isCurrentTier={league.tier === activeTier}
-                      leaderboard={leaderboard}
-                      user={user}
-                      userRowRef={userRowRef}
-                      previousRank={previousRank}
-                      userTier={userTier}
-                      viewingTier={viewingTier}
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          )}
-        </div>
       </div>
 
       {/* Fixed User Position Bar (Mobile only) */}
@@ -213,7 +204,6 @@ export default function Leaderboards() {
 // Desktop: All 3 leaderboards side by side with hero background
 function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: string }) {
   const { language } = useLanguage();
-  const [viewingTier, setViewingTier] = useState(userTier || 1);
   
   // Fetch all 3 tiers
   const tier1 = useLeagueLeaderboard(1, region);
@@ -227,11 +217,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
   ];
 
   return (
-    <LeaderboardHeroBackground
-      tier={viewingTier}
-      onTierSelect={setViewingTier}
-      userTier={userTier}
-    >
+    <LeaderboardHeroBackground>
       {/* Countdown - top right */}
       <div className="absolute top-6 right-6 z-30">
         <div className="w-64">
@@ -331,9 +317,10 @@ function DesktopLeagueColumn({
   );
 }
 
-// Mobile league content
-interface MobileLeagueContentProps {
+// Mobile/Tablet league card (same style as desktop)
+interface MobileLeagueCardProps {
   tier: number;
+  name: string;
   isCurrentTier: boolean;
   leaderboard: LeagueEntry[];
   user: any;
@@ -343,8 +330,9 @@ interface MobileLeagueContentProps {
   viewingTier: number | undefined;
 }
 
-function MobileLeagueContent({
+function MobileLeagueCard({
   tier,
+  name,
   isCurrentTier,
   leaderboard,
   user,
@@ -352,61 +340,56 @@ function MobileLeagueContent({
   previousRank,
   userTier,
   viewingTier,
-}: MobileLeagueContentProps) {
-  const { t } = useLanguage();
+}: MobileLeagueCardProps) {
+  const isUserTier = tier === userTier;
   
   if (!isCurrentTier) {
     return (
-      <div className="h-full flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      <Card className="backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl bg-card/50 border-border/30 min-h-[500px]">
+        <CardContent className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="px-4 space-y-1 pt-2"
-    >
-      <AnimatePresence mode="popLayout">
-        {leaderboard.map((entry, index) => {
-          const isCurrentUser = entry.user_id === user?.id;
-          const shouldAnimate = isCurrentUser && previousRank !== null;
-          const totalPlayers = leaderboard.length;
-          const isPromotionZone = (viewingTier ?? userTier) < 5 && entry.rank <= 10;
-          const isDemotionZone = (viewingTier ?? userTier) > 1 && entry.rank > totalPlayers - 10;
+    <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl ${
+      isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
+    }`}>
+      <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
+        <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
+        {isUserTier && (
+          <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
+        )}
+      </CardHeader>
 
-          return (
-            <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
-              <LeaguePlayerRow
-                entry={entry}
-                isCurrentUser={isCurrentUser}
-                index={index}
-                previousRank={previousRank}
-                shouldAnimate={shouldAnimate}
-                totalPlayers={totalPlayers}
-                isPromotionZone={isPromotionZone}
-                isDemotionZone={isDemotionZone}
-              />
-            </div>
-          );
-        })}
-      </AnimatePresence>
-
-      {leaderboard.length === 0 && (
-        <motion.div
-          className="text-center py-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4">
-            <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+      <CardContent className="px-3 pb-3 pt-0">
+        {leaderboard.length === 0 ? (
+          <div className="text-center py-8">
+            <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
           </div>
-          <p className="text-muted-foreground">{t('leaderboard.noPlayersYet')}</p>
-        </motion.div>
-      )}
-    </motion.div>
+        ) : (
+          leaderboard.slice(0, 10).map((entry, index) => {
+            const isCurrentUser = entry.user_id === user?.id;
+            return (
+              <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+                <LeaguePlayerRow
+                  entry={entry}
+                  isCurrentUser={isCurrentUser}
+                  index={index}
+                  previousRank={isCurrentUser ? previousRank : null}
+                  shouldAnimate={false}
+                  totalPlayers={leaderboard.length}
+                  isPromotionZone={tier < 5 && entry.rank <= 10}
+                  isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
+                />
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
   );
 }
