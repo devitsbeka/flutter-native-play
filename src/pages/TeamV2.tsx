@@ -33,6 +33,8 @@ import { CreateCollectionModal } from "@/components/social/CreateCollectionModal
 import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal";
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { QuickPlayModal } from "@/components/team/QuickPlayModal";
+import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
+import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
@@ -160,6 +162,9 @@ function TeamContentV2() {
   const [roomsSort, setRoomsSort] = useState<RoomSort>("recent");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [showTeamMenu, setShowTeamMenu] = useState(false);
+  const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
+  const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
@@ -368,7 +373,7 @@ function TeamContentV2() {
       <DesktopLeftNav 
         onNotificationsClick={() => setShowNotificationsPanel(true)}
         onMessagesClick={() => setShowRoomChatsPanel(true)}
-        onCreateClick={() => setShowCreateModal(true)}
+        onCreateClick={() => setShowTeamMenu(true)}
       />
 
       {/* Main Content Area */}
@@ -452,7 +457,7 @@ function TeamContentV2() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-foreground">ოთახები</h2>
               <ChunkyButton 
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => setShowTeamMenu(true)}
                 variant="primary"
                 size="sm"
               >
@@ -462,7 +467,7 @@ function TeamContentV2() {
             </div>
             <MyRoomsSection 
               hideTV 
-              onCreateRoom={() => setShowCreateModal(true)}
+              onCreateRoom={() => setShowTeamMenu(true)}
               onShowAllRooms={() => setShowAllGamesModal(true)}
               vertical
             />
@@ -529,7 +534,7 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateModal(true)}
+                onAddClick={() => setShowTeamMenu(true)}
               />
             </div>
           )}
@@ -544,7 +549,7 @@ function TeamContentV2() {
               >
                 <MyRoomsSection 
                   hideTV 
-                  onCreateRoom={() => setShowCreateModal(true)}
+                  onCreateRoom={() => setShowTeamMenu(true)}
                   onShowAllRooms={() => setShowAllGamesModal(true)}
                   vertical
                   filter={roomsFilter}
@@ -615,12 +620,12 @@ function TeamContentV2() {
         </div>
 
         {/* Bottom Navigation - Mobile only (hidden on tablet/desktop) */}
-        {!showCreateModal && (
+        {!showCreateModal && !showTeamMenu && (
           <div className="lg:hidden">
             <UniversalBottomNav 
               onTeamPlayClick={() => {
                 playSound("button-click");
-                setShowCreateModal(true);
+                setShowTeamMenu(true);
               }}
             />
           </div>
@@ -632,19 +637,62 @@ function TeamContentV2() {
 
       {/* Modals */}
       <AnimatePresence>
+        {showTeamMenu && (
+          <TeamMenuScreen
+            onClose={() => setShowTeamMenu(false)}
+            onSelectCreateRoom={() => {
+              setShowTeamMenu(false);
+              setShowCreateModal(true);
+            }}
+            onSelectTrivia={() => {
+              setShowTeamMenu(false);
+              setShowCreateQuizModal(true);
+            }}
+            onSelectCollection={(draftId) => {
+              setShowTeamMenu(false);
+              if (draftId) setEditingDraftId(draftId);
+              setShowCreateCollectionModal(true);
+            }}
+            onSelectPersonalTrivia={() => {
+              setShowTeamMenu(false);
+              setShowBlindTriviaModal(true);
+            }}
+            onSelectRandom={() => {
+              setShowTeamMenu(false);
+              setPendingRandomPlay(true);
+              setShowCreateModal(true);
+            }}
+            onSelectLibrary={() => {
+              setShowTeamMenu(false);
+              setShowCategorySelectorModal(true);
+            }}
+          />
+        )}
         {showCreateModal && (
           <CreateRoomPage 
             onClose={() => {
               setShowCreateModal(false);
               setChallengeContext(null);
               setAutoOpenPersonalTrivia(false);
+              setPendingRandomPlay(false);
             }}
             challengeUserId={challengeContext?.targetUserId}
-            defaultChallengeType={challengeContext?.challengeType}
+            defaultChallengeType={pendingRandomPlay ? "random" : challengeContext?.challengeType}
             autoOpenPersonalTrivia={autoOpenPersonalTrivia}
           />
         )}
       </AnimatePresence>
+      
+      <CategorySelectorModal
+        open={showCategorySelectorModal}
+        onOpenChange={setShowCategorySelectorModal}
+        onSelect={(category) => {
+          setShowCategorySelectorModal(false);
+          // Open create room with library category pre-selected
+          setChallengeContext({ targetUserId: "", challengeType: "library" });
+          setShowCreateModal(true);
+        }}
+      />
       
       <JoinRoomModal 
         isOpen={showJoinModal} 
@@ -681,7 +729,7 @@ function TeamContentV2() {
           setShowCreateCollectionModal(true);
         }}
         onSelectPersonal={() => setShowBlindTriviaModal(true)}
-        onSelectGameRoom={() => setShowCreateModal(true)}
+        onSelectGameRoom={() => setShowTeamMenu(true)}
       />
       <CreateBlindTriviaModal
         open={showBlindTriviaModal}
