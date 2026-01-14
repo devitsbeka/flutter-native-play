@@ -277,6 +277,7 @@ export function GameStyleQuestionEditor({
   const [editingField, setEditingField] = useState<"question" | string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -286,6 +287,34 @@ export function GameStyleQuestionEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showIdeaGlow, setShowIdeaGlow] = useState(true);
+
+  // Check if user has any progress that would be lost
+  const hasProgress = () => {
+    // Check if any question has meaningful content
+    const hasQuestionContent = questions.some(q => 
+      q.question.trim() !== "" ||
+      q.answers.some(a => {
+        const text = a.text.trim();
+        // Ignore default true/false values
+        return text !== "" && text !== "მართალია" && text !== "მცდარი";
+      }) ||
+      q.backgroundImageUrl ||
+      q.iconSlug
+    );
+    
+    // Check if title has been changed
+    const hasTitleContent = title.trim() !== "";
+    
+    return hasQuestionContent || hasTitleContent;
+  };
+
+  const handleBackClick = () => {
+    if (hasProgress()) {
+      setShowBackConfirm(true);
+    } else {
+      onBack();
+    }
+  };
 
   const QUESTION_MAX = 65;
   const ANSWER_MAX = 25;
@@ -627,7 +656,7 @@ export function GameStyleQuestionEditor({
       {/* Header */}
       <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
         <button
-          onClick={onBack}
+          onClick={handleBackClick}
           className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
         >
           <ChevronLeft className="w-6 h-6 text-white" />
@@ -995,6 +1024,49 @@ export function GameStyleQuestionEditor({
                   className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium"
                 >
                   წაშლა
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Back Confirmation Modal */}
+      <AnimatePresence>
+        {showBackConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setShowBackConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"
+            >
+              <h3 className="text-lg font-bold text-center mb-2">გსურთ გასვლა?</h3>
+              <p className="text-muted-foreground text-center text-sm mb-6">
+                თქვენი პროგრესი დაიკარგება და ვერ აღდგება
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBackConfirm(false)}
+                  className="flex-1 py-3 rounded-xl bg-muted font-medium"
+                >
+                  დარჩენა
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBackConfirm(false);
+                    onBack();
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-medium"
+                >
+                  გასვლა
                 </button>
               </div>
             </motion.div>
