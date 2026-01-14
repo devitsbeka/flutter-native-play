@@ -43,55 +43,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
     },
     ref
   ) {
-    // Top row - horizontal compact cards
+    // Top section - full-width horizontal cards
     const topOptions: MenuOption[] = [
-      {
-        id: "create-room",
-        imageIcon: danceFloor,
-        icon: null,
-        title: "ოთახი",
-        subtitle: "შექმენი სათამაშო ოთახი",
-        gradient: "from-emerald-500 to-green-600",
-        glowColor: "rgba(16, 185, 129, 0.4)",
-        onClick: onSelectCreateRoom,
-      },
-      {
-        id: "trivia",
-        imageIcon: triviaBuzzer,
-        icon: null,
-        title: "ტრივია",
-        subtitle: "1 რაუნდი",
-        gradient: "from-purple-500 to-indigo-600",
-        glowColor: "rgba(139, 92, 246, 0.4)",
-        onClick: onSelectTrivia,
-      },
-    ];
-
-    // Middle grid - vertical cards
-    const menuOptions: MenuOption[] = [
-      {
-        id: "collection",
-        imageIcon: iconCollections,
-        icon: null,
-        title: "კოლექცია",
-        subtitle: "რამდენიმე რაუნდი",
-        gradient: "from-cyan-400 to-blue-500",
-        glowColor: "rgba(34, 211, 238, 0.4)",
-        onClick: () => onSelectCollection(),
-      },
-      {
-        id: "party",
-        imageIcon: iconGroupOfPeople,
-        icon: null,
-        title: "MyTrivia Party",
-        subtitle: "შენი კითხვები",
-        gradient: "from-pink-500 to-rose-500",
-        glowColor: "rgba(236, 72, 153, 0.4)",
-        onClick: onSelectPersonalTrivia,
-      },
-    ];
-
-    const bottomOptions: MenuOption[] = [
       {
         id: "random",
         imageIcon: spinTheBottle,
@@ -113,6 +66,50 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
         glowColor: "rgba(139, 92, 246, 0.4)",
         fullWidth: true,
         onClick: onSelectLibrary,
+      },
+    ];
+
+    // 2x2 Grid - all same size vertical cards
+    const menuOptions: MenuOption[] = [
+      {
+        id: "create-room",
+        imageIcon: danceFloor,
+        icon: null,
+        title: "ოთახი",
+        subtitle: "შექმენი სათამაშო ოთახი",
+        gradient: "from-emerald-500 to-green-600",
+        glowColor: "rgba(16, 185, 129, 0.4)",
+        onClick: onSelectCreateRoom,
+      },
+      {
+        id: "trivia",
+        imageIcon: triviaBuzzer,
+        icon: null,
+        title: "ტრივია",
+        subtitle: "1 რაუნდი",
+        gradient: "from-purple-500 to-indigo-600",
+        glowColor: "rgba(139, 92, 246, 0.4)",
+        onClick: onSelectTrivia,
+      },
+      {
+        id: "collection",
+        imageIcon: iconCollections,
+        icon: null,
+        title: "კოლექცია",
+        subtitle: "რამდენიმე რაუნდი",
+        gradient: "from-cyan-400 to-blue-500",
+        glowColor: "rgba(34, 211, 238, 0.4)",
+        onClick: () => onSelectCollection(),
+      },
+      {
+        id: "party",
+        imageIcon: iconGroupOfPeople,
+        icon: null,
+        title: "MyTrivia Party",
+        subtitle: "შენი კითხვები",
+        gradient: "from-pink-500 to-rose-500",
+        glowColor: "rgba(236, 72, 153, 0.4)",
+        onClick: onSelectPersonalTrivia,
       },
     ];
 
@@ -147,18 +144,18 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom">
-        {/* Top Row - Two horizontal compact cards side by side */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* Top section - Full-width horizontal cards */}
+        <div className="space-y-3 mb-4">
           {topOptions.map((option, index) => (
             <motion.button
               key={option.id}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={option.onClick}
-              className="relative p-3 rounded-2xl overflow-hidden text-left flex items-center gap-3"
+              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
               style={{
                 background: "rgba(255, 255, 255, 0.12)",
                 backdropFilter: "blur(12px)",
@@ -167,28 +164,28 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
             >
               {/* Glow effect */}
               <div
-                className="absolute inset-0 opacity-30"
+                className="absolute inset-0 opacity-20"
                 style={{
-                  background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 60%)`,
+                  background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 50%)`,
                 }}
               />
               
               {/* Icon */}
               <div className="relative shrink-0">
-                <img src={option.imageIcon} alt="" className="w-12 h-12 object-contain" />
+                <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
               </div>
               
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-sm mb-0.5">{option.title}</h3>
-                <p className="text-white/60 text-[10px] leading-tight truncate">{option.subtitle}</p>
+                <h3 className="font-bold text-white text-base">{option.title}</h3>
+                <p className="text-white/60 text-xs">{option.subtitle}</p>
               </div>
             </motion.button>
           ))}
         </div>
 
-        {/* 2x2 Grid for middle options */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* 2x2 Grid for all 4 options - same size vertical cards */}
+        <div className="grid grid-cols-2 gap-3">
           {menuOptions.map((option, index) => (
             <motion.button
               key={option.id}
@@ -221,46 +218,6 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
               {/* Text */}
               <h3 className="font-bold text-white text-base mb-0.5">{option.title}</h3>
               <p className="text-white/60 text-xs">{option.subtitle}</p>
-            </motion.button>
-          ))}
-        </div>
-
-        {/* Full-width options */}
-        <div className="space-y-3">
-          {bottomOptions.map((option, index) => (
-            <motion.button
-              key={option.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + index * 0.05 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={option.onClick}
-              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
-              style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-              }}
-            >
-              {/* Glow effect */}
-              <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                  background: `radial-gradient(circle at left center, ${option.glowColor}, transparent 50%)`,
-                }}
-              />
-              
-              {/* Icon */}
-              <div className="relative shrink-0">
-                <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white text-base">{option.title}</h3>
-                <p className="text-white/60 text-xs">{option.subtitle}</p>
-              </div>
             </motion.button>
           ))}
         </div>
