@@ -244,23 +244,15 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-6">
             {tiers.map(({ tier, data, name, nameKa }) => (
-              <div key={tier} className="flex flex-col items-center">
-                {/* Trophy floating above - positioned to align with podiums */}
-                <img
-                  src={TROPHY_IMAGES[tier]}
-                  alt={language === 'ka' ? nameKa : name}
-                  style={{ width: 160, height: 160 }}
-                  className="object-contain drop-shadow-2xl mb-[-60px] z-10 relative"
-                />
-                <DesktopLeagueColumn
-                  tier={tier}
-                  name={language === 'ka' ? nameKa : name}
-                  leaderboard={data.leaderboard}
-                  isLoading={data.isLoading}
-                  userTier={userTier}
-                  previousRank={data.previousRank}
-                />
-              </div>
+              <DesktopLeagueColumn
+                key={tier}
+                tier={tier}
+                name={language === 'ka' ? nameKa : name}
+                leaderboard={data.leaderboard}
+                isLoading={data.isLoading}
+                userTier={userTier}
+                previousRank={data.previousRank}
+              />
             ))}
           </div>
         </div>
