@@ -445,7 +445,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#6B5B95] rounded-2xl p-5 w-full max-w-sm space-y-4"
+            className="bg-[#5B21B6] rounded-2xl p-5 w-full max-w-sm space-y-4"
           >
             <h3 className="text-lg font-bold text-white text-center">რაუნდის პარამეტრები</h3>
             

@@ -653,7 +653,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-5"
+            className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] space-y-5"
           >
             <div className="text-center">
               <h3 className="text-xl font-bold text-white mb-1">ფორმატი ⚡</h3>
@@ -728,21 +728,24 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
             {isGenerating && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] z-50"
+                style={{ background: "linear-gradient(to top, rgba(76,29,149,0.98) 0%, rgba(76,29,149,0.9) 50%, transparent 100%)" }}
               >
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-white"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${generationProgress}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
+                <div className="space-y-2 max-w-sm mx-auto">
+                  <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-white"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${generationProgress}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                  <p className="text-sm text-center text-white/80 animate-pulse">
+                    ✨ AI ქმნის კითხვებს...
+                  </p>
                 </div>
-                <p className="text-xs text-center text-white/70 animate-pulse">
-                  ✨ AI ქმნის კითხვებს...
-                </p>
               </motion.div>
             )}
           </motion.div>
@@ -822,7 +825,10 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   <X className="w-6 h-6 text-white" />
                 </button>
                 
-                <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
+                <div className="flex items-center gap-2">
+                  <img src={triviaBuzzer} alt="Trivia" className="w-6 h-6 object-contain" />
+                  <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
+                </div>
                 
                 {/* Progress dots */}
                 <div className="flex gap-1.5">
