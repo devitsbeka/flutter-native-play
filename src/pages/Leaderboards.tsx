@@ -11,6 +11,7 @@ import trophyGold from "@/assets/trophy-gold.png";
 
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
 import { LeagueCountdown } from "@/components/leaderboard/LeagueCountdown";
+import { LeaderboardHeroBackground } from "@/components/leaderboard/LeaderboardHeroBackground";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -118,50 +119,24 @@ export default function Leaderboards() {
 
       {/* Mobile/Tablet: Single leaderboard with trophy tabs */}
       <div className="lg:hidden flex-1 flex flex-col pb-28">
-        {/* Trophy Tabs */}
-        <div className="flex justify-center items-end gap-2 pt-4 pb-2 px-4 bg-gradient-to-b from-primary/10 to-transparent">
-          {([2, 3, 1] as const).map((tierNum) => {
-            const isActive = tierNum === activeTier;
-            return (
-              <motion.button
-                key={tierNum}
-                onClick={() => handleSelectTier(tierNum)}
-                className="relative flex-shrink-0"
-                style={{ width: TROPHY_SIZES.mobile, height: TROPHY_SIZES.mobile }}
-                whileTap={{ scale: 0.95 }}
-                animate={{
-                  scale: isActive ? 1.15 : 0.8,
-                  opacity: isActive ? 1 : 0.5,
-                  y: isActive ? -8 : 0,
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              >
-                <img
-                  src={TROPHY_IMAGES[tierNum]}
-                  alt={LEAGUES[tierNum - 1]?.name || ''}
-                  className="w-full h-full object-contain drop-shadow-xl"
-                  style={{
-                    filter: isActive 
-                      ? 'drop-shadow(0 0 15px rgba(255,215,0,0.5))' 
-                      : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
-                  }}
-                />
-              </motion.button>
-            );
-          })}
-        </div>
+        {/* Hero Background with Map and Trophies */}
+        <LeaderboardHeroBackground
+          tier={activeTier || 1}
+          onTierSelect={handleSelectTier}
+          userTier={userTier}
+        >
+          {/* League Header */}
+          <div className="text-center py-2">
+            <h1 className="text-xl font-bold text-foreground">
+              {language === 'ka' ? currentLeague?.nameKa : currentLeague?.name}
+            </h1>
+          </div>
 
-        {/* League Header */}
-        <div className="text-center py-3">
-          <h1 className="text-xl font-bold text-foreground">
-            {language === 'ka' ? currentLeague?.nameKa : currentLeague?.name}
-          </h1>
-        </div>
-
-        {/* Countdown */}
-        <div className="px-4 pb-3">
-          <LeagueCountdown />
-        </div>
+          {/* Countdown */}
+          <div className="px-4 pb-2">
+            <LeagueCountdown />
+          </div>
+        </LeaderboardHeroBackground>
 
         {/* Swipeable Leaderboard Content */}
         <div className="flex-1 overflow-hidden">
