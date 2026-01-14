@@ -46,18 +46,34 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  
+  // Track original values to detect changes
+  const [originalValues, setOriginalValues] = useState<{
+    title: string;
+    isPublic: boolean;
+    gradient: string;
+    coverImage: string | null;
+    questions: Question[];
+  } | null>(null);
 
   useEffect(() => {
     if (round) {
-      setTitle(round.title || "");
-      setSelectedGradient(round.cover_gradient || "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)");
-      setCoverImage(round.cover_image || null);
-      setIsPublic(round.is_public !== false);
+      const initialTitle = round.title || "";
+      const initialGradient = round.cover_gradient || "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)";
+      const initialCoverImage = round.cover_image || null;
+      const initialIsPublic = round.is_public !== false;
+      
+      setTitle(initialTitle);
+      setSelectedGradient(initialGradient);
+      setCoverImage(initialCoverImage);
+      setIsPublic(initialIsPublic);
       setIconSlug(round.icon_slug || null);
       setShowDeleteConfirm(false);
       setViewMode("info");
       setCurrentQuestionIndex(0);
       setDeleteQuestionIndex(null);
+      setHasChanges(false);
       
       // Parse questions from JSON
       const parsedQuestions = Array.isArray(round.questions) 
@@ -66,8 +82,30 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
           ? JSON.parse(round.questions)
           : [];
       setQuestions(parsedQuestions);
+      
+      // Store original values for change detection
+      setOriginalValues({
+        title: initialTitle,
+        isPublic: initialIsPublic,
+        gradient: initialGradient,
+        coverImage: initialCoverImage,
+        questions: parsedQuestions,
+      });
     }
   }, [round]);
+  
+  // Detect changes
+  useEffect(() => {
+    if (originalValues) {
+      const changed = 
+        title !== originalValues.title ||
+        isPublic !== originalValues.isPublic ||
+        selectedGradient !== originalValues.gradient ||
+        coverImage !== originalValues.coverImage ||
+        JSON.stringify(questions) !== JSON.stringify(originalValues.questions);
+      setHasChanges(changed);
+    }
+  }, [title, isPublic, selectedGradient, coverImage, questions, originalValues]);
 
   // Listen to carousel selection changes
   useEffect(() => {
@@ -515,17 +553,27 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
 
           {/* Fixed Footer - Save Button (only in info mode) */}
           {viewMode === "info" && (
-            <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 bg-background border-t border-border">
+            <div className="flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 bg-background border-t border-border space-y-2">
+              {hasChanges && (
+                <p className="text-xs text-center text-amber-600 font-medium">
+                  ცვლილებები შესანახია
+                </p>
+              )}
               <ChunkyButton
                 onClick={handleSave}
-                disabled={isSaving}
-                className="w-full"
+                disabled={isSaving || !hasChanges}
+                className={`w-full transition-all ${hasChanges ? "!bg-green-500 hover:!bg-green-600" : ""}`}
                 size="lg"
               >
                 {isSaving ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     ინახება...
+                  </>
+                ) : hasChanges ? (
+                  <>
+                    <Check className="w-5 h-5 mr-2" />
+                    შენახვა
                   </>
                 ) : (
                   "შენახვა"
