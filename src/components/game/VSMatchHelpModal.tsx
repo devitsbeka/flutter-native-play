@@ -18,14 +18,14 @@ interface HelpItemProps {
 
 const HelpItem = ({ icon, title, description, gradient, index }: HelpItemProps) => (
   <motion.div
-    className="flex items-start gap-3 p-3 rounded-xl bg-gray-50"
+    className="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50"
     style={{ boxShadow: "0 2px 0 #E5E7EB" }}
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay: index * 0.1 }}
   >
     <div 
-      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
       style={{ background: gradient }}
     >
       {icon}
@@ -81,7 +81,7 @@ export function VSMatchHelpModal({ isOpen, onClose }: VSMatchHelpModalProps) {
       iconEmoji="⚔️"
       showSparkles={false}
     >
-      <div className="space-y-2 mb-4">
+      <div className="space-y-1.5 mb-2">
         {helpItems.map((item, index) => (
           <HelpItem
             key={index}

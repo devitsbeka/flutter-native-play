@@ -156,6 +156,7 @@ export function GameModal({
             className="fixed inset-0 z-[100] flex flex-col"
             style={{
               background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+              paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
             {/* Fixed Header */}
@@ -225,7 +226,7 @@ export function GameModal({
               
               {/* Icon section if provided */}
               {(icon || iconEmoji) && (
-                <div className="flex justify-center pt-6 pb-4">
+                <div className="flex justify-center pt-4 pb-2">
                   {iconEmoji ? (
                     <motion.div
                       className="relative"
@@ -233,35 +234,16 @@ export function GameModal({
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
                     >
-                      {/* Subtle glow ring */}
-                      <motion.div
-                        className="absolute inset-0 rounded-full blur-lg"
-                        style={{
-                          background: "radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, transparent 70%)",
+                      <motion.span 
+                        className="text-5xl"
+                        animate={{ 
+                          rotate: [-5, 5, -5],
+                          y: [0, -3, 0],
                         }}
-                        animate={{ scale: [1, 1.2, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      
-                      {/* Badge container */}
-                      <div 
-                        className="relative w-20 h-20 rounded-full flex items-center justify-center"
-                        style={{
-                          background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
-                          boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
-                        }}
                       >
-                        <motion.span 
-                          className="text-4xl"
-                          animate={{ 
-                            rotate: [-5, 5, -5],
-                            y: [0, -3, 0],
-                          }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          {iconEmoji}
-                        </motion.span>
-                      </div>
+                        {iconEmoji}
+                      </motion.span>
                     </motion.div>
                   ) : (
                     <motion.div
@@ -287,6 +269,7 @@ export function GameModal({
                 className="sticky bottom-0 px-5 py-4 border-t border-gray-200/60"
                 style={{
                   background: "linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%)",
+                  paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
                 }}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
