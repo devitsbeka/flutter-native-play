@@ -17,9 +17,9 @@ interface LeaderboardHeroBackgroundProps {
 
 // Desktop/Tablet: Trophy positions on the actual podiums in the background image
 const DESKTOP_TROPHY_CONFIG = {
-  1: { left: '66.5%', top: '45.2%', size: '18%' }, // Bronze
+  1: { left: '66.5%', top: '44.5%', size: '18%' }, // Bronze
   2: { left: '18%', top: '46%', size: '18%' }, // Silver
-  3: { left: '40%', top: '37.3%', size: '22%' }, // Gold
+  3: { left: '40%', top: '36.6%', size: '22%' }, // Gold
 } as const;
 
 // Mobile: Centered trophy for active tier
