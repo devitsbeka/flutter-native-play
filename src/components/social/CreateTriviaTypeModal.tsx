@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
+import danceFloor from "@/assets/dance-floor.png";
 import { DraftsList } from "./DraftsList";
 
 interface CreateTriviaTypeModalProps {
@@ -37,24 +38,27 @@ export function CreateTriviaTypeModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background flex flex-col"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
+          }}
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-4 safe-top">
             <button
               onClick={handleClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center hover:bg-white/25 transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              <ArrowLeft className="w-5 h-5 text-white" />
             </button>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground">რა შევქმნათ?</h2>
+              <Sparkles className="w-5 h-5 text-white/80" />
+              <h2 className="text-xl font-bold text-white">რა შევქმნათ?</h2>
             </div>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 safe-bottom">
             {/* Single Trivia Card */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -66,18 +70,30 @@ export function CreateTriviaTypeModal({
                 handleClose();
                 onSelectSingle();
               }}
-              className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-purple-500/5 to-purple-500/10 transition-all text-left flex items-center gap-4 group"
+              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+              style={{
+                background: "rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+              }}
             >
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-purple-500/30 transition-shadow">
-                <img src={triviaBuzzer} alt="" className="w-[41px] h-[41px] object-contain" />
+              {/* Glow effect */}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: "radial-gradient(circle at left center, rgba(139, 92, 246, 0.4), transparent 50%)",
+                }}
+              />
+              
+              {/* Icon */}
+              <div className="relative shrink-0">
+                <img src={triviaBuzzer} alt="" className="w-14 h-14 object-contain" />
               </div>
+              
+              {/* Text */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-foreground text-lg">ტრივია</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  1 რაუნდი, სწრაფი შექმნა
-                </p>
+                <h3 className="font-bold text-white text-base">ტრივია</h3>
+                <p className="text-white/60 text-xs">1 რაუნდი, სწრაფი შექმნა</p>
               </div>
             </motion.button>
 
@@ -92,18 +108,30 @@ export function CreateTriviaTypeModal({
                 handleClose();
                 onSelectCollection();
               }}
-              className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-cyan-500/5 to-blue-500/10 transition-all text-left flex items-center gap-4 group"
+              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+              style={{
+                background: "rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+              }}
             >
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-cyan-500/30 transition-shadow">
-                <img src={iconCollections} alt="" className="w-[41px] h-[41px] object-contain" />
+              {/* Glow effect */}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  background: "radial-gradient(circle at left center, rgba(34, 211, 238, 0.4), transparent 50%)",
+                }}
+              />
+              
+              {/* Icon */}
+              <div className="relative shrink-0">
+                <img src={iconCollections} alt="" className="w-14 h-14 object-contain" />
               </div>
+              
+              {/* Text */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold text-foreground text-lg">კოლექცია</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  რამდენიმე რაუნდი ერთად
-                </p>
+                <h3 className="font-bold text-white text-base">კოლექცია</h3>
+                <p className="text-white/60 text-xs">რამდენიმე რაუნდი ერთად</p>
               </div>
             </motion.button>
 
@@ -119,18 +147,30 @@ export function CreateTriviaTypeModal({
                   handleClose();
                   onSelectPersonal();
                 }}
-                className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-pink-500/5 to-rose-500/10 transition-all text-left flex items-center gap-4 group"
+                className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+                style={{
+                  background: "rgba(255, 255, 255, 0.12)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                }}
               >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-pink-500/30 transition-shadow">
-                  <img src={iconGroupOfPeople} alt="" className="w-[41px] h-[41px] object-contain" />
+                {/* Glow effect */}
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    background: "radial-gradient(circle at left center, rgba(236, 72, 153, 0.4), transparent 50%)",
+                  }}
+                />
+                
+                {/* Icon */}
+                <div className="relative shrink-0">
+                  <img src={iconGroupOfPeople} alt="" className="w-14 h-14 object-contain" />
                 </div>
+                
+                {/* Text */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-foreground text-lg">MyTrivia Party</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    შენი კითხვები, შენი პასუხები
-                  </p>
+                  <h3 className="font-bold text-white text-base">MyTrivia Party</h3>
+                  <p className="text-white/60 text-xs">შენი კითხვები, შენი პასუხები</p>
                 </div>
               </motion.button>
             )}
@@ -147,18 +187,30 @@ export function CreateTriviaTypeModal({
                   handleClose();
                   onSelectGameRoom();
                 }}
-                className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-emerald-500/5 to-green-500/10 transition-all text-left flex items-center gap-4 group"
+                className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+                style={{
+                  background: "rgba(255, 255, 255, 0.12)",
+                  backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                }}
               >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-emerald-500/30 transition-shadow">
-                  <Users className="w-8 h-8 text-white" />
+                {/* Glow effect */}
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    background: "radial-gradient(circle at left center, rgba(16, 185, 129, 0.4), transparent 50%)",
+                  }}
+                />
+                
+                {/* Icon */}
+                <div className="relative shrink-0">
+                  <img src={danceFloor} alt="" className="w-14 h-14 object-contain" />
                 </div>
+                
+                {/* Text */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-foreground text-lg">სათამაშო ოთახი</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    ითამაშე მეგობრებთან ერთად
-                  </p>
+                  <h3 className="font-bold text-white text-base">სათამაშო ოთახი</h3>
+                  <p className="text-white/60 text-xs">ითამაშე მეგობრებთან ერთად</p>
                 </div>
               </motion.button>
             )}
@@ -170,7 +222,7 @@ export function CreateTriviaTypeModal({
             />
 
             {/* Hint */}
-            <p className="text-xs text-center text-muted-foreground pt-2">
+            <p className="text-xs text-center text-white/50 pt-2">
               💡 კოლექცია იდეალურია თემატური ტურნირისთვის
             </p>
           </div>
