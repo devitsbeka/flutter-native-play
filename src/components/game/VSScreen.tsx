@@ -348,8 +348,25 @@ export function VSScreen() {
           <ArrowLeft className="w-6 h-6 text-white" strokeWidth={2.5} />
         </motion.button>
 
-        {/* Spacer for header balance */}
-        <div className="w-10" />
+        {/* Coins Reward - center of header */}
+        <AnimatePresence>
+          {isOpponentLocked && (
+            <motion.div 
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              style={{
+                background: "linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,165,0,0.15) 100%)",
+                border: "1.5px solid rgba(255,215,0,0.3)",
+              }}
+            >
+              <img src={coinIcon} alt="" className="w-4 h-4" />
+              <span className="text-white font-bold text-sm">{REWARDS.GAME_WIN_REWARD.toLocaleString()}</span>
+              <span className="text-white/60 text-xs">მოგება</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <motion.button 
           className="p-2" 
@@ -405,38 +422,24 @@ export function VSScreen() {
 
           {/* Category - Center with Interactive Morphing Blobs */}
           <motion.div 
-            className="flex flex-col items-center justify-center gap-3 relative z-10 mt-[5px]"
+            className="flex flex-col items-center justify-center gap-2 relative z-10"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Coins Badge - separate from category */}
+            {/* Category name - ABOVE blob */}
             <AnimatePresence>
-              {isOpponentLocked && (
-                <motion.div
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full backdrop-blur-md"
-                  initial={{ opacity: 0, y: -20, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  style={{
-                    background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
-                    border: "2px solid rgba(255,215,0,0.4)",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
-                  }}
+              {isCategoryLocked && (
+                <motion.span
+                  className="text-white font-bold text-lg"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ delay: 0.2 }}
+                  style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
                 >
-                  {/* Entry fee */}
-                  <img src={coinIcon} alt="" className="w-4 h-4 opacity-70" />
-                  <span className="text-sm text-white/70">-{stakeAmount}</span>
-                  
-                  {/* Arrow separator */}
-                  <span className="text-white/40 text-sm">→</span>
-                  
-                  {/* Win reward */}
-                  <img src={coinIcon} alt="" className="w-5 h-5" />
-                  <span className="text-lg font-black text-white">
-                    {REWARDS.GAME_WIN_REWARD.toLocaleString()}
-                  </span>
-                </motion.div>
+                  {selectedCategory?.name || currentCategory?.name || t("game.category")}
+                </motion.span>
               )}
             </AnimatePresence>
 
@@ -448,7 +451,7 @@ export function VSScreen() {
               shouldAnimate={showCategorySlot && !isCategoryLocked}
             />
 
-            {/* Refresh button - only visible when category is locked */}
+            {/* Refresh button - BELOW blob */}
             <AnimatePresence>
               {isCategoryLocked && (
                 <motion.button
@@ -467,22 +470,6 @@ export function VSScreen() {
                   <RefreshCw className="w-4 h-4 text-white" />
                   <span className="text-white font-bold text-sm">ახლიდან</span>
                 </motion.button>
-              )}
-            </AnimatePresence>
-
-            {/* Category name - separate text below refresh */}
-            <AnimatePresence>
-              {isCategoryLocked && (
-                <motion.span
-                  className="text-white font-bold text-lg"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ delay: 0.4 }}
-                  style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
-                >
-                  {selectedCategory?.name || currentCategory?.name || t("game.category")}
-                </motion.span>
               )}
             </AnimatePresence>
           </motion.div>

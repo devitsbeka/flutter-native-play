@@ -126,7 +126,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
   const isSpinning = shouldAnimate && !isLocked && slotSequence.length > 0 && iconsPreloaded;
 
   return (
-    <div className="relative w-[252px] h-[252px] select-none">
+    <div className="relative w-[220px] h-[220px] select-none">
       {/* SVG Definitions */}
       <svg className="absolute w-0 h-0">
         <defs>
@@ -196,7 +196,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
                   <img 
                     src={currentIconUrl} 
                     alt="" 
-                    className="w-24 h-24 object-contain drop-shadow-lg"
+                    className="w-20 h-20 object-contain drop-shadow-lg"
                   />
                 )}
               </motion.div>
