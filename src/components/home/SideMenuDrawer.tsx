@@ -8,7 +8,7 @@ import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
-import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
+import { AvatarModal } from "./AvatarModal";
 import { SettingsModal } from "./SettingsModal";
 import { HelpModal } from "./HelpModal";
 import { PrivacyModal } from "./PrivacyModal";
@@ -79,7 +79,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
       <DailyRewardsModal isOpen={isDailyRewardsOpen} onClose={() => setIsDailyRewardsOpen(false)} currentStreak={currentStreak} />
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
-      <AvatarGeneratorModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
+      <AvatarModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => { setIsSettingsOpen(false); setSettingsInitialView("main"); }} initialView={settingsInitialView} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
