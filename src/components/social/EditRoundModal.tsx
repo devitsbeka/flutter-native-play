@@ -446,7 +446,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                   }}
                   className="w-full"
                 >
-                  <CarouselContent>
+                  <CarouselContent className="ml-4">
                     {questions.map((q, index) => {
                       const answerInQuestion = hasAnswerInQuestion(q.question_text, q.correct_answer);
                       const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
