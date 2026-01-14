@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, PanInfo, useMotionValue } from "framer-motion";
 import { ReactNode, useCallback, useEffect, useState, memo, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -85,6 +85,110 @@ const useIsDesktop = () => {
   return isDesktop;
 };
 
+// Individual draggable trophy component with its own motion values
+interface DraggableTrophyProps {
+  tierNum: number;
+  meta: { image: string; label: string; labelKa: string };
+  isActive: boolean;
+  label: string;
+  initialX: number;
+  initialY: number;
+  size: number;
+  scaleInfo: { scale: number; offsetX: number; offsetY: number };
+  onPositionChange: (tierNum: number, imageX: number, imageY: number) => void;
+  onClick: () => void;
+}
+
+const DraggableTrophy = memo(function DraggableTrophy({
+  tierNum,
+  meta,
+  isActive,
+  label,
+  initialX,
+  initialY,
+  size,
+  scaleInfo,
+  onPositionChange,
+  onClick,
+}: DraggableTrophyProps) {
+  const x = useMotionValue(initialX);
+  const y = useMotionValue(initialY);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Update position when initialX/initialY change (e.g., on resize)
+  useEffect(() => {
+    x.set(initialX);
+    y.set(initialY);
+  }, [initialX, initialY, x, y]);
+
+  const handleDragEnd = useCallback(() => {
+    const currentX = x.get();
+    const currentY = y.get();
+    
+    // Convert screen position back to image coordinates
+    const imageX = Math.round((currentX - scaleInfo.offsetX) / scaleInfo.scale);
+    const imageY = Math.round((currentY - scaleInfo.offsetY) / scaleInfo.scale);
+    
+    onPositionChange(tierNum, imageX, imageY);
+    setIsDragging(false);
+  }, [x, y, scaleInfo, tierNum, onPositionChange]);
+
+  return (
+    <motion.div
+      className="absolute cursor-grab active:cursor-grabbing group"
+      style={{
+        x,
+        y,
+        width: size,
+        maxWidth: '280px',
+        minWidth: '100px',
+        transform: 'translate(-50%, -100%)',
+      }}
+      drag={DEV_MODE}
+      dragMomentum={false}
+      dragElastic={0}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={handleDragEnd}
+      onClick={onClick}
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ 
+        opacity: 1, 
+        scale: isActive ? 1.1 : 1,
+      }}
+      whileHover={DEV_MODE ? undefined : { scale: isActive ? 1.15 : 1.08 }}
+      whileTap={DEV_MODE ? undefined : { scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <img 
+        src={meta.image} 
+        alt={label}
+        className={`w-full h-auto select-none pointer-events-none transition-all duration-300 ${
+          isActive ? 'drop-shadow-2xl' : 'drop-shadow-lg'
+        }`}
+        draggable={false}
+      />
+      
+      {DEV_MODE && isDragging && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50">
+          Drag freely...
+        </div>
+      )}
+      
+      {!DEV_MODE && (
+        <div className={`absolute left-1/2 -translate-x-1/2 -top-10 opacity-0 group-hover:opacity-100 transition-opacity ${
+          isActive ? 'opacity-100' : ''
+        }`}>
+          <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
+            <span className="text-sm font-medium text-foreground/90">
+              {label}
+            </span>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+});
+
 // Hook to manage trophy positions with auto-save
 const useTrophyConfig = () => {
   const [config, setConfig] = useState(() => loadTrophyConfig());
@@ -104,6 +208,8 @@ const useTrophyConfig = () => {
     const defaultConfig = { ...DEFAULT_TROPHY_CONFIG };
     setConfig(defaultConfig);
     localStorage.removeItem(STORAGE_KEY);
+    // Force re-render by setting a new object
+    return defaultConfig;
   }, []);
   
   return { config, updatePosition, resetPositions };
@@ -177,8 +283,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   
   const { config: trophyConfig, updatePosition, resetPositions } = useTrophyConfig();
   const { positions, scaleInfo } = useTrophyPositions(containerRef, trophyConfig);
-  
-  const [isDragging, setIsDragging] = useState<number | null>(null);
+  const [resetKey, setResetKey] = useState(0);
   
   const currentMeta = TROPHY_META[tier as keyof typeof TROPHY_META];
   const currentLabel = language === 'ka' ? currentMeta?.labelKa : currentMeta?.label;
@@ -189,24 +294,10 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     }
   }, [onTierSelect]);
 
-  // Convert screen position to image coordinates and auto-save
-  const handleDragEnd = useCallback((tierNum: number, info: PanInfo) => {
-    if (!DEV_MODE || !containerRef.current) return;
-    
-    const currentScreenPos = positions[tierNum];
-    if (!currentScreenPos) return;
-    
-    const newScreenX = currentScreenPos.x + info.offset.x;
-    const newScreenY = currentScreenPos.y + info.offset.y;
-    
-    // Convert back to image coordinates
-    const imageX = Math.round((newScreenX - scaleInfo.offsetX) / scaleInfo.scale);
-    const imageY = Math.round((newScreenY - scaleInfo.offsetY) / scaleInfo.scale);
-    
-    // Auto-save to localStorage
-    updatePosition(tierNum, imageX, imageY);
-    setIsDragging(null);
-  }, [positions, scaleInfo, updatePosition]);
+  const handleReset = useCallback(() => {
+    resetPositions();
+    setResetKey(k => k + 1); // Force remount of trophy components
+  }, [resetPositions]);
 
   const handleMobileSwipe = useCallback((_: any, info: PanInfo) => {
     const swipeThreshold = 50;
@@ -249,10 +340,10 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       {DEV_MODE && isDesktop && (
         <div className="absolute top-2 left-2 z-50 flex gap-2">
           <div className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-lg">
-            DEV: Drag trophies to position
+            DEV: Drag trophies freely
           </div>
           <button 
-            onClick={resetPositions}
+            onClick={handleReset}
             className="bg-foreground/80 text-background px-3 py-1 rounded-lg text-xs font-bold shadow-lg hover:bg-foreground transition-colors"
           >
             Reset All
@@ -286,59 +377,19 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             if (!pos) return null;
             
             return (
-              <motion.button
-                key={tierKey}
+              <DraggableTrophy
+                key={`${tierKey}-${resetKey}`}
+                tierNum={tierNum}
+                meta={meta}
+                isActive={isActive}
+                label={label}
+                initialX={pos.x}
+                initialY={pos.y}
+                size={pos.size}
+                scaleInfo={scaleInfo}
+                onPositionChange={updatePosition}
                 onClick={() => handleTrophyClick(tierNum)}
-                className={`absolute ${DEV_MODE ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} group`}
-                style={{
-                  left: pos.x,
-                  top: pos.y,
-                  transform: 'translate(-50%, -100%)',
-                  width: pos.size,
-                  maxWidth: '280px',
-                  minWidth: '100px',
-                }}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: isActive ? 1.1 : 1,
-                }}
-                whileHover={DEV_MODE ? undefined : { scale: isActive ? 1.15 : 1.08 }}
-                whileTap={DEV_MODE ? undefined : { scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                drag={DEV_MODE}
-                dragMomentum={false}
-                dragElastic={0}
-                onDragStart={() => setIsDragging(tierNum)}
-                onDragEnd={(_, info) => handleDragEnd(tierNum, info)}
-              >
-                <img 
-                  src={meta.image} 
-                  alt={label}
-                  className={`w-full h-auto select-none pointer-events-none transition-all duration-300 ${
-                    isActive ? 'drop-shadow-2xl' : 'drop-shadow-lg'
-                  }`}
-                  draggable={false}
-                />
-                
-                {DEV_MODE && isDragging === tierNum && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-0 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50">
-                    Moving...
-                  </div>
-                )}
-                
-                {!DEV_MODE && (
-                  <div className={`absolute left-1/2 -translate-x-1/2 -top-10 opacity-0 group-hover:opacity-100 transition-opacity ${
-                    isActive ? 'opacity-100' : ''
-                  }`}>
-                    <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
-                      <span className="text-sm font-medium text-foreground/90">
-                        {label}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </motion.button>
+              />
             );
           })}
         </div>
