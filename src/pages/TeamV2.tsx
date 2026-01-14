@@ -34,6 +34,7 @@ import { CreateTriviaTypeModal } from "@/components/social/CreateTriviaTypeModal
 import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { QuickPlayModal } from "@/components/team/QuickPlayModal";
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
+import { CreateRoomScreen } from "@/components/team/CreateRoomScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TabsContent } from "@/components/ui/tabs";
@@ -163,6 +164,7 @@ function TeamContentV2() {
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [showTeamMenu, setShowTeamMenu] = useState(false);
+  const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
 
@@ -534,7 +536,7 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowTeamMenu(true)}
+                onAddClick={() => setShowCreateRoomScreen(true)}
               />
             </div>
           )}
@@ -642,7 +644,7 @@ function TeamContentV2() {
             onClose={() => setShowTeamMenu(false)}
             onSelectCreateRoom={() => {
               setShowTeamMenu(false);
-              setShowCreateModal(true);
+              setShowCreateRoomScreen(true);
             }}
             onSelectTrivia={() => {
               setShowTeamMenu(false);
@@ -664,6 +666,32 @@ function TeamContentV2() {
             }}
             onSelectLibrary={() => {
               setShowTeamMenu(false);
+              setShowCategorySelectorModal(true);
+            }}
+          />
+        )}
+        {showCreateRoomScreen && (
+          <CreateRoomScreen
+            onClose={() => setShowCreateRoomScreen(false)}
+            onSelectTrivia={() => {
+              setShowCreateRoomScreen(false);
+              setShowCreateQuizModal(true);
+            }}
+            onSelectCollection={() => {
+              setShowCreateRoomScreen(false);
+              setShowCreateCollectionModal(true);
+            }}
+            onSelectPersonalTrivia={() => {
+              setShowCreateRoomScreen(false);
+              setShowBlindTriviaModal(true);
+            }}
+            onSelectRandom={() => {
+              setShowCreateRoomScreen(false);
+              setPendingRandomPlay(true);
+              setShowCreateModal(true);
+            }}
+            onSelectLibrary={() => {
+              setShowCreateRoomScreen(false);
               setShowCategorySelectorModal(true);
             }}
           />
