@@ -30,7 +30,7 @@ export function QuizTrueFalseButton({
       return { 
         bg: "#4ADE80", 
         depth: "#22C55E", 
-        iconBg: "#22C55E",
+        iconColor: "#FFFFFF",
         text: "#FFFFFF" 
       };
     }
@@ -38,27 +38,18 @@ export function QuizTrueFalseButton({
       return { 
         bg: "#F87171", 
         depth: "#EF4444", 
-        iconBg: "#EF4444",
+        iconColor: "#FFFFFF",
         text: "#FFFFFF" 
       };
     }
     
-    // Default state - green theme for true, red theme for false
-    if (isTrue) {
-      return { 
-        bg: "#E8F5E9", 
-        depth: "#A5D6A7", 
-        iconBg: "#22C55E",
-        text: "#22C55E" 
-      };
-    } else {
-      return { 
-        bg: "#FFEBEE", 
-        depth: "#EF9A9A", 
-        iconBg: "#EF4444",
-        text: "#EF4444" 
-      };
-    }
+    // Default state - light purple/gray background for both
+    return { 
+      bg: "#E8E8F4", 
+      depth: "#D0D0E0", 
+      iconColor: isTrue ? "#22C55E" : "#EF4444",
+      text: isTrue ? "#22C55E" : "#EF4444"
+    };
   };
 
   const styles = getStyles();
@@ -71,12 +62,12 @@ export function QuizTrueFalseButton({
       rotateY: 0,
     },
     tap: { 
-      scale: 0.92,
+      scale: 0.95,
       transition: { duration: 0.1 }
     },
     correct: {
-      scale: [1, 1.1, 1],
-      rotateY: [0, 10, -10, 0],
+      scale: [1, 1.05, 1],
+      rotateY: [0, 5, -5, 0],
       transition: { 
         duration: 0.5,
         times: [0, 0.3, 0.6, 1],
@@ -85,7 +76,7 @@ export function QuizTrueFalseButton({
     },
     wrong: {
       scale: [1, 0.95, 1],
-      x: [0, -8, 8, -8, 8, 0],
+      x: [0, -6, 6, -6, 6, 0],
       transition: { 
         duration: 0.4,
         times: [0, 0.2, 0.4, 0.6, 0.8, 1],
@@ -97,7 +88,7 @@ export function QuizTrueFalseButton({
   const iconVariants = {
     initial: { scale: 1, rotate: 0 },
     correct: {
-      scale: [1, 1.3, 1],
+      scale: [1, 1.2, 1],
       rotate: [0, -10, 10, 0],
       transition: { 
         duration: 0.5,
@@ -106,7 +97,7 @@ export function QuizTrueFalseButton({
       }
     },
     wrong: {
-      scale: [1, 0.8, 1],
+      scale: [1, 0.85, 1],
       rotate: [0, -15, 15, 0],
       transition: { 
         duration: 0.4,
@@ -125,7 +116,7 @@ export function QuizTrueFalseButton({
       animate={isRevealed ? state : "initial"}
       whileTap={!disabled ? "tap" : undefined}
       className={cn(
-        "flex-1 relative h-14 cursor-pointer",
+        "flex-1 relative aspect-square cursor-pointer min-h-[140px]",
         disabled && "cursor-default",
         className
       )}
@@ -133,19 +124,19 @@ export function QuizTrueFalseButton({
     >
       {/* Shadow/Depth Layer */}
       <motion.div 
-        className="absolute inset-0 rounded-2xl"
+        className="absolute inset-0 rounded-3xl"
         style={{ 
           background: styles.depth, 
-          transform: "translateY(4px)" 
+          transform: "translateY(6px)" 
         }}
         animate={{
-          transform: isRevealed ? "translateY(2px)" : "translateY(4px)"
+          transform: isRevealed ? "translateY(3px)" : "translateY(6px)"
         }}
       />
       
       {/* Main Face */}
       <motion.div 
-        className="relative flex flex-row items-center justify-center px-4 rounded-2xl gap-3 h-full overflow-hidden"
+        className="relative flex flex-col items-center justify-center rounded-3xl gap-3 h-full overflow-hidden"
         style={{ background: styles.bg }}
         animate={{
           background: styles.bg
@@ -170,24 +161,31 @@ export function QuizTrueFalseButton({
           )}
         </AnimatePresence>
 
-        {/* Icon Circle */}
+        {/* Large Icon (no circle background) */}
         <motion.div 
-          className="w-8 h-8 rounded-full flex items-center justify-center shadow-md flex-shrink-0"
-          style={{ background: styles.iconBg }}
+          className="flex items-center justify-center"
           variants={iconVariants}
           initial="initial"
           animate={isRevealed ? state : "initial"}
         >
           {isTrue ? (
-            <Check className="w-5 h-5 text-white" strokeWidth={3} />
+            <Check 
+              className="w-14 h-14" 
+              strokeWidth={3.5} 
+              style={{ color: styles.iconColor }}
+            />
           ) : (
-            <X className="w-5 h-5 text-white" strokeWidth={3} />
+            <X 
+              className="w-14 h-14" 
+              strokeWidth={3.5} 
+              style={{ color: styles.iconColor }}
+            />
           )}
         </motion.div>
         
         {/* Label Text */}
         <motion.span 
-          className="font-bold text-base"
+          className="font-bold text-lg"
           style={{ color: styles.text }}
           animate={{
             scale: isRevealed ? [1, 1.1, 1] : 1,
@@ -214,8 +212,8 @@ export function QuizTrueFalseButton({
                   animate={{ 
                     opacity: 0, 
                     scale: 1,
-                    x: (Math.random() - 0.5) * 80,
-                    y: (Math.random() - 0.5) * 80
+                    x: (Math.random() - 0.5) * 100,
+                    y: (Math.random() - 0.5) * 100
                   }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.6, delay: i * 0.05 }}
