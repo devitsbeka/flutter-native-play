@@ -220,7 +220,7 @@ const DraggableTrophy = memo(function DraggableTrophy({
 
   return (
     <motion.div
-      className={`absolute cursor-pointer z-10 ${isDragging ? 'z-50' : ''}`}
+      className={`absolute cursor-grab z-40 ${isDragging ? 'z-50 cursor-grabbing' : ''}`}
       style={{ 
         x, 
         y,
@@ -586,7 +586,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       />
 
       {/* Content */}
-      <div className="relative z-30 h-full flex flex-col items-center justify-end pb-8">
+      <div className={`relative h-full flex flex-col items-center justify-end pb-8 ${DEV_MODE ? 'pointer-events-none z-10' : 'z-30'}`}>
         {children}
       </div>
     </div>
