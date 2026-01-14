@@ -1,8 +1,8 @@
-import { motion, AnimatePresence, PanInfo, useMotionValue } from "framer-motion";
-import { ReactNode, useCallback, useEffect, useState, memo, useRef } from "react";
+import { ReactNode, useState, useRef, useCallback, useEffect, memo } from "react";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { ChevronLeft, ChevronRight, Save, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-// New layered assets
 import leaderboardMap from "@/assets/leaderboard-map.png";
 import trophyBronze from "@/assets/trophy-bronze.png";
 import trophySilver from "@/assets/trophy-silver.png";
@@ -17,75 +17,152 @@ interface LeaderboardHeroBackgroundProps {
 
 // ============ DEV MODE - Set to true to enable trophy dragging ============
 const DEV_MODE = true;
-const STORAGE_KEY = 'leaderboard-trophy-positions';
+const STORAGE_KEY = 'leaderboard-trophy-positions-v3';
 // ==========================================================================
 
 // Background image natural dimensions
 const BG_IMAGE_DIMENSIONS = { width: 2048, height: 1365 };
 
-// Default trophy positions in pixels relative to background image
-const DEFAULT_TROPHY_CONFIG = {
-  1: { x: 1360, y: 610, size: 370 }, // Bronze
-  2: { x: 370, y: 630, size: 370 },  // Silver
-  3: { x: 820, y: 500, size: 450 },  // Gold
-} as const;
+type Breakpoint = 'desktop' | 'tablet' | 'mobile';
+
+// Default trophy positions for each breakpoint (in pixels relative to background image)
+const DEFAULT_TROPHY_CONFIGS: Record<Breakpoint, Record<number, { x: number; y: number; size: number }>> = {
+  desktop: {
+    1: { x: 1360, y: 610, size: 370 }, // Bronze
+    2: { x: 370, y: 630, size: 370 },  // Silver
+    3: { x: 820, y: 500, size: 450 },  // Gold
+  },
+  tablet: {
+    1: { x: 1024, y: 400, size: 280 }, // Bronze
+    2: { x: 300, y: 420, size: 280 },  // Silver
+    3: { x: 620, y: 340, size: 340 },  // Gold
+  },
+  mobile: {
+    1: { x: 1024, y: 350, size: 240 }, // Bronze - centered for single view
+    2: { x: 1024, y: 350, size: 240 }, // Silver
+    3: { x: 1024, y: 300, size: 300 }, // Gold
+  },
+};
 
 // Load saved positions from localStorage or use defaults
-const loadTrophyConfig = (): Record<number, { x: number; y: number; size: number }> => {
+const loadTrophyConfigs = (): Record<Breakpoint, Record<number, { x: number; y: number; size: number }>> => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        1: { ...DEFAULT_TROPHY_CONFIG[1], ...parsed[1] },
-        2: { ...DEFAULT_TROPHY_CONFIG[2], ...parsed[2] },
-        3: { ...DEFAULT_TROPHY_CONFIG[3], ...parsed[3] },
-      };
+      return JSON.parse(saved);
     }
   } catch (e) {
-    console.warn('Failed to load trophy positions:', e);
+    console.error('Failed to load trophy configs:', e);
   }
-  return { ...DEFAULT_TROPHY_CONFIG };
+  return { ...DEFAULT_TROPHY_CONFIGS };
 };
 
 // Save positions to localStorage
-const saveTrophyConfig = (config: Record<number, { x: number; y: number; size: number }>) => {
+const saveTrophyConfigs = (configs: Record<Breakpoint, Record<number, { x: number; y: number; size: number }>>) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
+    console.log('Trophy configs saved:', configs);
   } catch (e) {
-    console.warn('Failed to save trophy positions:', e);
+    console.error('Failed to save trophy configs:', e);
   }
 };
 
-// Mobile: Centered trophy for active tier
-const MOBILE_TROPHY_CONFIG = {
-  1: { left: '50%', top: '50%', size: '44%' },
-  2: { left: '50%', top: '50%', size: '44%' },
-  3: { left: '50%', top: '46%', size: '52%' },
-} as const;
+// Hook to manage trophy configurations for all breakpoints
+const useTrophyConfigs = () => {
+  const [configs, setConfigs] = useState(() => loadTrophyConfigs());
+  const [pendingConfigs, setPendingConfigs] = useState<Record<Breakpoint, Record<number, { x: number; y: number; size: number }>> | null>(null);
 
-// Trophy metadata
-const TROPHY_META = {
-  1: { image: trophyBronze, label: 'Bronze League', labelKa: 'ბრინჯაოს ლიგა' },
-  2: { image: trophySilver, label: 'Silver League', labelKa: 'ვერცხლის ლიგა' },
-  3: { image: trophyGold, label: 'Gold League', labelKa: 'ოქროს ლიგა' },
-} as const;
+  const updatePosition = useCallback((breakpoint: Breakpoint, tierNum: number, x: number, y: number) => {
+    setPendingConfigs(prev => {
+      const base = prev || configs;
+      return {
+        ...base,
+        [breakpoint]: {
+          ...base[breakpoint],
+          [tierNum]: { ...base[breakpoint][tierNum], x, y }
+        }
+      };
+    });
+  }, [configs]);
 
-// Check if we're on desktop/tablet (>= 768px)
+  const saveChanges = useCallback((breakpoint: Breakpoint) => {
+    if (pendingConfigs) {
+      const newConfigs = {
+        ...configs,
+        [breakpoint]: pendingConfigs[breakpoint]
+      };
+      setConfigs(newConfigs);
+      saveTrophyConfigs(newConfigs);
+      setPendingConfigs(null);
+    }
+  }, [configs, pendingConfigs]);
+
+  const resetBreakpoint = useCallback((breakpoint: Breakpoint) => {
+    const newConfigs = {
+      ...configs,
+      [breakpoint]: { ...DEFAULT_TROPHY_CONFIGS[breakpoint] }
+    };
+    setConfigs(newConfigs);
+    saveTrophyConfigs(newConfigs);
+    setPendingConfigs(null);
+  }, [configs]);
+
+  const hasUnsavedChanges = useCallback((breakpoint: Breakpoint) => {
+    if (!pendingConfigs) return false;
+    return JSON.stringify(pendingConfigs[breakpoint]) !== JSON.stringify(configs[breakpoint]);
+  }, [configs, pendingConfigs]);
+
+  const getConfig = useCallback((breakpoint: Breakpoint) => {
+    return pendingConfigs?.[breakpoint] || configs[breakpoint];
+  }, [configs, pendingConfigs]);
+
+  return { getConfig, updatePosition, saveChanges, resetBreakpoint, hasUnsavedChanges };
+};
+
+// Hook to detect current breakpoint
+const useBreakpoint = (): Breakpoint => {
+  const [breakpoint, setBreakpoint] = useState<Breakpoint>('desktop');
+
+  useEffect(() => {
+    const checkBreakpoint = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setBreakpoint('mobile');
+      } else if (width < 1024) {
+        setBreakpoint('tablet');
+      } else {
+        setBreakpoint('desktop');
+      }
+    };
+
+    checkBreakpoint();
+    window.addEventListener('resize', checkBreakpoint);
+    return () => window.removeEventListener('resize', checkBreakpoint);
+  }, []);
+
+  return breakpoint;
+};
+
+// Hook to check if desktop
 const useIsDesktop = () => {
   const [isDesktop, setIsDesktop] = useState(false);
-  
+
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
-  
+
   return isDesktop;
 };
 
-// Individual draggable trophy component with its own motion values
+const TROPHY_META = {
+  1: { image: trophyBronze, label: "Bronze League", labelKa: "ბრინჯაოს ლიგა" },
+  2: { image: trophySilver, label: "Silver League", labelKa: "ვერცხლის ლიგა" },
+  3: { image: trophyGold, label: "Gold League", labelKa: "ოქროს ლიგა" },
+} as const;
+
 interface DraggableTrophyProps {
   tierNum: number;
   meta: { image: string; label: string; labelKa: string };
@@ -95,7 +172,7 @@ interface DraggableTrophyProps {
   initialY: number;
   size: number;
   scaleInfo: { scale: number; offsetX: number; offsetY: number };
-  onPositionChange: (tierNum: number, imageX: number, imageY: number) => void;
+  onPositionChange: (tierNum: number, x: number, y: number) => void;
   onClick: () => void;
 }
 
@@ -109,40 +186,42 @@ const DraggableTrophy = memo(function DraggableTrophy({
   size,
   scaleInfo,
   onPositionChange,
-  onClick,
+  onClick
 }: DraggableTrophyProps) {
   const x = useMotionValue(initialX);
   const y = useMotionValue(initialY);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Update position when initialX/initialY change (e.g., on resize)
+  // Update position when initialX/initialY changes (e.g., on resize)
   useEffect(() => {
     x.set(initialX);
     y.set(initialY);
   }, [initialX, initialY, x, y]);
 
   const handleDragEnd = useCallback(() => {
-    const currentX = x.get();
-    const currentY = y.get();
-    
-    // Convert screen position back to image coordinates
-    const imageX = Math.round((currentX - scaleInfo.offsetX) / scaleInfo.scale);
-    const imageY = Math.round((currentY - scaleInfo.offsetY) / scaleInfo.scale);
-    
-    onPositionChange(tierNum, imageX, imageY);
     setIsDragging(false);
-  }, [x, y, scaleInfo, tierNum, onPositionChange]);
+    
+    if (!DEV_MODE) return;
+    
+    // Get current screen position
+    const screenX = x.get();
+    const screenY = y.get();
+    
+    // Convert screen position back to image pixels
+    const imageX = (screenX - scaleInfo.offsetX) / scaleInfo.scale;
+    const imageY = (screenY - scaleInfo.offsetY) / scaleInfo.scale;
+    
+    onPositionChange(tierNum, Math.round(imageX), Math.round(imageY));
+  }, [tierNum, x, y, scaleInfo, onPositionChange]);
 
   return (
     <motion.div
-      className="absolute cursor-grab active:cursor-grabbing group"
-      style={{
-        x,
+      className={`absolute cursor-pointer z-10 ${isDragging ? 'z-50' : ''}`}
+      style={{ 
+        x, 
         y,
         width: size,
-        maxWidth: '280px',
-        minWidth: '100px',
-        transform: 'translate(-50%, -100%)',
+        transformOrigin: 'center bottom',
       }}
       drag={DEV_MODE}
       dragMomentum={false}
@@ -150,125 +229,78 @@ const DraggableTrophy = memo(function DraggableTrophy({
       onDragStart={() => setIsDragging(true)}
       onDragEnd={handleDragEnd}
       onClick={onClick}
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ 
-        opacity: 1, 
-        scale: isActive ? 1.1 : 1,
-      }}
-      whileHover={DEV_MODE ? undefined : { scale: isActive ? 1.15 : 1.08 }}
-      whileTap={DEV_MODE ? undefined : { scale: 0.95 }}
+      whileHover={!DEV_MODE ? { scale: 1.05 } : undefined}
+      animate={isActive && !DEV_MODE ? { scale: 1.1 } : { scale: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      <img 
-        src={meta.image} 
+      <motion.img
+        src={meta.image}
         alt={label}
-        className={`w-full h-auto select-none pointer-events-none transition-all duration-300 ${
-          isActive ? 'drop-shadow-2xl' : 'drop-shadow-lg'
-        }`}
-        draggable={false}
+        className={`w-full h-auto drop-shadow-2xl ${DEV_MODE ? 'ring-2 ring-blue-500 ring-offset-2' : ''} ${isDragging ? 'opacity-80' : ''}`}
+        style={{
+          filter: isActive 
+            ? 'drop-shadow(0 0 20px rgba(255,215,0,0.6))' 
+            : 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))'
+        }}
       />
-      
-      {DEV_MODE && isDragging && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50">
-          Drag freely...
-        </div>
-      )}
-      
-      {!DEV_MODE && (
-        <div className={`absolute left-1/2 -translate-x-1/2 -top-10 opacity-0 group-hover:opacity-100 transition-opacity ${
-          isActive ? 'opacity-100' : ''
-        }`}>
-          <div className="bg-background/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg border border-border/50 whitespace-nowrap">
-            <span className="text-sm font-medium text-foreground/90">
-              {label}
-            </span>
-          </div>
+      {DEV_MODE && (
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+          Tier {tierNum}
         </div>
       )}
     </motion.div>
   );
 });
 
-// Hook to manage trophy positions with auto-save
-const useTrophyConfig = () => {
-  const [config, setConfig] = useState(() => loadTrophyConfig());
-  
-  const updatePosition = useCallback((tierNum: number, x: number, y: number) => {
-    setConfig(prev => {
-      const newConfig = {
-        ...prev,
-        [tierNum]: { ...prev[tierNum], x, y },
-      };
-      saveTrophyConfig(newConfig);
-      return newConfig;
-    });
-  }, []);
-  
-  const resetPositions = useCallback(() => {
-    const defaultConfig = { ...DEFAULT_TROPHY_CONFIG };
-    setConfig(defaultConfig);
-    localStorage.removeItem(STORAGE_KEY);
-    // Force re-render by setting a new object
-    return defaultConfig;
-  }, []);
-  
-  return { config, updatePosition, resetPositions };
-};
-
-// Hook to calculate trophy screen positions based on background scaling
+// Hook to calculate trophy screen positions based on container size
 const useTrophyPositions = (
   containerRef: React.RefObject<HTMLDivElement>,
-  trophyConfig: Record<number, { x: number; y: number; size: number }>
+  trophyConfig: Record<number, { x: number; y: number; size: number }>,
+  resetKey: number
 ) => {
   const [positions, setPositions] = useState<Record<number, { x: number; y: number; size: number }>>({});
   const [scaleInfo, setScaleInfo] = useState({ scale: 1, offsetX: 0, offsetY: 0 });
-  
-  const calculatePositions = useCallback(() => {
-    if (!containerRef.current) return;
-    
-    const container = containerRef.current;
-    const containerWidth = container.offsetWidth;
-    const containerHeight = container.offsetHeight;
-    
-    const imageAspect = BG_IMAGE_DIMENSIONS.width / BG_IMAGE_DIMENSIONS.height;
-    const containerAspect = containerWidth / containerHeight;
-    
-    let scale: number;
-    let offsetX = 0;
-    let offsetY = 0;
-    
-    if (containerAspect > imageAspect) {
-      scale = containerWidth / BG_IMAGE_DIMENSIONS.width;
-      offsetY = 0;
-    } else {
-      scale = containerHeight / BG_IMAGE_DIMENSIONS.height;
-      const scaledWidth = BG_IMAGE_DIMENSIONS.width * scale;
-      offsetX = (containerWidth - scaledWidth) / 2;
-    }
-    
-    setScaleInfo({ scale, offsetX, offsetY });
-    
-    const newPositions: Record<number, { x: number; y: number; size: number }> = {};
-    
-    Object.entries(trophyConfig).forEach(([tierKey, config]) => {
-      const tierNum = parseInt(tierKey);
-      newPositions[tierNum] = {
-        x: offsetX + config.x * scale,
-        y: offsetY + config.y * scale,
-        size: config.size * scale,
-      };
-    });
-    
-    setPositions(newPositions);
-  }, [containerRef, trophyConfig]);
-  
+
   useEffect(() => {
-    calculatePositions();
-    window.addEventListener('resize', calculatePositions);
-    return () => window.removeEventListener('resize', calculatePositions);
-  }, [calculatePositions]);
-  
-  return { positions, scaleInfo, calculatePositions };
+    const updatePositions = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+
+      // Calculate scale to cover container
+      const scaleX = containerWidth / BG_IMAGE_DIMENSIONS.width;
+      const scaleY = containerHeight / BG_IMAGE_DIMENSIONS.height;
+      const scale = Math.max(scaleX, scaleY);
+
+      // Calculate offset for centering
+      const scaledWidth = BG_IMAGE_DIMENSIONS.width * scale;
+      const scaledHeight = BG_IMAGE_DIMENSIONS.height * scale;
+      const offsetX = (containerWidth - scaledWidth) / 2;
+      const offsetY = (containerHeight - scaledHeight) / 2;
+
+      setScaleInfo({ scale, offsetX, offsetY });
+
+      // Convert image pixel positions to screen positions
+      const newPositions: Record<number, { x: number; y: number; size: number }> = {};
+      for (const [tierStr, config] of Object.entries(trophyConfig)) {
+        const tier = parseInt(tierStr);
+        newPositions[tier] = {
+          x: config.x * scale + offsetX,
+          y: config.y * scale + offsetY,
+          size: config.size * scale,
+        };
+      }
+      setPositions(newPositions);
+    };
+
+    updatePositions();
+    window.addEventListener('resize', updatePositions);
+    return () => window.removeEventListener('resize', updatePositions);
+  }, [containerRef, trophyConfig, resetKey]);
+
+  return { positions, scaleInfo };
 };
 
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
@@ -278,79 +310,125 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   userTier = 1 
 }: LeaderboardHeroBackgroundProps) {
   const isDesktop = useIsDesktop();
+  const breakpoint = useBreakpoint();
   const { language } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { config: trophyConfig, updatePosition, resetPositions } = useTrophyConfig();
-  const { positions, scaleInfo } = useTrophyPositions(containerRef, trophyConfig);
   const [resetKey, setResetKey] = useState(0);
+  const [editingTier, setEditingTier] = useState(tier);
   
-  const currentMeta = TROPHY_META[tier as keyof typeof TROPHY_META];
-  const currentLabel = language === 'ka' ? currentMeta?.labelKa : currentMeta?.label;
+  const { getConfig, updatePosition, saveChanges, resetBreakpoint, hasUnsavedChanges } = useTrophyConfigs();
+  const currentConfig = getConfig(breakpoint);
+  
+  const { positions, scaleInfo } = useTrophyPositions(containerRef, currentConfig, resetKey);
 
-  const handleTrophyClick = useCallback((clickedTier: number) => {
-    if (!DEV_MODE) {
-      onTierSelect?.(clickedTier);
-    }
-  }, [onTierSelect]);
+  const handlePositionChange = useCallback((tierNum: number, x: number, y: number) => {
+    updatePosition(breakpoint, tierNum, x, y);
+  }, [breakpoint, updatePosition]);
+
+  const handleSave = useCallback(() => {
+    saveChanges(breakpoint);
+  }, [breakpoint, saveChanges]);
 
   const handleReset = useCallback(() => {
-    resetPositions();
-    setResetKey(k => k + 1); // Force remount of trophy components
-  }, [resetPositions]);
+    resetBreakpoint(breakpoint);
+    setResetKey(prev => prev + 1);
+  }, [breakpoint, resetBreakpoint]);
 
-  const handleMobileSwipe = useCallback((_: any, info: PanInfo) => {
-    const swipeThreshold = 50;
-    const velocityThreshold = 300;
+  const handleTrophyClick = useCallback((clickedTier: number) => {
+    if (DEV_MODE) {
+      setEditingTier(clickedTier);
+    }
+    onTierSelect?.(clickedTier);
+  }, [onTierSelect]);
+
+  // Navigation for mobile/tablet in DEV_MODE
+  const navigateTier = useCallback((direction: 'prev' | 'next') => {
+    setEditingTier(prev => {
+      if (direction === 'prev') return prev > 1 ? prev - 1 : 3;
+      return prev < 3 ? prev + 1 : 1;
+    });
+  }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!DEV_MODE) return;
     
-    const swipedLeft = info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold;
-    const swipedRight = info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') navigateTier('prev');
+      if (e.key === 'ArrowRight') navigateTier('next');
+    };
     
-    if (swipedLeft && tier < 3) {
-      onTierSelect?.(tier + 1);
-    } else if (swipedRight && tier > 1) {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigateTier]);
+
+  // Swipe handling for non-DEV mode
+  const handleMobileSwipe = useCallback((e: any, info: { offset: { x: number } }) => {
+    if (DEV_MODE) return;
+    
+    const threshold = 50;
+    if (info.offset.x > threshold && tier > 1) {
       onTierSelect?.(tier - 1);
+    } else if (info.offset.x < -threshold && tier < 3) {
+      onTierSelect?.(tier + 1);
     }
   }, [tier, onTierSelect]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (tier > 1) onTierSelect?.(tier - 1);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (tier < 3) onTierSelect?.(tier + 1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tier, onTierSelect]);
+  const currentMeta = TROPHY_META[tier as keyof typeof TROPHY_META];
+  const showTier = DEV_MODE ? editingTier : tier;
+  const showMeta = TROPHY_META[showTier as keyof typeof TROPHY_META];
 
   return (
-    <motion.div
-      className="relative overflow-hidden w-full"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      style={{ minHeight: '62vh' }}
-    >
-      {/* DEV MODE controls */}
-      {DEV_MODE && isDesktop && (
-        <div className="absolute top-2 left-2 z-50 flex gap-2">
-          <div className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-lg">
-            DEV: Drag trophies freely
+    <div className="relative w-full h-[40vh] min-h-[300px] md:min-h-[400px] overflow-hidden">
+      {/* DEV MODE UI */}
+      {DEV_MODE && (
+        <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
+          <div className="bg-black/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium">
+            {breakpoint.toUpperCase()} Mode - Tier {showTier}
           </div>
-          <button 
-            onClick={handleReset}
-            className="bg-foreground/80 text-background px-3 py-1 rounded-lg text-xs font-bold shadow-lg hover:bg-foreground transition-colors"
-          >
-            Reset All
-          </button>
+          <div className="flex gap-2">
+            {hasUnsavedChanges(breakpoint) && (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Save className="w-4 h-4 mr-1" />
+                Save {breakpoint}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReset}
+              className="bg-white/90"
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Reset
+            </Button>
+          </div>
         </div>
       )}
-      
+
+      {/* Navigation arrows for mobile/tablet in DEV_MODE */}
+      {DEV_MODE && !isDesktop && (
+        <>
+          <button
+            onClick={() => navigateTier('prev')}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-50 bg-black/60 text-white p-2 rounded-full"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => navigateTier('next')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-50 bg-black/60 text-white p-2 rounded-full"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </>
+      )}
+
+      {/* Background and Trophies */}
       {isDesktop ? (
         <div 
           ref={containerRef}
@@ -367,7 +445,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             }}
           />
           
-          {Object.keys(trophyConfig).map((tierKey) => {
+          {Object.keys(currentConfig).map((tierKey) => {
             const tierNum = parseInt(tierKey);
             const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
             const isActive = tierNum === tier;
@@ -387,7 +465,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                 initialY={pos.y}
                 size={pos.size}
                 scaleInfo={scaleInfo}
-                onPositionChange={updatePosition}
+                onPositionChange={handlePositionChange}
                 onClick={() => handleTrophyClick(tierNum)}
               />
             );
@@ -395,9 +473,10 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         </div>
       ) : (
         <motion.div 
+          ref={containerRef}
           className="absolute inset-0 w-full touch-pan-y"
-          style={{ height: 'calc(100% + 100px)', top: '-100px', cursor: 'grab' }}
-          drag="x"
+          style={{ height: 'calc(100% + 100px)', top: '-100px', cursor: DEV_MODE ? 'default' : 'grab' }}
+          drag={DEV_MODE ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
           onDragEnd={handleMobileSwipe}
@@ -413,93 +492,99 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             }}
           />
           
-          <AnimatePresence mode="popLayout">
-            {currentMeta && (
-              <motion.div
-                key={tier}
-                className="absolute pointer-events-none"
-                style={{
-                  left: '50%',
-                  top: `calc(${MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].top} + 100px)`,
-                  width: MOBILE_TROPHY_CONFIG[tier as keyof typeof MOBILE_TROPHY_CONFIG].size,
-                  transformOrigin: 'center bottom',
-                }}
-                initial={{ 
-                  x: tier > 2 ? 100 : tier < 2 ? -100 : 0,
-                  opacity: 0,
-                  scale: 0.8,
-                }}
-                animate={{ 
-                  x: '-50%',
-                  opacity: 1,
-                  scale: 1,
-                }}
-                exit={{ 
-                  x: tier > 2 ? -100 : tier < 2 ? 100 : 0,
-                  opacity: 0,
-                  scale: 0.8,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  mass: 0.8,
-                }}
-              >
-                <img 
-                  src={currentMeta.image} 
-                  alt="" 
-                  className="w-full h-auto select-none pointer-events-none drop-shadow-2xl"
-                  style={{ transform: 'translateX(-50px) translateY(-100%)' }}
-                  draggable={false}
+          {/* Single trophy view for mobile/tablet */}
+          {DEV_MODE ? (
+            // DEV MODE: Show single draggable trophy
+            (() => {
+              const pos = positions[showTier];
+              if (!pos) return null;
+              const label = language === 'ka' ? showMeta.labelKa : showMeta.label;
+              
+              return (
+                <DraggableTrophy
+                  key={`mobile-${showTier}-${resetKey}`}
+                  tierNum={showTier}
+                  meta={showMeta}
+                  isActive={true}
+                  label={label}
+                  initialX={pos.x}
+                  initialY={pos.y}
+                  size={pos.size}
+                  scaleInfo={scaleInfo}
+                  onPositionChange={handlePositionChange}
+                  onClick={() => {}}
                 />
-              </motion.div>
-            )}
-          </AnimatePresence>
+              );
+            })()
+          ) : (
+            // Normal mode: Animated transitions
+            <AnimatePresence mode="popLayout">
+              {currentMeta && (
+                <motion.div
+                  key={tier}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: '50%',
+                    top: '40%',
+                    width: positions[tier]?.size || 200,
+                    transformOrigin: 'center bottom',
+                  }}
+                  initial={{ 
+                    x: tier > 2 ? 100 : tier < 2 ? -100 : 0,
+                    opacity: 0,
+                    scale: 0.8,
+                  }}
+                  animate={{ 
+                    x: '-50%',
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  exit={{ 
+                    x: tier > 2 ? -100 : tier < 2 ? 100 : 0,
+                    opacity: 0,
+                    scale: 0.8,
+                  }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 25 
+                  }}
+                >
+                  <motion.img
+                    src={currentMeta.image}
+                    alt={language === 'ka' ? currentMeta.labelKa : currentMeta.label}
+                    className="w-full h-auto drop-shadow-2xl"
+                    style={{
+                      filter: 'drop-shadow(0 0 30px rgba(255,215,0,0.5))'
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </motion.div>
       )}
-        
-      {!isDesktop && (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`label-${tier}`}
-            className="absolute z-[10] left-0 right-0 flex justify-center px-4"
-            style={{ top: '100px' }}
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ 
-              opacity: 1, 
-              y: [0, -5, 0],
-              scale: 1,
-            }}
-            exit={{ opacity: 0, y: -10, scale: 0.9 }}
-            transition={{
-              opacity: { duration: 0.25 },
-              scale: { duration: 0.25 },
-              y: {
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }
-            }}
-          >
-            <div className="bg-background/95 backdrop-blur-sm px-4 py-2 rounded-xl shadow-lg border border-border/50">
-              <span className="text-sm font-semibold text-foreground/90 whitespace-nowrap">
-                {currentLabel}
-              </span>
-            </div>
-            <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-background/95 border-r border-b border-border/50 rotate-45" />
-          </motion.div>
-        </AnimatePresence>
-      )}
+
+      {/* Top gradient overlay */}
+      <div 
+        className="absolute inset-x-0 top-0 h-24 pointer-events-none z-20"
+        style={{
+          background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)'
+        }}
+      />
       
-      <div className="absolute top-0 left-0 right-0 h-36 bg-gradient-to-b from-background via-background/80 to-transparent z-[5] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/70 to-transparent z-[5] pointer-events-none" />
-      
-      <div className="relative z-10 flex flex-col h-full pointer-events-none">
-        <div className="pointer-events-auto">
-          {children}
-        </div>
+      {/* Bottom gradient overlay */}
+      <div 
+        className="absolute inset-x-0 bottom-0 h-32 pointer-events-none z-20"
+        style={{
+          background: 'linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)'
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-30 h-full flex flex-col items-center justify-end pb-8">
+        {children}
       </div>
-    </motion.div>
+    </div>
   );
 });
