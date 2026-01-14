@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeagueLeaderboard, LEAGUES } from "@/hooks/useLeagueLeaderboard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import glitchIcon from "@/assets/glitch.png";
 
 import { LeagueInfoCard } from "@/components/leaderboard/LeagueInfoCard";
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
@@ -304,6 +305,9 @@ function LeagueContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4">
+            <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+          </div>
           <p className="text-muted-foreground">
             {t('leaderboard.noPlayersYet')}
           </p>

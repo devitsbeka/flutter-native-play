@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import glitchIcon from "@/assets/glitch.png";
 
 interface Trivia {
   id: string;
@@ -91,7 +92,9 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
       <TabsContent value="trivias" className="max-h-[40vh] overflow-y-auto">
         {trivias.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            <Gamepad2 className="w-12 h-12 mx-auto mb-2 opacity-30" />
+            <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
+              <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+            </div>
             <p>ჯერ არ გაქვს ტრივიები</p>
           </div>
         ) : (
@@ -141,7 +144,9 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
       <TabsContent value="collections" className="max-h-[40vh] overflow-y-auto">
         {collections.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
-            <FolderOpen className="w-12 h-12 mx-auto mb-2 opacity-30" />
+            <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
+              <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+            </div>
             <p>ჯერ არ გაქვს კოლექციები</p>
           </div>
         ) : (

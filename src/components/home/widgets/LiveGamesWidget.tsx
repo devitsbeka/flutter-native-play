@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useMyRooms } from "@/hooks/useMyRooms";
-import { Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
+import glitchIcon from "@/assets/glitch.png";
 
 export function LiveGamesWidget() {
   const navigate = useNavigate();
@@ -58,7 +58,9 @@ export function LiveGamesWidget() {
 
       {activeRooms.length === 0 ? (
         <div className="text-center py-5">
-          <Users className="w-10 h-10 mx-auto text-muted-foreground/40 mb-2" />
+          <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
+            <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+          </div>
           <p className="text-[13px] text-muted-foreground">
             აქტიური თამაშები არ გაქვს
           </p>

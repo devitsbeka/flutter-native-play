@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users, Gamepad2, Tv, Airplay, Cast, UserPlus } from "lucide-react";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, RoomSort } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,6 +13,7 @@ import { getGradientById } from "@/config/roomGradients";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { LiveBadge } from "@/components/social/LiveBadge";
+import glitchIcon from "@/assets/glitch.png";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -105,7 +106,9 @@ export function MyRoomsSection({
           animate={{ opacity: 1 }}
           className="mx-4 flex flex-col items-center py-8 rounded-2xl bg-card border border-border"
         >
-          <Gamepad2 className="w-12 h-12 text-muted-foreground mb-3" />
+          <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3">
+            <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+          </div>
           <p className="text-muted-foreground text-sm text-center">
             {activeFilter === "my_rooms" && "შენ ჯერ ოთახი არ შეგიქმნია"}
             {activeFilter === "friends_rooms" && "მეგობრებს ოთახები არ აქვთ"}

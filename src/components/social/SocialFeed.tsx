@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { PopularityFilter } from "./FilterBar";
 import { SortFilter } from "./FeedFiltersBar";
+import glitchIcon from "@/assets/glitch.png";
 
 interface SocialFeedProps {
   onPlayQuiz?: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
@@ -302,8 +303,8 @@ export function SocialFeed({
       >
         {filteredFeedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <Hash className="w-8 h-8 text-muted-foreground" />
+            <div className="w-16 h-16 rounded-2xl overflow-hidden mb-4">
+              <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
             </div>
             <p className="text-muted-foreground text-sm">
               {hasActiveFilters 

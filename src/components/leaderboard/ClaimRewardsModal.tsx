@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Coins, Gem, Gift, Sparkles, ChevronLeft } from "lucide-react";
+import { Coins, Gem, Gift, Sparkles, ChevronLeft } from "lucide-react";
 import { useState } from "react";
 import { useLeaderboardRewards, WeeklyReward } from "@/hooks/useLeaderboardRewards";
 import { EXCLUSIVE_FRAMES, LEADERBOARD_BADGES } from "@/config/leaderboardRewards";
 import { Button } from "@/components/ui/button";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
+import glitchIcon from "@/assets/glitch.png";
 
 interface ClaimRewardsModalProps {
   open: boolean;
@@ -103,7 +104,9 @@ export function ClaimRewardsModal({
               </div>
             ) : pendingRewards.length === 0 ? (
               <div className="text-center py-12">
-                <Trophy className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-3">
+                  <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+                </div>
                 <p className="text-muted-foreground">
                   {claimedIds.size > 0 
                     ? "ყველა ჯილდო მიღებულია! 🎉" 

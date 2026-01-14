@@ -4,6 +4,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { Play, Settings, Trophy, Users, RefreshCw, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import glitchIcon from "@/assets/glitch.png";
 
 interface Category {
   id: string;
@@ -156,7 +157,9 @@ export const TVIdleScreen: React.FC = () => {
 
             {sortedPlayers.length === 0 && (
               <div className="text-center py-12 text-purple-300">
-                <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4">
+                  <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+                </div>
                 <p>ჯერ არავინ შემოსულა</p>
               </div>
             )}
