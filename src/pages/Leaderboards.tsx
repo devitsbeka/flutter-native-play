@@ -297,63 +297,34 @@ function DesktopLeagueColumn({
           )}
         </CardHeader>
 
-        <CardContent className="p-0 flex-1">
-          <ScrollArea className="h-[400px]">
-            <div className="px-3 pb-3">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              ) : leaderboard.length === 0 ? (
-                <div className="text-center py-8">
-                  <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
-                </div>
-              ) : (
-                (() => {
-                  const userInTop10 = leaderboard.slice(0, 10).some(e => e.user_id === user?.id);
-                  const userEntryOutside = !userInTop10 ? leaderboard.find(e => e.user_id === user?.id) : null;
-                  const top = userEntryOutside ? leaderboard.slice(0, 9) : leaderboard.slice(0, 10);
-                  
-                  return (
-                    <>
-                      {top.map((entry, index) => {
-                        const isCurrentUser = entry.user_id === user?.id;
-                        return (
-                          <LeaguePlayerRow
-                            key={entry.user_id}
-                            entry={entry}
-                            isCurrentUser={isCurrentUser}
-                            index={index}
-                            previousRank={isCurrentUser ? previousRank : null}
-                            shouldAnimate={false}
-                            totalPlayers={leaderboard.length}
-                            isPromotionZone={tier < 5 && entry.rank <= 10}
-                            isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
-                          />
-                        );
-                      })}
-                      {userEntryOutside && (
-                        <>
-                          <div className="text-center text-muted-foreground text-xs py-1">• • •</div>
-                          <LeaguePlayerRow
-                            entry={userEntryOutside}
-                            isCurrentUser={true}
-                            index={leaderboard.indexOf(userEntryOutside)}
-                            previousRank={previousRank}
-                            shouldAnimate={false}
-                            totalPlayers={leaderboard.length}
-                            isPromotionZone={false}
-                            isDemotionZone={tier > 1 && userEntryOutside.rank > leaderboard.length - 10}
-                          />
-                        </>
-                      )}
-                    </>
-                  );
-                })()
-              )}
+        <CardContent className="px-3 pb-3 pt-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
-          </ScrollArea>
+          ) : leaderboard.length === 0 ? (
+            <div className="text-center py-8">
+              <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+            </div>
+          ) : (
+            leaderboard.slice(0, 10).map((entry, index) => {
+              const isCurrentUser = entry.user_id === user?.id;
+              return (
+                <LeaguePlayerRow
+                  key={entry.user_id}
+                  entry={entry}
+                  isCurrentUser={isCurrentUser}
+                  index={index}
+                  previousRank={isCurrentUser ? previousRank : null}
+                  shouldAnimate={false}
+                  totalPlayers={leaderboard.length}
+                  isPromotionZone={tier < 5 && entry.rank <= 10}
+                  isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
+                />
+              );
+            })
+          )}
         </CardContent>
       </Card>
     </motion.div>
