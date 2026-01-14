@@ -240,7 +240,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
       </div>
 
       {/* Content area - leaderboards pushed down */}
-      <div className="pt-[300px]">
+      <div className="pt-[600px]">
         {/* 3 Column Layout with trophies floating above */}
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-3 gap-6">
@@ -291,7 +291,7 @@ function DesktopLeagueColumn({
         isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
       }`}>
         <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
-          <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 300 }}>{name}</CardTitle>
+          <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name}</CardTitle>
           {isUserTier && (
             <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
           )}
