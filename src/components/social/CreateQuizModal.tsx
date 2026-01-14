@@ -440,108 +440,113 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-5"
+            className="flex flex-col min-h-[calc(100vh-120px)]"
           >
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-                <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
+            <div className="flex-1 space-y-5">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+                  <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">შექმენი Trivia ✨</h3>
+                <p className="text-sm text-white/70">რა თემაზე გსურს კითხვები?</p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">შექმენი Trivia ✨</h3>
-              <p className="text-sm text-white/70">რა თემაზე გსურს კითხვები?</p>
-            </div>
 
-            <Input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
-              className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
-            />
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
+                className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
+              />
 
-            {/* Topic suggestions as text chips */}
-            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-              {isLoadingTopics ? (
-                // Loading skeletons
-                Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-8 w-20 rounded-full bg-white/20 animate-pulse" />
-                ))
-              ) : (
-                <>
-                  {topicSuggestions.map((topic) => (
+              {/* Topic suggestions as text chips */}
+              <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                {isLoadingTopics ? (
+                  // Loading skeletons
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-8 w-20 rounded-full bg-white/20 animate-pulse" />
+                  ))
+                ) : (
+                  <>
+                    {topicSuggestions.map((topic) => (
+                      <button
+                        key={topic.value}
+                        onClick={() => setSubject(topic.value)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                          subject === topic.value
+                            ? "bg-white text-slate-800"
+                            : "bg-white/20 hover:bg-white/30 text-white"
+                        }`}
+                      >
+                        {topic.icon_url && (
+                          <img 
+                            src={topic.icon_url} 
+                            alt="" 
+                            className="w-4 h-4 object-contain"
+                          />
+                        )}
+                        <span>{topic.label}</span>
+                      </button>
+                    ))}
+                    
+                    {/* Refresh button */}
                     <button
-                      key={topic.value}
-                      onClick={() => setSubject(topic.value)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
-                        subject === topic.value
-                          ? "bg-white text-slate-800"
-                          : "bg-white/20 hover:bg-white/30 text-white"
-                      }`}
+                      onClick={fetchTopicSuggestions}
+                      disabled={isLoadingTopics}
+                      className="w-8 h-8 rounded-full border border-dashed border-white/30 hover:border-white/50 transition-all flex items-center justify-center"
                     >
-                      {topic.icon_url && (
-                        <img 
-                          src={topic.icon_url} 
-                          alt="" 
-                          className="w-4 h-4 object-contain"
-                        />
-                      )}
-                      <span>{topic.label}</span>
+                      <RefreshCw className={`w-3.5 h-3.5 text-white/70 ${isLoadingTopics ? 'animate-spin' : ''}`} />
                     </button>
-                  ))}
-                  
-                  {/* Refresh button */}
-                  <button
-                    onClick={fetchTopicSuggestions}
-                    disabled={isLoadingTopics}
-                    className="w-8 h-8 rounded-full border border-dashed border-white/30 hover:border-white/50 transition-all flex items-center justify-center"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 text-white/70 ${isLoadingTopics ? 'animate-spin' : ''}`} />
-                  </button>
-                </>
+                  </>
+                )}
+              </div>
+
+              {/* Title suggestions */}
+              {subject.trim() && suggestedTitles.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs text-white/70 mb-2 text-center">💡 იდეები სათაურისთვის:</p>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {suggestedTitles.slice(0, 3).map((suggestedTitle) => (
+                      <button
+                        key={suggestedTitle}
+                        onClick={() => setTitle(suggestedTitle)}
+                        className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+                          title === suggestedTitle
+                            ? "bg-white text-slate-800"
+                            : "bg-white/20 text-white hover:bg-white/30"
+                        }`}
+                      >
+                        {suggestedTitle}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
-            {/* Title suggestions */}
-            {subject.trim() && suggestedTitles.length > 0 && (
-              <div className="pt-2">
-                <p className="text-xs text-white/70 mb-2 text-center">💡 იდეები სათაურისთვის:</p>
-                <div className="flex flex-wrap justify-center gap-1.5">
-                  {suggestedTitles.slice(0, 3).map((suggestedTitle) => (
-                    <button
-                      key={suggestedTitle}
-                      onClick={() => setTitle(suggestedTitle)}
-                      className={`px-3 py-1.5 text-xs rounded-full transition-all ${
-                        title === suggestedTitle
-                          ? "bg-white text-slate-800"
-                          : "bg-white/20 text-white hover:bg-white/30"
-                      }`}
-                    >
-                      {suggestedTitle}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <ChunkyButton
-              onClick={() => setStep(2)}
-              disabled={!subject.trim()}
-              className="w-full"
-            >
-              შემდეგი
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </ChunkyButton>
-
-            {/* Switch to collection prompt */}
-            <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20">
-              <span className="text-xs text-white/70">გინდა რამდენიმე რაუნდი?</span>
-              <button
-                onClick={() => {
-                  handleClose();
-                  onSwitchToCollection?.();
-                }}
-                className="text-xs text-white font-medium hover:underline"
+            {/* Fixed bottom section */}
+            <div className="mt-auto pt-4 space-y-3" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              <ChunkyButton
+                onClick={() => setStep(2)}
+                disabled={!subject.trim()}
+                className="w-full"
               >
-                შექმენი კოლექცია →
-              </button>
+                შემდეგი
+                <ChevronRight className="w-5 h-5 ml-2" />
+              </ChunkyButton>
+
+              {/* Switch to collection prompt */}
+              <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20">
+                <span className="text-xs text-white/70">გინდა რამდენიმე რაუნდი?</span>
+                <button
+                  onClick={() => {
+                    handleClose();
+                    onSwitchToCollection?.();
+                  }}
+                  className="text-xs text-white font-medium hover:underline"
+                >
+                  შექმენი კოლექცია →
+                </button>
+              </div>
             </div>
           </motion.div>
         );
