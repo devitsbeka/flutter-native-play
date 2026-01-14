@@ -78,19 +78,19 @@ export function EditQuestionDialog({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-[#7E7ADB]"
         >
           {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#7E7ADB]/90 backdrop-blur-md border-b border-white/10 safe-top">
             <div className="flex items-center gap-3 px-4 py-3">
               <button 
                 onClick={() => onOpenChange(false)} 
-                className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
+                className="p-2 -ml-2 hover:bg-white/10 rounded-xl transition-colors"
               >
-                <ChevronLeft className="w-6 h-6 text-foreground" />
+                <ChevronLeft className="w-6 h-6 text-white" />
               </button>
               <div className="flex-1">
-                <h1 className="text-lg font-bold text-foreground">✏️ კითხვის რედაქტირება</h1>
+                <h1 className="text-lg font-bold text-white">✏️ კითხვის რედაქტირება</h1>
               </div>
             </div>
           </div>
@@ -110,39 +110,51 @@ export function EditQuestionDialog({
 
               {/* Question Text */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium">კითხვა</Label>
+                <Label className="text-sm font-medium text-white/80">კითხვა</Label>
                 <Textarea
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
                   placeholder="შეიყვანეთ კითხვა..."
-                  className="min-h-[100px] resize-none text-base"
+                  className="min-h-[100px] resize-none text-base bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-white/30"
                 />
               </div>
 
-              {/* Correct Answer */}
+              {/* Correct Answer - Game style */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-green-600">✓ სწორი პასუხი</Label>
-                <Input
-                  value={correctAnswer}
-                  onChange={(e) => setCorrectAnswer(e.target.value)}
-                  placeholder="სწორი პასუხი"
-                  className="h-12 border-green-500/30 focus-visible:ring-green-500/50"
-                />
+                <Label className="text-sm font-medium text-emerald-300">✓ სწორი პასუხი</Label>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
+                  <Input
+                    value={correctAnswer}
+                    onChange={(e) => setCorrectAnswer(e.target.value)}
+                    placeholder="სწორი პასუხი"
+                    className="relative h-12 bg-emerald-500 border-0 text-white placeholder:text-emerald-200 font-semibold"
+                  />
+                </div>
               </div>
 
               {/* Incorrect Answers (only for 4_answers format) */}
               {answerFormat === "4_answers" && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-red-500">✗ არასწორი პასუხები</Label>
-                  <div className="space-y-2">
+                  <Label className="text-sm font-medium text-red-300">✗ არასწორი პასუხები</Label>
+                  <div className="space-y-2.5">
                     {incorrectAnswers.map((answer, idx) => (
-                      <Input
-                        key={idx}
-                        value={answer}
-                        onChange={(e) => updateIncorrectAnswer(idx, e.target.value)}
-                        placeholder={`არასწორი პასუხი ${idx + 1}`}
-                        className="h-12 border-red-500/20"
-                      />
+                      <div key={idx} className="relative">
+                        <div className="absolute inset-0 bg-gray-400 rounded-xl translate-y-1" />
+                        <div className="relative flex items-center">
+                          <div className="absolute left-3 w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center z-10">
+                            <span className="text-slate-700 font-bold text-sm">
+                              {String.fromCharCode(66 + idx)}
+                            </span>
+                          </div>
+                          <Input
+                            value={answer}
+                            onChange={(e) => updateIncorrectAnswer(idx, e.target.value)}
+                            placeholder={`არასწორი პასუხი ${idx + 1}`}
+                            className="h-12 bg-white border-0 text-slate-700 placeholder:text-slate-400 pl-14 font-medium"
+                          />
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -152,7 +164,7 @@ export function EditQuestionDialog({
           </div>
 
           {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 p-5 border-t border-border/30 bg-background safe-bottom">
+          <div className="fixed bottom-0 left-0 right-0 p-5 border-t border-white/10 bg-[#7E7ADB]/95 backdrop-blur-sm safe-bottom">
             <ChunkyButton
               onClick={handleSave}
               disabled={!questionText.trim() || !correctAnswer.trim()}

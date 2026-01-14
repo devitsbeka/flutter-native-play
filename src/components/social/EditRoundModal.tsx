@@ -191,19 +191,27 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-background flex flex-col"
+          className={`fixed inset-0 z-[100] flex flex-col ${
+            viewMode === "questions" ? "bg-[#7E7ADB]" : "bg-background"
+          }`}
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 fixed top-0 left-0 right-0 z-[110] bg-background border-b border-border safe-top">
+          <div className={`flex-shrink-0 fixed top-0 left-0 right-0 z-[110] safe-top ${
+            viewMode === "questions" 
+              ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-b border-white/10" 
+              : "bg-background border-b border-border"
+          }`}>
             <div className="flex items-center gap-3 px-4 py-3">
               <button 
                 onClick={() => viewMode === "questions" ? setViewMode("info") : onClose()} 
-                className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
+                className={`p-2 -ml-2 rounded-xl transition-colors ${
+                  viewMode === "questions" ? "hover:bg-white/10" : "hover:bg-muted"
+                }`}
               >
-                <ChevronLeft className="w-6 h-6 text-foreground" />
+                <ChevronLeft className={`w-6 h-6 ${viewMode === "questions" ? "text-white" : "text-foreground"}`} />
               </button>
               <div className="flex-1 text-center">
-                <h1 className="text-lg font-bold text-foreground">
+                <h1 className={`text-lg font-bold ${viewMode === "questions" ? "text-white" : "text-foreground"}`}>
                   {viewMode === "questions" 
                     ? `კითხვა ${currentQuestionIndex + 1} / ${questions.length}`
                     : "რაუნდის რედაქტირება"
@@ -222,8 +230,8 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                     onClick={() => carouselApi?.scrollTo(idx)}
                     className={`w-2 h-2 rounded-full transition-all ${
                       idx === currentQuestionIndex 
-                        ? "bg-primary w-4" 
-                        : "bg-muted-foreground/30"
+                        ? "bg-white w-4" 
+                        : "bg-white/30"
                     }`}
                   />
                 ))}
@@ -389,10 +397,10 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                       
                       return (
                         <CarouselItem key={index} className="flex items-start justify-center pt-4 px-2">
-                          <div className="w-full max-w-sm bg-card rounded-2xl border border-border p-6 space-y-5">
+                          <div className="w-full max-w-sm bg-[#5A4A7A] rounded-2xl border border-white/10 p-6 space-y-5 shadow-xl">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
-                              <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                              <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
                                 <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>
                                   {answerInQuestion 
@@ -413,30 +421,43 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                                 large
                               />
                               {missingIcon && !hasCriticalIssue && (
-                                <span className="text-xs text-yellow-600">აიკონის დამატება</span>
+                                <span className="text-xs text-yellow-300">აიკონის დამატება</span>
                               )}
                             </div>
                             
                             {/* Question Text (READ-ONLY) */}
                             <div className="text-center">
-                              <p className="text-lg font-medium text-foreground leading-relaxed">
+                              <p className="text-lg font-medium text-white leading-relaxed">
                                 {q.question_text}
                               </p>
                             </div>
                             
-                            {/* Answers (READ-ONLY) */}
-                            <div className="space-y-2">
-                              <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30">
-                                <div className="flex items-center gap-2">
-                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                  <span className="text-green-700 dark:text-green-400 font-medium">
+                            {/* Answers (READ-ONLY) - Game Style */}
+                            <div className="space-y-2.5">
+                              {/* Correct Answer - Green chunky button */}
+                              <div className="relative">
+                                <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
+                                <div className="relative p-3.5 rounded-xl bg-emerald-500 flex items-center gap-3">
+                                  <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+                                    <Check className="w-4 h-4 text-emerald-600" />
+                                  </div>
+                                  <span className="text-white font-semibold">
                                     {q.correct_answer}
                                   </span>
                                 </div>
                               </div>
+                              {/* Incorrect Answers - White chunky buttons */}
                               {q.incorrect_answers.map((ans, i) => (
-                                <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border">
-                                  <span className="text-muted-foreground">{ans}</span>
+                                <div key={i} className="relative">
+                                  <div className="absolute inset-0 bg-gray-300 rounded-xl translate-y-1" />
+                                  <div className="relative p-3.5 rounded-xl bg-white flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-slate-700 font-bold text-sm">
+                                        {String.fromCharCode(66 + i)}
+                                      </span>
+                                    </div>
+                                    <span className="text-slate-700 font-medium">{ans}</span>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -450,19 +471,19 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                                   exit={{ opacity: 0, scale: 0.95 }}
                                   className="space-y-2"
                                 >
-                                  <p className="text-xs text-center text-destructive">
+                                  <p className="text-xs text-center text-red-200">
                                     წაიშალოს ეს კითხვა?
                                   </p>
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => setDeleteQuestionIndex(null)}
-                                      className="flex-1 py-2.5 rounded-xl border border-border text-foreground text-sm font-medium"
+                                      className="flex-1 py-2.5 rounded-xl border border-white/20 text-white text-sm font-medium"
                                     >
                                       გაუქმება
                                     </button>
                                     <button
                                       onClick={() => deleteQuestion(index)}
-                                      className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium flex items-center justify-center gap-1.5"
+                                      className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium flex items-center justify-center gap-1.5"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                       წაშლა
@@ -475,7 +496,7 @@ export function EditRoundModal({ round, isOpen, onClose }: EditRoundModalProps) 
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
                                   onClick={() => setDeleteQuestionIndex(index)}
-                                  className="w-full py-3 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
+                                  className="w-full py-3 rounded-xl bg-red-500/20 text-red-200 flex items-center justify-center gap-2 hover:bg-red-500/30 transition-colors border border-red-400/20"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                   <span className="font-medium">კითხვის წაშლა</span>
