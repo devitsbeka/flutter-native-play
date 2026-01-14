@@ -663,9 +663,12 @@ function TeamContentV2() {
         {showTeamMenu && (
           <TeamMenuScreen
             onClose={() => setShowTeamMenu(false)}
-            onSelectCreateRoom={() => {
+            onSelectCreateRoom={async () => {
               setShowTeamMenu(false);
-              setShowCreateRoomScreen(true);
+              const room = await createRoom();
+              if (room) {
+                navigate(`/team?room=${room.room_code}`);
+              }
             }}
             onSelectTrivia={() => {
               setShowTeamMenu(false);
@@ -687,32 +690,6 @@ function TeamContentV2() {
             }}
             onSelectLibrary={() => {
               setShowTeamMenu(false);
-              setShowCategorySelectorModal(true);
-            }}
-          />
-        )}
-        {showCreateRoomScreen && (
-          <CreateRoomScreen
-            onClose={() => setShowCreateRoomScreen(false)}
-            onSelectTrivia={() => {
-              setShowCreateRoomScreen(false);
-              setShowCreateQuizModal(true);
-            }}
-            onSelectCollection={() => {
-              setShowCreateRoomScreen(false);
-              setShowCreateCollectionModal(true);
-            }}
-            onSelectPersonalTrivia={() => {
-              setShowCreateRoomScreen(false);
-              setShowPersonalTriviaModal(true);
-            }}
-            onSelectRandom={() => {
-              setShowCreateRoomScreen(false);
-              setPendingRandomPlay(true);
-              setShowCreateModal(true);
-            }}
-            onSelectLibrary={() => {
-              setShowCreateRoomScreen(false);
               setShowCategorySelectorModal(true);
             }}
           />
