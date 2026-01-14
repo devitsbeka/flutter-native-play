@@ -691,6 +691,36 @@ function TeamContentV2() {
             }}
           />
         )}
+        {showCreateRoomScreen && (
+          <CreateRoomScreen
+            onClose={() => setShowCreateRoomScreen(false)}
+            onSelectTrivia={async () => {
+              setShowCreateRoomScreen(false);
+              const room = await createRoom();
+              if (room) navigate(`/team?room=${room.room_code}`);
+            }}
+            onSelectCollection={async () => {
+              setShowCreateRoomScreen(false);
+              const room = await createRoom();
+              if (room) navigate(`/team?room=${room.room_code}`);
+            }}
+            onSelectPersonalTrivia={async () => {
+              setShowCreateRoomScreen(false);
+              const room = await createRoom();
+              if (room) navigate(`/team?room=${room.room_code}`);
+            }}
+            onSelectRandom={async () => {
+              setShowCreateRoomScreen(false);
+              const room = await createRoom();
+              if (room) navigate(`/team?room=${room.room_code}`);
+            }}
+            onSelectLibrary={async () => {
+              setShowCreateRoomScreen(false);
+              const room = await createRoom();
+              if (room) navigate(`/team?room=${room.room_code}`);
+            }}
+          />
+        )}
         {showCreateModal && (
         <CreateRoomPage 
             onClose={() => {
