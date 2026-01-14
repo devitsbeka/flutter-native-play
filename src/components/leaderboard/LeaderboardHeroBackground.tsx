@@ -191,12 +191,16 @@ const DraggableTrophy = memo(function DraggableTrophy({
   const x = useMotionValue(initialX);
   const y = useMotionValue(initialY);
   const [isDragging, setIsDragging] = useState(false);
+  const lastInitialRef = useRef({ x: initialX, y: initialY });
 
-  // Update position when initialX/initialY changes (e.g., on resize)
+  // Only update position when initialX/initialY actually changes (resize), not during drag
   useEffect(() => {
-    x.set(initialX);
-    y.set(initialY);
-  }, [initialX, initialY, x, y]);
+    if (!isDragging && (lastInitialRef.current.x !== initialX || lastInitialRef.current.y !== initialY)) {
+      x.set(initialX);
+      y.set(initialY);
+      lastInitialRef.current = { x: initialX, y: initialY };
+    }
+  }, [initialX, initialY, x, y, isDragging]);
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
