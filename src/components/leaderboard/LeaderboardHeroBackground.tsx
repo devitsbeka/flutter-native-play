@@ -16,7 +16,7 @@ interface LeaderboardHeroBackgroundProps {
 }
 
 // ============ DEV MODE - Set to true to enable trophy dragging ============
-const DEV_MODE = true;
+const DEV_MODE = false;
 const STORAGE_KEY = 'leaderboard-trophy-positions-v3';
 // ==========================================================================
 
