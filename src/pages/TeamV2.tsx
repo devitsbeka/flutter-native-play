@@ -557,7 +557,7 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateRoomScreen(true)}
+                onAddClick={() => setShowCreateModal(true)}
               />
             </div>
           )}
