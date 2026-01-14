@@ -17,7 +17,8 @@ export type SortFilter =
   | "most_liked" 
   | "most_saved" 
   | "most_played"
-  | "newest";
+  | "newest"
+  | "personal";
 
 interface FeedFiltersBarProps {
   sortFilter: SortFilter;
@@ -37,6 +38,7 @@ const filterOptions: { value: SortFilter; label: string }[] = [
   { value: "newest", label: "ახალი" },
   { value: "trivias", label: "ტრივიები" },
   { value: "collections", label: "კოლექციები" },
+  { value: "personal", label: "MyTrivia Party" },
   { value: "most_liked", label: "მოწონებული" },
   { value: "most_saved", label: "შენახული" },
   { value: "most_played", label: "ნათამაშები" },
