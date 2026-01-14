@@ -188,16 +188,80 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 )}
               </div>
 
-              {/* Big Play Button */}
+              {/* Big Play Button - 3D Mint Style */}
               <div className="px-4 py-4">
                 <motion.button
                   onClick={handlePlayClick}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-lg flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/30"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98, y: 4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="relative w-full overflow-hidden rounded-2xl"
+                  style={{ height: 56 }}
                 >
-                  <Play className="w-6 h-6 fill-current" />
-                  {t("menu.play")}
+                  {/* Bottom depth layer */}
+                  <div
+                    className="absolute inset-0 rounded-2xl"
+                    style={{
+                      top: 6,
+                      background: "linear-gradient(180deg, #5DD8B0 0%, #4BC9A0 50%, #3DB890 100%)",
+                    }}
+                  />
+                  
+                  {/* Middle bevel layer */}
+                  <div
+                    className="absolute rounded-2xl"
+                    style={{
+                      inset: 0,
+                      top: 2,
+                      bottom: 8,
+                      background: "linear-gradient(180deg, #7EECC5 0%, #6ADDB5 100%)",
+                    }}
+                  />
+                  
+                  {/* Main face */}
+                  <div
+                    className="absolute rounded-2xl overflow-hidden"
+                    style={{
+                      inset: 0,
+                      bottom: 10,
+                      background: "radial-gradient(circle at 40% 35%, #8AFFDA 0%, #6EFFC2 25%, #5EE8B5 50%, #4DD8A5 75%, #3FC99A 100%)",
+                    }}
+                  >
+                    {/* Sparkle particles */}
+                    {[...Array(8)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute rounded-full"
+                        style={{
+                          width: i % 2 === 0 ? 4 : 3,
+                          height: i % 2 === 0 ? 4 : 3,
+                          background: "rgba(180,255,220,0.95)",
+                          boxShadow: "0 0 6px rgba(150,255,210,0.9), 0 0 10px rgba(100,230,180,0.6)",
+                          left: `${10 + (i * 10)}%`,
+                          top: `${30 + ((i % 3) * 15)}%`,
+                        }}
+                        animate={{
+                          y: [-3, 3, -3],
+                          opacity: [0.5, 1, 0.5],
+                          scale: [0.8, 1.2, 0.8],
+                        }}
+                        transition={{
+                          duration: 1.5 + (i * 0.2),
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          delay: i * 0.12,
+                        }}
+                      />
+                    ))}
+                    
+                    {/* Button content */}
+                    <div className="relative h-full flex items-center justify-center gap-3">
+                      <Play className="w-6 h-6 fill-white text-white" />
+                      <span className="text-white font-bold text-lg" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
+                        {t("menu.play")}
+                      </span>
+                    </div>
+                  </div>
                 </motion.button>
               </div>
 
