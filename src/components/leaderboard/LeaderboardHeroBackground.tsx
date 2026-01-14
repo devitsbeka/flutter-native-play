@@ -444,7 +444,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             style={{
               backgroundImage: `url(${leaderboardMap})`,
               backgroundSize: 'cover',
-              backgroundPosition: 'center top',
+              backgroundPosition: 'center 30%',
               backgroundRepeat: 'no-repeat',
             }}
           />
