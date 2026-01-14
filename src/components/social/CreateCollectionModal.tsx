@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion, createEmptyQuestion } from "./GameStyleQuestionEditor";
 import confetti from "canvas-confetti";
+import iconCollections from "@/assets/icon-collections.png";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 
@@ -597,14 +598,14 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-5"
                 >
-                  {/* Header */}
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
-                      <span className="text-4xl">📚</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">კოლექციის რაუნდები</h3>
-                    <p className="text-white/70">შეიყვანე რაუნდების თემები</p>
-                  </div>
+                   {/* Header */}
+                   <div className="text-center">
+                     <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-white/20 backdrop-blur-sm">
+                       <img src={iconCollections} alt="Create Collection" className="w-12 h-12 object-contain" />
+                     </div>
+                     <h3 className="text-2xl font-bold text-white mb-2">შექმენი კოლექცია</h3>
+                     <p className="text-white/70">ჩაწერე რა თემებზე გსურს რაუნდები</p>
+                   </div>
 
                   {/* Round name inputs */}
                   <div className="space-y-3">
