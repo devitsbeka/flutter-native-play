@@ -857,20 +857,9 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           {title}
         </h3>
         
-        <p className="text-muted-foreground text-center text-sm mb-6 max-w-xs">
+        <p className="text-muted-foreground text-center text-sm max-w-xs">
           {description}
         </p>
-        
-        <div className="flex gap-3">
-          <ChunkyButton onClick={onCreateQuiz} className="whitespace-nowrap flex-row">
-            <Plus className="w-5 h-5 flex-shrink-0" />
-            <span>შექმენი Trivia</span>
-          </ChunkyButton>
-          <ChunkyButton onClick={onCreateCollection} variant="secondary" className="whitespace-nowrap flex-row">
-            <Layers className="w-5 h-5 flex-shrink-0" />
-            <span>კოლექცია</span>
-          </ChunkyButton>
-        </div>
       </motion.div>
     );
   }
