@@ -145,7 +145,7 @@ export function CreateRoomScreen({
         </motion.p>
 
         {/* Top Row - Compact horizontal cards */}
-        <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+        <div className="space-y-2.5 mb-2.5">
           {topOptions.map((option, index) => (
             <motion.button
               key={option.id}
