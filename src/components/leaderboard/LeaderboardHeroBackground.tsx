@@ -2,6 +2,7 @@ import { ReactNode, memo } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import leaderboardMap from "@/assets/leaderboard-map.png";
+import leaderboardMapDesktop from "@/assets/leaderboard-map-desktop.png";
 import trophyBronze from "@/assets/trophy-bronze.png";
 import trophySilver from "@/assets/trophy-silver.png";
 import trophyGold from "@/assets/trophy-gold.png";
@@ -75,11 +76,18 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   return (
     <div className="relative w-full overflow-hidden min-h-screen lg:min-h-0">
-      {/* Background image - full width visible on desktop */}
+      {/* Background image - mobile */}
       <div 
-        className="absolute inset-0 w-full h-full bg-no-repeat bg-top bg-cover lg:bg-[length:100%_auto]"
+        className="absolute inset-0 w-full h-full bg-no-repeat bg-top bg-cover lg:hidden"
         style={{
           backgroundImage: `url(${leaderboardMap})`,
+        }}
+      />
+      {/* Background image - desktop (different image, full width) */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-no-repeat bg-top bg-[length:100%_auto] hidden lg:block"
+        style={{
+          backgroundImage: `url(${leaderboardMapDesktop})`,
         }}
       />
       
