@@ -114,6 +114,10 @@ export default {
         'float': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' }
+        },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 8px 2px rgba(139, 92, 246, 0.4)' },
+          '50%': { boxShadow: '0 0 20px 8px rgba(139, 92, 246, 0.8)' }
         }
       },
       animation: {
@@ -122,7 +126,8 @@ export default {
         'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
         'shimmer': 'shimmer 2s infinite',
         'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
-        'float': 'float 3s ease-in-out infinite'
+        'float': 'float 3s ease-in-out infinite',
+        'glow-pulse': 'glow-pulse 1.5s ease-in-out'
       },
       fontFamily: {
         sans: [
