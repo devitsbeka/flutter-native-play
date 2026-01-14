@@ -199,19 +199,23 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-2xl flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0 relative ${
+        className={`rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 ${
+          large 
+            ? "bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40" 
+            : "hover:scale-105"
+        } ${
           selectedIconUnsafe 
-            ? "border-2 border-destructive bg-destructive/10" 
+            ? "!border-destructive !border-solid !bg-destructive/10" 
             : ""
         }`}
-        style={{ width: large ? 103 : 58, height: large ? 103 : 58 }}
+        style={{ width: large ? 100 : 58, height: large ? 100 : 58 }}
       >
         {selectedSlug ? (
           <>
             <img
               src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
               alt=""
-              style={{ width: large ? 94 : 50, height: large ? 94 : 50 }}
+              style={{ width: large ? 80 : 50, height: large ? 80 : 50 }}
               className="object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -224,7 +228,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             )}
           </>
         ) : (
-          <Smile style={{ width: large ? 62 : 38, height: large ? 62 : 38 }} className="text-muted-foreground" />
+          <Smile style={{ width: large ? 50 : 38, height: large ? 50 : 38 }} className={large ? "text-white/60" : "text-muted-foreground"} />
         )}
       </button>
 
