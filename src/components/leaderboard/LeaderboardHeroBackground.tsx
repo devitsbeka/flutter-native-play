@@ -17,35 +17,43 @@ interface LeaderboardHeroBackgroundProps {
 
 // ============ DEV MODE - Set to true to enable trophy dragging ============
 const DEV_MODE = true;
-const STORAGE_KEY = 'leaderboard-trophy-positions-v3';
+const STORAGE_KEY = 'leaderboard-trophy-positions-v4';
 // ==========================================================================
 
-// Background image natural dimensions
+// Background image natural dimensions (for reference)
 const BG_IMAGE_DIMENSIONS = { width: 2048, height: 1365 };
 
 type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
-// Default trophy positions for each breakpoint (in pixels relative to background image)
-const DEFAULT_TROPHY_CONFIGS: Record<Breakpoint, Record<number, { x: number; y: number; size: number }>> = {
+// Positions stored as percentages (0-100) relative to background image
+// This ensures consistent positioning across all screen sizes
+interface TrophyPosition {
+  xPercent: number; // 0-100 percentage across image width
+  yPercent: number; // 0-100 percentage across image height  
+  sizePercent: number; // size as percentage of image width
+}
+
+// Default trophy positions for each breakpoint (in percentages)
+const DEFAULT_TROPHY_CONFIGS: Record<Breakpoint, Record<number, TrophyPosition>> = {
   desktop: {
-    1: { x: 1360, y: 610, size: 370 }, // Bronze
-    2: { x: 370, y: 630, size: 370 },  // Silver
-    3: { x: 820, y: 500, size: 450 },  // Gold
+    1: { xPercent: 66.4, yPercent: 44.7, sizePercent: 18 }, // Bronze (right)
+    2: { xPercent: 18.1, yPercent: 46.2, sizePercent: 18 }, // Silver (left)
+    3: { xPercent: 40.0, yPercent: 36.6, sizePercent: 22 }, // Gold (center)
   },
   tablet: {
-    1: { x: 1024, y: 400, size: 280 }, // Bronze
-    2: { x: 300, y: 420, size: 280 },  // Silver
-    3: { x: 620, y: 340, size: 340 },  // Gold
+    1: { xPercent: 66.4, yPercent: 44.7, sizePercent: 18 }, // Bronze
+    2: { xPercent: 18.1, yPercent: 46.2, sizePercent: 18 }, // Silver
+    3: { xPercent: 40.0, yPercent: 36.6, sizePercent: 22 }, // Gold
   },
   mobile: {
-    1: { x: 1024, y: 350, size: 240 }, // Bronze - centered for single view
-    2: { x: 1024, y: 350, size: 240 }, // Silver
-    3: { x: 1024, y: 300, size: 300 }, // Gold
+    1: { xPercent: 50, yPercent: 40, sizePercent: 24 }, // Bronze - centered for single view
+    2: { xPercent: 50, yPercent: 40, sizePercent: 24 }, // Silver
+    3: { xPercent: 50, yPercent: 35, sizePercent: 28 }, // Gold
   },
 };
 
 // Load saved positions from localStorage or use defaults
-const loadTrophyConfigs = (): Record<Breakpoint, Record<number, { x: number; y: number; size: number }>> => {
+const loadTrophyConfigs = (): Record<Breakpoint, Record<number, TrophyPosition>> => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -54,11 +62,11 @@ const loadTrophyConfigs = (): Record<Breakpoint, Record<number, { x: number; y: 
   } catch (e) {
     console.error('Failed to load trophy configs:', e);
   }
-  return { ...DEFAULT_TROPHY_CONFIGS };
+  return JSON.parse(JSON.stringify(DEFAULT_TROPHY_CONFIGS));
 };
 
 // Save positions to localStorage
-const saveTrophyConfigs = (configs: Record<Breakpoint, Record<number, { x: number; y: number; size: number }>>) => {
+const saveTrophyConfigs = (configs: Record<Breakpoint, Record<number, TrophyPosition>>) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
     console.log('Trophy configs saved:', configs);
@@ -69,30 +77,30 @@ const saveTrophyConfigs = (configs: Record<Breakpoint, Record<number, { x: numbe
 
 // Hook to manage trophy configurations for all breakpoints
 const useTrophyConfigs = () => {
-  const [configs, setConfigs] = useState(() => loadTrophyConfigs());
-  const [pendingConfigs, setPendingConfigs] = useState<Record<Breakpoint, Record<number, { x: number; y: number; size: number }>> | null>(null);
+  const [configs, setConfigs] = useState<Record<Breakpoint, Record<number, TrophyPosition>>>(() => loadTrophyConfigs());
+  const [pendingConfigs, setPendingConfigs] = useState<Record<Breakpoint, Record<number, TrophyPosition>> | null>(null);
 
-  const updatePosition = useCallback((breakpoint: Breakpoint, tierNum: number, x: number, y: number) => {
+  const updatePosition = useCallback((breakpoint: Breakpoint, tierNum: number, xPercent: number, yPercent: number) => {
     setPendingConfigs(prev => {
       const base = prev || configs;
       return {
         ...base,
         [breakpoint]: {
           ...base[breakpoint],
-          [tierNum]: { ...base[breakpoint][tierNum], x, y }
+          [tierNum]: { ...base[breakpoint][tierNum], xPercent, yPercent }
         }
       };
     });
   }, [configs]);
 
-  const updateSize = useCallback((breakpoint: Breakpoint, tierNum: number, size: number) => {
+  const updateSize = useCallback((breakpoint: Breakpoint, tierNum: number, sizePercent: number) => {
     setPendingConfigs(prev => {
       const base = prev || configs;
       return {
         ...base,
         [breakpoint]: {
           ...base[breakpoint],
-          [tierNum]: { ...base[breakpoint][tierNum], size }
+          [tierNum]: { ...base[breakpoint][tierNum], sizePercent }
         }
       };
     });
@@ -113,7 +121,7 @@ const useTrophyConfigs = () => {
   const resetBreakpoint = useCallback((breakpoint: Breakpoint) => {
     const newConfigs = {
       ...configs,
-      [breakpoint]: { ...DEFAULT_TROPHY_CONFIGS[breakpoint] }
+      [breakpoint]: JSON.parse(JSON.stringify(DEFAULT_TROPHY_CONFIGS[breakpoint]))
     };
     setConfigs(newConfigs);
     saveTrophyConfigs(newConfigs);
@@ -181,12 +189,13 @@ interface DraggableTrophyProps {
   meta: { image: string; label: string; labelKa: string };
   isActive: boolean;
   label: string;
-  initialX: number;
-  initialY: number;
-  size: number;
-  scaleInfo: { scale: number; offsetX: number; offsetY: number };
-  onPositionChange: (tierNum: number, x: number, y: number) => void;
-  onSizeChange?: (tierNum: number, size: number) => void;
+  xPercent: number;
+  yPercent: number;
+  sizePercent: number;
+  containerWidth: number;
+  containerHeight: number;
+  onPositionChange: (tierNum: number, xPercent: number, yPercent: number) => void;
+  onSizeChange?: (tierNum: number, sizePercent: number) => void;
   onClick: () => void;
 }
 
@@ -195,52 +204,62 @@ const DraggableTrophy = memo(function DraggableTrophy({
   meta,
   isActive,
   label,
-  initialX,
-  initialY,
-  size,
-  scaleInfo,
+  xPercent,
+  yPercent,
+  sizePercent,
+  containerWidth,
+  containerHeight,
   onPositionChange,
   onSizeChange,
   onClick
 }: DraggableTrophyProps) {
-  const x = useMotionValue(initialX);
-  const y = useMotionValue(initialY);
+  // Calculate pixel positions from percentages
+  const pixelX = (xPercent / 100) * containerWidth;
+  const pixelY = (yPercent / 100) * containerHeight;
+  const pixelSize = (sizePercent / 100) * containerWidth;
+  
+  const x = useMotionValue(pixelX);
+  const y = useMotionValue(pixelY);
   const [isDragging, setIsDragging] = useState(false);
-  const lastInitialRef = useRef({ x: initialX, y: initialY });
+  const lastPercentRef = useRef({ xPercent, yPercent });
 
-  // Only update position when initialX/initialY actually changes (resize), not during drag
+  // Update position when percentages change (but not during drag)
   useEffect(() => {
-    if (!isDragging && (lastInitialRef.current.x !== initialX || lastInitialRef.current.y !== initialY)) {
-      x.set(initialX);
-      y.set(initialY);
-      lastInitialRef.current = { x: initialX, y: initialY };
+    if (!isDragging && (lastPercentRef.current.xPercent !== xPercent || lastPercentRef.current.yPercent !== yPercent)) {
+      x.set(pixelX);
+      y.set(pixelY);
+      lastPercentRef.current = { xPercent, yPercent };
     }
-  }, [initialX, initialY, x, y, isDragging]);
+  }, [xPercent, yPercent, pixelX, pixelY, x, y, isDragging]);
+
+  // Also update on container resize
+  useEffect(() => {
+    if (!isDragging) {
+      x.set(pixelX);
+      y.set(pixelY);
+    }
+  }, [containerWidth, containerHeight, pixelX, pixelY, x, y, isDragging]);
 
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
     
     if (!DEV_MODE) return;
     
-    // Get current screen position
-    const screenX = x.get();
-    const screenY = y.get();
+    // Convert pixel position back to percentage
+    const newXPercent = (x.get() / containerWidth) * 100;
+    const newYPercent = (y.get() / containerHeight) * 100;
     
-    // Convert screen position back to image pixels
-    const imageX = (screenX - scaleInfo.offsetX) / scaleInfo.scale;
-    const imageY = (screenY - scaleInfo.offsetY) / scaleInfo.scale;
-    
-    onPositionChange(tierNum, Math.round(imageX), Math.round(imageY));
-  }, [tierNum, x, y, scaleInfo, onPositionChange]);
+    // Round to 1 decimal for cleaner storage
+    onPositionChange(tierNum, Math.round(newXPercent * 10) / 10, Math.round(newYPercent * 10) / 10);
+  }, [tierNum, x, y, containerWidth, containerHeight, onPositionChange]);
 
   const handleSizeAdjust = useCallback((delta: number) => {
     if (onSizeChange) {
-      // Convert screen size back to image pixels for storage
-      const currentImageSize = size / scaleInfo.scale;
-      const newImageSize = Math.max(100, Math.min(600, currentImageSize + delta));
-      onSizeChange(tierNum, Math.round(newImageSize));
+      // Adjust size by percentage points
+      const newSizePercent = Math.max(5, Math.min(40, sizePercent + delta));
+      onSizeChange(tierNum, Math.round(newSizePercent * 10) / 10);
     }
-  }, [tierNum, size, scaleInfo, onSizeChange]);
+  }, [tierNum, sizePercent, onSizeChange]);
 
   return (
     <motion.div
@@ -248,7 +267,7 @@ const DraggableTrophy = memo(function DraggableTrophy({
       style={{ 
         x, 
         y,
-        width: size,
+        width: pixelSize,
         transformOrigin: 'center bottom',
       }}
       drag={DEV_MODE}
@@ -274,16 +293,16 @@ const DraggableTrophy = memo(function DraggableTrophy({
       {DEV_MODE && (
         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); handleSizeAdjust(-20); }}
+            onClick={(e) => { e.stopPropagation(); handleSizeAdjust(-2); }}
             className="bg-blue-600 text-white text-xs w-6 h-6 rounded flex items-center justify-center hover:bg-blue-700"
           >
             -
           </button>
           <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-            Tier {tierNum}
+            T{tierNum}: {sizePercent.toFixed(0)}%
           </div>
           <button
-            onClick={(e) => { e.stopPropagation(); handleSizeAdjust(20); }}
+            onClick={(e) => { e.stopPropagation(); handleSizeAdjust(2); }}
             className="bg-blue-600 text-white text-xs w-6 h-6 rounded flex items-center justify-center hover:bg-blue-700"
           >
             +
@@ -294,55 +313,26 @@ const DraggableTrophy = memo(function DraggableTrophy({
   );
 });
 
-// Hook to calculate trophy screen positions based on container size
-const useTrophyPositions = (
-  containerRef: React.RefObject<HTMLDivElement>,
-  trophyConfig: Record<number, { x: number; y: number; size: number }>,
-  resetKey: number
-) => {
-  const [positions, setPositions] = useState<Record<number, { x: number; y: number; size: number }>>({});
-  const [scaleInfo, setScaleInfo] = useState({ scale: 1, offsetX: 0, offsetY: 0 });
+// Hook to get container dimensions
+const useContainerDimensions = (containerRef: React.RefObject<HTMLDivElement>) => {
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    const updatePositions = () => {
+    const updateDimensions = () => {
       const container = containerRef.current;
       if (!container) return;
-
-      const containerWidth = container.offsetWidth;
-      const containerHeight = container.offsetHeight;
-
-      // Calculate scale to cover container
-      const scaleX = containerWidth / BG_IMAGE_DIMENSIONS.width;
-      const scaleY = containerHeight / BG_IMAGE_DIMENSIONS.height;
-      const scale = Math.max(scaleX, scaleY);
-
-      // Calculate offset for centering
-      const scaledWidth = BG_IMAGE_DIMENSIONS.width * scale;
-      const scaledHeight = BG_IMAGE_DIMENSIONS.height * scale;
-      const offsetX = (containerWidth - scaledWidth) / 2;
-      const offsetY = (containerHeight - scaledHeight) / 2;
-
-      setScaleInfo({ scale, offsetX, offsetY });
-
-      // Convert image pixel positions to screen positions
-      const newPositions: Record<number, { x: number; y: number; size: number }> = {};
-      for (const [tierStr, config] of Object.entries(trophyConfig)) {
-        const tier = parseInt(tierStr);
-        newPositions[tier] = {
-          x: config.x * scale + offsetX,
-          y: config.y * scale + offsetY,
-          size: config.size * scale,
-        };
-      }
-      setPositions(newPositions);
+      setDimensions({
+        width: container.offsetWidth,
+        height: container.offsetHeight
+      });
     };
 
-    updatePositions();
-    window.addEventListener('resize', updatePositions);
-    return () => window.removeEventListener('resize', updatePositions);
-  }, [containerRef, trophyConfig, resetKey]);
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [containerRef]);
 
-  return { positions, scaleInfo };
+  return dimensions;
 };
 
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
@@ -360,15 +350,14 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   
   const { getConfig, updatePosition, updateSize, saveChanges, resetBreakpoint, hasUnsavedChanges } = useTrophyConfigs();
   const currentConfig = getConfig(breakpoint);
-  
-  const { positions, scaleInfo } = useTrophyPositions(containerRef, currentConfig, resetKey);
+  const containerDimensions = useContainerDimensions(containerRef);
 
-  const handlePositionChange = useCallback((tierNum: number, x: number, y: number) => {
-    updatePosition(breakpoint, tierNum, x, y);
+  const handlePositionChange = useCallback((tierNum: number, xPercent: number, yPercent: number) => {
+    updatePosition(breakpoint, tierNum, xPercent, yPercent);
   }, [breakpoint, updatePosition]);
 
-  const handleSizeChange = useCallback((tierNum: number, size: number) => {
-    updateSize(breakpoint, tierNum, size);
+  const handleSizeChange = useCallback((tierNum: number, sizePercent: number) => {
+    updateSize(breakpoint, tierNum, sizePercent);
   }, [breakpoint, updateSize]);
 
   const handleSave = useCallback(() => {
@@ -496,9 +485,9 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
             const isActive = tierNum === tier;
             const label = language === 'ka' ? meta.labelKa : meta.label;
-            const pos = positions[tierNum];
+            const config = currentConfig[tierNum];
             
-            if (!pos) return null;
+            if (!config || containerDimensions.width === 0) return null;
             
             return (
               <DraggableTrophy
@@ -507,10 +496,11 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                 meta={meta}
                 isActive={isActive}
                 label={label}
-                initialX={pos.x}
-                initialY={pos.y}
-                size={pos.size}
-                scaleInfo={scaleInfo}
+                xPercent={config.xPercent}
+                yPercent={config.yPercent}
+                sizePercent={config.sizePercent}
+                containerWidth={containerDimensions.width}
+                containerHeight={containerDimensions.height}
                 onPositionChange={handlePositionChange}
                 onSizeChange={handleSizeChange}
                 onClick={() => handleTrophyClick(tierNum)}
@@ -557,9 +547,9 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                   const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
                   const isActive = tierNum === tier;
                   const label = language === 'ka' ? meta.labelKa : meta.label;
-                  const pos = positions[tierNum];
+                  const config = currentConfig[tierNum];
                   
-                  if (!pos) return null;
+                  if (!config || containerDimensions.width === 0) return null;
                   
                   return (
                     <DraggableTrophy
@@ -568,10 +558,11 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
                       meta={meta}
                       isActive={isActive}
                       label={label}
-                      initialX={pos.x}
-                      initialY={pos.y}
-                      size={pos.size}
-                      scaleInfo={scaleInfo}
+                      xPercent={config.xPercent}
+                      yPercent={config.yPercent}
+                      sizePercent={config.sizePercent}
+                      containerWidth={containerDimensions.width}
+                      containerHeight={containerDimensions.height}
                       onPositionChange={handlePositionChange}
                       onSizeChange={handleSizeChange}
                       onClick={() => handleTrophyClick(tierNum)}
