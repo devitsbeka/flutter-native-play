@@ -857,35 +857,86 @@ export function GameStyleQuestionEditor({
                 </div>
               </div>
 
-              {/* Reorderable Answers */}
-              <Reorder.Group
-                axis="y"
-                values={question.answers}
-                onReorder={(newOrder) => {
-                  if (index === currentIndex) {
-                    handleReorder(newOrder);
-                  }
-                }}
-                className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto pb-4"
-              >
-                {question.answers.map((answer) => (
-                  <DraggableAnswerItem
-                    key={answer.id}
-                    answer={answer}
-                    onEdit={() => startEditing(answer.id, answer.text)}
-                    onSetCorrect={() => setCorrectAnswer(answer.id)}
-                    isEditing={editingField === answer.id && index === currentIndex}
-                    editValue={editValue}
-                    onEditChange={setEditValue}
-                    onEditBlur={saveEdit}
-                    onEditKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                    inputRef={inputRef}
-                    answerMax={ANSWER_MAX}
-                    letter={getLetterForAnswer(question.answers, answer.id)}
-                    hasError={errorField?.questionIndex === index && errorField?.answerId === answer.id}
-                  />
-                ))}
-              </Reorder.Group>
+              {/* Answers Section */}
+              {answerFormat === "true_false" ? (
+                // Side-by-side layout for True/False
+                <div className="flex gap-4 pb-4">
+                  {question.answers.map((answer) => {
+                    const isTrue = answer.text === "მართალია";
+                    const hasError = errorField?.questionIndex === index && errorField?.answerId === answer.id;
+                    
+                    return (
+                      <button
+                        key={answer.id}
+                        onClick={() => setCorrectAnswer(answer.id)}
+                        className={cn(
+                          "flex-1 flex flex-col items-center justify-center gap-3 p-6 rounded-3xl transition-all min-h-[140px]",
+                          answer.isCorrect
+                            ? "bg-emerald-500 shadow-[0_6px_0_0_#059669]"
+                            : "bg-[#E8E4F4] shadow-[0_6px_0_0_#C4BFD9]",
+                          hasError && "ring-2 ring-red-500 animate-pulse"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-14 h-14 rounded-full flex items-center justify-center",
+                          answer.isCorrect ? "bg-white" : "bg-white/80"
+                        )}>
+                          {isTrue ? (
+                            <Check className={cn(
+                              "w-8 h-8",
+                              answer.isCorrect ? "text-emerald-500" : "text-emerald-600"
+                            )} strokeWidth={3} />
+                          ) : (
+                            <X className={cn(
+                              "w-8 h-8",
+                              answer.isCorrect ? "text-emerald-500" : "text-rose-500"
+                            )} strokeWidth={3} />
+                          )}
+                        </div>
+                        <span className={cn(
+                          "font-bold text-lg",
+                          answer.isCorrect ? "text-white" : "text-slate-700"
+                        )}>
+                          {answer.text}
+                        </span>
+                        {answer.isCorrect && (
+                          <span className="text-white/80 text-xs font-medium">სწორი პასუხი</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                // Reorderable list for 4-answer questions
+                <Reorder.Group
+                  axis="y"
+                  values={question.answers}
+                  onReorder={(newOrder) => {
+                    if (index === currentIndex) {
+                      handleReorder(newOrder);
+                    }
+                  }}
+                  className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto pb-4"
+                >
+                  {question.answers.map((answer) => (
+                    <DraggableAnswerItem
+                      key={answer.id}
+                      answer={answer}
+                      onEdit={() => startEditing(answer.id, answer.text)}
+                      onSetCorrect={() => setCorrectAnswer(answer.id)}
+                      isEditing={editingField === answer.id && index === currentIndex}
+                      editValue={editValue}
+                      onEditChange={setEditValue}
+                      onEditBlur={saveEdit}
+                      onEditKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                      inputRef={inputRef}
+                      answerMax={ANSWER_MAX}
+                      letter={getLetterForAnswer(question.answers, answer.id)}
+                      hasError={errorField?.questionIndex === index && errorField?.answerId === answer.id}
+                    />
+                  ))}
+                </Reorder.Group>
+              )}
             </div>
           ))}
         </div>
