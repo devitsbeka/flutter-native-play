@@ -140,7 +140,7 @@ export function CreateRoomScreen({
         </motion.p>
 
         {/* Grid for all options */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {allOptions.map((option, index) => (
             <motion.button
               key={option.id}
@@ -196,9 +196,9 @@ export function CreateRoomScreen({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-xs text-center text-white/50 mt-6"
+          className="text-xs text-center text-white/50 mt-[22px]"
         >
-          💡 მეგობრების მოწვევა შეძლებ ოთახის შექმნის შემდეგ
+          💡 მეგობრების მოწვევას შეძლებ ოთახის შექმნის შემდეგ
         </motion.p>
       </div>
 
