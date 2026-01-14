@@ -410,7 +410,7 @@ export function VSScreen() {
             animate={{ opacity: showCategorySlot ? 1 : 0.3, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Combined Prize + Category Badge - merged coin info */}
+            {/* Coins Badge - separate from category */}
             <AnimatePresence>
               {isOpponentLocked && (
                 <motion.div
@@ -435,12 +435,6 @@ export function VSScreen() {
                   <img src={coinIcon} alt="" className="w-5 h-5" />
                   <span className="text-lg font-black text-white">
                     {REWARDS.GAME_WIN_REWARD.toLocaleString()}
-                  </span>
-                  
-                  {/* Category name */}
-                  <span className="text-white/50 text-lg">•</span>
-                  <span className="text-white font-bold text-base truncate max-w-[140px]">
-                    {selectedCategory?.name || currentCategory?.name || t("game.category")}
                   </span>
                 </motion.div>
               )}
@@ -473,6 +467,22 @@ export function VSScreen() {
                   <RefreshCw className="w-4 h-4 text-white" />
                   <span className="text-white font-bold text-sm">ახლიდან</span>
                 </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Category name - separate text below refresh */}
+            <AnimatePresence>
+              {isCategoryLocked && (
+                <motion.span
+                  className="text-white font-bold text-lg"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ delay: 0.4 }}
+                  style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+                >
+                  {selectedCategory?.name || currentCategory?.name || t("game.category")}
+                </motion.span>
               )}
             </AnimatePresence>
           </motion.div>
