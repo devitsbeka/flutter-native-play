@@ -345,6 +345,50 @@ Return ONLY valid JSON.`;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Georgian Grammar Verification
+    console.log("Verifying Georgian grammar...");
+    for (const q of finalQuestions) {
+      try {
+        const textsToVerify = [
+          q.question_text,
+          q.correct_answer,
+          ...(q.incorrect_answers || [])
+        ];
+        
+        const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ texts: textsToVerify }),
+        });
+
+        if (grammarResponse.ok) {
+          const grammarResult = await grammarResponse.json();
+          if (grammarResult.results && grammarResult.results.length > 0) {
+            // Apply corrections
+            if (grammarResult.results[0]?.corrected) {
+              q.question_text = grammarResult.results[0].corrected;
+            }
+            if (grammarResult.results[1]?.corrected) {
+              q.correct_answer = grammarResult.results[1].corrected;
+            }
+            for (let i = 0; i < (q.incorrect_answers || []).length; i++) {
+              if (grammarResult.results[i + 2]?.corrected) {
+                q.incorrect_answers[i] = grammarResult.results[i + 2].corrected;
+              }
+            }
+            if (grammarResult.totalErrors > 0) {
+              console.log(`Grammar fixed for: "${q.question_text.substring(0, 30)}..."`);
+            }
+          }
+        }
+      } catch (grammarError) {
+        console.error("Grammar verification failed (non-blocking):", grammarError);
+      }
+    }
+
     // Blocked generic keywords that match random icons
     const BLOCKED_GENERIC_KEYWORDS = [
       'country', 'place', 'thing', 'person', 'object', 'item', 

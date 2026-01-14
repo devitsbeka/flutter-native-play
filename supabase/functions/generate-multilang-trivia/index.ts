@@ -625,6 +625,54 @@ Return ONLY valid JSON with this structure:
     // Take only the requested number of unique questions
     const trimmedQuestions = uniqueQuestions.slice(0, requestedCount);
 
+    // Georgian Grammar Verification (only for Georgian language)
+    if (language === 'ka') {
+      console.log("Verifying Georgian grammar...");
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      
+      for (const q of trimmedQuestions) {
+        try {
+          const textsToVerify = [
+            q.questionText,
+            q.correctAnswer,
+            ...(q.incorrectAnswers || [])
+          ];
+          
+          const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({ texts: textsToVerify }),
+          });
+
+          if (grammarResponse.ok) {
+            const grammarResult = await grammarResponse.json();
+            if (grammarResult.results && grammarResult.results.length > 0) {
+              // Apply corrections
+              if (grammarResult.results[0]?.corrected) {
+                q.questionText = grammarResult.results[0].corrected;
+              }
+              if (grammarResult.results[1]?.corrected) {
+                q.correctAnswer = grammarResult.results[1].corrected;
+              }
+              for (let i = 0; i < (q.incorrectAnswers || []).length; i++) {
+                if (grammarResult.results[i + 2]?.corrected) {
+                  q.incorrectAnswers[i] = grammarResult.results[i + 2].corrected;
+                }
+              }
+              if (grammarResult.totalErrors > 0) {
+                console.log(`Grammar fixed for: "${q.questionText.substring(0, 30)}..."`);
+              }
+            }
+          }
+        } catch (grammarError) {
+          console.error("Grammar verification failed (non-blocking):", grammarError);
+        }
+      }
+    }
+
     // Find icons for each question using multi-tier search with category fallback
     console.log(`Finding icons for ${trimmedQuestions.length} questions...`);
     let iconsFound = 0;
