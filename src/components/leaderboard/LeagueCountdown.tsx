@@ -167,9 +167,6 @@ export function LeagueCountdown() {
       className="bg-card/95 backdrop-blur-md rounded-2xl p-4 border border-border/30 shadow-lg"
       whileHover={{ scale: 1.02 }}
     >
-      <div className="text-xs text-muted-foreground uppercase tracking-wide mb-3 text-center font-medium">
-        {t('leaderboard.timeRemaining')}
-      </div>
       <div className="flex items-center justify-center gap-2">
         <Clock className="w-5 h-5 text-amber-500" />
         
