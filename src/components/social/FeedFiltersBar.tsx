@@ -27,6 +27,8 @@ interface FeedFiltersBarProps {
   selectedHashtag?: string | null;
   onClearHashtag?: () => void;
   onAddClick?: () => void;
+  addButtonText?: string;
+  addButtonDescription?: string;
 }
 
 const filterOptions: { value: SortFilter; label: string }[] = [
@@ -48,6 +50,7 @@ export function FeedFiltersBar({
   selectedHashtag,
   onClearHashtag,
   onAddClick,
+  addButtonText = "+ შექმენი",
 }: FeedFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -161,9 +164,9 @@ export function FeedFiltersBar({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   onClick={onAddClick}
-                  className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm flex-shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
                 >
-                  <Plus className="h-5 w-5" />
+                  <span className="text-sm font-semibold">{addButtonText}</span>
                 </motion.button>
               )}
             </>

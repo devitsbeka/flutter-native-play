@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronLeft, Sparkles, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
@@ -11,6 +11,7 @@ interface CreateTriviaTypeModalProps {
   onSelectSingle: () => void;
   onSelectCollection: (draftId?: string) => void;
   onSelectPersonal?: () => void;
+  onSelectGameRoom?: () => void;
 }
 
 export function CreateTriviaTypeModal({
@@ -19,6 +20,7 @@ export function CreateTriviaTypeModal({
   onSelectSingle,
   onSelectCollection,
   onSelectPersonal,
+  onSelectGameRoom,
 }: CreateTriviaTypeModalProps) {
   const handleResumeDraft = (draftId: string) => {
     onSelectCollection(draftId);
@@ -128,6 +130,34 @@ export function CreateTriviaTypeModal({
                   </div>
                   <p className="text-sm text-muted-foreground">
                     შენი კითხვები, შენი პასუხები
+                  </p>
+                </div>
+              </motion.button>
+            )}
+
+            {/* Game Room Card */}
+            {onSelectGameRoom && (
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  handleClose();
+                  onSelectGameRoom();
+                }}
+                className="w-full p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-gradient-to-br from-emerald-500/5 to-green-500/10 transition-all text-left flex items-center gap-4 group"
+              >
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shrink-0 shadow-lg group-hover:shadow-emerald-500/30 transition-shadow">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-bold text-foreground text-lg">სათამაშო ოთახი</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    ითამაშე მეგობრებთან ერთად
                   </p>
                 </div>
               </motion.button>
