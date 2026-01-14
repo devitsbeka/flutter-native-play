@@ -446,15 +446,15 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
                 <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-1">შექმენი Trivia ✨</h3>
-              <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
+              <h3 className="text-xl font-bold text-white mb-1">შექმენი Trivia ✨</h3>
+              <p className="text-sm text-white/70">რა თემაზე გსურს კითხვები?</p>
             </div>
 
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
-              className="text-center text-lg h-14 rounded-xl"
+              className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
             />
 
             {/* Topic suggestions as text chips */}
@@ -462,7 +462,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               {isLoadingTopics ? (
                 // Loading skeletons
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-8 w-20 rounded-full bg-muted animate-pulse" />
+                  <div key={i} className="h-8 w-20 rounded-full bg-white/20 animate-pulse" />
                 ))
               ) : (
                 <>
@@ -472,8 +472,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                       onClick={() => setSubject(topic.value)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
                         subject === topic.value
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted hover:bg-muted/80 text-foreground"
+                          ? "bg-white text-slate-800"
+                          : "bg-white/20 hover:bg-white/30 text-white"
                       }`}
                     >
                       {topic.icon_url && (
@@ -491,9 +491,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   <button
                     onClick={fetchTopicSuggestions}
                     disabled={isLoadingTopics}
-                    className="w-8 h-8 rounded-full border border-dashed border-border hover:border-primary/50 transition-all flex items-center justify-center"
+                    className="w-8 h-8 rounded-full border border-dashed border-white/30 hover:border-white/50 transition-all flex items-center justify-center"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${isLoadingTopics ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-3.5 h-3.5 text-white/70 ${isLoadingTopics ? 'animate-spin' : ''}`} />
                   </button>
                 </>
               )}
@@ -502,7 +502,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             {/* Title suggestions */}
             {subject.trim() && suggestedTitles.length > 0 && (
               <div className="pt-2">
-                <p className="text-xs text-muted-foreground mb-2 text-center">💡 იდეები სათაურისთვის:</p>
+                <p className="text-xs text-white/70 mb-2 text-center">💡 იდეები სათაურისთვის:</p>
                 <div className="flex flex-wrap justify-center gap-1.5">
                   {suggestedTitles.slice(0, 3).map((suggestedTitle) => (
                     <button
@@ -510,8 +510,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                       onClick={() => setTitle(suggestedTitle)}
                       className={`px-3 py-1.5 text-xs rounded-full transition-all ${
                         title === suggestedTitle
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-primary/10 text-primary hover:bg-primary/20"
+                          ? "bg-white text-slate-800"
+                          : "bg-white/20 text-white hover:bg-white/30"
                       }`}
                     >
                       {suggestedTitle}
@@ -531,14 +531,14 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             </ChunkyButton>
 
             {/* Switch to collection prompt */}
-            <div className="flex items-center justify-center gap-2 pt-3 border-t border-border/50">
-              <span className="text-xs text-muted-foreground">გინდა რამდენიმე რაუნდი?</span>
+            <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20">
+              <span className="text-xs text-white/70">გინდა რამდენიმე რაუნდი?</span>
               <button
                 onClick={() => {
                   handleClose();
                   onSwitchToCollection?.();
                 }}
-                className="text-xs text-primary font-medium hover:underline"
+                className="text-xs text-white font-medium hover:underline"
               >
                 შექმენი კოლექცია →
               </button>
@@ -555,8 +555,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-foreground mb-1">სირთულე 🎯</h3>
-              <p className="text-sm text-muted-foreground">რა სირთულის კითხვები გინდა?</p>
+              <h3 className="text-xl font-bold text-white mb-1">სირთულე 🎯</h3>
+              <p className="text-sm text-white/70">რა სირთულის კითხვები გინდა?</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -568,19 +568,19 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   onClick={() => setDifficulty(option.value)}
                   className={`p-4 rounded-xl border-2 transition-all text-center ${
                     difficulty === option.value
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
+                      ? "border-white bg-white/20"
+                      : "border-white/30 hover:border-white/50 bg-white/10"
                   }`}
                 >
                   <span className="text-2xl block mb-1">{option.emoji}</span>
-                  <span className="font-semibold text-foreground block">{option.label}</span>
-                  <span className="text-xs text-muted-foreground">{option.description}</span>
+                  <span className="font-semibold text-white block">{option.label}</span>
+                  <span className="text-xs text-white/70">{option.description}</span>
                 </motion.button>
               ))}
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -601,8 +601,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-foreground mb-1">რამდენი კითხვა? 🤔</h3>
-              <p className="text-sm text-muted-foreground">აირჩიე რაოდენობა</p>
+              <h3 className="text-xl font-bold text-white mb-1">რამდენი კითხვა? 🤔</h3>
+              <p className="text-sm text-white/70">აირჩიე რაოდენობა</p>
             </div>
 
             <div className="flex justify-center gap-3">
@@ -614,15 +614,15 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   onClick={() => setQuestionCount(count)}
                   className={`w-16 h-16 rounded-2xl font-bold text-xl transition-all relative overflow-hidden ${
                     questionCount === count
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      ? "bg-white text-slate-800 shadow-lg"
+                      : "bg-white/20 text-white hover:bg-white/30"
                   }`}
                 >
                   {count}
                   {questionCount === count && (
                     <motion.div
                       layoutId="count-indicator"
-                      className="absolute inset-0 border-2 border-primary-foreground/30 rounded-2xl"
+                      className="absolute inset-0 border-2 border-white/30 rounded-2xl"
                     />
                   )}
                 </motion.button>
@@ -630,7 +630,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -651,8 +651,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-foreground mb-1">ფორმატი ⚡</h3>
-              <p className="text-sm text-muted-foreground">როგორი კითხვები გინდა?</p>
+              <h3 className="text-xl font-bold text-white mb-1">ფორმატი ⚡</h3>
+              <p className="text-sm text-white/70">როგორი კითხვები გინდა?</p>
             </div>
 
             <div className="space-y-3">
@@ -662,19 +662,19 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 onClick={() => setAnswerFormat("4_answers")}
                 className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 ${
                   answerFormat === "4_answers"
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
+                    ? "border-white bg-white/20"
+                    : "border-white/30 hover:border-white/50 bg-white/10"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                   <span className="text-2xl">🎯</span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-foreground">4 ვარიანტი</div>
-                  <div className="text-sm text-muted-foreground">კლასიკური Quiz ფორმატი</div>
+                  <div className="font-semibold text-white">4 ვარიანტი</div>
+                  <div className="text-sm text-white/70">კლასიკური Quiz ფორმატი</div>
                 </div>
                 {answerFormat === "4_answers" && (
-                  <Check className="w-5 h-5 text-primary" />
+                  <Check className="w-5 h-5 text-white" />
                 )}
               </motion.button>
 
@@ -684,25 +684,25 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 onClick={() => setAnswerFormat("true_false")}
                 className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 ${
                   answerFormat === "true_false"
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
+                    ? "border-white bg-white/20"
+                    : "border-white/30 hover:border-white/50 bg-white/10"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                   <span className="text-2xl">✅</span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-foreground">მართალი / მცდარი</div>
-                  <div className="text-sm text-muted-foreground">სწრაფი True/False</div>
+                  <div className="font-semibold text-white">მართალი / მცდარი</div>
+                  <div className="text-sm text-white/70">სწრაფი True/False</div>
                 </div>
                 {answerFormat === "true_false" && (
-                  <Check className="w-5 h-5 text-primary" />
+                  <Check className="w-5 h-5 text-white" />
                 )}
               </motion.button>
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(3)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(3)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -727,15 +727,15 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 animate={{ opacity: 1 }}
                 className="space-y-2"
               >
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-primary to-primary/60"
+                    className="h-full bg-white"
                     initial={{ width: 0 }}
                     animate={{ width: `${generationProgress}%` }}
                     transition={{ duration: 0.3 }}
                   />
                 </div>
-                <p className="text-xs text-center text-muted-foreground animate-pulse">
+                <p className="text-xs text-center text-white/70 animate-pulse">
                   ✨ AI ქმნის კითხვებს...
                 </p>
               </motion.div>
@@ -804,39 +804,43 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col"
+            className="fixed inset-0 z-50 bg-[#6B5B95] flex flex-col"
           >
             {/* Fixed Header */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-              <button
-                onClick={handleClose}
-                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-              
-              <h2 className="text-lg font-bold text-foreground">შექმენი Trivia</h2>
-              
-              {/* Progress dots */}
-              <div className="flex gap-1.5">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <motion.div
-                    key={s}
-                    animate={{
-                      width: s === step ? 16 : 6,
-                      backgroundColor: s <= step ? "hsl(var(--primary))" : "hsl(var(--muted))",
-                    }}
-                    className="h-1.5 rounded-full"
-                  />
-                ))}
+            <div className="fixed top-0 left-0 right-0 z-50 safe-top">
+              <div className="flex items-center justify-between px-4 py-3">
+                <button
+                  onClick={handleClose}
+                  className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+                
+                <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
+                
+                {/* Progress dots */}
+                <div className="flex gap-1.5">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <motion.div
+                      key={s}
+                      animate={{
+                        width: s === step ? 16 : 6,
+                        backgroundColor: s <= step ? "#ffffff" : "rgba(255,255,255,0.3)",
+                      }}
+                      className="h-1.5 rounded-full"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-4 py-6">
-              <AnimatePresence mode="wait">
-                {renderStep()}
-              </AnimatePresence>
+            <div className="h-full overflow-y-auto pt-[60px] pb-8">
+              <div className="px-4">
+                <AnimatePresence mode="wait">
+                  {renderStep()}
+                </AnimatePresence>
+              </div>
             </div>
           </motion.div>
         )}
