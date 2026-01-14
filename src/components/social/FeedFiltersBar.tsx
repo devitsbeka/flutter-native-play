@@ -166,7 +166,7 @@ export function FeedFiltersBar({
                   onClick={onAddClick}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
                 >
-                  <span className="text-sm font-semibold">{addButtonText}</span>
+                  <span className="text-sm font-bold">{addButtonText}</span>
                 </motion.button>
               )}
             </>
