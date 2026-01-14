@@ -16,7 +16,7 @@ interface LeaderboardHeroBackgroundProps {
 }
 
 // ============ DEV MODE - Set to true to enable trophy dragging ============
-const DEV_MODE = false;
+const DEV_MODE = true;
 const STORAGE_KEY = 'leaderboard-trophy-positions-v3';
 // ==========================================================================
 
@@ -541,29 +541,35 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           
           {/* All 3 trophies for mobile/tablet */}
           {DEV_MODE ? (
-            // DEV MODE: Show single draggable trophy for editing
-            (() => {
-              const pos = positions[showTier];
-              if (!pos) return null;
-              const label = language === 'ka' ? showMeta.labelKa : showMeta.label;
-              
-              return (
-                <DraggableTrophy
-                  key={`mobile-${showTier}-${resetKey}`}
-                  tierNum={showTier}
-                  meta={showMeta}
-                  isActive={true}
-                  label={label}
-                  initialX={pos.x}
-                  initialY={pos.y}
-                  size={pos.size}
-                  scaleInfo={scaleInfo}
-                  onPositionChange={handlePositionChange}
-                  onSizeChange={handleSizeChange}
-                  onClick={() => {}}
-                />
-              );
-            })()
+            // DEV MODE: Show all 3 draggable trophies for editing
+            <>
+              {Object.keys(currentConfig).map((tierKey) => {
+                const tierNum = parseInt(tierKey);
+                const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
+                const isActive = tierNum === tier;
+                const label = language === 'ka' ? meta.labelKa : meta.label;
+                const pos = positions[tierNum];
+                
+                if (!pos) return null;
+                
+                return (
+                  <DraggableTrophy
+                    key={`mobile-${tierKey}-${resetKey}`}
+                    tierNum={tierNum}
+                    meta={meta}
+                    isActive={isActive}
+                    label={label}
+                    initialX={pos.x}
+                    initialY={pos.y}
+                    size={pos.size}
+                    scaleInfo={scaleInfo}
+                    onPositionChange={handlePositionChange}
+                    onSizeChange={handleSizeChange}
+                    onClick={() => handleTrophyClick(tierNum)}
+                  />
+                );
+              })}
+            </>
           ) : (
             // Normal mode: Show all 3 trophies, clickable to navigate
             <>
