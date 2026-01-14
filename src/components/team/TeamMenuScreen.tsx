@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Shuffle, Library, Sparkles, Users, PartyPopper, Layers } from "lucide-react";
+import { ArrowLeft, Shuffle, Sparkles, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
@@ -28,87 +28,92 @@ interface MenuOption {
   onClick: () => void;
 }
 
-export function TeamMenuScreen({
-  onClose,
-  onSelectCreateRoom,
-  onSelectTrivia,
-  onSelectCollection,
-  onSelectPersonalTrivia,
-  onSelectRandom,
-  onSelectLibrary,
-}: TeamMenuScreenProps) {
-  const menuOptions: MenuOption[] = [
+export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
+  function TeamMenuScreen(
     {
-      id: "create-room",
-      icon: <Users className="w-7 h-7 text-white" />,
-      title: "სათამაშო ოთახი",
-      subtitle: "შექმენი და მოიწვიე",
-      gradient: "from-emerald-500 to-green-600",
-      glowColor: "rgba(16, 185, 129, 0.4)",
-      onClick: onSelectCreateRoom,
+      onClose,
+      onSelectCreateRoom,
+      onSelectTrivia,
+      onSelectCollection,
+      onSelectPersonalTrivia,
+      onSelectRandom,
+      onSelectLibrary,
     },
-    {
-      id: "trivia",
-      imageIcon: triviaBuzzer,
-      icon: null,
-      title: "ტრივია",
-      subtitle: "1 რაუნდი",
-      gradient: "from-purple-500 to-indigo-600",
-      glowColor: "rgba(139, 92, 246, 0.4)",
-      onClick: onSelectTrivia,
-    },
-    {
-      id: "collection",
-      imageIcon: iconCollections,
-      icon: null,
-      title: "კოლექცია",
-      subtitle: "რამდენიმე რაუნდი",
-      gradient: "from-cyan-400 to-blue-500",
-      glowColor: "rgba(34, 211, 238, 0.4)",
-      onClick: () => onSelectCollection(),
-    },
-    {
-      id: "party",
-      imageIcon: iconGroupOfPeople,
-      icon: null,
-      title: "MyTrivia Party",
-      subtitle: "შენი კითხვები",
-      gradient: "from-pink-500 to-rose-500",
-      glowColor: "rgba(236, 72, 153, 0.4)",
-      onClick: onSelectPersonalTrivia,
-    },
-  ];
+    ref
+  ) {
+    const menuOptions: MenuOption[] = [
+      {
+        id: "create-room",
+        icon: <Users className="w-7 h-7 text-white" />,
+        title: "სათამაშო ოთახი",
+        subtitle: "შექმენი და მოიწვიე",
+        gradient: "from-emerald-500 to-green-600",
+        glowColor: "rgba(16, 185, 129, 0.4)",
+        onClick: onSelectCreateRoom,
+      },
+      {
+        id: "trivia",
+        imageIcon: triviaBuzzer,
+        icon: null,
+        title: "ტრივია",
+        subtitle: "1 რაუნდი",
+        gradient: "from-purple-500 to-indigo-600",
+        glowColor: "rgba(139, 92, 246, 0.4)",
+        onClick: onSelectTrivia,
+      },
+      {
+        id: "collection",
+        imageIcon: iconCollections,
+        icon: null,
+        title: "კოლექცია",
+        subtitle: "რამდენიმე რაუნდი",
+        gradient: "from-cyan-400 to-blue-500",
+        glowColor: "rgba(34, 211, 238, 0.4)",
+        onClick: () => onSelectCollection(),
+      },
+      {
+        id: "party",
+        imageIcon: iconGroupOfPeople,
+        icon: null,
+        title: "MyTrivia Party",
+        subtitle: "შენი კითხვები",
+        gradient: "from-pink-500 to-rose-500",
+        glowColor: "rgba(236, 72, 153, 0.4)",
+        onClick: onSelectPersonalTrivia,
+      },
+    ];
 
-  const bottomOptions: MenuOption[] = [
-    {
-      id: "random",
-      icon: <Shuffle className="w-6 h-6 text-white" />,
-      title: "შემთხვევითი კატეგორია",
-      subtitle: "სწრაფი სტარტი",
-      gradient: "from-amber-500 to-orange-500",
-      glowColor: "rgba(245, 158, 11, 0.4)",
-      fullWidth: true,
-      onClick: onSelectRandom,
-    },
-    {
-      id: "library",
-      imageIcon: secretBookcase,
-      icon: null,
-      title: "აირჩიე ბიბლიოთეკიდან",
-      subtitle: "კატეგორიების არჩევა",
-      gradient: "from-violet-500 to-purple-600",
-      glowColor: "rgba(139, 92, 246, 0.4)",
-      fullWidth: true,
-      onClick: onSelectLibrary,
-    },
-  ];
+    const bottomOptions: MenuOption[] = [
+      {
+        id: "random",
+        icon: <Shuffle className="w-6 h-6 text-white" />,
+        title: "შემთხვევითი კატეგორია",
+        subtitle: "სწრაფი სტარტი",
+        gradient: "from-amber-500 to-orange-500",
+        glowColor: "rgba(245, 158, 11, 0.4)",
+        fullWidth: true,
+        onClick: onSelectRandom,
+      },
+      {
+        id: "library",
+        imageIcon: secretBookcase,
+        icon: null,
+        title: "აირჩიე ბიბლიოთეკიდან",
+        subtitle: "კატეგორიების არჩევა",
+        gradient: "from-violet-500 to-purple-600",
+        glowColor: "rgba(139, 92, 246, 0.4)",
+        fullWidth: true,
+        onClick: onSelectLibrary,
+      },
+    ];
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+    return (
+      <motion.div
+        ref={ref}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
       style={{
         background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
       }}
@@ -240,5 +245,6 @@ export function TeamMenuScreen({
         </motion.p>
       </div>
     </motion.div>
-  );
-}
+    );
+  }
+);
