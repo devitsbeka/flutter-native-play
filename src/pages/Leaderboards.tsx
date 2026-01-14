@@ -113,7 +113,7 @@ export default function Leaderboards() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Desktop: Show all 3 leaderboards side by side */}
-      <div className="hidden lg:block flex-1 p-6 pb-28">
+      <div className="hidden lg:block flex-1 pb-28">
         <DesktopLeaderboards userTier={userTier} region={region} />
       </div>
 
