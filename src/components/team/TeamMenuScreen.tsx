@@ -1,10 +1,12 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Shuffle, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
+import spinTheBottle from "@/assets/spin-the-bottle.png";
+import danceFloor from "@/assets/dance-floor.png";
 
 interface TeamMenuScreenProps {
   onClose: () => void;
@@ -44,7 +46,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
     const menuOptions: MenuOption[] = [
       {
         id: "create-room",
-        icon: <Users className="w-7 h-7 text-white" />,
+        imageIcon: danceFloor,
+        icon: null,
         title: "სათამაშო ოთახი",
         subtitle: "შექმენი და მოიწვიე",
         gradient: "from-emerald-500 to-green-600",
@@ -86,7 +89,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
     const bottomOptions: MenuOption[] = [
       {
         id: "random",
-        icon: <Shuffle className="w-6 h-6 text-white" />,
+        imageIcon: spinTheBottle,
+        icon: null,
         title: "შემთხვევითი კატეგორია",
         subtitle: "სწრაფი სტარტი",
         gradient: "from-amber-500 to-orange-500",
@@ -165,17 +169,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
               />
               
               {/* Icon */}
-              <div
-                className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${option.gradient} flex items-center justify-center mb-3 shadow-lg`}
-                style={{
-                  boxShadow: `0 8px 24px ${option.glowColor}`,
-                }}
-              >
-                {option.imageIcon ? (
-                  <img src={option.imageIcon} alt="" className="w-8 h-8 object-contain" />
-                ) : (
-                  option.icon
-                )}
+              <div className="relative mb-3">
+                <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
               </div>
               
               {/* Text */}
@@ -212,17 +207,8 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
               />
               
               {/* Icon */}
-              <div
-                className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${option.gradient} flex items-center justify-center shrink-0 shadow-lg`}
-                style={{
-                  boxShadow: `0 6px 20px ${option.glowColor}`,
-                }}
-              >
-                {option.imageIcon ? (
-                  <img src={option.imageIcon} alt="" className="w-8 h-8 object-contain" />
-                ) : (
-                  option.icon
-                )}
+              <div className="relative shrink-0">
+                <img src={option.imageIcon} alt="" className="w-14 h-14 object-contain" />
               </div>
               
               {/* Text */}
