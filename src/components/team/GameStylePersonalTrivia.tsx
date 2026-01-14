@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw, Lightbulb } from "lucide-react";
+import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw, Lightbulb, Save, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
@@ -220,6 +222,10 @@ export function GameStylePersonalTrivia({
   const [editValue, setEditValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showDraftNameInput, setShowDraftNameInput] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const { user } = useAuth();
   const [title, setTitle] = useState(initialData?.title || "");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -1017,7 +1023,11 @@ export function GameStylePersonalTrivia({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
-                onClick={() => setShowExitConfirm(false)}
+                onClick={() => {
+                  if (!showDraftNameInput) {
+                    setShowExitConfirm(false);
+                  }
+                }}
               >
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -1026,34 +1036,115 @@ export function GameStylePersonalTrivia({
                   className="bg-background rounded-2xl p-6 max-w-sm w-full space-y-4"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="text-center">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
-                      <ChevronLeft className="w-6 h-6 text-amber-500" />
-                    </div>
-                    <h3 className="text-lg font-bold text-foreground">გასვლა?</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      შენი პროგრესი დაიკარგება
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <ChunkyButton
-                      variant="outline"
-                      onClick={() => setShowExitConfirm(false)}
-                      className="flex-1"
-                    >
-                      დარჩენა
-                    </ChunkyButton>
-                    <ChunkyButton
-                      variant="danger"
-                      onClick={() => {
-                        setShowExitConfirm(false);
-                        onClose();
-                      }}
-                      className="flex-1"
-                    >
-                      გასვლა
-                    </ChunkyButton>
-                  </div>
+                  {!showDraftNameInput ? (
+                    <>
+                      <div className="text-center">
+                        <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+                          <ChevronLeft className="w-6 h-6 text-amber-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground">გასვლა?</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          შენი პროგრესი დაიკარგება
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <ChunkyButton
+                          variant="outline"
+                          onClick={() => setShowExitConfirm(false)}
+                          className="w-full"
+                        >
+                          დარჩენა
+                        </ChunkyButton>
+                        <ChunkyButton
+                          variant="secondary"
+                          onClick={() => setShowDraftNameInput(true)}
+                          className="w-full"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          დრაფტად შენახვა
+                        </ChunkyButton>
+                        <ChunkyButton
+                          variant="danger"
+                          onClick={() => {
+                            setShowExitConfirm(false);
+                            setShowDraftNameInput(false);
+                            onClose();
+                          }}
+                          className="w-full"
+                        >
+                          გასვლა
+                        </ChunkyButton>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-center">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                          <Save className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground">დრაფტის სახელი</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          შეიყვანეთ სახელი მოგვიანებით მოსაძებნად
+                        </p>
+                      </div>
+                      <Input
+                        placeholder="ჩემი ვიქტორინა..."
+                        value={draftName}
+                        onChange={(e) => setDraftName(e.target.value)}
+                        autoFocus
+                        className="text-center"
+                      />
+                      <div className="flex gap-3">
+                        <ChunkyButton
+                          variant="outline"
+                          onClick={() => {
+                            setShowDraftNameInput(false);
+                            setDraftName("");
+                          }}
+                          className="flex-1"
+                        >
+                          უკან
+                        </ChunkyButton>
+                        <ChunkyButton
+                          onClick={async () => {
+                            if (!user || !draftName.trim()) return;
+                            
+                            setIsSavingDraft(true);
+                            try {
+                              const questionsData = questions.map(q => ({
+                                question: q.question,
+                                answers: q.answers.map(a => ({ text: a.text, isCorrect: a.isCorrect })),
+                                iconSlug: q.iconSlug,
+                                backgroundImageUrl: q.backgroundImageUrl
+                              }));
+                              
+                              const { error } = await supabase.from("trivia_drafts").insert({
+                                user_id: user.id,
+                                title: draftName.trim(),
+                                questions: questionsData
+                              });
+                              
+                              if (error) throw error;
+                              
+                              sonnerToast.success("დრაფტი შეინახა!");
+                              setShowExitConfirm(false);
+                              setShowDraftNameInput(false);
+                              setDraftName("");
+                              onClose();
+                            } catch (error) {
+                              sonnerToast.error("დრაფტის შენახვა ვერ მოხერხდა");
+                            } finally {
+                              setIsSavingDraft(false);
+                            }
+                          }}
+                          disabled={!draftName.trim() || isSavingDraft}
+                          className="flex-1"
+                        >
+                          {isSavingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : "შენახვა"}
+                        </ChunkyButton>
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               </motion.div>
             )}
