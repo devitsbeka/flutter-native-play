@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Gamepad2, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2 } from "lucide-react";
+import { Plus, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2 } from "lucide-react";
+import glitchIcon from "@/assets/glitch.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -814,22 +815,50 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   }
 
   if (!hasContent) {
+    // Dynamic empty state message based on filter
+    const getEmptyStateMessage = () => {
+      switch (sortFilter) {
+        case "personal":
+          return {
+            title: "MyTrivia Party",
+            description: "შექმენი პერსონალური MyTrivia Party და გაუზიარე მეგობრებს!"
+          };
+        case "trivias":
+          return {
+            title: "Trivia",
+            description: "შექმენი შენი პირველი Trivia და გაუზიარე მეგობრებს!"
+          };
+        case "collections":
+          return {
+            title: "კოლექციები",
+            description: "შექმენი კოლექცია და დაამატე მასში რაუნდები!"
+          };
+        default:
+          return {
+            title: "შენი Trivia-ები",
+            description: "შექმენი შენი საკუთარი ქვიზები და გაუზიარე მეგობრებს!"
+          };
+      }
+    };
+
+    const { title, description } = getEmptyStateMessage();
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-16 px-6"
       >
-        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Gamepad2 className="w-10 h-10 text-muted-foreground" />
+        <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
+          <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
         </div>
         
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          შენი Trivia-ები
+          {title}
         </h3>
         
         <p className="text-muted-foreground text-center text-sm mb-6 max-w-xs">
-          შექმენი შენი საკუთარი ქვიზები და გაუზიარე მეგობრებს!
+          {description}
         </p>
         
         <div className="flex gap-3">
