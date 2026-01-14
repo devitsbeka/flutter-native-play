@@ -208,7 +208,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
             ? "!border-destructive !border-solid !bg-destructive/10" 
             : ""
         }`}
-        style={{ width: large ? 100 : 48, height: large ? 100 : 48 }}
+        style={{ width: large ? 80 : 48, height: large ? 80 : 48 }}
       >
         {selectedSlug ? (
           <>
