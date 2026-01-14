@@ -5,7 +5,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
-import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -230,23 +230,34 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
         </div>
 
         {/* Info Row */}
-        <div className="p-4 flex items-center justify-between">
+        <div className="p-4">
           <div className="flex items-center gap-3">
-            <AvatarWithFrame
-              imageUrl={profile?.avatar_url || undefined}
-              size="sm"
-              showVipBadge={false}
-            />
-            <div>
+            {/* Simple Avatar without frame effects */}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg">👤</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
               <p className="font-semibold text-foreground text-sm">{profile?.nickname || 'შენ'}</p>
               <p className="text-xs text-muted-foreground">
                 {formatGeorgianTimeAgo(new Date(collection.created_at))}
               </p>
             </div>
+            {/* Expand/Collapse icon */}
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              {isExpanded ? (
+                <ChevronUp className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              )}
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            {/* Stats */}
+          {/* Stats Row */}
+          <div className="flex items-center gap-3 mt-3">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Heart className="w-3.5 h-3.5" />
               <span>{collection.likes_count || 0}</span>
@@ -259,13 +270,15 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
               <Play className="w-3.5 h-3.5" />
               <span>{collection.plays_count || 0}</span>
             </div>
-            
-            {/* Post button - only show for private collections */}
-            {collection.is_public === false && (
+          </div>
+          
+          {/* Buttons Row */}
+          {collection.is_public === false && (
+            <div className="flex items-center justify-end mt-3">
               <button
                 onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
                 disabled={isPosting}
-                className="flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 {isPosting ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -274,17 +287,8 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
                 )}
                 <span>Post</span>
               </button>
-            )}
-            
-            {/* Expand/Collapse icon - Up when open, Down when closed */}
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              {isExpanded ? (
-                <ChevronUp className="w-5 h-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-muted-foreground" />
-              )}
             </div>
-          </div>
+          )}
         </div>
       </button>
 
@@ -404,11 +408,14 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <AvatarWithFrame
-            imageUrl={profile?.avatar_url || undefined}
-            size="sm"
-            showVipBadge={false}
-          />
+          {/* Simple Avatar without frame effects */}
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-lg">👤</span>
+            )}
+          </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
               {profile?.nickname || 'შენ'}
@@ -420,50 +427,49 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
 
         {/* Stats Row */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Heart className="w-4 h-4" />
-              <span>{post.likes_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Bookmark className="w-4 h-4" />
-              <span>{post.saves_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Play className="w-4 h-4" />
-              <span>{post.plays_count || 0}</span>
-            </div>
+        <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Heart className="w-4 h-4" />
+            <span>{post.likes_count || 0}</span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            {/* Post button - only show for private content */}
-            {post.is_public === false && (
-              <ChunkyButton 
-                size="sm" 
-                variant="primary" 
-                className="text-xs"
-                onClick={() => onPost?.(post)}
-                disabled={isPosting}
-              >
-                {isPosting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Globe className="w-3.5 h-3.5" />
-                )}
-                <span>Post</span>
-              </ChunkyButton>
-            )}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Bookmark className="w-4 h-4" />
+            <span>{post.saves_count || 0}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Play className="w-4 h-4" />
+            <span>{post.plays_count || 0}</span>
+          </div>
+        </div>
+        
+        {/* Buttons Row */}
+        <div className="flex items-center justify-end gap-2 mt-3">
+          {/* Post button - only show for private content */}
+          {post.is_public === false && (
             <ChunkyButton 
               size="sm" 
-              variant="secondary" 
+              variant="primary" 
               className="text-xs"
-              onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
+              onClick={() => onPost?.(post)}
+              disabled={isPosting}
             >
-              <Play className="w-3.5 h-3.5" />
-              <span>თამაში</span>
+              {isPosting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Globe className="w-3.5 h-3.5" />
+              )}
+              <span>Post</span>
             </ChunkyButton>
-          </div>
+          )}
+          <ChunkyButton 
+            size="sm" 
+            variant="secondary" 
+            className="text-xs"
+            onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
+          >
+            <Play className="w-3.5 h-3.5" />
+            <span>თამაში</span>
+          </ChunkyButton>
         </div>
       </div>
     </motion.div>
