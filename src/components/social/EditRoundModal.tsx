@@ -435,7 +435,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex-1 flex flex-col pt-[80px]"
+                className="flex-1 flex flex-col pt-[80px] pb-[140px] overflow-hidden"
               >
                 {/* Swipe Carousel for Questions */}
                 <Carousel
@@ -444,9 +444,9 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                     align: "center",
                     loop: false,
                   }}
-                  className="flex-1"
+                  className="flex-1 h-full"
                 >
-                  <CarouselContent className="h-full">
+                  <CarouselContent className="h-full items-center">
                     {questions.map((q, index) => {
                       const answerInQuestion = hasAnswerInQuestion(q.question_text, q.correct_answer);
                       const iconRevealsAnswer = q.icon_slug && !validateIconKeyword(q.icon_slug, q.correct_answer, q.incorrect_answers).isValid;
@@ -454,8 +454,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
                       
                       return (
-                        <CarouselItem key={index} className="flex items-center justify-center px-4">
-                          <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-5 space-y-4 shadow-xl">
+                        <CarouselItem key={index} className="flex items-center justify-center px-4 h-full">
+                          <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-4 space-y-3 shadow-xl max-h-[calc(100vh-240px)] overflow-y-auto">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
                               <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
@@ -469,7 +469,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             )}
                             
                             {/* Large Tappable Icon */}
-                            <div className="flex flex-col items-center gap-1.5">
+                            <div className="flex flex-col items-center gap-1">
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
@@ -491,11 +491,11 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             </div>
                             
                             {/* Answers (READ-ONLY) - Game Style */}
-                            <div className="space-y-2.5">
+                            <div className="space-y-2">
                               {/* Correct Answer - Green chunky button */}
                               <div className="relative">
                                 <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
-                                <div className="relative p-3.5 rounded-xl bg-emerald-500 flex items-center gap-3">
+                                <div className="relative p-3 rounded-xl bg-emerald-500 flex items-center gap-3">
                                   <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
                                     <Check className="w-4 h-4 text-emerald-600" />
                                   </div>
@@ -508,7 +508,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                               {q.incorrect_answers.map((ans, i) => (
                                 <div key={i} className="relative">
                                   <div className="absolute inset-0 bg-gray-300 rounded-xl translate-y-1" />
-                                  <div className="relative p-3.5 rounded-xl bg-white flex items-center gap-3">
+                                  <div className="relative p-3 rounded-xl bg-white flex items-center gap-3">
                                     <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
                                       <span className="text-slate-700 font-bold text-sm">
                                         {String.fromCharCode(66 + i)}
@@ -572,7 +572,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           </AnimatePresence>
 
           {/* Fixed Footer - Save Button (always visible) */}
-          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-8 space-y-2 safe-bottom ${
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-6 space-y-2 safe-bottom ${
             viewMode === "questions" 
               ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
               : "bg-background border-t border-border"
