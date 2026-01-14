@@ -24,8 +24,10 @@ interface NotificationsPanelProps {
 // Generation notification card with special design
 function GenerationNotificationCard({
   notification,
+  onUseImage,
 }: {
   notification: GenerationNotification;
+  onUseImage?: (imageUrl: string, type: 'avatar' | 'cover') => void;
 }) {
   const [elapsedTime, setElapsedTime] = useState(0);
   
@@ -81,6 +83,12 @@ function GenerationNotificationCard({
     }
   };
 
+  const handleUseImage = () => {
+    if (notification.imageUrl && onUseImage) {
+      onUseImage(notification.imageUrl, notification.generationType);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -127,15 +135,21 @@ function GenerationNotificationCard({
           </p>
         </div>
 
-        {/* Status indicator */}
+        {/* Action buttons for completed generations */}
+        {notification.status === 'completed' && notification.imageUrl && (
+          <button
+            onClick={handleUseImage}
+            className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-500 text-xs font-medium hover:bg-emerald-500/30 transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" />
+            <span>გამოყენება</span>
+          </button>
+        )}
+
+        {/* Status indicator for generating */}
         {notification.status === 'generating' && (
           <div className="flex-shrink-0">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          </div>
-        )}
-        {notification.status === 'completed' && (
-          <div className="flex-shrink-0">
-            <Check className="w-4 h-4 text-emerald-500" />
           </div>
         )}
       </div>
@@ -331,6 +345,27 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
 
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
 
+  // Handle using generated image (copy URL and navigate for cover images)
+  const handleUseGeneratedImage = (imageUrl: string, type: 'avatar' | 'cover') => {
+    if (type === 'cover') {
+      // Copy URL to clipboard
+      navigator.clipboard.writeText(imageUrl).then(() => {
+        toast.success("URL დაკოპირდა! გახსენი ტრივია My Trivia-ში გარეკანის გამოსაყენებლად", {
+          duration: 4000,
+        });
+        onClose();
+        navigate('/explore?tab=my-trivia');
+      }).catch(() => {
+        toast.error("კოპირება ვერ მოხერხდა");
+      });
+    } else if (type === 'avatar') {
+      // For avatar, navigate to profile
+      toast.success("ავატარი უკვე დაყენებულია!", { duration: 3000 });
+      onClose();
+      navigate('/profile');
+    }
+  };
+
   const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
     setActionLoading(notificationId);
     try {
@@ -522,6 +557,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                           <GenerationNotificationCard
                             key={genNotif.id}
                             notification={genNotif}
+                            onUseImage={handleUseGeneratedImage}
                           />
                         ))}
                       </AnimatePresence>
