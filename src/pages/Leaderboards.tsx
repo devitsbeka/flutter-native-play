@@ -320,22 +320,47 @@ function DesktopLeagueColumn({
               <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
             </div>
           ) : (
-            leaderboard.slice(0, 15).map((entry, index) => {
-              const isCurrentUser = entry.user_id === user?.id;
+            (() => {
+              const top10 = leaderboard.slice(0, 10);
+              const userInTop10 = top10.some(e => e.user_id === user?.id);
+              const userEntryOutside = !userInTop10 ? leaderboard.find(e => e.user_id === user?.id) : null;
+              
               return (
-                <LeaguePlayerRow
-                  key={entry.user_id}
-                  entry={entry}
-                  isCurrentUser={isCurrentUser}
-                  index={index}
-                  previousRank={isCurrentUser ? previousRank : null}
-                  shouldAnimate={false}
-                  totalPlayers={leaderboard.length}
-                  isPromotionZone={tier < 5 && entry.rank <= 10}
-                  isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
-                />
+                <>
+                  {top10.map((entry, index) => {
+                    const isCurrentUser = entry.user_id === user?.id;
+                    return (
+                      <LeaguePlayerRow
+                        key={entry.user_id}
+                        entry={entry}
+                        isCurrentUser={isCurrentUser}
+                        index={index}
+                        previousRank={isCurrentUser ? previousRank : null}
+                        shouldAnimate={false}
+                        totalPlayers={leaderboard.length}
+                        isPromotionZone={tier < 5 && entry.rank <= 10}
+                        isDemotionZone={tier > 1 && entry.rank > leaderboard.length - 10}
+                      />
+                    );
+                  })}
+                  {userEntryOutside && (
+                    <>
+                      <div className="text-center text-muted-foreground text-xs py-2">• • •</div>
+                      <LeaguePlayerRow
+                        entry={userEntryOutside}
+                        isCurrentUser={true}
+                        index={leaderboard.indexOf(userEntryOutside)}
+                        previousRank={previousRank}
+                        shouldAnimate={false}
+                        totalPlayers={leaderboard.length}
+                        isPromotionZone={false}
+                        isDemotionZone={tier > 1 && userEntryOutside.rank > leaderboard.length - 10}
+                      />
+                    </>
+                  )}
+                </>
               );
-            })
+            })()
           )}
         </div>
       </ScrollArea>
