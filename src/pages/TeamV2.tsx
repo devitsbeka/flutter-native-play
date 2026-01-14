@@ -555,8 +555,8 @@ function TeamContentV2() {
             </div>
           )}
 
-          {/* Row 6: Sticky Filter Bar - Hide on rooms tab */}
-          {activeTab !== "rooms" && (
+          {/* Row 6: Sticky Filter Bar - For discover tab */}
+          {activeTab === "discover" && (
             <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
               <FeedFiltersBar
                 sortFilter={sortFilter}
@@ -566,6 +566,23 @@ function TeamContentV2() {
                 selectedHashtag={selectedHashtag}
                 onClearHashtag={() => setSelectedHashtag(null)}
                 onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="+ შექმენი"
+              />
+            </div>
+          )}
+
+          {/* Row 6b: Sticky Filter Bar - For my-content tab */}
+          {activeTab === "my-content" && (
+            <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                selectedHashtag={selectedHashtag}
+                onClearHashtag={() => setSelectedHashtag(null)}
+                onAddClick={() => setShowCreateQuizModal(true)}
+                addButtonText="+ Trivia"
               />
             </div>
           )}
@@ -663,6 +680,8 @@ function TeamContentV2() {
           }
           setShowCreateCollectionModal(true);
         }}
+        onSelectPersonal={() => setShowBlindTriviaModal(true)}
+        onSelectGameRoom={() => setShowCreateModal(true)}
       />
       <CreateBlindTriviaModal
         open={showBlindTriviaModal}

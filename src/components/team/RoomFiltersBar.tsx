@@ -23,6 +23,8 @@ interface RoomFiltersBarProps {
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   onAddClick?: () => void;
+  addButtonText?: string;
+  addButtonDescription?: string;
 }
 
 const filterOptions: { value: RoomFilter; label: string }[] = [
@@ -46,6 +48,7 @@ export function RoomFiltersBar({
   searchQuery,
   onSearchQueryChange,
   onAddClick,
+  addButtonText = "+ ოთახი",
 }: RoomFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -141,15 +144,15 @@ export function RoomFiltersBar({
 
       <div className="flex-1 min-w-0" />
 
-      {/* Add button - right side (replaces old search position) */}
+      {/* Add button - right side */}
       {onAddClick && (
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           onClick={onAddClick}
-          className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm flex-shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
         >
-          <Plus className="h-5 w-5" />
+          <span className="text-sm font-semibold">{addButtonText}</span>
         </motion.button>
       )}
     </div>
