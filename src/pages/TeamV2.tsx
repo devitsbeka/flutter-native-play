@@ -77,7 +77,18 @@ function TeamContentV2() {
     if (location.state?.openPersonalTrivia) {
       setAutoOpenPersonalTrivia(true);
       setShowCreateModal(true);
-      // Clear the state to prevent re-triggering
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    if (location.state?.openCreateRoom) {
+      setShowCreateRoomScreen(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    if (location.state?.openTrivia) {
+      setShowCreateQuizModal(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    if (location.state?.openCollection) {
+      setShowCreateCollectionModal(true);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, navigate, setShowCreateModal]);
