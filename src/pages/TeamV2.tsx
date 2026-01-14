@@ -596,7 +596,7 @@ function TeamContentV2() {
                 onSearchQueryChange={setSearchQuery}
                 selectedHashtag={selectedHashtag}
                 onClearHashtag={() => setSelectedHashtag(null)}
-                onAddClick={() => setShowCreateQuizModal(true)}
+                onAddClick={() => setShowCreateTypeModal(true)}
                 addButtonText="+ Trivia"
               />
             </div>
@@ -774,7 +774,6 @@ function TeamContentV2() {
           setShowCreateCollectionModal(true);
         }}
         onSelectPersonal={() => setShowBlindTriviaModal(true)}
-        onSelectGameRoom={() => setShowTeamMenu(true)}
       />
       <CreateBlindTriviaModal
         open={showBlindTriviaModal}
