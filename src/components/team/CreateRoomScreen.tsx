@@ -38,7 +38,26 @@ export function CreateRoomScreen({
 }: CreateRoomScreenProps) {
   const [selectedType, setSelectedType] = useState<GameType | null>(null);
 
-  const allOptions: GameOption[] = [
+  // Top row options - horizontal compact cards
+  const topOptions: GameOption[] = [
+    {
+      id: "random",
+      imageIcon: spinTheBottle,
+      title: "შემთხვევითი კატეგორია",
+      subtitle: "სწრაფი სტარტი",
+      glowColor: "rgba(245, 158, 11, 0.4)",
+    },
+    {
+      id: "library",
+      imageIcon: secretBookcase,
+      title: "აირჩიე ბიბლიოთეკიდან",
+      subtitle: "კატეგორიების არჩევა",
+      glowColor: "rgba(139, 92, 246, 0.4)",
+    },
+  ];
+
+  // Bottom grid options - vertical cards
+  const bottomOptions: GameOption[] = [
     {
       id: "trivia",
       imageIcon: triviaBuzzer,
@@ -59,20 +78,6 @@ export function CreateRoomScreen({
       title: "MyTrivia Party",
       subtitle: "შენი კითხვები",
       glowColor: "rgba(236, 72, 153, 0.4)",
-    },
-    {
-      id: "random",
-      imageIcon: spinTheBottle,
-      title: "შემთხვევითი კატეგორია",
-      subtitle: "სწრაფი სტარტი",
-      glowColor: "rgba(245, 158, 11, 0.4)",
-    },
-    {
-      id: "library",
-      imageIcon: secretBookcase,
-      title: "აირჩიე ბიბლიოთეკიდან",
-      subtitle: "კატეგორიების არჩევა",
-      glowColor: "rgba(139, 92, 246, 0.4)",
     },
   ];
 
@@ -139,14 +144,68 @@ export function CreateRoomScreen({
           აირჩიე რას ითამაშებთ
         </motion.p>
 
-        {/* Grid for all options */}
-        <div className="grid grid-cols-2 gap-2.5">
-          {allOptions.map((option, index) => (
+        {/* Top Row - Compact horizontal cards */}
+        <div className="grid grid-cols-2 gap-2.5 mb-2.5">
+          {topOptions.map((option, index) => (
             <motion.button
               key={option.id}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.2 + index * 0.05 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setSelectedType(option.id)}
+              className={`relative p-3 rounded-2xl overflow-hidden text-left transition-all flex items-center gap-3 ${
+                selectedType === option.id ? "ring-2 ring-white ring-offset-2 ring-offset-purple-600" : ""
+              }`}
+              style={{
+                background: selectedType === option.id 
+                  ? "rgba(255, 255, 255, 0.25)" 
+                  : "rgba(255, 255, 255, 0.12)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+              }}
+            >
+              {/* Glow effect */}
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: `radial-gradient(circle at top right, ${option.glowColor}, transparent 60%)`,
+                }}
+              />
+              
+              {/* Selection indicator */}
+              {selectedType === option.id && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-2 right-2 w-4 h-4 rounded-full bg-white flex items-center justify-center"
+                >
+                  <div className="w-2.5 h-2.5 rounded-full bg-purple-600" />
+                </motion.div>
+              )}
+              
+              {/* Icon */}
+              <div className="relative flex-shrink-0">
+                <img src={option.imageIcon} alt="" className="w-10 h-10 object-contain" />
+              </div>
+              
+              {/* Text */}
+              <div className="relative min-w-0">
+                <h3 className="font-bold text-white text-sm leading-tight mb-0.5 line-clamp-2">{option.title}</h3>
+                <p className="text-white/60 text-[10px]">{option.subtitle}</p>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Bottom Grid - Vertical cards */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {bottomOptions.map((option, index) => (
+            <motion.button
+              key={option.id}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.3 + index * 0.05 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setSelectedType(option.id)}
               className={`relative p-4 rounded-2xl overflow-hidden text-left transition-all ${
