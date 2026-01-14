@@ -231,30 +231,38 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
       onTierSelect={setViewingTier}
       userTier={userTier}
     >
-      {/* Spacer to push content down */}
-      <div className="pt-[300px]">
-        {/* Global Countdown */}
-        <div className="flex justify-center mb-6">
-          <div className="w-80">
-            <LeagueCountdown />
-          </div>
+      {/* Countdown - top right */}
+      <div className="absolute top-6 right-6 z-30">
+        <div className="w-64">
+          <LeagueCountdown />
         </div>
+      </div>
 
-        {/* 3 Column Layout */}
+      {/* Content area */}
+      <div className="pt-[100px]">
+        {/* 3 Column Layout with trophies above */}
         <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-3 gap-4">
-          {tiers.map(({ tier, data, name, nameKa }) => (
-            <DesktopLeagueColumn
-              key={tier}
-              tier={tier}
-              name={language === 'ka' ? nameKa : name}
-              leaderboard={data.leaderboard}
-              isLoading={data.isLoading}
-              userTier={userTier}
-              previousRank={data.previousRank}
-            />
-          ))}
-        </div>
+          <div className="grid grid-cols-3 gap-4">
+            {tiers.map(({ tier, data, name, nameKa }) => (
+              <div key={tier} className="flex flex-col items-center">
+                {/* Trophy above the card */}
+                <img
+                  src={TROPHY_IMAGES[tier]}
+                  alt={language === 'ka' ? nameKa : name}
+                  style={{ width: TROPHY_SIZES.desktop, height: TROPHY_SIZES.desktop }}
+                  className="object-contain drop-shadow-lg mb-[-40px] z-10 relative"
+                />
+                <DesktopLeagueColumn
+                  tier={tier}
+                  name={language === 'ka' ? nameKa : name}
+                  leaderboard={data.leaderboard}
+                  isLoading={data.isLoading}
+                  userTier={userTier}
+                  previousRank={data.previousRank}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </LeaderboardHeroBackground>
@@ -289,20 +297,14 @@ function DesktopLeagueColumn({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: tier * 0.1 }}
     >
-      {/* Trophy Header */}
-      <div className="flex flex-col items-center py-4 bg-gradient-to-b from-primary/5 to-transparent">
-        <img
-          src={TROPHY_IMAGES[tier]}
-          alt={name}
-          style={{ width: TROPHY_SIZES.desktop, height: TROPHY_SIZES.desktop }}
-          className="object-contain drop-shadow-lg"
-        />
-        <h2 className="text-lg font-bold text-foreground mt-2">{name}</h2>
-        {isUserTier && (
-          <span className="text-xs text-primary font-medium mt-1 px-2 py-0.5 bg-primary/10 rounded-full">
-            შენი ლიგა
-          </span>
-        )}
+      {/* Header - left aligned */}
+      <div className="flex items-center justify-between py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{name}</h2>
+          {isUserTier && (
+            <span className="text-xs text-primary font-medium">შენი ლიგა</span>
+          )}
+        </div>
       </div>
 
       {/* Leaderboard List */}
