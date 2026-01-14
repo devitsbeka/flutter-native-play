@@ -167,6 +167,14 @@ function TeamContentV2() {
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
+  const [preSelectedCategory, setPreSelectedCategory] = useState<{
+    id: string;
+    category_id: string;
+    name: string;
+    color: string;
+    image_url?: string | null;
+    total_levels: number;
+  } | null>(null);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
@@ -697,16 +705,18 @@ function TeamContentV2() {
           />
         )}
         {showCreateModal && (
-          <CreateRoomPage 
+        <CreateRoomPage 
             onClose={() => {
               setShowCreateModal(false);
               setChallengeContext(null);
               setAutoOpenPersonalTrivia(false);
               setPendingRandomPlay(false);
+              setPreSelectedCategory(null);
             }}
             challengeUserId={challengeContext?.targetUserId}
             defaultChallengeType={pendingRandomPlay ? "random" : challengeContext?.challengeType}
             autoOpenPersonalTrivia={autoOpenPersonalTrivia}
+            preSelectedCategory={preSelectedCategory}
           />
         )}
       </AnimatePresence>
@@ -716,8 +726,15 @@ function TeamContentV2() {
         onOpenChange={setShowCategorySelectorModal}
         onSelect={(category) => {
           setShowCategorySelectorModal(false);
-          // Open create room with library category pre-selected
-          setChallengeContext({ targetUserId: "", challengeType: "library" });
+          // Store the pre-selected category and open create room
+          setPreSelectedCategory({
+            id: category.id,
+            category_id: category.category_id,
+            name: category.name,
+            color: category.color,
+            image_url: category.image_url,
+            total_levels: category.total_levels,
+          });
           setShowCreateModal(true);
         }}
       />
