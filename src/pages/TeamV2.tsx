@@ -795,9 +795,29 @@ function TeamContentV2() {
       <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}
         onClose={() => setShowPersonalTriviaModal(false)}
-        onSave={(questions, title) => {
+        onSave={async (questions, title) => {
+          if (!user) return;
+          
+          const { error } = await supabase.from("user_quiz_posts").insert([{
+            user_id: user.id,
+            title: title || "MyTrivia Party",
+            subject: "personal",
+            cover_gradient: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)",
+            question_count: questions.length,
+            answer_format: "4_answers",
+            questions: questions,
+            is_public: false,
+          }]);
+          
+          if (error) {
+            toast.error("შეცდომა შენახვისას");
+            console.error(error);
+            return;
+          }
+          
           setShowPersonalTriviaModal(false);
           setActiveTab("my-content");
+          toast.success("MyTrivia Party შენახულია!");
         }}
       />
       <CreateBlindTriviaModal

@@ -345,6 +345,140 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
   );
 }
 
+// Personal trivia card with distinct styling
+function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
+  const gradientProps = getGradientProps(post.cover_gradient);
+  const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
+
+  return (
+    <motion.div
+      initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0, rotate: 0 }}
+      transition={isNew ? { type: "spring", stiffness: 300, damping: 20, delay: index * 0.05 } : { delay: index * 0.05 }}
+      className="relative bg-card rounded-2xl overflow-hidden shadow-lg"
+      style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
+    >
+      {/* Party Badge */}
+      <div className="absolute top-3 left-14 z-10 flex items-center gap-1.5 bg-pink-500/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+        <span>🎉</span>
+        <span>MyTrivia Party</span>
+      </div>
+
+      {/* Edit Button */}
+      <button 
+        onClick={(e) => { e.stopPropagation(); onEdit(post); }}
+        className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+      >
+        <Pencil className="w-4 h-4 text-white" />
+      </button>
+
+      {/* Visibility Badge - Icon Only */}
+      <div className="absolute top-3 right-3 z-10">
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
+          post.is_public !== false 
+            ? 'bg-green-500/90 text-white' 
+            : 'bg-muted text-muted-foreground'
+        }`}>
+          {post.is_public !== false ? (
+            <Globe className="w-4 h-4" />
+          ) : (
+            <Lock className="w-4 h-4" />
+          )}
+        </div>
+      </div>
+
+      {/* Cover Image or Gradient Thumbnail */}
+      <div className="h-32 relative overflow-hidden">
+        {post.cover_image ? (
+          <>
+            <img src={post.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/30" />
+          </>
+        ) : (
+          <>
+            <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
+            <div className="absolute inset-0 bg-black/20" />
+          </>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
+            {post.title}
+          </h4>
+        </div>
+        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+          {post.question_count} კითხვა
+        </div>
+      </div>
+
+      {/* Author Info & Stats */}
+      <div className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-lg">👤</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-foreground truncate">
+              {profile?.nickname || 'შენ'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {formatGeorgianTimeAgo(new Date(post.created_at))}
+            </p>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Heart className="w-4 h-4" />
+            <span>{post.likes_count || 0}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Bookmark className="w-4 h-4" />
+            <span>{post.saves_count || 0}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Play className="w-4 h-4" />
+            <span>{post.plays_count || 0}</span>
+          </div>
+        </div>
+        
+        {/* Buttons Row */}
+        <div className="flex items-center justify-end gap-2 mt-3">
+          {post.is_public === false && (
+            <ChunkyButton 
+              size="sm" 
+              variant="primary" 
+              className="text-xs"
+              onClick={() => onPost?.(post)}
+              disabled={isPosting}
+            >
+              {isPosting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Globe className="w-3.5 h-3.5" />
+              )}
+              <span>Post</span>
+            </ChunkyButton>
+          )}
+          <ChunkyButton 
+            size="sm" 
+            variant="secondary" 
+            className="text-xs"
+            onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
+          >
+            <Play className="w-3.5 h-3.5" />
+            <span>თამაში</span>
+          </ChunkyButton>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // Standalone quiz card (not in a collection)
 function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
   const gradientProps = getGradientProps(post.cover_gradient);
@@ -606,9 +740,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       )
     : myCollections;
 
-  // Apply type filter first - "trivias" shows only standalone, "collections" shows only collections
-  let standalonePosts = sortFilter === "collections" ? [] : [...searchFilteredPosts];
-  let filteredCollections = sortFilter === "trivias" ? [] : [...(searchFilteredCollections || [])];
+  // Apply type filter first - "trivias" shows only standalone, "collections" shows only collections, "personal" shows MyTrivia Party
+  let standalonePosts = sortFilter === "collections" 
+    ? [] 
+    : sortFilter === "personal"
+      ? searchFilteredPosts.filter(p => p.subject === "personal")
+      : [...searchFilteredPosts];
+  let filteredCollections = sortFilter === "trivias" || sortFilter === "personal" ? [] : [...(searchFilteredCollections || [])];
   
   // Apply sorting based on sortFilter
   const getEngagementScore = (item: any) => 
@@ -787,6 +925,18 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               }
               onPlay={onPlay}
               onPost={handlePostCollection}
+              isNew={newItemIds.has(item.data.id)}
+              isPosting={postingItemId === item.data.id}
+            />
+          ) : item.data.subject === 'personal' ? (
+            <PersonalTriviaCard 
+              key={item.data.id} 
+              post={item.data} 
+              profile={profile} 
+              index={index} 
+              onEdit={(post) => setEditingRound(post)}
+              onPlay={onPlay}
+              onPost={handlePostQuiz}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
             />
