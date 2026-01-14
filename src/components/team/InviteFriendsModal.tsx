@@ -197,10 +197,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background"
         >
           {/* Video Background */}
           <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-background" />
             <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
             <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
           </div>
