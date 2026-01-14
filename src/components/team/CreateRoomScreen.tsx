@@ -196,7 +196,7 @@ export function CreateRoomScreen({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-xs text-center text-white/50 mt-[22px]"
+          className="text-xs text-center text-white/50 mt-[19px]"
         >
           💡 მეგობრების მოწვევას შეძლებ ოთახის შექმნის შემდეგ
         </motion.p>
