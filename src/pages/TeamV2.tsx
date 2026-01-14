@@ -179,6 +179,7 @@ function TeamContentV2() {
   const [showTeamMenu, setShowTeamMenu] = useState(false);
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
+  const [isEditingRound, setIsEditingRound] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
   const [preSelectedCategory, setPreSelectedCategory] = useState<{
     id: string;
@@ -618,7 +619,7 @@ function TeamContentV2() {
           {/* Row 7: Content */}
           {activeTab === "my-content" && (
             <div className="px-4">
-              <MyTriviaTab 
+            <MyTriviaTab 
                 onCreateQuiz={() => setShowCreateQuizModal(true)} 
                 onCreateCollection={() => setShowCreateCollectionModal(true)}
                 onContinueDraft={(draftId) => {
@@ -628,6 +629,7 @@ function TeamContentV2() {
                 searchQuery={searchQuery}
                 sortFilter={sortFilter}
                 onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
+                onEditingRoundChange={setIsEditingRound}
               />
             </div>
           )}
@@ -642,8 +644,8 @@ function TeamContentV2() {
           )}
         </div>
 
-        {/* Bottom Navigation - Mobile only (hidden on tablet/desktop) */}
-        {!showCreateModal && !showTeamMenu && (
+        {/* Bottom Navigation - Mobile only (hidden on tablet/desktop and when editing) */}
+        {!showCreateModal && !showTeamMenu && !isEditingRound && (
           <div className="lg:hidden">
             <UniversalBottomNav 
               onTeamPlayClick={() => {
