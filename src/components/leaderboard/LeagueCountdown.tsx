@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,7 +8,6 @@ interface CountdownTime {
   hours: number;
   minutes: number;
   seconds: number;
-  totalSeconds: number;
 }
 
 function getTimeUntilReset(): CountdownTime {
@@ -23,7 +22,7 @@ function getTimeUntilReset(): CountdownTime {
   const diff = nextSunday.getTime() - now.getTime();
   
   if (diff <= 0) {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0 };
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   }
   
   return {
@@ -31,7 +30,6 @@ function getTimeUntilReset(): CountdownTime {
     hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
     minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
     seconds: Math.floor((diff % (1000 * 60)) / 1000),
-    totalSeconds: Math.floor(diff / 1000),
   };
 }
 
@@ -39,67 +37,95 @@ function padZero(num: number): string {
   return num.toString().padStart(2, "0");
 }
 
-// Flip unit component for each digit
-function FlipDigit({ digit, prevDigit }: { digit: string; prevDigit: string }) {
-  const isFlipping = digit !== prevDigit;
-  
+// Single flip digit
+function FlipDigit({ digit }: { digit: string }) {
+  const [currentDigit, setCurrentDigit] = useState(digit);
+  const [prevDigit, setPrevDigit] = useState(digit);
+  const [isFlipping, setIsFlipping] = useState(false);
+
+  useEffect(() => {
+    if (digit !== currentDigit) {
+      setPrevDigit(currentDigit);
+      setCurrentDigit(digit);
+      setIsFlipping(true);
+      const timer = setTimeout(() => setIsFlipping(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [digit, currentDigit]);
+
   return (
-    <div className="relative w-[1.2em] h-[1.6em] text-lg font-bold">
-      {/* Static top half */}
-      <div className="absolute inset-x-0 top-0 h-1/2 overflow-hidden rounded-t-sm bg-card border-b border-black/10">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-foreground">
-          {digit}
-        </div>
+    <div className="relative w-7 h-10 text-xl font-bold select-none">
+      {/* Top half - shows current digit */}
+      <div 
+        className="absolute inset-x-0 top-0 h-1/2 overflow-hidden rounded-t-md bg-foreground/5"
+        style={{ lineHeight: '40px' }}
+      >
+        <span className="absolute w-full text-center text-foreground">
+          {currentDigit}
+        </span>
       </div>
 
-      {/* Static bottom half */}
-      <div className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden rounded-b-sm bg-card/90">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 text-foreground">
-          {prevDigit}
-        </div>
+      {/* Bottom half - shows current digit */}
+      <div 
+        className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden rounded-b-md bg-foreground/10"
+        style={{ lineHeight: '0px' }}
+      >
+        <span className="absolute w-full text-center text-foreground" style={{ top: '-20px' }}>
+          {currentDigit}
+        </span>
       </div>
 
-      {/* Flipping cards */}
+      {/* Divider line */}
+      <div className="absolute inset-x-0 top-1/2 h-px bg-black/10 z-10" />
+
+      {/* Flipping animation overlay */}
       {isFlipping && (
-        <div className="absolute inset-0 [perspective:200px]">
+        <>
+          {/* Top card flipping down */}
           <div 
-            className="absolute inset-x-0 top-0 h-1/2 overflow-hidden rounded-t-sm bg-card origin-bottom animate-[flip-top_0.3s_ease-in_forwards]"
-            style={{ backfaceVisibility: 'hidden' }}
-          >
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-foreground">
-              {prevDigit}
-            </div>
-          </div>
-          <div 
-            className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden rounded-b-sm bg-card/90 origin-top animate-[flip-bottom_0.3s_ease-out_0.3s_forwards]"
+            className="absolute inset-x-0 top-0 h-1/2 overflow-hidden rounded-t-md bg-foreground/5 origin-bottom z-20"
             style={{ 
+              animation: 'flip-top 0.3s ease-in forwards',
               backfaceVisibility: 'hidden',
-              transform: 'rotateX(180deg)'
+              lineHeight: '40px'
             }}
           >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 text-foreground">
-              {digit}
-            </div>
+            <span className="absolute w-full text-center text-foreground">
+              {prevDigit}
+            </span>
           </div>
-        </div>
+
+          {/* Bottom card flipping up */}
+          <div 
+            className="absolute inset-x-0 bottom-0 h-1/2 overflow-hidden rounded-b-md bg-foreground/10 origin-top z-20"
+            style={{ 
+              animation: 'flip-bottom 0.3s ease-out 0.3s forwards',
+              transform: 'rotateX(180deg)',
+              backfaceVisibility: 'hidden',
+              lineHeight: '0px'
+            }}
+          >
+            <span className="absolute w-full text-center text-foreground" style={{ top: '-20px' }}>
+              {currentDigit}
+            </span>
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-function FlipNumber({ value }: { value: string }) {
-  const [prev, setPrev] = useState(value);
-  
-  useEffect(() => {
-    const timeout = setTimeout(() => setPrev(value), 300);
-    return () => clearTimeout(timeout);
-  }, [value]);
-  
+function TimeUnit({ value, label }: { value: string; label?: string }) {
   return (
-    <div className="flex gap-0.5">
-      {value.split('').map((digit, i) => (
-        <FlipDigit key={i} digit={digit} prevDigit={prev[i] || '0'} />
-      ))}
+    <div className="flex items-center gap-1">
+      <div className="flex gap-0.5">
+        {value.split('').map((digit, i) => (
+          <FlipDigit key={i} digit={digit} />
+        ))}
+      </div>
+      {label && (
+        <span className="text-sm text-amber-600 font-semibold ml-0.5">{label}</span>
+      )}
     </div>
   );
 }
@@ -116,7 +142,7 @@ export function LeagueCountdown() {
     return () => clearInterval(interval);
   }, []);
   
-  const daysLabel = language === 'ka' ? 'დღე' : 'd';
+  const daysLabel = language === 'ka' ? 'დღ' : 'd';
   
   return (
     <motion.div
@@ -126,30 +152,22 @@ export function LeagueCountdown() {
       <div className="text-xs text-muted-foreground uppercase tracking-wide mb-3 text-center font-medium">
         {t('leaderboard.timeRemaining')}
       </div>
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-2">
         <Clock className="w-5 h-5 text-amber-500" />
-        <div className="flex items-center gap-2">
-          {/* Days */}
-          <div className="flex items-center gap-1">
-            <FlipNumber value={time.days.toString()} />
-            <span className="text-sm text-muted-foreground font-medium">{daysLabel}</span>
-          </div>
-          
-          <span className="text-xl font-bold text-muted-foreground/50">:</span>
-          
-          {/* Hours */}
-          <FlipNumber value={padZero(time.hours)} />
-          
-          <span className="text-xl font-bold text-muted-foreground/50">:</span>
-          
-          {/* Minutes */}
-          <FlipNumber value={padZero(time.minutes)} />
-          
-          <span className="text-xl font-bold text-muted-foreground/50">:</span>
-          
-          {/* Seconds */}
-          <FlipNumber value={padZero(time.seconds)} />
-        </div>
+        
+        <TimeUnit value={time.days.toString()} label={daysLabel} />
+        
+        <span className="text-xl font-bold text-foreground/30">:</span>
+        
+        <TimeUnit value={padZero(time.hours)} />
+        
+        <span className="text-xl font-bold text-foreground/30">:</span>
+        
+        <TimeUnit value={padZero(time.minutes)} />
+        
+        <span className="text-xl font-bold text-foreground/30">:</span>
+        
+        <TimeUnit value={padZero(time.seconds)} />
       </div>
     </motion.div>
   );
