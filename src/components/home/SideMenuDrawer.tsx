@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, LogOut, User, Play, Compass, Store, Trophy, Headphones, ChevronDown, Settings, HelpCircle, Shield, Lock } from "lucide-react";
+import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,15 +9,10 @@ import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
 import { AvatarModal } from "./AvatarModal";
-import { SettingsModal } from "./SettingsModal";
-import { HelpModal } from "./HelpModal";
-import { PrivacyModal } from "./PrivacyModal";
 import { calculateLevel } from "@/utils/levelCalculation";
-import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SideMenuDrawerProps {
   isOpen: boolean;
@@ -34,18 +29,14 @@ const navItemsConfig = [
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useLanguage();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
-  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
 
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
@@ -53,12 +44,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const handleNavItemClick = (route: string) => {
     onClose();
     navigate(route);
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    onClose();
-    navigate("/");
   };
 
   const handlePlayClick = () => {
@@ -79,9 +64,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <DailyRewardsModal isOpen={isDailyRewardsOpen} onClose={() => setIsDailyRewardsOpen(false)} currentStreak={currentStreak} />
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
       <AvatarModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <PrivacyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />
       <AnimatePresence>
         {isTeamMenuOpen && (
           <TeamMenuScreen
@@ -277,82 +259,22 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 </div>
               </div>
 
-              {/* Settings Collapsible Section */}
+              {/* Settings Navigation Button */}
               <div className="px-4 pb-4 pt-2 border-t border-border/30 mt-2">
-                <Collapsible open={isSettingsExpanded} onOpenChange={setIsSettingsExpanded}>
-                  <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                          <Settings className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                        <span className="text-base font-medium text-foreground">
-                          {t("menu.settings")}
-                        </span>
-                      </div>
-                      <motion.div
-                        animate={{ rotate: isSettingsExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                      </motion.div>
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="pl-4 flex flex-col gap-1">
-                      {/* Settings Page */}
-                      <button
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <User className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("settings.editProfile")}
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => setIsHelpOpen(true)}
-                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("menu.help")}
-                        </span>
-                      </button>
-
-                      <button
-                        onClick={() => setIsPrivacyOpen(true)}
-                        className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <Shield className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {t("menu.privacy")}
-                        </span>
-                      </button>
-
-                      {user && (
-                        <button
-                          onClick={handleSignOut}
-                          className="flex items-center gap-4 p-3 rounded-xl text-left hover:bg-destructive/10 transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-                            <LogOut className="w-4 h-4 text-destructive" />
-                          </div>
-                          <span className="text-sm text-destructive">
-                            {t("menu.signOut")}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                <motion.button
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  onClick={() => handleNavItemClick("/settings")}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-muted/50 active:scale-98"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <span className="text-base font-medium text-foreground flex-1 text-left">
+                    {t("menu.settings")}
+                  </span>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </motion.button>
               </div>
             </div>
           </motion.div>

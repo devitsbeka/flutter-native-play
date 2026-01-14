@@ -61,6 +61,10 @@ import PrivacyPolicyEN from "./pages/PrivacyPolicyEN";
 import TermsOfService from "./pages/TermsOfService";
 import TermsOfServiceEN from "./pages/TermsOfServiceEN";
 import Support from "./pages/Support";
+import Settings from "./pages/Settings";
+import SettingsName from "./pages/SettingsName";
+import SettingsPassword from "./pages/SettingsPassword";
+import SettingsPrivacy from "./pages/SettingsPrivacy";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 
 const App = () => (
@@ -108,6 +112,10 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/terms-en" element={<TermsOfServiceEN />} />
               <Route path="/support" element={<Support />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/name" element={<SettingsName />} />
+              <Route path="/settings/password" element={<SettingsPassword />} />
+              <Route path="/settings/privacy" element={<SettingsPrivacy />} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="flow" element={<AdminFlow />} />
