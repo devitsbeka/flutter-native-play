@@ -958,11 +958,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <div className="p-4 bg-gradient-to-r from-pink-500 to-rose-600">
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                          {challengeTrivia.type === "collection" ? (
-                            <img src={iconCollections} alt="" className="w-8 h-8 object-contain" />
-                          ) : (
-                            <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
-                          )}
+                          <img src={stickerAlbum} alt="" className="w-8 h-8 object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
@@ -1009,7 +1005,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
-                        ჩემი Trivia
+                        ჩემი შექმნილი ტრივიები
                       </p>
                       <p className={`text-sm ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white/70" : "text-muted-foreground"}`}>
                         აირჩიე შენი შექმნილი ტრივიებიდან
