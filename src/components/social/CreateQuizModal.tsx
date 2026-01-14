@@ -447,7 +447,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                 <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
                   <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-1">შექმენი Trivia ✨</h3>
+                <h3 className="text-xl font-bold text-white mb-1">შექმენი შენი ტრივია</h3>
                 <p className="text-sm text-white/70">რა თემაზე გსურს კითხვები?</p>
               </div>
 
@@ -825,10 +825,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   <X className="w-6 h-6 text-white" />
                 </button>
                 
-                <div className="flex items-center gap-2">
-                  <img src={triviaBuzzer} alt="Trivia" className="w-6 h-6 object-contain" />
-                  <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
-                </div>
+                <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
                 
                 {/* Progress dots */}
                 <div className="flex gap-1.5">
