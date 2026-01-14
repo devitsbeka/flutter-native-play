@@ -1,3 +1,4 @@
+// Multiplayer Context V2 - Manages room-based trivia games
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
