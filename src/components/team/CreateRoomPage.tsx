@@ -30,6 +30,7 @@ import storyDice from "@/assets/story-dice.png";
 import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
+import stickerAlbum from "@/assets/sticker-album.png";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPICS = [
@@ -837,14 +838,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       />
                     )}
                     
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      isSearchingRandom ? "bg-white/20" : "bg-purple-500/10"
-                    }`}>
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
                       <motion.div
                         animate={isSearchingRandom ? { rotate: 360 } : { rotate: 0 }}
                         transition={isSearchingRandom ? { duration: 0.5, repeat: Infinity, ease: "linear" } : {}}
                       >
-                        <img src={storyDice} alt="" className="w-7 h-7 object-contain" />
+                        <img src={storyDice} alt="" className="w-8 h-8 object-contain" />
                       </motion.div>
                     </div>
                     <div className="flex-1 text-left relative z-10">
@@ -929,12 +928,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      selectionMode === "library" && !selectedCategory
-                        ? "bg-white/20" 
-                        : "bg-blue-500/10"
-                    }`}>
-                      <img src={secretBookcase} alt="" className="w-7 h-7 object-contain" />
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                      <img src={secretBookcase} alt="" className="w-8 h-8 object-contain" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "library" && !selectedCategory ? "text-white" : "text-foreground"}`}>
@@ -1009,12 +1004,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      selectionMode === "my-trivias" && !challengeTrivia
-                        ? "bg-white/20" 
-                        : "bg-pink-500/10"
-                    }`}>
-                      <Gamepad2 className={`w-6 h-6 ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-pink-500"}`} />
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                      <img src={stickerAlbum} alt="" className="w-8 h-8 object-contain" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
@@ -1117,12 +1108,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
                     }`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      selectionMode === "create" && customTriviaQuestions
-                        ? "bg-white/20" 
-                        : "bg-emerald-500/10"
-                    }`}>
-                      <img src={triviaBuzzer} alt="" className="w-7 h-7 object-contain" />
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                      <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "create" && customTriviaQuestions ? "text-white" : "text-foreground"}`}>
