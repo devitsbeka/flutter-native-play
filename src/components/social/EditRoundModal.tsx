@@ -454,8 +454,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
                       
                       return (
-                        <CarouselItem key={index} className="flex items-center justify-center px-4">
-                          <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-4 space-y-3 shadow-xl max-h-[calc(100vh-200px)] overflow-y-auto">
+                        <CarouselItem key={index} className="flex items-center justify-center w-full px-6">
+                          <div className="w-full space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto px-2">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
                               <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
