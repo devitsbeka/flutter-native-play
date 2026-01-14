@@ -31,6 +31,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [selectedIconData, setSelectedIconData] = useState<IconItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
   const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
   const [suggestionSeed, setSuggestionSeed] = useState(0);
 
@@ -115,29 +116,59 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
     loadSuggestions(true);
   };
 
+  // Fetch random library icons
+  const fetchRandomLibraryIcons = async () => {
+    setIsLoadingLibrary(true);
+    try {
+      // Get total count for random offset
+      const { count } = await supabase
+        .from("icon_library")
+        .select("*", { count: "exact", head: true });
+      
+      const totalCount = count || 500;
+      const offset = Math.floor(Math.random() * Math.max(1, totalCount - 50));
+      
+      const { data } = await supabase
+        .from("icon_library")
+        .select("id, slug, title, icon_url")
+        .range(offset, offset + 49);
+      
+      // Shuffle for extra randomness
+      const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
+      setIcons(shuffled);
+    } catch (error) {
+      console.error("Error fetching random icons:", error);
+    } finally {
+      setIsLoadingLibrary(false);
+    }
+  };
+
+  // Load random library icons when modal opens
+  useEffect(() => {
+    if (open && !searchQuery) {
+      fetchRandomLibraryIcons();
+    }
+  }, [open]);
+
   // Search icons when query changes
   useEffect(() => {
     if (!open) return;
     
     const searchIcons = async () => {
+      if (!searchQuery.trim()) {
+        // Don't reset icons here - fetchRandomLibraryIcons handles it
+        return;
+      }
+      
       setIsLoading(true);
       try {
-        if (searchQuery.trim()) {
-          // Always use smart search for both Georgian AND English queries
-          const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-            body: { query: searchQuery, limit: 50 }
-          });
-          
-          if (error) throw error;
-          setIcons(data?.icons || []);
-        } else {
-          // No search query - fetch random icons
-          const { data } = await supabase
-            .from("icon_library")
-            .select("id, slug, title, icon_url")
-            .limit(50);
-          setIcons(data || []);
-        }
+        // Always use smart search for both Georgian AND English queries
+        const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+          body: { query: searchQuery, limit: 50 }
+        });
+        
+        if (error) throw error;
+        setIcons(data?.icons || []);
       } catch (error) {
         console.error("Error searching icons:", error);
       } finally {
@@ -287,8 +318,19 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
 
                 {/* Library section */}
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-3 px-1">ბიბლიოთეკა</p>
-                  {isLoading ? (
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <p className="text-xs font-medium text-muted-foreground">ბიბლიოთეკა</p>
+                    {!searchQuery && (
+                      <button
+                        onClick={fetchRandomLibraryIcons}
+                        disabled={isLoadingLibrary}
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-4 h-4 text-muted-foreground ${isLoadingLibrary ? 'animate-spin' : ''}`} />
+                      </button>
+                    )}
+                  </div>
+                  {isLoading || isLoadingLibrary ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>

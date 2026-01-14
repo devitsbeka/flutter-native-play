@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X, Clock, Sparkles, Lightbulb, AlertTriangle } from 'lucide-react';
+import { Search, X, Clock, Sparkles, Lightbulb, AlertTriangle, Shuffle, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -54,7 +54,9 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
   const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [contextIcons, setContextIcons] = useState<IconItem[]>([]);
+  const [randomIcons, setRandomIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingRandom, setIsLoadingRandom] = useState(false);
   const [brokenIcons, setBrokenIcons] = useState<Set<string>>(new Set());
 
   const handleImageError = (slug: string) => {
@@ -64,10 +66,37 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
   const filterBrokenIcons = (iconList: IconItem[]) => 
     iconList.filter(icon => !brokenIcons.has(icon.slug));
 
-  // Load recent, suggested, and context-based icons when modal opens
+  // Fetch random icons
+  const fetchRandomIcons = async () => {
+    setIsLoadingRandom(true);
+    try {
+      const { count } = await supabase
+        .from('icon_library')
+        .select('*', { count: 'exact', head: true });
+      
+      const totalCount = count || 500;
+      const offset = Math.floor(Math.random() * Math.max(1, totalCount - 30));
+      
+      const { data } = await supabase
+        .from('icon_library')
+        .select('id, slug, title, icon_url')
+        .range(offset, offset + 29);
+      
+      // Shuffle for extra randomness
+      const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
+      setRandomIcons(shuffled);
+    } catch (error) {
+      console.error('Error fetching random icons:', error);
+    } finally {
+      setIsLoadingRandom(false);
+    }
+  };
+
+  // Load recent, suggested, context-based, and random icons when modal opens
   useEffect(() => {
     if (open) {
       loadRecentIcons();
+      fetchRandomIcons();
       if (currentKeyword) {
         loadSuggestedIcons(currentKeyword);
       }
@@ -350,15 +379,69 @@ export function IconPickerModal({ open, onClose, currentSlug, currentKeyword, qu
                     <IconGrid icons={recentIcons} title="ბოლოს გამოყენებული" icon={Clock} />
                   )}
 
-                  {/* Empty state */}
-                  {contextIcons.length === 0 && suggestedIcons.length === 0 && recentIcons.length === 0 && (
-                    <div className="text-center py-8">
-                      <Search className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">
-                        ჩაწერე საძიებო სიტყვა აიკონის მოსაძებნად
-                      </p>
+                  {/* Random icons section */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Shuffle className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium text-muted-foreground">რანდომ აიკონები</p>
+                      </div>
+                      <button
+                        onClick={fetchRandomIcons}
+                        disabled={isLoadingRandom}
+                        className="p-1.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-4 h-4 text-muted-foreground ${isLoadingRandom ? 'animate-spin' : ''}`} />
+                      </button>
                     </div>
-                  )}
+                    {isLoadingRandom ? (
+                      <div className="flex items-center justify-center py-6">
+                        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-6 gap-2">
+                        {filterBrokenIcons(randomIcons).map((icon) => {
+                          const validation = correctAnswer 
+                            ? validateIconKeyword(icon.slug, correctAnswer)
+                            : { isValid: true, severity: 'ok' as const };
+                          const isBlocked = !validation.isValid && validation.severity === 'error';
+                          const isWarning = !validation.isValid && validation.severity === 'warning';
+                          
+                          return (
+                            <button
+                              key={icon.id}
+                              onClick={() => !isBlocked && handleSelect(icon.slug)}
+                              disabled={isBlocked}
+                              className={cn(
+                                "aspect-square rounded-lg border border-border/50 flex items-center justify-center transition-all relative",
+                                currentSlug === icon.slug && "ring-2 ring-primary bg-primary/10",
+                                brokenIcons.has(icon.slug) && "hidden",
+                                isBlocked && "opacity-40 cursor-not-allowed border-destructive/50 bg-destructive/10",
+                                isWarning && "border-yellow-500/50 bg-yellow-500/10",
+                                !isBlocked && "hover:border-primary/50 hover:bg-accent/50 hover:scale-105"
+                              )}
+                              title={isBlocked ? validation.warning : isWarning ? validation.warning : icon.title}
+                            >
+                              <img 
+                                src={getIconUrl(icon)} 
+                                alt={icon.title}
+                                className="w-8 h-8 object-contain"
+                                onError={() => handleImageError(icon.slug)}
+                              />
+                              {(isBlocked || isWarning) && (
+                                <div className={cn(
+                                  "absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center",
+                                  isBlocked ? "bg-destructive" : "bg-yellow-500"
+                                )}>
+                                  <AlertTriangle className="w-3 h-3 text-white" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
