@@ -667,7 +667,7 @@ function TeamContentV2() {
             onClose={() => setShowTeamMenu(false)}
             onSelectCreateRoom={() => {
               setShowTeamMenu(false);
-              setShowCreateRoomScreen(true);
+              setShowCreateModal(true);
             }}
             onSelectTrivia={() => {
               setShowTeamMenu(false);
