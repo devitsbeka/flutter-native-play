@@ -519,110 +519,122 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           })}
         </div>
       ) : (
-        <motion.div 
-          ref={containerRef}
-          className="absolute inset-0 w-full touch-pan-y"
-          style={{ height: 'calc(100% + 100px)', top: '-100px', cursor: DEV_MODE ? 'default' : 'grab' }}
-          drag={DEV_MODE ? false : "x"}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
-          onDragEnd={handleMobileSwipe}
-          whileDrag={{ cursor: 'grabbing' }}
-        >
-          <div
-            className="absolute inset-0 w-full h-full"
-            style={{
-              backgroundImage: `url(${leaderboardMap})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center top',
-              backgroundRepeat: 'no-repeat',
+        // Mobile/Tablet: Panning viewport effect
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div 
+            ref={containerRef}
+            className="absolute w-[200%] h-full touch-pan-y"
+            style={{ 
+              height: 'calc(100% + 100px)', 
+              top: '-100px',
             }}
-          />
-          
-          {/* All 3 trophies for mobile/tablet */}
-          {DEV_MODE ? (
-            // DEV MODE: Show all 3 draggable trophies for editing
-            <>
-              {Object.keys(currentConfig).map((tierKey) => {
-                const tierNum = parseInt(tierKey);
-                const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
-                const isActive = tierNum === tier;
-                const label = language === 'ka' ? meta.labelKa : meta.label;
-                const pos = positions[tierNum];
-                
-                if (!pos) return null;
-                
-                return (
-                  <DraggableTrophy
-                    key={`mobile-${tierKey}-${resetKey}`}
-                    tierNum={tierNum}
-                    meta={meta}
-                    isActive={isActive}
-                    label={label}
-                    initialX={pos.x}
-                    initialY={pos.y}
-                    size={pos.size}
-                    scaleInfo={scaleInfo}
-                    onPositionChange={handlePositionChange}
-                    onSizeChange={handleSizeChange}
-                    onClick={() => handleTrophyClick(tierNum)}
-                  />
-                );
-              })}
-            </>
-          ) : (
-            // Normal mode: Show all 3 trophies, clickable to navigate
-            <>
-              {([2, 3, 1] as const).map((tierNum) => {
-                const meta = TROPHY_META[tierNum];
-                const isActive = tierNum === tier;
-                const label = language === 'ka' ? meta.labelKa : meta.label;
-                
-                // Position trophies horizontally: Silver (left), Gold (center), Bronze (right)
-                const baseSize = isActive ? 140 : 100;
-                const xPositions = { 2: '15%', 3: '50%', 1: '85%' };
-                
-                return (
-                  <motion.div
-                    key={tierNum}
-                    className="absolute cursor-pointer"
-                    style={{
-                      left: xPositions[tierNum],
-                      top: isActive ? '35%' : '42%',
-                      width: baseSize,
-                      transformOrigin: 'center bottom',
-                      transform: 'translateX(-50%)',
-                      zIndex: isActive ? 10 : 5,
-                    }}
-                    onClick={() => onTierSelect?.(tierNum)}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={{
-                      scale: isActive ? 1.15 : 0.85,
-                      opacity: isActive ? 1 : 0.7,
-                    }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
-                      damping: 25 
-                    }}
-                  >
-                    <motion.img
-                      src={meta.image}
-                      alt={label}
-                      className="w-full h-auto drop-shadow-2xl"
-                      style={{
-                        filter: isActive 
-                          ? 'drop-shadow(0 0 30px rgba(255,215,0,0.5))' 
-                          : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
-                      }}
+            animate={{
+              // Pan viewport: Silver (tier 2) = show left, Gold (tier 3) = center, Bronze (tier 1) = show right
+              x: tier === 2 ? '0%' : tier === 3 ? '-25%' : '-50%',
+            }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 200, 
+              damping: 25 
+            }}
+          >
+            <div
+              className="absolute inset-0 w-full h-full"
+              style={{
+                backgroundImage: `url(${leaderboardMap})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center top',
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+            
+            {/* All 3 trophies for mobile/tablet */}
+            {DEV_MODE ? (
+              // DEV MODE: Show all 3 draggable trophies for editing
+              <>
+                {Object.keys(currentConfig).map((tierKey) => {
+                  const tierNum = parseInt(tierKey);
+                  const meta = TROPHY_META[tierNum as keyof typeof TROPHY_META];
+                  const isActive = tierNum === tier;
+                  const label = language === 'ka' ? meta.labelKa : meta.label;
+                  const pos = positions[tierNum];
+                  
+                  if (!pos) return null;
+                  
+                  return (
+                    <DraggableTrophy
+                      key={`mobile-${tierKey}-${resetKey}`}
+                      tierNum={tierNum}
+                      meta={meta}
+                      isActive={isActive}
+                      label={label}
+                      initialX={pos.x}
+                      initialY={pos.y}
+                      size={pos.size}
+                      scaleInfo={scaleInfo}
+                      onPositionChange={handlePositionChange}
+                      onSizeChange={handleSizeChange}
+                      onClick={() => handleTrophyClick(tierNum)}
                     />
-                  </motion.div>
-                );
-              })}
-            </>
-          )}
-        </motion.div>
+                  );
+                })}
+              </>
+            ) : (
+              // Normal mode: Show all 3 trophies positioned on the wide canvas
+              <>
+                {([2, 3, 1] as const).map((tierNum) => {
+                  const meta = TROPHY_META[tierNum];
+                  const isActive = tierNum === tier;
+                  const label = language === 'ka' ? meta.labelKa : meta.label;
+                  
+                  // Position trophies on the 200% wide canvas
+                  // Silver at 12.5% (left third), Gold at 50% (center), Bronze at 87.5% (right third)
+                  const baseSize = isActive ? 160 : 110;
+                  const xPositions = { 2: '12.5%', 3: '50%', 1: '87.5%' };
+                  
+                  return (
+                    <motion.div
+                      key={tierNum}
+                      className="absolute cursor-pointer"
+                      style={{
+                        left: xPositions[tierNum],
+                        top: '38%',
+                        width: baseSize,
+                        transformOrigin: 'center bottom',
+                        transform: 'translateX(-50%)',
+                        zIndex: isActive ? 10 : 5,
+                      }}
+                      onClick={() => onTierSelect?.(tierNum)}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={{
+                        scale: isActive ? 1.15 : 0.9,
+                        opacity: isActive ? 1 : 0.7,
+                        y: isActive ? -10 : 0,
+                      }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 300, 
+                        damping: 25 
+                      }}
+                    >
+                      <motion.img
+                        src={meta.image}
+                        alt={label}
+                        className="w-full h-auto drop-shadow-2xl"
+                        style={{
+                          filter: isActive 
+                            ? 'drop-shadow(0 0 30px rgba(255,215,0,0.5))' 
+                            : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
+                        }}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </>
+            )}
+          </motion.div>
+        </div>
       )}
 
       {/* Top gradient overlay */}
