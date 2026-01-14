@@ -74,18 +74,18 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   const { language } = useLanguage();
 
   return (
-    <div className="relative w-full overflow-hidden">
-      {/* Background image */}
+    <div className="relative w-full overflow-hidden min-h-screen lg:min-h-0">
+      {/* Background image - full cover on desktop */}
       <div 
-        className="absolute inset-0 w-full h-full bg-no-repeat bg-center bg-cover lg:bg-contain lg:bg-top"
+        className="absolute inset-0 w-full h-full bg-no-repeat bg-center bg-cover"
         style={{
           backgroundImage: `url(${leaderboardMap})`,
         }}
       />
       
-      {/* Top gradient overlay */}
+      {/* Top gradient overlay - smaller on desktop */}
       <div 
-        className="absolute inset-x-0 top-0 h-20 pointer-events-none z-10"
+        className="absolute inset-x-0 top-0 h-12 lg:h-8 pointer-events-none z-10"
         style={{
           background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)'
         }}
