@@ -557,12 +557,7 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={async () => {
-                  const room = await createRoom();
-                  if (room) {
-                    navigate(`/team?room=${room.room_code}`);
-                  }
-                }}
+                onAddClick={() => setShowCreateRoomScreen(true)}
               />
             </div>
           )}
@@ -668,12 +663,9 @@ function TeamContentV2() {
         {showTeamMenu && (
           <TeamMenuScreen
             onClose={() => setShowTeamMenu(false)}
-            onSelectCreateRoom={async () => {
+            onSelectCreateRoom={() => {
               setShowTeamMenu(false);
-              const room = await createRoom();
-              if (room) {
-                navigate(`/team?room=${room.room_code}`);
-              }
+              setShowCreateRoomScreen(true);
             }}
             onSelectTrivia={() => {
               setShowTeamMenu(false);
