@@ -949,6 +949,86 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               </AnimatePresence>
             </div>
 
+            {/* My Trivias Option - User's created content */}
+            <div className="rounded-2xl overflow-hidden">
+              <AnimatePresence mode="wait">
+                {selectionMode === "my-trivias" && challengeTrivia ? (
+                  <motion.div
+                    key="my-trivia-selected"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="relative overflow-hidden rounded-2xl"
+                  >
+                    <div className="p-4 bg-gradient-to-r from-pink-500 to-rose-600">
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                          {challengeTrivia.type === "collection" ? (
+                            <img src={iconCollections} alt="" className="w-8 h-8 object-contain" />
+                          ) : (
+                            <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
+                            {challengeTrivia.title}
+                          </p>
+                          <p className="text-xs text-white/80">
+                            {challengeTrivia.type === "collection" ? "კოლექცია" : "ტრივია"}
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => setShowMyTriviasModal(true)}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                        >
+                          <RefreshCw className="w-5 h-5 text-white" />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setChallengeTrivia(null);
+                            setSelectionMode(null);
+                            setRoomName("");
+                          }}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="my-trivia-button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => handleOptionClick("my-trivias")}
+                    className={`relative w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
+                      selectionMode === "my-trivias" && !challengeTrivia
+                        ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                      selectionMode === "my-trivias" && !challengeTrivia
+                        ? "bg-white/20" 
+                        : "bg-pink-500/10"
+                    }`}>
+                      <Gamepad2 className={`w-6 h-6 ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-pink-500"}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
+                        ჩემი Trivia
+                      </p>
+                      <p className={`text-sm ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white/70" : "text-muted-foreground"}`}>
+                        აირჩიე შენი შექმნილი ტრივიებიდან
+                      </p>
+                    </div>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* Create Trivia Option - Container that expands to show sub-options */}
             <div className="rounded-2xl overflow-hidden">
               <AnimatePresence mode="wait">
