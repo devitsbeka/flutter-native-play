@@ -536,7 +536,7 @@ function TeamContentV2() {
 
           {/* Row 5: My Rooms (შენი ოთახები) - Only show on rooms tab, vertical layout */}
           {activeTab === "rooms" && (
-            <div className="lg:hidden">
+            <div className="lg:hidden pt-3">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
