@@ -269,10 +269,37 @@ export function GameResultsScreenV2() {
             ))}
           </motion.div>
         )}
+
+        {/* Points + Coins Row - Fixed under stars */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex items-center justify-center gap-4 mt-3"
+        >
+          {/* Coins Badge */}
+          {coinsEarned > 0 && (
+            <div 
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/90"
+              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
+            >
+              <img src={coinIcon} alt="Coins" className="w-5 h-5" />
+              <span className="text-white font-bold text-lg">+{coinsEarned}</span>
+            </div>
+          )}
+
+          {/* XP Badge */}
+          {myScore > 0 && (
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-sm">
+              <img src={xpIcon} alt="XP" className="w-5 h-5" />
+              <span className="text-white font-bold text-lg">+{myScore} XP</span>
+            </div>
+          )}
+        </motion.div>
       </div>
 
-      {/* Middle Section: Category + Scorecard + Rewards (with 60px top spacing) */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-4" style={{ paddingTop: '60px' }}>
+      {/* Middle Section: Category + Scorecard (with 40px top spacing) */}
+      <div className="flex-1 flex flex-col items-center gap-4 px-4" style={{ paddingTop: '40px' }}>
         {/* Category */}
         {currentRoom?.category_name && (
           <motion.div
@@ -285,15 +312,15 @@ export function GameResultsScreenV2() {
           </motion.div>
         )}
 
-        {/* Compact Scorecard */}
+        {/* Compact Scorecard with scroll */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3"
+          className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3 max-h-[280px] overflow-y-auto"
         >
           <div className="space-y-2">
-          {rankedParticipants.slice(0, 4).map((p, idx) => (
+          {rankedParticipants.map((p, idx) => (
               <div
                 key={p.user_id}
                 className={cn(
@@ -329,33 +356,6 @@ export function GameResultsScreenV2() {
               </div>
             ))}
           </div>
-        </motion.div>
-
-        {/* Points + Coins Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center justify-center gap-4"
-        >
-          {/* Coins Badge */}
-          {coinsEarned > 0 && (
-            <div 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500/90"
-              style={{ boxShadow: "0 4px 0 rgba(180,120,0,0.4)" }}
-            >
-              <img src={coinIcon} alt="Coins" className="w-5 h-5" />
-              <span className="text-white font-bold text-lg">+{coinsEarned}</span>
-            </div>
-          )}
-
-          {/* XP Badge */}
-          {myScore > 0 && (
-            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-sm">
-              <img src={xpIcon} alt="XP" className="w-5 h-5" />
-              <span className="text-white font-bold text-lg">+{myScore} XP</span>
-            </div>
-          )}
         </motion.div>
       </div>
 
