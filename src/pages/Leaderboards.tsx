@@ -161,7 +161,7 @@ export default function Leaderboards() {
                 setApi={setCarouselApi}
                 opts={{
                   align: "center",
-                  loop: false,
+                  loop: true,
                   startIndex: (activeTier || 1) - 1,
                   duration: 30,
                   skipSnaps: false,
