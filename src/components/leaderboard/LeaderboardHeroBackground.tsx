@@ -100,17 +100,17 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   return (
     <div 
-      className="relative w-full overflow-hidden min-h-screen touch-pan-y"
+      className="relative w-full overflow-hidden min-h-screen"
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
-      {/* Background image - extends full height behind content */}
+      {/* Background image - extends full height behind content, moved up by 100px */}
       <div 
         className="absolute inset-0 w-full bg-no-repeat bg-[length:360%_auto] md:bg-[length:120%_auto]"
         style={{
           backgroundImage: `url(${leaderboardMapDesktop})`,
-          backgroundPosition: isMobile ? `${bgPositionX}% top` : 'center top',
+          backgroundPosition: isMobile ? `${bgPositionX}% calc(0% - 100px)` : 'center calc(0% - 100px)',
           transition: isDragging.current ? 'none' : 'background-position 0.3s ease-out',
         }}
       />
