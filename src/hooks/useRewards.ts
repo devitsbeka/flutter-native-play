@@ -164,11 +164,48 @@ export function useRewards() {
     }
   };
 
+  const addExtraSpins = async (extraSpins: number = 5): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      // Find or create today's spin record
+      const { data: existing } = await supabase
+        .from("user_daily_spins")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("spin_date", today)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("user_daily_spins")
+          .update({ max_spins: existing.max_spins + extraSpins })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("user_daily_spins").insert({
+          user_id: user.id,
+          spin_date: today,
+          spins_used: 0,
+          max_spins: 1 + extraSpins,
+        });
+      }
+
+      await fetchDailySpinInfo(); // Refresh state
+      return true;
+    } catch (error) {
+      console.error("Error adding extra spins:", error);
+      return false;
+    }
+  };
+
   return {
     dailySpinInfo,
     loading,
     recordSpinReward,
     recordChestReward,
     refreshSpinInfo: fetchDailySpinInfo,
+    addExtraSpins,
   };
 }

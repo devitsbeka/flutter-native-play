@@ -865,6 +865,18 @@ export const es: KaTranslations = {
     winChances: "Probabilidades de ganar",
     eachSegmentChance: "Cada segmento tiene igual probabilidad:",
     allSegmentsEqual: "Todos los segmentos tienen igual probabilidad (1/8)",
+    // Watch ad for spins
+    noSpinsLeft: "¡No quedan giros!",
+    watchAdForSpins: "Ver anuncio para +5 Giros",
+    extraSpinsReceived: "¡+5 giros añadidos! 🎉",
+    spinsRemaining: "Restantes: {current}/{max} giros",
+    watchAdGetSpins: "Ver un anuncio y obtener",
+    extraSpins: "+{count} giros",
+    watchingAd: "Cargando anuncio...",
+    watching: "Cargando...",
+    adFailed: "Error al cargar el anuncio",
+    watchFailed: "Por favor, inténtalo de nuevo",
+    errorOccurred: "Ha ocurrido un error",
   },
   gameExtra: { prize: "Premio" },
   iap: {

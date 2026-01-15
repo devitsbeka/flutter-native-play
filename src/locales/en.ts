@@ -1009,6 +1009,18 @@ export const en: KaTranslations = {
     winChances: "Win chances",
     eachSegmentChance: "Each segment has equal chance:",
     allSegmentsEqual: "All segments have equal chance (1/8)",
+    // Watch ad for spins
+    noSpinsLeft: "No spins left!",
+    watchAdForSpins: "Watch Ad for +5 Spins",
+    extraSpinsReceived: "+5 spins added! 🎉",
+    spinsRemaining: "Remaining: {current}/{max} spins",
+    watchAdGetSpins: "Watch an ad and get",
+    extraSpins: "+{count} spins",
+    watchingAd: "Loading ad...",
+    watching: "Loading...",
+    adFailed: "Ad failed to load",
+    watchFailed: "Please try again",
+    errorOccurred: "An error occurred",
   },
 
   // ==========================================
