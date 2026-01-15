@@ -455,7 +455,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
         
         {/* Buttons Row */}
-        <div className="flex items-center gap-3 mt-3">
+        <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
           {post.is_public === false ? (
             <ChunkyButton 
               size="sm" 
@@ -591,7 +591,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         </div>
         
         {/* Buttons Row */}
-        <div className="flex items-center gap-3 mt-3">
+        <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
           {/* Post button - only show for private content */}
           {post.is_public === false ? (
             <ChunkyButton 
