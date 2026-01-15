@@ -98,8 +98,8 @@ const DayRewardCard = ({
       whileHover={isAvailable ? { scale: 1.05 } : {}}
       whileTap={isAvailable ? { scale: 0.95 } : {}}
       className={`
-        flex-shrink-0 w-[120px] rounded-2xl p-4 flex flex-col items-center justify-between snap-center
-        transition-all duration-300 relative overflow-hidden min-h-[140px]
+        flex-shrink-0 w-[156px] rounded-2xl p-5 flex flex-col items-center justify-between snap-center
+        transition-all duration-300 relative overflow-hidden min-h-[182px]
         ${isAvailable ? "cursor-pointer" : ""}
       `}
       style={{
@@ -118,7 +118,7 @@ const DayRewardCard = ({
     >
       {/* Day label */}
       <span
-        className={`text-sm font-bold mb-2 ${
+        className={`text-base font-bold mb-2 ${
           isAvailable ? "text-white" : isClaimed ? "text-emerald-700" : "text-gray-500"
         }`}
       >
@@ -128,25 +128,25 @@ const DayRewardCard = ({
       {/* Reward content */}
       <div className="flex flex-col items-center gap-2">
         {isClaimed ? (
-          <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #059669" }}>
-            <Check className="w-6 h-6 text-white" />
+          <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #059669" }}>
+            <Check className="w-8 h-8 text-white" />
           </div>
         ) : isLocked ? (
-          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #9CA3AF" }}>
-            <Lock className="w-5 h-5 text-gray-400" />
+          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center" style={{ boxShadow: "0 2px 0 #9CA3AF" }}>
+            <Lock className="w-6 h-6 text-gray-400" />
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-1.5">
-              <img src={coinIcon} alt="coins" className="w-5 h-5" />
-              <span className={`text-base font-bold ${isAvailable ? "text-white" : "text-gray-700"}`}>
+            <div className="flex items-center gap-2">
+              <img src={coinIcon} alt="coins" className="w-6 h-6" />
+              <span className={`text-lg font-bold ${isAvailable ? "text-white" : "text-gray-700"}`}>
                 {reward.coins}
               </span>
             </div>
             {reward.gems > 0 && (
-              <div className="flex items-center gap-1.5">
-                <img src={gemIcon} alt="gems" className="w-5 h-5" />
-                <span className={`text-base font-bold ${isAvailable ? "text-white" : "text-purple-600"}`}>
+              <div className="flex items-center gap-2">
+                <img src={gemIcon} alt="gems" className="w-6 h-6" />
+                <span className={`text-lg font-bold ${isAvailable ? "text-white" : "text-purple-600"}`}>
                   +{reward.gems}
                 </span>
               </div>
@@ -205,7 +205,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const cardWidth = 120 + 12; // w-[120px] + gap-3 (12px)
+      const cardWidth = 156 + 16; // w-[156px] + gap-4 (16px)
       const scrollPosition = currentDay * cardWidth - container.offsetWidth / 2 + cardWidth / 2;
       setTimeout(() => {
         container.scrollTo({ left: Math.max(0, scrollPosition), behavior: "smooth" });
@@ -270,7 +270,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
         {/* Rewards - Horizontal scroll */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide"
+          className="flex gap-4 overflow-x-auto pb-2 px-4 scrollbar-hide"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {dailyRewards.map((reward, index) => (
