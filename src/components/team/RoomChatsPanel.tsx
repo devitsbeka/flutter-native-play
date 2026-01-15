@@ -40,21 +40,21 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick 
   return (
     <motion.button
       onClick={onClick}
-      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-foreground/5 active:bg-foreground/10 transition-colors text-left border-b border-border/30 last:border-b-0"
+      className="flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0"
       whileTap={{ scale: 0.98 }}
     >
-      {/* Avatar */}
+      {/* Avatar with type badge */}
       <div className="relative flex-shrink-0">
-        <Avatar className="w-14 h-14 border-2 border-background shadow-md">
+        <Avatar className="w-11 h-11">
           {conversation.type === "room" && conversation.roomIcon ? (
             <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-              <img src={conversation.roomIcon} alt="" className="w-8 h-8 object-contain" />
+              <img src={conversation.roomIcon} alt="" className="w-6 h-6 object-contain" />
             </div>
           ) : (
             <>
               <AvatarImage src={conversation.avatarUrl || undefined} />
               <AvatarFallback 
-                className="text-lg font-bold text-primary-foreground"
+                className="text-sm font-bold text-primary-foreground"
                 style={{
                   background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
                 }}
@@ -65,43 +65,54 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick 
           )}
         </Avatar>
         
-        {/* Badge overlay */}
+        {/* Type indicator badge */}
         {conversation.type === "room" && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-sm">
-            <Users className="w-3 h-3 text-primary-foreground" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-violet-500/20 rounded-full flex items-center justify-center border-2 border-background">
+            <Users className="w-2.5 h-2.5 text-violet-400" />
           </div>
         )}
         {conversation.type === "friend" && conversation.isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-background" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-background" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-bold text-foreground truncate text-base">
-            {conversation.name}
-          </h3>
-          {conversation.lastMessageTime && (
-            <span className="text-xs text-muted-foreground flex-shrink-0">
-              {conversation.lastMessageTime}
-            </span>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm">
+              <span className="font-bold text-foreground">
+                {conversation.name}
+              </span>
+              {conversation.lastMessage && (
+                <span className="text-muted-foreground ml-1 truncate">
+                  {conversation.lastMessage}
+                </span>
+              )}
+              {!conversation.lastMessage && (
+                <span className="text-muted-foreground/60 ml-1">
+                  {conversation.type === "room" 
+                    ? `${conversation.roomParticipantCount} მონაწილე`
+                    : "დაიწყე საუბარი..."
+                  }
+                </span>
+              )}
+            </p>
+            {conversation.lastMessageTime && (
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                {conversation.lastMessageTime}
+              </p>
+            )}
+          </div>
+
+          {/* Unread indicator */}
+          {conversation.unreadCount > 0 && (
+            <div className="flex-shrink-0 mt-1">
+              <div className="w-2 h-2 rounded-full bg-primary" />
+            </div>
           )}
         </div>
-        <p className="text-sm text-muted-foreground truncate mt-0.5">
-          {conversation.lastMessage || (conversation.type === "room" 
-            ? `${conversation.roomParticipantCount} მონაწილე`
-            : "დაიწყე საუბარი..."
-          )}
-        </p>
       </div>
-      
-      {/* Unread badge */}
-      {conversation.unreadCount > 0 && (
-        <span className="min-w-[22px] h-[22px] flex items-center justify-center px-1.5 text-xs font-bold text-primary-foreground bg-primary rounded-full flex-shrink-0">
-          {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
-        </span>
-      )}
     </motion.button>
   );
 });
