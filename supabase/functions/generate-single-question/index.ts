@@ -11,6 +11,16 @@ const corsHeaders = {
 const QUESTION_MAX_LENGTH = 65;
 const ANSWER_MAX_LENGTH = 20;
 
+// Fisher-Yates shuffle for randomizing answer positions
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 interface GeneratedQuestion {
   question_text: string;
   correct_answer: string;
@@ -383,10 +393,13 @@ Return ONLY valid JSON.`;
       }
     }
 
+    // Shuffle incorrect_answers to prevent AI patterns
+    const shuffledIncorrect = shuffleArray(questionData.incorrect_answers || []);
+    
     const result = {
       question_text: questionData.question_text,
       correct_answer: questionData.correct_answer,
-      incorrect_answers: questionData.incorrect_answers,
+      incorrect_answers: shuffledIncorrect,
       difficulty: questionData.difficulty || difficulty,
       icon_slug: iconSlug,
     };
