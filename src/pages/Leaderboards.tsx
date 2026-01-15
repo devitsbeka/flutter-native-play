@@ -15,6 +15,7 @@ import { LeaderboardHeroBackground } from "@/components/leaderboard/LeaderboardH
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboardsSkeleton } from "@/components/leaderboard/LeaderboardSkeleton";
 
 import {
   Carousel,
@@ -152,41 +153,36 @@ export default function Leaderboards() {
 
           {/* Swipeable Cards - full width on active */}
           <div className="pt-[calc(70vh-130px)] md:pt-[calc(60vh-130px)] px-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <Carousel
-                setApi={setCarouselApi}
-                opts={{
-                  align: "center",
-                  loop: true,
-                  startIndex: (activeTier || 1) - 1,
-                  duration: 30,
-                  skipSnaps: false,
-                }}
-                className="w-full"
-              >
-                <CarouselContent className="-ml-2">
-                  {LEAGUES.map((league) => (
-                    <CarouselItem key={league.tier} className="pl-2 basis-full">
-                      <MobileLeagueCard
-                        tier={league.tier}
-                        name={language === 'ka' ? league.nameKa : league.name}
-                        isCurrentTier={league.tier === activeTier}
-                        leaderboard={leaderboard}
-                        user={user}
-                        userRowRef={userRowRef}
-                        previousRank={previousRank}
-                        userTier={userTier}
-                        viewingTier={viewingTier}
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            )}
+            <Carousel
+              setApi={setCarouselApi}
+              opts={{
+                align: "center",
+                loop: true,
+                startIndex: (activeTier || 1) - 1,
+                duration: 30,
+                skipSnaps: false,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2">
+                {LEAGUES.map((league) => (
+                  <CarouselItem key={league.tier} className="pl-2 basis-full">
+                    <MobileLeagueCard
+                      tier={league.tier}
+                      name={language === 'ka' ? league.nameKa : league.name}
+                      isCurrentTier={league.tier === activeTier}
+                      leaderboard={leaderboard}
+                      isLoading={isLoading}
+                      user={user}
+                      userRowRef={userRowRef}
+                      previousRank={previousRank}
+                      userTier={userTier}
+                      viewingTier={viewingTier}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
           </div>
         </LeaderboardHeroBackground>
       </div>
@@ -306,10 +302,23 @@ function DesktopLeagueColumn({
         </CardHeader>
 
         <CardContent className="px-3 pb-3 pt-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
+          {isLoading && leaderboard.length === 0 ? (
+            // Show skeleton rows while loading
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
+                <div className="relative shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                  <div className="h-5 w-12 bg-muted animate-pulse rounded" />
+                </div>
+              </div>
+            ))
           ) : leaderboard.length === 0 ? (
             <div className="text-center py-8">
               <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -345,6 +354,7 @@ interface MobileLeagueCardProps {
   name: string;
   isCurrentTier: boolean;
   leaderboard: LeagueEntry[];
+  isLoading: boolean;
   user: any;
   userRowRef: React.RefObject<HTMLDivElement>;
   previousRank: number | null;
@@ -357,6 +367,7 @@ function MobileLeagueCard({
   name,
   isCurrentTier,
   leaderboard,
+  isLoading,
   user,
   userRowRef,
   previousRank,
@@ -364,6 +375,11 @@ function MobileLeagueCard({
   viewingTier,
 }: MobileLeagueCardProps) {
   const isUserTier = tier === userTier;
+  
+  // Show skeleton if loading and this is the current tier being viewed
+  if (isLoading && isCurrentTier) {
+    return <LeaderboardCardSkeleton isUserTier={isUserTier} />;
+  }
   
   if (!isCurrentTier) {
     return (
