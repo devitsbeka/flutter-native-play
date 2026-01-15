@@ -80,13 +80,24 @@ GENERATE: Factual trivia questions with FACTUAL answers about the topic.
 LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
 LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
 
-${isTrueFalse ? `TRUE/FALSE format - 1 correct and 1 incorrect answer` : `4 MULTIPLE CHOICE answers - 1 correct and 3 incorrect`}
+${isTrueFalse ? `TRUE/FALSE FORMAT - CRITICAL RULES:
+- RANDOMLY choose to generate either a TRUE statement or a FALSE statement
+- For TRUE statements: write a factually CORRECT statement, correctAnswer = "მართალია"
+- For FALSE statements: write a factually INCORRECT/WRONG statement, correctAnswer = "მცდარია"  
+- incorrectAnswers is always the OPPOSITE: ["მცდარია"] for true statements, ["მართალია"] for false statements
+- FALSE statements should be believable but clearly wrong when you know the facts
+
+EXAMPLES:
+✓ TRUE: "საქართველოს დედაქალაქია თბილისი." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
+✓ FALSE: "საქართველოს დედაქალაქია ბათუმი." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]
+✓ TRUE: "მზის სისტემაში 8 პლანეტაა." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
+✓ FALSE: "მზის სისტემაში 12 პლანეტაა." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]` : `4 MULTIPLE CHOICE answers - 1 correct and 3 incorrect`}
 
 JSON FORMAT:
 {
   "question_text": "...",
-  "correct_answer": "...",
-  "incorrect_answers": ["...", "...", "..."],
+  "correct_answer": "${isTrueFalse ? 'მართალია ან მცდარია' : '...'}",
+  "incorrect_answers": ${isTrueFalse ? '["მცდარია ან მართალია"]' : '["...", "...", "..."]'},
   "difficulty": "${difficulty}",
   "icon_keywords": ["relevant", "topic", "keywords"]
 }`;
@@ -215,9 +226,18 @@ serve(async (req) => {
       console.log(`Generating PERSONAL question with focus category: ${focusCategory.theme}, seed: ${randomSeed}`);
     }
 
+    // For True/False, randomly decide if we want a true or false statement
+    const generateTrueStatement = Math.random() > 0.5;
+    const trueFalseInstruction = isTrueFalse 
+      ? `\n\n🎲 FOR THIS QUESTION: Generate a ${generateTrueStatement ? 'TRUE (მართალია)' : 'FALSE (მცდარია)'} statement.
+${generateTrueStatement 
+  ? '- Write a factually CORRECT statement. correct_answer = "მართალია", incorrect_answers = ["მცდარია"]'
+  : '- Write a factually INCORRECT statement. correct_answer = "მცდარია", incorrect_answers = ["მართალია"]'}`
+      : '';
+
     const userPrompt = mode === "trivia"
       ? `🎯 Generate 1 UNIQUE, FACTUAL trivia question about: "${subject}"
-${existingContext}
+${existingContext}${trueFalseInstruction}
 
 ⚡ IMPORTANT: 
 - Generate factual questions with REAL answers about the topic
@@ -227,7 +247,7 @@ ${existingContext}
 Return ONLY valid JSON.`
       : `🎲 Generate 1 UNIQUE, FUN question about: "${subject}"
 Focus on theme: ${focusCategory.theme}
-${existingContext}
+${existingContext}${trueFalseInstruction}
 
 ⚡ IMPORTANT: 
 - Generate something COMPLETELY NEW and DIFFERENT!
