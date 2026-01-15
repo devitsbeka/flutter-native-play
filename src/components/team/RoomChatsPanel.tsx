@@ -43,7 +43,7 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick 
       className="flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0"
       whileTap={{ scale: 0.98 }}
     >
-      {/* Avatar with type badge */}
+      {/* Avatar - no badges */}
       <div className="relative flex-shrink-0">
         <Avatar className="w-11 h-11">
           {conversation.type === "room" && conversation.roomIcon ? (
@@ -64,16 +64,6 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick 
             </>
           )}
         </Avatar>
-        
-        {/* Type indicator badge */}
-        {conversation.type === "room" && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-violet-500/20 rounded-full flex items-center justify-center border-2 border-background">
-            <Users className="w-2.5 h-2.5 text-violet-400" />
-          </div>
-        )}
-        {conversation.type === "friend" && conversation.isOnline && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-background" />
-        )}
       </div>
 
       {/* Content */}
@@ -309,32 +299,32 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   exit={{ opacity: 0, x: -20 }}
                   className="relative flex flex-col h-full"
                 >
-                  {/* Header */}
+                  {/* Header - reduced size */}
                   <div className="relative z-10 px-4 pt-4 pb-3">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                          <MessageCircle className="w-6 h-6 text-primary" />
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                          <MessageCircle className="w-4 h-4 text-primary" />
                         </div>
-                        <h2 className="font-bold text-xl text-foreground">შეტყობინებები</h2>
+                        <h2 className="font-bold text-base text-foreground">შეტყობინებები</h2>
                       </div>
                       <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                        className="w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
                       >
-                        <X className="w-5 h-5 text-foreground" />
+                        <X className="w-4 h-4 text-foreground" />
                       </button>
                     </div>
 
                     {/* Search */}
-                    <div className="relative mb-4">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <div className="relative mb-3">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="ძებნა..."
-                        className="w-full h-12 pl-12 pr-4 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full h-10 pl-11 pr-4 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                     </div>
 
@@ -345,7 +335,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           key={filter.id}
                           onClick={() => setActiveFilter(filter.id)}
                           className={cn(
-                            "px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all border",
+                            "px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
                             activeFilter === filter.id 
                               ? "bg-foreground text-background border-foreground" 
                               : "bg-card/80 backdrop-blur-sm text-foreground border-border/50 hover:bg-card"
@@ -359,9 +349,9 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                     </div>
                   </div>
 
-                  {/* Conversation List */}
-                  <div className="relative z-10 flex-1 overflow-y-auto">
-                    <div className="bg-card/60 backdrop-blur-sm mx-2 rounded-2xl overflow-hidden">
+                  {/* Conversation List - full width, hidden scroll */}
+                  <div className="relative z-10 flex-1 overflow-y-auto px-0 scrollbar-hide">
+                    <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden">
                       {isLoading ? (
                         <div className="flex items-center justify-center py-12">
                           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
