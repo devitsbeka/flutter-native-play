@@ -69,21 +69,23 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     // Calculate swipe direction based on touch movement
     const swipeDiff = touchStartX.current - touchEndX.current;
     
-    // Use the prop currentTier to get the actual current tier
     const activeTier = lastTierRef.current;
     let newTier = activeTier;
     
-    // Any swipe in a direction changes tier (very low threshold)
+    // Visual order: Silver(2) - Gold(3) - Bronze(1) from left to right
+    // Swipe LEFT (swipeDiff > 0) = scroll right = show what's on the RIGHT
+    // Swipe RIGHT (swipeDiff < 0) = scroll left = show what's on the LEFT
+    
     if (swipeDiff > 5) {
-      // Swipe left: Silver→Bronze, Gold→Silver, Bronze→Gold
-      if (activeTier === 2) newTier = 1;
-      else if (activeTier === 3) newTier = 2;
-      else if (activeTier === 1) newTier = 3;
+      // Swipe left = move right visually: Silver→Gold→Bronze→Silver
+      if (activeTier === 2) newTier = 3;      // Silver → Gold
+      else if (activeTier === 3) newTier = 1; // Gold → Bronze
+      else if (activeTier === 1) newTier = 2; // Bronze → Silver (wrap)
     } else if (swipeDiff < -5) {
-      // Swipe right: Silver→Gold, Gold→Bronze, Bronze→Silver
-      if (activeTier === 2) newTier = 3;
-      else if (activeTier === 3) newTier = 1;
-      else if (activeTier === 1) newTier = 2;
+      // Swipe right = move left visually: Bronze→Gold→Silver→Bronze
+      if (activeTier === 1) newTier = 3;      // Bronze → Gold
+      else if (activeTier === 3) newTier = 2; // Gold → Silver
+      else if (activeTier === 2) newTier = 1; // Silver → Bronze (wrap)
     }
     
     // Snap to tier position
