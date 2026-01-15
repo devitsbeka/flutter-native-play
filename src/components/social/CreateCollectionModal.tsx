@@ -546,7 +546,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   // Step 1: Round Names Entry
   // Step 2: Generation Progress
   return (
-    <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -590,7 +589,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         {/* Content */}
         <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
           <div className="p-5">
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {step === 1 && (
                 <motion.div
                   key="step1"
@@ -769,7 +768,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             </AnimatePresence>
           </div>
         </div>
-      </motion.div>
-    </AnimatePresence>
+    </motion.div>
   );
 }
