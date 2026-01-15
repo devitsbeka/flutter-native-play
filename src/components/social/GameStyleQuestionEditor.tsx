@@ -288,7 +288,6 @@ export function GameStyleQuestionEditor({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
-  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -777,10 +776,7 @@ export function GameStyleQuestionEditor({
                   <div className="flex justify-center mb-2 overflow-visible">
                     <button
                       type="button"
-                      onClick={() => {
-                        setIconPickerIndex(index);
-                        setIconPickerOpen(true);
-                      }}
+                      onClick={() => setIconPickerIndex(index)}
                       className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 hover:scale-105"
                       style={{ width: 48, height: 48 }}
                     >
@@ -836,10 +832,7 @@ export function GameStyleQuestionEditor({
                   <div className="flex justify-center mb-2 pt-2 overflow-visible">
                     <button
                       type="button"
-                      onClick={() => {
-                        setIconPickerIndex(index);
-                        setIconPickerOpen(true);
-                      }}
+                      onClick={() => setIconPickerIndex(index)}
                       className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 hover:scale-105"
                       style={{ width: 48, height: 48 }}
                     >
@@ -1183,15 +1176,11 @@ export function GameStyleQuestionEditor({
       {/* Global Icon Picker - rendered outside carousel */}
       {iconPickerIndex !== null && questions[iconPickerIndex] && (
         <QuestionIconPicker
-          isOpen={iconPickerOpen}
-          onClose={() => {
-            setIconPickerOpen(false);
-            setIconPickerIndex(null);
-          }}
+          isOpen={true}
+          onClose={() => setIconPickerIndex(null)}
           selectedSlug={questions[iconPickerIndex]?.iconSlug || null}
           onSelect={(slug) => {
             handleIconChange(slug, iconPickerIndex);
-            setIconPickerOpen(false);
             setIconPickerIndex(null);
           }}
           questionText={questions[iconPickerIndex]?.question}
