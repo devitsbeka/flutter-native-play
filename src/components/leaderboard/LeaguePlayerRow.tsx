@@ -1,3 +1,4 @@
+import React, { forwardRef } from "react";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,16 +40,20 @@ function getAvatarColor(name: string): string {
   return colors[hash % colors.length];
 }
 
-export function LeaguePlayerRow({
-  entry,
-  isCurrentUser,
-  index,
-  previousRank,
-  shouldAnimate,
-  isPromotionZone,
-  isDemotionZone,
-  isFixed,
-}: LeaguePlayerRowProps) {
+export const LeaguePlayerRow = forwardRef<HTMLDivElement, LeaguePlayerRowProps>(
+  function LeaguePlayerRow(
+    {
+      entry,
+      isCurrentUser,
+      index,
+      previousRank,
+      shouldAnimate,
+      isPromotionZone,
+      isDemotionZone,
+      isFixed,
+    },
+    ref
+  ) {
   const rankStyle = RANK_COLORS[entry.rank];
   const isTopThree = entry.rank <= 3;
 
@@ -157,4 +162,4 @@ export function LeaguePlayerRow({
       </motion.div>
     </motion.div>
   );
-}
+});

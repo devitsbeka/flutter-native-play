@@ -16,6 +16,7 @@ type ProgressCallback = (progress: VideoLoadProgress) => void;
 // Global video preloading state
 let videosLoaded = false;
 let preloadingStarted = false;
+let sessionPreloadComplete = false; // Track if we already preloaded this session
 const videoLoadCallbacks: (() => void)[] = [];
 const progressCallbacks: ProgressCallback[] = [];
 
@@ -169,22 +170,24 @@ export async function startVideoPreload(): Promise<void> {
   const hasCachedVideos = await checkServiceWorkerCache();
   
   if (hasCachedVideos) {
-    console.log('[VideoPreloader] Videos found in Service Worker cache');
-    // Videos are cached, just load blob URLs quickly
-    await loadVideosInBatches(videoUrls, 10);
-  } else {
-    console.log('[VideoPreloader] Loading videos from network');
-    // Priority loading: map videos first, then category videos
-    const mapVideoUrls = Object.values(MAP_VIDEOS);
-    const categoryVideoUrls = videoUrls.filter(url => !mapVideoUrls.includes(url));
-    
-    // Load map videos first (user sees these immediately)
-    await loadVideosInBatches(mapVideoUrls, 3);
-    
-    // Then load category videos in larger batches
-    await loadVideosInBatches(categoryVideoUrls, 6);
+    // Videos are already in SW cache - skip blob URL creation entirely
+    // The SW will serve them instantly on demand
+    sessionPreloadComplete = true;
+    markComplete();
+    return;
   }
 
+  // No SW cache - load from network with priority
+  const mapVideoUrls = Object.values(MAP_VIDEOS);
+  const categoryVideoUrls = videoUrls.filter(url => !mapVideoUrls.includes(url));
+  
+  // Load map videos first (user sees these immediately)
+  await loadVideosInBatches(mapVideoUrls, 3);
+  
+  // Then load category videos in larger batches
+  await loadVideosInBatches(categoryVideoUrls, 6);
+
+  sessionPreloadComplete = true;
   markComplete();
 }
 
