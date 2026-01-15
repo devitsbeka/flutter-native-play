@@ -6,14 +6,14 @@ export default function Loading() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - fixed to top for consistent view across devices */}
       <div 
-        className="absolute inset-0 bg-cover bg-bottom bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-top bg-no-repeat"
         style={{ backgroundImage: `url(${splashBackground})` }}
       />
       
       {/* Gradient overlay for better text visibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-center px-8 w-full max-w-lg">
@@ -96,14 +96,13 @@ export default function Loading() {
             <div 
               className="relative h-8 rounded-xl overflow-hidden"
               style={{
-                background: 'linear-gradient(180deg, hsl(220 15% 15%) 0%, hsl(220 15% 25%) 100%)',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)',
                 boxShadow: `
-                  inset 0 4px 8px rgba(0,0,0,0.5),
-                  inset 0 -2px 4px rgba(255,255,255,0.05),
-                  0 4px 12px rgba(0,0,0,0.4),
-                  0 8px 24px rgba(0,0,0,0.3)
+                  inset 0 2px 4px rgba(0,0,0,0.1),
+                  0 4px 12px rgba(0,0,0,0.15),
+                  0 8px 24px rgba(0,0,0,0.1)
                 `,
-                border: '3px solid hsl(220 15% 30%)',
+                border: '3px solid rgba(255,255,255,0.9)',
               }}
             >
               {/* Progress fill */}
