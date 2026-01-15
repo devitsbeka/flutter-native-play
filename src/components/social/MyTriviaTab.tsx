@@ -772,6 +772,15 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
       : [...searchFilteredPosts];
   let filteredCollections = sortFilter === "trivias" || sortFilter === "personal" ? [] : [...(searchFilteredCollections || [])];
   
+  // Apply visibility filter
+  if (sortFilter === "private") {
+    standalonePosts = standalonePosts.filter(p => p.is_public === false);
+    filteredCollections = filteredCollections.filter(c => c.is_public === false);
+  } else if (sortFilter === "published") {
+    standalonePosts = standalonePosts.filter(p => p.is_public === true);
+    filteredCollections = filteredCollections.filter(c => c.is_public === true);
+  }
+  
   // Apply sorting based on sortFilter
   const getEngagementScore = (item: any) => 
     (item.likes_count || 0) + (item.saves_count || 0) + (item.plays_count || 0);
@@ -788,10 +797,6 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     case "most_played":
       standalonePosts = standalonePosts.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
       filteredCollections = filteredCollections.sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
-      break;
-    case "popular":
-      standalonePosts = standalonePosts.sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
-      filteredCollections = filteredCollections.sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
       break;
     default:
       // "all", "trivias", "collections" - sort by date, newest first
@@ -823,8 +828,6 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.saves_count || 0) - (a.data.saves_count || 0));
   } else if (sortFilter === "most_played") {
     unifiedFeed = unifiedFeed.sort((a, b) => (b.data.plays_count || 0) - (a.data.plays_count || 0));
-  } else if (sortFilter === "popular") {
-    unifiedFeed = unifiedFeed.sort((a, b) => getEngagementScore(b.data) - getEngagementScore(a.data));
   }
   
   const hasContent = unifiedFeed.length > 0;
