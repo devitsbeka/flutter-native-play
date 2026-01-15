@@ -141,15 +141,17 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
       return data;
     },
     enabled: !!user?.id,
-    staleTime: 60 * 1000, // Cache for 1 minute
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes - user tier rarely changes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const userTier = userLeagueData?.league_tier || 1;
   const activeTier = viewingTier ?? userTier;
 
   // Fetch leaderboard for the viewing tier (optionally filtered by region)
-  const { data: leaderboard, isLoading } = useQuery({
+  const { data: leaderboard, isLoading, isFetching } = useQuery({
     queryKey: ["leagueLeaderboard", activeTier, region],
     queryFn: async () => {
       // For user's own tier, get league data; for other tiers, get all profiles
@@ -271,8 +273,10 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
       return allEntries;
     },
     enabled: true,
-    staleTime: 30 * 1000, // Cache for 30 seconds - fast navigation
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes - instant navigation
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   // Update rank tracking when user visits their own league
@@ -343,7 +347,8 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
 
   return {
     leaderboard: leaderboard || [],
-    isLoading,
+    isLoading: isLoading && !leaderboard, // Only show loading if no cached data
+    isFetching, // Background fetching indicator
     userLeagueData,
     userTier,
     currentLeague,
