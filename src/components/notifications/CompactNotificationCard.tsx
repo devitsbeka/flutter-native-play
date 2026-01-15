@@ -1,6 +1,6 @@
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import { Check, X, ExternalLink } from 'lucide-react';
+import { memo, useState } from 'react';
+import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { Check, X, ExternalLink, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getNotificationConfig } from '@/config/notificationConfig';
@@ -15,9 +15,12 @@ interface CompactNotificationCardProps {
   onDeclineFriend?: (friendshipId: string, notificationId: string) => void;
   onAcceptInvite?: (invitationId: string, notificationId: string) => void;
   onDeclineInvite?: (invitationId: string, notificationId: string) => void;
+  onDismiss?: (id: string) => void;
   actionLoading?: string | null;
   timeAgo: string;
 }
+
+const SWIPE_THRESHOLD = 100;
 
 export const CompactNotificationCard = memo(function CompactNotificationCard({
   notification,
@@ -27,9 +30,16 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   onDeclineFriend,
   onAcceptInvite,
   onDeclineInvite,
+  onDismiss,
   actionLoading,
   timeAgo,
 }: CompactNotificationCardProps) {
+  const [isDismissing, setIsDismissing] = useState(false);
+  const x = useMotionValue(0);
+  const opacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [0, 1]);
+  const deleteOpacity = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.5, 0]);
+  const deleteScale = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.8, 0.5]);
+
   const isUnread = !notification.read_at;
   const config = getNotificationConfig(notification.type);
   const Icon = config.icon;
@@ -88,102 +98,137 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
     }
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -10 }}
-      className={cn(
-        "flex items-start gap-3 px-4 py-3 border-b border-border/30 last:border-b-0 transition-colors",
-        !hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
-      )}
-      onClick={handleClick}
-    >
-      {/* Avatar with type indicator badge */}
-      <div className="relative flex-shrink-0">
-        <Avatar className="w-11 h-11">
-          <AvatarImage src={avatarUrl} />
-          <AvatarFallback 
-            className="text-sm font-bold text-primary-foreground"
-            style={{
-              background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
-            }}
-          >
-            {senderName ? senderName.charAt(0).toUpperCase() : <Icon className="w-5 h-5" />}
-          </AvatarFallback>
-        </Avatar>
-        
-        {/* Type indicator badge */}
-        <div className={cn(
-          "absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
-          config.bgColor
-        )}>
-          <Icon className={cn("w-2.5 h-2.5", config.color)} />
-        </div>
-      </div>
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x < -SWIPE_THRESHOLD && onDismiss) {
+      setIsDismissing(true);
+      onDismiss(notification.id);
+    }
+  };
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm">
-              <span className={cn(
-                "font-bold",
-                isUnread ? "text-foreground" : "text-muted-foreground"
-              )}>
-                {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
-              </span>
-              {notification.message && (
-                <span className="text-muted-foreground ml-1">
-                  {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
+  if (isDismissing) {
+    return (
+      <motion.div
+        initial={{ height: 'auto', opacity: 1 }}
+        animate={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      />
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Delete background indicator */}
+      <motion.div 
+        className="absolute inset-0 bg-destructive flex items-center justify-end pr-6"
+        style={{ opacity: deleteOpacity }}
+      >
+        <motion.div style={{ scale: deleteScale }}>
+          <Trash2 className="w-5 h-5 text-destructive-foreground" />
+        </motion.div>
+      </motion.div>
+
+      {/* Swipeable card */}
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        style={{ x, opacity }}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={cn(
+          "relative flex items-start gap-3 px-4 py-3 border-b border-border/30 last:border-b-0 transition-colors bg-background",
+          !hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
+        )}
+        onClick={handleClick}
+      >
+        {/* Avatar with type indicator badge */}
+        <div className="relative flex-shrink-0">
+          <Avatar className="w-11 h-11">
+            <AvatarImage src={avatarUrl} />
+            <AvatarFallback 
+              className="text-sm font-bold text-primary-foreground"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
+              }}
+            >
+              {senderName ? senderName.charAt(0).toUpperCase() : <Icon className="w-5 h-5" />}
+            </AvatarFallback>
+          </Avatar>
+          
+          {/* Type indicator badge */}
+          <div className={cn(
+            "absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
+            config.bgColor
+          )}>
+            <Icon className={cn("w-2.5 h-2.5", config.color)} />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm">
+                <span className={cn(
+                  "font-bold",
+                  isUnread ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {translateNotificationTitle(notification.type, notification.title, notification.data as Record<string, unknown>)}
                 </span>
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground/60 mt-0.5">
-              {timeAgo}
-            </p>
+                {notification.message && (
+                  <span className="text-muted-foreground ml-1">
+                    {translateNotificationMessage(notification.type, notification.message, notification.data as Record<string, unknown>)}
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                {timeAgo}
+              </p>
+            </div>
+
+            {/* Unread indicator */}
+            {isUnread && (
+              <div className="flex-shrink-0 mt-1.5">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+              </div>
+            )}
           </div>
 
-          {/* Unread indicator */}
-          {isUnread && (
-            <div className="flex-shrink-0 mt-1.5">
-              <div className="w-2 h-2 rounded-full bg-primary" />
+          {/* Action buttons */}
+          {hasDualActions && (
+            <div className="flex gap-2 mt-2">
+              <motion.button
+                onClick={handleAccept}
+                disabled={isLoading}
+                className="px-4 py-1.5 rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50"
+                whileTap={{ scale: 0.95 }}
+              >
+                {isFriendRequest ? "მიღება" : "შესვლა"}
+              </motion.button>
+              <motion.button
+                onClick={handleDecline}
+                disabled={isLoading}
+                className="px-4 py-1.5 rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50"
+                whileTap={{ scale: 0.95 }}
+              >
+                უარყოფა
+              </motion.button>
             </div>
           )}
+
+          {hasSingleAction && (
+            <motion.button
+              onClick={handleSingleAction}
+              className="mt-2 px-4 py-1.5 rounded-full border border-foreground/30 text-foreground hover:bg-foreground/5 transition-colors text-xs font-semibold"
+              whileTap={{ scale: 0.95 }}
+            >
+              {getActionButtonLabel()}
+            </motion.button>
+          )}
         </div>
-
-        {/* Action buttons */}
-        {hasDualActions && (
-          <div className="flex gap-2 mt-2">
-            <motion.button
-              onClick={handleAccept}
-              disabled={isLoading}
-              className="px-4 py-1.5 rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50"
-              whileTap={{ scale: 0.95 }}
-            >
-              {isFriendRequest ? "მიღება" : "შესვლა"}
-            </motion.button>
-            <motion.button
-              onClick={handleDecline}
-              disabled={isLoading}
-              className="px-4 py-1.5 rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50"
-              whileTap={{ scale: 0.95 }}
-            >
-              უარყოფა
-            </motion.button>
-          </div>
-        )}
-
-        {hasSingleAction && (
-          <motion.button
-            onClick={handleSingleAction}
-            className="mt-2 px-4 py-1.5 rounded-full border border-foreground/30 text-foreground hover:bg-foreground/5 transition-colors text-xs font-semibold"
-            whileTap={{ scale: 0.95 }}
-          >
-            {getActionButtonLabel()}
-          </motion.button>
-        )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 });
