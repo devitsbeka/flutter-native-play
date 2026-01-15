@@ -48,12 +48,10 @@ self.addEventListener('fetch', (event) => {
       const cachedResponse = await cache.match(event.request);
       
       if (cachedResponse) {
-        console.log('[SW] Serving from cache:', url.pathname);
         return cachedResponse;
       }
 
       // Not in cache, fetch from network
-      console.log('[SW] Fetching from network:', url.pathname);
       
       try {
         const networkResponse = await fetch(event.request);
