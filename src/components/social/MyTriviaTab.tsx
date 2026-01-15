@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2 } from "lucide-react";
+import { Plus, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2, Check } from "lucide-react";
 import glitchIcon from "@/assets/glitch.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
@@ -275,8 +275,8 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
           </div>
           
           {/* Buttons Row */}
-          {collection.is_public === false && (
-            <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-3 mt-3">
+            {collection.is_public === false ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
                 disabled={isPosting}
@@ -289,8 +289,13 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
                 )}
                 <span>გამოაქვეყნე</span>
               </button>
-            </div>
-          )}
+            ) : (
+              <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/20 text-green-600 rounded-full text-xs font-medium">
+                <Check className="w-3.5 h-3.5" />
+                <span>გამოქვეყნებულია</span>
+              </div>
+            )}
+          </div>
         </div>
       </button>
 
@@ -451,7 +456,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3">
-          {post.is_public === false && (
+          {post.is_public === false ? (
             <ChunkyButton 
               size="sm" 
               variant="primary" 
@@ -466,6 +471,11 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               )}
               <span>გამოაქვეყნე</span>
             </ChunkyButton>
+          ) : (
+            <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/20 text-green-600 rounded-full text-xs font-medium">
+              <Check className="w-3.5 h-3.5" />
+              <span>გამოქვეყნებულია</span>
+            </div>
           )}
           <ChunkyButton 
             size="sm" 
@@ -583,7 +593,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3">
           {/* Post button - only show for private content */}
-          {post.is_public === false && (
+          {post.is_public === false ? (
             <ChunkyButton 
               size="sm" 
               variant="primary" 
@@ -598,6 +608,11 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               )}
               <span>გამოაქვეყნე</span>
             </ChunkyButton>
+          ) : (
+            <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/20 text-green-600 rounded-full text-xs font-medium">
+              <Check className="w-3.5 h-3.5" />
+              <span>გამოქვეყნებულია</span>
+            </div>
           )}
           <ChunkyButton 
             size="sm" 
@@ -931,10 +946,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         </div>
       )}
 
-      {/* Content Section Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-foreground">შენი კონტენტი ({totalCount})</h3>
-      </div>
+      {/* Content Section - header hidden per user request */}
 
       <div className="space-y-4">
         {/* Unified feed - sorted by date, newest first */}
