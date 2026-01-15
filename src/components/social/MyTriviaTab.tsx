@@ -276,25 +276,29 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
           
           {/* Buttons Row */}
           <div className="flex items-center gap-3 mt-3">
-            {collection.is_public === false ? (
-              <button
-                onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
-                disabled={isPosting}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-full text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {isPosting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
+              disabled={isPosting}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
+                collection.is_public === false
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+              }`}
+            >
+              {isPosting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : collection.is_public === false ? (
+                <>
                   <Globe className="w-3.5 h-3.5" />
-                )}
-                <span>გამოაქვეყნე</span>
-              </button>
-            ) : (
-              <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/20 text-green-600 rounded-full text-xs font-medium">
-                <Check className="w-3.5 h-3.5" />
-                <span>გამოქვეყნებულია</span>
-              </div>
-            )}
+                  <span>გამოაქვეყნე</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>გამოქვეყნებულია</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </button>
@@ -456,27 +460,29 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          {post.is_public === false ? (
-            <ChunkyButton 
-              size="sm" 
-              variant="primary" 
-              className="flex-1 text-xs"
-              onClick={() => onPost?.(post)}
-              disabled={isPosting}
-            >
-              {isPosting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
+          <button
+            onClick={() => onPost?.(post)}
+            disabled={isPosting}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
+              post.is_public === false
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+            }`}
+          >
+            {isPosting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : post.is_public === false ? (
+              <>
                 <Globe className="w-3.5 h-3.5" />
-              )}
-              <span>გამოაქვეყნე</span>
-            </ChunkyButton>
-          ) : (
-            <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/20 text-green-600 rounded-full text-xs font-medium">
-              <Check className="w-3.5 h-3.5" />
-              <span>გამოქვეყნებულია</span>
-            </div>
-          )}
+                <span>გამოაქვეყნე</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>გამოქვეყნებულია</span>
+              </>
+            )}
+          </button>
           <ChunkyButton 
             size="sm" 
             variant="secondary" 
@@ -592,28 +598,30 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          {/* Post button - only show for private content */}
-          {post.is_public === false ? (
-            <ChunkyButton 
-              size="sm" 
-              variant="primary" 
-              className="flex-1 text-xs"
-              onClick={() => onPost?.(post)}
-              disabled={isPosting}
-            >
-              {isPosting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
+          {/* Toggle visibility button */}
+          <button
+            onClick={() => onPost?.(post)}
+            disabled={isPosting}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
+              post.is_public === false
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
+            }`}
+          >
+            {isPosting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : post.is_public === false ? (
+              <>
                 <Globe className="w-3.5 h-3.5" />
-              )}
-              <span>გამოაქვეყნე</span>
-            </ChunkyButton>
-          ) : (
-            <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/20 text-green-600 rounded-full text-xs font-medium">
-              <Check className="w-3.5 h-3.5" />
-              <span>გამოქვეყნებულია</span>
-            </div>
-          )}
+                <span>გამოაქვეყნე</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>გამოქვეყნებულია</span>
+              </>
+            )}
+          </button>
           <ChunkyButton 
             size="sm" 
             variant="secondary" 
@@ -647,16 +655,16 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   } | null>(null);
   const [postingItemId, setPostingItemId] = useState<string | null>(null);
 
-  // Mutation to publish content (make it public)
-  const postMutation = useMutation({
-    mutationFn: async ({ id, type }: { id: string; type: 'quiz' | 'collection' }) => {
+  // Mutation to toggle visibility (private ↔ public)
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async ({ id, type, newPublicState }: { id: string; type: 'quiz' | 'collection'; newPublicState: boolean }) => {
       setPostingItemId(id);
       
       if (type === 'collection') {
         // Update collection
         const { error: collectionError } = await supabase
           .from('quiz_collections')
-          .update({ is_public: true })
+          .update({ is_public: newPublicState })
           .eq('id', id);
         
         if (collectionError) throw collectionError;
@@ -664,7 +672,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         // Also update all rounds in the collection
         const { error: roundsError } = await supabase
           .from('user_quiz_posts')
-          .update({ is_public: true })
+          .update({ is_public: newPublicState })
           .eq('collection_id', id);
         
         if (roundsError) throw roundsError;
@@ -672,32 +680,39 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         // Update standalone quiz
         const { error } = await supabase
           .from('user_quiz_posts')
-          .update({ is_public: true })
+          .update({ is_public: newPublicState })
           .eq('id', id);
         
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['my-quiz-posts'] });
       queryClient.invalidateQueries({ queryKey: ['my-collections'] });
       queryClient.invalidateQueries({ queryKey: ['quiz-posts-with-profiles'] });
-      toast.success('კონტენტი გამოქვეყნდა! 🎉');
+      
+      if (variables.newPublicState) {
+        toast.success('კონტენტი გამოქვეყნდა! 🎉');
+      } else {
+        toast.success('კონტენტი პირადი გახდა 🔒');
+      }
       setPostingItemId(null);
     },
     onError: (error) => {
-      console.error('Error publishing content:', error);
-      toast.error('გამოქვეყნება ვერ მოხერხდა');
+      console.error('Error toggling visibility:', error);
+      toast.error('ხილვადობის შეცვლა ვერ მოხერხდა');
       setPostingItemId(null);
     }
   });
 
-  const handlePostQuiz = (post: any) => {
-    postMutation.mutate({ id: post.id, type: 'quiz' });
+  const handleToggleQuizVisibility = (post: any) => {
+    const currentlyPublic = post.is_public !== false;
+    toggleVisibilityMutation.mutate({ id: post.id, type: 'quiz', newPublicState: !currentlyPublic });
   };
 
-  const handlePostCollection = (collection: any) => {
-    postMutation.mutate({ id: collection.id, type: 'collection' });
+  const handleToggleCollectionVisibility = (collection: any) => {
+    const currentlyPublic = collection.is_public !== false;
+    toggleVisibilityMutation.mutate({ id: collection.id, type: 'collection', newPublicState: !currentlyPublic });
   };
 
   // Track known item IDs to detect new items for tilt animation
@@ -965,7 +980,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
                 setAddingToCollection({ collectionId, roundNumber })
               }
               onPlay={onPlay}
-              onPost={handlePostCollection}
+              onPost={handleToggleCollectionVisibility}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
             />
@@ -977,7 +992,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               index={index} 
               onEdit={(post) => setEditingRound(post)}
               onPlay={onPlay}
-              onPost={handlePostQuiz}
+              onPost={handleToggleQuizVisibility}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
             />
@@ -989,7 +1004,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               index={index} 
               onEdit={(post) => setEditingRound(post)}
               onPlay={onPlay}
-              onPost={handlePostQuiz}
+              onPost={handleToggleQuizVisibility}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
             />
