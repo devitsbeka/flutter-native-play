@@ -85,11 +85,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   };
 
   const getActionButtonLabel = () => {
-    if (isRoomInvite || isGameStarted) return 'შესვლა';
+    if (isRoomInvite || isGameStarted || isTriviaAction) return 'ითამაშე';
     if (isGameResult) return 'ნახვა';
-    if (isTriviaAction) return 'ნახვა';
     return 'გახსნა';
   };
+
+  const isPlayButton = isRoomInvite || isGameStarted || isTriviaAction;
 
   const handleClick = () => {
     if (!hasDualActions && !hasSingleAction) {
@@ -221,7 +222,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
           {hasSingleAction && (
             <motion.button
               onClick={handleSingleAction}
-              className="mt-2 px-4 py-1.5 rounded-full border border-foreground/30 text-foreground hover:bg-foreground/5 transition-colors text-xs font-semibold"
+              className={cn(
+                "mt-2 px-4 py-1.5 rounded-full transition-colors text-xs font-semibold",
+                isPlayButton 
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  : "border border-foreground/30 text-foreground hover:bg-foreground/5"
+              )}
               whileTap={{ scale: 0.95 }}
             >
               {getActionButtonLabel()}

@@ -153,10 +153,10 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
       case 'trivia_liked':
       case 'trivia_saved':
       case 'trivia_played':
-        if (data?.trivia_id) {
-          navigate(`/explore?trivia=${data.trivia_id}`);
+        if (data?.post_id) {
+          navigate(`/team?playTrivia=${data.post_id}`);
         } else {
-          navigate('/explore');
+          navigate('/explore?tab=my-trivia');
         }
         break;
       case 'reward':
