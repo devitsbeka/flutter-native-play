@@ -72,7 +72,7 @@ export function RoomFiltersBar({
                 placeholder="ძიება..."
                 value={searchQuery}
                 onChange={(e) => onSearchQueryChange(e.target.value)}
-                className="h-9 flex-1 rounded-full bg-card/50 border-border/30"
+                className="h-9 flex-1 rounded-full bg-card/50 border-border/30 text-base md:text-sm"
                 autoFocus
               />
               <button
