@@ -244,6 +244,7 @@ export default function Notifications() {
                   onDeclineFriend={handleDeclineFriend}
                   onAcceptInvite={handleAcceptInvite}
                   onDeclineInvite={handleDeclineInvite}
+                  onDismiss={deleteNotification}
                   actionLoading={actionLoading}
                   timeAgo={formatDistanceToNow(new Date(notification.created_at), { 
                     addSuffix: false,
