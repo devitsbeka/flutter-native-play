@@ -184,41 +184,41 @@ export default function Notifications() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
       </div>
 
-      {/* Header */}
+      {/* Header - reduced size */}
       <div className="relative z-10 px-4 pt-4 pb-3">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-              <Bell className="w-6 h-6 text-primary" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+              <Bell className="w-4 h-4 text-primary" />
             </div>
-            <h1 className="font-bold text-xl text-foreground">აქტივობა</h1>
+            <h1 className="font-bold text-base text-foreground">აქტივობა</h1>
           </div>
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+            className="w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
           >
-            <X className="w-5 h-5 text-foreground" />
+            <X className="w-4 h-4 text-foreground" />
           </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 px-2">
+      {/* Content - full width, hidden scroll */}
+      <div className="relative z-10 px-0 overflow-y-auto scrollbar-hide">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : !hasAnyContent ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
-            <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-              <BellOff className="w-10 h-10 text-muted-foreground" />
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <BellOff className="w-8 h-8 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground text-center text-lg">
+            <p className="text-muted-foreground text-center">
               შეტყობინებები არ არის
             </p>
           </div>
         ) : (
-          <div className="bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden">
             {/* Generation Notifications */}
             {generationNotifications.length > 0 && (
               <>
