@@ -528,13 +528,34 @@ serve(async (req) => {
       );
     }
 
+    // Sanitize search terms - remove special characters that break PostgREST queries
+    // Commas, parentheses, quotes, and other special chars can break the .or() query
+    const sanitizeForQuery = (term: string): string => {
+      return term
+        .replace(/[,(){}[\]'"\\]/g, '') // Remove special chars
+        .replace(/\s+/g, '') // Remove spaces (search terms should be single words)
+        .trim();
+    };
+
+    // Filter and sanitize terms
+    const sanitizedTerms = allSearchTerms
+      .map(term => sanitizeForQuery(term))
+      .filter(term => term.length >= 2); // Only keep meaningful terms
+
+    if (sanitizedTerms.length === 0) {
+      return new Response(
+        JSON.stringify({ icons: [], keywords: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Build OR conditions for search
-    const orConditions = allSearchTerms.map(term => 
+    const orConditions = sanitizedTerms.map(term => 
       `title.ilike.%${term}%,slug.ilike.%${term}%`
     ).join(',');
 
     // Also search in tags
-    const tagsConditions = allSearchTerms.map(term => `tags.cs.{${term}}`).join(',');
+    const tagsConditions = sanitizedTerms.map(term => `tags.cs.{${term}}`).join(',');
     
     const { data: icons, error } = await supabase
       .from('icon_library')
