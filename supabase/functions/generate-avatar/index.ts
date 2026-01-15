@@ -21,7 +21,7 @@ STYLE REQUIREMENTS:
 - SEMI-REALISTIC 3D render like a modern video game character (Unreal Engine, Final Fantasy style)
 - REALISTIC eye proportions - NOT cartoon-style big eyes
 - Highly detailed, realistic skin with subtle subsurface scattering
-- Soft, even lighting with a bright, clean atmosphere
+- Dramatic, moody lighting with dark atmosphere
 - SOLID LIGHT LAVENDER/PURPLE BACKGROUND (#E9CCFF) - smooth gradient or solid pastel purple
 - Preserve the person's EXACT facial structure, features, and proportions
 - Add subtle violet/purple color tones to the hair for artistic flair
@@ -31,7 +31,7 @@ STYLE REQUIREMENTS:
 - Cinematic quality with depth of field effect
 - Mature, sophisticated aesthetic - NOT cartoonish or childish
 
-The result should look like a premium AAA video game character portrait - realistic but stylized, with a light lavender (#E9CCFF) pastel background.`;
+The result should look like a premium AAA video game character portrait - realistic but stylized, dramatic lighting, with a light lavender (#E9CCFF) background.`;
 
 const DEFAULT_MODEL = "google/gemini-2.5-flash-image-preview";
 
