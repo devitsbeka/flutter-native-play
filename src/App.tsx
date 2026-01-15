@@ -65,6 +65,7 @@ import Settings from "./pages/Settings";
 import SettingsName from "./pages/SettingsName";
 import SettingsPassword from "./pages/SettingsPassword";
 import SettingsPrivacy from "./pages/SettingsPrivacy";
+import Loading from "./pages/Loading";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 
 const App = () => (
@@ -86,7 +87,7 @@ const App = () => (
             <UserPresenceTracker />
             <Routes>
               <Route path="/" element={<Index />} />
-              
+              <Route path="/loading" element={<Loading />} />
               <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
               <Route path="/power-ups" element={<PowerUps />} />
               <Route path="/category/:categoryId" element={<CategoryPage />} />
