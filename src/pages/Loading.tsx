@@ -1,8 +1,27 @@
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tv, Grid3X3, Users, Trophy, Zap, Globe } from 'lucide-react';
 import splashBackground from '@/assets/loading-bg.png';
+
+const FEATURES = [
+  { icon: Tv, text: "TV რეჟიმი მეგობრებთან ერთად სათამაშოდ" },
+  { icon: Grid3X3, text: "50+ კატეგორია ტრივიას კითხვებით" },
+  { icon: Users, text: "შეჯიბრი მეგობრებთან რეალურ დროში" },
+  { icon: Trophy, text: "ყოველკვირეული ლიდერბორდები და ჯილდოები" },
+  { icon: Zap, text: "დღიური მისიები და პრემიუმ ბონუსები" },
+  { icon: Globe, text: "მოთამაშეები მთელი საქართველოდან" },
+];
 
 export default function Loading() {
   const progress = 69;
+  const [featureIndex, setFeatureIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFeatureIndex((prev) => (prev + 1) % FEATURES.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
@@ -221,6 +240,50 @@ export default function Loading() {
           </div>
         </motion.div>
       </div>
+
+      {/* Feature Carousel at Bottom */}
+      <motion.div
+        className="absolute bottom-8 left-4 right-4 z-20"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.5 }}
+      >
+        <div 
+          className="mx-auto max-w-md px-4 py-3 flex items-center gap-3"
+          style={{
+            background: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: '22px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+          }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={featureIndex}
+              className="flex items-center gap-3 w-full"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {(() => {
+                const Feature = FEATURES[featureIndex];
+                const IconComponent = Feature.icon;
+                return (
+                  <>
+                    <div className="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                      <IconComponent className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="text-white/90 text-sm font-medium leading-snug">
+                      {Feature.text}
+                    </p>
+                  </>
+                );
+              })()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </motion.div>
     </div>
   );
 }
