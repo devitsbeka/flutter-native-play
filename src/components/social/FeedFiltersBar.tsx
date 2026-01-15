@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, ChevronDown, X, Hash, Plus } from "lucide-react";
+import { Search, Filter, ChevronDown, X, Hash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VisibilityToggle } from "./VisibilityToggle";
 
 export type SortFilter = 
   | "all" 
@@ -34,8 +35,6 @@ interface FeedFiltersBarProps {
 
 const filterOptions: { value: SortFilter; label: string }[] = [
   { value: "all", label: "ყველა" },
-  { value: "private", label: "პირადი" },
-  { value: "published", label: "გამოქვეყნებული" },
   { value: "trivias", label: "ტრივიები" },
   { value: "collections", label: "კოლექციები" },
   { value: "personal", label: "MyTrivia Party" },
@@ -115,7 +114,11 @@ export function FeedFiltersBar({
                 <Search className="h-4 w-4 text-muted-foreground" />
               </motion.button>
 
-              {/* Active Hashtag Chip */}
+              {/* Visibility Toggle - Private/Published */}
+              <VisibilityToggle 
+                value={sortFilter} 
+                onChange={onSortFilterChange}
+              />
               {selectedHashtag && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
                   <Hash className="w-3.5 h-3.5 text-primary" />
