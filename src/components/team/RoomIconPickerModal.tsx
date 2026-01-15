@@ -8,6 +8,19 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
 const MAX_RECENT_ICONS = 8;
 
+// Icon categories with Georgian labels and emojis
+const ICON_CATEGORIES = [
+  { id: "all", label: "ყველა", emoji: "✨", dbValue: null },
+  { id: "animals", label: "ცხოველები", emoji: "🐾", dbValue: "Animals" },
+  { id: "food", label: "საჭმელი", emoji: "🍕", dbValue: "Food & Drink" },
+  { id: "places", label: "ადგილები", emoji: "🏠", dbValue: "Places & Structures" },
+  { id: "nature", label: "ბუნება", emoji: "🌿", dbValue: "Nature & Outdoors" },
+  { id: "sports", label: "სპორტი", emoji: "⚽", dbValue: "Sports" },
+  { id: "entertainment", label: "გართობა", emoji: "🎮", dbValue: "Entertainment & Leisure" },
+  { id: "tech", label: "ტექნოლოგია", emoji: "💻", dbValue: "Technology & Media" },
+  { id: "vehicles", label: "ტრანსპორტი", emoji: "🚗", dbValue: "Vehicles & Transport" },
+];
+
 function getRecentIconSlugs(): string[] {
   try {
     const stored = localStorage.getItem(RECENT_ROOM_ICONS_KEY);
@@ -51,13 +64,17 @@ export function RoomIconPickerModal({
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [searchResults, setSearchResults] = useState<IconItem[]>([]);
   const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
+  const [categoryIcons, setCategoryIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [editableName, setEditableName] = useState(roomName);
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   // Load recent icons from localStorage
   const loadRecentIcons = useCallback(async () => {
@@ -84,6 +101,37 @@ export function RoomIconPickerModal({
       }
     } catch (e) {
       console.error("Failed to load recent icons:", e);
+    }
+  }, []);
+
+  // Fetch icons by category
+  const fetchCategoryIcons = useCallback(async (categoryDbValue: string | null) => {
+    setIsCategoryLoading(true);
+    try {
+      let query = supabase
+        .from("icon_library")
+        .select("id, slug, title, icon_url")
+        .not("icon_url", "is", null);
+
+      if (categoryDbValue) {
+        query = query.eq("category", categoryDbValue);
+      }
+
+      const { data, error } = await query.limit(50);
+
+      if (error) {
+        console.error("Error fetching category icons:", error);
+        return;
+      }
+
+      if (data) {
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setCategoryIcons(shuffled.slice(0, 24) as IconItem[]);
+      }
+    } catch (e) {
+      console.error("Failed to fetch category icons:", e);
+    } finally {
+      setIsCategoryLoading(false);
     }
   }, []);
 
@@ -158,6 +206,18 @@ export function RoomIconPickerModal({
     }
   }, []);
 
+  // Handle category selection
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSearchQuery("");
+    setSearchResults([]);
+    
+    const category = ICON_CATEGORIES.find(c => c.id === categoryId);
+    if (category) {
+      fetchCategoryIcons(category.dbValue);
+    }
+  };
+
   // Debounced search
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -184,12 +244,14 @@ export function RoomIconPickerModal({
     if (isOpen) {
       fetchRandomIcons();
       loadRecentIcons();
+      fetchCategoryIcons(null); // Load "all" category
       setSelectedIcon(currentIconUrl);
       setEditableName(roomName);
       setSearchQuery("");
       setSearchResults([]);
+      setSelectedCategory("all");
     }
-  }, [isOpen, fetchRandomIcons, loadRecentIcons, currentIconUrl, roomName]);
+  }, [isOpen, fetchRandomIcons, loadRecentIcons, fetchCategoryIcons, currentIconUrl, roomName]);
 
   // Generate name for a specific icon
   const generateNameForIcon = async (iconSlug: string) => {
@@ -227,8 +289,21 @@ export function RoomIconPickerModal({
     setSearchResults([]);
   };
 
-  const displayIcons = searchQuery.trim() ? searchResults : suggestedIcons;
-  const isDisplayLoading = searchQuery.trim() ? isSearching : isLoading;
+  // Determine which icons to display
+  const getDisplayIcons = () => {
+    if (searchQuery.trim()) return searchResults;
+    if (selectedCategory !== "all") return categoryIcons;
+    return suggestedIcons;
+  };
+
+  const getDisplayLoading = () => {
+    if (searchQuery.trim()) return isSearching;
+    if (selectedCategory !== "all") return isCategoryLoading;
+    return isLoading;
+  };
+
+  const displayIcons = getDisplayIcons();
+  const isDisplayLoading = getDisplayLoading();
 
   if (!isOpen) return null;
 
@@ -316,8 +391,32 @@ export function RoomIconPickerModal({
                 </div>
               </div>
 
+              {/* Category filters - horizontal scrollable */}
+              {!searchQuery.trim() && (
+                <div 
+                  ref={categoryScrollRef}
+                  className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {ICON_CATEGORIES.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                        selectedCategory === category.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span>{category.emoji}</span>
+                      <span>{category.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Recent icons section - only show if there are recent icons and not searching */}
-              {!searchQuery.trim() && recentIcons.length > 0 && (
+              {!searchQuery.trim() && selectedCategory === "all" && recentIcons.length > 0 && (
                 <>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-muted-foreground">
@@ -366,16 +465,28 @@ export function RoomIconPickerModal({
                 <h3 className="text-sm font-medium text-muted-foreground">
                   {searchQuery.trim() 
                     ? `ძებნის შედეგები (${searchResults.length})` 
+                    : selectedCategory !== "all"
+                    ? ICON_CATEGORIES.find(c => c.id === selectedCategory)?.label || "კატეგორია"
                     : "შემოთავაზებული"
                   }
                 </h3>
-                {!searchQuery.trim() && (
+                {!searchQuery.trim() && selectedCategory === "all" && (
                   <button
                     onClick={fetchRandomIcons}
                     disabled={isLoading}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+                    განახლება
+                  </button>
+                )}
+                {!searchQuery.trim() && selectedCategory !== "all" && (
+                  <button
+                    onClick={() => fetchCategoryIcons(ICON_CATEGORIES.find(c => c.id === selectedCategory)?.dbValue || null)}
+                    disabled={isCategoryLoading}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isCategoryLoading ? "animate-spin" : ""}`} />
                     განახლება
                   </button>
                 )}
