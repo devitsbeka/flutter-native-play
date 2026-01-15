@@ -1,5 +1,7 @@
-import { ReactNode, memo, useState, useRef, useCallback, useEffect } from "react";
-import leaderboardHugemap from "@/assets/leaderboard-hugemap.png";
+import { ReactNode, memo, useRef, useCallback } from "react";
+import leaderboardBgBronze from "@/assets/leaderboard-bg-bronze.png";
+import leaderboardBgSilver from "@/assets/leaderboard-bg-silver.png";
+import leaderboardBgGold from "@/assets/leaderboard-bg-gold.png";
 
 interface LeaderboardHeroBackgroundProps {
   children: ReactNode;
@@ -8,11 +10,11 @@ interface LeaderboardHeroBackgroundProps {
   onTierChange?: (tier: number) => void;
 }
 
-// Map tier to background position (visual order: Silver-left, Gold-center, Bronze-right)
-const TIER_POSITIONS: Record<number, number> = {
-  1: 80, // Bronze - right side
-  2: 20, // Silver - left side
-  3: 50, // Gold - center
+// Map tier to background image
+const TIER_BACKGROUNDS: Record<number, string> = {
+  1: leaderboardBgBronze, // Bronze
+  2: leaderboardBgSilver, // Silver
+  3: leaderboardBgGold,   // Gold
 };
 
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
@@ -21,51 +23,20 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   currentTier = 2,
   onTierChange,
 }: LeaderboardHeroBackgroundProps) {
-  // Background position as percentage (0 = left edge, 100 = right edge, 50 = center)
-  const [bgPositionX, setBgPositionX] = useState(() => TIER_POSITIONS[currentTier] ?? 50);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
-  const startPositionX = useRef<number>(50);
-  const isDragging = useRef<boolean>(false);
   const lastTierRef = useRef<number>(currentTier);
-
-  // Sync position when tier changes externally (from carousel)
-  useEffect(() => {
-    if (currentTier !== lastTierRef.current) {
-      lastTierRef.current = currentTier;
-      setBgPositionX(TIER_POSITIONS[currentTier] ?? 50);
-    }
-  }, [currentTier]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = e.touches[0].clientX;
-    startPositionX.current = bgPositionX;
-    isDragging.current = true;
-  }, [bgPositionX]);
+  }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging.current) return;
-    
-    const currentX = e.touches[0].clientX;
-    touchEndX.current = currentX;
-    const diff = touchStartX.current - currentX;
-    
-    // Sensitivity: how much the bg moves per pixel dragged
-    const sensitivity = 0.15;
-    
-    // Calculate new position - no clamping for free movement
-    let newPosition = startPositionX.current + (diff * sensitivity);
-    
-    // Allow wider range for smoother dragging
-    newPosition = Math.max(0, Math.min(100, newPosition));
-    
-    setBgPositionX(newPosition);
+    touchEndX.current = e.touches[0].clientX;
   }, []);
 
   const handleTouchEnd = useCallback(() => {
-    isDragging.current = false;
-    
     // Calculate swipe direction based on touch movement
     const swipeDiff = touchStartX.current - touchEndX.current;
     
@@ -76,20 +47,18 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     // Swipe LEFT (swipeDiff > 0) = scroll right = show what's on the RIGHT
     // Swipe RIGHT (swipeDiff < 0) = scroll left = show what's on the LEFT
     
-    if (swipeDiff > 5) {
+    if (swipeDiff > 30) {
       // Swipe left = move right visually: Silver→Gold→Bronze→Silver
       if (activeTier === 2) newTier = 3;      // Silver → Gold
       else if (activeTier === 3) newTier = 1; // Gold → Bronze
       else if (activeTier === 1) newTier = 2; // Bronze → Silver (wrap)
-    } else if (swipeDiff < -5) {
+    } else if (swipeDiff < -30) {
       // Swipe right = move left visually: Bronze→Gold→Silver→Bronze
       if (activeTier === 1) newTier = 3;      // Bronze → Gold
       else if (activeTier === 3) newTier = 2; // Gold → Silver
       else if (activeTier === 2) newTier = 1; // Silver → Bronze (wrap)
     }
     
-    // Snap to tier position
-    setBgPositionX(TIER_POSITIONS[newTier]);
     lastTierRef.current = newTier;
     
     // Notify parent of tier change
@@ -105,14 +74,12 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
-      {/* Background image - wider on mobile for swipe panning between tiers */}
+      {/* Background image - switches based on current tier */}
       <div 
-        className="absolute inset-0 w-full bg-no-repeat"
+        className="absolute inset-0 w-full bg-no-repeat bg-cover transition-all duration-500 ease-out"
         style={{
-          backgroundImage: `url(${leaderboardHugemap})`,
-          backgroundSize: isMobile ? '300% auto' : 'auto',
-          backgroundPosition: isMobile ? `calc(${bgPositionX}% - 30px) -70px` : 'calc(50% - 30px) -70px',
-          transition: isDragging.current ? 'none' : 'background-position 0.3s ease-out',
+          backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
+          backgroundPosition: 'center top',
         }}
       />
       
