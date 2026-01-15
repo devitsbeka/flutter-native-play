@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { samplePosts, SamplePost } from "@/data/samplePosts";
 import { Json } from "@/integrations/supabase/types";
+import { createNotification } from "@/hooks/useNotifications";
 
 export function useSocialFeed() {
   const { user } = useAuth();
@@ -140,6 +141,29 @@ export function useSocialFeed() {
       } else {
         // Add like - trigger handles count automatically
         await supabase.from("quiz_post_likes").insert({ post_id: postId, user_id: user.id });
+        
+        // Send notification to trivia creator
+        const { data: postData } = await supabase
+          .from("user_quiz_posts")
+          .select("user_id, title")
+          .eq("id", postId)
+          .single();
+        
+        if (postData && postData.user_id !== user.id) {
+          const { data: senderProfile } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("user_id", user.id)
+            .single();
+          
+          await createNotification(
+            postData.user_id,
+            "trivia_liked",
+            `${senderProfile?.nickname || "ვიღაცამ"} მოიწონა შენი ტრივია`,
+            postData.title || undefined,
+            { post_id: postId, sender_id: user.id }
+          );
+        }
       }
     },
     onMutate: async ({ postId }) => {
@@ -164,6 +188,29 @@ export function useSocialFeed() {
       } else {
         // Add save - trigger handles count automatically
         await supabase.from("quiz_post_saves").insert({ post_id: postId, user_id: user.id });
+        
+        // Send notification to trivia creator
+        const { data: postData } = await supabase
+          .from("user_quiz_posts")
+          .select("user_id, title")
+          .eq("id", postId)
+          .single();
+        
+        if (postData && postData.user_id !== user.id) {
+          const { data: senderProfile } = await supabase
+            .from("profiles")
+            .select("nickname")
+            .eq("user_id", user.id)
+            .single();
+          
+          await createNotification(
+            postData.user_id,
+            "trivia_saved",
+            `${senderProfile?.nickname || "ვიღაცამ"} შეინახა შენი ტრივია`,
+            postData.title || undefined,
+            { post_id: postId, sender_id: user.id }
+          );
+        }
       }
     },
     onMutate: async ({ postId }) => {
