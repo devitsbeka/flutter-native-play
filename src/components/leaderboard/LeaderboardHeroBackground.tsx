@@ -1,5 +1,5 @@
 import { ReactNode, memo, useState, useRef, useCallback, useEffect } from "react";
-import leaderboardMapDesktop from "@/assets/leaderboard-map-desktop.png";
+import leaderboardHugemap from "@/assets/leaderboard-hugemap.png";
 
 interface LeaderboardHeroBackgroundProps {
   children: ReactNode;
@@ -105,12 +105,12 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
-      {/* Background image - extends full height behind content, moved up by 100px */}
+      {/* Background image - taller hugemap covers full height */}
       <div 
-        className="absolute inset-0 w-full bg-no-repeat bg-[length:360%_auto] md:bg-[length:120%_auto]"
+        className="absolute inset-0 w-full bg-no-repeat bg-[length:400%_auto] md:bg-[length:130%_auto]"
         style={{
-          backgroundImage: `url(${leaderboardMapDesktop})`,
-          backgroundPosition: isMobile ? `${bgPositionX}% calc(0% - 100px)` : 'center calc(0% - 100px)',
+          backgroundImage: `url(${leaderboardHugemap})`,
+          backgroundPosition: isMobile ? `${bgPositionX}% top` : 'center top',
           transition: isDragging.current ? 'none' : 'background-position 0.3s ease-out',
         }}
       />
