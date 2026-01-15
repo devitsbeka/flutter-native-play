@@ -148,7 +148,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
                 >
                   {/* MyTrivia Text */}
                   <span 
-                    className="text-5xl md:text-6xl font-slackey text-white tracking-tight"
+                    className="text-4xl md:text-6xl font-slackey text-white tracking-tight"
                     style={{
                       textShadow: `
                         0 4px 8px rgba(0,0,0,0.4),
@@ -215,11 +215,11 @@ export function SplashScreen({ children }: SplashScreenProps) {
                       animate={{ width: `${combinedProgress}%` }}
                       transition={{ duration: 0.2, ease: 'linear' }}
                       style={{
-                        background: 'linear-gradient(180deg, hsl(45 100% 60%) 0%, hsl(40 100% 50%) 50%, hsl(35 100% 45%) 100%)',
+                        background: 'linear-gradient(180deg, hsl(270 80% 65%) 0%, hsl(265 85% 55%) 50%, hsl(260 90% 45%) 100%)',
                         boxShadow: `
                           inset 0 3px 6px rgba(255,255,255,0.4),
                           inset 0 -2px 4px rgba(0,0,0,0.2),
-                          0 0 20px rgba(255,180,50,0.3)
+                          0 0 20px rgba(150,100,255,0.3)
                         `,
                       }}
                     >
@@ -269,10 +269,10 @@ export function SplashScreen({ children }: SplashScreenProps) {
                       className="text-3xl font-bold tracking-wider"
                       style={{
                         fontFamily: "'TASolivare', sans-serif",
-                        color: 'hsl(45 100% 70%)',
+                        color: 'hsl(270 100% 80%)',
                         textShadow: `
                           0 2px 4px rgba(0,0,0,0.5),
-                          0 0 20px rgba(255,200,100,0.3)
+                          0 0 20px rgba(180,150,255,0.3)
                         `,
                       }}
                     >
