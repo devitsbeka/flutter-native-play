@@ -38,7 +38,7 @@ export function SplashScreen({ children }: SplashScreenProps) {
   useEffect(() => {
     const interval = setInterval(() => {
       setFeatureIndex((prev) => (prev + 1) % FEATURES.length);
-    }, 2500);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 

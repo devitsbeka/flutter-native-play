@@ -19,7 +19,7 @@ export default function Loading() {
   useEffect(() => {
     const interval = setInterval(() => {
       setFeatureIndex((prev) => (prev + 1) % FEATURES.length);
-    }, 2500);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
