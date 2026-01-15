@@ -154,7 +154,7 @@ export default function Leaderboards() {
         {/* Sticky League Header + Scrollable List Container */}
         <div className="flex-1 flex flex-col -mt-8 relative z-30">
           {/* Sticky League Name Header */}
-          <div className="sticky top-[68px] z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
+          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
             <div className="flex items-center justify-between py-4 px-4">
               {/* Left Arrow */}
               <button
