@@ -38,6 +38,7 @@ import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CreateRoomScreen } from "@/components/team/CreateRoomScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
+import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
 import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
@@ -168,6 +169,7 @@ function TeamContentV2() {
   const [showBlindTriviaModal, setShowBlindTriviaModal] = useState(false);
   const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(false);
   const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
+  const [previewPost, setPreviewPost] = useState<SamplePost | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
   const [sortFilter, setSortFilter] = useState<SortFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -267,7 +269,7 @@ function TeamContentV2() {
             isPublic: trivia.is_public,
           };
           
-          setPlayingQuiz({ post });
+          setPreviewPost(post);
         } catch (err) {
           toast.error("შეცდომა მოხდა");
         }
@@ -343,6 +345,12 @@ function TeamContentV2() {
   // Handle joining room from invitation
   const handleJoinFromInvitation = (roomCode: string) => {
     enterRoom(roomCode);
+  };
+
+  // Handle playing from preview modal
+  const handlePlayFromPreview = (post: SamplePost) => {
+    setPreviewPost(null);
+    setPlayingQuiz({ post });
   };
 
   // Show game screen if playing (with guard for currentRoom)
@@ -844,6 +852,12 @@ function TeamContentV2() {
         }}
         onCollectionCreated={() => setActiveTab("my-content")}
         draftId={editingDraftId}
+      />
+      <TriviaPreviewModal
+        open={!!previewPost}
+        onOpenChange={(open) => !open && setPreviewPost(null)}
+        post={previewPost}
+        onPlay={handlePlayFromPreview}
       />
       <QuizPlayModal
         open={!!playingQuiz}
