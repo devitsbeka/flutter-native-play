@@ -139,18 +139,16 @@ export default function Leaderboards() {
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
       <div className="lg:hidden flex-1 flex flex-col">
-        {/* Sticky Countdown - always at top */}
-        <div className="sticky top-0 z-50 py-4 flex justify-center bg-transparent">
-          <LeagueCountdown />
-        </div>
-
-        {/* Background Hero - fixed height, shows trophy */}
+        {/* Background Hero - fixed height, shows trophy with countdown on top */}
         <LeaderboardHeroBackground 
           isMobile 
           currentTier={activeTier} 
           onTierChange={handleSelectTier}
         >
-          {/* Empty - just the background */}
+          {/* Sticky Countdown - positioned on top of the background */}
+          <div className="sticky top-0 z-50 py-4 flex justify-center">
+            <LeagueCountdown />
+          </div>
         </LeaderboardHeroBackground>
 
         {/* Sticky League Header + Scrollable List Container */}
