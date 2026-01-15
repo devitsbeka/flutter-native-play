@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -63,7 +63,6 @@ function generateFakeUsers(tier: number, count: number = 15, existingCoinsRange?
 
 export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
   const { user, profile } = useAuth();
-  const queryClient = useQueryClient();
   const [previousRank, setPreviousRank] = useState<number | null>(null);
   const [rankChange, setRankChange] = useState<number>(0);
   const hasAnimated = useRef(false);
@@ -142,6 +141,8 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
       return data;
     },
     enabled: !!user?.id,
+    staleTime: 60 * 1000, // Cache for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const userTier = userLeagueData?.league_tier || 1;
@@ -270,6 +271,8 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
       return allEntries;
     },
     enabled: true,
+    staleTime: 30 * 1000, // Cache for 30 seconds - fast navigation
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   // Update rank tracking when user visits their own league
@@ -310,11 +313,17 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
     }
   }, [user?.id, leaderboard, userLeagueData, viewingTier]);
 
-  // Sync XP from profile
+  // Sync XP from profile - debounced to prevent excessive updates
+  const lastSyncedPoints = useRef<number | null>(null);
+  
   useEffect(() => {
     if (!user?.id || !profile?.total_points) return;
-
+    
+    // Only sync if points actually changed significantly (avoid syncing on every navigation)
+    if (lastSyncedPoints.current === profile.total_points) return;
+    
     const syncXp = async () => {
+      lastSyncedPoints.current = profile.total_points;
       await supabase
         .from("user_league_data")
         .update({ 
@@ -323,11 +332,11 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
         })
         .eq("user_id", user.id);
       
-      queryClient.invalidateQueries({ queryKey: ["leagueLeaderboard"] });
+      // Don't invalidate queries here - let staleTime handle refetching
     };
 
     syncXp();
-  }, [profile?.total_points, user?.id, queryClient]);
+  }, [profile?.total_points, user?.id]);
 
   const currentLeague = LEAGUES.find(l => l.tier === activeTier) || LEAGUES[0];
   const userEntry = leaderboard?.find(e => e.user_id === user?.id);
