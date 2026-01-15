@@ -85,32 +85,37 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   }, [bgPositionX, onTierChange]);
 
   return (
-    <div 
-      className="relative w-full overflow-hidden min-h-screen touch-pan-y"
-      onTouchStart={isMobile ? handleTouchStart : undefined}
-      onTouchMove={isMobile ? handleTouchMove : undefined}
-      onTouchEnd={isMobile ? handleTouchEnd : undefined}
-    >
+    <div className="relative w-full overflow-hidden min-h-screen">
       {/* Background image - extends full height behind content */}
       <div 
         className="absolute inset-0 w-full bg-no-repeat bg-[length:300%_auto] md:bg-[length:100%_auto]"
         style={{
           backgroundImage: `url(${leaderboardMapDesktop})`,
           backgroundPosition: isMobile ? `${bgPositionX}% top` : 'center top',
-          transition: isDragging.current ? 'none' : 'background-position 0.1s ease-out',
+          transition: isDragging.current ? 'none' : 'background-position 0.3s ease-out',
         }}
       />
       
+      {/* Touch layer for background swiping - only on mobile */}
+      {isMobile && (
+        <div 
+          className="absolute inset-0 z-10 touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        />
+      )}
+      
       {/* Top gradient overlay */}
       <div 
-        className="absolute inset-x-0 top-0 h-12 pointer-events-none z-10"
+        className="absolute inset-x-0 top-0 h-12 pointer-events-none z-20"
         style={{
           background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)'
         }}
       />
 
       {/* Content container - max-width only on desktop */}
-      <div className={`relative z-20 ${isMobile ? 'w-full' : 'max-w-[1400px] mx-auto'}`}>
+      <div className={`relative z-30 ${isMobile ? 'w-full' : 'max-w-[1400px] mx-auto'}`}>
         {children}
       </div>
     </div>
