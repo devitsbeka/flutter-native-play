@@ -68,28 +68,20 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     
     // Calculate swipe direction based on touch movement
     const swipeDiff = touchStartX.current - touchEndX.current;
-    const SWIPE_THRESHOLD = 30; // minimum pixels to count as a swipe
     
     let newTier = lastTierRef.current;
     
-    if (Math.abs(swipeDiff) > SWIPE_THRESHOLD) {
-      const swipedLeft = swipeDiff > 0;
-      
-      // Visual order on screen: Silver(2) - Gold(3) - Bronze(1)
-      // Swipe left = move to item on the left visually
-      // Swipe right = move to item on the right visually
-      
-      if (swipedLeft) {
-        // Swipe left: Silver→Bronze, Gold→Silver, Bronze→Gold
-        if (lastTierRef.current === 2) newTier = 1; // Silver → Bronze
-        else if (lastTierRef.current === 3) newTier = 2; // Gold → Silver
-        else if (lastTierRef.current === 1) newTier = 3; // Bronze → Gold
-      } else {
-        // Swipe right: Silver→Gold, Gold→Bronze, Bronze→Silver
-        if (lastTierRef.current === 2) newTier = 3; // Silver → Gold
-        else if (lastTierRef.current === 3) newTier = 1; // Gold → Bronze
-        else if (lastTierRef.current === 1) newTier = 2; // Bronze → Silver
-      }
+    // Any swipe in a direction changes tier
+    if (swipeDiff > 5) {
+      // Swipe left: Silver→Bronze, Gold→Silver, Bronze→Gold
+      if (lastTierRef.current === 2) newTier = 1;
+      else if (lastTierRef.current === 3) newTier = 2;
+      else if (lastTierRef.current === 1) newTier = 3;
+    } else if (swipeDiff < -5) {
+      // Swipe right: Silver→Gold, Gold→Bronze, Bronze→Silver
+      if (lastTierRef.current === 2) newTier = 3;
+      else if (lastTierRef.current === 3) newTier = 1;
+      else if (lastTierRef.current === 1) newTier = 2;
     }
     
     // Snap to tier position
