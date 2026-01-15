@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, Copy, Trash2, Check, Plus, Edit3, ImageIcon, PartyPopper, GripVertical, Upload, X, Sparkles, Image, RefreshCw, Lightbulb, Save, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -232,6 +233,7 @@ export function GameStylePersonalTrivia({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
+  const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -701,6 +703,7 @@ export function GameStylePersonalTrivia({
   if (!isOpen) return null;
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -858,16 +861,36 @@ export function GameStylePersonalTrivia({
                         )}
                       </button>
 
-                      {/* Icon - clickable to edit */}
+                      {/* Icon - clickable to open global picker */}
                       <div className="flex justify-center mb-3 relative z-20">
-                        <QuestionIconPicker
-                          selectedSlug={question.iconSlug || null}
-                          onSelect={(slug) => handleIconChange(slug, index)}
-                          questionText={question.question}
-                          correctAnswer={question.answers.find(a => a.isCorrect)?.text}
-                          incorrectAnswers={question.answers.filter(a => !a.isCorrect).map(a => a.text)}
-                          large
-                        />
+                        <button
+                          type="button"
+                          onClick={() => setIconPickerIndex(index)}
+                          className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 overflow-visible bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
+                          style={{ width: 80, height: 80 }}
+                        >
+                          {question.iconSlug ? (
+                            <>
+                              <img
+                                src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
+                                alt=""
+                                style={{ width: 80, height: 80 }}
+                                className="object-contain"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                                <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <ImageIcon style={{ width: 50, height: 50 }} className="text-white/60" />
+                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                                <Plus className="w-3 h-3 text-slate-600" />
+                              </div>
+                            </>
+                          )}
+                        </button>
                       </div>
 
                       {/* Question Text - Editable */}
@@ -1152,5 +1175,24 @@ export function GameStylePersonalTrivia({
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Global Icon Picker - rendered via portal to escape carousel stacking context */}
+    {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
+      <QuestionIconPicker
+        isOpen={true}
+        onClose={() => setIconPickerIndex(null)}
+        selectedSlug={questions[iconPickerIndex]?.iconSlug || null}
+        onSelect={(slug) => {
+          handleIconChange(slug, iconPickerIndex);
+          setIconPickerIndex(null);
+        }}
+        questionText={questions[iconPickerIndex]?.question}
+        correctAnswer={questions[iconPickerIndex]?.answers.find(a => a.isCorrect)?.text}
+        incorrectAnswers={questions[iconPickerIndex]?.answers.filter(a => !a.isCorrect).map(a => a.text)}
+        large
+      />,
+      document.body
+    )}
+  </>
   );
 }
