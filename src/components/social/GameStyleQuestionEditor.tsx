@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -1173,8 +1174,8 @@ export function GameStyleQuestionEditor({
         )}
       </AnimatePresence>
 
-      {/* Global Icon Picker - rendered outside carousel */}
-      {iconPickerIndex !== null && questions[iconPickerIndex] && (
+      {/* Global Icon Picker - rendered via portal to escape stacking context */}
+      {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
         <QuestionIconPicker
           isOpen={true}
           onClose={() => setIconPickerIndex(null)}
@@ -1186,7 +1187,8 @@ export function GameStyleQuestionEditor({
           questionText={questions[iconPickerIndex]?.question}
           correctAnswer={questions[iconPickerIndex]?.answers.find(a => a.isCorrect)?.text}
           incorrectAnswers={questions[iconPickerIndex]?.answers.filter(a => !a.isCorrect).map(a => a.text)}
-        />
+        />,
+        document.body
       )}
     </motion.div>
   );
