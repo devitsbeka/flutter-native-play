@@ -429,8 +429,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
         room = createdRoom;
         
-        // Navigate to room after creation
-        navigate(`/team?room=${roomCode}`);
+        // Close modal and navigate to room after creation
+        onClose();
+        navigate(`/team?join=${roomCode}`);
       } else if (selectionMode === "create" && customTriviaQuestions) {
         // Create room with custom trivia questions
         room = await createRoom(
