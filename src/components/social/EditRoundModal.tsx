@@ -227,6 +227,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
   if (!round || !isOpen) return null;
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -630,23 +631,25 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
         </motion.div>
       )}
 
-      {/* Global Icon Picker - rendered via portal to escape stacking context */}
-      {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
-        <QuestionIconPicker
-          isOpen={true}
-          onClose={() => setIconPickerIndex(null)}
-          selectedSlug={questions[iconPickerIndex]?.icon_slug || null}
-          onSelect={(slug) => {
-            updateQuestionIcon(iconPickerIndex, slug || undefined);
-            setIconPickerIndex(null);
-          }}
-          questionText={questions[iconPickerIndex]?.question_text}
-          correctAnswer={questions[iconPickerIndex]?.correct_answer}
-          incorrectAnswers={questions[iconPickerIndex]?.incorrect_answers}
-          large
-        />,
-        document.body
-      )}
     </AnimatePresence>
+
+    {/* Global Icon Picker - rendered via portal OUTSIDE AnimatePresence to escape stacking context */}
+    {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
+      <QuestionIconPicker
+        isOpen={true}
+        onClose={() => setIconPickerIndex(null)}
+        selectedSlug={questions[iconPickerIndex]?.icon_slug || null}
+        onSelect={(slug) => {
+          updateQuestionIcon(iconPickerIndex, slug || undefined);
+          setIconPickerIndex(null);
+        }}
+        questionText={questions[iconPickerIndex]?.question_text}
+        correctAnswer={questions[iconPickerIndex]?.correct_answer}
+        incorrectAnswers={questions[iconPickerIndex]?.incorrect_answers}
+        large
+      />,
+      document.body
+    )}
+    </>
   );
 }
