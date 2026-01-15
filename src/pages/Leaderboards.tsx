@@ -138,7 +138,7 @@ export default function Leaderboards() {
       </div>
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
-      <div className="lg:hidden flex-1 flex flex-col">
+      <div className="lg:hidden h-screen overflow-y-auto">
         {/* Background Hero - fixed height, shows trophy with countdown on top */}
         <LeaderboardHeroBackground 
           isMobile 
@@ -152,9 +152,9 @@ export default function Leaderboards() {
         </LeaderboardHeroBackground>
 
         {/* Sticky League Header + Scrollable List Container */}
-        <div className="flex-1 flex flex-col -mt-8 relative z-30 min-h-0">
+        <div className="-mt-8 relative z-30">
           {/* Sticky League Name Header */}
-          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg flex-shrink-0">
+          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
             <div className="flex items-center justify-between py-4 px-4">
               {/* Left Arrow */}
               <button
@@ -201,7 +201,7 @@ export default function Leaderboards() {
           </div>
 
           {/* Scrollable Player List */}
-          <div className="flex-1 bg-white/90 backdrop-blur-sm px-3 pb-32 overflow-y-auto">
+          <div className="bg-white/90 backdrop-blur-sm px-3 pb-32">
             {isLoading && leaderboard.length === 0 ? (
               // Show skeleton rows while loading
               Array.from({ length: 10 }).map((_, i) => (
