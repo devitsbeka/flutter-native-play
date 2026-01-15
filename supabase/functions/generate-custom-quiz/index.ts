@@ -188,10 +188,19 @@ ${difficulty === "mixed"
 - Avoid obscure facts nobody would know
 
 ${isTrueFalse ? `
-TRUE/FALSE FORMAT:
-- Question should be a statement that is either true or false
-- correctAnswer must be "მართალია" (True) or "მცდარია" (False)
-- incorrectAnswers should be the opposite of correctAnswer
+TRUE/FALSE FORMAT - CRITICAL RULES:
+- Generate a MIX of TRUE and FALSE statements (approximately 50% each)
+- For TRUE statements: write factually CORRECT statements, correctAnswer = "მართალია"
+- For FALSE statements: write factually INCORRECT/WRONG statements, correctAnswer = "მცდარია"
+- incorrectAnswers is always the OPPOSITE: ["მცდარია"] for true, ["მართალია"] for false
+- FALSE statements should be believable but clearly wrong when you know the facts
+- VARY THE TRUTH VALUE - don't make all questions true or all false!
+
+EXAMPLES:
+✓ TRUE: "საქართველოს დედაქალაქია თბილისი." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
+✓ FALSE: "საქართველოს დედაქალაქია ბათუმი." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]
+✓ TRUE: "წყალი 100°C-ზე დუღს." → correct_answer: "მართალია", incorrect_answers: ["მცდარია"]
+✓ FALSE: "მზე დედამიწის გარშემო ბრუნავს." → correct_answer: "მცდარია", incorrect_answers: ["მართალია"]
 ` : `
 MULTIPLE CHOICE FORMAT:
 - Provide exactly 4 options (1 correct, 3 incorrect)
@@ -235,7 +244,9 @@ CRITICAL REMINDERS:
 2. ⚠️ NO DUPLICATES: Each question must cover a COMPLETELY DIFFERENT fact. No repetition!
 3. ALL text must be in Georgian
 4. Questions max ${QUESTION_MAX_LENGTH} chars, answers max ${ANSWER_MAX_LENGTH} chars
-5. ${isTrueFalse ? 'True/False format - correctAnswer is "მართალია" or "მცდარია"' : '4 unique answer options per question'}
+5. ${isTrueFalse 
+  ? `TRUE/FALSE FORMAT - CRITICAL: Generate approximately 50% TRUE statements (correct_answer: "მართალია") and 50% FALSE statements (correct_answer: "მცდარია"). Do NOT make all statements true!` 
+  : '4 unique answer options per question'}
 6. Include icon_keywords (2-3 English words) for each question
 
 Return ONLY valid JSON.`;
