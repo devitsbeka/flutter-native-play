@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
-import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Trash2, Check, Plus, Edit3, ImageIcon, GripVertical, X, Lightbulb, Image, Globe, Lock, RefreshCw, Loader2, Sparkles, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shuffleArray } from "@/utils/shuffle";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -288,6 +288,8 @@ export function GameStyleQuestionEditor({
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [errorField, setErrorField] = useState<{questionIndex: number; field: string; answerId?: string} | null>(null);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -772,14 +774,37 @@ export function GameStyleQuestionEditor({
               {/* Empty State with Idea Button */}
               {!question.question ? (
                 <div className="flex flex-col items-center justify-center py-4 pt-6">
-                  <div className="flex justify-center mb-2">
-                    <QuestionIconPicker
-                      selectedSlug={question.iconSlug || null}
-                      onSelect={(slug) => handleIconChange(slug, index)}
-                      questionText={question.question}
-                      correctAnswer={question.answers.find(a => a.isCorrect)?.text}
-                      incorrectAnswers={question.answers.filter(a => !a.isCorrect).map(a => a.text)}
-                    />
+                  <div className="flex justify-center mb-2 overflow-visible">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIconPickerIndex(index);
+                        setIconPickerOpen(true);
+                      }}
+                      className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 hover:scale-105"
+                      style={{ width: 48, height: 48 }}
+                    >
+                      {question.iconSlug ? (
+                        <>
+                          <img
+                            src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
+                            alt=""
+                            style={{ width: 40, height: 40 }}
+                            className="object-contain"
+                          />
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                            <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Smile style={{ width: 32, height: 32 }} className="text-muted-foreground" />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                            <Plus className="w-3 h-3 text-slate-600" />
+                          </div>
+                        </>
+                      )}
+                    </button>
                   </div>
                   <Lightbulb className="w-10 h-10 text-white/40 mb-2" />
                   <p className="text-white/60 text-sm mb-3">დააჭირე AI იდეას</p>
@@ -808,14 +833,37 @@ export function GameStyleQuestionEditor({
               ) : (
                 <>
                   {/* Icon */}
-                  <div className="flex justify-center mb-2 pt-2">
-                    <QuestionIconPicker
-                      selectedSlug={question.iconSlug || null}
-                      onSelect={(slug) => handleIconChange(slug, index)}
-                      questionText={question.question}
-                      correctAnswer={question.answers.find(a => a.isCorrect)?.text}
-                      incorrectAnswers={question.answers.filter(a => !a.isCorrect).map(a => a.text)}
-                    />
+                  <div className="flex justify-center mb-2 pt-2 overflow-visible">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIconPickerIndex(index);
+                        setIconPickerOpen(true);
+                      }}
+                      className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 hover:scale-105"
+                      style={{ width: 48, height: 48 }}
+                    >
+                      {question.iconSlug ? (
+                        <>
+                          <img
+                            src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
+                            alt=""
+                            style={{ width: 40, height: 40 }}
+                            className="object-contain"
+                          />
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                            <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Smile style={{ width: 32, height: 32 }} className="text-muted-foreground" />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                            <Plus className="w-3 h-3 text-slate-600" />
+                          </div>
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   {/* Question Text */}
@@ -1131,6 +1179,26 @@ export function GameStyleQuestionEditor({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global Icon Picker - rendered outside carousel */}
+      {iconPickerIndex !== null && questions[iconPickerIndex] && (
+        <QuestionIconPicker
+          isOpen={iconPickerOpen}
+          onClose={() => {
+            setIconPickerOpen(false);
+            setIconPickerIndex(null);
+          }}
+          selectedSlug={questions[iconPickerIndex]?.iconSlug || null}
+          onSelect={(slug) => {
+            handleIconChange(slug, iconPickerIndex);
+            setIconPickerOpen(false);
+            setIconPickerIndex(null);
+          }}
+          questionText={questions[iconPickerIndex]?.question}
+          correctAnswer={questions[iconPickerIndex]?.answers.find(a => a.isCorrect)?.text}
+          incorrectAnswers={questions[iconPickerIndex]?.answers.filter(a => !a.isCorrect).map(a => a.text)}
+        />
+      )}
     </motion.div>
   );
 }

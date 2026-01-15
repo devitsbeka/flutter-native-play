@@ -22,10 +22,27 @@ interface QuestionIconPickerProps {
   correctAnswer?: string;
   incorrectAnswers?: string[];
   large?: boolean;
+  /** When true, renders only the modal (no trigger button) and controls open state externally */
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers, large = false }: QuestionIconPickerProps) {
-  const [open, setOpen] = useState(false);
+export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers, large = false, isOpen: externalOpen, onClose }: QuestionIconPickerProps) {
+  // Use external open state if provided, otherwise use internal state
+  const isControlled = externalOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? externalOpen : internalOpen;
+  
+  const setOpen = (value: boolean) => {
+    if (isControlled) {
+      if (!value && onClose) {
+        onClose();
+      }
+    } else {
+      setInternalOpen(value);
+    }
+  };
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
@@ -196,50 +213,53 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 ${
-          large 
-            ? "bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40" 
-            : "hover:scale-105"
-        } ${
-          selectedIconUnsafe 
-            ? "!border-destructive !border-solid !bg-destructive/10" 
-            : ""
-        }`}
-        style={{ width: large ? 80 : 48, height: large ? 80 : 48 }}
-      >
-        {selectedSlug ? (
-          <>
-            <img
-              src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
-              alt=""
-              style={{ width: large ? 80 : 40, height: large ? 80 : 40 }}
-              className="object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            {selectedIconUnsafe ? (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-3 h-3 text-white" />
+      {/* Only render the trigger button if not externally controlled */}
+      {!isControlled && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={`rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 overflow-visible ${
+            large 
+              ? "bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40" 
+              : "hover:scale-105"
+          } ${
+            selectedIconUnsafe 
+              ? "!border-destructive !border-solid !bg-destructive/10" 
+              : ""
+          }`}
+          style={{ width: large ? 80 : 48, height: large ? 80 : 48 }}
+        >
+          {selectedSlug ? (
+            <>
+              <img
+                src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
+                alt=""
+                style={{ width: large ? 80 : 40, height: large ? 80 : 40 }}
+                className="object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              {selectedIconUnsafe ? (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-3 h-3 text-white" />
+                </div>
+              ) : (
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <Smile style={{ width: large ? 50 : 32, height: large ? 50 : 32 }} className={large ? "text-white/60" : "text-muted-foreground"} />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                <Plus className="w-3 h-3 text-slate-600" />
               </div>
-            ) : (
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
-                <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <Smile style={{ width: large ? 50 : 32, height: large ? 50 : 32 }} className={large ? "text-white/60" : "text-muted-foreground"} />
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
-              <Plus className="w-3 h-3 text-slate-600" />
-            </div>
-          </>
-        )}
-      </button>
+            </>
+          )}
+        </button>
+      )}
 
       <AnimatePresence>
         {open && (
