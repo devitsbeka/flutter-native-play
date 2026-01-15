@@ -79,8 +79,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         className="absolute inset-0 w-full h-full bg-no-repeat transition-all duration-500 ease-out"
         style={{
           backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
-          backgroundPosition: 'center top',
-          backgroundSize: 'auto 100%',
+          backgroundPosition: 'center center',
+          backgroundSize: 'cover',
         }}
       />
       
