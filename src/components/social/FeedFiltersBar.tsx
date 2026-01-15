@@ -80,7 +80,7 @@ export function FeedFiltersBar({
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   placeholder="ძიება..."
                   autoFocus
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0 w-full"
+                  className="flex-1 bg-transparent text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0 w-full"
                 />
                 {searchQuery && (
                   <button 
