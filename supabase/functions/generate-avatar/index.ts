@@ -15,23 +15,24 @@ interface AvatarRequest {
 }
 
 // Default prompt if database fetch fails
-const DEFAULT_PROMPT = `Transform this photo into a high-quality STYLIZED 3D rendered portrait.
+const DEFAULT_PROMPT = `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait.
 
 STYLE REQUIREMENTS:
-- STYLIZED 3D render like a Pixar/Disney 3D animation or modern mobile game character
+- SEMI-REALISTIC 3D render like a modern video game character (Unreal Engine, Final Fantasy style)
 - FRONT VIEW - face looking directly at camera, symmetrical composition
-- Slightly larger, expressive eyes with detailed iris and reflections
-- Smooth, polished skin with soft gradients - NOT photorealistic texture
+- REALISTIC eye proportions - NOT cartoon-style big eyes
+- Highly detailed, realistic skin with subtle subsurface scattering
+- Dramatic, moody lighting with dark atmosphere
 - SOLID LIGHT LAVENDER/PURPLE BACKGROUND (#E9CCFF)
-- Preserve the person's facial structure but IDEALIZE and smooth the features
+- Preserve the person's EXACT facial structure, features, and proportions
 - Add subtle violet/purple color tones to the hair for artistic flair
-- Soft, flowing hair rendering with volume
-- Keep their general hairstyle and hair color base
-- Head and shoulders portrait, centered
-- Soft, even studio lighting
-- Clean, polished 3D animation aesthetic
+- Soft hair rendering with realistic strand details
+- Keep their exact hairstyle, hair color base, clothing and accessories
+- Professional portrait composition (head and shoulders, centered)
+- Cinematic quality with depth of field effect
+- Mature, sophisticated aesthetic - NOT cartoonish or childish
 
-The result should look like a premium 3D animated character portrait - stylized and polished like Pixar/Fortnite style, with a light lavender (#E9CCFF) background.`;
+The result should look like a premium AAA video game character portrait - realistic but stylized, dramatic lighting, with a light lavender (#E9CCFF) background.`;
 
 const DEFAULT_MODEL = "google/gemini-2.5-flash-image-preview";
 
