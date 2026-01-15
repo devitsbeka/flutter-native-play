@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { DesktopLeftSidebar, DesktopRightSidebarWidgets } from "@/components/home/DesktopSidebars";
@@ -36,7 +36,7 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/avatars/bot-avatar-1.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { t } from "@/lib/i18n";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -184,54 +184,6 @@ export default function Index() {
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
   
-  // Pull-to-refresh state
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const startY = useRef(0);
-  const isPulling = useRef(false);
-  
-  const PULL_THRESHOLD = 80;
-  
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (containerRef.current?.scrollTop === 0) {
-      startY.current = e.touches[0].clientY;
-      isPulling.current = true;
-    }
-  }, []);
-  
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling.current) return;
-    
-    const currentY = e.touches[0].clientY;
-    const distance = Math.max(0, currentY - startY.current);
-    
-    if (distance > 0) {
-      // Apply resistance
-      setPullDistance(Math.min(distance * 0.5, 120));
-    }
-  }, []);
-  
-  const handleTouchEnd = useCallback(async () => {
-    if (!isPulling.current) return;
-    isPulling.current = false;
-    
-    if (pullDistance > PULL_THRESHOLD) {
-      setIsRefreshing(true);
-      setPullDistance(60);
-      
-      // Refresh profile data
-      if (user) {
-        await fetchProfile(user.id);
-      }
-      // Small delay for animation to complete
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setIsRefreshing(false);
-    }
-    
-    setPullDistance(0);
-  }, [pullDistance, user, fetchProfile]);
 
   // Handle play button click - check auth status and plays remaining
   const handlePlayClick = useCallback(async () => {
@@ -444,13 +396,7 @@ export default function Index() {
           <DesktopLeftSidebar />
 
           {/* Main content area */}
-          <div 
-            ref={containerRef}
-            className="flex-1 relative h-[calc(100vh-60px)] overflow-hidden"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
+          <div className="flex-1 relative h-[calc(100vh-60px)] overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 10 }}>
             <motion.div 
@@ -458,9 +404,6 @@ export default function Index() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring" }}
-            style={{ 
-              transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : undefined 
-            }}
           >
             {/* Avatar section with curved action buttons above (only for logged-in users) */}
             <div className="relative">
@@ -602,26 +545,9 @@ export default function Index() {
               {/* Empty space above avatar for guests - no more activation flow */}
 
               <motion.div 
-                animate={isRefreshing ? {
-                  rotateY: [0, 360],
-                  y: [0, -10, 0],
-                } : { 
-                  y: [0, -8, 0],
-                  rotateY: 0,
-                }}
-                transition={isRefreshing ? {
-                  rotateY: { duration: 0.8, ease: "easeInOut" },
-                  y: { duration: 0.4, ease: "easeOut" },
-                } : { 
-                  duration: 4, 
-                  repeat: Infinity, 
-                  ease: "easeInOut" 
-                }}
-                style={{ 
-                  perspective: 1000,
-                  transformStyle: "preserve-3d",
-                  marginTop: 15,
-                }}
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                style={{ marginTop: 15 }}
               >
                 {/* Avatar */}
                 <div 
@@ -652,11 +578,8 @@ export default function Index() {
               transition={{ delay: 0.3, type: "spring" }}
               className="flex flex-col items-center mt-11 pointer-events-auto"
             >
-              {isRefreshing ? (
-                <Skeleton className="w-64 h-20 rounded-2xl bg-white/40" />
-              ) : (
-                <>
-                  {/* Flag and Name */}
+              <>
+                {/* Flag and Name */}
                   <div className="flex items-center justify-center gap-2.5">
                     {user && profile?.country_code && (
                       <FlagIcon countryCode={profile.country_code} size="md" />
@@ -694,9 +617,8 @@ export default function Index() {
                         {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
                       </span>
                     </div>
-                  </div>
-                </>
-              )}
+                </div>
+              </>
                 </motion.div>
           </motion.div>
         </div>
