@@ -173,8 +173,8 @@ export default function Leaderboards() {
               </button>
               
               {/* Title */}
-              <div className="text-center flex-1">
-                <h2 className="text-lg text-foreground font-bold" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+              <div className="text-center flex-1 min-w-0">
+                <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                   {LEAGUES.find(l => l.tier === activeTier)?.[language === 'ka' ? 'nameKa' : 'name']?.toUpperCase() || 'LEAGUE'}
                 </h2>
                 {activeTier === userTier && (
