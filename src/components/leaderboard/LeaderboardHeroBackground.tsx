@@ -107,7 +107,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     >
       {/* Background image - taller hugemap covers full height */}
       <div 
-        className="absolute inset-0 w-full bg-no-repeat bg-[length:400%_auto] md:bg-[length:130%_auto]"
+        className="absolute inset-0 w-full bg-no-repeat bg-cover"
         style={{
           backgroundImage: `url(${leaderboardHugemap})`,
           backgroundPosition: isMobile ? `${bgPositionX}% top` : 'center top',
