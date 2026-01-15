@@ -120,6 +120,29 @@ export default function Loading() {
                   `,
                 }}
               >
+                {/* Sparkle particles */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 rounded-full bg-white"
+                    style={{
+                      left: `${10 + i * 12}%`,
+                      top: `${20 + (i % 3) * 25}%`,
+                      boxShadow: '0 0 4px 1px rgba(255,255,255,0.8)',
+                    }}
+                    animate={{
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.8, 1.2, 0.8],
+                    }}
+                    transition={{
+                      duration: 0.8 + (i * 0.15),
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                ))}
+
                 {/* Shine sweep effect */}
                 <motion.div
                   className="absolute inset-0 rounded-lg"
