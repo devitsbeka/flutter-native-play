@@ -203,23 +203,23 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             {/* Header */}
             <div className="relative z-10 px-4 pt-4 pb-3">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Bell className="w-6 h-6 text-primary" />
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-primary" />
                   </div>
-                  <h2 className="font-bold text-xl text-foreground">აქტივობა</h2>
+                  <h2 className="font-bold text-base text-foreground">აქტივობა</h2>
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                  className="w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
                 >
-                  <X className="w-5 h-5 text-foreground" />
+                  <X className="w-4 h-4 text-foreground" />
                 </button>
               </div>
             </div>
 
             {/* Content */}
-            <div className="relative z-10 flex-1 overflow-y-auto px-2">
+            <div className="relative z-10 flex-1 overflow-y-auto px-0 scrollbar-hide">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -234,7 +234,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                   </p>
                 </div>
               ) : (
-                <div className="bg-card/60 backdrop-blur-sm rounded-2xl overflow-hidden">
+                <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden">
                   {/* Generation Notifications */}
                   {generationNotifications.length > 0 && (
                     <>
