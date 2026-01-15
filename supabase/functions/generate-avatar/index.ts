@@ -15,27 +15,28 @@ interface AvatarRequest {
 }
 
 // Default prompt if database fetch fails
-const DEFAULT_PROMPT = `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait.
+const DEFAULT_PROMPT = `Transform this photo into a high-quality SEMI-REALISTIC 3D rendered portrait with subtle beautification.
 
 STYLE REQUIREMENTS:
 - SEMI-REALISTIC 3D render like a modern video game character (Unreal Engine, Final Fantasy style)
 - FRONT VIEW - face looking directly at camera, symmetrical composition
 - WARM, FRIENDLY EXPRESSION - slight natural smile, bright welcoming eyes
 - Make the person look positive, confident, and approachable
-- Eyes should have a lively sparkle and warmth
-- REALISTIC eye proportions - NOT cartoon-style big eyes
-- Highly detailed, realistic skin with subtle subsurface scattering
+- Slightly enlarged, bright eyes with beautiful lashes - subtle enhancement, not cartoon
+- Eyes should have a lively sparkle, depth, and warmth
+- Soft, slightly rounded face contours for a youthful glow
+- Flawless, glowing skin with a subtle radiant finish
 - Bright, clean studio lighting with soft shadows
 - SOLID LIGHT LAVENDER/PURPLE BACKGROUND (#E9CCFF)
-- Preserve the person's facial structure and identity but ENHANCE their expression positively
+- Preserve the person's facial structure and identity but ENHANCE their beauty positively
 - Add subtle violet/purple color tones to the hair for artistic flair
-- Soft hair rendering with realistic strand details
+- Luxurious, voluminous hair with beautiful shine and soft flowing strands
 - Keep their general hairstyle, hair color base, clothing and accessories
 - Professional portrait composition (head and shoulders, centered)
 - Clean, polished render with sharp details
-- Mature, sophisticated aesthetic - NOT cartoonish or childish
+- Beautiful, polished aesthetic - enhanced beauty while keeping realistic proportions
 
-The result should look like a premium AAA video game character portrait - realistic but stylized, bright clean lighting, with a warm positive expression and light lavender (#E9CCFF) background.`;
+The result should look like a premium AAA video game character portrait - realistic but beautified, bright clean lighting, with a warm positive expression, glowing skin, beautiful eyes, and light lavender (#E9CCFF) background.`;
 
 const DEFAULT_MODEL = "google/gemini-2.5-flash-image-preview";
 
