@@ -111,6 +111,24 @@ export default function Leaderboards() {
     }
   }, [carouselApi]);
 
+  // Sync carousel slide changes with the background
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const onSelect = () => {
+      const selectedIndex = carouselApi.selectedScrollSnap();
+      const newTier = selectedIndex + 1;
+      if (newTier !== viewingTier) {
+        setViewingTier(newTier);
+      }
+    };
+
+    carouselApi.on('select', onSelect);
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi, viewingTier]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Desktop: Show all 3 leaderboards side by side */}
