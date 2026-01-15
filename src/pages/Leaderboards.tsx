@@ -161,12 +161,13 @@ export default function Leaderboards() {
                 startIndex: (activeTier || 1) - 1,
                 duration: 30,
                 skipSnaps: false,
+                watchDrag: false,
               }}
               className="w-full"
             >
-              <CarouselContent className="-ml-2">
+              <CarouselContent className="ml-0">
                 {LEAGUES.map((league) => (
-                  <CarouselItem key={league.tier} className="pl-2 basis-full">
+                  <CarouselItem key={league.tier} className="pl-0 basis-full">
                     <MobileLeagueCard
                       tier={league.tier}
                       name={language === 'ka' ? league.nameKa : league.name}
