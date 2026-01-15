@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock } from "lucide-react";
-import iconGroupOfPeople from "@/assets/group-of-people.png";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -202,10 +202,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           >
             <div className="text-center">
               <div className="inline-flex items-center justify-center mb-4">
-                <img src={iconGroupOfPeople} alt="Create MyTrivia Party" className="w-16 h-16 object-contain" />
+                <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">შექმენი MyTrivia Party</h3>
-              <p className="text-white/70">შენი კითხვები, შენი პასუხები</p>
+              <h3 className="text-2xl font-bold text-white mb-2">შექმენი Trivia</h3>
+              <p className="text-white/70">1 რაუნდი, სწრაფი შექმნა</p>
             </div>
 
             <div className="space-y-4">
