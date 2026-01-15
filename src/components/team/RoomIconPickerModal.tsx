@@ -173,7 +173,7 @@ export function RoomIconPickerModal({
     }
   }, []);
 
-  // Search icons by query
+  // Search icons by query using smart bilingual search
   const searchIcons = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -182,22 +182,18 @@ export function RoomIconPickerModal({
 
     setIsSearching(true);
     try {
-      const searchTerm = query.toLowerCase().trim();
-      
-      const { data, error } = await supabase
-        .from("icon_library")
-        .select("id, slug, title, icon_url")
-        .not("icon_url", "is", null)
-        .or(`title.ilike.%${searchTerm}%,slug.ilike.%${searchTerm}%,tags.cs.{${searchTerm}}`)
-        .limit(24);
+      // Use smart-icon-search for bilingual Georgian/English support
+      const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+        body: { query: query.trim(), limit: 24 }
+      });
 
       if (error) {
         console.error("Error searching icons:", error);
         return;
       }
 
-      if (data) {
-        setSearchResults(data as IconItem[]);
+      if (data?.icons) {
+        setSearchResults(data.icons as IconItem[]);
       }
     } catch (e) {
       console.error("Failed to search icons:", e);
