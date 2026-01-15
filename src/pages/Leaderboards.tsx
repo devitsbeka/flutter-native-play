@@ -152,7 +152,7 @@ export default function Leaderboards() {
         </LeaderboardHeroBackground>
 
         {/* Sticky League Header + Scrollable List Container */}
-        <div className="-mt-[34px] relative z-30">
+        <div className="-mt-[37px] relative z-30">
           {/* Sticky League Name Header */}
           <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
             <div className="flex items-center justify-between py-4 px-4">
