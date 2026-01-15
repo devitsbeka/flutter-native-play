@@ -54,11 +54,11 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     // Sensitivity: how much the bg moves per pixel dragged
     const sensitivity = 0.15;
     
-    // Calculate new position (inverted: drag left = show right side)
+    // Calculate new position - no clamping for free movement
     let newPosition = startPositionX.current + (diff * sensitivity);
     
-    // Clamp between 20% and 80% to keep content visible
-    newPosition = Math.max(20, Math.min(80, newPosition));
+    // Allow wider range for smoother dragging
+    newPosition = Math.max(0, Math.min(100, newPosition));
     
     setBgPositionX(newPosition);
   }, []);
@@ -69,27 +69,29 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     // Calculate swipe direction based on touch movement
     const swipeDiff = touchStartX.current - touchEndX.current;
     
-    let newTier = lastTierRef.current;
+    // Use the prop currentTier to get the actual current tier
+    const activeTier = lastTierRef.current;
+    let newTier = activeTier;
     
-    // Any swipe in a direction changes tier
+    // Any swipe in a direction changes tier (very low threshold)
     if (swipeDiff > 5) {
       // Swipe left: Silver→Bronze, Gold→Silver, Bronze→Gold
-      if (lastTierRef.current === 2) newTier = 1;
-      else if (lastTierRef.current === 3) newTier = 2;
-      else if (lastTierRef.current === 1) newTier = 3;
+      if (activeTier === 2) newTier = 1;
+      else if (activeTier === 3) newTier = 2;
+      else if (activeTier === 1) newTier = 3;
     } else if (swipeDiff < -5) {
       // Swipe right: Silver→Gold, Gold→Bronze, Bronze→Silver
-      if (lastTierRef.current === 2) newTier = 3;
-      else if (lastTierRef.current === 3) newTier = 1;
-      else if (lastTierRef.current === 1) newTier = 2;
+      if (activeTier === 2) newTier = 3;
+      else if (activeTier === 3) newTier = 1;
+      else if (activeTier === 1) newTier = 2;
     }
     
     // Snap to tier position
     setBgPositionX(TIER_POSITIONS[newTier]);
+    lastTierRef.current = newTier;
     
     // Notify parent of tier change
-    if (onTierChange && newTier !== lastTierRef.current) {
-      lastTierRef.current = newTier;
+    if (onTierChange && newTier !== activeTier) {
       onTierChange(newTier);
     }
   }, [onTierChange]);
