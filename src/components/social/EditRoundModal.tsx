@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Plus } from "lucide-react";
+import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Plus, Smile, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   
   // Track original values to detect changes
   const [originalValues, setOriginalValues] = useState<{
@@ -75,6 +77,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
       setCurrentQuestionIndex(0);
       setDeleteQuestionIndex(null);
       setHasChanges(false);
+      setIconPickerIndex(null);
       
       // Parse questions from JSON
       const parsedQuestions = Array.isArray(round.questions) 
@@ -468,16 +471,35 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                               </div>
                             )}
                             
-                            {/* Large Tappable Icon */}
+                            {/* Large Tappable Icon - Trigger Button */}
                             <div className="flex flex-col items-center gap-1">
-                              <QuestionIconPicker
-                                selectedSlug={q.icon_slug || null}
-                                onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
-                                questionText={q.question_text}
-                                correctAnswer={q.correct_answer}
-                                incorrectAnswers={q.incorrect_answers}
-                                large
-                              />
+                              <button
+                                type="button"
+                                onClick={() => setIconPickerIndex(index)}
+                                className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
+                                style={{ width: 80, height: 80 }}
+                              >
+                                {q.icon_slug ? (
+                                  <>
+                                    <img
+                                      src={`https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${q.icon_slug}.png`}
+                                      alt=""
+                                      style={{ width: 80, height: 80 }}
+                                      className="object-contain"
+                                    />
+                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                                      <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Smile style={{ width: 50, height: 50 }} className="text-white/60" />
+                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                                      <Plus className="w-3 h-3 text-slate-600" />
+                                    </div>
+                                  </>
+                                )}
+                              </button>
                               {missingIcon && !hasCriticalIssue && (
                                 <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
                               )}
@@ -606,6 +628,24 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
             </ChunkyButton>
           </div>
         </motion.div>
+      )}
+
+      {/* Global Icon Picker - rendered via portal to escape stacking context */}
+      {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
+        <QuestionIconPicker
+          isOpen={true}
+          onClose={() => setIconPickerIndex(null)}
+          selectedSlug={questions[iconPickerIndex]?.icon_slug || null}
+          onSelect={(slug) => {
+            updateQuestionIcon(iconPickerIndex, slug || undefined);
+            setIconPickerIndex(null);
+          }}
+          questionText={questions[iconPickerIndex]?.question_text}
+          correctAnswer={questions[iconPickerIndex]?.correct_answer}
+          incorrectAnswers={questions[iconPickerIndex]?.incorrect_answers}
+          large
+        />,
+        document.body
       )}
     </AnimatePresence>
   );
