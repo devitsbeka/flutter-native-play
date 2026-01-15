@@ -58,21 +58,21 @@ export function RoomFiltersBar({
   return (
     <div className="flex items-center gap-2 px-4 py-2">
       {/* Search button - left side */}
-      <div className="flex-shrink-0">
-        <AnimatePresence>
+      <div className={isSearchOpen ? "flex-1" : "flex-shrink-0"}>
+        <AnimatePresence mode="wait">
           {isSearchOpen ? (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "auto", opacity: 1 }}
+              animate={{ width: "100%", opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              className="flex items-center gap-2 overflow-hidden"
+              className="flex items-center gap-2 w-full"
             >
               <Input
                 type="text"
                 placeholder="ძიება..."
                 value={searchQuery}
                 onChange={(e) => onSearchQueryChange(e.target.value)}
-                className="h-9 w-40 rounded-full bg-card/50 border-border/30"
+                className="h-9 flex-1 rounded-full bg-card/50 border-border/30"
                 autoFocus
               />
               <button
@@ -98,62 +98,66 @@ export function RoomFiltersBar({
         </AnimatePresence>
       </div>
 
-      {/* Combined Filter & Sort Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 min-w-0 flex-shrink">
-            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <span className="text-sm font-medium truncate">
-              {currentFilterLabel}
-            </span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
-          {filterOptions.map((option) => (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => onFilterChange(option.value)}
-              className={filter === option.value ? "bg-primary/10 text-primary" : ""}
-            >
-              <div className="flex items-center gap-2 w-full">
-                {filter === option.value && <Check className="h-4 w-4" />}
-                <span className={filter !== option.value ? "pl-6" : ""}>{option.label}</span>
-              </div>
-            </DropdownMenuItem>
-          ))}
-          
-          <DropdownMenuSeparator />
-          
-          <DropdownMenuLabel className="text-xs text-muted-foreground">დალაგება</DropdownMenuLabel>
-          {sortOptions.map((option) => (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => onSortChange(option.value)}
-              className={sort === option.value ? "bg-primary/10 text-primary" : ""}
-            >
-              <div className="flex items-center gap-2 w-full">
-                {sort === option.value && <Check className="h-4 w-4" />}
-                <span className={sort !== option.value ? "pl-6" : ""}>{option.label}</span>
-              </div>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Combined Filter & Sort Dropdown - hidden when search is open */}
+      {!isSearchOpen && (
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 min-w-0 flex-shrink">
+                <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm font-medium truncate">
+                  {currentFilterLabel}
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
+              {filterOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => onFilterChange(option.value)}
+                  className={filter === option.value ? "bg-primary/10 text-primary" : ""}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    {filter === option.value && <Check className="h-4 w-4" />}
+                    <span className={filter !== option.value ? "pl-6" : ""}>{option.label}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuLabel className="text-xs text-muted-foreground">დალაგება</DropdownMenuLabel>
+              {sortOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => onSortChange(option.value)}
+                  className={sort === option.value ? "bg-primary/10 text-primary" : ""}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    {sort === option.value && <Check className="h-4 w-4" />}
+                    <span className={sort !== option.value ? "pl-6" : ""}>{option.label}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-      <div className="flex-1 min-w-0" />
+          <div className="flex-1 min-w-0" />
 
-      {/* Add button - right side */}
-      {onAddClick && (
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={onAddClick}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
-        >
-          <span className="text-sm font-bold">{addButtonText}</span>
-        </motion.button>
+          {/* Add button - right side */}
+          {onAddClick && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={onAddClick}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
+            >
+              <span className="text-sm font-bold">{addButtonText}</span>
+            </motion.button>
+          )}
+        </>
       )}
     </div>
   );
