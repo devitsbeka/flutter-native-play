@@ -111,7 +111,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         style={{
           backgroundImage: `url(${leaderboardHugemap})`,
           backgroundSize: isMobile ? '300% auto' : 'auto',
-          backgroundPosition: isMobile ? `${bgPositionX}% -70px` : 'center -70px',
+          backgroundPosition: isMobile ? `calc(${bgPositionX}% - 50px) -70px` : 'calc(50% - 50px) -70px',
           transition: isDragging.current ? 'none' : 'background-position 0.3s ease-out',
         }}
       />
