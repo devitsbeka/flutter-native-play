@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { QuestionIconPicker } from "@/components/social/QuestionIconPicker";
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,178 +107,6 @@ const EXAMPLE_QUESTIONS = [
 // Check if text contains Georgian characters
 const isGeorgian = (text: string) => /[\u10A0-\u10FF]/.test(text);
 
-// Inline Icon Picker Component
-function QuestionIconPickerInline({ 
-  selectedSlug, 
-  onSelect 
-}: { 
-  selectedSlug?: string; 
-  onSelect: (slug: string | null) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [icons, setIcons] = useState<IconItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const getIconUrl = (icon: IconItem): string => {
-    if (icon.icon_url) return icon.icon_url;
-    return `${ICON_STORAGE_URL}/${icon.slug}.png`;
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    
-    const searchIcons = async () => {
-      setIsLoading(true);
-      try {
-        if (searchQuery.trim()) {
-          // Always use smart search for both Georgian AND English queries
-          const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-            body: { query: searchQuery, limit: 50 }
-          });
-          
-          if (error) throw error;
-          
-          // If smart search returns results, use them; otherwise fetch random icons
-          if (data?.icons && data.icons.length > 0) {
-            setIcons(data.icons);
-          } else {
-            // Fallback: fetch random icons so user always sees something
-            const { data: randomData } = await supabase
-              .from("icon_library")
-              .select("id, slug, title, icon_url")
-              .limit(50);
-            setIcons(randomData || []);
-          }
-        } else {
-          // No search query - fetch random icons
-          const { data: randomData } = await supabase
-            .from("icon_library")
-            .select("id, slug, title, icon_url")
-            .limit(50);
-          setIcons(randomData || []);
-        }
-      } catch (error) {
-        console.error("Error searching icons:", error);
-        // On error, still try to show some icons
-        const { data } = await supabase
-          .from("icon_library")
-          .select("id, slug, title, icon_url")
-          .limit(50);
-        setIcons(data || []);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(searchIcons, 300);
-    return () => clearTimeout(debounce);
-  }, [searchQuery, open]);
-
-  const handleSelect = (slug: string) => {
-    onSelect(slug);
-    setOpen(false);
-    setSearchQuery("");
-  };
-
-  const handleRemove = () => {
-    onSelect(null);
-    setOpen(false);
-  };
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "h-9 min-w-[44px] rounded-lg border flex items-center gap-1.5 px-2.5 hover:bg-muted transition-colors text-xs",
-            selectedSlug 
-              ? "border-primary/50 bg-primary/5" 
-              : "border-border bg-muted/50"
-          )}
-        >
-          {selectedSlug ? (
-            <>
-              <img
-                src={`${ICON_STORAGE_URL}/${selectedSlug}.png`}
-                alt=""
-                className="w-5 h-5 object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-              <span className="text-muted-foreground hidden sm:inline">აიკონი</span>
-            </>
-          ) : (
-            <>
-              <ImageIcon className="w-4.5 h-4.5 text-muted-foreground" />
-              <Plus className="w-3 h-3 text-muted-foreground" />
-            </>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" side="top" sideOffset={8}>
-        <div className="p-3 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ძებნა... (ქართულად ან English)"
-              className="pl-8 h-8 text-sm"
-            />
-          </div>
-
-          <ScrollArea className="h-56">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : icons.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-xs">
-                აიკონი ვერ მოიძებნა
-              </div>
-            ) : (
-              <div className="grid grid-cols-4 gap-2 p-1">
-                {icons.map((icon) => (
-                  <button
-                    key={icon.id}
-                    onClick={() => handleSelect(icon.slug)}
-                    className={cn(
-                      "flex flex-col items-center p-1.5 rounded-lg border transition-all hover:scale-105",
-                      selectedSlug === icon.slug
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-muted/30 hover:border-primary/50"
-                    )}
-                    title={icon.title}
-                  >
-                          <img
-                            src={getIconUrl(icon)}
-                            alt={icon.title}
-                            className="w-10 h-10 object-contain"
-                          />
-                  </button>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-
-          {selectedSlug && (
-            <button
-              onClick={handleRemove}
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-lg transition-colors border border-destructive/20"
-            >
-              <X className="w-3 h-3" />
-              წაშლა
-            </button>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 // Draggable Answer Item Component
 function DraggableAnswer({
   answer,
@@ -350,6 +180,7 @@ function DraggableQuestionCard({
   onUpdateAnswers,
   onUpdateCorrectIndex,
   onInsertIdea,
+  onOpenIconPicker,
 }: {
   question: PersonalQuestion;
   questionIndex: number;
@@ -360,6 +191,7 @@ function DraggableQuestionCard({
   onUpdateAnswers: (answers: string[], correctIndex: number) => void;
   onUpdateCorrectIndex: (index: number) => void;
   onInsertIdea: () => void;
+  onOpenIconPicker: () => void;
 }) {
   const dragControls = useDragControls();
   
@@ -463,11 +295,34 @@ function DraggableQuestionCard({
             <span className="text-xs font-medium text-amber-600 dark:text-amber-400">იდეა</span>
           </button>
           
-          {/* Icon picker - larger for tap */}
-          <QuestionIconPickerInline
-            selectedSlug={question.iconSlug}
-            onSelect={(slug) => onUpdateQuestion("iconSlug", slug)}
-          />
+          {/* Icon picker trigger button */}
+          <button
+            type="button"
+            onClick={onOpenIconPicker}
+            className={cn(
+              "h-9 min-w-[44px] rounded-lg border flex items-center gap-1.5 px-2.5 hover:bg-muted transition-colors text-xs",
+              question.iconSlug 
+                ? "border-primary/50 bg-primary/5" 
+                : "border-border bg-muted/50"
+            )}
+          >
+            {question.iconSlug ? (
+              <>
+                <img
+                  src={`${ICON_STORAGE_URL}/${question.iconSlug}.png`}
+                  alt=""
+                  className="w-5 h-5 object-contain"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+                <span className="text-muted-foreground hidden sm:inline">აიკონი</span>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4.5 h-4.5 text-muted-foreground" />
+                <Plus className="w-3 h-3 text-muted-foreground" />
+              </>
+            )}
+          </button>
           
           {/* Copy and Delete buttons - no gap between them */}
           <div className="flex items-center gap-0">
@@ -552,6 +407,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     { id: "1", question: "", answers: ["", "", "", ""], correctIndex: 0 }
   ]);
   const [displayedIdeas, setDisplayedIdeas] = useState<string[]>([]);
+  const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
 
   const shuffleIdeas = useCallback(() => {
     const shuffled = [...EXAMPLE_QUESTIONS].sort(() => Math.random() - 0.5);
@@ -783,6 +639,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
                       onUpdateAnswers={(answers, correctIndex) => updateAnswers(q.id, answers, correctIndex)}
                       onUpdateCorrectIndex={(index) => updateCorrectIndex(q.id, index)}
                       onInsertIdea={() => insertIdeaForQuestion(q.id)}
+                      onOpenIconPicker={() => setIconPickerIndex(qIdx)}
                     />
                   ))}
                 </AnimatePresence>
@@ -812,6 +669,24 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
               შენახვა ({questions.filter(q => q.question.trim() && q.answers.every(a => a.trim())).length} კითხვა)
             </Button>
           </div>
+
+          {/* Global Icon Picker - rendered via portal to escape stacking context */}
+          {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
+            <QuestionIconPicker
+              isOpen={true}
+              onClose={() => setIconPickerIndex(null)}
+              selectedSlug={questions[iconPickerIndex]?.iconSlug || null}
+              onSelect={(slug) => {
+                updateQuestion(questions[iconPickerIndex].id, "iconSlug", slug);
+                setIconPickerIndex(null);
+              }}
+              questionText={questions[iconPickerIndex]?.question}
+              correctAnswer={questions[iconPickerIndex]?.answers[questions[iconPickerIndex]?.correctIndex]}
+              incorrectAnswers={questions[iconPickerIndex]?.answers.filter((_, i) => i !== questions[iconPickerIndex]?.correctIndex)}
+              large
+            />,
+            document.body
+          )}
         </motion.div>
       )}
     </AnimatePresence>
