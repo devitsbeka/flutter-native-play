@@ -270,7 +270,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
         {/* Rewards - Horizontal scroll */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-auto pb-2 px-4 scrollbar-hide"
+          className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {dailyRewards.map((reward, index) => (
