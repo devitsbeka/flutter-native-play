@@ -1,5 +1,4 @@
 import { ReactNode, memo, useState, useRef, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import leaderboardHugemap from "@/assets/leaderboard-hugemap.png";
 
 interface LeaderboardHeroBackgroundProps {
@@ -99,36 +98,6 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     }
   }, [onTierChange]);
 
-  // Navigate to previous tier (visual left)
-  const handlePrevTier = useCallback(() => {
-    const activeTier = lastTierRef.current;
-    let newTier = activeTier;
-    // Visual order: Silver(2) - Gold(3) - Bronze(1)
-    // Going left: Bronze→Gold→Silver→Bronze
-    if (activeTier === 1) newTier = 3;      // Bronze → Gold
-    else if (activeTier === 3) newTier = 2; // Gold → Silver
-    else if (activeTier === 2) newTier = 1; // Silver → Bronze (wrap)
-    
-    setBgPositionX(TIER_POSITIONS[newTier]);
-    lastTierRef.current = newTier;
-    onTierChange?.(newTier);
-  }, [onTierChange]);
-
-  // Navigate to next tier (visual right)
-  const handleNextTier = useCallback(() => {
-    const activeTier = lastTierRef.current;
-    let newTier = activeTier;
-    // Visual order: Silver(2) - Gold(3) - Bronze(1)
-    // Going right: Silver→Gold→Bronze→Silver
-    if (activeTier === 2) newTier = 3;      // Silver → Gold
-    else if (activeTier === 3) newTier = 1; // Gold → Bronze
-    else if (activeTier === 1) newTier = 2; // Bronze → Silver (wrap)
-    
-    setBgPositionX(TIER_POSITIONS[newTier]);
-    lastTierRef.current = newTier;
-    onTierChange?.(newTier);
-  }, [onTierChange]);
-
   return (
     <div 
       className="relative w-full overflow-hidden min-h-screen"
@@ -162,26 +131,6 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           background: 'linear-gradient(to bottom, transparent 0%, #4E4FA6 100%)'
         }}
       />
-
-      {/* Navigation Arrows - mobile only */}
-      {isMobile && onTierChange && (
-        <>
-          <button
-            onClick={handlePrevTier}
-            className="absolute left-2 top-[35%] -translate-y-1/2 z-30 p-2 rounded-full bg-background/30 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-background/50 hover:text-white transition-all"
-            aria-label="Previous tier"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <button
-            onClick={handleNextTier}
-            className="absolute right-2 top-[35%] -translate-y-1/2 z-30 p-2 rounded-full bg-background/30 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-background/50 hover:text-white transition-all"
-            aria-label="Next tier"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </>
-      )}
 
       {/* Content container - max-width only on desktop */}
       <div className={`relative z-20 ${isMobile ? 'w-full' : 'max-w-[1400px] mx-auto'}`}>

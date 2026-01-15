@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeagueLeaderboard, LEAGUES, LeagueEntry } from "@/hooks/useLeagueLeaderboard";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -164,22 +164,39 @@ export default function Leaderboards() {
               className="w-full"
             >
               <CarouselContent className="ml-0">
-                {LEAGUES.map((league) => (
-                  <CarouselItem key={league.tier} className="pl-0 basis-full">
-                    <MobileLeagueCard
-                      tier={league.tier}
-                      name={language === 'ka' ? league.nameKa : league.name}
-                      isCurrentTier={league.tier === activeTier}
-                      leaderboard={leaderboard}
-                      isLoading={isLoading}
-                      user={user}
-                      userRowRef={userRowRef}
-                      previousRank={previousRank}
-                      userTier={userTier}
-                      viewingTier={viewingTier}
-                    />
-                  </CarouselItem>
-                ))}
+                {LEAGUES.map((league) => {
+                  // Calculate prev/next tiers for navigation
+                  // Visual order: Silver(2) - Gold(3) - Bronze(1)
+                  const getPrevTier = (t: number) => {
+                    if (t === 1) return 3;      // Bronze → Gold
+                    if (t === 3) return 2;      // Gold → Silver
+                    return 1;                    // Silver → Bronze
+                  };
+                  const getNextTier = (t: number) => {
+                    if (t === 2) return 3;      // Silver → Gold
+                    if (t === 3) return 1;      // Gold → Bronze
+                    return 2;                    // Bronze → Silver
+                  };
+                  
+                  return (
+                    <CarouselItem key={league.tier} className="pl-0 basis-full">
+                      <MobileLeagueCard
+                        tier={league.tier}
+                        name={language === 'ka' ? league.nameKa : league.name}
+                        isCurrentTier={league.tier === activeTier}
+                        leaderboard={leaderboard}
+                        isLoading={isLoading}
+                        user={user}
+                        userRowRef={userRowRef}
+                        previousRank={previousRank}
+                        userTier={userTier}
+                        viewingTier={viewingTier}
+                        onPrevTier={() => handleSelectTier(getPrevTier(activeTier || 1))}
+                        onNextTier={() => handleSelectTier(getNextTier(activeTier || 1))}
+                      />
+                    </CarouselItem>
+                  );
+                })}
               </CarouselContent>
             </Carousel>
           </div>
@@ -357,6 +374,8 @@ interface MobileLeagueCardProps {
   previousRank: number | null;
   userTier: number;
   viewingTier: number | undefined;
+  onPrevTier?: () => void;
+  onNextTier?: () => void;
 }
 
 function MobileLeagueCard({
@@ -370,6 +389,8 @@ function MobileLeagueCard({
   previousRank,
   userTier,
   viewingTier,
+  onPrevTier,
+  onNextTier,
 }: MobileLeagueCardProps) {
   const isUserTier = tier === userTier;
   
@@ -392,11 +413,34 @@ function MobileLeagueCard({
     <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl ${
       isUserTier ? 'bg-white/80 border-primary/50 ring-2 ring-primary/20' : 'bg-white/80 border-border/30'
     }`}>
-      <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
-        <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
-        {isUserTier && (
-          <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
-        )}
+      <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent">
+        <div className="flex items-center justify-between">
+          {/* Left Arrow */}
+          <button
+            onClick={onPrevTier}
+            className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+            aria-label="Previous tier"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          {/* Title */}
+          <div className="text-center flex-1">
+            <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
+            {isUserTier && (
+              <CardDescription className="text-xs text-primary font-medium">შენი ლიგა</CardDescription>
+            )}
+          </div>
+          
+          {/* Right Arrow */}
+          <button
+            onClick={onNextTier}
+            className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+            aria-label="Next tier"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
       </CardHeader>
 
       <CardContent className="px-3 pb-3 pt-0">
