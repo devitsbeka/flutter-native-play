@@ -131,7 +131,7 @@ export default function Leaderboards() {
   }, [carouselApi, viewingTier]);
 
   return (
-    <div className="min-h-screen w-screen flex flex-col overflow-x-hidden" style={{ backgroundColor: '#4E4FA6' }}>
+    <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden" style={{ backgroundColor: '#4E4FA6' }}>
       {/* Desktop: Show all 3 leaderboards side by side */}
       <div className="hidden lg:block flex-1 pb-28">
         <DesktopLeaderboards userTier={userTier} region={region} />
