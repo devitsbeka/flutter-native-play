@@ -8,11 +8,11 @@ interface LeaderboardHeroBackgroundProps {
   onTierChange?: (tier: number) => void;
 }
 
-// Map tier to background position (1=bronze=right, 2=silver=center, 3=gold=left)
+// Map tier to background position (visual order: Silver-left, Gold-center, Bronze-right)
 const TIER_POSITIONS: Record<number, number> = {
   1: 80, // Bronze - right side
-  2: 50, // Silver - center
-  3: 20, // Gold - left side
+  2: 20, // Silver - left side
+  3: 50, // Gold - center
 };
 
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
