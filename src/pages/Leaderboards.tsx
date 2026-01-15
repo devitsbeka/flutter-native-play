@@ -129,7 +129,7 @@ export default function Leaderboards() {
           </div>
 
           {/* Swipeable Cards - full width on active */}
-          <div className="pt-[calc(70vh-80px)] md:pt-[calc(60vh-80px)] px-4">
+          <div className="pt-[calc(70vh-130px)] md:pt-[calc(60vh-130px)] px-4">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
