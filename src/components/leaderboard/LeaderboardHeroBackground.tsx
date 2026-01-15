@@ -105,12 +105,12 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
-      {/* Background image - shown at 75% of actual pixels (1.33x scale) for quality */}
+      {/* Background image - shown at 100% actual pixel size */}
       <div 
         className="absolute inset-0 w-full bg-no-repeat"
         style={{
           backgroundImage: `url(${leaderboardHugemap})`,
-          backgroundSize: '133% auto',
+          backgroundSize: 'auto',
           backgroundPosition: isMobile ? `${bgPositionX}% top` : 'center top',
           transition: isDragging.current ? 'none' : 'background-position 0.3s ease-out',
         }}
