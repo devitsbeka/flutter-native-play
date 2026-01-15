@@ -498,9 +498,18 @@ export default function Index() {
                             <Check className="w-3.5 h-3.5" />
                           </span>
                         ) : (
-                          <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-md z-20">
-                            <Clock className="w-2.5 h-2.5" />
-                          </span>
+                          <motion.div
+                            className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20"
+                            style={{
+                              background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
+                              boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
+                              border: "2px solid white",
+                            }}
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Clock className="w-3.5 h-3.5 text-amber-700" />
+                          </motion.div>
                         )
                       }
                     />
