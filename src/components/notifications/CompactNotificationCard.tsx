@@ -157,12 +157,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </AvatarFallback>
           </Avatar>
           
-          {/* Type indicator badge */}
+          {/* Type indicator badge - solid background for visibility */}
           <div className={cn(
             "absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
-            config.bgColor
+            config.bgColor.replace('/20', '')
           )}>
-            <Icon className={cn("w-2.5 h-2.5", config.color)} />
+            <Icon className="w-2.5 h-2.5 text-white" />
           </div>
         </div>
 
