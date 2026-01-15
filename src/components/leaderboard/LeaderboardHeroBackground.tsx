@@ -24,6 +24,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   // Background position as percentage (0 = left edge, 100 = right edge, 50 = center)
   const [bgPositionX, setBgPositionX] = useState(() => TIER_POSITIONS[currentTier] ?? 50);
   const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
   const startPositionX = useRef<number>(50);
   const isDragging = useRef<boolean>(false);
   const lastTierRef = useRef<number>(currentTier);
@@ -38,6 +39,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
     startPositionX.current = bgPositionX;
     isDragging.current = true;
   }, [bgPositionX]);
@@ -46,6 +48,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     if (!isDragging.current) return;
     
     const currentX = e.touches[0].clientX;
+    touchEndX.current = currentX;
     const diff = touchStartX.current - currentX;
     
     // Sensitivity: how much the bg moves per pixel dragged
@@ -63,15 +66,30 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   const handleTouchEnd = useCallback(() => {
     isDragging.current = false;
     
-    // Determine which tier based on final position
-    // Position thresholds: <35 = Gold(3), 35-65 = Silver(2), >65 = Bronze(1)
-    let newTier: number;
-    if (bgPositionX < 35) {
-      newTier = 3; // Gold
-    } else if (bgPositionX > 65) {
-      newTier = 1; // Bronze
-    } else {
-      newTier = 2; // Silver
+    // Calculate swipe direction based on touch movement
+    const swipeDiff = touchStartX.current - touchEndX.current;
+    const SWIPE_THRESHOLD = 30; // minimum pixels to count as a swipe
+    
+    let newTier = lastTierRef.current;
+    
+    if (Math.abs(swipeDiff) > SWIPE_THRESHOLD) {
+      const swipedLeft = swipeDiff > 0;
+      
+      // Visual order on screen: Silver(2) - Gold(3) - Bronze(1)
+      // Swipe left = move to item on the left visually
+      // Swipe right = move to item on the right visually
+      
+      if (swipedLeft) {
+        // Swipe left: Silver→Bronze, Gold→Silver, Bronze→Gold
+        if (lastTierRef.current === 2) newTier = 1; // Silver → Bronze
+        else if (lastTierRef.current === 3) newTier = 2; // Gold → Silver
+        else if (lastTierRef.current === 1) newTier = 3; // Bronze → Gold
+      } else {
+        // Swipe right: Silver→Gold, Gold→Bronze, Bronze→Silver
+        if (lastTierRef.current === 2) newTier = 3; // Silver → Gold
+        else if (lastTierRef.current === 3) newTier = 1; // Gold → Bronze
+        else if (lastTierRef.current === 1) newTier = 2; // Bronze → Silver
+      }
     }
     
     // Snap to tier position
@@ -82,7 +100,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       lastTierRef.current = newTier;
       onTierChange(newTier);
     }
-  }, [bgPositionX, onTierChange]);
+  }, [onTierChange]);
 
   return (
     <div className="relative w-full overflow-hidden min-h-screen">
