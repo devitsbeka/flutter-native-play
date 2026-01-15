@@ -135,21 +135,11 @@ export function useSocialFeed() {
       if (!user) throw new Error("Must be logged in");
 
       if (liked) {
-        // Remove like
+        // Remove like - trigger handles count automatically
         await supabase.from("quiz_post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
-        // Decrement likes count
-        const { data } = await supabase.from("user_quiz_posts").select("likes_count").eq("id", postId).single();
-        if (data) {
-          await supabase.from("user_quiz_posts").update({ likes_count: Math.max(0, (data.likes_count || 0) - 1) }).eq("id", postId);
-        }
       } else {
-        // Add like
+        // Add like - trigger handles count automatically
         await supabase.from("quiz_post_likes").insert({ post_id: postId, user_id: user.id });
-        // Increment likes count
-        const { data } = await supabase.from("user_quiz_posts").select("likes_count").eq("id", postId).single();
-        if (data) {
-          await supabase.from("user_quiz_posts").update({ likes_count: (data.likes_count || 0) + 1 }).eq("id", postId);
-        }
       }
     },
     onMutate: async ({ postId }) => {
@@ -169,21 +159,11 @@ export function useSocialFeed() {
       if (!user) throw new Error("Must be logged in");
 
       if (saved) {
-        // Remove save
+        // Remove save - trigger handles count automatically
         await supabase.from("quiz_post_saves").delete().eq("post_id", postId).eq("user_id", user.id);
-        // Decrement saves count
-        const { data } = await supabase.from("user_quiz_posts").select("saves_count").eq("id", postId).single();
-        if (data) {
-          await supabase.from("user_quiz_posts").update({ saves_count: Math.max(0, (data.saves_count || 0) - 1) }).eq("id", postId);
-        }
       } else {
-        // Add save
+        // Add save - trigger handles count automatically
         await supabase.from("quiz_post_saves").insert({ post_id: postId, user_id: user.id });
-        // Increment saves count
-        const { data } = await supabase.from("user_quiz_posts").select("saves_count").eq("id", postId).single();
-        if (data) {
-          await supabase.from("user_quiz_posts").update({ saves_count: (data.saves_count || 0) + 1 }).eq("id", postId);
-        }
       }
     },
     onMutate: async ({ postId }) => {
