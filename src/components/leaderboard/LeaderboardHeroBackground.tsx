@@ -6,68 +6,59 @@ interface LeaderboardHeroBackgroundProps {
   isMobile?: boolean;
 }
 
-// Background positions: left (gold), center (silver), right (bronze)
-const POSITIONS = ['left', 'center', 'right'] as const;
-type Position = typeof POSITIONS[number];
-
-const getBackgroundPosition = (position: Position, isMobile: boolean): string => {
-  if (!isMobile) return 'top';
-  switch (position) {
-    case 'left': return '80% top';   // Gold trophy on the left side
-    case 'center': return '50% top'; // Silver trophy in center
-    case 'right': return '20% top';  // Bronze trophy on the right side
-    default: return '50% top';
-  }
-};
-
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
   children,
   isMobile = false,
 }: LeaderboardHeroBackgroundProps) {
-  const [currentPosition, setCurrentPosition] = useState<Position>('center');
+  // Background position as percentage (0 = left edge, 100 = right edge, 50 = center)
+  const [bgPositionX, setBgPositionX] = useState(50);
   const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
+  const startPositionX = useRef<number>(50);
+  const isDragging = useRef<boolean>(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
-  }, []);
+    startPositionX.current = bgPositionX;
+    isDragging.current = true;
+  }, [bgPositionX]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
+    if (!isDragging.current) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartX.current - currentX;
+    
+    // Sensitivity: how much the bg moves per pixel dragged
+    // With 300% bg size, we want smooth panning
+    const sensitivity = 0.15;
+    
+    // Calculate new position (inverted: drag left = show right side)
+    let newPosition = startPositionX.current + (diff * sensitivity);
+    
+    // Clamp between 20% and 80% to keep content visible
+    newPosition = Math.max(20, Math.min(80, newPosition));
+    
+    setBgPositionX(newPosition);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
-    const diff = touchStartX.current - touchEndX.current;
-    const threshold = 50; // Minimum swipe distance
-
-    if (Math.abs(diff) < threshold) return;
-
-    const currentIndex = POSITIONS.indexOf(currentPosition);
-    
-    if (diff > 0) {
-      // Swiped left - move to right position (bronze)
-      const newIndex = Math.min(currentIndex + 1, POSITIONS.length - 1);
-      setCurrentPosition(POSITIONS[newIndex]);
-    } else {
-      // Swiped right - move to left position (gold)
-      const newIndex = Math.max(currentIndex - 1, 0);
-      setCurrentPosition(POSITIONS[newIndex]);
-    }
-  }, [currentPosition]);
+    isDragging.current = false;
+  }, []);
 
   return (
     <div 
-      className="relative w-full overflow-hidden min-h-screen"
+      className="relative w-full overflow-hidden min-h-screen touch-pan-y"
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
       {/* Background image - extends full height behind content */}
       <div 
-        className="absolute inset-0 w-full bg-no-repeat bg-[length:300%_auto] md:bg-[length:100%_auto] transition-all duration-500 ease-out"
+        className="absolute inset-0 w-full bg-no-repeat bg-[length:300%_auto] md:bg-[length:100%_auto]"
         style={{
           backgroundImage: `url(${leaderboardMapDesktop})`,
-          backgroundPosition: getBackgroundPosition(currentPosition, isMobile),
+          backgroundPosition: isMobile ? `${bgPositionX}% top` : 'center top',
+          transition: isDragging.current ? 'none' : 'background-position 0.1s ease-out',
         }}
       />
       
