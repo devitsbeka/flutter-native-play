@@ -140,7 +140,7 @@ export default function Leaderboards() {
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
       <div className="lg:hidden flex-1 flex flex-col">
         {/* Sticky Countdown - always at top */}
-        <div className="sticky top-0 z-50 py-4 flex justify-center" style={{ backgroundColor: '#4E4FA6' }}>
+        <div className="sticky top-0 z-50 py-4 flex justify-center bg-transparent">
           <LeagueCountdown />
         </div>
 
