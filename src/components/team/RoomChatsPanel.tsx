@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, MessageCircle, Users, Search, ArrowLeft, MoreVertical } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { X, Send, MessageCircle, Users, Search, ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { useFriends } from "@/hooks/useFriends";
 import { useRoomChat } from "@/hooks/useRoomChat";
@@ -16,6 +16,7 @@ import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RoomChatsPanelProps {
   isOpen: boolean;
@@ -31,79 +32,123 @@ const filters: { id: FilterType; label: string }[] = [
   { id: "friends", label: "მეგობრები" },
 ];
 
+const SWIPE_THRESHOLD = 100;
+
 interface ConversationCardProps {
   conversation: ConversationPreview;
   onClick: () => void;
+  onDelete?: (id: string, type: "room" | "friend") => void;
 }
 
-const ConversationCard = memo(function ConversationCard({ conversation, onClick }: ConversationCardProps) {
-  return (
-    <motion.button
-      onClick={onClick}
-      className="flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0"
-      whileTap={{ scale: 0.98 }}
-    >
-      {/* Avatar - no badges */}
-      <div className="relative flex-shrink-0">
-        <Avatar className="w-11 h-11">
-          {conversation.type === "room" && conversation.roomIcon ? (
-            <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-              <img src={conversation.roomIcon} alt="" className="w-6 h-6 object-contain" />
-            </div>
-          ) : (
-            <>
-              <AvatarImage src={conversation.avatarUrl || undefined} />
-              <AvatarFallback 
-                className="text-sm font-bold text-primary-foreground"
-                style={{
-                  background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
-                }}
-              >
-                {conversation.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </>
-          )}
-        </Avatar>
-      </div>
+const ConversationCard = memo(function ConversationCard({ conversation, onClick, onDelete }: ConversationCardProps) {
+  const [isDismissing, setIsDismissing] = useState(false);
+  const x = useMotionValue(0);
+  const opacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [0, 1]);
+  const deleteOpacity = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.5, 0]);
+  const deleteScale = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.8, 0.5]);
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <p className="text-sm">
-              <span className="font-bold text-foreground">
-                {conversation.name}
-              </span>
-              {conversation.lastMessage && (
-                <span className="text-muted-foreground ml-1 truncate">
-                  {conversation.lastMessage}
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x < -SWIPE_THRESHOLD && onDelete) {
+      setIsDismissing(true);
+      onDelete(conversation.id, conversation.type);
+    }
+  };
+
+  if (isDismissing) {
+    return (
+      <motion.div
+        initial={{ height: 'auto', opacity: 1 }}
+        animate={{ height: 0, opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="overflow-hidden"
+      />
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Delete background indicator */}
+      <motion.div 
+        className="absolute inset-0 bg-destructive flex items-center justify-end pr-6"
+        style={{ opacity: deleteOpacity }}
+      >
+        <motion.div style={{ scale: deleteScale }}>
+          <Trash2 className="w-5 h-5 text-destructive-foreground" />
+        </motion.div>
+      </motion.div>
+
+      {/* Swipeable card */}
+      <motion.button
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        style={{ x, opacity }}
+        onClick={onClick}
+        className="flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0 bg-background"
+      >
+        {/* Avatar - no badges */}
+        <div className="relative flex-shrink-0">
+          <Avatar className="w-11 h-11">
+            {conversation.type === "room" && conversation.roomIcon ? (
+              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                <img src={conversation.roomIcon} alt="" className="w-6 h-6 object-contain" />
+              </div>
+            ) : (
+              <>
+                <AvatarImage src={conversation.avatarUrl || undefined} />
+                <AvatarFallback 
+                  className="text-sm font-bold text-primary-foreground"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
+                  }}
+                >
+                  {conversation.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </>
+            )}
+          </Avatar>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm">
+                <span className="font-bold text-foreground">
+                  {conversation.name}
                 </span>
-              )}
-              {!conversation.lastMessage && (
-                <span className="text-muted-foreground/60 ml-1">
-                  {conversation.type === "room" 
-                    ? `${conversation.roomParticipantCount} მონაწილე`
-                    : "დაიწყე საუბარი..."
-                  }
-                </span>
-              )}
-            </p>
-            {conversation.lastMessageTime && (
-              <p className="text-xs text-muted-foreground/60 mt-0.5">
-                {conversation.lastMessageTime}
+                {conversation.lastMessage && (
+                  <span className="text-muted-foreground ml-1 truncate">
+                    {conversation.lastMessage}
+                  </span>
+                )}
+                {!conversation.lastMessage && (
+                  <span className="text-muted-foreground/60 ml-1">
+                    {conversation.type === "room" 
+                      ? `${conversation.roomParticipantCount} მონაწილე`
+                      : "დაიწყე საუბარი..."
+                    }
+                  </span>
+                )}
               </p>
+              {conversation.lastMessageTime && (
+                <p className="text-xs text-muted-foreground/60 mt-0.5">
+                  {conversation.lastMessageTime}
+                </p>
+              )}
+            </div>
+
+            {/* Unread indicator */}
+            {conversation.unreadCount > 0 && (
+              <div className="flex-shrink-0 mt-1">
+                <div className="w-2 h-2 rounded-full bg-primary" />
+              </div>
             )}
           </div>
-
-          {/* Unread indicator */}
-          {conversation.unreadCount > 0 && (
-            <div className="flex-shrink-0 mt-1">
-              <div className="w-2 h-2 rounded-full bg-primary" />
-            </div>
-          )}
         </div>
-      </div>
-    </motion.button>
+      </motion.button>
+    </div>
   );
 });
 
@@ -256,6 +301,29 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
     setInputValue("");
   };
 
+  const handleDeleteConversation = async (id: string, type: "room" | "friend") => {
+    if (!user) return;
+    
+    try {
+      if (type === "room") {
+        // Leave the room
+        await supabase
+          .from("room_participants")
+          .delete()
+          .eq("room_id", id)
+          .eq("user_id", user.id);
+      } else {
+        // For friends, just clear the conversation by deleting messages
+        await supabase
+          .from("chat_messages")
+          .delete()
+          .or(`and(sender_id.eq.${user.id},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${user.id})`);
+      }
+    } catch (error) {
+      console.error("Delete conversation error:", error);
+    }
+  };
+
   const totalUnread = useMemo(() => {
     return conversations.reduce((sum, c) => sum + c.unreadCount, 0);
   }, [conversations]);
@@ -381,6 +449,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                             <ConversationCard
                               conversation={conversation}
                               onClick={() => handleConversationClick(conversation)}
+                              onDelete={handleDeleteConversation}
                             />
                           </motion.div>
                         ))
