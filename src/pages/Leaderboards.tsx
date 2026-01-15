@@ -159,7 +159,7 @@ export default function Leaderboards() {
                 startIndex: (activeTier || 1) - 1,
                 duration: 30,
                 skipSnaps: false,
-                watchDrag: false,
+                watchDrag: true,
               }}
               className="w-full"
             >
