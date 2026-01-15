@@ -4,7 +4,7 @@ import leaderboardBgSilver from "@/assets/leaderboard-bg-silver.png";
 import leaderboardBgGold from "@/assets/leaderboard-bg-gold.png";
 
 interface LeaderboardHeroBackgroundProps {
-  children: ReactNode;
+  children?: ReactNode;
   isMobile?: boolean;
   currentTier?: number;
   onTierChange?: (tier: number) => void;
@@ -69,17 +69,18 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   return (
     <div 
-      className="relative w-full overflow-hidden min-h-screen"
+      className={`relative w-full overflow-hidden ${isMobile ? 'h-[50vh]' : 'min-h-screen'}`}
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
       {/* Background image - switches based on current tier */}
       <div 
-        className="absolute inset-0 w-full bg-no-repeat bg-cover transition-all duration-500 ease-out"
+        className="absolute inset-0 w-full h-full bg-no-repeat transition-all duration-500 ease-out"
         style={{
           backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
           backgroundPosition: 'center top',
+          backgroundSize: 'auto 100%',
         }}
       />
       
@@ -90,17 +91,9 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           background: 'linear-gradient(to bottom, #4E4FA6 0%, transparent 100%)'
         }}
       />
-      
-      {/* Bottom gradient overlay - fade to purple fill color */}
-      <div 
-        className="absolute inset-x-0 bottom-0 h-[60px] pointer-events-none z-10"
-        style={{
-          background: 'linear-gradient(to bottom, transparent 0%, #4E4FA6 100%)'
-        }}
-      />
 
       {/* Content container - max-width only on desktop */}
-      <div className={`relative z-20 ${isMobile ? 'w-full' : 'max-w-[1400px] mx-auto'}`}>
+      <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'max-w-[1400px] mx-auto'}`}>
         {children}
       </div>
     </div>

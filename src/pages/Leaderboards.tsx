@@ -138,69 +138,115 @@ export default function Leaderboards() {
       </div>
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
-      <div className="lg:hidden flex-1 flex flex-col pb-28">
+      <div className="lg:hidden flex-1 flex flex-col">
+        {/* Sticky Countdown - always at top */}
+        <div className="sticky top-0 z-50 py-4 flex justify-center" style={{ backgroundColor: '#4E4FA6' }}>
+          <LeagueCountdown />
+        </div>
+
+        {/* Background Hero - fixed height, shows trophy */}
         <LeaderboardHeroBackground 
           isMobile 
           currentTier={activeTier} 
           onTierChange={handleSelectTier}
         >
-          {/* Countdown - centered at top */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
-            <LeagueCountdown />
+          {/* Empty - just the background */}
+        </LeaderboardHeroBackground>
+
+        {/* Sticky League Header + Scrollable List Container */}
+        <div className="flex-1 flex flex-col -mt-8 relative z-30">
+          {/* Sticky League Name Header */}
+          <div className="sticky top-[68px] z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
+            <div className="flex items-center justify-between py-4 px-4">
+              {/* Left Arrow */}
+              <button
+                onClick={() => {
+                  const getPrevTier = (t: number) => {
+                    if (t === 1) return 3;
+                    if (t === 3) return 2;
+                    return 1;
+                  };
+                  handleSelectTier(getPrevTier(activeTier || 1));
+                }}
+                className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                aria-label="Previous tier"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              
+              {/* Title */}
+              <div className="text-center flex-1">
+                <h2 className="text-lg text-foreground font-bold" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                  {LEAGUES.find(l => l.tier === activeTier)?.[language === 'ka' ? 'nameKa' : 'name']?.toUpperCase() || 'LEAGUE'}
+                </h2>
+                {activeTier === userTier && (
+                  <p className="text-xs text-primary font-medium">შენი ლიგა</p>
+                )}
+              </div>
+              
+              {/* Right Arrow */}
+              <button
+                onClick={() => {
+                  const getNextTier = (t: number) => {
+                    if (t === 2) return 3;
+                    if (t === 3) return 1;
+                    return 2;
+                  };
+                  handleSelectTier(getNextTier(activeTier || 1));
+                }}
+                className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+                aria-label="Next tier"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Swipeable Cards - full width on active */}
-          <div className="pt-[calc(70vh-130px)] md:pt-[calc(60vh-130px)] px-4">
-            <Carousel
-              setApi={setCarouselApi}
-              opts={{
-                align: "center",
-                loop: true,
-                startIndex: (activeTier || 1) - 1,
-                duration: 30,
-                skipSnaps: false,
-                watchDrag: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="ml-0">
-                {LEAGUES.map((league) => {
-                  // Calculate prev/next tiers for navigation
-                  // Visual order: Silver(2) - Gold(3) - Bronze(1)
-                  const getPrevTier = (t: number) => {
-                    if (t === 1) return 3;      // Bronze → Gold
-                    if (t === 3) return 2;      // Gold → Silver
-                    return 1;                    // Silver → Bronze
-                  };
-                  const getNextTier = (t: number) => {
-                    if (t === 2) return 3;      // Silver → Gold
-                    if (t === 3) return 1;      // Gold → Bronze
-                    return 2;                    // Bronze → Silver
-                  };
-                  
-                  return (
-                    <CarouselItem key={league.tier} className="pl-0 basis-full">
-                      <MobileLeagueCard
-                        tier={league.tier}
-                        name={language === 'ka' ? league.nameKa : league.name}
-                        isCurrentTier={league.tier === activeTier}
-                        leaderboard={leaderboard}
-                        isLoading={isLoading}
-                        user={user}
-                        userRowRef={userRowRef}
-                        previousRank={previousRank}
-                        userTier={userTier}
-                        viewingTier={viewingTier}
-                        onPrevTier={() => handleSelectTier(getPrevTier(activeTier || 1))}
-                        onNextTier={() => handleSelectTier(getNextTier(activeTier || 1))}
-                      />
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-            </Carousel>
+          {/* Scrollable Player List */}
+          <div className="flex-1 bg-white/90 backdrop-blur-sm px-3 pb-32 overflow-y-auto">
+            {isLoading && leaderboard.length === 0 ? (
+              // Show skeleton rows while loading
+              Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
+                  <div className="relative shrink-0">
+                    <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                    <div className="h-5 w-12 bg-muted animate-pulse rounded" />
+                  </div>
+                </div>
+              ))
+            ) : leaderboard.length === 0 ? (
+              <div className="text-center py-8">
+                <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+              </div>
+            ) : (
+              leaderboard.map((entry, index) => {
+                const isCurrentUser = entry.user_id === user?.id;
+                return (
+                  <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+                    <LeaguePlayerRow
+                      entry={entry}
+                      isCurrentUser={isCurrentUser}
+                      index={index}
+                      previousRank={isCurrentUser ? previousRank : null}
+                      shouldAnimate={false}
+                      totalPlayers={leaderboard.length}
+                      isPromotionZone={(activeTier || 1) < 5 && entry.rank <= 10}
+                      isDemotionZone={(activeTier || 1) > 1 && entry.rank > leaderboard.length - 10}
+                    />
+                  </div>
+                );
+              })
+            )}
           </div>
-        </LeaderboardHeroBackground>
+        </div>
       </div>
 
       {/* Fixed User Position Bar (Mobile only) */}
