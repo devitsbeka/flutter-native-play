@@ -11,6 +11,16 @@ const corsHeaders = {
 const QUESTION_MAX_LENGTH = 65;
 const ANSWER_MAX_LENGTH = 20;
 
+// Fisher-Yates shuffle for randomizing answer positions
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // Duplicate detection helpers
 function normalizeText(text: string): string {
   return text
@@ -205,6 +215,7 @@ EXAMPLES:
 MULTIPLE CHOICE FORMAT:
 - Provide exactly 4 options (1 correct, 3 incorrect)
 - Make incorrect answers plausible but clearly wrong
+- IMPORTANT: The position of the correct answer in your response doesn't matter - it will be randomized later
 
 🚫 ANSWER LENGTH PARITY - CRITICAL ANTI-CHEATING RULE:
 1. ALL 4 answers MUST be similar in character length (within 5 characters of each other)
@@ -484,11 +495,14 @@ Return ONLY valid JSON.`;
           }
         }
 
-        // Questions already passed validation, no need to truncate
+        // Shuffle incorrect_answers to prevent AI patterns
+        // The correct_answer is kept separate and shuffled on client side
+        const shuffledIncorrect = shuffleArray(q.incorrect_answers || []);
+        
         return {
           question_text: q.question_text,
           correct_answer: q.correct_answer,
-          incorrect_answers: q.incorrect_answers,
+          incorrect_answers: shuffledIncorrect,
           difficulty: q.difficulty || 'medium',
           icon_slug: iconSlug,
         };
