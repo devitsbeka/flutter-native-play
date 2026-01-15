@@ -22,17 +22,17 @@ STYLE REQUIREMENTS:
 - FRONT VIEW - face looking directly at camera, symmetrical composition
 - REALISTIC eye proportions - NOT cartoon-style big eyes
 - Highly detailed, realistic skin with subtle subsurface scattering
-- Dramatic, moody lighting with dark atmosphere
+- Bright, clean studio lighting with soft shadows
 - SOLID LIGHT LAVENDER/PURPLE BACKGROUND (#E9CCFF)
 - Preserve the person's EXACT facial structure, features, and proportions
 - Add subtle violet/purple color tones to the hair for artistic flair
 - Soft hair rendering with realistic strand details
 - Keep their exact hairstyle, hair color base, clothing and accessories
 - Professional portrait composition (head and shoulders, centered)
-- Cinematic quality with depth of field effect
+- Clean, polished render with sharp details
 - Mature, sophisticated aesthetic - NOT cartoonish or childish
 
-The result should look like a premium AAA video game character portrait - realistic but stylized, dramatic lighting, with a light lavender (#E9CCFF) background.`;
+The result should look like a premium AAA video game character portrait - realistic but stylized, bright clean lighting, with a light lavender (#E9CCFF) background.`;
 
 const DEFAULT_MODEL = "google/gemini-2.5-flash-image-preview";
 
