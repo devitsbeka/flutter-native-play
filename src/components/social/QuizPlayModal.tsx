@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { REWARDS } from "@/config/rewardConfig";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
 import { supabase } from "@/integrations/supabase/client";
+import { createNotification } from "@/hooks/useNotifications";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 
 interface Question {
@@ -181,6 +182,29 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
             user_id: user.id,
             post_id: postId,
           });
+          
+          // Send notification to trivia creator
+          const { data: postData } = await supabase
+            .from("user_quiz_posts")
+            .select("user_id, title")
+            .eq("id", postId)
+            .single();
+          
+          if (postData && postData.user_id !== user.id) {
+            const { data: senderProfile } = await supabase
+              .from("profiles")
+              .select("nickname")
+              .eq("user_id", user.id)
+              .single();
+            
+            await createNotification(
+              postData.user_id,
+              "trivia_played",
+              `${senderProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`,
+              postData.title || undefined,
+              { post_id: postId, player_id: user.id }
+            );
+          }
         }
       }
     } catch (error) {
