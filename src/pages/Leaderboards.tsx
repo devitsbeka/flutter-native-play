@@ -201,7 +201,7 @@ export default function Leaderboards() {
           </div>
 
           {/* Scrollable Player List */}
-          <div className="bg-white/90 backdrop-blur-sm px-3 pb-32">
+          <div className="bg-white/90 backdrop-blur-sm px-3 pt-3 pb-32">
             {isLoading && leaderboard.length === 0 ? (
               // Show skeleton rows while loading
               Array.from({ length: 10 }).map((_, i) => (
