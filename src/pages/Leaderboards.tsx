@@ -131,7 +131,7 @@ export default function Leaderboards() {
   }, [carouselApi, viewingTier]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#4E4FA6' }}>
       {/* Desktop: Show all 3 leaderboards side by side */}
       <div className="hidden lg:block flex-1 pb-28">
         <DesktopLeaderboards userTier={userTier} region={region} />
@@ -144,11 +144,9 @@ export default function Leaderboards() {
           currentTier={activeTier} 
           onTierChange={handleSelectTier}
         >
-          {/* Countdown - top right */}
-          <div className="absolute top-6 right-6 z-30">
-            <div className="w-64">
-              <LeagueCountdown />
-            </div>
+          {/* Countdown - centered at top */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
+            <LeagueCountdown />
           </div>
 
           {/* Swipeable Cards - full width on active */}
@@ -237,11 +235,9 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
 
   return (
     <LeaderboardHeroBackground>
-      {/* Countdown - top right */}
-      <div className="absolute top-6 right-6 z-30">
-        <div className="w-64">
-          <LeagueCountdown />
-        </div>
+      {/* Countdown - centered at top */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
+        <LeagueCountdown />
       </div>
 
       {/* Content area - leaderboards pushed down */}
@@ -293,7 +289,7 @@ function DesktopLeagueColumn({
       transition={{ delay: tier * 0.1 }}
     >
       <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl ${
-        isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
+        isUserTier ? 'bg-white/80 border-primary/50 ring-2 ring-primary/20' : 'bg-white/80 border-border/30'
       }`}>
         <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
           <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
@@ -394,7 +390,7 @@ function MobileLeagueCard({
 
   return (
     <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl ${
-      isUserTier ? 'bg-white/50 border-primary/50 ring-2 ring-primary/20' : 'bg-card/50 border-border/30'
+      isUserTier ? 'bg-white/80 border-primary/50 ring-2 ring-primary/20' : 'bg-white/80 border-border/30'
     }`}>
       <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
         <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>

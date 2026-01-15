@@ -1,7 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CountdownTime {
   hours: number;
@@ -24,7 +21,6 @@ function getTimeUntilReset(): CountdownTime {
     return { hours: 0, minutes: 0, seconds: 0 };
   }
   
-  // Convert everything to hours (including days)
   const totalHours = Math.floor(diff / (1000 * 60 * 60));
   
   return {
@@ -38,8 +34,8 @@ function padZero(num: number): string {
   return num.toString().padStart(2, "0");
 }
 
-// Single flip digit
-function FlipDigit({ digit }: { digit: string }) {
+// 3D Purplish Flip Digit
+function FlipDigit3D({ digit }: { digit: string }) {
   const [currentDigit, setCurrentDigit] = useState(digit);
   const [prevDigit, setPrevDigit] = useState(digit);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -54,104 +50,63 @@ function FlipDigit({ digit }: { digit: string }) {
     }
   }, [digit, currentDigit]);
 
-  const cardHeight = 40; // Total height in px
-  const halfHeight = cardHeight / 2;
-
   return (
     <div 
-      className="relative font-bold select-none"
-      style={{ width: 28, height: cardHeight }}
+      className="relative font-black select-none"
+      style={{ 
+        width: 36, 
+        height: 48,
+        perspective: '100px'
+      }}
     >
-      {/* Top half - shows current digit (top half clipped) */}
+      {/* 3D purplish card with shadow */}
       <div 
-        className="absolute inset-x-0 top-0 overflow-hidden rounded-t-md bg-foreground/5"
-        style={{ height: halfHeight }}
-      >
-        <div 
-          className="flex items-center justify-center text-foreground text-xl"
-          style={{ height: cardHeight }}
-        >
-          {currentDigit}
-        </div>
-      </div>
-
-      {/* Bottom half - shows current digit (bottom half clipped) */}
+        className="absolute inset-0 rounded-lg"
+        style={{
+          background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #4F46E5 100%)',
+          boxShadow: `
+            0 4px 0 0 #3730A3,
+            0 6px 4px rgba(0,0,0,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.3)
+          `,
+          transform: 'translateZ(0)'
+        }}
+      />
+      
+      {/* Digit */}
       <div 
-        className="absolute inset-x-0 overflow-hidden rounded-b-md bg-foreground/10"
-        style={{ top: halfHeight, height: halfHeight }}
+        className="absolute inset-0 flex items-center justify-center text-white text-2xl font-black"
+        style={{
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          transform: isFlipping ? 'scale(0.95)' : 'scale(1)',
+          transition: 'transform 0.15s ease-out'
+        }}
       >
-        <div 
-          className="flex items-center justify-center text-foreground text-xl"
-          style={{ height: cardHeight, marginTop: -halfHeight }}
-        >
-          {currentDigit}
-        </div>
+        {currentDigit}
       </div>
-
-      {/* Divider line */}
-      <div className="absolute inset-x-0 top-1/2 h-px bg-black/10 z-10" />
-
-      {/* Flipping animation overlay */}
-      {isFlipping && (
-        <>
-          {/* Top card flipping down - shows previous digit */}
-          <div 
-            className="absolute inset-x-0 top-0 overflow-hidden rounded-t-md bg-foreground/5 origin-bottom z-20"
-            style={{ 
-              height: halfHeight,
-              animation: 'flip-top 0.3s ease-in forwards',
-              backfaceVisibility: 'hidden',
-            }}
-          >
-            <div 
-              className="flex items-center justify-center text-foreground text-xl"
-              style={{ height: cardHeight }}
-            >
-              {prevDigit}
-            </div>
-          </div>
-
-          {/* Bottom card flipping up - shows current digit */}
-          <div 
-            className="absolute inset-x-0 overflow-hidden rounded-b-md bg-foreground/10 origin-top z-20"
-            style={{ 
-              top: halfHeight,
-              height: halfHeight,
-              animation: 'flip-bottom 0.3s ease-out 0.3s forwards',
-              transform: 'rotateX(180deg)',
-              backfaceVisibility: 'hidden',
-            }}
-          >
-            <div 
-              className="flex items-center justify-center text-foreground text-xl"
-              style={{ height: cardHeight, marginTop: -halfHeight }}
-            >
-              {currentDigit}
-            </div>
-          </div>
-        </>
-      )}
+      
+      {/* Highlight/shine effect */}
+      <div 
+        className="absolute inset-x-0 top-0 h-1/2 rounded-t-lg pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, transparent 100%)'
+        }}
+      />
     </div>
   );
 }
 
-function TimeUnit({ value, label }: { value: string; label?: string }) {
+function TimeUnit3D({ value }: { value: string }) {
   return (
-    <div className="flex items-center gap-1">
-      <div className="flex gap-0.5">
-        {value.split('').map((digit, i) => (
-          <FlipDigit key={i} digit={digit} />
-        ))}
-      </div>
-      {label && (
-        <span className="text-sm text-amber-600 font-semibold ml-0.5">{label}</span>
-      )}
+    <div className="flex gap-1">
+      {value.split('').map((digit, i) => (
+        <FlipDigit3D key={i} digit={digit} />
+      ))}
     </div>
   );
 }
 
 export function LeagueCountdown() {
-  const { t } = useLanguage();
   const [time, setTime] = useState<CountdownTime>(getTimeUntilReset);
   
   useEffect(() => {
@@ -163,23 +118,28 @@ export function LeagueCountdown() {
   }, []);
   
   return (
-    <motion.div
-      className="bg-card/95 backdrop-blur-md rounded-2xl p-4 border border-border/30 shadow-lg"
-      whileHover={{ scale: 1.02 }}
-    >
-      <div className="flex items-center justify-center gap-2">
-        <Clock className="w-5 h-5 text-amber-500" />
-        
-        <TimeUnit value={padZero(time.hours)} />
-        
-        <span className="text-xl font-bold text-foreground/30">:</span>
-        
-        <TimeUnit value={padZero(time.minutes)} />
-        
-        <span className="text-xl font-bold text-foreground/30">:</span>
-        
-        <TimeUnit value={padZero(time.seconds)} />
-      </div>
-    </motion.div>
+    <div className="flex items-center justify-center gap-1.5">
+      <TimeUnit3D value={padZero(time.hours)} />
+      <span 
+        className="text-2xl font-black drop-shadow-lg"
+        style={{ 
+          color: 'rgba(255,255,255,0.6)',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+        }}
+      >
+        :
+      </span>
+      <TimeUnit3D value={padZero(time.minutes)} />
+      <span 
+        className="text-2xl font-black drop-shadow-lg"
+        style={{ 
+          color: 'rgba(255,255,255,0.6)',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+        }}
+      >
+        :
+      </span>
+      <TimeUnit3D value={padZero(time.seconds)} />
+    </div>
   );
 }
