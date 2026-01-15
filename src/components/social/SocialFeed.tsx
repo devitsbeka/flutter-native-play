@@ -179,36 +179,6 @@ export function SocialFeed({
       });
     }
 
-    // Apply sorting
-    if (sortFilter === "popular") {
-      result.sort((a, b) => {
-        const getScore = (item: FeedItem) => {
-          if (item.type === 'standalone') {
-            return item.post.likesCount + item.post.playsCount;
-          } else {
-            const total = item.posts.reduce((sum, p) => {
-              return sum + p.likesCount + p.playsCount;
-            }, 0);
-            return total;
-          }
-        };
-        return getScore(b) - getScore(a);
-      });
-    } else if (sortFilter === "newest") {
-      result.sort((a, b) => {
-        const getCreatedAt = (item: FeedItem) => {
-          if (item.type === 'standalone') {
-            return new Date(item.post.createdAt).getTime();
-          } else {
-            // For collections, use the most recent post's date
-            const dates = item.posts.map(p => new Date(p.createdAt).getTime());
-            return Math.max(...dates);
-          }
-        };
-        return getCreatedAt(b) - getCreatedAt(a);
-      });
-    }
-
     return result;
   }, [feedItems, selectedHashtag, showSavedOnly, popularityFilter, sortFilter, searchQuery, userSaves, userLikes, userPlays]);
 

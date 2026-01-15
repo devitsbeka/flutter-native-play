@@ -11,13 +11,13 @@ import {
 
 export type SortFilter = 
   | "all" 
-  | "popular" 
+  | "private" 
+  | "published" 
   | "trivias" 
   | "collections" 
   | "most_liked" 
   | "most_saved" 
   | "most_played"
-  | "newest"
   | "personal";
 
 interface FeedFiltersBarProps {
@@ -34,8 +34,8 @@ interface FeedFiltersBarProps {
 
 const filterOptions: { value: SortFilter; label: string }[] = [
   { value: "all", label: "ყველა" },
-  { value: "popular", label: "პოპულარული" },
-  { value: "newest", label: "ახალი" },
+  { value: "private", label: "პირადი" },
+  { value: "published", label: "გამოქვეყნებული" },
   { value: "trivias", label: "ტრივიები" },
   { value: "collections", label: "კოლექციები" },
   { value: "personal", label: "MyTrivia Party" },
