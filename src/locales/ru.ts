@@ -882,6 +882,18 @@ export const ru: KaTranslations = {
     winChances: "Шансы на выигрыш",
     eachSegmentChance: "Каждый сегмент имеет равный шанс:",
     allSegmentsEqual: "Все сегменты имеют равный шанс (1/8)",
+    // Watch ad for spins
+    noSpinsLeft: "Вращения закончились!",
+    watchAdForSpins: "Смотреть рекламу за +5 Вращений",
+    extraSpinsReceived: "+5 вращений добавлено! 🎉",
+    spinsRemaining: "Осталось: {current}/{max} вращений",
+    watchAdGetSpins: "Посмотрите рекламу и получите",
+    extraSpins: "+{count} вращений",
+    watchingAd: "Загрузка рекламы...",
+    watching: "Загрузка...",
+    adFailed: "Ошибка загрузки рекламы",
+    watchFailed: "Попробуйте снова",
+    errorOccurred: "Произошла ошибка",
   },
   gameExtra: {
     prize: "Приз",

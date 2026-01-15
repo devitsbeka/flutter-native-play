@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, ChevronLeft } from "lucide-react";
+import { Volume2, VolumeX, ChevronLeft, Tv } from "lucide-react";
 import { useRewards } from "@/hooks/useRewards";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,6 +10,8 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
+import { WatchAdForSpinsModal } from "@/components/home/WatchAdForSpinsModal";
+import { REWARDS } from "@/config/rewardConfig";
 
 interface LuckySpinModalProps {
   isOpen: boolean;
@@ -38,7 +40,7 @@ const WHEEL_SEGMENTS: WheelSegment[] = [
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENTS.length;
 
 export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
-  const { dailySpinInfo, loading, recordSpinReward, refreshSpinInfo } = useRewards();
+  const { dailySpinInfo, loading, recordSpinReward, refreshSpinInfo, addExtraSpins } = useRewards();
   const { playSound, vibrate } = useSound();
   const { t } = useLanguage();
   const [isSpinning, setIsSpinning] = useState(false);
@@ -46,6 +48,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
   const [result, setResult] = useState<WheelSegment | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showFlyingCurrency, setShowFlyingCurrency] = useState(false);
+  const [isAdModalOpen, setIsAdModalOpen] = useState(false);
 
   // Helper to get translated label for a segment
   const getSegmentLabel = (segment: WheelSegment): string => {
@@ -351,13 +354,28 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                   background: "#F3F4F6",
                 }}
               >
-                <span className="text-gray-600 text-sm">
-                  {loading ? t('spin.loading') :
-                    dailySpinInfo.canSpin 
-                      ? t('spin.freeSpinsLeft').replace('{count}', String(dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed))
-                      : t('spin.comeBackTomorrow')
-                  }
-                </span>
+                {loading ? (
+                  <span className="text-gray-600 text-sm">{t('spin.loading')}</span>
+                ) : dailySpinInfo.canSpin ? (
+                  <span className="text-gray-600 text-sm">
+                    {t('spin.freeSpinsLeft').replace('{count}', String(dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed))}
+                  </span>
+                ) : (
+                  <div className="space-y-3">
+                    <span className="text-gray-600 text-sm block">
+                      {t('spin.noSpinsLeft')}
+                    </span>
+                    <ChunkyButton
+                      variant="success"
+                      size="md"
+                      onClick={() => setIsAdModalOpen(true)}
+                      className="mx-auto"
+                    >
+                      <Tv className="w-5 h-5 mr-2" />
+                      {t('spin.watchAdForSpins')}
+                    </ChunkyButton>
+                  </div>
+                )}
               </div>
             )}
             
@@ -401,6 +419,23 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
               </ChunkyButton>
             </motion.div>
           )}
+
+          {/* Watch Ad for Spins Modal */}
+          <WatchAdForSpinsModal
+            isOpen={isAdModalOpen}
+            onClose={() => setIsAdModalOpen(false)}
+            onWatchAd={async () => {
+              const extraSpins = REWARDS.AD_WATCH_EXTRA_SPINS || 5;
+              const success = await addExtraSpins(extraSpins);
+              if (success) {
+                await refreshSpinInfo();
+                toast.success(t('spin.extraSpinsReceived'));
+              }
+              return success;
+            }}
+            spinsRemaining={dailySpinInfo.maxSpins - dailySpinInfo.spinsUsed}
+            maxSpins={dailySpinInfo.maxSpins}
+          />
         </motion.div>
       )}
     </AnimatePresence>

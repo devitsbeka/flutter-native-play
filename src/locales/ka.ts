@@ -1007,6 +1007,18 @@ export const ka = {
     winChances: "მოგების შანსები",
     eachSegmentChance: "თითოეულ სეგმენტზე მოხვედრის შანსი:",
     allSegmentsEqual: "ყველა სეგმენტს თანაბარი შანსი აქვს (1/8)",
+    // Watch ad for spins
+    noSpinsLeft: "სპინები ამოიწურა!",
+    watchAdForSpins: "უყურე რეკლამას +5 სპინისთვის",
+    extraSpinsReceived: "+5 სპინი დამატებულია! 🎉",
+    spinsRemaining: "დარჩენილია: {current}/{max} სპინი",
+    watchAdGetSpins: "უყურე რეკლამას და მიიღე",
+    extraSpins: "+{count} სპინი",
+    watchingAd: "რეკლამა იტვირთება...",
+    watching: "იტვირთება...",
+    adFailed: "რეკლამა ვერ ჩაიტვირთა",
+    watchFailed: "სცადეთ თავიდან",
+    errorOccurred: "შეცდომა მოხდა",
   },
 
   // ==========================================
