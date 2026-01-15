@@ -1,7 +1,6 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import splashBackground from '@/assets/splash-background.png';
-import logoImage from '@/assets/logo-worldquizzes.png';
+import splashBackground from '@/assets/loading-bg.png';
 import { 
   onVideosLoaded, 
   areVideosLoaded, 
@@ -24,23 +23,12 @@ export function SplashScreen({ children }: SplashScreenProps) {
   const [videosReady, setVideosReady] = useState(areVideosLoaded());
   const [videoProgress, setVideoProgress] = useState<VideoLoadProgress>(getVideoLoadProgress());
 
-  // Preload splash images before starting the loading animation
+  // Preload splash background image
   useEffect(() => {
     const bgImage = new Image();
-    const logoImg = new Image();
-    let loadedCount = 0;
-
-    const onLoad = () => {
-      loadedCount++;
-      if (loadedCount === 2) {
-        setImagesLoaded(true);
-      }
-    };
-
-    bgImage.onload = onLoad;
-    logoImg.onload = onLoad;
+    bgImage.onload = () => setImagesLoaded(true);
+    bgImage.onerror = () => setImagesLoaded(true); // Don't block on error
     bgImage.src = splashBackground;
-    logoImg.src = logoImage;
   }, []);
 
   // Preload all category icons using the resolver (searches 9k library)
@@ -122,16 +110,16 @@ export function SplashScreen({ children }: SplashScreenProps) {
           >
             {/* Background Image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-bottom bg-no-repeat"
               style={{ backgroundImage: `url(${splashBackground})` }}
             />
             
-            {/* Dark Overlay for readability */}
-            <div className="absolute inset-0 bg-black/40" />
+            {/* Gradient overlay for better text visibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
             
             {/* Content Container */}
             <div className="relative z-10 flex flex-col items-center justify-center px-8 w-full max-w-lg">
-              {/* Logo with fade-in and float animation */}
+              {/* MyTrivia Logo with LIVE badge */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ 
@@ -142,14 +130,12 @@ export function SplashScreen({ children }: SplashScreenProps) {
                 transition={{ 
                   delay: 0.3, 
                   duration: 0.6, 
-                  ease: [0.34, 1.56, 0.64, 1] // Spring-like bounce
+                  ease: [0.34, 1.56, 0.64, 1]
                 }}
                 className="mb-16"
               >
-                <motion.img
-                  src={logoImage}
-                  alt="MyTrivia"
-                  className="w-64 md:w-80 h-auto drop-shadow-2xl"
+                <motion.div
+                  className="flex items-center justify-center"
                   animate={{ 
                     y: [0, -8, 0],
                   }}
@@ -159,7 +145,44 @@ export function SplashScreen({ children }: SplashScreenProps) {
                     repeat: Infinity,
                     ease: 'easeInOut'
                   }}
-                />
+                >
+                  {/* MyTrivia Text */}
+                  <span 
+                    className="text-5xl md:text-6xl font-slackey text-white tracking-tight"
+                    style={{
+                      textShadow: `
+                        0 4px 8px rgba(0,0,0,0.4),
+                        0 8px 24px rgba(0,0,0,0.3)
+                      `,
+                    }}
+                  >
+                    MyTrivia
+                  </span>
+                  
+                  {/* Large LIVE Badge */}
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="ml-3"
+                  >
+                    <span 
+                      className="relative inline-flex items-center px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-wider text-white"
+                      style={{
+                        background: '#EF4444',
+                        boxShadow: '0 4px 0 #B91C1C, 0 6px 12px rgba(0,0,0,0.25)',
+                      }}
+                    >
+                      {/* Blinking dot */}
+                      <motion.span
+                        animate={{ opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-2.5 h-2.5 rounded-full bg-white mr-2"
+                      />
+                      LIVE
+                    </span>
+                  </motion.span>
+                </motion.div>
               </motion.div>
 
               {/* Loading Bar Container */}
