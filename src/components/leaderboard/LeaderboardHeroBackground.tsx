@@ -84,13 +84,6 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         }}
       />
       
-      {/* Top gradient overlay */}
-      <div 
-        className="absolute inset-x-0 top-0 h-12 pointer-events-none z-10"
-        style={{
-          background: 'linear-gradient(to bottom, #4E4FA6 0%, transparent 100%)'
-        }}
-      />
 
       {/* Content container - max-width only on desktop */}
       <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'max-w-[1400px] mx-auto'}`}>
