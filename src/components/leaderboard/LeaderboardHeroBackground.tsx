@@ -119,7 +119,15 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       <div 
         className="absolute inset-x-0 top-0 h-12 pointer-events-none z-10"
         style={{
-          background: 'linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 100%)'
+          background: 'linear-gradient(to bottom, #4E4FA6 0%, transparent 100%)'
+        }}
+      />
+      
+      {/* Bottom gradient overlay - fade to purple fill color */}
+      <div 
+        className="absolute inset-x-0 bottom-0 h-[60px] pointer-events-none z-10"
+        style={{
+          background: 'linear-gradient(to bottom, transparent 0%, #4E4FA6 100%)'
         }}
       />
 
