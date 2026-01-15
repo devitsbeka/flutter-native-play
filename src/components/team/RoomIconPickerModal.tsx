@@ -5,6 +5,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
+const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
+const MAX_RECENT_ICONS = 8;
+
+function getRecentIconSlugs(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENT_ROOM_ICONS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentIcon(slug: string): void {
+  const recent = getRecentIconSlugs().filter((s) => s !== slug);
+  recent.unshift(slug);
+  localStorage.setItem(
+    RECENT_ROOM_ICONS_KEY,
+    JSON.stringify(recent.slice(0, MAX_RECENT_ICONS))
+  );
+}
+
 interface IconItem {
   id: string;
   slug: string;
@@ -29,6 +50,7 @@ export function RoomIconPickerModal({
 }: RoomIconPickerModalProps) {
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
   const [searchResults, setSearchResults] = useState<IconItem[]>([]);
+  const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
@@ -36,6 +58,34 @@ export function RoomIconPickerModal({
   const [isGeneratingName, setIsGeneratingName] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load recent icons from localStorage
+  const loadRecentIcons = useCallback(async () => {
+    const slugs = getRecentIconSlugs();
+    if (slugs.length === 0) {
+      setRecentIcons([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("icon_library")
+        .select("id, slug, title, icon_url")
+        .in("slug", slugs)
+        .not("icon_url", "is", null);
+
+      if (!error && data) {
+        // Preserve the order from localStorage
+        const iconMap = new Map(data.map(icon => [icon.slug, icon]));
+        const orderedIcons = slugs
+          .map(slug => iconMap.get(slug))
+          .filter((icon): icon is IconItem => !!icon);
+        setRecentIcons(orderedIcons);
+      }
+    } catch (e) {
+      console.error("Failed to load recent icons:", e);
+    }
+  }, []);
 
   // Fetch random icons from database
   const fetchRandomIcons = useCallback(async () => {
@@ -133,12 +183,13 @@ export function RoomIconPickerModal({
   useEffect(() => {
     if (isOpen) {
       fetchRandomIcons();
+      loadRecentIcons();
       setSelectedIcon(currentIconUrl);
       setEditableName(roomName);
       setSearchQuery("");
       setSearchResults([]);
     }
-  }, [isOpen, fetchRandomIcons, currentIconUrl, roomName]);
+  }, [isOpen, fetchRandomIcons, loadRecentIcons, currentIconUrl, roomName]);
 
   // Generate name for a specific icon
   const generateNameForIcon = async (iconSlug: string) => {
@@ -160,6 +211,7 @@ export function RoomIconPickerModal({
 
   const handleIconClick = async (icon: IconItem) => {
     setSelectedIcon(icon.icon_url);
+    addRecentIcon(icon.slug);
     await generateNameForIcon(icon.slug);
   };
 
@@ -263,6 +315,51 @@ export function RoomIconPickerModal({
                   </p>
                 </div>
               </div>
+
+              {/* Recent icons section - only show if there are recent icons and not searching */}
+              {!searchQuery.trim() && recentIcons.length > 0 && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-muted-foreground">
+                      ბოლოს გამოყენებული
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-3">
+                    {recentIcons.map((icon, index) => (
+                      <motion.button
+                        key={icon.id}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.03 }}
+                        onClick={() => handleIconClick(icon)}
+                        disabled={isGeneratingName}
+                        className={`relative aspect-square rounded-xl bg-muted/50 hover:bg-muted border-2 transition-all flex items-center justify-center overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
+                          selectedIcon === icon.icon_url
+                            ? "border-primary ring-2 ring-primary/30 bg-primary/10"
+                            : "border-transparent hover:border-border"
+                        }`}
+                      >
+                        <img
+                          src={icon.icon_url}
+                          alt={icon.title}
+                          className="w-12 h-12 object-contain"
+                          loading="lazy"
+                        />
+                        {selectedIcon === icon.icon_url && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
+                          >
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    ))}
+                  </div>
+                </>
+              )}
 
               {/* Icons section header */}
               <div className="flex items-center justify-between">
