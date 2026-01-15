@@ -120,7 +120,11 @@ export default function Leaderboards() {
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
       <div className="lg:hidden flex-1 flex flex-col pb-28">
-        <LeaderboardHeroBackground isMobile>
+        <LeaderboardHeroBackground 
+          isMobile 
+          currentTier={activeTier} 
+          onTierChange={handleSelectTier}
+        >
           {/* Countdown - top right */}
           <div className="absolute top-6 right-6 z-30">
             <div className="w-64">
