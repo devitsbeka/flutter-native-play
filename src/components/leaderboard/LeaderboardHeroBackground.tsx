@@ -14,7 +14,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     <div className="relative w-full overflow-hidden min-h-screen">
       {/* Background image - extends full height behind content */}
       <div 
-        className="absolute inset-0 w-full bg-no-repeat bg-top bg-[length:100%_auto]"
+        className="absolute inset-0 w-full bg-no-repeat bg-top bg-[length:200%_auto] md:bg-[length:100%_auto] bg-center md:bg-top"
         style={{
           backgroundImage: `url(${leaderboardMapDesktop})`,
         }}
