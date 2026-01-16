@@ -2,6 +2,7 @@ import { ReactNode, memo, useRef, useCallback } from "react";
 import leaderboardBgBronze from "@/assets/leaderboard-bg-bronze.png";
 import leaderboardBgSilver from "@/assets/leaderboard-bg-silver.png";
 import leaderboardBgGold from "@/assets/leaderboard-bg-gold.png";
+import leaderboardBgDesktop from "@/assets/leaderboard-bg-desktop.png";
 
 interface LeaderboardHeroBackgroundProps {
   children?: ReactNode;
@@ -10,7 +11,7 @@ interface LeaderboardHeroBackgroundProps {
   onTierChange?: (tier: number) => void;
 }
 
-// Map tier to background image
+// Map tier to background image (mobile only)
 const TIER_BACKGROUNDS: Record<number, string> = {
   1: leaderboardBgBronze, // Bronze
   2: leaderboardBgSilver, // Silver
@@ -86,30 +87,14 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           }}
         />
       ) : (
-        // Desktop: All 3 backgrounds side by side, each taking 1/3 width
-        <div className="absolute inset-0 w-full h-full flex">
-          <div 
-            className="flex-1 h-full bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${leaderboardBgSilver})`,
-              backgroundSize: 'auto 100%',
-            }}
-          />
-          <div 
-            className="flex-1 h-full bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${leaderboardBgGold})`,
-              backgroundSize: 'auto 100%',
-            }}
-          />
-          <div 
-            className="flex-1 h-full bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${leaderboardBgBronze})`,
-              backgroundSize: 'auto 100%',
-            }}
-          />
-        </div>
+        // Desktop/Tablet: Single unified background image
+        <div 
+          className="absolute inset-0 w-full h-full bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${leaderboardBgDesktop})`,
+            backgroundSize: 'auto 100%',
+          }}
+        />
       )}
 
       {/* Content container - account for left nav on desktop */}
