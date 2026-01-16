@@ -92,7 +92,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           className="absolute inset-0 w-full h-full bg-center bg-no-repeat"
           style={{
             backgroundImage: `url(${leaderboardBgDesktop})`,
-            backgroundSize: 'auto 100%',
+            backgroundSize: '100% auto',
           }}
         />
       )}
