@@ -130,7 +130,7 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
 
   // Slide indicator dots
   const slideIndicators = (
-    <div className="flex justify-center gap-2 mb-4">
+    <div className="flex justify-center gap-2 mt-6">
       {TUTORIAL_SLIDES.map((_, index) => (
         <motion.button
           key={index}
@@ -184,13 +184,11 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
-      icon={headerIcon}
       title={t("help.howToUsePowers")}
       subtitle={t("help.learnEachPower")}
       footer={footer}
       showSparkles
     >
-      {slideIndicators}
       
       <AnimatePresence mode="wait">
         <motion.div
@@ -248,6 +246,8 @@ export function PowerUpTutorialModal({ isOpen, onClose }: PowerUpTutorialModalPr
           </div>
         </motion.div>
       </AnimatePresence>
+      
+      {slideIndicators}
     </GameModal>
   );
 }
