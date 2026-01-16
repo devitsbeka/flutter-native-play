@@ -16,8 +16,12 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCompactNumber } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { DesktopPlayButton } from "./DesktopPlayButton";
+import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 import {
   Tooltip,
   TooltipContent,
@@ -62,6 +66,7 @@ export function UnifiedDesktopNav({
   const { profile, signOut } = useAuth();
   const { unreadCount } = useNotifications();
   const { pendingChallenges } = usePendingChallenges();
+  const { coins, gems } = useCurrency();
   const pendingCount = pendingChallenges?.length || 0;
 
   const isActive = (path: string) => {
@@ -74,7 +79,7 @@ export function UnifiedDesktopNav({
     navigate("/");
   };
 
-  // NavButton component for consistency
+  // NavButton component for consistency - all icons use strokeWidth 1.5
   const NavButton = ({
     icon: Icon,
     label,
@@ -109,7 +114,8 @@ export function UnifiedDesktopNav({
             <div className="relative flex items-center justify-center w-6 h-6">
               {children || (Icon && (
                 <Icon 
-                  className={`w-6 h-6 ${active ? 'stroke-[2.5]' : ''}`}
+                  className="w-6 h-6"
+                  strokeWidth={active ? 2.5 : 1.5}
                 />
               ))}
               {badge && badge > 0 && (
@@ -168,23 +174,70 @@ export function UnifiedDesktopNav({
           badge={unreadCount}
         />
 
-        {/* Profile */}
+        {/* Profile - 15% smaller avatar (20px instead of 24px) */}
         <NavButton
           label="პროფილი"
           onClick={() => navigate("/profile")}
           active={isActive("/profile")}
         >
-          <Avatar
-            imageUrl={profile?.avatar_url || undefined}
-            emoji={profile?.nickname?.charAt(0) || "👤"}
-            size="sm"
-          />
+          <div className="w-5 h-5 flex items-center justify-center">
+            <Avatar
+              imageUrl={profile?.avatar_url || undefined}
+              emoji={profile?.nickname?.charAt(0) || "👤"}
+              size="xs"
+              className="!w-5 !h-5"
+            />
+          </div>
         </NavButton>
       </div>
 
-      {/* Play Button - Positioned in middle section */}
-      {showPlayButton && (
-        <div className="px-2 xl:px-3 py-4">
+      {/* Currency Display + Play Button Section */}
+      <div className="px-2 xl:px-3 py-4 mt-2 space-y-3">
+        {/* Currency Display */}
+        <div className="flex flex-col xl:flex-row items-center justify-center gap-2">
+          {/* Coins */}
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border/50"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <img src={coinIcon} alt="Coins" className="w-4 h-4" />
+                  <span className="text-xs font-bold text-foreground hidden xl:inline">
+                    {formatCompactNumber(coins)}
+                  </span>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="xl:hidden">
+                {formatCompactNumber(coins)} მონეტა
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Gems */}
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border/50"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <img src={gemIcon} alt="Gems" className="w-4 h-4" />
+                  <span className="text-xs font-bold text-foreground hidden xl:inline">
+                    {formatCompactNumber(gems)}
+                  </span>
+                </motion.div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="xl:hidden">
+                {formatCompactNumber(gems)} ბრილიანტი
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Play Button - 15% larger */}
+        {showPlayButton && (
           <DesktopPlayButton
             onClick={onPlayClick}
             playsRemaining={playsRemaining}
@@ -192,9 +245,10 @@ export function UnifiedDesktopNav({
             canPlay={canPlay}
             isVip={isVip}
             isCompact={false}
+            size="lg"
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Bottom Section - More menu */}
       <div className="px-2 xl:px-3 mt-auto">
@@ -205,22 +259,22 @@ export function UnifiedDesktopNav({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6" strokeWidth={1.5} />
               <span className="text-[15px] hidden xl:inline">მეტი</span>
             </motion.button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-56">
             <DropdownMenuItem onClick={() => navigate("/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="mr-2 h-4 w-4" strokeWidth={1.5} />
               პარამეტრები
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate("/support")}>
-              <HelpCircle className="mr-2 h-4 w-4" />
+              <HelpCircle className="mr-2 h-4 w-4" strokeWidth={1.5} />
               დახმარება
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4" strokeWidth={1.5} />
               გასვლა
             </DropdownMenuItem>
           </DropdownMenuContent>

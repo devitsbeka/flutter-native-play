@@ -6,13 +6,14 @@ interface AvatarProps {
   emoji?: string;
   imageUrl?: string;
   countryCode?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   showRing?: boolean;
   ringColor?: string;
   className?: string;
 }
 
 const sizeClasses = {
+  xs: "w-5 h-5 text-xs",
   sm: "w-10 h-10 text-lg",
   md: "w-14 h-14 text-2xl",
   lg: "w-20 h-20 text-4xl",

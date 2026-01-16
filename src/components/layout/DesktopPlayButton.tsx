@@ -8,6 +8,7 @@ interface DesktopPlayButtonProps {
   canPlay?: boolean;
   isVip?: boolean;
   isCompact?: boolean; // For tablet view (icon only)
+  size?: "md" | "lg"; // md = default, lg = 15% larger
 }
 
 export function DesktopPlayButton({
@@ -17,8 +18,17 @@ export function DesktopPlayButton({
   canPlay = true,
   isVip = false,
   isCompact = false,
+  size = "md",
 }: DesktopPlayButtonProps) {
   const isExhausted = !canPlay && playsRemaining === 0;
+  
+  // Size configurations - lg is 15% larger
+  const sizeConfig = {
+    md: { height: "h-14", iconSize: "w-6 h-6", textSize: "text-lg", compactHeight: "h-12", compactIcon: "w-5 h-5" },
+    lg: { height: "h-16", iconSize: "w-7 h-7", textSize: "text-xl", compactHeight: "h-14", compactIcon: "w-6 h-6" },
+  };
+  
+  const config = sizeConfig[size];
   
   // Get button styling based on state
   const getButtonStyle = () => {
@@ -73,7 +83,7 @@ export function DesktopPlayButton({
         disabled={isExhausted}
         className={`
           relative w-full rounded-xl flex items-center justify-center gap-2
-          ${isCompact ? 'h-12 px-3' : 'h-14 px-4'}
+          ${isCompact ? config.compactHeight : config.height} px-4
           transition-all duration-200
           ${isExhausted ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}
         `}
@@ -104,13 +114,14 @@ export function DesktopPlayButton({
 
         {/* Icon */}
         <Icon 
-          className={`${isCompact ? 'w-5 h-5' : 'w-6 h-6'} text-white drop-shadow-md`}
+          className={`${isCompact ? config.compactIcon : config.iconSize} text-white drop-shadow-md`}
           fill={isExhausted ? "none" : "currentColor"}
+          strokeWidth={1.5}
         />
 
         {/* Text - hidden on compact/tablet */}
         {!isCompact && (
-          <span className="text-white font-bold text-lg drop-shadow-md tracking-wide">
+          <span className={`text-white font-bold ${config.textSize} drop-shadow-md tracking-wide`}>
             ითამაშე
           </span>
         )}

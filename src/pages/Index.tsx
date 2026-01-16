@@ -21,6 +21,7 @@ import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetail
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
 import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
+import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
@@ -413,10 +414,22 @@ export default function Index() {
           >
             {/* Avatar section with curved action buttons above (only for logged-in users) */}
             <div className="relative">
-              {/* Curved action buttons above avatar - ONLY show for logged-in users */}
+              {/* Desktop/Tablet: Show extended info cards instead of circles */}
+              {user && (
+                <div className="hidden md:block absolute left-1/2 -translate-x-1/2 pointer-events-auto z-20" style={{ top: -130 }}>
+                  <DesktopActionCards
+                    onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
+                    onMissionsClick={() => setShowMissionsModal(true)}
+                    onChestClick={() => setIsChestModalOpen(true)}
+                    onPowersClick={() => setShowMyPowersModal(true)}
+                  />
+                </div>
+              )}
+
+              {/* Mobile only: Show curved action buttons above avatar */}
               {user && (
                 <div 
-                  className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
+                  className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
                   style={{ 
                     top: -75,
                     width: 340,
