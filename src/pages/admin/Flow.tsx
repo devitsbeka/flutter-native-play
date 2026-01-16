@@ -540,7 +540,7 @@ export default function Flow() {
   const selectedQuestion = generatedQuestions.find(q => q.id === selectedPreviewId);
 
   return (
-    <div className="h-full flex flex-col" ref={containerRef}>
+    <div className="h-full overflow-y-auto" ref={containerRef}>
       {/* Header - Compact Card Design */}
       <div className="p-3 border-b border-border/50">
         <div className="bg-card rounded-lg border border-border/50 shadow-sm p-3">
@@ -629,9 +629,9 @@ export default function Flow() {
       </div>
 
       {/* Two Column Layout - More space for questions */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex">
         {/* Left: Preview & Review - NOW WIDER */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50">
+        <div className="flex-1 flex flex-col bg-background/50">
           <QuestionPreviewList
             questions={generatedQuestions}
             categories={categories}
@@ -649,7 +649,7 @@ export default function Flow() {
         </div>
 
         {/* Right: Queue - Responsive width */}
-        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex flex-col flex-shrink-0">
+        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex flex-col flex-shrink-0 sticky top-0 h-screen">
           <QuestionQueue
             pendingCount={pendingCount}
             approvedCount={approvedCount}
