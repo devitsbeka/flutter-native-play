@@ -89,10 +89,11 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       ) : (
         // Desktop/Tablet: Single unified background image
         <div 
-          className="absolute inset-0 w-full h-full bg-center bg-no-repeat"
+          className="absolute inset-0 w-full h-full bg-no-repeat"
           style={{
             backgroundImage: `url(${leaderboardBgDesktop})`,
             backgroundSize: '100% auto',
+            backgroundPosition: 'top center',
           }}
         />
       )}
