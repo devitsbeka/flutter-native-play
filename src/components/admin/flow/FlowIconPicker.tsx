@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Clock, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -8,6 +8,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
+const RECENT_ICONS_KEY = 'flow_recent_icons';
+const MAX_RECENT_ICONS = 10;
+
+// Helper functions for recent icons
+function getRecentIconSlugs(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENT_ICONS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentIcon(slug: string) {
+  if (!slug) return;
+  const recent = getRecentIconSlugs().filter(s => s !== slug);
+  recent.unshift(slug);
+  localStorage.setItem(RECENT_ICONS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_ICONS)));
+}
 
 interface IconItem {
   id: string;
@@ -20,15 +39,25 @@ interface FlowIconPickerProps {
   currentIconSlug?: string;
   onSelect: (slug: string) => void;
   suggestedSlugs?: string[];
+  questionText?: string;
   isExpanded?: boolean;
 }
 
-export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [], isExpanded = false }: FlowIconPickerProps) {
+export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [], questionText, isExpanded = false }: FlowIconPickerProps) {
   const [isOpen, setIsOpen] = useState(isExpanded);
   const [searchQuery, setSearchQuery] = useState('');
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [suggestedIcons, setSuggestedIcons] = useState<IconItem[]>([]);
+  const [recentIcons, setRecentIcons] = useState<IconItem[]>([]);
+  const [contextIcons, setContextIcons] = useState<IconItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load recent icons when picker opens
+  useEffect(() => {
+    if (isOpen) {
+      loadRecentIcons();
+    }
+  }, [isOpen]);
 
   // Load suggested icons when picker opens
   useEffect(() => {
@@ -36,6 +65,13 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
       loadSuggestedIcons();
     }
   }, [isOpen, suggestedSlugs]);
+
+  // Load context-based icons when picker opens
+  useEffect(() => {
+    if (isOpen && questionText) {
+      loadContextIcons(questionText);
+    }
+  }, [isOpen, questionText]);
 
   // Search icons when query changes
   useEffect(() => {
@@ -46,6 +82,27 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
     }
   }, [searchQuery]);
 
+  const loadRecentIcons = async () => {
+    const recentSlugs = getRecentIconSlugs();
+    if (recentSlugs.length === 0) {
+      setRecentIcons([]);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('icon_library')
+      .select('id, slug, title, icon_url')
+      .in('slug', recentSlugs);
+
+    if (data) {
+      // Preserve order from localStorage
+      const sorted = recentSlugs
+        .map(slug => data.find(icon => icon.slug === slug))
+        .filter(Boolean) as IconItem[];
+      setRecentIcons(sorted);
+    }
+  };
+
   const loadSuggestedIcons = async () => {
     const { data } = await supabase
       .from('icon_library')
@@ -55,6 +112,20 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
     
     if (data) {
       setSuggestedIcons(data);
+    }
+  };
+
+  const loadContextIcons = async (question: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('smart-icon-search', {
+        body: { query: question, limit: 12 }
+      });
+
+      if (data?.results) {
+        setContextIcons(data.results);
+      }
+    } catch (err) {
+      console.error('Error loading context icons:', err);
     }
   };
 
@@ -71,6 +142,9 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
   };
 
   const handleSelect = (slug: string) => {
+    if (slug) {
+      addRecentIcon(slug);
+    }
     onSelect(slug);
     setIsOpen(false);
     setSearchQuery('');
@@ -130,14 +204,17 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
           </div>
         </div>
 
-        <ScrollArea className="h-64">
-          <div className="p-3">
-            {/* Suggested icons */}
-            {suggestedIcons.length > 0 && !searchQuery && (
-              <div className="mb-3">
-                <p className="text-xs text-muted-foreground mb-2">Suggested</p>
+        <ScrollArea className="h-72">
+          <div className="p-3 space-y-4">
+            {/* Recently used icons */}
+            {!searchQuery && recentIcons.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">ბოლოს გამოყენებული</p>
+                </div>
                 <div className="grid grid-cols-5 gap-2">
-                  {suggestedIcons.map((icon) => (
+                  {recentIcons.map((icon) => (
                     <button
                       key={icon.id}
                       onClick={() => handleSelect(icon.slug)}
@@ -154,6 +231,41 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
                       />
                     </button>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Context-based + suggested icons */}
+            {!searchQuery && (contextIcons.length > 0 || suggestedIcons.length > 0) && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-xs text-muted-foreground">რეკომენდებული</p>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {/* Combine and dedupe context + suggested icons */}
+                  {[...contextIcons, ...suggestedIcons]
+                    .filter((icon, idx, arr) => 
+                      arr.findIndex(i => i.slug === icon.slug) === idx
+                    )
+                    .slice(0, 15)
+                    .map((icon) => (
+                      <button
+                        key={icon.id}
+                        onClick={() => handleSelect(icon.slug)}
+                        className={cn(
+                          "w-12 h-12 rounded-lg border border-border/50 flex items-center justify-center hover:border-primary/50 hover:bg-accent/50 transition-colors",
+                          currentIconSlug === icon.slug && "ring-2 ring-primary"
+                        )}
+                        title={icon.title}
+                      >
+                        <img 
+                          src={getIconUrl(icon)} 
+                          alt={icon.title}
+                          className="w-8 h-8 object-contain"
+                        />
+                      </button>
+                    ))}
                 </div>
               </div>
             )}
@@ -190,7 +302,7 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
             )}
 
             {/* Empty state */}
-            {!searchQuery && suggestedIcons.length === 0 && (
+            {!searchQuery && recentIcons.length === 0 && contextIcons.length === 0 && suggestedIcons.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Type to search icons
               </p>
