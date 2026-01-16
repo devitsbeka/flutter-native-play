@@ -2793,6 +2793,7 @@ export type Database = {
         Args: never
         Returns: {
           category_id: string
+          production_count: number
           question_count: number
         }[]
       }
