@@ -76,7 +76,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     >
       {/* Background image - switches based on current tier */}
       <div 
-        className={`absolute inset-0 w-full h-full bg-no-repeat transition-all duration-500 ease-out ${isMobile ? '' : 'lg:bg-contain'}`}
+        className={`absolute inset-0 bg-no-repeat transition-all duration-500 ease-out ${isMobile ? 'w-full' : 'lg:left-[72px] xl:left-[220px]'}`}
         style={{
           backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
           backgroundPosition: isMobile 
