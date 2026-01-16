@@ -88,7 +88,14 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
     const category = categories.find(c => c.id === selectedCategory);
     if (!category) return;
 
+    // Warn for large batches
+    if (count > 50) {
+      toast.warning('Large batches may take longer. Consider 50 or fewer for faster results.');
+    }
+
     setIsGenerating(true);
+    const startTime = Date.now();
+    
     try {
       // Prepare knowledge sources for API
       const knowledgeContext = knowledgeSources.length > 0 
@@ -111,7 +118,14 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check for timeout-like errors
+        const errorMsg = error.message || '';
+        if (errorMsg.includes('Failed to fetch') || errorMsg.includes('network') || errorMsg.includes('timeout')) {
+          throw new Error('Generation timed out. Try generating 50 or fewer questions.');
+        }
+        throw error;
+      }
 
       const questions: GeneratedQuestion[] = (data.questions || []).map((q: any, i: number) => {
         const validation = validateQuestion(q);
@@ -131,10 +145,19 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
       });
 
       onQuestionsGenerated(questions);
-      toast.success(`Generated ${questions.length} questions`);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      toast.success(`Generated ${questions.length} questions in ${elapsed}s`);
     } catch (err) {
       console.error('Generation error:', err);
-      toast.error('Failed to generate questions');
+      const elapsed = (Date.now() - startTime) / 1000;
+      const errorMessage = (err as Error).message || 'Failed to generate questions';
+      
+      // Check if it's likely a timeout
+      if (elapsed > 55 || errorMessage.includes('timed out') || errorMessage.includes('timeout')) {
+        toast.error(`Request timed out after ${Math.round(elapsed)}s. Try generating 50 or fewer questions.`);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -142,7 +165,8 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
 
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value) || 0;
-    setCount(Math.min(300, Math.max(0, value)));
+    // Cap at 100 instead of 300 to prevent timeouts
+    setCount(Math.min(100, Math.max(0, value)));
   };
 
   return (
@@ -207,7 +231,7 @@ export function GenerationPanel({ categories, languages, selectedLanguage, onQue
             value={count}
             onChange={handleCountChange}
             min={0}
-            max={300}
+            max={100}
             className="h-9 text-center"
           />
         </div>
