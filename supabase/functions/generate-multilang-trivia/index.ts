@@ -625,91 +625,109 @@ Return ONLY valid JSON with this structure:
     // Take only the requested number of unique questions
     const trimmedQuestions = uniqueQuestions.slice(0, requestedCount);
 
-    // Georgian Grammar Verification (only for Georgian language)
-    if (language === 'ka') {
-      console.log("Verifying Georgian grammar...");
+    // Georgian Grammar Verification (BATCHED for performance - only for Georgian language)
+    if (language === 'ka' && trimmedQuestions.length > 0) {
+      console.log(`Verifying Georgian grammar (batched for ${trimmedQuestions.length} questions)...`);
       const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       
-      for (const q of trimmedQuestions) {
-        try {
-          const textsToVerify = [
-            q.questionText,
-            q.correctAnswer,
-            ...(q.incorrectAnswers || [])
-          ];
-          
-          const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({ texts: textsToVerify }),
+      try {
+        // Collect ALL texts from all questions into one batch with position tracking
+        const allTexts: { questionIndex: number; textIndex: number; text: string }[] = [];
+        trimmedQuestions.forEach((q: any, qIdx: number) => {
+          allTexts.push({ questionIndex: qIdx, textIndex: 0, text: q.questionText || '' });
+          allTexts.push({ questionIndex: qIdx, textIndex: 1, text: q.correctAnswer || '' });
+          (q.incorrectAnswers || []).forEach((ans: string, aIdx: number) => {
+            allTexts.push({ questionIndex: qIdx, textIndex: 2 + aIdx, text: ans || '' });
           });
+        });
 
-          if (grammarResponse.ok) {
-            const grammarResult = await grammarResponse.json();
-            if (grammarResult.results && grammarResult.results.length > 0) {
-              // Apply corrections
-              if (grammarResult.results[0]?.corrected) {
-                q.questionText = grammarResult.results[0].corrected;
-              }
-              if (grammarResult.results[1]?.corrected) {
-                q.correctAnswer = grammarResult.results[1].corrected;
-              }
-              for (let i = 0; i < (q.incorrectAnswers || []).length; i++) {
-                if (grammarResult.results[i + 2]?.corrected) {
-                  q.incorrectAnswers[i] = grammarResult.results[i + 2].corrected;
+        const grammarResponse = await fetch(`${supabaseUrl}/functions/v1/verify-georgian-grammar`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ texts: allTexts.map(t => t.text) }),
+        });
+
+        if (grammarResponse.ok) {
+          const grammarResult = await grammarResponse.json();
+          let fixesApplied = 0;
+          
+          // Apply corrections back to questions using position tracking
+          if (grammarResult.results && grammarResult.results.length > 0) {
+            allTexts.forEach((item, resultIdx) => {
+              const correction = grammarResult.results[resultIdx]?.corrected;
+              if (correction && correction !== item.text) {
+                const q = trimmedQuestions[item.questionIndex];
+                if (item.textIndex === 0) {
+                  q.questionText = correction;
+                  fixesApplied++;
+                } else if (item.textIndex === 1) {
+                  q.correctAnswer = correction;
+                  fixesApplied++;
+                } else {
+                  const answerIndex = item.textIndex - 2;
+                  if (q.incorrectAnswers && q.incorrectAnswers[answerIndex]) {
+                    q.incorrectAnswers[answerIndex] = correction;
+                    fixesApplied++;
+                  }
                 }
               }
-              if (grammarResult.totalErrors > 0) {
-                console.log(`Grammar fixed for: "${q.questionText.substring(0, 30)}..."`);
-              }
-            }
+            });
           }
-        } catch (grammarError) {
-          console.error("Grammar verification failed (non-blocking):", grammarError);
+          console.log(`Grammar verification complete: ${grammarResult.totalErrors || 0} errors found, ${fixesApplied} fixes applied`);
+        } else {
+          console.error("Grammar verification failed with status:", grammarResponse.status);
         }
+      } catch (grammarError) {
+        console.error("Grammar batch verification failed (non-blocking):", grammarError);
       }
     }
 
     // Find icons for each question using multi-tier search with category fallback
+    // Process in batches of 10 to avoid overwhelming the database
     console.log(`Finding icons for ${trimmedQuestions.length} questions...`);
     let iconsFound = 0;
     let iconsFallback = 0;
     
-    const questionsWithIcons = await Promise.all(
-      trimmedQuestions.map(async (q: any) => {
-        // Combine AI-generated keywords with extracted text keywords (question only, never answer!)
-        const aiKeywords = (q.iconKeywords || []).map((k: string) => k.toLowerCase().trim());
-        const textKeywords = extractVisualKeywords(q.questionText || '');
-        
-        // Combine all keywords
-        let combinedKeywords = [...new Set([...aiKeywords, ...textKeywords])];
-        
-        // 🚨 CRITICAL: Filter out any keywords that could reveal the answer!
-        const safeKeywords = filterAnswerKeywords(
-          combinedKeywords,
-          q.correctAnswer || '',
-          q.incorrectAnswers || []
-        );
-        
-        console.log(`Keywords for "${q.questionText?.substring(0, 30)}...": [${combinedKeywords.join(', ')}] -> safe: [${safeKeywords.join(', ')}]`);
-        
-        const iconSlug = await findIconForQuestion(supabase, safeKeywords, categoryIconSlug);
-        
-        if (iconSlug) {
-          q.iconSlug = iconSlug;
-          iconsFound++;
-          if (iconSlug === categoryIconSlug) {
-            iconsFallback++;
+    const ICON_BATCH_SIZE = 10;
+    const questionsWithIcons: any[] = [];
+    
+    for (let i = 0; i < trimmedQuestions.length; i += ICON_BATCH_SIZE) {
+      const batch = trimmedQuestions.slice(i, i + ICON_BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async (q: any) => {
+          // Combine AI-generated keywords with extracted text keywords (question only, never answer!)
+          const aiKeywords = (q.iconKeywords || []).map((k: string) => k.toLowerCase().trim());
+          const textKeywords = extractVisualKeywords(q.questionText || '');
+          
+          // Combine all keywords
+          let combinedKeywords = [...new Set([...aiKeywords, ...textKeywords])];
+          
+          // 🚨 CRITICAL: Filter out any keywords that could reveal the answer!
+          const safeKeywords = filterAnswerKeywords(
+            combinedKeywords,
+            q.correctAnswer || '',
+            q.incorrectAnswers || []
+          );
+          
+          const iconSlug = await findIconForQuestion(supabase, safeKeywords, categoryIconSlug);
+          
+          if (iconSlug) {
+            q.iconSlug = iconSlug;
+            iconsFound++;
+            if (iconSlug === categoryIconSlug) {
+              iconsFallback++;
+            }
           }
-        }
-        
-        delete q.iconKeywords;
-        return q;
-      })
-    );
+          
+          delete q.iconKeywords;
+          return q;
+        })
+      );
+      questionsWithIcons.push(...batchResults);
+    }
     
     console.log(`Icon assignment complete: ${iconsFound}/${trimmedQuestions.length} icons found (${iconsFallback} used category fallback)`);
 
