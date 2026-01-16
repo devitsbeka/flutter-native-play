@@ -57,6 +57,23 @@ CRITICAL CHARACTER LIMITS:
 
 If translation exceeds limits, shorten while preserving meaning. Use abbreviations if needed.
 
+CRITICAL FOR GEORGIAN (ka) TRANSLATIONS - Use ONLY native Georgian words, NOT Slavic/Russian loanwords:
+❌ "კომარა" → ✅ "კოღო" (mosquito)
+❌ "ბაბოჩკა" → ✅ "პეპელა" (butterfly)
+❌ "სტაკანი" → ✅ "ჭიქა" (glass)
+❌ "კარტოშკა" → ✅ "კარტოფილი" (potato)
+❌ "აგურცი" → ✅ "კიტრი" (cucumber)
+❌ "კაპუსტა" → ✅ "კომბოსტო" (cabbage)
+❌ "სტოლი" → ✅ "მაგიდა" (table)
+❌ "კროვატი" → ✅ "საწოლი" (bed)
+❌ "დივანი" → ✅ "ტახტი" (sofa)
+❌ "მაიკა" → ✅ "მაისური" (t-shirt)
+❌ "პლატია" → ✅ "კაბა" (dress)
+❌ "შტანი" → ✅ "შარვალი" (pants)
+❌ "ბოლნიცა" → ✅ "საავადმყოფო" (hospital)
+❌ "აპტეკა" → ✅ "აფთიაქი" (pharmacy)
+❌ "მაგაზინი" → ✅ "მაღაზია" (store)
+
 Return JSON with "translations" array matching input order.`;
 
   const userPrompt = `Translate these trivia questions to ${languageName}:
