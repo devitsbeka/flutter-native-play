@@ -137,6 +137,9 @@ function ItemContentsDisplay({ item, t }: { item: { id: string; description: str
           <span className="text-sm font-bold text-amber-500">{t('shop.vipStatus')}</span>
           <span className="text-xs text-muted-foreground">{daysText}</span>
         </div>
+        <span className="text-xs text-muted-foreground text-center px-4">
+          {t('shop.vipDescription')}
+        </span>
         <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
           <span className="bg-muted px-2 py-1 rounded-lg">{t('shop.doubleXp')}</span>
           <span className="bg-muted px-2 py-1 rounded-lg">{t('shop.unlimitedSpin')}</span>
@@ -153,12 +156,22 @@ function ItemContentsDisplay({ item, t }: { item: { id: string; description: str
       "replace": t('shop.replace'),
       "time-drain": t('shop.timePlus'),
     };
+    const powerDescriptions: Record<string, string> = {
+      "5050": t('powerups.fiftyFifty.description'),
+      "freeze": t('powerups.freeze.description'),
+      "replace": t('powerups.replace.description'),
+      "time-drain": t('powerups.timeDrain.description'),
+    };
     const name = powerNames[contents.powerType || "5050"];
+    const description = powerDescriptions[contents.powerType || "5050"];
     
     return (
       <div className="flex flex-col items-center gap-2">
         <span className="text-sm font-medium text-foreground">
           {contents.amount}x {name}
+        </span>
+        <span className="text-xs text-muted-foreground text-center px-4">
+          {description}
         </span>
       </div>
     );
@@ -169,6 +182,9 @@ function ItemContentsDisplay({ item, t }: { item: { id: string; description: str
       <div className="flex flex-col items-center gap-2">
         <span className="text-sm font-bold text-amber-500">
           {contents.amount} {t('shop.coin')}
+        </span>
+        <span className="text-xs text-muted-foreground text-center px-4">
+          {t('shop.coinsDescription')}
         </span>
       </div>
     );
@@ -203,10 +219,10 @@ export function ShopItemDetailModal({
       onClose={onClose}
       title={item.name}
     >
-      <div className="flex flex-col items-center gap-4 py-2">
+      <div className="flex flex-col items-center justify-center gap-4 py-6 min-h-[40vh]">
         {/* Icon */}
         <motion.div
-          className="w-20 h-20 flex items-center justify-center"
+          className="w-[86px] h-[86px] flex items-center justify-center"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}

@@ -598,6 +598,8 @@ export const es: KaTranslations = {
     notEnoughCoinsLong: "Monedas insuficientes",
     purchasedSuccess: "¡Comprado exitosamente!",
     purchasedPower: "¡Comprado {count}x {name}! ⚡",
+    coinsDescription: "Usa monedas para comprar poderes",
+    vipDescription: "Obtén beneficios y bonificaciones exclusivas",
   },
   help: {
     title: "Ayuda",
