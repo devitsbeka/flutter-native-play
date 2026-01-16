@@ -93,7 +93,7 @@ export default function ContentManager() {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   
   // Category question counts (fetched separately)
-  const [questionCounts, setQuestionCounts] = useState<Record<string, number>>({});
+  const [questionCounts, setQuestionCounts] = useState<Record<string, { total: number; production: number }>>({});
   const [countsLoading, setCountsLoading] = useState(true);
   
   // Fetch question counts per category using RPC (server-side aggregation)
@@ -107,9 +107,12 @@ export default function ContentManager() {
       
       if (error) throw error;
       
-      const counts: Record<string, number> = {};
-      (data || []).forEach((row: { category_id: string; question_count: number }) => {
-        counts[row.category_id] = row.question_count;
+      const counts: Record<string, { total: number; production: number }> = {};
+      (data || []).forEach((row: { category_id: string; question_count: number; production_count: number }) => {
+        counts[row.category_id] = { 
+          total: row.question_count, 
+          production: row.production_count 
+        };
       });
       setQuestionCounts(counts);
     } catch (err) {
@@ -391,7 +394,17 @@ export default function ContentManager() {
                       ? "text-primary-foreground/70" 
                       : "text-muted-foreground"
                   )}>
-                    {questionCounts[category.id] || 0} კითხვა
+                    {questionCounts[category.id]?.production || 0} კითხვა
+                    {questionCounts[category.id] && questionCounts[category.id].total > questionCounts[category.id].production && (
+                      <span className={cn(
+                        "ml-1",
+                        selectedCategoryId === category.id 
+                          ? "text-primary-foreground/50" 
+                          : "text-amber-500/70"
+                      )}>
+                        (+{questionCounts[category.id].total - questionCounts[category.id].production})
+                      </span>
+                    )}
                   </p>
                 </div>
                 <DropdownMenu>
@@ -732,7 +745,14 @@ export default function ContentManager() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl bg-card border">
                     <p className="text-xs text-muted-foreground">კითხვები</p>
-                    <p className="text-2xl font-bold">{questionCounts[selectedCategory.id] || 0}</p>
+                    <p className="text-2xl font-bold">
+                      {questionCounts[selectedCategory.id]?.production || 0}
+                      {questionCounts[selectedCategory.id] && questionCounts[selectedCategory.id].total > questionCounts[selectedCategory.id].production && (
+                        <span className="text-sm font-normal text-amber-500 ml-2">
+                          (+{questionCounts[selectedCategory.id].total - questionCounts[selectedCategory.id].production})
+                        </span>
+                      )}
+                    </p>
                   </div>
                   <div className="p-4 rounded-xl bg-card border">
                     <p className="text-xs text-muted-foreground">დონეები</p>
