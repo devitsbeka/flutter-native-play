@@ -20,7 +20,7 @@ import { HelpModal } from "@/components/team/HelpModal";
 import { AllRecentRoomsModal } from "@/components/team/AllRecentRoomsModal";
 import { AllFriendsModal } from "@/components/team/AllFriendsModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
@@ -40,7 +40,7 @@ import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
-import { DesktopLeftNav } from "@/components/team/DesktopLeftNav";
+
 import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
@@ -400,14 +400,7 @@ function TeamContentV2() {
   }
 
   return (
-    <div className="min-h-screen flex w-full">
-      {/* Desktop Left Navigation - Instagram style */}
-      <DesktopLeftNav 
-        onNotificationsClick={() => setShowNotificationsPanel(true)}
-        onMessagesClick={() => setShowRoomChatsPanel(true)}
-        onCreateClick={() => setShowTeamMenu(true)}
-      />
-
+    <MainLayout showPlayButton={false}>
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Row 1: Mobile Header - Scrolls away */}
@@ -652,17 +645,6 @@ function TeamContentV2() {
           )}
         </div>
 
-        {/* Bottom Navigation - Mobile only (hidden on tablet/desktop and when editing) */}
-        {!showCreateModal && !showTeamMenu && !isEditingRound && (
-          <div className="lg:hidden">
-            <UniversalBottomNav 
-              onTeamPlayClick={() => {
-                playSound("button-click");
-                setShowTeamMenu(true);
-              }}
-            />
-          </div>
-        )}
       </main>
 
       {/* Desktop Right Sidebar - Instagram style */}
@@ -906,7 +888,7 @@ function TeamContentV2() {
         open={showQRScanner}
         onClose={() => setShowQRScanner(false)}
       />
-    </div>
+    </MainLayout>
   );
 }
 

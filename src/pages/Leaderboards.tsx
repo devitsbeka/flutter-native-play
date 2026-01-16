@@ -12,7 +12,7 @@ import trophyGold from "@/assets/trophy-gold.png";
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
 import { LeagueCountdown } from "@/components/leaderboard/LeagueCountdown";
 import { LeaderboardHeroBackground } from "@/components/leaderboard/LeaderboardHeroBackground";
-import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboardsSkeleton } from "@/components/leaderboard/LeaderboardSkeleton";
@@ -131,6 +131,7 @@ export default function Leaderboards() {
   }, [carouselApi, viewingTier]);
 
   return (
+    <MainLayout showPlayButton={false}>
     <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden" style={{ backgroundColor: '#4E4FA6' }}>
       {/* Desktop: Show all 3 leaderboards side by side */}
       <div className="hidden lg:block flex-1 pb-28">
@@ -273,9 +274,8 @@ export default function Leaderboards() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <UniversalBottomNav />
     </div>
+    </MainLayout>
   );
 }
 

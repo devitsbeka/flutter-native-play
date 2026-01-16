@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { User, Lock, HelpCircle, Shield, LogOut, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -47,8 +48,8 @@ export default function Settings() {
   };
 
   return (
+    <MainLayout showPlayButton={false}>
     <div className="min-h-screen bg-background">
-      <PageHeader title={t("menu.settings")} />
 
       <div className="p-4 pb-12 space-y-2">
         {settingsItems.map((item, index) => {
@@ -92,5 +93,6 @@ export default function Settings() {
         )}
       </div>
     </div>
+    </MainLayout>
   );
 }

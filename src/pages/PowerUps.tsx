@@ -10,7 +10,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useShopData, ShopItem } from "@/hooks/useShopData";
 
-import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
@@ -135,6 +135,7 @@ export default function PowerUps() {
   };
 
   return (
+    <MainLayout showPlayButton={false}>
     <div className="min-h-screen flex flex-col pb-24">
       <GlobalSplineBackground />
       
@@ -207,7 +208,7 @@ export default function PowerUps() {
       />
 
       {/* Bottom Navigation */}
-      <UniversalBottomNav />
     </div>
+    </MainLayout>
   );
 }

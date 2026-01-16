@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Settings, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { HexBadge } from "@/components/shared/HexBadge";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ export default function Profile() {
 
   if (!user || !profile) {
     return (
-      <AppLayout showNav>
+      <MainLayout showPlayButton={false}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <p className="text-muted-foreground mb-4">{t("profile.signInToView")}</p>
@@ -52,7 +52,7 @@ export default function Profile() {
             </button>
           </div>
         </div>
-      </AppLayout>
+      </MainLayout>
     );
   }
 
@@ -71,7 +71,21 @@ export default function Profile() {
   );
 
   return (
-    <AppLayout headerContent={headerContent} headerClassName="pb-8">
+    <MainLayout showPlayButton={false}>
+      <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="gradient-teal pt-12 pb-20 px-6">
+        <div className="flex justify-between items-start mb-8">
+          <h1 className="text-2xl font-bold text-primary-foreground">{t("profile.title")}</h1>
+          <button
+            onClick={() => navigate("/settings")}
+            className="p-2 rounded-full bg-primary-foreground/10"
+          >
+            <Settings className="w-5 h-5 text-primary-foreground" />
+          </button>
+        </div>
+      </div>
+
       <div className="px-6 -mt-16 relative z-10">
         {/* Avatar Card */}
         <motion.div
@@ -270,6 +284,7 @@ export default function Profile() {
         isOpen={showAvatarGenerator}
         onClose={() => setShowAvatarGenerator(false)}
       />
-    </AppLayout>
+      </div>
+    </MainLayout>
   );
 }

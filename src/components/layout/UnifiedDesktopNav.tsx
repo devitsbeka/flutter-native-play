@@ -147,7 +147,7 @@ export function UnifiedDesktopNav({
       </div>
 
       {/* Main Navigation */}
-      <div className="flex-1 px-2 xl:px-3 space-y-1">
+      <div className="px-2 xl:px-3 space-y-1">
         {navItems.map((item) => (
           <NavButton
             key={item.id}
@@ -182,9 +182,9 @@ export function UnifiedDesktopNav({
         </NavButton>
       </div>
 
-      {/* Play Button */}
+      {/* Play Button - Positioned in middle section */}
       {showPlayButton && (
-        <div className="px-2 xl:px-3 mb-4">
+        <div className="px-2 xl:px-3 py-4">
           <DesktopPlayButton
             onClick={onPlayClick}
             playsRemaining={playsRemaining}
