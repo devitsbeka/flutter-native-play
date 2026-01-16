@@ -60,6 +60,7 @@ export const ka = {
     invalidCredentials: "არასწორი მონაცემები",
     accountCreated: "ანგარიში შეიქმნა!",
     welcomeBack: "კეთილი იყოს შენი დაბრუნება!",
+    signInRequired: "შესვლა საჭიროა",
   },
 
   // ==========================================
@@ -692,6 +693,7 @@ export const ka = {
     gemShop: "ალმასების მაღაზია",
     premiumItems: "პრემიუმ აითემები ალმასებით",
     vipActive: "VIP აქტიური",
+    active: "აქტიური",
     daysRemaining: "{days} დღე დარჩენილი",
     popular: "პოპულარული",
     tabAll: "ყველა",

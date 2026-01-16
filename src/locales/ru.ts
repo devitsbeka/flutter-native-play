@@ -55,6 +55,7 @@ export const ru: KaTranslations = {
     invalidCredentials: "Неверные данные",
     accountCreated: "Аккаунт создан!",
     welcomeBack: "С возвращением!",
+    signInRequired: "Требуется вход",
   },
   onboarding: {
     welcomeTitle: "Привет! 👋",
@@ -597,7 +598,8 @@ export const ru: KaTranslations = {
     processing: "Обработка...",
     gemShop: "Магазин кристаллов",
     premiumItems: "Премиум товары за кристаллы",
-    vipActive: "VIP активен",
+    vipActive: "VIP Активен",
+    active: "Активно",
     daysRemaining: "Осталось {days} дней",
     popular: "Популярное",
     tabAll: "Все",
