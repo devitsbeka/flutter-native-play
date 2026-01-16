@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellOff, ChevronDown, Trash2, X } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
@@ -177,6 +178,7 @@ export default function Notifications() {
   };
 
   return (
+    <MainLayout showPlayButton={false}>
     <div className="min-h-screen pb-8 relative overflow-hidden">
       {/* Video Background */}
       <div className="fixed inset-0">
@@ -307,5 +309,6 @@ export default function Notifications() {
         <div className="h-8" />
       </div>
     </div>
+    </MainLayout>
   );
 }

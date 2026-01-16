@@ -4,7 +4,7 @@ import { useWorldProgress } from "@/hooks/useWorldProgress";
 import { continents, Continent } from "@/data/worldData";
 import { ContinentCard } from "@/components/shared/ContinentCard";
 import { AnimatedGlobe } from "@/components/shared/AnimatedGlobe";
-import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 const continentEmojis: Record<string, string> = {
   asia: "🌏",
@@ -39,6 +39,7 @@ export default function WorldHome() {
   };
 
   return (
+    <MainLayout showPlayButton={false}>
     <div className="min-h-screen flex flex-col">
       {/* Teal Header */}
       <div className="gradient-teal px-6 pt-12 pb-24 relative overflow-hidden">
@@ -103,8 +104,7 @@ export default function WorldHome() {
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation />
     </div>
+    </MainLayout>
   );
 }
