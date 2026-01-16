@@ -22,6 +22,7 @@ import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingM
 import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
+import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
 
 import { SoundSettingsModal } from "@/components/home/SoundSettingsModal";
 import { AdFreeModal } from "@/components/home/AdFreeModal";
@@ -636,6 +637,17 @@ export default function Index() {
                         {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
                       </span>
                     </div>
+                </div>
+
+                {/* Large Play Button - Desktop only */}
+                <div className="hidden md:block mt-6">
+                  <DesktopPlayButtonLarge
+                    onClick={handlePlayClick}
+                    playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+                    maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+                    canPlay={user ? canPlay : guestPlaysRemaining > 0}
+                    isVip={isVip}
+                  />
                 </div>
               </>
                 </motion.div>

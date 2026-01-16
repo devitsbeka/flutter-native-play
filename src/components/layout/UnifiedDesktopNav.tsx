@@ -236,7 +236,7 @@ export function UnifiedDesktopNav({
           </TooltipProvider>
         </div>
 
-        {/* Play Button - 15% larger */}
+        {/* Play Button - smaller version in nav */}
         {showPlayButton && (
           <DesktopPlayButton
             onClick={onPlayClick}
@@ -244,8 +244,8 @@ export function UnifiedDesktopNav({
             maxPlays={maxPlays}
             canPlay={canPlay}
             isVip={isVip}
-            isCompact={false}
-            size="lg"
+            isCompact={true}
+            size="md"
           />
         )}
       </div>
