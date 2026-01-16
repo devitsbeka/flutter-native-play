@@ -391,6 +391,7 @@ const QuestionCard = React.memo(function QuestionCard({
         <FlowIconPicker
           currentIconSlug={question.iconSlug}
           suggestedSlugs={question.suggestedIconSlugs || []}
+          questionText={question.questionText}
           onSelect={(slug) => onUpdate({ iconSlug: slug })}
         />
 
