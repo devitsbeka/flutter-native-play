@@ -84,10 +84,9 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           backgroundColor: '#9B8AC4',
         }}
       />
-      
 
-      {/* Content container - max-width only on desktop */}
-      <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'max-w-[1400px] mx-auto'}`}>
+      {/* Content container - account for left nav on desktop */}
+      <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'max-w-[1200px] mx-auto lg:ml-[72px] xl:ml-[220px] lg:mr-auto'}`}>
         {children}
       </div>
     </div>
