@@ -74,17 +74,43 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
-      {/* Background image - switches based on current tier */}
-      <div 
-        className="absolute inset-0 w-full h-full bg-no-repeat transition-all duration-500 ease-out"
-        style={{
-          backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
-          backgroundPosition: isMobile 
-            ? (currentTier === 3 ? 'center calc(50% - 55px)' : 'center calc(50% - 105px)')
-            : 'center top',
-          backgroundSize: isMobile ? 'cover' : 'auto 100%',
-        }}
-      />
+      {/* Background images */}
+      {isMobile ? (
+        // Mobile: Single background that switches based on current tier
+        <div 
+          className="absolute inset-0 w-full h-full bg-no-repeat transition-all duration-500 ease-out"
+          style={{
+            backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
+            backgroundPosition: currentTier === 3 ? 'center calc(50% - 55px)' : 'center calc(50% - 105px)',
+            backgroundSize: 'cover',
+          }}
+        />
+      ) : (
+        // Desktop: All 3 backgrounds side by side, each taking 1/3 width
+        <div className="absolute inset-0 w-full h-full flex">
+          <div 
+            className="flex-1 h-full bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${leaderboardBgSilver})`,
+              backgroundSize: 'auto 100%',
+            }}
+          />
+          <div 
+            className="flex-1 h-full bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${leaderboardBgGold})`,
+              backgroundSize: 'auto 100%',
+            }}
+          />
+          <div 
+            className="flex-1 h-full bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${leaderboardBgBronze})`,
+              backgroundSize: 'auto 100%',
+            }}
+          />
+        </div>
+      )}
 
       {/* Content container - account for left nav on desktop */}
       <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'max-w-[1200px] mx-auto lg:ml-[72px] xl:ml-[220px] lg:mr-auto'}`}>
