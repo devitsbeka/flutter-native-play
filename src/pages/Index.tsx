@@ -398,7 +398,7 @@ export default function Index() {
           {/* Main content area */}
           <div className="flex-1 relative h-[calc(100vh-60px)] overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 10 }}>
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 0 }}>
             <motion.div 
               className="flex flex-col items-center w-full max-w-[360px] px-4"
             initial={{ scale: 0.8, opacity: 0 }}
