@@ -151,7 +151,7 @@ export function QuestionPreviewList({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col">
       {/* Toolbar */}
       <div className="p-3 border-b border-border/50 space-y-2 bg-card/30">
         {/* Search */}
@@ -258,33 +258,31 @@ export function QuestionPreviewList({
       </div>
 
       {/* Questions List */}
-      <ScrollArea className="flex-1">
-        <div className="p-3 space-y-2">
-          {filteredQuestions.map((q) => (
-            <QuestionCard
-              key={q.id}
-              question={q}
-              isSelected={selectedIds.has(q.id)}
-              isEditing={editingId === q.id}
-              isFocused={focusedQuestionId === q.id}
-              onToggleSelect={() => toggleSelect(q.id)}
-              onApprove={() => onApprove(q.id)}
-              onReject={() => onReject(q.id)}
-              onStartEdit={() => {
-                setEditingId(q.id);
-                onEditStart?.();
-              }}
-              onEndEdit={() => {
-                setEditingId(null);
-                onEditEnd?.();
-              }}
-              onUpdate={(updates) => onUpdateQuestion(q.id, updates)}
-              onFocus={() => onFocusChange(q.id)}
-              flag={getFlag(q.language)}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+      <div className="p-3 space-y-2">
+        {filteredQuestions.map((q) => (
+          <QuestionCard
+            key={q.id}
+            question={q}
+            isSelected={selectedIds.has(q.id)}
+            isEditing={editingId === q.id}
+            isFocused={focusedQuestionId === q.id}
+            onToggleSelect={() => toggleSelect(q.id)}
+            onApprove={() => onApprove(q.id)}
+            onReject={() => onReject(q.id)}
+            onStartEdit={() => {
+              setEditingId(q.id);
+              onEditStart?.();
+            }}
+            onEndEdit={() => {
+              setEditingId(null);
+              onEditEnd?.();
+            }}
+            onUpdate={(updates) => onUpdateQuestion(q.id, updates)}
+            onFocus={() => onFocusChange(q.id)}
+            flag={getFlag(q.language)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
