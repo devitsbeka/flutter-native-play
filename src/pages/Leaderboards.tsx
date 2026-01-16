@@ -303,8 +303,8 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
 
       {/* Content area - leaderboards pushed down */}
       <div className="pt-[520px]">
-        {/* 3 Column Layout with trophies floating above */}
-        <div className="max-w-7xl mx-auto px-4">
+        {/* 3 Column Layout - full width */}
+        <div className="w-full px-6">
           <div className="grid grid-cols-3 gap-6">
             {tiers.map(({ tier, data, name, nameKa }) => (
               <DesktopLeagueColumn
