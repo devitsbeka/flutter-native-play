@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { DesktopLeftSidebar, DesktopRightSidebarWidgets } from "@/components/home/DesktopSidebars";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { Bell, Menu, Check, Clock } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
@@ -39,6 +39,7 @@ import { AvatarModal } from "@/components/home/AvatarModal";
 
 import { t } from "@/lib/i18n";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { DesktopRightSidebarWidgets } from "@/components/home/DesktopSidebars";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useTotalStars } from "@/hooks/useTotalStars";
@@ -322,9 +323,17 @@ export default function Index() {
           setIsDailyRewardsOpen(true);
         }}
       />
-      {/* Main layout wrapper */}
-      <div className="min-h-screen flex flex-col w-full relative">
-        {/* ===== TOP BAR - Full width above sidebars ===== */}
+      {/* Main layout with desktop navigation */}
+      <MainLayout
+        onPlayClick={handlePlayClick}
+        playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+        maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+        canPlay={user ? canPlay : guestPlaysRemaining > 0}
+        isVip={isVip}
+        showPlayButton={true}
+        showBottomNav={!isSideMenuOpen}
+      >
+        <div className="min-h-screen flex flex-col w-full relative">
         <header className="relative z-20 px-4 pt-4 safe-top">
           <div className="flex items-center justify-between">
             {/* Burger menu chip - same style as currency */}
@@ -390,13 +399,10 @@ export default function Index() {
           </div>
         </header>
 
-        {/* Content area with sidebars */}
+        {/* Content area */}
         <div className="flex-1 flex relative">
-          {/* Left Sidebar - tablet/desktop */}
-          <DesktopLeftSidebar />
-
           {/* Main content area */}
-          <div className="flex-1 relative h-[calc(100vh-60px)] overflow-hidden">
+          <div className="flex-1 relative h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 0 }}>
             <motion.div 
@@ -622,44 +628,15 @@ export default function Index() {
                 </motion.div>
           </motion.div>
         </div>
-
-          {/* Universal Bottom Navigation - Mobile only (hidden on lg+) */}
-          <div className="lg:hidden">
-            <UniversalBottomNav 
-              onPlayClick={handlePlayClick}
-              playsRemaining={user ? playsRemaining : guestPlaysRemaining}
-              maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
-              canPlay={user ? canPlay : guestPlaysRemaining > 0}
-              isVip={isVip}
-              vipLoading={vipLoading}
-              onWatchAdClick={() => setShowWatchAdModal(true)}
-              isGuest={!user}
-              hidden={isSideMenuOpen}
-            />
-          </div>
           </div>
 
-          {/* Right Sidebar - desktop only */}
-          <DesktopRightSidebarWidgets />
+          {/* Right Sidebar - desktop only (xl+) */}
+          <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-[calc(100vh-60px)] lg:h-screen sticky top-0 p-4 overflow-y-auto scrollbar-hide">
+            <DesktopRightSidebarWidgets />
+          </aside>
         </div>
-      </div>
-
-      {/* Desktop Bottom Navigation - visible on lg+ */}
-      <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-50">
-        <div className="max-w-[600px] mx-auto">
-          <UniversalBottomNav 
-            onPlayClick={handlePlayClick}
-            playsRemaining={user ? playsRemaining : guestPlaysRemaining}
-            maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
-            canPlay={user ? canPlay : guestPlaysRemaining > 0}
-            isVip={isVip}
-            vipLoading={vipLoading}
-            onWatchAdClick={() => setShowWatchAdModal(true)}
-            isGuest={!user}
-            hidden={isSideMenuOpen}
-          />
         </div>
-      </div>
+      </MainLayout>
     </>
   );
 }
