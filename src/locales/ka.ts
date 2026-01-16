@@ -710,6 +710,8 @@ export const ka = {
     notEnoughCoinsLong: "არ გაქვს საკმარისი მონეტები",
     purchasedSuccess: "წარმატებით შეიძინე!",
     purchasedPower: "შეძენილია {count}x {name}! ⚡",
+    coinsDescription: "გამოიყენე მონეტები ძალების შესაძენად",
+    vipDescription: "მიიღე ექსკლუზიური ბენეფიტები და ბონუსები",
   },
 
   // ==========================================

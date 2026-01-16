@@ -712,6 +712,8 @@ export const en: KaTranslations = {
     notEnoughCoinsLong: "Not enough coins",
     purchasedSuccess: "Successfully purchased!",
     purchasedPower: "Purchased {count}x {name}! ⚡",
+    coinsDescription: "Use coins to buy powers",
+    vipDescription: "Get exclusive benefits and bonuses",
   },
 
   // ==========================================

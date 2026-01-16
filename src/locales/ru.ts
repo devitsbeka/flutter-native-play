@@ -615,6 +615,8 @@ export const ru: KaTranslations = {
     notEnoughCoinsLong: "Недостаточно монет",
     purchasedSuccess: "Успешно куплено!",
     purchasedPower: "Куплено {count}x {name}! ⚡",
+    coinsDescription: "Используйте монеты для покупки сил",
+    vipDescription: "Получите эксклюзивные бонусы и преимущества",
   },
   help: {
     title: "Помощь",
