@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -171,7 +171,8 @@ export default function Discover() {
   const isSearching = searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen pb-24 bg-[#F8F6FC]">
+    <MainLayout showPlayButton={false}>
+      <div className="min-h-screen pb-24 bg-[#F8F6FC]">
       {/* Subtle overlay for depth */}
       <div className="fixed inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/20 pointer-events-none z-0" />
 
@@ -443,7 +444,7 @@ export default function Discover() {
           )}
           </div>
 
-        <UniversalBottomNav />
       </div>
+    </MainLayout>
   );
 }
