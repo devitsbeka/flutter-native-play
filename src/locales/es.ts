@@ -55,6 +55,7 @@ export const es: KaTranslations = {
     invalidCredentials: "Credenciales inválidas",
     accountCreated: "¡Cuenta creada!",
     welcomeBack: "¡Bienvenido de nuevo!",
+    signInRequired: "Inicio de sesión requerido",
   },
   onboarding: {
     welcomeTitle: "¡Hola! 👋",
@@ -581,6 +582,7 @@ export const es: KaTranslations = {
     gemShop: "Tienda de gemas",
     premiumItems: "Artículos premium con gemas",
     vipActive: "VIP Activo",
+    active: "Activo",
     daysRemaining: "{days} días restantes",
     popular: "Popular",
     tabAll: "Todos",

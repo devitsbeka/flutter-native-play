@@ -62,6 +62,7 @@ export const en: KaTranslations = {
     invalidCredentials: "Invalid credentials",
     accountCreated: "Account created!",
     welcomeBack: "Welcome back!",
+    signInRequired: "Sign in required",
   },
 
   // ==========================================
@@ -694,6 +695,7 @@ export const en: KaTranslations = {
     gemShop: "Gem Shop",
     premiumItems: "Premium items with gems",
     vipActive: "VIP Active",
+    active: "Active",
     daysRemaining: "{days} days remaining",
     popular: "Popular",
     tabAll: "All",
