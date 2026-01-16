@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import logger from '@/utils/logger';
 
 // Generate or get a persistent guest session ID
 const getGuestSessionId = (): string => {
@@ -23,7 +24,6 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
   if (countryCodeFetched) return cachedCountryCode;
   
   try {
-    // Use ipapi.co - free, no API key needed, 1000 requests/day
     const response = await fetch('https://ipapi.co/json/', { 
       signal: AbortSignal.timeout(3000) 
     });
@@ -33,8 +33,8 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
       countryCodeFetched = true;
       return cachedCountryCode;
     }
-  } catch (err) {
-    console.warn('IP geolocation failed, using timezone fallback');
+  } catch {
+    logger.debug('IP geolocation failed, using timezone fallback');
   }
   
   // Fallback to timezone detection
@@ -76,15 +76,48 @@ const detectCountryFromTimezone = (): string | null => {
   }
 };
 
+/**
+ * useUserPresence - Tracks user presence for both authenticated and guest users
+ * 
+ * Key improvements:
+ * - Session validation before requests
+ * - Silent failures (no console spam)
+ * - Reduced heartbeat to 60s
+ * - Proper cleanup
+ */
 export const useUserPresence = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const location = useLocation();
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
   const countryCodeRef = useRef<string | null>(null);
+  const isUpdatingRef = useRef(false);
+
+  // Check if we can make authenticated requests
+  const canMakeRequest = useCallback((): boolean => {
+    // For authenticated users, check session validity
+    if (user?.id && session?.access_token) {
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const expiryTime = expiresAt * 1000;
+        const now = Date.now();
+        const buffer = 60 * 1000;
+        if (now >= expiryTime - buffer) {
+          return false;
+        }
+      }
+      return true;
+    }
+    // For guests, always allow (uses anon key)
+    return true;
+  }, [user?.id, session]);
 
   const updatePresence = useCallback(async (status: 'online' | 'away' | 'offline', currentPage?: string) => {
+    if (!canMakeRequest() || isUpdatingRef.current) return;
+    
     const userId = user?.id || getGuestSessionId();
     const countryCode = countryCodeRef.current;
+
+    isUpdatingRef.current = true;
 
     try {
       const { error } = await supabase
@@ -100,15 +133,17 @@ export const useUserPresence = () => {
         });
 
       if (error) {
-        console.error('Error updating presence:', error);
+        // Silent fail - don't spam console
+        logger.debug('Presence update failed:', error.message);
       }
-    } catch (err) {
-      console.error('Presence update failed:', err);
+    } catch {
+      // Silent fail
+    } finally {
+      isUpdatingRef.current = false;
     }
-  }, [user, location.pathname]);
-  useEffect(() => {
-    const userId = user?.id || getGuestSessionId();
+  }, [user?.id, location.pathname, canMakeRequest]);
 
+  useEffect(() => {
     // Fetch country code first, then start presence tracking
     const initPresence = async () => {
       const countryCode = await fetchCountryFromIP();
@@ -120,13 +155,17 @@ export const useUserPresence = () => {
 
     initPresence();
 
-    // Heartbeat every 30 seconds
+    // Heartbeat every 60 seconds (reduced from 30s)
     heartbeatInterval.current = setInterval(() => {
-      updatePresence('online', location.pathname);
-    }, 30000);
+      if (canMakeRequest()) {
+        updatePresence('online', location.pathname);
+      }
+    }, 60000);
 
     // Handle tab visibility
     const handleVisibilityChange = () => {
+      if (!canMakeRequest()) return;
+      
       if (document.hidden) {
         updatePresence('away');
       } else {
@@ -134,18 +173,11 @@ export const useUserPresence = () => {
       }
     };
 
-    // Handle before unload
+    // Handle before unload - simplified, just try to update
+    // The server-side timeout will handle cases where this fails
     const handleBeforeUnload = () => {
-      const data = JSON.stringify({
-        user_id: userId,
-        status: 'offline',
-        last_seen: new Date().toISOString(),
-        country_code: countryCodeRef.current,
-      });
-      navigator.sendBeacon(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_presence?user_id=eq.${userId}`,
-        data
-      );
+      // Don't use sendBeacon - it can't authenticate properly
+      // Server-side will mark users as offline after timeout
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -159,12 +191,14 @@ export const useUserPresence = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updatePresence('offline');
     };
-  }, [user, updatePresence, location.pathname]);
+  }, [user?.id, updatePresence, location.pathname, canMakeRequest]);
 
   // Update page on route change
   useEffect(() => {
-    updatePresence('online', location.pathname);
-  }, [location.pathname, updatePresence]);
+    if (canMakeRequest()) {
+      updatePresence('online', location.pathname);
+    }
+  }, [location.pathname, updatePresence, canMakeRequest]);
 
   return { updatePresence };
 };
