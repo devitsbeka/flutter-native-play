@@ -1,4 +1,5 @@
 // Centralized video configuration for preloading and display
+// IMPORTANT: No cache-busting query params - Service Worker handles versioning
 
 // Map/Adventure videos
 export const MAP_VIDEOS = {
@@ -7,13 +8,14 @@ export const MAP_VIDEOS = {
   videoC: "/videos/map-video-c.mp4",
 };
 
-// Category card background videos - v3 cache bust for updated files
+// Category card background videos
+// Note: Removed ?v=X params - SW cache handles versioning via CACHE_NAME
 export const CATEGORY_VIDEOS: Record<string, string> = {
-  art: "/videos/art.mp4?v=2",
-  georgian_history: "/videos/geo-history.mp4?v=2",
-  sports: "/videos/sport-final.mp4?v=2",
+  art: "/videos/art.mp4",
+  georgian_history: "/videos/geo-history.mp4",
+  sports: "/videos/sport-final.mp4",
   space: "/videos/galaxy.mp4",
-  georgian_literature: "/videos/literature.mp4?v=2",
+  georgian_literature: "/videos/literature.mp4",
   psychology: "/videos/psyc.mp4",
   geography: "/videos/geography.mp4",
   science: "/videos/science.mp4",
@@ -131,10 +133,17 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   linguistics: "/images/categories/languages.jpg",
 };
 
-// Get all video URLs for preloading
+// Get all video URLs for preloading (deduplicated)
 export function getAllVideoUrls(): string[] {
-  return [
+  const allUrls = [
     ...Object.values(MAP_VIDEOS),
     ...Object.values(CATEGORY_VIDEOS),
   ];
+  // Deduplicate
+  return [...new Set(allUrls)];
+}
+
+// Get category image URL for instant display while video loads
+export function getCategoryImageUrl(categoryId: string): string | null {
+  return CATEGORY_IMAGES[categoryId] || null;
 }

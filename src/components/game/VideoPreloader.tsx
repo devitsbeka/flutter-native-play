@@ -1,4 +1,5 @@
 import { MAP_VIDEOS, getAllVideoUrls } from "@/config/videoConfig";
+import logger from "@/utils/logger";
 
 // Re-export MAP_VIDEOS for backward compatibility
 export { MAP_VIDEOS };
@@ -16,12 +17,8 @@ type ProgressCallback = (progress: VideoLoadProgress) => void;
 // Global video preloading state
 let videosLoaded = false;
 let preloadingStarted = false;
-let sessionPreloadComplete = false; // Track if we already preloaded this session
 const videoLoadCallbacks: (() => void)[] = [];
 const progressCallbacks: ProgressCallback[] = [];
-
-// Store blob URLs for preloaded videos
-const videoBlobUrls: Map<string, string> = new Map();
 
 // Current progress state
 let currentProgress: VideoLoadProgress = {
@@ -41,9 +38,11 @@ export function getVideoLoadProgress(): VideoLoadProgress {
   return { ...currentProgress };
 }
 
-// Get blob URL for a video (returns original URL if not cached)
+// Blob URLs removed - let SW handle caching directly
+// This prevents memory duplication and simplifies architecture
 export function getVideoBlobUrl(originalUrl: string): string {
-  return videoBlobUrls.get(originalUrl) || originalUrl;
+  // Always return original URL - SW serves from cache if available
+  return originalUrl;
 }
 
 // Register callback for when videos are loaded
@@ -88,64 +87,23 @@ function markComplete() {
     updateProgress(currentProgress.total, currentProgress.total, '');
     videoLoadCallbacks.forEach((cb) => cb());
     videoLoadCallbacks.length = 0;
-  }
-}
-
-// Load a single video and return blob URL
-async function loadVideo(url: string): Promise<void> {
-  try {
-    const response = await fetch(url, { 
-      cache: 'force-cache',
-    });
-    
-    if (response.ok) {
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      videoBlobUrls.set(url, blobUrl);
-    }
-  } catch {
-    // Silently fail - will use original URL
-  }
-}
-
-// Load videos in batches to respect browser connection limits
-async function loadVideosInBatches(
-  urls: string[], 
-  batchSize: number = 6
-): Promise<void> {
-  const total = urls.length;
-  let loaded = 0;
-  
-  updateProgress(0, total, urls[0] || '');
-  
-  // Process in batches
-  for (let i = 0; i < urls.length; i += batchSize) {
-    const batch = urls.slice(i, i + batchSize);
-    
-    // Load batch in parallel
-    await Promise.all(
-      batch.map(async (url) => {
-        await loadVideo(url);
-        loaded++;
-        updateProgress(loaded, total, url);
-      })
-    );
+    logger.debug('[VideoPreloader] All videos ready');
   }
 }
 
 // Check if Service Worker has cached videos
-async function checkServiceWorkerCache(): Promise<boolean> {
+async function checkServiceWorkerCache(): Promise<{ hasCached: boolean; count: number }> {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
     return new Promise((resolve) => {
       const messageChannel = new MessageChannel();
       
       messageChannel.port1.onmessage = (event) => {
         const { cachedCount } = event.data;
-        resolve(cachedCount > 0);
+        resolve({ hasCached: cachedCount > 0, count: cachedCount });
       };
       
       // Timeout if no response
-      setTimeout(() => resolve(false), 500);
+      setTimeout(() => resolve({ hasCached: false, count: 0 }), 1000);
       
       navigator.serviceWorker.controller.postMessage(
         { type: 'GET_CACHE_STATUS' },
@@ -153,10 +111,21 @@ async function checkServiceWorkerCache(): Promise<boolean> {
       );
     });
   }
-  return false;
+  return { hasCached: false, count: 0 };
 }
 
-// Start preloading immediately (called at module load time)
+// Request SW to cache videos in background
+function requestSwCaching(urls: string[]): void {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'CACHE_VIDEOS',
+      urls,
+    });
+    logger.debug('[VideoPreloader] Requested SW to cache', urls.length, 'videos');
+  }
+}
+
+// Start preloading - optimized for instant app readiness
 export async function startVideoPreload(): Promise<void> {
   if (preloadingStarted) return;
   preloadingStarted = true;
@@ -165,29 +134,32 @@ export async function startVideoPreload(): Promise<void> {
   const total = videoUrls.length;
   
   updateProgress(0, total, '');
+  logger.debug('[VideoPreloader] Starting preload for', total, 'videos');
 
   // Check if videos are already cached by Service Worker
-  const hasCachedVideos = await checkServiceWorkerCache();
+  const { hasCached, count } = await checkServiceWorkerCache();
   
-  if (hasCachedVideos) {
-    // Videos are already in SW cache - skip blob URL creation entirely
-    // The SW will serve them instantly on demand
-    sessionPreloadComplete = true;
+  if (hasCached && count >= total * 0.8) {
+    // Most videos are cached - mark complete immediately
+    logger.debug('[VideoPreloader] SW has', count, 'cached videos - ready!');
+    updateProgress(total, total, '');
     markComplete();
     return;
   }
 
-  // No SW cache - load from network with priority
-  const mapVideoUrls = Object.values(MAP_VIDEOS);
-  const categoryVideoUrls = videoUrls.filter(url => !mapVideoUrls.includes(url));
+  // Some or no videos cached - trigger SW caching in background
+  // But mark as ready immediately (we have first-frame images as fallback)
+  requestSwCaching(videoUrls);
   
-  // Load map videos first (user sees these immediately)
-  await loadVideosInBatches(mapVideoUrls, 3);
+  // Simulate quick progress for UX (SW caches in background)
+  const steps = 5;
+  const stepDelay = 100;
   
-  // Then load category videos in larger batches
-  await loadVideosInBatches(categoryVideoUrls, 6);
-
-  sessionPreloadComplete = true;
+  for (let i = 1; i <= steps; i++) {
+    await new Promise(r => setTimeout(r, stepDelay));
+    updateProgress(Math.floor((i / steps) * total), total, '');
+  }
+  
   markComplete();
 }
 

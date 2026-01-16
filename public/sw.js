@@ -1,33 +1,28 @@
 /**
  * Service Worker for World Quizzes
  * Caches video files for instant return visits
+ * 
+ * Version: 2 - Improved caching strategy
  */
 
-const CACHE_NAME = 'worldquizzes-videos-v1';
-const VIDEO_CACHE_URLS = [];
+const CACHE_NAME = 'worldquizzes-videos-v2';
 
-// Dynamically build video URLs from the config
-// This will cache any video that matches /videos/*.mp4
-const VIDEO_URL_PATTERN = /\/videos\/.*\.mp4/;
+// Match video requests (no query params needed now)
+const VIDEO_URL_PATTERN = /\/videos\/.*\.mp4$/;
 
-// Install event - pre-cache essential assets
-self.addEventListener('install', (event) => {
-  console.log('[SW] Installing Service Worker');
+// Install event - activate immediately
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name.startsWith('worldquizzes-') && name !== CACHE_NAME)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .map((name) => caches.delete(name))
       );
     }).then(() => self.clients.claim())
   );
@@ -52,20 +47,22 @@ self.addEventListener('fetch', (event) => {
       }
 
       // Not in cache, fetch from network
-      
       try {
         const networkResponse = await fetch(event.request);
         
         // Cache the response for future use
-        if (networkResponse.ok) {
-          // Clone the response since we need to use it and cache it
+        if (networkResponse.ok && networkResponse.status === 200) {
+          // Clone before caching
           cache.put(event.request, networkResponse.clone());
         }
         
         return networkResponse;
       } catch (error) {
-        console.error('[SW] Fetch failed:', error);
-        throw error;
+        // Network failed - return a minimal error response
+        return new Response('Video unavailable', { 
+          status: 503, 
+          statusText: 'Service Unavailable' 
+        });
       }
     })
   );
@@ -77,19 +74,38 @@ self.addEventListener('message', (event) => {
     const urls = event.data.urls || [];
     
     event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) => {
-        console.log('[SW] Pre-caching videos:', urls.length);
-        return Promise.all(
-          urls.map((url) => 
-            fetch(url)
-              .then((response) => {
+      caches.open(CACHE_NAME).then(async (cache) => {
+        // Check which URLs are not yet cached
+        const uncachedUrls = [];
+        for (const url of urls) {
+          const cached = await cache.match(url);
+          if (!cached) {
+            uncachedUrls.push(url);
+          }
+        }
+        
+        // Only fetch uncached URLs
+        if (uncachedUrls.length === 0) {
+          return;
+        }
+        
+        // Cache in batches of 3 to respect connection limits
+        const batchSize = 3;
+        for (let i = 0; i < uncachedUrls.length; i += batchSize) {
+          const batch = uncachedUrls.slice(i, i + batchSize);
+          await Promise.all(
+            batch.map(async (url) => {
+              try {
+                const response = await fetch(url);
                 if (response.ok) {
-                  return cache.put(url, response);
+                  await cache.put(url, response);
                 }
-              })
-              .catch((err) => console.warn('[SW] Failed to cache:', url, err))
-          )
-        );
+              } catch {
+                // Silent fail - will try again next time
+              }
+            })
+          );
+        }
       })
     );
   }
