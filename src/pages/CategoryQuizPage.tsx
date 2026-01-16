@@ -942,7 +942,7 @@ export default function CategoryQuizPage() {
         <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20">
           <DynamicIcon 
             slug={aiIconSlug || currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
-            categoryId={categoryId}
+            categoryId={(aiIconSlug || currentQuestion?.icon_slug) ? undefined : categoryId}
             size={128}
             className="drop-shadow-2xl"
           />

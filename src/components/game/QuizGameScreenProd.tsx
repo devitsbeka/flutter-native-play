@@ -321,7 +321,7 @@ export function QuizGameScreenProd() {
           <div className="flex-shrink-0">
             <DynamicIcon 
               slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
-              categoryId={currentQuestion.categoryId}
+              categoryId={currentQuestion.questionIconSlug ? undefined : currentQuestion.categoryId}
               questionId={currentQuestion.id}
               size={80}
               className="drop-shadow-lg"
@@ -343,7 +343,7 @@ export function QuizGameScreenProd() {
         <div className="flex justify-center py-3 flex-shrink-0 z-10">
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
-            categoryId={currentQuestion.categoryId}
+            categoryId={currentQuestion.questionIconSlug ? undefined : currentQuestion.categoryId}
             questionId={currentQuestion.id}
             size={96}
             className="drop-shadow-lg"
