@@ -31,15 +31,15 @@ export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModal
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
           />
 
-          {/* Modal */}
+          {/* Modal - centered in viewport */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg z-[101]"
+            className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="w-full bg-card rounded-3xl shadow-2xl border border-border/50 overflow-hidden max-h-[80vh] flex flex-col">
+            <div className="w-full max-w-lg bg-card rounded-3xl shadow-2xl border border-border/50 overflow-hidden max-h-[80vh] flex flex-col pointer-events-auto">
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
                 <h2 className="text-lg font-bold text-foreground">Select Language</h2>
