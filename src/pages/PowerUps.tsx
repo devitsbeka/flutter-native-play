@@ -15,6 +15,7 @@ import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
+import { ShopCurrencyBar } from "@/components/shop/ShopCurrencyBar";
 import { ShopPromoSection } from "@/components/shop/ShopPromoSection";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
@@ -139,11 +140,14 @@ export default function PowerUps() {
     <div className="min-h-screen flex flex-col pb-24">
       <GlobalSplineBackground />
       
-      {/* Sticky Header */}
+      {/* Sticky Header - Title only */}
       <ShopHeader
         onHelpClick={() => setShowTutorialModal(true)}
         onCurrencyPlusClick={handleCurrencyPlusClick}
       />
+
+      {/* Currency Bar - on video background */}
+      <ShopCurrencyBar onCurrencyPlusClick={handleCurrencyPlusClick} />
 
       {/* Scrollable Content - Section-based layout with scroll snap */}
       <div 
