@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -292,7 +292,7 @@ export function QuizGameScreenProd() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Different layout for solo vs challenge mode */}
-      <div className="flex items-center justify-between px-4 py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-3 py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -300,25 +300,23 @@ export function QuizGameScreenProd() {
           <ArrowLeft className="w-5 h-5 [@media(max-height:700px)]:w-4 [@media(max-height:700px)]:h-4 text-white" />
         </button>
         
-        {/* Center - Category name in solo mode */}
-        {!opponent && (
+        {/* Center - Category name in solo mode, Difficulty badge in challenge mode */}
+        {opponent ? (
+          <span className={`px-3 py-1 rounded-full text-white text-xs font-bold ${DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}`}>
+            {getDifficultyLabel(currentQuestion.difficulty)}
+          </span>
+        ) : (
           <span className="text-white font-bold text-base [@media(max-height:700px)]:text-sm truncate max-w-[160px] text-center">
             {currentQuestion.category}
           </span>
         )}
         
-        {/* Right - Timer in solo mode, Help in challenge mode */}
-        {!opponent ? (
-          <TimerBadge 
-            seconds={timeRemaining} 
-            maxSeconds={timePerQuestion + playerTimerBonus}
-            compact
-          />
-        ) : (
-          <button className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-            <HelpCircle className="w-5 h-5 [@media(max-height:700px)]:w-4 [@media(max-height:700px)]:h-4 text-white" />
-          </button>
-        )}
+        {/* Right - Timer for both modes */}
+        <TimerBadge 
+          seconds={timeRemaining} 
+          maxSeconds={timePerQuestion + playerTimerBonus}
+          compact
+        />
       </div>
 
       {/* Players Row with Icon - Only show in vs/challenge mode */}
@@ -370,16 +368,16 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0">
+      <div className="px-4 flex-shrink-0 mt-2">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
           state={playerTimerFrozen ? "frozen" : "default"}
-          difficultyLabel={getDifficultyLabel(currentQuestion.difficulty)}
-          difficultyColor={DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium}
-          timerSeconds={timeRemaining}
+          difficultyLabel={!opponent ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
+          difficultyColor={!opponent ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
+          timerSeconds={!opponent ? timeRemaining : undefined}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}
-          freezeTimeLeft={freezeTimeLeft}
+          freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
         />
       </div>
 
@@ -393,7 +391,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Answer Buttons */}
-      <div className="flex-1 px-4 flex flex-col gap-1.5 [@media(max-height:700px)]:gap-1 overflow-hidden min-h-0">
+      <div className="flex-1 px-4 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
