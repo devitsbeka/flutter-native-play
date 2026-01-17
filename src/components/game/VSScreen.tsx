@@ -257,7 +257,7 @@ export function VSScreen() {
       style={{ background: "#7E7ADB" }}
     >
       {/* Content wrapper with max-width for desktop/tablet, centered */}
-      <div className="w-full h-full flex flex-col sm:max-w-[960px] sm:mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Wave Pattern Background */}
       <WavePattern />
 
