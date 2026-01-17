@@ -112,13 +112,13 @@ export function UnifiedDesktopNav({
             whileTap={{ scale: 0.98 }}
           >
             <div className="relative flex items-center justify-center w-6 h-6">
-              {children || (Icon && (
+              {children ? children : Icon ? (
                 <Icon 
                   className="w-6 h-6"
                   strokeWidth={active ? 2.5 : 1.5}
                 />
-              ))}
-              {badge && badge > 0 && (
+              ) : null}
+              {badge !== undefined && badge > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
                   {badge > 99 ? "99+" : badge}
                 </span>
