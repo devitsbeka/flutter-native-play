@@ -17,6 +17,7 @@ import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopCurrencyBar } from "@/components/shop/ShopCurrencyBar";
 import { ShopPromoSection } from "@/components/shop/ShopPromoSection";
+import { ShopColumnLayout } from "@/components/shop/ShopColumnLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
 import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
@@ -149,9 +150,21 @@ export default function PowerUps() {
       {/* Currency Bar - on video background */}
       <ShopCurrencyBar onCurrencyPlusClick={handleCurrencyPlusClick} />
 
-      {/* Scrollable Content - Section-based layout with scroll snap */}
+      {/* Desktop/Tablet: Horizontal scrolling columns */}
+      <div className="hidden md:block flex-1 overflow-y-auto pt-4 pb-4">
+        <ShopColumnLayout
+          sections={SHOP_SECTIONS}
+          gems={gems}
+          purchasedItems={purchasedItems}
+          isPurchasing={isPurchasing}
+          isFrameUnlocked={isFrameUnlocked}
+          onItemClick={handlePurchase}
+        />
+      </div>
+
+      {/* Mobile: Vertical scroll with horizontal item carousels */}
       <div 
-        className="flex-1 overflow-y-auto pt-4 pb-4"
+        className="md:hidden flex-1 overflow-y-auto pt-4 pb-4"
         style={{
           scrollSnapType: "y mandatory",
           scrollBehavior: "smooth",
