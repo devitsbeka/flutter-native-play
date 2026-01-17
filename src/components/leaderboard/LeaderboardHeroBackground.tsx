@@ -87,24 +87,17 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           }}
         />
       ) : (
-        // Desktop/Tablet: Single unified background image with fade
-        <>
-          <div 
-            className="absolute inset-0 w-full h-full bg-no-repeat"
-            style={{
-              backgroundImage: `url(${leaderboardBgDesktop})`,
-              backgroundSize: '100% auto',
-              backgroundPosition: 'top center',
-            }}
-          />
-          {/* Gradient overlay for smooth fade to background */}
-          <div 
-            className="absolute inset-x-0 bottom-0 h-[30%] pointer-events-none"
-            style={{
-              background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)',
-            }}
-          />
-        </>
+        // Desktop/Tablet: Single unified background image with mask fade
+        <div 
+          className="absolute inset-0 w-full h-full bg-no-repeat"
+          style={{
+            backgroundImage: `url(${leaderboardBgDesktop})`,
+            backgroundSize: '100% auto',
+            backgroundPosition: 'top center',
+            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+          }}
+        />
       )}
 
       {/* Content container - account for left nav on desktop */}
