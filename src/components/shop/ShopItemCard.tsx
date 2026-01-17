@@ -117,7 +117,7 @@ export function ShopItemCard({
         onClick={onClick}
         disabled={isPurchased || isLoading}
         className={cn(
-          "w-full px-4 py-3 rounded-2xl transition-all relative overflow-hidden flex items-center gap-4",
+          "w-full p-4 rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -133,13 +133,14 @@ export function ShopItemCard({
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
+          aspectRatio: "1 / 1.1",
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
       >
-        {/* Icon - Left side */}
+        {/* Icon - Top */}
         <motion.div
-          className="flex-shrink-0 w-12 h-12 flex items-center justify-center"
+          className="w-14 h-14 flex items-center justify-center mb-3"
           whileHover={{ scale: 1.05 }}
         >
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
@@ -147,25 +148,26 @@ export function ShopItemCard({
           </div>
         </motion.div>
 
-        {/* Name & Description - Center, left-aligned */}
-        <div className="flex-1 text-left min-w-0">
-          <h3 className="text-gray-900 font-bold text-sm leading-tight">{name}</h3>
-          {showDescription && description && (
-            <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{description}</p>
-          )}
-        </div>
+        {/* Name */}
+        <h3 className="text-gray-900 font-bold text-sm leading-tight mb-1">{name}</h3>
+        
+        {/* Description */}
+        {showDescription && description && (
+          <p className="text-gray-500 text-xs line-clamp-2 mb-3 flex-1">{description}</p>
+        )}
 
-        {/* Price / Status - Right side */}
-        <div className="flex-shrink-0">
+        {/* Price / Status - Bottom */}
+        <div className="mt-auto">
           {isPurchased ? (
-            <div className="flex items-center gap-1 text-success font-bold text-xs px-2 py-1">
+            <div className="flex items-center justify-center gap-1 text-success font-bold text-xs px-3 py-1.5 rounded-full bg-success/10">
               <Check className="w-4 h-4" />
+              <span>{t("common.owned") || "შეძენილი"}</span>
             </div>
           ) : isLoading ? (
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : (
             <motion.div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full"
               style={{
                 background: "linear-gradient(135deg, rgba(147, 89, 221, 0.15), rgba(147, 89, 221, 0.08))",
               }}

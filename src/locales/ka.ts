@@ -1055,9 +1055,11 @@ export const ka = {
     megaPowersDesc: "5x ყველა ძალა • საუკეთესო მოთამაშეებისთვის",
     vipWeek: "VIP კვირა",
     vipWeekDesc: "2x XP • უსასრულო სპინი • ექსკლუზიური ჩარჩოები",
+    coinsDesc: "1500 მონეტა • +20% ბონუსი",
     badgeNew: "ახალი",
     badgePopular: "პოპულარული",
     badgeBestPrice: "საუკეთესო ფასი",
+    badgeBestValue: "საუკეთესო ღირებულება",
   },
 };
 

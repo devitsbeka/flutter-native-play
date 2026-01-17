@@ -918,8 +918,10 @@ export const ru: KaTranslations = {
     megaPowersDesc: "5x все силы • Для топ игроков",
     vipWeek: "VIP Неделя",
     vipWeekDesc: "2x XP • Безлимитные вращения • Эксклюзивные рамки",
+    coinsDesc: "1500 Монет • +20% Бонус",
     badgeNew: "Новое",
     badgePopular: "Популярное",
     badgeBestPrice: "Лучшая цена",
+    badgeBestValue: "Лучшее предложение",
   },
 };
