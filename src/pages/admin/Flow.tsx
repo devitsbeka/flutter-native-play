@@ -668,7 +668,7 @@ export default function Flow() {
             />
             
             {/* Auto Generation Panel */}
-            <div className="p-3 border-t border-border/50">
+            <div className="p-3 border-t border-border/50 relative z-10">
               <AutoGenerationPanel categories={categories} />
             </div>
             
