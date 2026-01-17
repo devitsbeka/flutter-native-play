@@ -260,7 +260,7 @@ export function UnifiedDesktopNav({
               whileTap={{ scale: 0.98 }}
             >
               <Menu className="w-6 h-6" strokeWidth={1.5} />
-              <span className="text-[15px] hidden xl:inline">მეტი</span>
+              <span className="text-[15px] hidden lg:inline">მეტი</span>
             </motion.button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-56">
