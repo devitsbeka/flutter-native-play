@@ -133,13 +133,22 @@ export default function Leaderboards() {
   return (
     <MainLayout showPlayButton={false}>
     <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden" style={{ backgroundColor: '#4E4FA6' }}>
+      {/* Header Bar - matching shop style */}
+      <div className="sticky top-0 z-50 border-b border-purple-900/10">
+        <div className="px-4 pt-4 pb-3">
+          <h1 className="text-xl font-display font-bold text-white uppercase tracking-wide">
+            {language === 'ka' ? 'ლიდერბორდი' : 'Leaderboard'}
+          </h1>
+        </div>
+      </div>
+
       {/* Desktop: Show all 3 leaderboards side by side */}
       <div className="hidden lg:block flex-1 pb-28">
         <DesktopLeaderboards userTier={userTier} region={region} />
       </div>
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
-      <div className="lg:hidden h-screen overflow-y-auto">
+      <div className="lg:hidden h-[calc(100vh-56px)] overflow-y-auto">
         {/* Background Hero - fixed height, shows trophy with countdown on top */}
         <LeaderboardHeroBackground 
           isMobile 
