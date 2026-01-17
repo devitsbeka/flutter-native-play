@@ -502,14 +502,15 @@ function TeamContentV2() {
                 ))}
               </div>
               
-              {/* New Room Button - Far Right */}
+              {/* New Room Button - Far Right (hidden on mobile) */}
               <ChunkyButton 
                 onClick={() => setShowTeamMenu(true)}
                 variant="primary"
                 size="sm"
+                className="hidden sm:flex"
               >
                 <Plus className="w-4 h-4 mr-1" />
-                ახალი ოთახი
+                {activeTab === "my-content" ? "ახალი ტრივია" : "ახალი ოთახი"}
               </ChunkyButton>
             </div>
           </div>
@@ -517,6 +518,19 @@ function TeamContentV2() {
 
         {/* Content Area - Full width like Shop/PowerUps */}
         <div className="flex-1 overflow-y-auto pb-24 lg:pb-0">
+          
+          {/* Mobile Full-Width Create Button */}
+          <div className="sm:hidden px-4 pt-3">
+            <ChunkyButton 
+              onClick={() => setShowTeamMenu(true)}
+              variant="primary"
+              size="md"
+              className="w-full justify-center"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              {activeTab === "my-content" ? "+ ახალი ტრივია" : "+ ახალი ოთახი"}
+            </ChunkyButton>
+          </div>
 
           {/* Friends Bar - only show on rooms tab */}
           {activeTab === "rooms" && (
