@@ -412,8 +412,10 @@ function TeamContentV2() {
 
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
-      {/* Main Content Area */}
-      <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
+      {/* Flex wrapper for main content + right sidebar */}
+      <div className="flex h-full w-full">
+        {/* Main Content Area */}
+        <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Sticky Header - matching Shop/PowerUps style */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
           <div className="px-4 pt-4 pb-2">
@@ -589,14 +591,15 @@ function TeamContentV2() {
           
         </div>
 
-      </main>
+        </main>
 
-      {/* Desktop Right Sidebar - Shows on xl screens only */}
-      <TeamRightSidebar 
-        onAcceptInvitation={handleAcceptInvitation}
-        onJoinRoom={handleJoinFromInvitation}
-        onOpenTV={() => setShowTVModal(true)}
-      />
+        {/* Desktop Right Sidebar - Shows on xl screens only */}
+        <TeamRightSidebar 
+          onAcceptInvitation={handleAcceptInvitation}
+          onJoinRoom={handleJoinFromInvitation}
+          onOpenTV={() => setShowTVModal(true)}
+        />
+      </div>
 
       {/* TV Modal */}
       <TVMirrorModal 
