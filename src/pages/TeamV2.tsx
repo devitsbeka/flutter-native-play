@@ -399,8 +399,14 @@ function TeamContentV2() {
     );
   }
 
+  // Hide bottom nav when any creation modal is open
+  const isCreationModalOpen = 
+    showCreateQuizModal || 
+    showCreateCollectionModal || 
+    showPersonalTriviaModal;
+
   return (
-    <MainLayout showPlayButton={false}>
+    <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Row 1: Mobile Header - Scrolls away */}
