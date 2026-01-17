@@ -15,6 +15,7 @@ import { CategoryCarousel } from "@/components/discover/CategoryCarousel";
 import { CategoryGrid } from "@/components/discover/CategoryGrid";
 
 import { PageHeader } from "@/components/shared/PageHeader";
+import { HeaderActions } from "@/components/shared/HeaderActions";
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -194,12 +195,16 @@ export default function Discover() {
                       title={t("discover.title")}
                       showBack={false}
                       rightElements={
-                        <button
-                          onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
-                        >
-                          {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <HeaderActions />
+                          <button
+                            onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                            className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
+                            style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                          >
+                            {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+                          </button>
+                        </div>
                       }
                     />
                   </div>
