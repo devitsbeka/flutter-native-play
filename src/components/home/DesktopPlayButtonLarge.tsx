@@ -68,7 +68,7 @@ export function DesktopPlayButtonLarge({
         onClick={onClick}
         disabled={isExhausted}
         className={`
-          relative rounded-2xl flex items-center justify-center gap-3
+          relative rounded-full flex items-center justify-center gap-3
           h-16 px-12 min-w-[200px]
           transition-all duration-200
           ${isExhausted ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}
