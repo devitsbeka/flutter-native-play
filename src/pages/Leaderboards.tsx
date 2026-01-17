@@ -133,7 +133,7 @@ export default function Leaderboards() {
 
   return (
     <MainLayout showPlayButton={false}>
-    <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden" style={{ backgroundColor: '#4E4FA6' }}>
+    <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden" style={{ backgroundColor: '#FBFBF9' }}>
       {/* Header Bar - transparent, overlays on background */}
       <div className="absolute top-0 left-0 right-0 z-50">
         <div className="px-4 pt-4 pb-3">
