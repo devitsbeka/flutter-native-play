@@ -478,7 +478,7 @@ function TeamContentV2() {
                   <motion.button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`relative px-5 py-2.5 rounded-full font-medium text-sm transition-all ${
+                    className={`relative px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm transition-all whitespace-nowrap ${
                       activeTab === tab.id
                         ? "text-white"
                         : "text-foreground"
