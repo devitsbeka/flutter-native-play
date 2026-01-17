@@ -412,67 +412,68 @@ function TeamContentV2() {
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
-        {/* Row 1: Mobile Header - Standard style matching other pages */}
-        <div className="lg:hidden px-4 pt-4 pb-3">
-          <div className="flex items-center justify-between safe-top">
-            <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-              ოთახები
-            </h1>
-            <div className="flex items-center gap-2">
-              <LiveBadge />
+        {/* Sticky Header - matching Shop/PowerUps style */}
+        <div className="sticky top-0 z-30 border-b border-purple-900/10">
+          <div className="px-4 pt-4 pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+                  ოთახები
+                </h1>
+                <LiveBadge />
+              </div>
 
-              {/* QR Scanner */}
-              <motion.button
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={() => setShowQRScanner(true)}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-              >
-                <ScanLine className="w-5 h-5" />
-              </motion.button>
+              <div className="flex items-center gap-2">
+                {/* QR Scanner */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowQRScanner(true)}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
+                  style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                >
+                  <ScanLine className="w-5 h-5" />
+                </motion.button>
 
-              <motion.button
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={() => setShowNotificationsPanel(true)}
-                className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowNotificationsPanel(true)}
+                  className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
+                  style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </motion.button>
 
-              <motion.button
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 }}
-                onClick={() => setShowRoomChatsPanel(true)}
-                className="relative flex items-center justify-center w-9 h-9 rounded-full bg-card text-foreground shadow-sm"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                    {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                  </span>
-                )}
-              </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowRoomChatsPanel(true)}
+                  className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
+                  style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  {unreadMessagesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                      {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                    </span>
+                  )}
+                </motion.button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Content - Centered on tablet/desktop like Instagram */}
-        <div className="relative z-0 flex flex-col lg:max-w-[756px] xl:max-w-[630px] lg:mx-auto lg:border-x lg:border-border/40 bg-background min-h-screen">
-          
-          {/* Desktop/Tablet Header */}
-          <div className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-border/40">
-            <h1 className="text-xl font-bold text-foreground">MyTrivia</h1>
-          </div>
+        {/* Content Area - Full width like Shop/PowerUps */}
+        <div className="flex-1 overflow-y-auto pb-24 lg:pb-0">
 
-          {/* Desktop/Tablet Friends Bar */}
-          <div className="hidden lg:block px-4 py-3">
+          {/* Friends Bar */}
+          <div className="px-4 py-3">
             <FriendsStoriesBar
               onAddFriendClick={() => setShowAddFriendModal(true)}
               onFriendClick={() => {}}
@@ -480,8 +481,8 @@ function TeamContentV2() {
             />
           </div>
 
-          {/* Desktop/Tablet Rooms Section */}
-          <div className="hidden lg:block px-4 pb-4">
+          {/* Rooms Section Header with Button */}
+          <div className="px-4 pb-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-foreground">ოთახები</h2>
               <ChunkyButton 
@@ -501,151 +502,6 @@ function TeamContentV2() {
             />
           </div>
           
-          {/* Row 2: Friends Bar (მეგობრები) - Mobile only */}
-          <div className="lg:hidden">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-4 py-3"
-            >
-              <FriendsStoriesBar
-                onAddFriendClick={() => setShowAddFriendModal(true)}
-                onFriendClick={() => {}}
-                onShowAllFriends={() => setShowAllFriendsModal(true)}
-              />
-            </motion.div>
-          </div>
-
-          {/* Row 3: Tabs */}
-          <div className="lg:hidden px-4 pb-3">
-            <div className="flex gap-1 p-1.5 bg-muted rounded-2xl shadow-inner">
-              <button
-                onClick={() => handleTabChange("discover")}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "discover"
-                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                აღმოაჩინე
-              </button>
-              <button
-                onClick={() => handleTabChange("rooms")}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "rooms"
-                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                ოთახები
-              </button>
-              <button
-                onClick={() => handleTabChange("my-content")}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  activeTab === "my-content"
-                    ? "bg-background text-foreground shadow-[0_3px_0_0_hsl(var(--border)),0_4px_8px_-2px_rgba(0,0,0,0.1)]"
-                    : "text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                MyTrivia
-              </button>
-            </div>
-          </div>
-
-          {/* Filter Bar for Rooms tab */}
-          {activeTab === "rooms" && (
-            <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
-              <RoomFiltersBar
-                filter={roomsFilter}
-                onFilterChange={setRoomsFilter}
-                sort={roomsSort}
-                onSortChange={setRoomsSort}
-                searchQuery={roomsSearchQuery}
-                onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateModal(true)}
-              />
-            </div>
-          )}
-
-          {/* Row 5: My Rooms (შენი ოთახები) - Only show on rooms tab, vertical layout */}
-          {activeTab === "rooms" && (
-            <div className="lg:hidden pt-3">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15 }}
-              >
-                <MyRoomsSection 
-                  hideTV 
-                  onCreateRoom={() => setShowTeamMenu(true)}
-                  onShowAllRooms={() => setShowAllGamesModal(true)}
-                  vertical
-                  filter={roomsFilter}
-                  sort={roomsSort}
-                  searchQuery={roomsSearchQuery}
-                />
-              </motion.div>
-            </div>
-          )}
-
-          {/* Row 6: Sticky Filter Bar - For discover tab */}
-          {activeTab === "discover" && (
-            <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
-              <FeedFiltersBar
-                sortFilter={sortFilter}
-                onSortFilterChange={setSortFilter}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                selectedHashtag={selectedHashtag}
-                onClearHashtag={() => setSelectedHashtag(null)}
-                onAddClick={() => setShowCreateTypeModal(true)}
-                addButtonText="+ შექმენი"
-              />
-            </div>
-          )}
-
-          {/* Row 6b: Sticky Filter Bar - For my-content tab */}
-          {activeTab === "my-content" && (
-            <div className="lg:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
-              <FeedFiltersBar
-                sortFilter={sortFilter}
-                onSortFilterChange={setSortFilter}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                selectedHashtag={selectedHashtag}
-                onClearHashtag={() => setSelectedHashtag(null)}
-                onAddClick={() => setShowCreateTypeModal(true)}
-                addButtonText="+ Trivia"
-              />
-            </div>
-          )}
-
-          {/* Row 7: Content */}
-          {activeTab === "my-content" && (
-            <div className="px-4">
-            <MyTriviaTab 
-                onCreateQuiz={() => setShowCreateQuizModal(true)} 
-                onCreateCollection={() => setShowCreateCollectionModal(true)}
-                onContinueDraft={(draftId) => {
-                  setEditingDraftId(draftId);
-                  setShowCreateCollectionModal(true);
-                }}
-                searchQuery={searchQuery}
-                sortFilter={sortFilter}
-                onPlay={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
-                onEditingRoundChange={setIsEditingRound}
-              />
-            </div>
-          )}
-          {activeTab === "discover" && (
-            <SocialFeed 
-              onPlayQuiz={(post, collectionPosts) => setPlayingQuiz({ post, collectionPosts })}
-              sortFilter={sortFilter}
-              searchQuery={searchQuery}
-              selectedHashtag={selectedHashtag}
-              onHashtagClick={setSelectedHashtag}
-            />
-          )}
         </div>
 
       </main>
