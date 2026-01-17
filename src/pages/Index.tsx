@@ -410,7 +410,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4">
+            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4" style={{ marginTop: -80 }}>
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -492,6 +492,7 @@ export default function Index() {
             {/* xl+ layout: Avatar centered */}
             <motion.div 
               className="hidden xl:flex flex-col items-center w-full px-4"
+              style={{ marginTop: -80 }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
@@ -571,7 +572,6 @@ export default function Index() {
             {/* Mobile only: circular action buttons + avatar + info */}
             <motion.div 
               className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-              style={{ marginTop: -80 }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
