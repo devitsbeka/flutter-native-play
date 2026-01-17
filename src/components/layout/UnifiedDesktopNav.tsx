@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -10,12 +10,12 @@ import {
   Bell, 
   Menu,
   ChevronDown,
-  Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLeaderboardPrefetch } from "@/hooks/useLeaderboardPrefetch";
 import { Avatar } from "@/components/shared/Avatar";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import {
@@ -59,6 +59,7 @@ export function UnifiedDesktopNav({
   const { unreadCount } = useNotifications();
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
+  const { prefetchAllTiers } = useLeaderboardPrefetch();
 
   const { currentLanguage } = useLanguage();
   
@@ -76,6 +77,13 @@ export function UnifiedDesktopNav({
     await signOut();
     navigate("/");
   };
+
+  // Prefetch leaderboard data on hover
+  const handleNavHover = useCallback((path: string) => {
+    if (path === "/leaderboards") {
+      prefetchAllTiers();
+    }
+  }, [prefetchAllTiers]);
 
   // NavButton component for consistency - all icons use strokeWidth 1.5
   const NavButton = ({
@@ -184,14 +192,19 @@ export function UnifiedDesktopNav({
         {/* Main Navigation */}
         <div className="px-2 lg:px-3 space-y-1">
           {navItems.map((item) => (
-            <NavButton
+            <div 
               key={item.id}
-              icon={item.icon}
-              label={item.label}
-              onClick={() => navigate(item.path)}
-              active={isActive(item.path)}
-              badge={item.id === "team" ? pendingCount : undefined}
-            />
+              onMouseEnter={() => handleNavHover(item.path)}
+              onFocus={() => handleNavHover(item.path)}
+            >
+              <NavButton
+                icon={item.icon}
+                label={item.label}
+                onClick={() => navigate(item.path)}
+                active={isActive(item.path)}
+                badge={item.id === "team" ? pendingCount : undefined}
+              />
+            </div>
           ))}
 
           {/* Notifications with badge */}

@@ -2944,6 +2944,19 @@ export type Database = {
           question_count: number
         }[]
       }
+      get_league_leaderboard: {
+        Args: { p_limit?: number; p_region?: string; p_tier: number }
+        Returns: {
+          avatar_url: string
+          coins: number
+          country_code: string
+          current_rank: number
+          nickname: string
+          previous_rank: number
+          user_id: string
+          weekly_xp: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
