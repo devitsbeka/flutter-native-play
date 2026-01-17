@@ -121,16 +121,11 @@ export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | nu
               exit={{ opacity: 0 }}
               className="fixed inset-0 pointer-events-none z-30"
             >
-              {/* Ice border glow */}
+            {/* Ice border glow */}
               <motion.div
                 className="absolute inset-0 border-4 border-cyan-400/40 rounded-3xl m-1"
                 animate={{ 
                   borderColor: ["rgba(34,211,238,0.4)", "rgba(34,211,238,0.7)", "rgba(34,211,238,0.4)"],
-                  boxShadow: [
-                    "inset 0 0 30px rgba(34,211,238,0.2)",
-                    "inset 0 0 50px rgba(34,211,238,0.4)",
-                    "inset 0 0 30px rgba(34,211,238,0.2)",
-                  ]
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
@@ -160,10 +155,10 @@ export function PowerUpScreenEffect({ type, isActive }: { type: PowerUpType | nu
                 </motion.div>
               ))}
               {/* Frost corners */}
-              <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-cyan-300/30 to-transparent" />
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-300/30 to-transparent" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-cyan-300/30 to-transparent" />
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-cyan-300/30 to-transparent" />
+              <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-cyan-300/15 to-transparent" />
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-cyan-300/15 to-transparent" />
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-cyan-300/15 to-transparent" />
+              <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tl from-cyan-300/15 to-transparent" />
             </motion.div>
           )}
 
