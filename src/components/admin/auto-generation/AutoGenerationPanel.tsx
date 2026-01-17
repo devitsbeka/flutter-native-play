@@ -241,7 +241,7 @@ export function AutoGenerationPanel({ categories }: { categories: Category[] }) 
   return (
     <div className="space-y-4">
       {/* Active Jobs */}
-      <AnimatePresence>
+      <AnimatePresence mode="sync">
         {activeJobs.map(job => (
           <motion.div
             key={job.id}
@@ -333,7 +333,7 @@ export function AutoGenerationPanel({ categories }: { categories: Category[] }) 
           ახალი ავტო-გენერაცია
         </Button>
       ) : (
-        <Card>
+        <Card className="relative z-10">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
@@ -498,8 +498,9 @@ export function AutoGenerationPanel({ categories }: { categories: Category[] }) 
             </Collapsible>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 pt-2 relative z-20 pointer-events-auto">
               <Button 
+                type="button"
                 variant="outline" 
                 onClick={() => setShowCreateForm(false)}
                 className="flex-1"
@@ -507,6 +508,7 @@ export function AutoGenerationPanel({ categories }: { categories: Category[] }) 
                 გაუქმება
               </Button>
               <Button 
+                type="button"
                 onClick={handleCreateJob}
                 disabled={isCreating || selectedCategories.length === 0}
                 className="flex-1"
