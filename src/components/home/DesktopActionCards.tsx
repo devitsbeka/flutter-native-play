@@ -138,7 +138,7 @@ const ActionCard = ({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="overflow-hidden w-full"
           >
-            <div className="pt-3 mt-3 border-t border-gray-200/60">
+            <div className="pt-3 pb-1 mt-3 border-t border-gray-200/60">
               {expandedDetails && (
                 <p className="text-xs text-gray-600 mb-3">{expandedDetails}</p>
               )}
