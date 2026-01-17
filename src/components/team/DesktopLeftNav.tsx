@@ -133,13 +133,6 @@ export function DesktopLeftNav({
           badge={unreadMessagesCount}
         />
 
-        {/* Notifications with badge */}
-        <NavButton
-          icon={Bell}
-          label="ნოტიფიკაციები"
-          onClick={onNotificationsClick}
-          badge={unreadCount}
-        />
 
         {/* Create */}
         <NavButton
