@@ -429,7 +429,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4" style={{ marginTop: -80 }}>
+            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -519,7 +519,6 @@ export default function Index() {
                 <motion.div 
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ marginTop: 15 }}
                 >
                   <div 
                     data-walkthrough="avatar" 

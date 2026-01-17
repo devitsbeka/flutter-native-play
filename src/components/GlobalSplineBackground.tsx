@@ -125,11 +125,11 @@ export function GlobalSplineBackground() {
         </video>
       </div>
       
-      {/* White radial mask - transparent center, white edges */}
+      {/* White radial mask - transparent center, white edges - less opaque to show blob */}
       <div 
         className="fixed inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.6) 80%, rgba(255,255,255,1) 100%)",
+          background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
           zIndex: -25,
         }}
       />
