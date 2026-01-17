@@ -139,7 +139,7 @@ export default function Leaderboards() {
         <div className="px-4 pt-4 pb-3">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-              {language === 'ka' ? 'ლიდერბორდი' : 'Leaderboard'}
+              {language === 'ka' ? 'რეიტინგი' : 'Leaderboard'}
             </h1>
             <HeaderActions />
           </div>

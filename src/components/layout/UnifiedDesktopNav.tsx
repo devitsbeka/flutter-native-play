@@ -10,10 +10,12 @@ import {
   Bell, 
   Menu,
   ChevronDown,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Avatar } from "@/components/shared/Avatar";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import {
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import { AccountSwitcherModal } from "@/components/home/AccountSwitcherModal";
 import { MoreMenuModal } from "@/components/home/MoreMenuModal";
+import { LanguageSelectorModal } from "@/components/layout/LanguageSelectorModal";
 
 interface UnifiedDesktopNavProps {
   onPlayClick?: () => void;
@@ -39,7 +42,7 @@ const navItems = [
   { id: "explore", label: "აღმოჩენა", icon: Compass, path: "/discover" },
   { id: "shop", label: "მაღაზია", icon: Store, path: "/power-ups" },
   { id: "rank", label: "რეიტინგი", icon: Trophy, path: "/leaderboards" },
-  { id: "team", label: "გუნდი", icon: Users, path: "/team" },
+  { id: "team", label: "Live", icon: Users, path: "/team" },
 ];
 
 export function UnifiedDesktopNav({
@@ -57,9 +60,12 @@ export function UnifiedDesktopNav({
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
 
+  const { currentLanguage } = useLanguage();
+  
   // Modal states
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -199,8 +205,20 @@ export function UnifiedDesktopNav({
         </div>
 
 
-        {/* Bottom Section - More menu button */}
-        <div className="px-2 lg:px-3 mt-auto">
+        {/* Bottom Section - Language selector and More menu */}
+        <div className="px-2 lg:px-3 mt-auto space-y-1">
+          {/* Language Selector */}
+          <motion.button
+            onClick={() => setIsLanguageModalOpen(true)}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <span className="text-xl">{currentLanguage.flag}</span>
+            <span className="text-[15px] hidden lg:inline">{currentLanguage.nativeName}</span>
+          </motion.button>
+
+          {/* More Menu */}
           <motion.button
             onClick={() => setIsMoreModalOpen(true)}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
@@ -227,6 +245,12 @@ export function UnifiedDesktopNav({
         onClose={() => setIsMoreModalOpen(false)}
         onNavigate={navigate}
         onSignOut={handleSignOut}
+      />
+
+      {/* Language Selector Modal */}
+      <LanguageSelectorModal
+        isOpen={isLanguageModalOpen}
+        onClose={() => setIsLanguageModalOpen(false)}
       />
     </>
   );
