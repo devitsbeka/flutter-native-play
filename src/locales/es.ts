@@ -899,8 +899,10 @@ export const es: KaTranslations = {
     megaPowersDesc: "5x Todos los poderes • Para jugadores top",
     vipWeek: "VIP Semana",
     vipWeekDesc: "2x XP • Giros ilimitados • Marcos exclusivos",
+    coinsDesc: "1500 Monedas • +20% Bonus",
     badgeNew: "Nuevo",
     badgePopular: "Popular",
     badgeBestPrice: "Mejor precio",
+    badgeBestValue: "Mejor valor",
   },
 };

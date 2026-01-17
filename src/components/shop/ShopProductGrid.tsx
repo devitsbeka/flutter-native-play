@@ -38,9 +38,9 @@ export function ShopProductGrid({
         </h2>
       </div>
 
-      {/* Products Grid - horizontal scroll on mobile, grid on desktop */}
+      {/* Products Grid */}
       <div className="px-4">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {items.map((item, index) => {
             const canAfford = gems >= item.price;
             const isPurchased = purchasedItems.has(item.id);
@@ -52,9 +52,8 @@ export function ShopProductGrid({
             return (
               <motion.div
                 key={item.id}
-                className="flex-shrink-0 w-[280px] md:w-full"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 <ShopItemCard

@@ -84,12 +84,12 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   const [direction, setDirection] = useState(0);
   const { t } = useLanguage();
 
-  // Auto-rotate every 6 seconds
+  // Auto-rotate every 10 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 6000);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -144,13 +144,13 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
             />
 
             {/* Gradient overlay for readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
-            {/* Content */}
-            <div className="relative z-10 p-5 flex flex-col justify-between h-full">
+            {/* Content - Centered */}
+            <div className="relative z-10 p-5 flex flex-col items-center justify-center h-full text-center">
               {/* Badge */}
               <motion.div
-                className="self-start px-3 py-1 rounded-full text-xs font-bold text-white"
+                className="px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
                 style={{
                   background: slide.badgeColor,
                   boxShadow: "0 2px 0 hsl(0 0% 0% / 0.2)",
@@ -161,52 +161,50 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
                 {t(`featured.${slide.badgeKey}`)}
               </motion.div>
 
-              {/* Text content */}
-              <div className="flex-1 flex flex-col justify-center">
-                <p className="text-white/70 text-sm mb-1">
-                  {t(`shop.${slide.subtitleKey}`)}
-                </p>
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2 drop-shadow-lg">
-                  {t(`shop.${slide.titleKey}`)}
-                </h3>
-                <p className="text-white/80 text-sm mb-3 max-w-[200px]">
-                  {t(`featured.${slide.descriptionKey}`)}
-                </p>
+              {/* Icon */}
+              <motion.img
+                src={slide.icon}
+                alt=""
+                className="w-16 h-16 object-contain drop-shadow-2xl mb-3"
+                animate={{ 
+                  y: [0, -3, 0],
+                  scale: [1, 1.02, 1],
+                }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              />
 
-                {/* Price + CTA */}
-                <div className="flex items-center gap-3">
-                  {slide.originalPrice && (
-                    <span className="text-white/50 line-through text-lg">
-                      {slide.originalPrice}
-                    </span>
-                  )}
-                  <div
-                    className="flex items-center gap-2 px-4 py-2 rounded-full"
-                    style={{
-                      background: "hsl(0 0% 100% / 0.15)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid hsl(0 0% 100% / 0.2)",
-                    }}
-                  >
-                    <img src={gemIcon} alt="" className="w-5 h-5" />
-                    <span className="text-xl font-bold text-white">{slide.price}</span>
-                    <ChevronRight className="w-4 h-4 text-white/70" />
-                  </div>
+              {/* Title */}
+              <h3 className="text-xl md:text-2xl font-display font-bold text-white mb-1 drop-shadow-lg">
+                {t(`shop.${slide.titleKey}`)}
+              </h3>
+              
+              {/* Subtitle */}
+              <p className="text-white/80 text-sm mb-3">
+                {t(`featured.${slide.descriptionKey}`)}
+              </p>
+
+              {/* Price + CTA */}
+              <div className="flex items-center gap-3">
+                {slide.originalPrice && (
+                  <span className="text-white/50 line-through text-base">
+                    {slide.originalPrice}
+                  </span>
+                )}
+                <div
+                  className="flex items-center gap-2 px-4 py-2 rounded-full"
+                  style={{
+                    background: "hsl(0 0% 100% / 0.2)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid hsl(0 0% 100% / 0.25)",
+                  }}
+                >
+                  <img src={gemIcon} alt="" className="w-5 h-5" />
+                  <span className="text-lg font-bold text-white">{slide.price}</span>
+                  <ChevronRight className="w-4 h-4 text-white/70" />
                 </div>
               </div>
             </div>
 
-            {/* Icon on the right */}
-            <motion.img
-              src={slide.icon}
-              alt=""
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-24 h-24 object-contain drop-shadow-2xl opacity-80"
-              animate={{ 
-                y: [0, -5, 0],
-                rotate: [-2, 2, -2],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            />
           </motion.div>
         </AnimatePresence>
       </div>
