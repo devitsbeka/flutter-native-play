@@ -291,7 +291,7 @@ export function QuizGameScreenProd() {
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 
-      {/* Header */}
+      {/* Header - Different layout for solo vs challenge mode */}
       <div className="flex items-center justify-between px-4 py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
@@ -299,12 +299,29 @@ export function QuizGameScreenProd() {
         >
           <ArrowLeft className="w-5 h-5 [@media(max-height:700px)]:w-4 [@media(max-height:700px)]:h-4 text-white" />
         </button>
-        <button className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-          <HelpCircle className="w-5 h-5 [@media(max-height:700px)]:w-4 [@media(max-height:700px)]:h-4 text-white" />
-        </button>
+        
+        {/* Center - Category name in solo mode */}
+        {!opponent && (
+          <span className="text-white font-bold text-base [@media(max-height:700px)]:text-sm truncate max-w-[160px] text-center">
+            {currentQuestion.category}
+          </span>
+        )}
+        
+        {/* Right - Timer in solo mode, Help in challenge mode */}
+        {!opponent ? (
+          <TimerBadge 
+            seconds={timeRemaining} 
+            maxSeconds={timePerQuestion + playerTimerBonus}
+            compact
+          />
+        ) : (
+          <button className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            <HelpCircle className="w-5 h-5 [@media(max-height:700px)]:w-4 [@media(max-height:700px)]:h-4 text-white" />
+          </button>
+        )}
       </div>
 
-      {/* Players Row with Icon - Only show players in vs/challenge mode */}
+      {/* Players Row with Icon - Only show in vs/challenge mode */}
       {opponent ? (
         <div className="flex items-center justify-between px-6 flex-shrink-0 z-10">
           {/* Player (Left) */}
@@ -339,13 +356,13 @@ export function QuizGameScreenProd() {
           />
         </div>
       ) : (
-        /* Solo Mode - Just centered icon - hand-picked icon priority, then AI, then category fallback */
-        <div className="flex justify-center py-2 [@media(max-height:700px)]:py-1 flex-shrink-0 z-10">
+        /* Solo Mode - Smaller centered icon since timer moved to header */
+        <div className="flex justify-center py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0 z-10">
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
             categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
             questionId={currentQuestion.id}
-            size={96}
+            size={64}
             className="drop-shadow-lg [@media(max-height:700px)]:scale-[0.85]"
             hideIfEmpty={true}
           />
