@@ -179,7 +179,7 @@ export default function Discover() {
         {/* Content above mask */}
         <div className="relative z-10">
           {/* Sticky header section */}
-          <div className={`sticky top-0 z-20 bg-white/50 backdrop-blur-sm border-b border-purple-900/10 transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''}`}>
+          <div className={`sticky top-0 z-20 bg-white/50 backdrop-blur-sm transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''}`}>
             {/* Header with Page Title - hide when scrolled */}
             <AnimatePresence>
               {!isScrolled && (
@@ -189,18 +189,20 @@ export default function Discover() {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <PageHeader
-                    title={t("discover.title")}
-                    showBack={false}
-                    rightElements={
-                      <button
-                        onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                        className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
-                      >
-                        {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-                      </button>
-                    }
-                  />
+                  <div className="border-b border-purple-900/10">
+                    <PageHeader
+                      title={t("discover.title")}
+                      showBack={false}
+                      rightElements={
+                        <button
+                          onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm text-slate-700 shadow-sm hover:bg-white transition-colors"
+                        >
+                          {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+                        </button>
+                      }
+                    />
+                  </div>
 
                   {/* Expandable Search Bar */}
                   <AnimatePresence>
