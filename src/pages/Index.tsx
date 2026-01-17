@@ -407,17 +407,116 @@ export default function Index() {
           <div className="flex-1 relative h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 0 }}>
-            <motion.div 
-              className="flex flex-col items-center w-full max-w-[360px] px-4"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, type: "spring" }}
-          >
-            {/* Avatar section with curved action buttons above (only for logged-in users) */}
-            <div className="relative">
-              {/* Desktop/Tablet: Show extended info cards instead of circles */}
+            
+            {/* xl+ layout: Cards on top, avatar centered below - combined */}
+
+            {/* md to xl layout: Side by side (avatar left, cards right) */}
+            <div className="hidden md:flex xl:hidden items-center justify-center gap-8 w-full px-4">
+              {/* Left side: Avatar + Info */}
+              <motion.div 
+                className="flex flex-col items-center"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, type: "spring" }}
+              >
+                <div className="relative">
+                  <motion.div 
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <div 
+                      data-walkthrough="avatar" 
+                      className="pointer-events-auto cursor-pointer"
+                      onClick={() => user && setIsAvatarModalOpen(true)}
+                    >
+                      <AvatarCircle 
+                        avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
+                        animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
+                        size={260} 
+                        coins={user ? coins : 0}
+                        gems={user ? gems : 0}
+                        level={user ? levelInfo.level : 1}
+                        xpProgress={user ? levelInfo.progress : 0}
+                        xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
+                        xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
+                      />
+                    </div>
+                  </motion.div>
+                </div>
+                {/* User info below avatar */}
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className="flex flex-col items-center mt-8 pointer-events-auto"
+                >
+                  <div className="flex items-center justify-center gap-2.5">
+                    {user && profile?.country_code && (
+                      <FlagIcon countryCode={profile.country_code} size="md" />
+                    )}
+                    <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
+                      {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-6 mt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={coinIcon} alt="Coins" className="w-9 h-9" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-base">
+                        {user ? (coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={gemIcon} alt="Gems" className="w-9 h-9" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-base">
+                        {user ? (gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-5">
+                    <DesktopPlayButtonLarge
+                      onClick={handlePlayClick}
+                      playsRemaining={user ? playsRemaining : guestPlaysRemaining}
+                      maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
+                      canPlay={user ? canPlay : guestPlaysRemaining > 0}
+                      isVip={isVip}
+                    />
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Right side: Action cards vertical */}
               {user && (
-                <div className="hidden md:block absolute left-1/2 -translate-x-1/2 pointer-events-auto z-20" style={{ top: -160 }}>
+                <motion.div 
+                  className="pointer-events-auto"
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                >
+                  <DesktopActionCards
+                    onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
+                    onMissionsClick={() => setShowMissionsModal(true)}
+                    onChestClick={() => setIsChestModalOpen(true)}
+                    onPowersClick={() => setShowMyPowersModal(true)}
+                    vertical
+                  />
+                </motion.div>
+              )}
+            </div>
+
+            {/* xl+ layout: Avatar centered with cards on top */}
+            <motion.div 
+              className="hidden xl:flex flex-col items-center w-full px-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, type: "spring" }}
+            >
+              {/* Action cards horizontal on top */}
+              {user && (
+                <div className="pointer-events-auto mb-6">
                   <DesktopActionCards
                     onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
                     onMissionsClick={() => setShowMissionsModal(true)}
@@ -426,221 +525,68 @@ export default function Index() {
                   />
                 </div>
               )}
-
-              {/* Mobile/Tablet: Show curved action buttons above avatar */}
-              {user && (
-                <div 
-                  className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
-                  style={{ 
-                    top: -75,
-                    width: 340,
-                  }}
-                  data-walkthrough="powerups"
+              <div className="relative">
+                <motion.div 
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ marginTop: 15 }}
                 >
-                  {/* Gift Button - leftmost, lower */}
-                  <motion.div 
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                    style={{ marginBottom: 0 }}
+                  <div 
+                    data-walkthrough="avatar" 
+                    className="pointer-events-auto cursor-pointer"
+                    onClick={() => user && setIsAvatarModalOpen(true)}
                   >
-                    <ActionButtonWithParticles
-                      iconSrc={giftBottleIcon}
-                      alt="Gift"
-                      onClick={() => setIsDailyRewardsOpen(true)}
-                      background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
-                      shadowColor="#FDBA74"
-                      delay={0.4}
-                      particleColor="rgba(253, 186, 116, 0.9)"
-                      glowColor="rgba(253, 186, 116, 0.5)"
-                      idleOffset={0}
-                      size={62}
-                      badge={
-                        canClaimDaily ? (
-                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                            <Check className="w-3.5 h-3.5" />
-                          </span>
-                        ) : (
-                          <motion.div
-                            className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20"
-                            style={{
-                              background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
-                              boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
-                              border: "2px solid white",
-                            }}
-                            animate={{ scale: [1, 1.1, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            <Clock className="w-3.5 h-3.5 text-amber-700" />
-                          </motion.div>
-                        )
-                      }
+                    <AvatarCircle 
+                      avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
+                      animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
+                      size={280} 
+                      coins={user ? coins : 0}
+                      gems={user ? gems : 0}
+                      level={user ? levelInfo.level : 1}
+                      xpProgress={user ? levelInfo.progress : 0}
+                      xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
+                      xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                     />
-                  </motion.div>
+                  </div>
+                </motion.div>
+              </div>
 
-                  {/* Mission Button - left-center, much higher for curve */}
-                  <motion.div 
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.35, type: "spring" }}
-                    style={{ marginBottom: 32 }}
-                  >
-                    <ActionButtonWithParticles
-                      iconSrc={missionCrystalIcon}
-                      alt="Mission"
-                      onClick={() => setShowMissionsModal(true)}
-                      background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
-                      shadowColor="#7DD3FC"
-                      delay={0.48}
-                      particleColor="rgba(125, 211, 252, 0.9)"
-                      glowColor="rgba(125, 211, 252, 0.5)"
-                      idleOffset={0.7}
-                      size={62}
-                      badge={
-                        incompleteMissions > 0 ? (
-                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
-                            {incompleteMissions}
-                          </span>
-                        ) : (
-                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
-                            <Check className="w-3.5 h-3.5" />
-                          </span>
-                        )
-                      }
-                    />
-                  </motion.div>
-
-                  {/* Chest Button - right-center, much higher for curve */}
-                  <motion.div 
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.4, type: "spring" }}
-                    style={{ marginBottom: 32 }}
-                  >
-                    <ActionButtonWithParticles
-                      iconSrc={chestBoxIcon}
-                      alt="Chest"
-                      onClick={() => setIsChestModalOpen(true)}
-                      background="linear-gradient(180deg, #E8FFE6 0%, #D9FFD7 100%)"
-                      shadowColor="#A7D9A5"
-                      delay={0.56}
-                      particleColor="rgba(169, 217, 167, 0.9)"
-                      glowColor="rgba(169, 217, 167, 0.5)"
-                      idleOffset={1.4}
-                      size={62}
-                      badge={<ChestButtonBadge canClaimChest={canClaimChest} />}
-                    />
-                  </motion.div>
-
-                  {/* Powers Button - rightmost, lower */}
-                  <motion.div 
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.45, type: "spring" }}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <ActionButtonWithParticles
-                      iconSrc={powersIcon}
-                      alt="Powers"
-                      onClick={() => setShowMyPowersModal(true)}
-                      background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                      shadowColor="#C4B5FD"
-                      delay={0.64}
-                      particleColor="rgba(196, 181, 253, 0.9)"
-                      glowColor="rgba(196, 181, 253, 0.5)"
-                      idleOffset={2.1}
-                      size={62}
-                      badge={
-                        totalPowerUps > 0 ? (
-                          <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
-                            {totalPowerUps}
-                          </span>
-                        ) : undefined
-                      }
-                    />
-                  </motion.div>
-                </div>
-              )}
-              
-              {/* Empty space above avatar for guests - no more activation flow */}
-
+              {/* User info section */}
               <motion.div 
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                style={{ marginTop: 15 }}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, type: "spring" }}
+                className="flex flex-col items-center mt-11 pointer-events-auto"
               >
-                {/* Avatar */}
-                <div 
-                  data-walkthrough="avatar" 
-                  className="pointer-events-auto cursor-pointer"
-                  onClick={() => user && setIsAvatarModalOpen(true)}
-                >
-                  <AvatarCircle 
-                    avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
-                    animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
-                    size={280} 
-                    coins={user ? coins : 0}
-                    gems={user ? gems : 0}
-                    level={user ? levelInfo.level : 1}
-                    xpProgress={user ? levelInfo.progress : 0}
-                    xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
-                    xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
-                  />
+                <div className="flex items-center justify-center gap-2.5">
+                  {user && profile?.country_code && (
+                    <FlagIcon countryCode={profile.country_code} size="md" />
+                  )}
+                  <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                    {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                  </span>
                 </div>
-              </motion.div>
-
-            </div>
-
-            {/* User info section - below avatar */}
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, type: "spring" }}
-              className="flex flex-col items-center mt-11 pointer-events-auto"
-            >
-              <>
-                {/* Flag and Name */}
-                  <div className="flex items-center justify-center gap-2.5">
-                    {user && profile?.country_code && (
-                      <FlagIcon countryCode={profile.country_code} size="md" />
-                    )}
-                    <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
-                      {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                
+                <div className="flex items-center gap-6 mt-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                    </div>
+                    <span className="font-bold text-gray-700 text-lg">
+                      {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
                     </span>
                   </div>
-                  
-                  {/* Coins & Gems */}
-                  <div className="flex items-center gap-6 mt-1">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90"
-                        style={{
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
-                        }}
-                      >
-                        <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-lg">
-                        {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
-                      </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <img src={gemIcon} alt="Gems" className="w-10 h-10" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90"
-                        style={{
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
-                        }}
-                      >
-                        <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-lg">
-                        {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
-                      </span>
-                    </div>
+                    <span className="font-bold text-gray-700 text-lg">
+                      {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Large Play Button - Desktop only */}
-                <div className="hidden md:block mt-6">
+                <div className="mt-6">
                   <DesktopPlayButtonLarge
                     onClick={handlePlayClick}
                     playsRemaining={user ? playsRemaining : guestPlaysRemaining}
@@ -649,9 +595,206 @@ export default function Index() {
                     isVip={isVip}
                   />
                 </div>
-              </>
+              </motion.div>
+            </motion.div>
+
+            {/* Mobile only: circular action buttons + avatar + info */}
+            <motion.div 
+              className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, type: "spring" }}
+            >
+              <div className="relative">
+                {/* Mobile: Show curved action buttons above avatar */}
+                {user && (
+                  <div 
+                    className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
+                    style={{ top: -75, width: 340 }}
+                    data-walkthrough="powerups"
+                  >
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.3, type: "spring" }}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <ActionButtonWithParticles
+                        iconSrc={giftBottleIcon}
+                        alt="Gift"
+                        onClick={() => setIsDailyRewardsOpen(true)}
+                        background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
+                        shadowColor="#FDBA74"
+                        delay={0.4}
+                        particleColor="rgba(253, 186, 116, 0.9)"
+                        glowColor="rgba(253, 186, 116, 0.5)"
+                        idleOffset={0}
+                        size={62}
+                        badge={
+                          canClaimDaily ? (
+                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                              <Check className="w-3.5 h-3.5" />
+                            </span>
+                          ) : (
+                            <motion.div
+                              className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20"
+                              style={{
+                                background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
+                                boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
+                                border: "2px solid white",
+                              }}
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              <Clock className="w-3.5 h-3.5 text-amber-700" />
+                            </motion.div>
+                          )
+                        }
+                      />
+                    </motion.div>
+
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.35, type: "spring" }}
+                      style={{ marginBottom: 32 }}
+                    >
+                      <ActionButtonWithParticles
+                        iconSrc={missionCrystalIcon}
+                        alt="Mission"
+                        onClick={() => setShowMissionsModal(true)}
+                        background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
+                        shadowColor="#7DD3FC"
+                        delay={0.48}
+                        particleColor="rgba(125, 211, 252, 0.9)"
+                        glowColor="rgba(125, 211, 252, 0.5)"
+                        idleOffset={0.7}
+                        size={62}
+                        badge={
+                          incompleteMissions > 0 ? (
+                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                              {incompleteMissions}
+                            </span>
+                          ) : (
+                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                              <Check className="w-3.5 h-3.5" />
+                            </span>
+                          )
+                        }
+                      />
+                    </motion.div>
+
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.4, type: "spring" }}
+                      style={{ marginBottom: 32 }}
+                    >
+                      <ActionButtonWithParticles
+                        iconSrc={chestBoxIcon}
+                        alt="Chest"
+                        onClick={() => setIsChestModalOpen(true)}
+                        background="linear-gradient(180deg, #E8FFE6 0%, #D9FFD7 100%)"
+                        shadowColor="#A7D9A5"
+                        delay={0.56}
+                        particleColor="rgba(169, 217, 167, 0.9)"
+                        glowColor="rgba(169, 217, 167, 0.5)"
+                        idleOffset={1.4}
+                        size={62}
+                        badge={<ChestButtonBadge canClaimChest={canClaimChest} />}
+                      />
+                    </motion.div>
+
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.45, type: "spring" }}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <ActionButtonWithParticles
+                        iconSrc={powersIcon}
+                        alt="Powers"
+                        onClick={() => setShowMyPowersModal(true)}
+                        background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                        shadowColor="#C4B5FD"
+                        delay={0.64}
+                        particleColor="rgba(196, 181, 253, 0.9)"
+                        glowColor="rgba(196, 181, 253, 0.5)"
+                        idleOffset={2.1}
+                        size={62}
+                        badge={
+                          totalPowerUps > 0 ? (
+                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                              {totalPowerUps}
+                            </span>
+                          ) : undefined
+                        }
+                      />
+                    </motion.div>
+                  </div>
+                )}
+
+                <motion.div 
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ marginTop: 15 }}
+                >
+                  <div 
+                    data-walkthrough="avatar" 
+                    className="pointer-events-auto cursor-pointer"
+                    onClick={() => user && setIsAvatarModalOpen(true)}
+                  >
+                    <AvatarCircle 
+                      avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
+                      animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
+                      size={280} 
+                      coins={user ? coins : 0}
+                      gems={user ? gems : 0}
+                      level={user ? levelInfo.level : 1}
+                      xpProgress={user ? levelInfo.progress : 0}
+                      xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
+                      xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
+                    />
+                  </div>
                 </motion.div>
-          </motion.div>
+              </div>
+
+              {/* User info section */}
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, type: "spring" }}
+                className="flex flex-col items-center mt-11 pointer-events-auto"
+              >
+                <div className="flex items-center justify-center gap-2.5">
+                  {user && profile?.country_code && (
+                    <FlagIcon countryCode={profile.country_code} size="md" />
+                  )}
+                  <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                    {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-6 mt-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                    </div>
+                    <span className="font-bold text-gray-700 text-lg">
+                      {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <img src={gemIcon} alt="Gems" className="w-10 h-10" />
+                    </div>
+                    <span className="font-bold text-gray-700 text-lg">
+                      {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
         </div>
           </div>
 

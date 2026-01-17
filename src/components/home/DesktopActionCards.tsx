@@ -14,6 +14,7 @@ interface DesktopActionCardsProps {
   onMissionsClick: () => void;
   onChestClick: () => void;
   onPowersClick: () => void;
+  vertical?: boolean;
 }
 
 interface ActionCardProps {
@@ -146,6 +147,7 @@ export function DesktopActionCards({
   onMissionsClick,
   onChestClick,
   onPowersClick,
+  vertical = false,
 }: DesktopActionCardsProps) {
   const { canClaimDaily, dailyTimeLeft, canClaimChest, chestTimeLeft } = useRewardTimers();
   const { completedCount, totalCount } = useMissions();
@@ -156,7 +158,7 @@ export function DesktopActionCards({
   const allMissionsDone = incompleteMissions === 0 && totalCount > 0;
 
   return (
-    <div className="flex flex-row flex-nowrap justify-center gap-4 overflow-x-auto">
+    <div className={vertical ? "flex flex-col gap-3" : "flex flex-row flex-nowrap justify-center gap-4 overflow-x-auto"}>
       {/* Daily Rewards Card */}
       <ActionCard
         iconSrc={giftBottleIcon}
