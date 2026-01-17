@@ -292,7 +292,7 @@ export function QuizGameScreenProd() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-1 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -306,7 +306,7 @@ export function QuizGameScreenProd() {
 
       {/* Players Row with Icon - Only show players in vs/challenge mode */}
       {opponent ? (
-        <div className="flex items-center justify-between px-6 pt-1 flex-shrink-0 z-10">
+        <div className="flex items-center justify-between px-6 flex-shrink-0 z-10">
           {/* Player (Left) */}
           <QuizPlayerAvatar
             avatarUrl={profile?.avatar_url}
@@ -340,7 +340,7 @@ export function QuizGameScreenProd() {
         </div>
       ) : (
         /* Solo Mode - Just centered icon - hand-picked icon priority, then AI, then category fallback */
-        <div className="flex justify-center py-3 flex-shrink-0 z-10">
+        <div className="flex justify-center py-2 flex-shrink-0 z-10">
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
             categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
@@ -353,7 +353,7 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-1">
+      <div className="px-4 flex-shrink-0">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
@@ -367,7 +367,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-2 flex-shrink-0">
+      <div className="flex justify-center py-1 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -376,7 +376,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Answer Buttons */}
-      <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
+      <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
@@ -406,7 +406,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Bottom Area - Power-ups OR Next Button */}
-      <div className="px-4 pb-3 pt-1 flex-shrink-0">
+      <div className="px-4 pb-2 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed ? (
