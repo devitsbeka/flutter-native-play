@@ -69,7 +69,7 @@ export function ShopColumnLayout({
     <>
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pt-4 pb-24 cursor-grab active:cursor-grabbing"
+        className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pt-4 pb-40 cursor-grab active:cursor-grabbing"
         style={{
           scrollBehavior: isDragging ? "auto" : "smooth",
           WebkitOverflowScrolling: "touch",
