@@ -137,7 +137,7 @@ export function UnifiedDesktopNav({
   );
 
   return (
-    <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-white/30 bg-white/50 backdrop-blur-xl pt-6 pb-4 transition-all duration-200 z-50">
+    <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/5 bg-white/50 backdrop-blur-xl pt-6 pb-4 transition-all duration-200 z-50">
       {/* Logo */}
       <div className="px-3 lg:px-4 mb-4 flex justify-center lg:justify-start">
         <motion.div
@@ -177,7 +177,7 @@ export function UnifiedDesktopNav({
               <ChevronDown className="w-4 h-4 hidden lg:block text-muted-foreground" />
             </motion.button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="start" className="w-56">
+          <DropdownMenuContent side="right" align="start" className="w-56 bg-white border border-border shadow-lg">
             <DropdownMenuItem onClick={() => navigate("/profile")}>
               <User className="mr-2 h-4 w-4" strokeWidth={1.5} />
               პროფილის ნახვა
@@ -228,7 +228,7 @@ export function UnifiedDesktopNav({
               <span className="text-[15px] hidden lg:inline">მეტი</span>
             </motion.button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="end" className="w-56">
+          <DropdownMenuContent side="right" align="end" className="w-56 bg-white border border-border shadow-lg">
             <DropdownMenuItem onClick={() => navigate("/settings")}>
               <Settings className="mr-2 h-4 w-4" strokeWidth={1.5} />
               პარამეტრები
