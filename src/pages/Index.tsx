@@ -417,7 +417,7 @@ export default function Index() {
             <div className="relative">
               {/* Desktop/Tablet: Show extended info cards instead of circles */}
               {user && (
-                <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 pointer-events-auto z-20" style={{ top: -160 }}>
+                <div className="hidden md:block absolute left-1/2 -translate-x-1/2 pointer-events-auto z-20" style={{ top: -160 }}>
                   <DesktopActionCards
                     onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
                     onMissionsClick={() => setShowMissionsModal(true)}
@@ -430,7 +430,7 @@ export default function Index() {
               {/* Mobile/Tablet: Show curved action buttons above avatar */}
               {user && (
                 <div 
-                  className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
+                  className="md:hidden absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
                   style={{ 
                     top: -75,
                     width: 340,
@@ -640,7 +640,7 @@ export default function Index() {
                 </div>
 
                 {/* Large Play Button - Desktop only */}
-                <div className="hidden lg:block mt-6">
+                <div className="hidden md:block mt-6">
                   <DesktopPlayButtonLarge
                     onClick={handlePlayClick}
                     playsRemaining={user ? playsRemaining : guestPlaysRemaining}
