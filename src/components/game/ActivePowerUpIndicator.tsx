@@ -58,18 +58,13 @@ export function ActivePowerUpIndicator({ type, remainingTime, isVisible }: Activ
           className="fixed top-20 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
         >
           <motion.div
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-white font-bold shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 rounded-full font-bold"
             style={{
-              background: config.bgColor,
-              boxShadow: `0 4px 20px ${config.glowColor}, 0 0 30px ${config.glowColor}`,
+              color: config.color,
+              textShadow: `0 2px 8px ${config.glowColor}, 0 0 20px ${config.glowColor}`,
             }}
             animate={{
-              scale: [1, 1.02, 1],
-              boxShadow: [
-                `0 4px 20px ${config.glowColor}, 0 0 30px ${config.glowColor}`,
-                `0 4px 30px ${config.glowColor}, 0 0 50px ${config.glowColor}`,
-                `0 4px 20px ${config.glowColor}, 0 0 30px ${config.glowColor}`,
-              ],
+              scale: [1, 1.05, 1],
             }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
@@ -80,7 +75,7 @@ export function ActivePowerUpIndicator({ type, remainingTime, isVisible }: Activ
                 key={remainingTime}
                 initial={{ scale: 1.2 }}
                 animate={{ scale: 1 }}
-                className="bg-white/20 rounded-full px-2 py-0.5 text-sm"
+                className="bg-black/30 rounded-full px-2 py-0.5 text-sm"
               >
                 {remainingTime}წ
               </motion.span>
