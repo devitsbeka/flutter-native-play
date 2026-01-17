@@ -734,7 +734,7 @@ export default function Index() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3, type: "spring" }}
-                className="flex flex-col items-center mt-11 pointer-events-auto"
+                className="flex flex-col items-center mt-8 pointer-events-auto"
               >
                 <div className="flex items-center justify-center gap-2.5">
                   {user && profile?.country_code && (
