@@ -650,30 +650,32 @@ export default function Flow() {
         </div>
 
         {/* Right: Queue - Responsive width */}
-        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex flex-col flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
-          <QuestionQueue
-            pendingCount={pendingCount}
-            approvedCount={approvedCount}
-            rejectedCount={rejectedCount}
-            inLibCount={stats.inLib}
-            inProdCount={stats.inProd}
-            onPublishToLib={handlePublishToLib}
-            onPublishToProd={handlePublishToProd}
-            onClearRejected={handleClearRejected}
-            onTranslateAll={handleTranslateAll}
-            isTranslating={isTranslating}
-            selectedQuestion={selectedQuestion}
-            onUpdateQuestion={handleUpdateQuestion}
-          />
-          
-          {/* Auto Generation Panel */}
-          <div className="p-3 border-t border-border/50">
-            <AutoGenerationPanel categories={categories} />
-          </div>
-          
-          {/* Job Question Review */}
-          <div className="p-3 border-t border-border/50">
-            <JobQuestionReview />
+        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+          <div className="flex flex-col">
+            <QuestionQueue
+              pendingCount={pendingCount}
+              approvedCount={approvedCount}
+              rejectedCount={rejectedCount}
+              inLibCount={stats.inLib}
+              inProdCount={stats.inProd}
+              onPublishToLib={handlePublishToLib}
+              onPublishToProd={handlePublishToProd}
+              onClearRejected={handleClearRejected}
+              onTranslateAll={handleTranslateAll}
+              isTranslating={isTranslating}
+              selectedQuestion={selectedQuestion}
+              onUpdateQuestion={handleUpdateQuestion}
+            />
+            
+            {/* Auto Generation Panel */}
+            <div className="p-3 border-t border-border/50">
+              <AutoGenerationPanel categories={categories} />
+            </div>
+            
+            {/* Job Question Review */}
+            <div className="p-3 border-t border-border/50 pb-8">
+              <JobQuestionReview />
+            </div>
           </div>
         </div>
       </div>

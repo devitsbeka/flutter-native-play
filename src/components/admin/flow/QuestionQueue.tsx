@@ -61,8 +61,7 @@ export function QuestionQueue({
   };
 
   return (
-    <ScrollArea className="flex-1">
-      <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4">
         {/* iPhone Mockup Preview */}
         <div className="space-y-2">
           <h3 className="font-semibold text-sm flex items-center gap-2">
@@ -227,8 +226,7 @@ export function QuestionQueue({
           <p><strong>Library:</strong> Questions saved for review, not visible to users.</p>
           <p><strong>Production:</strong> Questions visible to all users in the app.</p>
         </div>
-      </div>
-    </ScrollArea>
+    </div>
   );
 }
 
