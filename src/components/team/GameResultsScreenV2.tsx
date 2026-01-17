@@ -215,7 +215,8 @@ export function GameResultsScreenV2() {
   };
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
+    <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
+      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Top Section: Icon + Result */}
       <div className="pt-8 text-center">
         <motion.img 
@@ -384,9 +385,10 @@ export function GameResultsScreenV2() {
           onClick={handleBackToRoom}
           icon={<ArrowLeft className="w-5 h-5" />}
         >
-          {t("game.backToRoom")}
+        {t("game.backToRoom")}
         </ChunkyButton>
       </motion.div>
+      </div>
     </div>
   );
 }
