@@ -151,7 +151,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
         {/* Question Text */}
         <div className={cn(
-          "px-5 py-3",
+          "px-5 py-2",
           (timerSeconds !== undefined || difficultyLabel) && "pt-12"
         )}>
           {isLoading ? (
