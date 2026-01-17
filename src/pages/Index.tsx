@@ -403,16 +403,34 @@ export default function Index() {
 
         {/* Content area */}
         <div className="flex-1 flex relative">
+          {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
+          {user && (
+            <motion.div 
+              className="hidden md:flex fixed right-4 lg:right-6 xl:right-8 top-20 z-20 pointer-events-auto"
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+            >
+              <DesktopActionCards
+                onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
+                onMissionsClick={() => setShowMissionsModal(true)}
+                onChestClick={() => setIsChestModalOpen(true)}
+                onPowersClick={() => setShowMyPowersModal(true)}
+                vertical
+              />
+            </motion.div>
+          )}
+
           {/* Main content area */}
           <div className="flex-1 relative h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ marginTop: 0 }}>
             
-            {/* xl+ layout: Cards on top, avatar centered below - combined */}
+            {/* xl+ layout: Cards moved to fixed right side */}
 
-            {/* md to xl layout: Side by side (avatar left, cards right) */}
-            <div className="hidden md:flex xl:hidden items-center justify-center gap-[52px] w-full px-4" style={{ marginTop: -80 }}>
-              {/* Left side: Avatar + Info */}
+            {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
+            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4" style={{ marginTop: -80 }}>
+              {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -488,43 +506,15 @@ export default function Index() {
                 </motion.div>
               </motion.div>
 
-              {/* Right side: Action cards vertical */}
-              {user && (
-                <motion.div 
-                  className="pointer-events-auto"
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                >
-                  <DesktopActionCards
-                    onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
-                    onMissionsClick={() => setShowMissionsModal(true)}
-                    onChestClick={() => setIsChestModalOpen(true)}
-                    onPowersClick={() => setShowMyPowersModal(true)}
-                    vertical
-                  />
-                </motion.div>
-              )}
             </div>
 
-            {/* xl+ layout: Avatar centered with cards on top */}
+            {/* xl+ layout: Avatar centered */}
             <motion.div 
               className="hidden xl:flex flex-col items-center w-full px-4"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
-              {/* Action cards horizontal on top */}
-              {user && (
-                <div className="pointer-events-auto mb-6">
-                  <DesktopActionCards
-                    onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
-                    onMissionsClick={() => setShowMissionsModal(true)}
-                    onChestClick={() => setIsChestModalOpen(true)}
-                    onPowersClick={() => setShowMyPowersModal(true)}
-                  />
-                </div>
-              )}
               <div className="relative">
                 <motion.div 
                   animate={{ y: [0, -8, 0] }}

@@ -214,20 +214,6 @@ export function UnifiedDesktopNav({
         />
       </div>
 
-      {/* Play Button Section */}
-      <div className="px-2 lg:px-3 py-4 mt-2">
-        {showPlayButton && (
-          <DesktopPlayButton
-            onClick={onPlayClick}
-            playsRemaining={playsRemaining}
-            maxPlays={maxPlays}
-            canPlay={canPlay}
-            isVip={isVip}
-            isCompact={true}
-            size="md"
-          />
-        )}
-      </div>
 
       {/* Bottom Section - More menu */}
       <div className="px-2 lg:px-3 mt-auto">
