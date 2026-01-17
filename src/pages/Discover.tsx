@@ -179,7 +179,7 @@ export default function Discover() {
         {/* Content above mask */}
         <div className="relative z-10">
           {/* Sticky header section */}
-          <div className={`sticky top-0 z-20 bg-white/50 backdrop-blur-sm transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''}`}>
+          <div className={`sticky top-0 z-20 bg-white/50 backdrop-blur-sm border-b border-border/40 transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''}`}>
             {/* Header with Page Title - hide when scrolled */}
             <AnimatePresence>
               {!isScrolled && (
@@ -241,7 +241,7 @@ export default function Discover() {
             </AnimatePresence>
 
             {/* Tabs */}
-            <div className={`px-4 border-b border-border/40 ${isScrolled ? 'py-2' : 'pt-2 pb-1'}`}>
+            <div className={`px-4 ${isScrolled ? 'py-2' : 'pt-2 pb-1'}`}>
               <IconTabBar
                 tabs={tabs}
                 activeTab={activeTab}
