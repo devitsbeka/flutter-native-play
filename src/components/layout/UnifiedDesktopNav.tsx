@@ -102,10 +102,10 @@ export function UnifiedDesktopNav({
             onClick={onClick}
             className={`
               w-full flex items-center gap-3 px-3 py-3 rounded-xl
-              transition-colors duration-200
+              transition-all duration-200
               ${active 
-                ? 'bg-primary/10 text-foreground font-semibold' 
-                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                ? 'text-foreground font-medium' 
+                : 'text-muted-foreground hover:text-foreground'
               }
             `}
             whileHover={{ scale: 1.02 }}
@@ -114,8 +114,8 @@ export function UnifiedDesktopNav({
             <div className="relative flex items-center justify-center w-6 h-6">
               {children ? children : Icon ? (
                 <Icon 
-                  className="w-6 h-6"
-                  strokeWidth={active ? 2.5 : 1.5}
+                  className={`w-6 h-6 transition-all ${active ? 'text-primary' : ''}`}
+                  strokeWidth={active ? 2 : 1.5}
                 />
               ) : null}
               {badge !== undefined && badge > 0 && (
