@@ -187,7 +187,7 @@ export default function Notifications() {
       </div>
 
       {/* Header - reduced size */}
-      <div className="relative z-10 px-4 pt-4 pb-3">
+      <div className="relative z-10 px-4 pt-4 pb-3 border-b border-border/40">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">

@@ -16,7 +16,7 @@ export function ShopHeader({ onHelpClick, onCurrencyPlusClick }: ShopHeaderProps
   const { t } = useLanguage();
 
   return (
-    <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md">
+    <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/40">
       <div className="px-4 pt-4 pb-3">
         {/* Top Row: Title + Help */}
         <div className="flex items-center justify-between mb-3">

@@ -241,7 +241,7 @@ export default function Discover() {
             </AnimatePresence>
 
             {/* Tabs */}
-            <div className={`px-4 ${isScrolled ? 'py-2' : 'pt-2 pb-1'}`}>
+            <div className={`px-4 border-b border-border/40 ${isScrolled ? 'py-2' : 'pt-2 pb-1'}`}>
               <IconTabBar
                 tabs={tabs}
                 activeTab={activeTab}
