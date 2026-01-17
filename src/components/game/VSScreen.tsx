@@ -253,9 +253,11 @@ export function VSScreen() {
 
   return (
     <div 
-      className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
+      className="h-[100dvh] w-full flex flex-col items-center relative overflow-hidden"
       style={{ background: "#7E7ADB" }}
     >
+      {/* Content wrapper with max-width for desktop/tablet */}
+      <div className="w-full h-full flex flex-col sm:max-w-[960px]">
       {/* Wave Pattern Background */}
       <WavePattern />
 
@@ -544,6 +546,7 @@ export function VSScreen() {
         isOpen={showHelpModal} 
         onClose={() => setShowHelpModal(false)} 
       />
+      </div>
     </div>
   );
 }
