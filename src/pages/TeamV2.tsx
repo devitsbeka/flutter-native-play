@@ -494,16 +494,16 @@ function TeamContentV2() {
                     onClick={() => handleTabChange(tab.id)}
                     className={`relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
                       activeTab === tab.id
-                        ? "text-primary-foreground"
+                        ? "text-primary"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {activeTab === tab.id && (
                       <motion.div
                         layoutId="activeTabTeam"
-                        className="absolute inset-0 rounded-xl bg-primary"
+                        className="absolute inset-0 rounded-xl bg-white"
                         style={{
-                          boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5)",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                         }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
