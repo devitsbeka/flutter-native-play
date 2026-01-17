@@ -467,6 +467,17 @@ function TeamContentV2() {
               </div>
             </div>
 
+            {/* Friends Bar - show above tabs on rooms tab */}
+            {activeTab === "rooms" && (
+              <div className="py-2">
+                <FriendsStoriesBar
+                  onAddFriendClick={() => setShowAddFriendModal(true)}
+                  onFriendClick={() => {}}
+                  onShowAllFriends={() => setShowAllFriendsModal(true)}
+                />
+              </div>
+            )}
+
             {/* 3D Chunky Tabs with Create Button */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex gap-2">
@@ -532,16 +543,6 @@ function TeamContentV2() {
             </ChunkyButton>
           </div>
 
-          {/* Friends Bar - only show on rooms tab */}
-          {activeTab === "rooms" && (
-            <div className="px-4 py-3">
-              <FriendsStoriesBar
-                onAddFriendClick={() => setShowAddFriendModal(true)}
-                onFriendClick={() => {}}
-                onShowAllFriends={() => setShowAllFriendsModal(true)}
-              />
-            </div>
-          )}
 
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
