@@ -1,6 +1,6 @@
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { Check, ChevronRight } from "lucide-react";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, ChevronRight, ArrowRight } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
@@ -22,6 +22,8 @@ interface ActionCardProps {
   title: string;
   description: string;
   statusText: string;
+  expandedDetails?: string;
+  actionLabel?: string;
   onClick: () => void;
   isReady?: boolean;
   badgeCount?: number;
@@ -59,23 +61,14 @@ const ActionCard = ({
   title,
   description,
   statusText,
+  expandedDetails,
+  actionLabel = "გახსნა",
   onClick,
   isReady = false,
   badgeCount,
-  bgGradient,
-  particleColor,
   delay = 0,
 }: ActionCardProps) => {
-  // Generate random particles
-  const particles = useMemo(() => 
-    Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      x: 10 + Math.random() * 80,
-      y: 10 + Math.random() * 80,
-      size: 3 + Math.random() * 4,
-      delay: Math.random() * 2,
-    })),
-  []);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <motion.button
@@ -83,54 +76,95 @@ const ActionCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, type: "spring", stiffness: 300, damping: 25 }}
       onClick={onClick}
-      className="relative flex items-center gap-4 p-4 rounded-2xl overflow-hidden w-[250px] min-h-[90px] text-left group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative flex flex-col p-4 rounded-2xl overflow-hidden w-[250px] text-left group"
       style={{ 
         background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-        boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,1)",
+        boxShadow: isHovered 
+          ? "0 6px 0 #D8D0E8, 0 10px 24px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,1)"
+          : "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,1)",
         border: "2px solid #E8E0F5",
       }}
-      whileHover={{ scale: 1.03, y: -3 }}
       whileTap={{ scale: 0.98 }}
     >
+      {/* Main row */}
+      <div className="flex items-center gap-4">
+        {/* Icon */}
+        <div className="relative flex-shrink-0 z-10">
+          <motion.img 
+            src={iconSrc} 
+            alt={title} 
+            className="w-14 h-14 object-contain drop-shadow-md"
+            animate={{ y: [0, -3, 0], rotate: [-2, 2, -2] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+          {/* Status badge */}
+          {isReady && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border-2 border-white">
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+            </span>
+          )}
+          {!isReady && badgeCount !== undefined && badgeCount > 0 && (
+            <motion.span 
+              className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-bold text-white flex items-center justify-center shadow-lg border-2 border-white"
+              style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {badgeCount}
+            </motion.span>
+          )}
+        </div>
 
-      {/* Icon */}
-      <div className="relative flex-shrink-0 z-10">
-        <motion.img 
-          src={iconSrc} 
-          alt={title} 
-          className="w-14 h-14 object-contain drop-shadow-md"
-          animate={{ y: [0, -3, 0], rotate: [-2, 2, -2] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Status badge */}
-        {isReady && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border-2 border-white">
-            <Check className="w-3 h-3 text-white" strokeWidth={3} />
-          </span>
-        )}
-        {!isReady && badgeCount !== undefined && badgeCount > 0 && (
-          <motion.span 
-            className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-bold text-white flex items-center justify-center shadow-lg border-2 border-white"
-            style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
+        {/* Text content */}
+        <div className="flex-1 min-w-0 z-10">
+          <p className="text-sm font-bold text-gray-800 truncate">{title}</p>
+          <p className="text-xs text-gray-600/80 truncate mb-1">{description}</p>
+          <p className="text-xs font-semibold text-gray-700 truncate">
+            {statusText}
+          </p>
+        </div>
+
+        {/* Chevron */}
+        <motion.div
+          animate={{ x: isHovered ? 3 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronRight className="w-5 h-5 text-gray-500/60 group-hover:text-gray-600 transition-colors flex-shrink-0 z-10" strokeWidth={2} />
+        </motion.div>
+      </div>
+
+      {/* Expanded content */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="overflow-hidden"
           >
-            {badgeCount}
-          </motion.span>
+            <div className="pt-3 mt-3 border-t border-gray-200/60">
+              {expandedDetails && (
+                <p className="text-xs text-gray-600 mb-3">{expandedDetails}</p>
+              )}
+              <motion.span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                style={{ 
+                  background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)",
+                  boxShadow: "0 2px 4px rgba(139, 92, 246, 0.3)"
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {actionLabel}
+                <ArrowRight className="w-3 h-3" />
+              </motion.span>
+            </div>
+          </motion.div>
         )}
-      </div>
-
-      {/* Text content */}
-      <div className="flex-1 min-w-0 z-10">
-        <p className="text-sm font-bold text-gray-800 truncate">{title}</p>
-        <p className="text-xs text-gray-600/80 truncate mb-1">{description}</p>
-        <p className="text-xs font-semibold text-gray-700 truncate">
-          {statusText}
-        </p>
-      </div>
-
-      {/* Chevron */}
-      <ChevronRight className="w-5 h-5 text-gray-500/60 group-hover:text-gray-600 transition-colors flex-shrink-0 z-10" strokeWidth={2} />
+      </AnimatePresence>
     </motion.button>
   );
 };
@@ -158,10 +192,12 @@ export function DesktopActionCards({
         title="დღიური საჩუქარი"
         description="მიიღე ყოველდღიური ჯილდო"
         statusText={canClaimDaily ? "მზად არის! 🎁" : `დარჩა: ${dailyTimeLeft || "00:00:00"}`}
+        expandedDetails="ყოველდღიური შესვლით იღებ მონეტებს, გემებს და სპეციალურ ჯილდოებს."
+        actionLabel={canClaimDaily ? "აიღე ჯილდო" : "ნახე დეტალები"}
         onClick={onDailyRewardsClick}
         isReady={canClaimDaily}
-        bgGradient="linear-gradient(145deg, #FFF7ED 0%, #FED7AA 50%, #FDBA74 100%)"
-        particleColor="rgba(253, 186, 116, 0.6)"
+        bgGradient=""
+        particleColor=""
         delay={0.1}
       />
 
@@ -171,11 +207,13 @@ export function DesktopActionCards({
         title="მისიები"
         description="შეასრულე დავალებები"
         statusText={allMissionsDone ? "ყველა შესრულებულია ✓" : `${completedCount}/${totalCount} შესრულებული`}
+        expandedDetails="დაასრულე დავალებები და მიიღე დამატებითი ჯილდოები."
+        actionLabel="ნახე მისიები"
         onClick={onMissionsClick}
         isReady={allMissionsDone}
         badgeCount={incompleteMissions}
-        bgGradient="linear-gradient(145deg, #E0F2FE 0%, #BAE6FD 50%, #7DD3FC 100%)"
-        particleColor="rgba(125, 211, 252, 0.6)"
+        bgGradient=""
+        particleColor=""
         delay={0.15}
       />
 
@@ -185,10 +223,12 @@ export function DesktopActionCards({
         title="სკივრი"
         description="გახსენი საიდუმლო სკივრი"
         statusText={canClaimChest ? "გახსენი ახლა! 📦" : `დარჩა: ${chestTimeLeft || "00:00:00"}`}
+        expandedDetails="საიდუმლო სკივრში შეიძლება იყოს იშვიათი ჯილდოები და პაუერ-აფები."
+        actionLabel={canClaimChest ? "გახსენი სკივრი" : "ნახე დეტალები"}
         onClick={onChestClick}
         isReady={canClaimChest}
-        bgGradient="linear-gradient(145deg, #DCFCE7 0%, #BBF7D0 50%, #86EFAC 100%)"
-        particleColor="rgba(134, 239, 172, 0.6)"
+        bgGradient=""
+        particleColor=""
         delay={0.2}
       />
 
@@ -198,10 +238,12 @@ export function DesktopActionCards({
         title="ძალები"
         description="გამოიყენე თამაშში"
         statusText={totalPowerUps > 0 ? `${totalPowerUps} ხელმისაწვდომია` : "არ გაქვს ძალები"}
+        expandedDetails="პაუერ-აფები გეხმარება კითხვებზე პასუხის გაცემაში."
+        actionLabel="მართე ძალები"
         onClick={onPowersClick}
         badgeCount={totalPowerUps}
-        bgGradient="linear-gradient(145deg, #EDE9FE 0%, #DDD6FE 50%, #C4B5FD 100%)"
-        particleColor="rgba(196, 181, 253, 0.6)"
+        bgGradient=""
+        particleColor=""
         delay={0.25}
       />
     </div>
