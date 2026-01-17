@@ -29,7 +29,7 @@ const botAvatars = [botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "bg-success",
-  medium: "bg-warning",
+  medium: "bg-amber-500",
   hard: "bg-destructive",
 };
 
@@ -292,7 +292,7 @@ export function QuizGameScreenProd() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Different layout for solo vs challenge mode */}
-      <div className="flex items-center justify-between px-4 pt-3 py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 [@media(max-height:700px)]:py-0.5 [@media(max-height:700px)]:mb-1 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -321,7 +321,7 @@ export function QuizGameScreenProd() {
 
       {/* Players Row with Icon - Only show in vs/challenge mode */}
       {opponent ? (
-        <div className="flex items-center justify-between px-6 flex-shrink-0 z-10">
+        <div className="flex items-center justify-between px-6 mt-1 mb-3 [@media(max-height:700px)]:mb-2 flex-shrink-0 z-10">
           {/* Player (Left) */}
           <QuizPlayerAvatar
             avatarUrl={profile?.avatar_url}
@@ -368,7 +368,7 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-2">
+      <div className="px-4 flex-shrink-0 mt-3 mb-2 [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:mb-1">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
@@ -382,7 +382,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0">
+      <div className="flex justify-center py-2 [@media(max-height:700px)]:py-1 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
