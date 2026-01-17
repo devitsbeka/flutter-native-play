@@ -16,8 +16,7 @@ import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopCurrencyBar } from "@/components/shop/ShopCurrencyBar";
-import { ShopPromoSection } from "@/components/shop/ShopPromoSection";
-import { ShopColumnLayout } from "@/components/shop/ShopColumnLayout";
+import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
 import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
@@ -150,9 +149,9 @@ export default function PowerUps() {
       {/* Currency Bar - on video background */}
       <ShopCurrencyBar onCurrencyPlusClick={handleCurrencyPlusClick} />
 
-      {/* Desktop/Tablet: Horizontal scrolling columns */}
-      <div className="hidden md:block flex-1 overflow-y-auto pt-4 pb-4">
-        <ShopColumnLayout
+      {/* Standard Shop Layout - Hero carousel + product grids */}
+      <div className="flex-1 overflow-y-auto pt-4">
+        <ShopStandardLayout
           sections={SHOP_SECTIONS}
           gems={gems}
           purchasedItems={purchasedItems}
@@ -160,30 +159,6 @@ export default function PowerUps() {
           isFrameUnlocked={isFrameUnlocked}
           onItemClick={handlePurchase}
         />
-      </div>
-
-      {/* Mobile: Vertical scroll with horizontal item carousels */}
-      <div 
-        className="md:hidden flex-1 overflow-y-auto pt-4 pb-4"
-        style={{
-          scrollSnapType: "y mandatory",
-          scrollBehavior: "smooth",
-        }}
-      >
-        {SHOP_SECTIONS.filter(section => section.id !== "frames").map((section) => (
-          <ShopPromoSection
-            key={section.id}
-            title={section.title}
-            description={section.description}
-            videoSrc={section.videoSrc}
-            items={section.items}
-            gems={gems}
-            purchasedItems={purchasedItems}
-            isPurchasing={isPurchasing}
-            isFrameUnlocked={isFrameUnlocked}
-            onItemClick={handlePurchase}
-          />
-        ))}
       </div>
 
       {/* Modals */}
