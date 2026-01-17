@@ -97,9 +97,9 @@ export function ShopColumnLayout({
             </div>
 
             {/* Content */}
-            <div className="relative z-10 p-4 pt-5 flex flex-col h-[420px]">
+            <div className="relative z-10 p-4 pt-5 flex flex-col h-[280px]">
               {/* Header */}
-              <div className="mb-auto">
+              <div>
                 <h3 className="text-xl font-display font-bold text-white drop-shadow-lg">
                   {section.title}
                 </h3>
@@ -107,9 +107,10 @@ export function ShopColumnLayout({
                   {section.description}
                 </p>
               </div>
+            </div>
 
-              {/* Items - vertical list, positioned at bottom, overflowing */}
-              <div className="flex flex-col gap-3 mt-auto" style={{ marginBottom: '-60px' }}>
+            {/* Items - positioned below card, overflowing */}
+            <div className="relative z-10 px-4 flex flex-col gap-3" style={{ marginTop: '-20px' }}>
                 {section.items.map((item, itemIndex) => {
                   const canAfford = gems >= item.price;
                   const isPurchased = purchasedItems.has(item.id);
@@ -145,7 +146,6 @@ export function ShopColumnLayout({
                   );
                 })}
               </div>
-            </div>
           </motion.div>
         ))}
       </div>
