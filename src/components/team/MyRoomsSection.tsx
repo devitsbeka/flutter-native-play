@@ -393,11 +393,12 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
           {isPlaying ? (
             <LiveBadge />
           ) : isCompleted ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-[10px]">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
               დასრულდა
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-[10px]">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               მოლოდინი
             </span>
           )}

@@ -475,28 +475,30 @@ function TeamContentV2() {
                   { id: "explore", label: "აღმოჩენა" },
                   { id: "my-content", label: "ჩემი ტრივია" },
                 ].map((tab) => (
-                  <button
+                  <motion.button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`relative px-5 py-2 rounded-full font-bold text-sm transition-all active:translate-y-[2px] ${
+                    className={`relative px-5 py-2.5 rounded-full font-medium text-sm transition-all ${
                       activeTab === tab.id
-                        ? "bg-gradient-to-b from-primary via-primary to-primary/90 text-white"
-                        : "bg-gradient-to-b from-white via-gray-50 to-gray-100 text-[#6B5B95]"
+                        ? "text-white"
+                        : "text-foreground"
                     }`}
                     style={{
+                      background: activeTab === tab.id
+                        ? "linear-gradient(180deg, hsl(270 60% 55%) 0%, hsl(270 55% 50%) 100%)"
+                        : "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
                       boxShadow: activeTab === tab.id
-                        ? `inset 0 2px 0 0 rgba(255,255,255,0.25),
-                           0 1px 0 0 hsl(270 50% 45%),
-                           0 4px 0 0 hsl(270 50% 35%),
-                           0 4px 0 1.5px hsl(270 50% 28%)`
-                        : `inset 0 2px 0 0 rgba(255,255,255,0.8),
-                           0 1px 0 0 #E5E5E5,
-                           0 4px 0 0 #C4C4C4,
-                           0 4px 0 1.5px #A0A0A0`,
+                        ? "0 3px 0 hsl(270 50% 35%), 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)"
+                        : "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
+                      border: activeTab === tab.id
+                        ? "2px solid hsl(270 45% 45%)"
+                        : "2px solid #E8E0F5",
                     }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     {tab.label}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
               
