@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronRight, ArrowRight } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
@@ -126,13 +126,6 @@ const ActionCard = ({
           </p>
         </div>
 
-        {/* Chevron */}
-        <motion.div
-          animate={{ x: isHovered ? 3 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronRight className="w-5 h-5 text-gray-500/60 group-hover:text-gray-600 transition-colors flex-shrink-0 z-10" strokeWidth={2} />
-        </motion.div>
       </div>
 
       {/* Expanded content */}
@@ -143,23 +136,26 @@ const ActionCard = ({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="overflow-hidden"
+            className="overflow-hidden w-full"
           >
             <div className="pt-3 mt-3 border-t border-gray-200/60">
               {expandedDetails && (
                 <p className="text-xs text-gray-600 mb-3">{expandedDetails}</p>
               )}
               <motion.span
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold"
                 style={{ 
-                  background: "linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)",
-                  boxShadow: "0 2px 4px rgba(139, 92, 246, 0.3)"
+                  background: "linear-gradient(180deg, #6EE7B7 0%, #10B981 50%, #059669 100%)",
+                  boxShadow: "0 4px 0 #047857, 0 6px 12px rgba(16, 185, 129, 0.3), inset 0 2px 0 rgba(255,255,255,0.3)",
+                  border: "2px solid #34D399",
+                  color: "#fff",
+                  textShadow: "0 1px 2px rgba(0,0,0,0.2)"
                 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97, y: 2, boxShadow: "0 2px 0 #047857" }}
               >
                 {actionLabel}
-                <ArrowRight className="w-3 h-3" />
+                <ArrowRight className="w-4 h-4" />
               </motion.span>
             </div>
           </motion.div>
