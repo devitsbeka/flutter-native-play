@@ -32,10 +32,13 @@ export function ShopProductGrid({
       transition={{ duration: 0.4 }}
     >
       {/* Section Header */}
-      <div className="px-4 mb-3">
-        <h2 className="text-lg font-display font-bold text-foreground">
-          {title}
-        </h2>
+      <div className="px-4 mb-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-display font-bold text-foreground">
+            {title}
+          </h2>
+          <div className="flex-1 h-px bg-border/50" />
+        </div>
       </div>
 
       {/* Products Grid - horizontal scroll on mobile, grid on desktop */}
