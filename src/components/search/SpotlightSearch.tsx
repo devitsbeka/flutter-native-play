@@ -52,6 +52,8 @@ const COMMANDS = [
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { signOut } = useAuth();
   
@@ -80,8 +82,13 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
   useEffect(() => {
     if (!open) {
       setQuery("");
+      setInputValue("");
+    } else if (inputValue) {
+      // Transfer any typed value to query when modal opens
+      setQuery(inputValue);
+      setInputValue("");
     }
-  }, [open]);
+  }, [open, inputValue]);
 
   // Filter commands
   const filteredCommands = useMemo(() => {
@@ -154,28 +161,61 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
     navigate(`/room/${roomCode}`);
   };
 
+  // Handle input change - open modal when typing
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    if (value && !open) {
+      setOpen(true);
+    }
+  };
+
+  // Handle input focus
+  const handleInputFocus = () => {
+    // Focus is ready for typing, modal opens on first keystroke
+  };
+
+  // Handle input keydown
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && inputValue) {
+      setOpen(true);
+    }
+    if (e.key === "Escape") {
+      setInputValue("");
+      inputRef.current?.blur();
+    }
+  };
+
   return (
     <>
-      {/* Trigger Bar */}
-      <motion.button
-        onClick={() => setOpen(true)}
-        className={`flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] ${className}`}
+      {/* Input Bar - acts like real input */}
+      <motion.div
+        className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] ${className}`}
         style={{
           background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
           boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
           border: "2px solid #E8E0F5",
         }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
       >
         <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-        <span className="text-sm text-muted-foreground flex-1 text-left truncate">
-          ძებნა...
-        </span>
-        <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 text-[10px] font-medium text-muted-foreground border border-border/50">
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onKeyDown={handleInputKeyDown}
+          placeholder="ძებნა..."
+          className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+        />
+        <kbd 
+          className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 text-[10px] font-medium text-muted-foreground border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors"
+          onClick={() => setOpen(true)}
+        >
           <Command className="w-2.5 h-2.5" />K
         </kbd>
-      </motion.button>
+      </motion.div>
 
       {/* Command Dialog */}
       <CommandDialog open={open} onOpenChange={setOpen}>
