@@ -904,7 +904,7 @@ export default function CategoryQuizPage() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Solo mode with category name and timer */}
-      <div className="flex items-center justify-between px-4 py-1 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0">
         <button
           onClick={() => setShowExitDialog(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -926,13 +926,13 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Question Card with Overlapping Icon - Solo mode optimized */}
-      <div className="px-4 flex-shrink-0 mt-2 relative">
-        {/* Category Icon - smaller for solo mode */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-20">
+      <div className="px-4 flex-shrink-0 mt-4 mb-2 relative">
+        {/* Category Icon - 25% larger */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
           <DynamicIcon 
             slug={currentQuestion?.icon_slug || aiIconSlug || dbCategory?.icon_slug || undefined}
             categoryId={(currentQuestion?.icon_slug || aiIconSlug) ? undefined : categoryId}
-            size={80}
+            size={100}
             className="drop-shadow-2xl"
           />
         </div>
@@ -947,7 +947,7 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-1 flex-shrink-0">
+      <div className="flex justify-center py-2 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -955,8 +955,8 @@ export default function CategoryQuizPage() {
         />
       </div>
 
-      {/* Answer Buttons - same component as QuizGameScreenProd */}
-      <div className="flex-1 px-4 flex flex-col gap-2 overflow-hidden min-h-0">
+      {/* Answer Buttons */}
+      <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion?.allAnswers?.map((answer, index) => {
             // Skip hidden answers (from 50/50 power-up)
