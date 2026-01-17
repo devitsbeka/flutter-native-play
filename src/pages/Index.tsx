@@ -2,7 +2,8 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Bell, Menu, Check, Clock } from "lucide-react";
+import { Bell, Check, Clock } from "lucide-react";
+import SpotlightSearch from "@/components/search/SpotlightSearch";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
@@ -338,21 +339,8 @@ export default function Index() {
         <div className="min-h-screen flex flex-col w-full relative">
         <header className="relative z-20 px-4 pt-4 safe-top">
           <div className="flex items-center justify-between">
-            {/* Burger menu chip - same style as currency */}
-            <motion.button
-              className="flex items-center gap-2 px-4 py-2 rounded-full h-[42px]"
-              style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-                border: "2px solid #E8E0F5",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsSideMenuOpen(true)}
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-              <span className="text-sm font-bold text-gray-700 uppercase" style={{ fontFamily: "'Google Sans', sans-serif" }}>{t('nav.menu')}</span>
-            </motion.button>
+            {/* Spotlight Search Bar */}
+            <SpotlightSearch />
             
             {/* Notification icons chip */}
             <motion.div 
