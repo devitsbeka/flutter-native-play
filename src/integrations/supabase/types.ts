@@ -667,6 +667,153 @@ export type Database = {
         }
         Relationships: []
       }
+      generation_job_questions: {
+        Row: {
+          category_id: string | null
+          category_name: string | null
+          correct_answer: string
+          created_at: string | null
+          difficulty: string
+          duplicate_of: string | null
+          icon_slug: string | null
+          id: string
+          incorrect_answers: Json
+          is_duplicate: boolean | null
+          job_id: string | null
+          question_text: string
+          status: string | null
+          validation_warnings: string[] | null
+        }
+        Insert: {
+          category_id?: string | null
+          category_name?: string | null
+          correct_answer: string
+          created_at?: string | null
+          difficulty: string
+          duplicate_of?: string | null
+          icon_slug?: string | null
+          id?: string
+          incorrect_answers: Json
+          is_duplicate?: boolean | null
+          job_id?: string | null
+          question_text: string
+          status?: string | null
+          validation_warnings?: string[] | null
+        }
+        Update: {
+          category_id?: string | null
+          category_name?: string | null
+          correct_answer?: string
+          created_at?: string | null
+          difficulty?: string
+          duplicate_of?: string | null
+          icon_slug?: string | null
+          id?: string
+          incorrect_answers?: Json
+          is_duplicate?: boolean | null
+          job_id?: string | null
+          question_text?: string
+          status?: string | null
+          validation_warnings?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_job_questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_job_questions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generation_jobs: {
+        Row: {
+          approved_count: number | null
+          auto_approve: boolean | null
+          batch_size: number | null
+          categories: Json
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          current_category_index: number | null
+          current_category_progress: number | null
+          difficulty_distribution: Json | null
+          duplicate_count: number | null
+          error_count: number | null
+          error_log: string[] | null
+          generated_count: number | null
+          id: string
+          interval_minutes: number | null
+          language: string | null
+          last_run_at: string | null
+          name: string
+          next_run_at: string | null
+          started_at: string | null
+          status: string | null
+          target_count: number
+          updated_at: string | null
+        }
+        Insert: {
+          approved_count?: number | null
+          auto_approve?: boolean | null
+          batch_size?: number | null
+          categories: Json
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_category_index?: number | null
+          current_category_progress?: number | null
+          difficulty_distribution?: Json | null
+          duplicate_count?: number | null
+          error_count?: number | null
+          error_log?: string[] | null
+          generated_count?: number | null
+          id?: string
+          interval_minutes?: number | null
+          language?: string | null
+          last_run_at?: string | null
+          name: string
+          next_run_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          target_count: number
+          updated_at?: string | null
+        }
+        Update: {
+          approved_count?: number | null
+          auto_approve?: boolean | null
+          batch_size?: number | null
+          categories?: Json
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_category_index?: number | null
+          current_category_progress?: number | null
+          difficulty_distribution?: Json | null
+          duplicate_count?: number | null
+          error_count?: number | null
+          error_log?: string[] | null
+          generated_count?: number | null
+          id?: string
+          interval_minutes?: number | null
+          language?: string | null
+          last_run_at?: string | null
+          name?: string
+          next_run_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          target_count?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       icon_assignment_history: {
         Row: {
           assigned_at: string

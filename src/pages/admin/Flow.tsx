@@ -4,6 +4,7 @@ import { GenerationPanel } from '@/components/admin/flow/GenerationPanel';
 import { QuestionPreviewList } from '@/components/admin/flow/QuestionPreviewList';
 import { QuestionQueue } from '@/components/admin/flow/QuestionQueue';
 import { KnowledgeSourcesList, KnowledgeSource } from '@/components/admin/flow/KnowledgeSourcesList';
+import { AutoGenerationPanel, JobQuestionReview } from '@/components/admin/auto-generation';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { calculateSimilarity, removeDuplicatesFromBatch } from '@/utils/duplicateDetection';
@@ -649,7 +650,7 @@ export default function Flow() {
         </div>
 
         {/* Right: Queue - Responsive width */}
-        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex flex-col flex-shrink-0 sticky top-0 h-screen">
+        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex flex-col flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
           <QuestionQueue
             pendingCount={pendingCount}
             approvedCount={approvedCount}
@@ -664,6 +665,16 @@ export default function Flow() {
             selectedQuestion={selectedQuestion}
             onUpdateQuestion={handleUpdateQuestion}
           />
+          
+          {/* Auto Generation Panel */}
+          <div className="p-3 border-t border-border/50">
+            <AutoGenerationPanel categories={categories} />
+          </div>
+          
+          {/* Job Question Review */}
+          <div className="p-3 border-t border-border/50">
+            <JobQuestionReview />
+          </div>
         </div>
       </div>
     </div>

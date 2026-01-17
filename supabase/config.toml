@@ -132,3 +132,6 @@ verify_jwt = false
 
 [functions.verify-georgian-grammar]
 verify_jwt = false
+
+[functions.run-generation-job]
+verify_jwt = false
