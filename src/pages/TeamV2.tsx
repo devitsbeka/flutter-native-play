@@ -399,11 +399,14 @@ function TeamContentV2() {
     );
   }
 
-  // Hide bottom nav when any creation modal is open
+  // Hide bottom nav when any creation modal/overlay is open
   const isCreationModalOpen = 
     showCreateQuizModal || 
     showCreateCollectionModal || 
-    showPersonalTriviaModal;
+    showPersonalTriviaModal ||
+    showCreateRoomScreen ||
+    showCreateModal ||
+    showTeamMenu;
 
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
