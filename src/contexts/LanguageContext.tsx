@@ -175,9 +175,25 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext);
+  
+  // During HMR or before provider mounts, return a fallback
   if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider');
+    // Return a fallback implementation using the standalone t function
+    const fallbackLang = typeof window !== 'undefined' 
+      ? localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE 
+      : DEFAULT_LANGUAGE;
+    const currentLang = LANGUAGES.find(l => l.code === fallbackLang) || LANGUAGES[0];
+    
+    return {
+      language: fallbackLang,
+      region: getRegionForLanguage(fallbackLang),
+      setLanguage: () => console.warn('LanguageProvider not mounted yet'),
+      t,
+      languages: LANGUAGES,
+      currentLanguage: currentLang,
+    };
   }
+  
   return context;
 }
 
