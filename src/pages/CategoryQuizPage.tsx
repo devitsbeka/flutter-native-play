@@ -938,11 +938,11 @@ export default function CategoryQuizPage() {
 
       {/* Question Card with Overlapping Icon - same as QuizGameScreenProd */}
       <div className="px-4 flex-shrink-0 mt-4 relative">
-        {/* Category Icon - AI-analyzed slug has priority, then question slug, then category */}
+        {/* Category Icon - hand-picked (database) icon has priority, then AI-analyzed, then category fallback */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20">
           <DynamicIcon 
-            slug={aiIconSlug || currentQuestion?.icon_slug || dbCategory?.icon_slug || undefined}
-            categoryId={(aiIconSlug || currentQuestion?.icon_slug) ? undefined : categoryId}
+            slug={currentQuestion?.icon_slug || aiIconSlug || dbCategory?.icon_slug || undefined}
+            categoryId={(currentQuestion?.icon_slug || aiIconSlug) ? undefined : categoryId}
             size={128}
             className="drop-shadow-2xl"
           />

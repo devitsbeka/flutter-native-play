@@ -86,11 +86,11 @@ export function QuizGameScreenProd() {
     return t(`game.difficulty.${difficulty}`) || difficulty;
   }, [t]);
 
-  // Get AI-suggested icon for current question
+  // Get AI-suggested icon for current question - only if no hand-picked icon exists
   const { aiData } = useAIIcon({
     questionText: currentQuestion?.question,
     category: currentQuestion?.categoryId,
-    enabled: !!currentQuestion,
+    enabled: !!currentQuestion && !currentQuestion.questionIconSlug,
   });
 
   // Reset state when question changes
@@ -317,11 +317,11 @@ export function QuizGameScreenProd() {
             size="default"
           />
 
-          {/* Center Icon */}
+          {/* Center Icon - hand-picked icon priority, then AI, then category fallback */}
           <div className="flex-shrink-0">
             <DynamicIcon 
-              slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
-              categoryId={currentQuestion.questionIconSlug ? undefined : currentQuestion.categoryId}
+              slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
+              categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
               questionId={currentQuestion.id}
               size={80}
               className="drop-shadow-lg"
@@ -339,11 +339,11 @@ export function QuizGameScreenProd() {
           />
         </div>
       ) : (
-        /* Solo Mode - Just centered icon */
+        /* Solo Mode - Just centered icon - hand-picked icon priority, then AI, then category fallback */
         <div className="flex justify-center py-3 flex-shrink-0 z-10">
           <DynamicIcon 
-            slug={currentQuestion.questionIconSlug || currentQuestion.categoryIconSlug}
-            categoryId={currentQuestion.questionIconSlug ? undefined : currentQuestion.categoryId}
+            slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
+            categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
             questionId={currentQuestion.id}
             size={96}
             className="drop-shadow-lg"
