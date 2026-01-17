@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -11,17 +10,19 @@ import {
   Menu,
   Settings,
   HelpCircle,
-  LogOut
+  LogOut,
+  ChevronDown,
+  User,
+  Plus,
+  Shield,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
-import { useCurrency } from "@/hooks/useCurrency";
-import { formatCompactNumber } from "@/lib/utils";
 import { Avatar } from "@/components/shared/Avatar";
 import { DesktopPlayButton } from "./DesktopPlayButton";
-import coinIcon from "@/assets/icons/icon-coin.png";
-import gemIcon from "@/assets/icons/icon-gem.png";
+import { LiveBadge } from "@/components/social/LiveBadge";
 import {
   Tooltip,
   TooltipContent,
@@ -66,7 +67,6 @@ export function UnifiedDesktopNav({
   const { profile, signOut } = useAuth();
   const { unreadCount } = useNotifications();
   const { pendingChallenges } = usePendingChallenges();
-  const { coins, gems } = useCurrency();
   const pendingCount = pendingChallenges?.length || 0;
 
   const isActive = (path: string) => {
@@ -139,17 +139,56 @@ export function UnifiedDesktopNav({
   return (
     <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-border/40 bg-background/95 backdrop-blur-sm pt-6 pb-4 transition-all duration-200 z-40">
       {/* Logo */}
-      <div className="px-3 lg:px-4 mb-6 flex justify-center lg:justify-start">
+      <div className="px-3 lg:px-4 mb-4 flex justify-center lg:justify-start">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-xl font-display font-bold text-foreground cursor-pointer"
+          className="flex items-center gap-1.5 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          {/* Icon on small tablet, full text on larger */}
           <span className="lg:hidden text-2xl">🎯</span>
-          <span className="hidden lg:inline">MyTrivia</span>
+          <span className="hidden lg:flex items-center">
+            <span className="text-xl font-slackey text-foreground tracking-tight">MyTrivia</span>
+            <LiveBadge />
+          </span>
         </motion.div>
+      </div>
+
+      {/* Profile Dropdown - at top */}
+      <div className="px-2 lg:px-3 mb-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <motion.button
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-foreground hover:bg-muted/50 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="w-6 h-6 flex items-center justify-center">
+                <Avatar
+                  imageUrl={profile?.avatar_url || undefined}
+                  emoji={profile?.nickname?.charAt(0) || "👤"}
+                  size="xs"
+                  className="!w-6 !h-6"
+                />
+              </div>
+              <span className="text-[15px] font-medium hidden lg:inline truncate flex-1 text-left">
+                {profile?.nickname || "მომხმარებელი"}
+              </span>
+              <ChevronDown className="w-4 h-4 hidden lg:block text-muted-foreground" />
+            </motion.button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start" className="w-56">
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              <User className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              პროფილის ნახვა
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled className="text-muted-foreground">
+              <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              ექაუნთის დამატება
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Main Navigation */}
@@ -173,70 +212,10 @@ export function UnifiedDesktopNav({
           active={isActive("/notifications")}
           badge={unreadCount}
         />
-
-        {/* Profile - 15% smaller avatar (20px instead of 24px) */}
-        <NavButton
-          label="პროფილი"
-          onClick={() => navigate("/profile")}
-          active={isActive("/profile")}
-        >
-          <div className="w-5 h-5 flex items-center justify-center">
-            <Avatar
-              imageUrl={profile?.avatar_url || undefined}
-              emoji={profile?.nickname?.charAt(0) || "👤"}
-              size="xs"
-              className="!w-5 !h-5"
-            />
-          </div>
-        </NavButton>
       </div>
 
-      {/* Currency Display + Play Button Section */}
-      <div className="px-2 lg:px-3 py-4 mt-2 space-y-3">
-        {/* Currency Display */}
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-2">
-          {/* Coins */}
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border/50"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img src={coinIcon} alt="Coins" className="w-4 h-4" />
-                  <span className="text-xs font-bold text-foreground hidden lg:inline">
-                    {formatCompactNumber(coins)}
-                  </span>
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="lg:hidden">
-                {formatCompactNumber(coins)} მონეტა
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Gems */}
-          <TooltipProvider delayDuration={300}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border border-border/50"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img src={gemIcon} alt="Gems" className="w-4 h-4" />
-                  <span className="text-xs font-bold text-foreground hidden lg:inline">
-                    {formatCompactNumber(gems)}
-                  </span>
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="lg:hidden">
-                {formatCompactNumber(gems)} ბრილიანტი
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        {/* Play Button - smaller version in nav */}
+      {/* Play Button Section */}
+      <div className="px-2 lg:px-3 py-4 mt-2">
         {showPlayButton && (
           <DesktopPlayButton
             onClick={onPlayClick}
@@ -271,6 +250,15 @@ export function UnifiedDesktopNav({
             <DropdownMenuItem onClick={() => navigate("/support")}>
               <HelpCircle className="mr-2 h-4 w-4" strokeWidth={1.5} />
               დახმარება
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/privacy-policy")}>
+              <Shield className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              კონფიდენციალურობა
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/terms")}>
+              <FileText className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              მომსახურების პირობები
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
