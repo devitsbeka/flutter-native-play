@@ -405,12 +405,12 @@ export default function Index() {
           {/* Main content area */}
           <div className="flex-1 relative h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none md:pr-[280px]">
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none md:pr-[280px]" style={{ paddingBottom: 160 }}>
             
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4" style={{ marginTop: -80 }}>
+            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -492,7 +492,6 @@ export default function Index() {
             {/* xl+ layout: Avatar centered */}
             <motion.div 
               className="hidden xl:flex flex-col items-center w-full px-4"
-              style={{ marginTop: -80 }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
