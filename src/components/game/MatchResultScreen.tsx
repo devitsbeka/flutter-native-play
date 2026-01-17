@@ -401,7 +401,7 @@ export function MatchResultScreen() {
 
       
       <div 
-        className="h-[100dvh] w-full flex flex-col relative overflow-hidden"
+        className="h-[100dvh] w-full flex flex-col relative overflow-hidden max-w-[700px] mx-auto"
         style={{
           background: "#858EE7",
         }}
