@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,8 +9,42 @@ interface LanguageSelectorModalProps {
   onClose: () => void;
 }
 
+// Region tabs with their language codes
+const REGIONS = [
+  { id: "all", label: "All" },
+  { id: "europe", label: "Europe" },
+  { id: "asia", label: "Asia" },
+  { id: "middle-east", label: "Middle East" },
+  { id: "americas", label: "Americas" },
+] as const;
+
+// Map language codes to regions
+const LANGUAGE_REGIONS: Record<string, string> = {
+  ka: "europe",
+  en: "americas",
+  ru: "europe",
+  es: "europe",
+  fr: "europe",
+  de: "europe",
+  it: "europe",
+  pt: "europe",
+  tr: "europe",
+  pl: "europe",
+  nl: "europe",
+  uk: "europe",
+  sv: "europe",
+  az: "asia",
+  ja: "asia",
+  ko: "asia",
+  zh: "asia",
+  hi: "asia",
+  ar: "middle-east",
+  he: "middle-east",
+};
+
 export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModalProps) {
   const { language, setLanguage } = useLanguage();
+  const [activeRegion, setActiveRegion] = useState<string>("all");
 
   const handleSelect = (code: string) => {
     setLanguage(code);
@@ -17,6 +52,11 @@ export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModal
     // Force a page reload to apply all translations
     window.location.reload();
   };
+
+  // Filter languages by region
+  const filteredLanguages = activeRegion === "all" 
+    ? LANGUAGES 
+    : LANGUAGES.filter(lang => LANGUAGE_REGIONS[lang.code] === activeRegion);
 
   return (
     <AnimatePresence>
@@ -51,10 +91,29 @@ export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModal
                 </button>
               </div>
 
+              {/* Region Tabs */}
+              <div className="px-4 pt-3 pb-2 border-b border-border/30">
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                  {REGIONS.map((region) => (
+                    <button
+                      key={region.id}
+                      onClick={() => setActiveRegion(region.id)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                        activeRegion === region.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {region.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Languages Grid */}
               <div className="p-4 overflow-y-auto flex-1">
                 <div className="grid grid-cols-2 gap-2">
-                  {LANGUAGES.map((lang) => {
+                  {filteredLanguages.map((lang) => {
                     const isSelected = language === lang.code;
                     return (
                       <motion.button
@@ -67,6 +126,7 @@ export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModal
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
+                        layout
                       >
                         <span className="text-2xl">{lang.flag}</span>
                         <div className="flex-1 min-w-0">
