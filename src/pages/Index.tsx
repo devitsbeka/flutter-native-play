@@ -337,23 +337,16 @@ export default function Index() {
         showBottomNav={!isSideMenuOpen}
       >
         <div className="min-h-screen flex flex-col w-full relative">
-        <header className="relative z-20 px-4 pt-4 safe-top">
+        <header className="relative z-20 px-4 py-3 safe-top border-b border-purple-900/10">
           <div className="flex items-center justify-between">
             {/* Spotlight Search Bar */}
             <SpotlightSearch />
             
-            {/* Notification icons chip */}
-            <motion.div 
-              className="flex items-center gap-2 px-3 py-2 rounded-full h-[42px]"
-              style={{
-                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-                border: "2px solid #E8E0F5",
-              }}
-            >
+            {/* Notification icons */}
+            <div className="flex items-center gap-1">
               {/* Ad-Free button */}
               <motion.button
-                className="relative p-1"
+                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setIsAdFreeModalOpen(true)}
@@ -363,7 +356,7 @@ export default function Index() {
               
               {/* Bell icon with unread badge */}
               <motion.button
-                className="relative p-1"
+                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate('/notifications')}
@@ -373,7 +366,7 @@ export default function Index() {
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                    className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
                     style={{
                       background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
                       boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
@@ -385,7 +378,7 @@ export default function Index() {
                   </motion.div>
                 )}
               </motion.button>
-            </motion.div>
+            </div>
           </div>
         </header>
 
