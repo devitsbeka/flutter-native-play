@@ -40,11 +40,12 @@ const COMMANDS = [
   { command: "/newroom", label: "ახალი ოთახის შექმნა", icon: Plus, action: "create-room" },
   { command: "/settings", label: "პარამეტრები", icon: Settings, action: "navigate", path: "/settings" },
   { command: "/profile", label: "ჩემი პროფილი", icon: User, action: "navigate", path: "/profile" },
-  { command: "/play", label: "თამაშის დაწყება", icon: Gamepad2, action: "navigate", path: "/play" },
+  { command: "/play", label: "თამაშის დაწყება", icon: Gamepad2, action: "navigate", path: "/game" },
   { command: "/shop", label: "მაღაზია", icon: Store, action: "navigate", path: "/power-ups" },
-  { command: "/leaderboard", label: "ლიდერბორდი", icon: Trophy, action: "navigate", path: "/leaderboard" },
+  { command: "/leaderboard", label: "ლიდერბორდი", icon: Trophy, action: "navigate", path: "/leaderboards" },
   { command: "/notifications", label: "შეტყობინებები", icon: Bell, action: "navigate", path: "/notifications" },
   { command: "/help", label: "დახმარება", icon: HelpCircle, action: "navigate", path: "/support" },
+  { command: "/team", label: "გუნდი", icon: Users, action: "navigate", path: "/team" },
   { command: "/logout", label: "გასვლა", icon: LogOut, action: "logout" },
 ];
 
@@ -230,13 +231,22 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
                   <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
                 </CommandItem>
                 <CommandItem 
-                  onSelect={() => { setOpen(false); navigate("/play"); }}
+                  onSelect={() => { setOpen(false); navigate("/game"); }}
                   className="flex items-center gap-3 cursor-pointer"
                 >
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
                     <Zap className="w-4 h-4 text-white" />
                   </div>
                   <span>თამაშის დაწყება</span>
+                </CommandItem>
+                <CommandItem 
+                  onSelect={() => { setOpen(false); navigate("/discover"); }}
+                  className="flex items-center gap-3 cursor-pointer"
+                >
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                    <Search className="w-4 h-4 text-white" />
+                  </div>
+                  <span>აღმოაჩინე</span>
                 </CommandItem>
               </CommandGroup>
               <CommandSeparator />
@@ -345,13 +355,13 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
                   <span>პაუერ-აფები</span>
                 </CommandItem>
                 <CommandItem 
-                  onSelect={() => { setOpen(false); navigate("/avatar-frames"); }}
+                  onSelect={() => { setOpen(false); navigate("/vip"); }}
                   className="flex items-center gap-3 cursor-pointer"
                 >
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500">
-                    <Users className="w-4 h-4 text-white" />
+                    <Trophy className="w-4 h-4 text-white" />
                   </div>
-                  <span>ავატარის ჩარჩოები</span>
+                  <span>VIP</span>
                 </CommandItem>
               </CommandGroup>
             </>
