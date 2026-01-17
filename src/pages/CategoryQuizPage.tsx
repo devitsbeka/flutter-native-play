@@ -926,7 +926,7 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Question Card with Overlapping Icon - Solo mode optimized */}
-      <div className="px-4 flex-shrink-0 mt-4 mb-2 relative">
+      <div className="px-4 flex-shrink-0 mt-10 mb-2 relative">
         {/* Category Icon - 25% larger */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
           <DynamicIcon 
