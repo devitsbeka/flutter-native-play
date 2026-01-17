@@ -768,10 +768,7 @@ export default function Index() {
         </div>
           </div>
 
-          {/* Right Sidebar - desktop only (xl+) */}
-          <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-[calc(100vh-60px)] lg:h-screen sticky top-0 p-4 overflow-y-auto scrollbar-hide">
-            <DesktopRightSidebarWidgets />
-          </aside>
+          {/* Right Sidebar removed - action cards now occupy this space */}
         </div>
         </div>
       </MainLayout>
