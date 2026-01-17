@@ -84,21 +84,14 @@ const ActionCard = ({
       transition={{ delay, type: "spring", stiffness: 300, damping: 25 }}
       onClick={onClick}
       className="relative flex items-center gap-4 p-4 rounded-2xl overflow-hidden w-[250px] min-h-[90px] text-left group"
-      style={{ background: bgGradient }}
+      style={{ 
+        background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+        boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,1)",
+        border: "2px solid #E8E0F5",
+      }}
       whileHover={{ scale: 1.03, y: -3 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* Particle animations */}
-      {particles.map((p) => (
-        <Sparkle
-          key={p.id}
-          delay={p.delay}
-          x={p.x}
-          y={p.y}
-          size={p.size}
-          color={particleColor}
-        />
-      ))}
 
       {/* Icon */}
       <div className="relative flex-shrink-0 z-10">
