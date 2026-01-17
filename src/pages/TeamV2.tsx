@@ -528,7 +528,7 @@ function TeamContentV2() {
               className="w-full justify-center"
             >
               <Plus className="w-4 h-4 mr-1" />
-              {activeTab === "my-content" ? "+ ახალი ტრივია" : "+ ახალი ოთახი"}
+              {activeTab === "my-content" ? "ახალი ტრივია" : "ახალი ოთახი"}
             </ChunkyButton>
           </div>
 
