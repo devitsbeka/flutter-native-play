@@ -498,18 +498,26 @@ export function AutoGenerationPanel({ categories }: { categories: Category[] }) 
             </Collapsible>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2 relative z-20 pointer-events-auto">
+            <div className="flex gap-2 pt-4 mt-4 border-t border-border/50 sticky bottom-0 bg-card z-50">
               <Button 
                 type="button"
                 variant="outline" 
-                onClick={() => setShowCreateForm(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('Cancel clicked');
+                  setShowCreateForm(false);
+                }}
                 className="flex-1"
               >
                 გაუქმება
               </Button>
               <Button 
                 type="button"
-                onClick={handleCreateJob}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log('Start clicked');
+                  handleCreateJob();
+                }}
                 disabled={isCreating || selectedCategories.length === 0}
                 className="flex-1"
               >
