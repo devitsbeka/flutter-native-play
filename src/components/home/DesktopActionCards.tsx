@@ -156,7 +156,7 @@ export function DesktopActionCards({
   const allMissionsDone = incompleteMissions === 0 && totalCount > 0;
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-wrap justify-center gap-4">
       {/* Daily Rewards Card */}
       <ActionCard
         iconSrc={giftBottleIcon}
