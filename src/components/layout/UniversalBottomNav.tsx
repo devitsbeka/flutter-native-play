@@ -1,9 +1,11 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useCallback } from "react";
 import { motion } from "framer-motion";
 import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
+import { useLeaderboardPrefetch } from "@/hooks/useLeaderboardPrefetch";
 import { toast } from "sonner";
 
 interface UniversalBottomNavProps {
@@ -37,10 +39,16 @@ export function UniversalBottomNav({
   const location = useLocation();
   const { pendingChallenges } = usePendingChallenges();
   const { indicators } = useNewContentIndicators();
+  const { prefetchAllTiers } = useLeaderboardPrefetch();
   
   const isHome = location.pathname === "/";
   const isTeam = location.pathname === "/team";
   const isActive = (path: string) => location.pathname === path;
+
+  // Prefetch leaderboard data on touch start (mobile)
+  const handleLeaderboardTouchStart = useCallback(() => {
+    prefetchAllTiers();
+  }, [prefetchAllTiers]);
 
   // Determine center button behavior
   const showPlayButton = isHome;
@@ -147,7 +155,10 @@ export function UniversalBottomNav({
           </div>
 
           {/* Rank */}
-          <div className="flex-1 flex justify-center pl-4">
+          <div 
+            className="flex-1 flex justify-center pl-4"
+            onTouchStart={handleLeaderboardTouchStart}
+          >
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/leaderboards")) {
