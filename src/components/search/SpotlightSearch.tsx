@@ -158,7 +158,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
       {/* Trigger Bar */}
       <motion.button
         onClick={() => setOpen(true)}
-        className={`flex items-center gap-3 px-4 py-2 rounded-full h-[42px] min-w-[200px] max-w-[280px] ${className}`}
+        className={`flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] ${className}`}
         style={{
           background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
           boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
