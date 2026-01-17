@@ -28,7 +28,7 @@ export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModal
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
           />
 
           {/* Modal */}
@@ -37,7 +37,7 @@ export function LanguageSelectorModal({ isOpen, onClose }: LanguageSelectorModal
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-50 flex items-center justify-center"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg z-[101]"
           >
             <div className="w-full bg-card rounded-3xl shadow-2xl border border-border/50 overflow-hidden max-h-[80vh] flex flex-col">
               {/* Header */}
