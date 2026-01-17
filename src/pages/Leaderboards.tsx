@@ -160,10 +160,10 @@ export default function Leaderboards() {
           onTierChange={handleSelectTier}
         />
 
-        {/* Countdown - positioned above league list */}
-        <div className="-mt-8 relative z-35 flex justify-center pb-4">
+        {/* Countdown - hidden for now */}
+        {/* <div className="-mt-8 relative z-35 flex justify-center pb-4">
           <LeagueCountdown />
-        </div>
+        </div> */}
 
         {/* Sticky League Header + Scrollable List Container */}
         <div className="-mt-4 relative z-30">
@@ -309,10 +309,10 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
 
   return (
     <LeaderboardHeroBackground>
-      {/* Countdown - centered at top */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
+      {/* Countdown - hidden for now */}
+      {/* <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
         <LeagueCountdown />
-      </div>
+      </div> */}
 
       {/* Content area - leaderboards overlap hero image */}
       <div className="pt-[420px]">
