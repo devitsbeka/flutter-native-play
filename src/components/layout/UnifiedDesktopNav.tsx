@@ -137,7 +137,7 @@ export function UnifiedDesktopNav({
   );
 
   return (
-    <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/5 bg-white/50 backdrop-blur-xl pt-6 pb-4 transition-all duration-200 z-50">
+    <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-6 pb-4 transition-all duration-200 z-50">
       {/* Logo */}
       <div className="px-3 lg:px-4 mb-4 flex justify-center lg:justify-start">
         <motion.div
@@ -159,7 +159,12 @@ export function UnifiedDesktopNav({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <motion.button
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-foreground hover:bg-muted/50 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-full text-foreground transition-colors"
+              style={{
+                background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
+                boxShadow: "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
+                border: "2px solid #E8E0F5",
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
