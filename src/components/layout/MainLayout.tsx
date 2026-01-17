@@ -38,7 +38,7 @@ export function MainLayout({
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
+      <main className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide">
         {children}
       </main>
 
