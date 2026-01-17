@@ -111,7 +111,7 @@ export function GlobalSplineBackground() {
       {/* Video background */}
       <div 
         className="fixed inset-0 pointer-events-none"
-        style={{ zIndex: -30 }}
+        style={{ zIndex: 0 }}
       >
         <video
           autoPlay
@@ -130,7 +130,7 @@ export function GlobalSplineBackground() {
         className="fixed inset-0 pointer-events-none"
         style={{
           background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
-          zIndex: -25,
+          zIndex: 1,
         }}
       />
       
@@ -138,7 +138,7 @@ export function GlobalSplineBackground() {
       {shouldShowParticles && (
         <div 
           className="fixed inset-0 overflow-hidden pointer-events-none"
-          style={{ zIndex: -15 }}
+          style={{ zIndex: 2 }}
         >
           {orbs.map((orb) => (
             <FloatingOrb key={orb.id} {...orb} />
@@ -150,7 +150,7 @@ export function GlobalSplineBackground() {
       {shouldShowParticles && (
         <div 
           className="fixed inset-0 overflow-hidden pointer-events-none"
-          style={{ zIndex: -5 }}
+          style={{ zIndex: 3 }}
         >
           {sparkles.map((p) => (
             <SparkleParticle key={p.id} {...p} />
