@@ -45,8 +45,8 @@ export function DesktopPlayButtonLarge({
 
   return (
     <div className="relative">
-      {/* Plays remaining badge */}
-      {!isExhausted && (
+      {/* Plays remaining badge - hidden for VIP users */}
+      {!isExhausted && !isVip && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
@@ -55,9 +55,7 @@ export function DesktopPlayButtonLarge({
           <div
             className="px-3 py-1 rounded-full text-sm font-bold text-white whitespace-nowrap"
             style={{
-              background: isVip 
-                ? "linear-gradient(180deg, #A855F7 0%, #7C3AED 100%)"
-                : "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)",
+              background: "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)",
               boxShadow: "0 3px 8px rgba(0,0,0,0.25)",
             }}
           >
