@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle2, 
@@ -42,7 +42,8 @@ interface JobQuestionReviewProps {
   jobId?: string;
 }
 
-export function JobQuestionReview({ jobId }: JobQuestionReviewProps) {
+export const JobQuestionReview = forwardRef<HTMLDivElement, JobQuestionReviewProps>(
+  function JobQuestionReview({ jobId }, ref) {
   const [questions, setQuestions] = useState<JobQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -401,4 +402,4 @@ export function JobQuestionReview({ jobId }: JobQuestionReviewProps) {
       </CardContent>
     </Card>
   );
-}
+});

@@ -650,8 +650,8 @@ export default function Flow() {
         </div>
 
         {/* Right: Queue - Responsive width */}
-        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
-          <div className="flex flex-col">
+        <div className="w-80 lg:w-96 border-l border-border/50 bg-card/20 flex-shrink-0 h-screen flex flex-col">
+          <div className="flex flex-col flex-1 overflow-y-auto">
             <QuestionQueue
               pendingCount={pendingCount}
               approvedCount={approvedCount}
