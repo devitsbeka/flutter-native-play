@@ -124,12 +124,12 @@ export function UnifiedDesktopNav({
                 </span>
               )}
             </div>
-            {/* Label - hidden on tablet (lg), visible on desktop (xl) */}
-            <span className="text-[15px] hidden xl:inline">{label}</span>
+            {/* Label - hidden on small tablet (md), visible on larger tablet/desktop (lg) */}
+            <span className="text-[15px] hidden lg:inline">{label}</span>
           </motion.button>
         </TooltipTrigger>
-        {/* Tooltip only shows on tablet (lg) where label is hidden */}
-        <TooltipContent side="right" className="xl:hidden">
+        {/* Tooltip only shows on small tablet (md) where label is hidden */}
+        <TooltipContent side="right" className="lg:hidden">
           {label}
         </TooltipContent>
       </Tooltip>
@@ -137,23 +137,23 @@ export function UnifiedDesktopNav({
   );
 
   return (
-    <nav className="hidden lg:flex flex-col w-[72px] xl:w-[220px] min-w-[72px] xl:min-w-[220px] h-screen sticky top-0 border-r border-border/40 bg-background/95 backdrop-blur-sm pt-6 pb-4 transition-all duration-200 z-40">
+    <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-border/40 bg-background/95 backdrop-blur-sm pt-6 pb-4 transition-all duration-200 z-40">
       {/* Logo */}
-      <div className="px-3 xl:px-4 mb-6 flex justify-center xl:justify-start">
+      <div className="px-3 lg:px-4 mb-6 flex justify-center lg:justify-start">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-xl font-display font-bold text-foreground cursor-pointer"
           onClick={() => navigate("/")}
         >
-          {/* Icon on tablet, full text on desktop */}
-          <span className="xl:hidden text-2xl">🎯</span>
-          <span className="hidden xl:inline">MyTrivia</span>
+          {/* Icon on small tablet, full text on larger */}
+          <span className="lg:hidden text-2xl">🎯</span>
+          <span className="hidden lg:inline">MyTrivia</span>
         </motion.div>
       </div>
 
       {/* Main Navigation */}
-      <div className="px-2 xl:px-3 space-y-1">
+      <div className="px-2 lg:px-3 space-y-1">
         {navItems.map((item) => (
           <NavButton
             key={item.id}
@@ -192,9 +192,9 @@ export function UnifiedDesktopNav({
       </div>
 
       {/* Currency Display + Play Button Section */}
-      <div className="px-2 xl:px-3 py-4 mt-2 space-y-3">
+      <div className="px-2 lg:px-3 py-4 mt-2 space-y-3">
         {/* Currency Display */}
-        <div className="flex flex-col xl:flex-row items-center justify-center gap-2">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-2">
           {/* Coins */}
           <TooltipProvider delayDuration={300}>
             <Tooltip>
@@ -204,12 +204,12 @@ export function UnifiedDesktopNav({
                   whileHover={{ scale: 1.05 }}
                 >
                   <img src={coinIcon} alt="Coins" className="w-4 h-4" />
-                  <span className="text-xs font-bold text-foreground hidden xl:inline">
+                  <span className="text-xs font-bold text-foreground hidden lg:inline">
                     {formatCompactNumber(coins)}
                   </span>
                 </motion.div>
               </TooltipTrigger>
-              <TooltipContent side="right" className="xl:hidden">
+              <TooltipContent side="right" className="lg:hidden">
                 {formatCompactNumber(coins)} მონეტა
               </TooltipContent>
             </Tooltip>
@@ -224,12 +224,12 @@ export function UnifiedDesktopNav({
                   whileHover={{ scale: 1.05 }}
                 >
                   <img src={gemIcon} alt="Gems" className="w-4 h-4" />
-                  <span className="text-xs font-bold text-foreground hidden xl:inline">
+                  <span className="text-xs font-bold text-foreground hidden lg:inline">
                     {formatCompactNumber(gems)}
                   </span>
                 </motion.div>
               </TooltipTrigger>
-              <TooltipContent side="right" className="xl:hidden">
+              <TooltipContent side="right" className="lg:hidden">
                 {formatCompactNumber(gems)} ბრილიანტი
               </TooltipContent>
             </Tooltip>
@@ -251,7 +251,7 @@ export function UnifiedDesktopNav({
       </div>
 
       {/* Bottom Section - More menu */}
-      <div className="px-2 xl:px-3 mt-auto">
+      <div className="px-2 lg:px-3 mt-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <motion.button
