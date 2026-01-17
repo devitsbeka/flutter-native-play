@@ -129,14 +129,13 @@ export function MyRoomsSection({
           )}
         </motion.div>
       ) : vertical ? (
-        <div className="flex flex-col gap-3 px-4 pb-4">
+        <div className="grid grid-cols-2 gap-3 px-4 pb-4">
           {rooms.map((room, index) => (
-            <RoomCard
+            <RoomCardGrid
               key={room.id}
               room={room}
               index={index}
               onJoin={() => handleJoin(room)}
-              fullWidth
             />
           ))}
         </div>
@@ -318,6 +317,123 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
                   </span>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Grid-style room card for grid layout
+interface RoomCardGridProps {
+  room: MyRoom;
+  index: number;
+  onJoin: () => void;
+}
+
+function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
+  const displayName = room.room_name || "თამაშის ოთახი";
+  const isPlaying = room.status === "playing";
+  const isCompleted = room.status === "completed";
+  
+  const coverImage = roomCoverPlaceholder;
+  const gradient = getGradientById(room.background_gradient);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.03 }}
+      onClick={onJoin}
+      className={`aspect-square rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+        room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
+      }`}
+      style={{
+        boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div 
+        className="relative w-full h-full p-3 flex flex-col"
+        style={{ background: gradient?.gradient || 'linear-gradient(135deg, hsl(var(--primary)/0.2), hsl(var(--primary)/0.3))' }}
+      >
+        {/* Cover image with radial fade */}
+        <div 
+          className="absolute inset-0 opacity-30 overflow-hidden"
+          style={{
+            maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+          }}
+        >
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${coverImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              transform: `scaleX(${index % 2 === 0 ? 1 : -1})`,
+            }}
+          />
+        </div>
+        
+        {/* Top: Status badge */}
+        <div className="relative z-10">
+          {isPlaying ? (
+            <LiveBadge />
+          ) : isCompleted ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-[10px]">
+              დასრულდა
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-[10px]">
+              მოლოდინი
+            </span>
+          )}
+        </div>
+        
+        {/* Middle: Room icon */}
+        {room.room_icon && (
+          <div className="flex-1 flex items-center justify-center relative z-10">
+            <img 
+              src={room.room_icon} 
+              alt="" 
+              className="w-12 h-12 object-contain drop-shadow-lg"
+            />
+          </div>
+        )}
+        
+        {/* Bottom: Name and participants */}
+        <div className="relative z-10 mt-auto">
+          <h3 className="font-bold text-white text-sm leading-tight truncate drop-shadow-md mb-1">
+            {displayName}
+          </h3>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-lg">
+              <Users className="w-3 h-3 text-white/80" />
+              <span className="text-xs font-bold text-white">{room.participants.length}</span>
+            </div>
+            
+            {/* Small avatars */}
+            <div className="flex -space-x-2">
+              {room.participants.slice(0, 2).map((p) => (
+                <div 
+                  key={p.user_id} 
+                  className="w-6 h-6 rounded-full overflow-hidden border border-white/30 flex-shrink-0 bg-white/20"
+                >
+                  {p.avatar_url ? (
+                    <img 
+                      src={p.avatar_url} 
+                      alt={p.nickname}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-[10px] font-bold">
+                      {p.nickname?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
