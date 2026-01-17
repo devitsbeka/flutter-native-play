@@ -100,8 +100,8 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
         />
       )}
 
-      {/* Content container - account for left nav on desktop */}
-      <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'max-w-[1200px] mx-auto lg:ml-[72px] xl:ml-[220px] lg:mr-auto'}`}>
+      {/* Content container - full width on desktop */}
+      <div className={`relative z-20 ${isMobile ? 'w-full h-full' : 'w-full'}`}>
         {children}
       </div>
     </div>

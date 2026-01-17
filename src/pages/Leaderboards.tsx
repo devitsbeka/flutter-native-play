@@ -316,9 +316,9 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
 
       {/* Content area - leaderboards overlap hero image */}
       <div className="pt-[420px]">
-        {/* 3 Column Layout - full width with minimal gaps */}
-        <div className="w-full px-4">
-          <div className="grid grid-cols-3 gap-4">
+        {/* 3 Column Layout - full width */}
+        <div className="w-full px-3">
+          <div className="grid grid-cols-3 gap-3">
             {tiers.map(({ tier, data, name, nameKa }) => (
               <DesktopLeagueColumn
                 key={tier}
