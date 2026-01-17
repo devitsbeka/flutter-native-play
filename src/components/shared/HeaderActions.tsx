@@ -18,34 +18,54 @@ export function HeaderActions({ className = "" }: HeaderActionsProps) {
 
   return (
     <>
-      <div className={`flex items-center gap-2 ${className}`}>
+      <div className={`flex items-center gap-1 ${className}`}>
+        {/* Bell icon - minimal style like overview page */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95, y: 2 }}
+          className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setShowNotificationsPanel(true)}
-          className="relative flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
-          style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5 h-5 text-gray-600" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+              }}
+            >
+              <span className="text-[9px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            </motion.div>
           )}
         </motion.button>
 
+        {/* Messages icon - minimal style like overview page */}
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95, y: 2 }}
+          className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setShowRoomChatsPanel(true)}
-          className="relative flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
-          style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
         >
-          <MessageCircle className="w-5 h-5" />
+          <MessageCircle className="w-5 h-5 text-gray-600" />
           {unreadMessagesCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-              {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-            </span>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+              }}
+            >
+              <span className="text-[9px] font-bold text-white">
+                {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+              </span>
+            </motion.div>
           )}
         </motion.button>
       </div>

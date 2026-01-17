@@ -339,23 +339,18 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* Panel - slides from right, 35% width on desktop, full on mobile */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed top-0 right-0 bottom-0 w-full md:w-[45%] lg:w-[35%] z-[60] flex flex-col overflow-hidden bg-background border-l border-border shadow-2xl"
           >
-            {/* Video Background */}
-            <div className="absolute inset-0">
-              <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
-              <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
-            </div>
 
             <AnimatePresence mode="wait">
               {!selectedConversation ? (
@@ -367,8 +362,8 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   exit={{ opacity: 0, x: -20 }}
                   className="relative flex flex-col h-full"
                 >
-                  {/* Header - reduced size */}
-                  <div className="relative z-10 px-4 pt-4 pb-3">
+                  {/* Header */}
+                  <div className="px-4 pt-4 pb-3 border-b border-border">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
@@ -378,7 +373,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                       </div>
                       <button
                         onClick={onClose}
-                        className="w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+                        className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
                       >
                         <X className="w-4 h-4 text-foreground" />
                       </button>
