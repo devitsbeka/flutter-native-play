@@ -136,7 +136,7 @@ export default function Leaderboards() {
       {/* Header Bar - transparent, overlays on background */}
       <div className="absolute top-0 left-0 right-0 z-50">
         <div className="px-4 pt-4 pb-3">
-          <h1 className="text-xl font-display font-bold text-white uppercase tracking-wide drop-shadow-lg">
+          <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
             {language === 'ka' ? 'ლიდერბორდი' : 'Leaderboard'}
           </h1>
         </div>
@@ -149,20 +149,20 @@ export default function Leaderboards() {
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
       <div className="lg:hidden h-[calc(100vh-56px)] overflow-y-auto">
-        {/* Background Hero - fixed height, shows trophy with countdown on top */}
+        {/* Background Hero - fixed height, shows trophy */}
         <LeaderboardHeroBackground 
           isMobile 
           currentTier={activeTier} 
           onTierChange={handleSelectTier}
-        >
-          {/* Sticky Countdown - positioned on top of the background */}
-          <div className="sticky top-0 z-50 py-4 flex justify-center">
-            <LeagueCountdown />
-          </div>
-        </LeaderboardHeroBackground>
+        />
+
+        {/* Countdown - positioned above league list */}
+        <div className="-mt-8 relative z-35 flex justify-center pb-4">
+          <LeagueCountdown />
+        </div>
 
         {/* Sticky League Header + Scrollable List Container */}
-        <div className="-mt-[42px] relative z-30">
+        <div className="-mt-4 relative z-30">
           {/* Sticky League Name Header */}
           <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
             <div className="flex items-center justify-between py-4 px-4">
