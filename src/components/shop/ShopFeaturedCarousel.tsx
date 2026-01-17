@@ -68,12 +68,12 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
   const [direction, setDirection] = useState(0);
   const { t } = useLanguage();
 
-  // Auto-rotate
+  // Auto-rotate - slower interval for better readability
   useEffect(() => {
     const timer = setInterval(() => {
       setDirection(1);
       setCurrentIndex((prev) => (prev + 1) % FEATURED_DEALS.length);
-    }, 8000);
+    }, 12000);
     return () => clearInterval(timer);
   }, []);
 
@@ -105,7 +105,7 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
 
   return (
     <div className="relative px-4 mb-6">
-      <div className="relative overflow-hidden rounded-3xl" style={{ height: 200 }}>
+      <div className="relative overflow-hidden rounded-3xl" style={{ height: 260 }}>
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={deal.id}
@@ -114,7 +114,7 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", stiffness: 200, damping: 25 }}
             className="absolute inset-0 cursor-pointer"
             onClick={() => handleBannerClick(deal)}
           >
@@ -128,48 +128,48 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
               className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* White gradient mask for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent" />
+            {/* Cleaner gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />
 
-            {/* Content */}
-            <div className="relative z-10 p-5 flex flex-col justify-between h-full">
+            {/* Content - cleaner layout */}
+            <div className="relative z-10 p-6 flex flex-col justify-center h-full max-w-[60%]">
               {/* Badge */}
               <motion.div
-                className="self-start px-3 py-1 rounded-full text-xs font-bold text-white"
+                className="self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-4"
                 style={{
                   background: deal.badgeColor,
                   boxShadow: "0 2px 0 hsl(0 0% 0% / 0.2)",
                 }}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
               >
                 {t(`featured.${deal.badgeKey}`)}
               </motion.div>
 
-              {/* Text content */}
-              <div className="flex-1">
-                <h3 className="text-2xl font-display font-bold text-gray-900 mb-1">
-                  {t(`featured.${deal.titleKey}`)}
-                </h3>
-                <p className="text-gray-700 text-sm mb-3">{t(`featured.${deal.subtitleKey}`)}</p>
+              {/* Title */}
+              <h3 className="text-2xl md:text-3xl font-display font-bold text-gray-900 mb-2">
+                {t(`featured.${deal.titleKey}`)}
+              </h3>
+              
+              {/* Subtitle */}
+              <p className="text-gray-600 text-sm mb-5 line-clamp-2">
+                {t(`featured.${deal.subtitleKey}`)}
+              </p>
 
-                {/* Price */}
-                <div className="flex items-center gap-3">
-                  {deal.originalPrice && (
-                    <span className="text-gray-400 line-through text-lg">
-                      {deal.originalPrice}
-                    </span>
-                  )}
-                  <div
-                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-full"
-                    style={{
-                      background: "hsl(0 0% 0% / 0.1)",
-                      boxShadow: "inset 0 1px 0 hsl(0 0% 100% / 0.3)",
-                    }}
-                  >
-                    <img src={gemIcon} alt="" className="w-5 h-5" />
-                    <span className="text-xl font-bold text-gray-900">{deal.price}</span>
-                  </div>
+              {/* Price */}
+              <div className="flex items-center gap-3">
+                {deal.originalPrice && (
+                  <span className="text-gray-400 line-through text-lg">
+                    {deal.originalPrice}
+                  </span>
+                )}
+                <div
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(270 60% 50%) 0%, hsl(280 70% 45%) 100%)",
+                    boxShadow: "0 3px 0 hsl(270 50% 35%)",
+                  }}
+                >
+                  <img src={gemIcon} alt="" className="w-5 h-5" />
+                  <span className="text-lg font-bold text-white">{deal.price}</span>
                 </div>
               </div>
             </div>

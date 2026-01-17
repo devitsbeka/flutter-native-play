@@ -21,11 +21,13 @@ export interface ShopItemCardProps {
   isLoading?: boolean;
   canAfford?: boolean;
   index?: number;
+  showDescription?: boolean;
   onClick: () => void;
 }
 
 export function ShopItemCard({
   name,
+  description,
   price,
   currency,
   icon,
@@ -35,6 +37,7 @@ export function ShopItemCard({
   isLoading = false,
   canAfford = true,
   index = 0,
+  showDescription = true,
   onClick,
 }: ShopItemCardProps) {
   const { t } = useLanguage();
@@ -144,9 +147,12 @@ export function ShopItemCard({
           </div>
         </motion.div>
 
-        {/* Name - Center, left-aligned */}
+        {/* Name & Description - Center, left-aligned */}
         <div className="flex-1 text-left min-w-0">
           <h3 className="text-gray-900 font-bold text-sm leading-tight">{name}</h3>
+          {showDescription && description && (
+            <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{description}</p>
+          )}
         </div>
 
         {/* Price / Status - Right side */}

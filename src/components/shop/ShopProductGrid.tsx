@@ -71,6 +71,7 @@ export function ShopProductGrid({
                   isLoading={isPurchasing === item.id}
                   canAfford={canAfford}
                   index={index}
+                  showDescription={true}
                   onClick={() => !isOwned && onItemClick(item)}
                 />
               </motion.div>
