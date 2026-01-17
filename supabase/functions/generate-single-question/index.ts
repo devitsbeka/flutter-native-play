@@ -7,9 +7,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// App-wide character limits
-const QUESTION_MAX_LENGTH = 65;
-const ANSWER_MAX_LENGTH = 20;
+// App-wide character limits - Georgian text needs more space
+const QUESTION_MAX_LENGTH = 120;
+const ANSWER_MAX_LENGTH = 35;
 
 // Fisher-Yates shuffle for randomizing answer positions
 function shuffleArray<T>(array: T[]): T[] {
