@@ -57,8 +57,8 @@ export function DesktopPlayButton({
 
   return (
     <div className="relative w-full">
-      {/* Plays remaining badge */}
-      {!isExhausted && !isCompact && (
+      {/* Plays remaining badge - hidden for VIP users */}
+      {!isExhausted && !isCompact && !isVip && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,9 +67,7 @@ export function DesktopPlayButton({
           <div
             className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white whitespace-nowrap"
             style={{
-              background: isVip 
-                ? "linear-gradient(180deg, #A855F7 0%, #7C3AED 100%)"
-                : "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)",
+              background: "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)",
               boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
             }}
           >
