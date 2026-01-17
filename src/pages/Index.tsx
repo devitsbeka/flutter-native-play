@@ -405,7 +405,7 @@ export default function Index() {
           {/* Main content area */}
           <div className="flex-1 relative h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none md:pr-[280px]" style={{ paddingBottom: 160 }}>
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none md:pr-[280px]">
             
             {/* xl+ layout: Cards moved to fixed right side */}
 
@@ -475,7 +475,7 @@ export default function Index() {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-5">
+                  <div className="mt-20">
                     <DesktopPlayButtonLarge
                       onClick={handlePlayClick}
                       playsRemaining={user ? playsRemaining : guestPlaysRemaining}
@@ -556,7 +556,7 @@ export default function Index() {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-20">
                   <DesktopPlayButtonLarge
                     onClick={handlePlayClick}
                     playsRemaining={user ? playsRemaining : guestPlaysRemaining}
