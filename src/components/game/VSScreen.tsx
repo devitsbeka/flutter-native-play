@@ -253,11 +253,11 @@ export function VSScreen() {
 
   return (
     <div 
-      className="h-[100dvh] w-full flex flex-col items-center relative overflow-hidden"
+      className="h-[100dvh] w-full relative overflow-hidden"
       style={{ background: "#7E7ADB" }}
     >
-      {/* Content wrapper with max-width for desktop/tablet */}
-      <div className="w-full h-full flex flex-col sm:max-w-[960px]">
+      {/* Content wrapper with max-width for desktop/tablet, centered */}
+      <div className="w-full h-full flex flex-col sm:max-w-[960px] sm:mx-auto">
       {/* Wave Pattern Background */}
       <WavePattern />
 
