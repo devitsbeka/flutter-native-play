@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
-import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import { VipDuration } from "@/hooks/useVipStatus";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
 
@@ -42,16 +41,17 @@ export interface ShopSection {
 // Helper function to get frame data by ID
 const getFrameById = (frameId: string) => AVATAR_FRAMES.find(f => f.id === frameId);
 
-// Frame Preview Component for shop
+// Simple frame preview icon that doesn't use hooks
 const FramePreviewIcon = ({ frameId }: { frameId: string }) => {
   const frame = getFrameById(frameId);
+  if (!frame) return <div className="w-12 h-12 rounded-full bg-muted" />;
+  
   return (
-    <AvatarWithFrame
-      emoji="👤"
-      size="sm"
-      showVipBadge={false}
-      frameOverride={frame}
-    />
+    <div 
+      className={`w-12 h-12 rounded-full bg-gradient-to-br ${frame.gradient} ${frame.borderStyle} flex items-center justify-center text-lg`}
+    >
+      👤
+    </div>
   );
 };
 
