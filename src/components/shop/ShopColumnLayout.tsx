@@ -69,7 +69,7 @@ export function ShopColumnLayout({
     <>
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pb-8 cursor-grab active:cursor-grabbing"
+        className="flex gap-4 overflow-x-auto scrollbar-hide px-4 pt-4 pb-24 cursor-grab active:cursor-grabbing"
         style={{
           scrollBehavior: isDragging ? "auto" : "smooth",
           WebkitOverflowScrolling: "touch",
@@ -82,13 +82,13 @@ export function ShopColumnLayout({
         {sections.filter(section => section.id !== "frames").map((section, sectionIndex) => (
           <motion.div
             key={section.id}
-            className="flex-shrink-0 w-[300px] rounded-3xl overflow-hidden relative"
+            className="flex-shrink-0 w-[300px] rounded-3xl overflow-visible relative"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: sectionIndex * 0.1 }}
           >
             {/* Video background */}
-            <div className="absolute inset-0">
+            <div className="absolute inset-0 rounded-3xl overflow-hidden">
               <PingPongVideo
                 src={section.videoSrc}
                 className="w-full h-full object-cover"
@@ -97,9 +97,9 @@ export function ShopColumnLayout({
             </div>
 
             {/* Content */}
-            <div className="relative z-10 p-4 flex flex-col min-h-[500px]">
+            <div className="relative z-10 p-4 pt-5 flex flex-col h-[420px]">
               {/* Header */}
-              <div className="mb-4">
+              <div className="mb-auto">
                 <h3 className="text-xl font-display font-bold text-white drop-shadow-lg">
                   {section.title}
                 </h3>
@@ -108,8 +108,8 @@ export function ShopColumnLayout({
                 </p>
               </div>
 
-              {/* Items - vertical list */}
-              <div className="flex flex-col gap-3 flex-1">
+              {/* Items - vertical list, positioned at bottom, overflowing */}
+              <div className="flex flex-col gap-3 mt-auto" style={{ marginBottom: '-60px' }}>
                 {section.items.map((item, itemIndex) => {
                   const canAfford = gems >= item.price;
                   const isPurchased = purchasedItems.has(item.id);
