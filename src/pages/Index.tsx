@@ -2,7 +2,9 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Bell, Check, Clock } from "lucide-react";
+import { Bell, Check, Clock, MessageCircle } from "lucide-react";
+import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
@@ -184,6 +186,8 @@ export default function Index() {
   const [showWatchAdModal, setShowWatchAdModal] = useState(false);
   const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
   const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
+  const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
+  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
   
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
@@ -374,6 +378,31 @@ export default function Index() {
                   >
                     <span className="text-[9px] font-bold text-white">
                       {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.button>
+              
+              {/* Messages icon with unread badge */}
+              <motion.button
+                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowRoomChatsPanel(true)}
+              >
+                <MessageCircle className="w-5 h-5 text-gray-600" />
+                {unreadMessagesCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                      boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold text-white">
+                      {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
                     </span>
                   </motion.div>
                 )}
@@ -772,6 +801,12 @@ export default function Index() {
         </div>
         </div>
       </MainLayout>
+      
+      {/* Room Chats Panel */}
+      <RoomChatsPanel
+        isOpen={showRoomChatsPanel}
+        onClose={() => setShowRoomChatsPanel(false)}
+      />
     </>
   );
 }
