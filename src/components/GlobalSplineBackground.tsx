@@ -8,6 +8,9 @@ const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile"
 // Pages where particles should be disabled for performance
 const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards"];
 
+// Pages where the white radial mask should be hidden (they have their own solid background)
+const NO_RADIAL_MASK_PAGES = ["/game", "/category"];
+
 // White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
   <motion.div
@@ -78,8 +81,11 @@ export function GlobalSplineBackground() {
   // Check if particles should be disabled for performance
   const shouldShowParticles = shouldShow && !NO_PARTICLES_PAGES.includes(location.pathname);
   
+  // Check if radial mask should be hidden (game/category pages have their own backgrounds)
+  const shouldHideRadialMask = NO_RADIAL_MASK_PAGES.some(page => location.pathname.startsWith(page));
+  
   // Generate sparkle particles - 80 particles for dense effect
-  const sparkles = useMemo(() => 
+  const sparkles = useMemo(() =>
     Array.from({ length: 80 }, (_, i) => ({
       id: i,
       delay: Math.random() * 15,
@@ -125,14 +131,16 @@ export function GlobalSplineBackground() {
         </video>
       </div>
       
-      {/* White radial mask - transparent center, white edges - less opaque to show blob */}
-      <div 
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
-          zIndex: 1,
-        }}
-      />
+      {/* White radial mask - transparent center, white edges - hidden on game/category pages */}
+      {!shouldHideRadialMask && (
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 0%, transparent 50%, rgba(255,255,255,0.15) 65%, rgba(255,255,255,0.35) 80%, rgba(255,255,255,0.7) 100%)",
+            zIndex: 1,
+          }}
+        />
+      )}
       
       {/* Floating orb particles - ambient background movement */}
       {shouldShowParticles && (
