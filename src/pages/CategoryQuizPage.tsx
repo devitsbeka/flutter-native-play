@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, ChevronRight, TrendingUp } from "lucide-react";
+import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
+import { TimerBadge } from "@/components/game/TimerBadge";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
@@ -902,48 +903,36 @@ export default function CategoryQuizPage() {
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 
-      {/* Header - same as QuizGameScreenProd */}
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+      {/* Header - Solo mode with category name and timer */}
+      <div className="flex items-center justify-between px-4 py-1 flex-shrink-0">
         <button
           onClick={() => setShowExitDialog(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-          <HelpCircle className="w-5 h-5 text-white" />
-        </button>
-      </div>
-
-      {/* Players Row - same layout as QuizGameScreenProd */}
-      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
-        {/* Player (Left) */}
-        <QuizPlayerAvatar
-          avatarUrl={profile?.avatar_url}
-          score={playerScore}
-          position="left"
-          state={getPlayerState()}
-          size="large"
-        />
-
-        {/* Opponent (Right) */}
-        <QuizPlayerAvatar
-          avatarUrl={opponent.avatar}
-          score={opponentScore}
-          position="right"
-          state={getOpponentState()}
-          size="large"
+        
+        {/* Center - Category name */}
+        <span className="text-white font-bold text-base truncate max-w-[160px] text-center">
+          {dbCategory?.name || category?.name || "Quiz"}
+        </span>
+        
+        {/* Right - Compact Timer */}
+        <TimerBadge 
+          seconds={timeRemaining} 
+          maxSeconds={15 + timerBonus}
+          compact
         />
       </div>
 
-      {/* Question Card with Overlapping Icon - same as QuizGameScreenProd */}
-      <div className="px-4 flex-shrink-0 mt-4 relative">
-        {/* Category Icon - hand-picked (database) icon has priority, then AI-analyzed, then category fallback */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-24 z-20">
+      {/* Question Card with Overlapping Icon - Solo mode optimized */}
+      <div className="px-4 flex-shrink-0 mt-2 relative">
+        {/* Category Icon - smaller for solo mode */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-20">
           <DynamicIcon 
             slug={currentQuestion?.icon_slug || aiIconSlug || dbCategory?.icon_slug || undefined}
             categoryId={(currentQuestion?.icon_slug || aiIconSlug) ? undefined : categoryId}
-            size={128}
+            size={80}
             className="drop-shadow-2xl"
           />
         </div>
@@ -953,14 +942,12 @@ export default function CategoryQuizPage() {
           state={timerFrozen ? "frozen" : "default"}
           difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
-          timerSeconds={timeRemaining}
-          timerMaxSeconds={15 + timerBonus}
           freezeTimeLeft={freezeTimeRemaining}
         />
       </div>
 
-      {/* Progress Dots - same component as QuizGameScreenProd */}
-      <div className="flex justify-center my-3 flex-shrink-0">
+      {/* Progress Dots */}
+      <div className="flex justify-center py-1 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
