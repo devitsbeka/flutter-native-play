@@ -413,9 +413,9 @@ function TeamContentV2() {
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Sticky Header - matching Shop/PowerUps style */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-purple-900/10">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
           <div className="px-4 pt-4 pb-2">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
                   Live
