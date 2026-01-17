@@ -571,6 +571,7 @@ export default function Index() {
             {/* Mobile only: circular action buttons + avatar + info */}
             <motion.div 
               className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
+              style={{ marginTop: -80 }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
