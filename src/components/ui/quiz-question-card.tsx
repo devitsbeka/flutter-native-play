@@ -151,8 +151,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
         {/* Question Text */}
         <div className={cn(
-          "px-5 py-2",
-          (timerSeconds !== undefined || difficultyLabel) && "pt-12"
+          "px-5 py-2 [@media(max-height:700px)]:py-1.5",
+          (timerSeconds !== undefined || difficultyLabel) && "pt-12 [@media(max-height:700px)]:pt-10"
         )}>
           {isLoading ? (
             <div className="space-y-2">
