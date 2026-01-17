@@ -207,14 +207,6 @@ export function UnifiedDesktopNav({
             </div>
           ))}
 
-          {/* Notifications with badge */}
-          <NavButton
-            icon={Bell}
-            label="შეტყობინებები"
-            onClick={() => navigate("/notifications")}
-            active={isActive("/notifications")}
-            badge={unreadCount}
-          />
         </div>
 
 
