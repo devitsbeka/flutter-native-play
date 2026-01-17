@@ -413,12 +413,12 @@ function TeamContentV2() {
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Sticky Header - matching Shop/PowerUps style */}
-        <div className="sticky top-0 z-30 border-b border-purple-900/10">
-          <div className="px-4 pt-4 pb-3">
-            <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-purple-900/10">
+          <div className="px-4 pt-4 pb-2">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-                  ოთახები
+                  Live
                 </h1>
                 <LiveBadge />
               </div>
@@ -466,41 +466,89 @@ function TeamContentV2() {
                 </motion.button>
               </div>
             </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1">
+              {[
+                { id: "rooms", label: "ოთახები" },
+                { id: "explore", label: "აღმოჩენა" },
+                { id: "my-content", label: "ჩემი ტრივია" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    activeTab === tab.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Content Area - Full width like Shop/PowerUps */}
         <div className="flex-1 overflow-y-auto pb-24 lg:pb-0">
 
-          {/* Friends Bar */}
-          <div className="px-4 py-3">
-            <FriendsStoriesBar
-              onAddFriendClick={() => setShowAddFriendModal(true)}
-              onFriendClick={() => {}}
-              onShowAllFriends={() => setShowAllFriendsModal(true)}
-            />
-          </div>
-
-          {/* Rooms Section Header with Button */}
-          <div className="px-4 pb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-foreground">ოთახები</h2>
-              <ChunkyButton 
-                onClick={() => setShowTeamMenu(true)}
-                variant="primary"
-                size="sm"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                ახალი ოთახი
-              </ChunkyButton>
+          {/* Friends Bar - only show on rooms tab */}
+          {activeTab === "rooms" && (
+            <div className="px-4 py-3">
+              <FriendsStoriesBar
+                onAddFriendClick={() => setShowAddFriendModal(true)}
+                onFriendClick={() => {}}
+                onShowAllFriends={() => setShowAllFriendsModal(true)}
+              />
             </div>
-            <MyRoomsSection 
-              hideTV 
-              onCreateRoom={() => setShowTeamMenu(true)}
-              onShowAllRooms={() => setShowAllGamesModal(true)}
-              vertical
-            />
-          </div>
+          )}
+
+          {/* Rooms Tab */}
+          {activeTab === "rooms" && (
+            <div className="px-4 pb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-foreground">ოთახები</h2>
+                <ChunkyButton 
+                  onClick={() => setShowTeamMenu(true)}
+                  variant="primary"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  ახალი ოთახი
+                </ChunkyButton>
+              </div>
+              <MyRoomsSection 
+                hideTV 
+                onCreateRoom={() => setShowTeamMenu(true)}
+                onShowAllRooms={() => setShowAllGamesModal(true)}
+                vertical
+              />
+            </div>
+          )}
+
+          {/* Explore Tab */}
+          {activeTab === "explore" && (
+            <div className="px-4 py-4">
+              <SocialFeed 
+                onPlayQuiz={(post, collectionPosts) => {
+                  setPlayingQuiz({ post, collectionPosts });
+                }}
+              />
+            </div>
+          )}
+
+          {/* My Trivia Tab */}
+          {activeTab === "my-content" && (
+            <div className="px-4 py-4">
+              <MyTriviaTab 
+                onCreateQuiz={() => setShowCreateTypeModal(true)}
+                onPlay={(post, collectionPosts) => {
+                  setPlayingQuiz({ post, collectionPosts });
+                }}
+              />
+            </div>
+          )}
           
         </div>
 
