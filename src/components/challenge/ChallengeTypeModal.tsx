@@ -140,14 +140,7 @@ export function ChallengeTypeModal({
           <div className="flex-1 overflow-y-auto px-4 py-6">
             {/* Target User Info */}
             {targetUserProfile && (
-              <div 
-                className="flex items-center gap-3 mb-6 p-4 rounded-xl"
-                style={{
-                  background: "rgba(255, 255, 255, 0.12)",
-                  backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                }}
-              >
+              <div className="flex items-center gap-3 mb-6 px-2">
                 <SmartAvatar
                   avatarUrl={targetUserProfile.avatar_url}
                   animatedAvatarUrl={targetUserProfile.animated_avatar_url}
