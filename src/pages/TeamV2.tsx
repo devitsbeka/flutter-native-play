@@ -467,25 +467,48 @@ function TeamContentV2() {
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-1">
-              {[
-                { id: "rooms", label: "ოთახები" },
-                { id: "explore", label: "აღმოჩენა" },
-                { id: "my-content", label: "ჩემი ტრივია" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    activeTab === tab.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* 3D Chunky Tabs with Create Button */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex gap-2">
+                {[
+                  { id: "rooms", label: "ოთახები" },
+                  { id: "explore", label: "აღმოჩენა" },
+                  { id: "my-content", label: "ჩემი ტრივია" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`relative px-5 py-2 rounded-full font-bold text-sm transition-all active:translate-y-[2px] ${
+                      activeTab === tab.id
+                        ? "bg-gradient-to-b from-primary via-primary to-primary/90 text-white"
+                        : "bg-gradient-to-b from-white via-gray-50 to-gray-100 text-[#6B5B95]"
+                    }`}
+                    style={{
+                      boxShadow: activeTab === tab.id
+                        ? `inset 0 2px 0 0 rgba(255,255,255,0.25),
+                           0 1px 0 0 hsl(270 50% 45%),
+                           0 4px 0 0 hsl(270 50% 35%),
+                           0 4px 0 1.5px hsl(270 50% 28%)`
+                        : `inset 0 2px 0 0 rgba(255,255,255,0.8),
+                           0 1px 0 0 #E5E5E5,
+                           0 4px 0 0 #C4C4C4,
+                           0 4px 0 1.5px #A0A0A0`,
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* New Room Button - Far Right */}
+              <ChunkyButton 
+                onClick={() => setShowTeamMenu(true)}
+                variant="primary"
+                size="sm"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                ახალი ოთახი
+              </ChunkyButton>
             </div>
           </div>
         </div>
@@ -507,17 +530,6 @@ function TeamContentV2() {
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
             <div className="px-4 pb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-foreground">ოთახები</h2>
-                <ChunkyButton 
-                  onClick={() => setShowTeamMenu(true)}
-                  variant="primary"
-                  size="sm"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  ახალი ოთახი
-                </ChunkyButton>
-              </div>
               <MyRoomsSection 
                 hideTV 
                 onCreateRoom={() => setShowTeamMenu(true)}

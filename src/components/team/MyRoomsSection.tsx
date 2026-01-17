@@ -9,11 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
 import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
-import { getGradientById } from "@/config/roomGradients";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import glitchIcon from "@/assets/glitch.png";
+import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -129,7 +129,7 @@ export function MyRoomsSection({
           )}
         </motion.div>
       ) : vertical ? (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 px-4 pb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 pb-4">
           {rooms.map((room, index) => (
             <RoomCardGrid
               key={room.id}
@@ -193,8 +193,8 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   // Always use the placeholder image
   const coverImage = roomCoverPlaceholder;
   
-  // Get gradient from room or fallback
-  const gradient = getGradientById(room.background_gradient);
+  // Get gradient preset based on index
+  const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
   return (
     <motion.div
@@ -210,9 +210,15 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
       }}
     >
       {/* Full card with dynamic gradient background */}
-      <div 
-        className="relative px-2.5 pb-2.5 pt-6 rounded-2xl overflow-hidden"
-        style={{ background: gradient?.gradient || 'linear-gradient(135deg, hsl(var(--primary)/0.2), hsl(var(--primary)/0.3))' }}
+      <GradientBackground
+        colors={gradientPreset.colors}
+        gradientSize="125% 125%"
+        gradientOrigin="bottom-middle"
+        enableNoise={true}
+        noisePatternAlpha={25}
+        noiseIntensity={0.8}
+        noisePatternRefreshInterval={3}
+        className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
       >
         {/* Cover image with radial fade - flip based on index for variety */}
         <div 
@@ -320,7 +326,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
             </div>
           </div>
         </div>
-      </div>
+      </GradientBackground>
     </motion.div>
   );
 }
@@ -338,7 +344,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
   const isCompleted = room.status === "completed";
   
   const coverImage = roomCoverPlaceholder;
-  const gradient = getGradientById(room.background_gradient);
+  const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
   return (
     <motion.div
@@ -353,9 +359,15 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
         boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
       }}
     >
-      <div 
+      <GradientBackground
+        colors={gradientPreset.colors}
+        gradientSize="125% 125%"
+        gradientOrigin="bottom-middle"
+        enableNoise={true}
+        noisePatternAlpha={25}
+        noiseIntensity={0.8}
+        noisePatternRefreshInterval={3}
         className="relative w-full h-full p-3 flex flex-col"
-        style={{ background: gradient?.gradient || 'linear-gradient(135deg, hsl(var(--primary)/0.2), hsl(var(--primary)/0.3))' }}
       >
         {/* Cover image with radial fade */}
         <div 
@@ -437,7 +449,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
             </div>
           </div>
         </div>
-      </div>
+      </GradientBackground>
     </motion.div>
   );
 }
