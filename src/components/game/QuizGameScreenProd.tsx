@@ -287,7 +287,9 @@ export function QuizGameScreenProd() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#7E7ADB] overflow-hidden">
+    <div className="w-full h-full flex flex-col items-center bg-[#7E7ADB] overflow-hidden">
+      {/* Content wrapper with max-width for desktop/tablet */}
+      <div className="w-full h-full flex flex-col sm:max-w-[960px]">
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 
@@ -466,6 +468,7 @@ export function QuizGameScreenProd() {
 
       {/* Screen-wide freeze effect */}
       <PowerUpScreenEffect type="freeze" isActive={playerTimerFrozen} />
+      </div>
     </div>
   );
 }

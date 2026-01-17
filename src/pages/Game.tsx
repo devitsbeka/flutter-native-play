@@ -44,9 +44,7 @@ function GameContent() {
       
       {/* Game Content - Full width/height */}
       <div className={`relative flex-1 w-full h-full overflow-hidden ${hasOwnBackground ? '' : 'px-4 pt-14 pb-4'}`}>
-        <div className="w-full h-full sm:max-w-[960px] sm:mx-auto">
-          <GameContainer />
-        </div>
+        <GameContainer />
       </div>
     </div>
   );
