@@ -476,38 +476,40 @@ function TeamContentV2() {
               />
             </div>
 
-            {/* 3D Chunky Tabs with Create Button */}
+            {/* Unified Tab Bar with Create Button */}
             <div className="flex items-center justify-between gap-3">
-              <div className="flex gap-2">
+              <div 
+                className="inline-flex rounded-2xl bg-muted p-1.5"
+                style={{
+                  boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
+                }}
+              >
                 {[
                   { id: "rooms", label: "ოთახები" },
                   { id: "explore", label: "აღმოჩენა" },
                   { id: "my-content", label: "ჩემი ტრივია" },
                 ].map((tab) => (
-                  <motion.button
+                  <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`relative px-3 sm:px-5 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm transition-all whitespace-nowrap ${
+                    className={`relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
                       activeTab === tab.id
-                        ? "text-white"
-                        : "text-foreground"
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
-                    style={{
-                      background: activeTab === tab.id
-                        ? "linear-gradient(180deg, hsl(270 60% 55%) 0%, hsl(270 55% 50%) 100%)"
-                        : "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-                      boxShadow: activeTab === tab.id
-                        ? "0 3px 0 hsl(270 50% 35%), 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3)"
-                        : "0 3px 0 #D8D0E8, 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
-                      border: activeTab === tab.id
-                        ? "2px solid hsl(270 45% 45%)"
-                        : "2px solid #E8E0F5",
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
-                    {tab.label}
-                  </motion.button>
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTabTeam"
+                        className="absolute inset-0 rounded-xl bg-primary"
+                        style={{
+                          boxShadow: "0 4px 0 0 hsl(var(--primary) / 0.5)",
+                        }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </button>
                 ))}
               </div>
               
