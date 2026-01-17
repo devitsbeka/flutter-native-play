@@ -190,13 +190,8 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
     <>
       {/* Input Bar - acts like real input */}
       <motion.div
-        className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] ${className}`}
-        style={{
-          background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
-          boxShadow: "0 4px 0 #D8D0E8, 0 6px 16px rgba(0,0,0,0.12), inset 0 2px 0 rgba(255,255,255,1)",
-          border: "2px solid #E8E0F5",
-        }}
-        whileHover={{ scale: 1.01 }}
+        className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] bg-white/40 backdrop-blur-sm border border-purple-900/10 ${className}`}
+        whileHover={{ backgroundColor: "rgba(255,255,255,0.5)" }}
       >
         <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         <input
