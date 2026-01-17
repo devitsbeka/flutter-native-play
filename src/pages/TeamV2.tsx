@@ -557,24 +557,28 @@ function TeamContentV2() {
 
           {/* Explore Tab */}
           {activeTab === "explore" && (
-            <div className="px-4 py-4">
-              <SocialFeed 
-                onPlayQuiz={(post, collectionPosts) => {
-                  setPlayingQuiz({ post, collectionPosts });
-                }}
-              />
+            <div className="px-4 py-4 sm:flex sm:justify-center">
+              <div className="w-full sm:max-w-[600px]">
+                <SocialFeed 
+                  onPlayQuiz={(post, collectionPosts) => {
+                    setPlayingQuiz({ post, collectionPosts });
+                  }}
+                />
+              </div>
             </div>
           )}
 
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
-            <div className="px-4 py-4">
-              <MyTriviaTab 
-                onCreateQuiz={() => setShowCreateTypeModal(true)}
-                onPlay={(post, collectionPosts) => {
-                  setPlayingQuiz({ post, collectionPosts });
-                }}
-              />
+            <div className="px-4 py-4 sm:flex sm:justify-center">
+              <div className="w-full sm:max-w-[600px]">
+                <MyTriviaTab 
+                  onCreateQuiz={() => setShowCreateTypeModal(true)}
+                  onPlay={(post, collectionPosts) => {
+                    setPlayingQuiz({ post, collectionPosts });
+                  }}
+                />
+              </div>
             </div>
           )}
           
