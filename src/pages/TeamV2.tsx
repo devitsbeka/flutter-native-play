@@ -41,7 +41,8 @@ import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
 
-import { DesktopRightSidebar } from "@/components/team/DesktopRightSidebar";
+import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
+import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
@@ -180,6 +181,7 @@ function TeamContentV2() {
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [showTeamMenu, setShowTeamMenu] = useState(false);
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
+  const [showTVModal, setShowTVModal] = useState(false);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [isEditingRound, setIsEditingRound] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
@@ -547,19 +549,21 @@ function TeamContentV2() {
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
             <div className="px-4 pt-4 pb-4">
-              <MyRoomsSection 
-                hideTV 
-                onCreateRoom={() => setShowTeamMenu(true)}
-                onShowAllRooms={() => setShowAllGamesModal(true)}
-                vertical
-              />
+              <div className="max-w-[700px]">
+                <MyRoomsSection 
+                  hideTV 
+                  onCreateRoom={() => setShowTeamMenu(true)}
+                  onShowAllRooms={() => setShowAllGamesModal(true)}
+                  vertical
+                />
+              </div>
             </div>
           )}
 
           {/* Explore Tab */}
           {activeTab === "explore" && (
-            <div className="px-4 py-4 sm:flex sm:justify-center">
-              <div className="w-full sm:max-w-[600px]">
+            <div className="px-4 py-4">
+              <div className="w-full max-w-[700px]">
                 <SocialFeed 
                   onPlayQuiz={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
@@ -571,8 +575,8 @@ function TeamContentV2() {
 
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
-            <div className="px-4 py-4 sm:flex sm:justify-center">
-              <div className="w-full sm:max-w-[600px]">
+            <div className="px-4 py-4">
+              <div className="w-full max-w-[700px]">
                 <MyTriviaTab 
                   onCreateQuiz={() => setShowCreateTypeModal(true)}
                   onPlay={(post, collectionPosts) => {
@@ -587,8 +591,18 @@ function TeamContentV2() {
 
       </main>
 
-      {/* Desktop Right Sidebar - Instagram style */}
-      <DesktopRightSidebar onAddFriendClick={() => setShowAddFriendModal(true)} />
+      {/* Desktop Right Sidebar - Shows on xl screens only */}
+      <TeamRightSidebar 
+        onAcceptInvitation={handleAcceptInvitation}
+        onJoinRoom={handleJoinFromInvitation}
+        onOpenTV={() => setShowTVModal(true)}
+      />
+
+      {/* TV Modal */}
+      <TVMirrorModal 
+        open={showTVModal} 
+        onOpenChange={setShowTVModal} 
+      />
 
       {/* Modals */}
       <AnimatePresence>
