@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { TimerBadge } from "@/components/game/TimerBadge";
@@ -492,6 +493,13 @@ export default function CategoryQuizPage() {
     // Consume power-up from database
     const success = await consumePowerUp(type);
     if (!success) return;
+
+    // Haptic feedback for satisfying mobile experience
+    try {
+      await Haptics.impact({ style: ImpactStyle.Medium });
+    } catch {
+      // Haptics not available (web browser)
+    }
 
     // Mark as used this question
     setUsedPowerUpsThisQuestion(prev => new Set(prev).add(type));
