@@ -16,6 +16,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboardsSkeleton } from "@/components/leaderboard/LeaderboardSkeleton";
+import { HeaderActions } from "@/components/shared/HeaderActions";
 
 import {
   Carousel,
@@ -136,9 +137,12 @@ export default function Leaderboards() {
       {/* Header Bar - transparent, overlays on background */}
       <div className="absolute top-0 left-0 right-0 z-50">
         <div className="px-4 pt-4 pb-3">
-          <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-            {language === 'ka' ? 'ლიდერბორდი' : 'Leaderboard'}
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+              {language === 'ka' ? 'ლიდერბორდი' : 'Leaderboard'}
+            </h1>
+            <HeaderActions />
+          </div>
         </div>
       </div>
 
