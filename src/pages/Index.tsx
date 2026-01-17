@@ -411,7 +411,7 @@ export default function Index() {
             {/* xl+ layout: Cards on top, avatar centered below - combined */}
 
             {/* md to xl layout: Side by side (avatar left, cards right) */}
-            <div className="hidden md:flex xl:hidden items-center justify-center gap-8 w-full px-4">
+            <div className="hidden md:flex xl:hidden items-center justify-center gap-[52px] w-full px-4" style={{ marginTop: -80 }}>
               {/* Left side: Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
