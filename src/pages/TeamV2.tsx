@@ -412,21 +412,15 @@ function TeamContentV2() {
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Main Content Area */}
       <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
-        {/* Row 1: Mobile Header - Scrolls away */}
-        <div className="lg:hidden">
-          <div className="flex items-center justify-between px-4 h-14 safe-top">
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center"
-            >
-              <span className="text-lg font-slackey text-foreground tracking-tight">
-                MyTrivia
-              </span>
-              <LiveBadge />
-            </motion.div>
-
+        {/* Row 1: Mobile Header - Standard style matching other pages */}
+        <div className="lg:hidden px-4 pt-4 pb-3">
+          <div className="flex items-center justify-between safe-top">
+            <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+              ოთახები
+            </h1>
             <div className="flex items-center gap-2">
+              <LiveBadge />
+
               {/* QR Scanner */}
               <motion.button
                 initial={{ opacity: 0, x: 10 }}
