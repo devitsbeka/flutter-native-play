@@ -128,7 +128,8 @@ export default function Auth() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         onClick={() => navigate("/")}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        className="flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-8"
+        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}
       >
         <ArrowLeft className="w-5 h-5" />
         <span>{t("common.back")}</span>
@@ -141,10 +142,16 @@ export default function Auth() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 
+            className="text-3xl font-bold text-white mb-2"
+            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)' }}
+          >
             {isSignUp ? t("auth.createAccount") : t("auth.welcomeBack")}
           </h1>
-          <p className="text-muted-foreground">
+          <p 
+            className="text-white/90"
+            style={{ textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}
+          >
             {isSignUp
               ? t("onboarding.welcomeSubtitle")
               : t("onboarding.startAdventure")}
@@ -161,7 +168,7 @@ export default function Auth() {
         >
           {isSignUp && (
             <div className="space-y-2">
-              <Label htmlFor="nickname">{t("auth.username")}</Label>
+              <Label htmlFor="nickname" className="text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>{t("auth.username")}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -180,7 +187,7 @@ export default function Auth() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">{t("help.email")}</Label>
+            <Label htmlFor="email" className="text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>{t("help.email")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -198,7 +205,7 @@ export default function Auth() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">{t("auth.password")}</Label>
+            <Label htmlFor="password" className="text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>{t("auth.password")}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -256,7 +263,7 @@ export default function Auth() {
           transition={{ delay: 0.2 }}
           className="mt-6 text-center"
         >
-          <p className="text-muted-foreground">
+          <p className="text-white/80" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
             {isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}{" "}
             <button
               type="button"
@@ -264,7 +271,7 @@ export default function Auth() {
                 setIsSignUp(!isSignUp);
                 setErrors({});
               }}
-              className="text-primary font-semibold hover:underline"
+              className="text-white font-semibold hover:underline"
             >
               {isSignUp ? t("auth.signIn") : t("auth.signUp")}
             </button>
@@ -281,7 +288,8 @@ export default function Auth() {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="text-sm text-white/70 hover:text-white transition-colors"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
           >
             {t("modals.continueAsGuest")} →
           </button>
