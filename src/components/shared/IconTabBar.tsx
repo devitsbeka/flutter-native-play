@@ -202,10 +202,6 @@ export function IconTabBar({ tabs, activeTab, onTabChange, compact = false }: Ic
         })}
       </div>
       
-      {/* Separator line - hide in compact mode */}
-      {!compact && (
-        <div className="mx-4 mt-2 h-[2px] rounded-full bg-gradient-to-r from-transparent via-purple-300/60 to-transparent" />
-      )}
     </div>
   );
 }
