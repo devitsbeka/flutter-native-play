@@ -84,14 +84,6 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   const [direction, setDirection] = useState(0);
   const { t } = useLanguage();
 
-  // Auto-rotate every 10 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDirection(1);
-      setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
 
   const goTo = (index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
