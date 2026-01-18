@@ -32,8 +32,8 @@ export function useExploreCreators(searchQuery: string = "") {
       if (postsError) throw postsError;
       if (!posts || posts.length === 0) return [];
 
-      // Get unique user IDs (excluding current user)
-      const userIds = [...new Set(posts.map(p => p.user_id))].filter(id => id !== user?.id);
+      // Get unique user IDs - show ALL users including current user in Explore
+      const userIds = [...new Set(posts.map(p => p.user_id))];
 
       if (userIds.length === 0) return [];
 
@@ -65,7 +65,7 @@ export function useExploreCreators(searchQuery: string = "") {
       const creatorMap = new Map<string, SamplePost[]>();
       
       posts.forEach(post => {
-        if (post.user_id === user?.id) return; // Skip current user's posts
+        // Show all users' public posts in Explore
         
         const profile = profileMap.get(post.user_id);
         if (!profile) return;
