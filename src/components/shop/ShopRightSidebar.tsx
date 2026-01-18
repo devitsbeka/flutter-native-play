@@ -87,10 +87,12 @@ export function ShopRightSidebar() {
       className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
     >
       {/* White Header */}
-      <div className="sticky top-0 z-30 bg-white px-4 py-3 border-b border-gray-100 shadow-sm">
-        <div className="flex items-center justify-center gap-2">
-          <Crown className="w-5 h-5 text-purple-600" />
-          <h2 className="text-lg font-bold text-gray-900">გახდი PRO</h2>
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-center justify-center gap-2 h-10">
+            <Crown className="w-5 h-5 text-purple-600" />
+            <h2 className="text-xl font-display font-bold text-gray-900 uppercase tracking-wide">გახდი PRO</h2>
+          </div>
         </div>
       </div>
 
