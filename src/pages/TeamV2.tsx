@@ -416,9 +416,10 @@ function TeamContentV2() {
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Flex wrapper for main content + right sidebar */}
-      <div className="flex h-screen w-full">
-        {/* Main Content Area */}
-        <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main Content Area */}
+          <div id="team-main-content" className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Sticky Header - matching Shop/PowerUps style */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
           <div className="px-4 pt-4 pb-2">
@@ -626,18 +627,19 @@ function TeamContentV2() {
           
         </div>
 
-        </main>
+          </div>
 
-        {/* Desktop Right Sidebar - Shows on xl screens only */}
-        <TeamRightSidebar 
-          onAcceptInvitation={handleAcceptInvitation}
-          onJoinRoom={handleJoinFromInvitation}
-          onOpenTV={() => setShowTVModal(true)}
-          onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
-          activeTab={activeTab}
-          onViewAllRooms={() => handleTabChange("rooms")}
-          onViewAllTrivias={() => handleTabChange("my-content")}
-        />
+          {/* Desktop Right Sidebar - Shows on xl screens only */}
+          <TeamRightSidebar 
+            onAcceptInvitation={handleAcceptInvitation}
+            onJoinRoom={handleJoinFromInvitation}
+            onOpenTV={() => setShowTVModal(true)}
+            onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
+            activeTab={activeTab}
+            onViewAllRooms={() => handleTabChange("rooms")}
+            onViewAllTrivias={() => handleTabChange("my-content")}
+          />
+        </div>
       </div>
 
       {/* TV Modal */}
