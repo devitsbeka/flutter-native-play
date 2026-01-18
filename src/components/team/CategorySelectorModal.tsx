@@ -70,7 +70,7 @@ export function CategorySelectorModal({
       className="!pb-0"
     >
       {/* Search */}
-      <div className="mt-3 mb-4">
+      <div className="mt-3 mb-4 max-w-[700px] md:max-w-[800px] lg:max-w-[900px] mx-auto">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -85,7 +85,8 @@ export function CategorySelectorModal({
 
       {/* Categories Grid - use flex-1 to fill remaining space */}
       <div className="flex-1 overflow-y-auto -mx-5 px-5 pb-safe">
-        <div className="grid grid-cols-2 gap-3 pb-8">
+        <div className="max-w-[700px] md:max-w-[800px] lg:max-w-[900px] mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-8">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
               <div
@@ -94,7 +95,7 @@ export function CategorySelectorModal({
               />
             ))
           ) : filteredCategories.length === 0 ? (
-            <div className="col-span-2 py-8 text-center text-gray-500 text-sm">
+            <div className="col-span-2 lg:col-span-4 py-8 text-center text-gray-500 text-sm">
               კატეგორია ვერ მოიძებნა
             </div>
           ) : (
@@ -160,6 +161,7 @@ export function CategorySelectorModal({
               );
             })
           )}
+          </div>
         </div>
       </div>
     </GameModal>
