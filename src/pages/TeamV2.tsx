@@ -425,9 +425,8 @@ function TeamContentV2() {
             <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-                  Live
+                  ონლაინ თამაში
                 </h1>
-                <LiveBadge />
               </div>
 
               <div className="flex items-center gap-2">
@@ -483,53 +482,59 @@ function TeamContentV2() {
               />
             </div>
 
-            {/* Unified Tab Bar with Create Button */}
-            <div className="flex items-center justify-between gap-3">
-              <div 
-                className="inline-flex rounded-2xl bg-muted p-1.5"
-                style={{
-                  boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
-                }}
-              >
-                {[
-                  { id: "rooms", label: "ოთახები" },
-                  { id: "explore", label: "აღმოჩენა" },
-                  { id: "my-content", label: "ჩემი ტრივია" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
-                      activeTab === tab.id
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {activeTab === tab.id && (
-                      <motion.div
-                        layoutId="activeTabTeam"
-                        className="absolute inset-0 rounded-xl bg-white"
-                        style={{
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                        }}
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10">{tab.label}</span>
-                  </button>
-                ))}
+            {/* Unified Tab Bar with Create Button - Full Width */}
+            <div className="w-full max-w-[1115px] mx-auto">
+              <div className="flex items-center justify-between gap-3">
+                {/* Tab container - takes available space */}
+                <div 
+                  className="flex-1 flex rounded-2xl bg-muted p-1.5"
+                  style={{
+                    boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
+                  }}
+                >
+                  {/* Tabs centered with even distribution */}
+                  <div className="flex-1 flex justify-center gap-1">
+                    {[
+                      { id: "explore", label: "აღმოაჩინე" },
+                      { id: "rooms", label: "ჩემი ოთახები" },
+                      { id: "my-content", label: "ჩემი ტრივიები" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={`relative flex items-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
+                          activeTab === tab.id
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {activeTab === tab.id && (
+                          <motion.div
+                            layoutId="activeTabTeam"
+                            className="absolute inset-0 rounded-xl bg-white"
+                            style={{
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10">{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* New Room Button - Far Right (hidden on mobile) */}
+                <ChunkyButton 
+                  onClick={() => setShowTeamMenu(true)}
+                  variant="primary"
+                  size="sm"
+                  className="hidden sm:flex flex-shrink-0"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  {activeTab === "my-content" ? "ახალი ტრივია" : "ახალი ოთახი"}
+                </ChunkyButton>
               </div>
-              
-              {/* New Room Button - Far Right (hidden on mobile) */}
-              <ChunkyButton 
-                onClick={() => setShowTeamMenu(true)}
-                variant="primary"
-                size="sm"
-                className="hidden sm:flex"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                {activeTab === "my-content" ? "ახალი ტრივია" : "ახალი ოთახი"}
-              </ChunkyButton>
             </div>
           </div>
         </div>
