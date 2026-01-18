@@ -200,15 +200,16 @@ export default function PowerUps() {
     <MainLayout showPlayButton={false}>
       {/* Flex wrapper for main content + right sidebar (matching TeamV2 layout) */}
       <div className="min-h-screen flex flex-col">
+        {/* Full-width unified header */}
+        <ShopHeader
+          onHelpClick={() => setShowTutorialModal(true)}
+          onCurrencyPlusClick={handleCurrencyPlusClick}
+        />
+
         <div className="flex flex-1 overflow-hidden">
           {/* Main Content Area */}
           <div className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
             <GlobalSplineBackground />
-            {/* Sticky Header - Title only */}
-            <ShopHeader
-              onHelpClick={() => setShowTutorialModal(true)}
-              onCurrencyPlusClick={handleCurrencyPlusClick}
-            />
 
             {/* Currency Bar - on video background */}
             <ShopCurrencyBar />

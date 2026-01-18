@@ -30,7 +30,7 @@ function SidebarParticle({ delay, left }: { delay: number; left: number }) {
 const SIMPLIFIED_TIERS = [
   {
     id: "solo" as const,
-    nameKa: "Solo PRO",
+    nameKa: "სოლო PRO",
     price: 9.99,
     icon: Crown,
     benefits: [
@@ -45,7 +45,7 @@ const SIMPLIFIED_TIERS = [
   },
   {
     id: "family" as const,
-    nameKa: "Family PRO",
+    nameKa: "სამეგობრო PRO",
     price: 19.99,
     icon: Users,
     benefits: [
@@ -86,16 +86,6 @@ export function ShopRightSidebar() {
     <aside 
       className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
     >
-      {/* White Header */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
-        <div className="px-4 pt-4 pb-3">
-          <div className="flex items-center justify-center gap-2 h-10">
-            <Crown className="w-5 h-5 text-purple-600" />
-            <h2 className="text-xl font-display font-bold text-gray-900 uppercase tracking-wide">გახდი PRO</h2>
-          </div>
-        </div>
-      </div>
-
       {/* Background Video */}
       <video
         autoPlay
@@ -128,6 +118,14 @@ export function ShopRightSidebar() {
 
       {/* Content Container */}
       <div className="flex-1 flex flex-col justify-end p-4 relative z-10">
+        {/* გახდი PRO Title - On video background */}
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
+            <Crown className="w-5 h-5 text-purple-400" />
+            <h2 className="text-lg font-bold text-white">გახდი PRO</h2>
+          </div>
+        </div>
+
         {/* Tier Cards - Compact with hover expand */}
         <div className="space-y-3">
           {SIMPLIFIED_TIERS.map((tier, index) => {
