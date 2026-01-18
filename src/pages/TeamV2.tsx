@@ -785,7 +785,7 @@ function TeamContentV2() {
           }
           setShowCreateCollectionModal(true);
         }}
-        onSelectPersonal={() => setShowPersonalTriviaModal(true)}
+        onSelectPersonal={activeTab !== "explore" ? () => setShowPersonalTriviaModal(true) : undefined}
       />
       <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}
