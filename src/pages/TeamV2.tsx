@@ -554,7 +554,7 @@ function TeamContentV2() {
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
             <div className="px-4 pt-4 pb-4 flex justify-center">
-              <div className="w-full max-w-[1000px]">
+              <div className="w-full max-w-[1215px]">
                 <MyRoomsSection 
                   hideTV 
                   onCreateRoom={() => setShowTeamMenu(true)}
@@ -581,7 +581,7 @@ function TeamContentV2() {
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
             <div className="px-4 py-4 flex justify-center">
-              <div className="w-full max-w-[1000px]">
+              <div className="w-full max-w-[1215px]">
                 <MyTriviaTab 
                   onCreateQuiz={() => setShowCreateTypeModal(true)}
                   onPlay={(post, collectionPosts) => {
