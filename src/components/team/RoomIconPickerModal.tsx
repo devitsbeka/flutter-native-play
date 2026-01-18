@@ -331,25 +331,6 @@ export function RoomIconPickerModal({
           <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <div className="p-4 space-y-4">
-              {/* Search input */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="მოძებნე აიკონი..."
-                  className="pl-10 pr-10 h-12 bg-muted/50 border-border rounded-xl"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={clearSearch}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
               {/* Current icon preview with editable name */}
               <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="w-18 h-18 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -386,6 +367,25 @@ export function RoomIconPickerModal({
                     შეცვალე სახელი ან აირჩიე ახალი აიკონი
                   </p>
                 </div>
+              </div>
+
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="მოძებნე აიკონი..."
+                  className="pl-10 pr-10 h-12 bg-muted/50 border-border rounded-xl"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               {/* Category filters - horizontal scrollable */}
