@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Share2, ArrowLeft, Check, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
+import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
+import { RoomIconPickerModal } from "./RoomIconPickerModal";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -51,8 +52,7 @@ export function RoomLobbyV2() {
     loading,
   } = useMultiplayerV2();
   
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState("");
+  const [showIconPicker, setShowIconPicker] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -110,12 +110,6 @@ export function RoomLobbyV2() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  useEffect(() => {
-    if (currentRoom) {
-      setEditedName(currentRoom.room_name || "");
-    }
-  }, [currentRoom]);
 
   const handleShare = async () => {
     if (!currentRoom) return;
@@ -188,20 +182,23 @@ export function RoomLobbyV2() {
 
   // handleStartTVMode removed - now using toggle with handleTVModeToggle
 
-  const handleSaveRoomName = async () => {
-    if (!currentRoom || !editedName.trim()) return;
+  const handleUpdateRoomIconAndName = async (iconUrl: string, newName: string) => {
+    if (!currentRoom) return;
     
     try {
       await supabase
         .from("game_rooms")
-        .update({ room_name: editedName.trim() })
+        .update({ 
+          room_icon: iconUrl,
+          room_name: newName.trim() 
+        })
         .eq("id", currentRoom.id);
       
-      toast.success(t("team.nameUpdated"));
-      setIsEditingName(false);
+      toast.success(t("team.roomUpdated") || "ოთახი განახლდა");
+      setShowIconPicker(false);
     } catch (error) {
-      console.error("Error updating room name:", error);
-      toast.error(t("team.nameUpdateFailed"));
+      console.error("Error updating room:", error);
+      toast.error(t("team.updateFailed") || "განახლება ვერ მოხერხდა");
     }
   };
 
@@ -249,7 +246,7 @@ export function RoomLobbyV2() {
       className="min-h-screen relative overflow-hidden"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
-      <div className="relative z-10 min-h-screen flex flex-col px-4 py-6">
+      <div className="relative z-10 min-h-screen flex flex-col px-4 py-6 max-w-[700px] md:max-w-[520px] mx-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <motion.button
@@ -340,59 +337,41 @@ export function RoomLobbyV2() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            {isEditingName ? (
-              <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
-                <Input
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  className="text-center font-bold bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                  placeholder="Room name"
-                  autoFocus
+            <div className="flex items-center justify-center gap-3">
+              {/* Room Icon */}
+              {currentRoom.room_icon && (
+                <img 
+                  src={currentRoom.room_icon} 
+                  alt="Room icon" 
+                  className="w-8 h-8 object-contain"
                 />
-                <ChunkyButton size="sm" variant="primary" onClick={handleSaveRoomName}>
-                  <Check className="w-4 h-4" />
-                </ChunkyButton>
-                <ChunkyButton size="sm" variant="secondary" onClick={() => setIsEditingName(false)}>
-                  <X className="w-4 h-4" />
-                </ChunkyButton>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-3">
-                {/* Room Icon */}
-                {currentRoom.room_icon && (
-                  <img 
-                    src={currentRoom.room_icon} 
-                    alt="Room icon" 
-                    className="w-8 h-8 object-contain"
-                  />
-                )}
-                <h2 className="text-base font-bold text-white drop-shadow-lg">
-                  {roomName}
-                </h2>
-                {isHost && (
-                  <>
-                    <motion.button
-                      onClick={() => setIsEditingName(true)}
-                      className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      title="Edit name"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => setShowGradientPicker(true)}
-                      className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      title="Change background"
-                    >
-                      <Palette className="w-4 h-4" />
-                    </motion.button>
-                  </>
-                )}
-              </div>
-            )}
+              )}
+              <h2 className="text-base font-bold text-white drop-shadow-lg">
+                {roomName}
+              </h2>
+              {isHost && (
+                <>
+                  <motion.button
+                    onClick={() => setShowIconPicker(true)}
+                    className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Edit room"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setShowGradientPicker(true)}
+                    className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Change background"
+                  >
+                    <Palette className="w-4 h-4" />
+                  </motion.button>
+                </>
+              )}
+            </div>
           </motion.div>
         </div>
 
@@ -710,6 +689,15 @@ export function RoomLobbyV2() {
         onClose={() => setShowGradientPicker(false)}
         currentGradient={(currentRoom as any)?.background_gradient || 'lavender_mist'}
         onSelect={handleChangeGradient}
+      />
+
+      {/* Room Icon & Name Picker Modal */}
+      <RoomIconPickerModal
+        isOpen={showIconPicker}
+        onClose={() => setShowIconPicker(false)}
+        currentIconUrl={currentRoom?.room_icon || null}
+        roomName={roomName}
+        onConfirm={handleUpdateRoomIconAndName}
       />
     </div>
   );
