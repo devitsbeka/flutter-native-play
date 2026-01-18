@@ -201,7 +201,7 @@ export default function PowerUps() {
 
       {/* Standard Shop Layout - Hero carousel + product grids */}
       <div className="flex-1 overflow-y-auto pt-4">
-        <div className="xl:flex xl:gap-6 xl:px-6">
+        <div className="xl:flex xl:gap-6 xl:px-6 xl:items-start">
           {/* Main Shop Content */}
           <div className="xl:flex-1">
             <ShopStandardLayout
@@ -215,7 +215,7 @@ export default function PowerUps() {
           </div>
 
           {/* Power-Up Guide Sidebar - Desktop only */}
-          <div className="hidden xl:block xl:w-80 xl:flex-shrink-0 xl:pr-2">
+          <div className="hidden xl:block xl:w-80 xl:flex-shrink-0 xl:pr-2 xl:pt-0">
             <ShopPowerUpGuide />
           </div>
         </div>
