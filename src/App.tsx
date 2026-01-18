@@ -51,6 +51,7 @@ import PushNotifications from "./pages/admin/PushNotifications";
 import AdminReports from "./pages/admin/Reports";
 import AdminFlow from "./pages/admin/Flow";
 import AdminDesign from "./pages/admin/Design";
+import AdminEconomy from "./pages/admin/Economy";
 import PowerUps from "./pages/PowerUps";
 import Styleguide from "./pages/Styleguide";
 import AllButtons from "./pages/AllButtons";
@@ -134,6 +135,7 @@ const App = () => (
                 <Route path="push" element={<PushNotifications />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="design" element={<AdminDesign />} />
+                <Route path="economy" element={<AdminEconomy />} />
               </Route>
               <Route path="/styleguide" element={<Styleguide />} />
               <Route path="/all-buttons" element={<AllButtons />} />

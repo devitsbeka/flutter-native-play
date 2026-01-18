@@ -416,6 +416,41 @@ export type Database = {
           },
         ]
       }
+      economy_config: {
+        Row: {
+          category: string
+          description: string | null
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+          value: number
+        }
+        Insert: {
+          category: string
+          description?: string | null
+          id: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: number
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "economy_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           accepted_at: string | null
@@ -810,6 +845,54 @@ export type Database = {
           started_at?: string | null
           status?: string | null
           target_count?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      iap_products: {
+        Row: {
+          coins_value: number | null
+          created_at: string | null
+          description: string | null
+          gems_value: number | null
+          id: string
+          is_active: boolean | null
+          is_subscription: boolean | null
+          name: string
+          platform: string | null
+          price_usd: number
+          sort_order: number | null
+          subscription_duration_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          coins_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          gems_value?: number | null
+          id: string
+          is_active?: boolean | null
+          is_subscription?: boolean | null
+          name: string
+          platform?: string | null
+          price_usd: number
+          sort_order?: number | null
+          subscription_duration_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          coins_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          gems_value?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_subscription?: boolean | null
+          name?: string
+          platform?: string | null
+          price_usd?: number
+          sort_order?: number | null
+          subscription_duration_days?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1232,6 +1315,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      purchase_transactions: {
+        Row: {
+          amount_paid: number
+          created_at: string | null
+          currency_used: string
+          id: string
+          platform: string | null
+          product_id: string | null
+          product_type: string
+          user_id: string | null
+          value_received: Json
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string | null
+          currency_used: string
+          id?: string
+          platform?: string | null
+          product_id?: string | null
+          product_type: string
+          user_id?: string | null
+          value_received: Json
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string | null
+          currency_used?: string
+          id?: string
+          platform?: string | null
+          product_id?: string | null
+          product_type?: string
+          user_id?: string | null
+          value_received?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       push_tokens: {
         Row: {
@@ -1739,6 +1866,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shop_products: {
+        Row: {
+          badge: string | null
+          category: string
+          created_at: string | null
+          currency: string
+          description_key: string | null
+          gradient: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          is_popular: boolean | null
+          name_key: string
+          original_price: number | null
+          price: number
+          sort_order: number | null
+          updated_at: string | null
+          value: Json | null
+        }
+        Insert: {
+          badge?: string | null
+          category: string
+          created_at?: string | null
+          currency: string
+          description_key?: string | null
+          gradient?: string | null
+          icon_url?: string | null
+          id: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_popular?: boolean | null
+          name_key: string
+          original_price?: number | null
+          price: number
+          sort_order?: number | null
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Update: {
+          badge?: string | null
+          category?: string
+          created_at?: string | null
+          currency?: string
+          description_key?: string | null
+          gradient?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          is_popular?: boolean | null
+          name_key?: string
+          original_price?: number | null
+          price?: number
+          sort_order?: number | null
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Relationships: []
       }
       trivia_drafts: {
         Row: {
