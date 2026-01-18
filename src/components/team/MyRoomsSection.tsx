@@ -116,17 +116,6 @@ export function MyRoomsSection({
             {activeFilter === "completed" && "დასრულებული ოთახები არ არის"}
             {activeFilter === "all" && t('team.noActiveRooms')}
           </p>
-          {(activeFilter === "my_rooms" || activeFilter === "all") && onCreateRoom && (
-            <ChunkyButton 
-              variant="primary" 
-              size="sm" 
-              className="mt-4"
-              onClick={onCreateRoom}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              ოთახის შექმნა
-            </ChunkyButton>
-          )}
         </motion.div>
       ) : vertical ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pb-4">
