@@ -553,8 +553,8 @@ function TeamContentV2() {
 
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
-            <div className="px-4 pt-4 pb-4">
-              <div className="max-w-[700px] md:max-w-[900px]">
+            <div className="px-4 pt-4 pb-4 flex justify-center">
+              <div className="w-full max-w-[1000px]">
                 <MyRoomsSection 
                   hideTV 
                   onCreateRoom={() => setShowTeamMenu(true)}
@@ -567,7 +567,7 @@ function TeamContentV2() {
 
           {/* Explore Tab */}
           {activeTab === "explore" && (
-            <div className="px-4 py-4">
+            <div className="px-4 py-4 flex justify-center">
               <div className="w-full max-w-[700px]">
                 <SocialFeed 
                   onPlayQuiz={(post, collectionPosts) => {
@@ -580,8 +580,8 @@ function TeamContentV2() {
 
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
-            <div className="px-4 py-4">
-              <div className="w-full max-w-[700px]">
+            <div className="px-4 py-4 flex justify-center">
+              <div className="w-full max-w-[1000px]">
                 <MyTriviaTab 
                   onCreateQuiz={() => setShowCreateTypeModal(true)}
                   onPlay={(post, collectionPosts) => {
