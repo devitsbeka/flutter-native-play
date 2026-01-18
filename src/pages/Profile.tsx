@@ -75,9 +75,9 @@ export default function Profile() {
                 <h1 className="text-2xl font-bold text-white">{t("profile.title")}</h1>
                 <button
                   onClick={() => navigate("/settings")}
-                  className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+                  className="p-2 rounded-full bg-white/30 backdrop-blur-md border border-white/20 shadow-lg"
                 >
-                  <Settings className="w-5 h-5 text-white" />
+                  <Settings className="w-5 h-5 text-white drop-shadow-md" />
                 </button>
               </div>
             </div>
@@ -120,12 +120,7 @@ export default function Profile() {
                         muted
                         playsInline
                         loop
-                        onLoadedData={() => {
-                          if (videoRef.current) {
-                            videoRef.current.play().catch(console.error);
-                            setShowVideo(true);
-                          }
-                        }}
+                        preload="auto"
                       />
                     )}
                   </div>
@@ -173,15 +168,15 @@ export default function Profile() {
                 animate={{ opacity: 1 }}
                 className="space-y-4"
               >
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.gamesPlayed")}</span>
                   <span className="font-bold text-foreground">{profile.games_played}</span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.gamesWon")}</span>
                   <span className="font-bold text-foreground">{profile.games_won}</span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.winRate")}</span>
                   <span className="font-bold text-foreground">
                     {profile.games_played > 0
@@ -189,7 +184,7 @@ export default function Profile() {
                       : 0}%
                   </span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.bestStreak")}</span>
                   <span className="font-bold text-foreground">{profile.best_streak}</span>
                 </div>
@@ -202,19 +197,19 @@ export default function Profile() {
                 animate={{ opacity: 1 }}
                 className="space-y-4"
               >
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.email")}</span>
                   <span className="text-muted-foreground truncate max-w-[180px]">
                     {user.email}
                   </span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.country")}</span>
                   <span className="text-foreground">
                     {profile.country_code || t("profile.notSet")}
                   </span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
                   <span className="text-foreground">{t("profile.memberSince")}</span>
                   <span className="text-muted-foreground">{t("profile.recently")}</span>
                 </div>
