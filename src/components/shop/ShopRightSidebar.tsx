@@ -16,11 +16,11 @@ export function ShopRightSidebar() {
 
   return (
     <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-border/50 bg-background/50 backdrop-blur-sm">
-      <div className="flex-1 overflow-y-auto p-4 pt-0 space-y-3">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <Crown className="w-5 h-5 text-amber-500" />
-          <h2 className="font-bold text-foreground">PRO გეგმები</h2>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Header - matching TeamRightSidebar style */}
+        <div className="flex items-center gap-2 text-primary">
+          <Crown className="w-4 h-4" />
+          <span className="text-sm font-bold tracking-wide">PRO გეგმები</span>
         </div>
 
         {/* PRO Plan Cards */}
