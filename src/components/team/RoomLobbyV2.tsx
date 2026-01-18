@@ -380,7 +380,7 @@ export function RoomLobbyV2() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md mx-auto p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
+            className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -531,7 +531,7 @@ export function RoomLobbyV2() {
         </AnimatePresence>
 
         {/* Scoreboard */}
-        <div className="flex-1 max-w-md mx-auto w-full">
+        <div className="flex-1 w-full">
           <RoomScoreboard
             participants={participants as any}
             matches={matches}
@@ -548,7 +548,7 @@ export function RoomLobbyV2() {
             <ChunkyButton
               variant="white"
               size="xl"
-              className="w-full max-w-md mx-auto"
+              className="w-full"
               onClick={handleStartGame}
               disabled={!canStartGame || isStarting || loading}
               icon={<Play className="w-5 h-5" />}
