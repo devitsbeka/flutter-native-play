@@ -150,7 +150,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
             <div className="relative z-10 p-5 pb-8 flex flex-col items-center justify-center h-full text-center" style={{ marginTop: -15 }}>
               {/* Badge */}
               <motion.div
-                className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-white"
+                className="absolute top-5 right-5 px-3 py-1 rounded-full text-xs font-bold text-white"
                 style={{
                   background: slide.badgeColor,
                   boxShadow: "0 2px 0 hsl(0 0% 0% / 0.2)",
