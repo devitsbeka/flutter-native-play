@@ -17,9 +17,39 @@ function getGradientPreset(id: string) {
   return ROOM_GRADIENT_PRESETS[hash % ROOM_GRADIENT_PRESETS.length];
 }
 
+// Get emoji based on subject/category
+function getTriviaEmoji(subject?: string): string {
+  const emojiMap: Record<string, string> = {
+    'music': '🎵',
+    'მუსიკა': '🎵',
+    'movies': '🎬',
+    'ფილმები': '🎬',
+    'science': '🔬',
+    'მეცნიერება': '🔬',
+    'geography': '🌍',
+    'გეოგრაფია': '🌍',
+    'history': '📜',
+    'ისტორია': '📜',
+    'sports': '⚽',
+    'სპორტი': '⚽',
+    'technology': '💻',
+    'ტექნოლოგია': '💻',
+    'art': '🎨',
+    'ხელოვნება': '🎨',
+    'literature': '📚',
+    'ლიტერატურა': '📚',
+    'nature': '🌿',
+    'ბუნება': '🌿',
+  };
+  
+  if (!subject) return '🧠';
+  const lowerSubject = subject.toLowerCase();
+  return emojiMap[lowerSubject] || '🧠';
+}
+
 export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfolioCardProps) {
   const gradientPreset = getGradientPreset(trivia.id);
-  const hasCoverImage = !!trivia.coverImage;
+  const emoji = getTriviaEmoji(trivia.subject);
   
   // Generate fake player avatars for display
   const playerAvatars = [
@@ -41,27 +71,25 @@ export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfol
       whileTap={{ scale: 0.98 }}
       onClick={() => onPlay?.(trivia)}
     >
-      {/* Background - either cover image or gradient */}
-      {hasCoverImage ? (
-        <>
-          <img 
-            src={trivia.coverImage} 
-            alt={trivia.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        </>
-      ) : (
-        <GradientBackground
-          colors={gradientPreset.colors}
-          gradientType="radial-gradient"
-          gradientSize="150% 150%"
-          gradientOrigin="center"
-          enableNoise={true}
-          noisePatternAlpha={40}
-          className="absolute inset-0"
-        />
-      )}
+      {/* Gradient Background - Always use gradient like game rooms */}
+      <GradientBackground
+        colors={gradientPreset.colors}
+        gradientType="radial-gradient"
+        gradientSize="125% 125%"
+        gradientOrigin="bottom-middle"
+        enableNoise={true}
+        noisePatternAlpha={25}
+        noiseIntensity={0.8}
+        className="absolute inset-0"
+      />
+      
+      {/* Radial mask overlay for depth - matching RoomCard */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 100%, transparent 0%, rgba(0,0,0,0.3) 100%)'
+        }}
+      />
       
       {/* Status Badge */}
       <div className="absolute top-3 left-3 z-10">
@@ -78,16 +106,10 @@ export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfol
         </div>
       </div>
       
-      {/* Center Cover Image or Emoji */}
-      {!hasCoverImage && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <img 
-            src={`https://fonts.gstatic.com/s/e/notoemoji/latest/1f9e0/512.gif`}
-            alt="brain"
-            className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-lg"
-          />
-        </div>
-      )}
+      {/* Center Emoji Icon */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <span className="text-5xl sm:text-6xl drop-shadow-lg">{emoji}</span>
+      </div>
       
       {/* Bottom Section with Title and Players */}
       <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
