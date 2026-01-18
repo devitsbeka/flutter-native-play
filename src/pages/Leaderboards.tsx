@@ -265,7 +265,7 @@ export default function Leaderboards() {
       <AnimatePresence>
         {userEntry && !isLeagueLocked && showFixedBar && (
           <motion.div
-            className="fixed bottom-28 left-0 right-0 z-40 px-4 lg:hidden"
+            className="fixed bottom-28 left-0 right-0 z-40 px-4 md:hidden"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 50, opacity: 0 }}

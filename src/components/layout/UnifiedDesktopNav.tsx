@@ -144,14 +144,24 @@ export function UnifiedDesktopNav({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center gap-1.5 cursor-pointer"
+            className="cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <span className="lg:hidden text-2xl">🎯</span>
+            {/* Desktop: horizontal layout */}
             <span className="hidden lg:flex items-center">
               <span className="text-xl font-slackey text-foreground tracking-tight">MyTrivia</span>
               <LiveBadge />
             </span>
+            
+            {/* Tablet: stacked layout with LIVE badge on top-right */}
+            <div className="hidden md:flex lg:hidden flex-col items-center relative">
+              <span className="text-sm font-slackey text-foreground tracking-tight leading-tight text-center">
+                My<br/>Trivia
+              </span>
+              <div className="absolute -top-1 -right-3 scale-75">
+                <LiveBadge />
+              </div>
+            </div>
           </motion.div>
         </div>
 
