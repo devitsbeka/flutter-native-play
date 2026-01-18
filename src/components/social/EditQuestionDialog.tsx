@@ -97,7 +97,8 @@ export function EditQuestionDialog({
 
           {/* Scrollable Content */}
           <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
-            <div className="p-5 space-y-5">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+              <div className="p-5 space-y-5">
               {/* Icon Picker - 86px large version */}
               <div className="flex justify-center">
                 <QuestionIconPicker
@@ -160,20 +161,23 @@ export function EditQuestionDialog({
                 </div>
               )}
 
+              </div>
             </div>
           </div>
 
           {/* Fixed Footer */}
           <div className="fixed bottom-0 left-0 right-0 p-5 border-t border-white/10 bg-[#7E7ADB]/95 backdrop-blur-sm safe-bottom">
-            <ChunkyButton
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+              <ChunkyButton
               onClick={handleSave}
               disabled={!questionText.trim() || !correctAnswer.trim()}
               className="w-full"
               variant="success"
             >
-              <Check className="w-5 h-5 mr-2" />
-              შენახვა
-            </ChunkyButton>
+                <Check className="w-5 h-5 mr-2" />
+                შენახვა
+              </ChunkyButton>
+            </div>
           </div>
         </motion.div>
       )}

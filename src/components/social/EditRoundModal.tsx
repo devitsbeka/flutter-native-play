@@ -292,7 +292,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 exit={{ opacity: 0, x: -20 }}
                 className="flex-1 h-full overflow-y-auto pt-[60px] pb-32 safe-top"
               >
-                <div className="p-4 space-y-5">
+                <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+                  <div className="p-4 space-y-5">
                   {/* Cover Image Picker */}
                   <CoverImagePicker
                     currentImage={coverImage}
@@ -430,7 +431,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                         <span className="font-medium">რაუნდის დამატება</span>
                       </button>
                     </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ) : (
@@ -595,12 +597,13 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           </AnimatePresence>
 
           {/* Fixed Footer - Save Button (always visible) */}
-          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-10 space-y-2 safe-bottom ${
+          <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-[110] p-4 pb-10 safe-bottom ${
             viewMode === "questions" 
               ? "bg-[#7E7ADB]/90 backdrop-blur-sm border-t border-white/10" 
               : "bg-background border-t border-border"
           }`}>
-            {hasChanges && (
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full space-y-2">
+              {hasChanges && (
               <p className={`text-xs text-center font-medium ${
                 viewMode === "questions" ? "text-yellow-200" : "text-amber-600"
               }`}>
@@ -625,8 +628,9 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 </>
               ) : (
                 "შენახვა"
-              )}
-            </ChunkyButton>
+                )}
+              </ChunkyButton>
+            </div>
           </div>
         </motion.div>
       )}

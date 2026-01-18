@@ -329,7 +329,8 @@ export function RoomIconPickerModal({
 
           {/* Scrollable Content */}
           <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
-            <div className="p-4 space-y-4">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+              <div className="p-4 space-y-4">
               {/* Search input */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -541,20 +542,23 @@ export function RoomIconPickerModal({
                   )}
                 </AnimatePresence>
               </div>
+              </div>
             </div>
           </div>
 
           {/* Fixed Footer */}
           <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-background safe-bottom">
-            <ChunkyButton
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+              <ChunkyButton
               onClick={handleConfirmClick}
               disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
               className="w-full"
               variant="success"
             >
-              <Check className="w-5 h-5 mr-2" />
-              არჩევა
-            </ChunkyButton>
+                <Check className="w-5 h-5 mr-2" />
+                არჩევა
+              </ChunkyButton>
+            </div>
           </div>
         </motion.div>
       )}
