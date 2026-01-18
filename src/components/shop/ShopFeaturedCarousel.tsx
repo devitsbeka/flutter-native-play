@@ -104,8 +104,8 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
   };
 
   return (
-    <div className="relative px-4 mb-6">
-      <div className="relative overflow-hidden rounded-3xl" style={{ height: 260 }}>
+    <div className="relative px-4 pt-2 mb-6">
+      <div className="relative overflow-hidden rounded-3xl mt-1" style={{ height: 260 }}>
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={deal.id}
