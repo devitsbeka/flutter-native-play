@@ -214,21 +214,34 @@ export default function CategoryPage() {
             )}
           </div>
 
-          {/* Title - positioned near bottom of video */}
-          <div className="absolute bottom-14 left-5 right-5 z-10 md:px-20 lg:px-28">
-            <div className="max-w-3xl mx-auto flex items-center justify-between">
+          {/* Title - positioned near bottom of video - Mobile only */}
+          <div className="absolute bottom-14 left-5 right-5 z-10 md:hidden">
+            <div className="max-w-3xl mx-auto">
               <h1 className="text-3xl font-bold text-white drop-shadow-lg tracking-tight">{category.name}</h1>
-              {/* Play button - only on desktop/tablet */}
-              <div className="hidden md:block">
-                <ChunkyButton
-                  onClick={handlePlayFromLeaderboard}
-                  size="sm"
-                  variant="mint"
-                  icon={<Play className="h-4 w-4 fill-current" />}
-                >
-                  {t('common.play')}
-                </ChunkyButton>
-              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* White overlay container - positioned to straddle video/content boundary - Desktop/Tablet only */}
+        <div className="relative px-5 -mt-10 z-20 hidden md:block md:px-20 lg:px-28">
+          <div className="max-w-3xl mx-auto">
+            <div 
+              className="flex items-center justify-between px-6 py-4 rounded-2xl"
+              style={{
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
+                boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8), inset 0 1px 0 0 rgba(255,255,255,1)',
+                border: '1px solid rgba(0,0,0,0.06)',
+              }}
+            >
+              <h1 className="text-2xl font-bold text-slate-800">{category.name}</h1>
+              <ChunkyButton
+                onClick={handlePlayFromLeaderboard}
+                size="sm"
+                variant="mint"
+                icon={<Play className="h-4 w-4 fill-current" />}
+              >
+                {t('common.play')}
+              </ChunkyButton>
             </div>
           </div>
         </div>
@@ -407,7 +420,7 @@ export default function CategoryPage() {
                     <Lock className="h-5 w-5 text-slate-400" />
                   ) : (
                     <>
-                      <span className={`font-bold text-lg ${
+                      <span className={`font-bold text-lg md:text-xl ${
                         isCompleted && stars > 0 ? "text-white drop-shadow-md" : "text-slate-700"
                       }`}>{level}</span>
                       {isCompleted && stars > 0 && (
@@ -415,7 +428,7 @@ export default function CategoryPage() {
                           {[...Array(3)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`h-3 w-3 drop-shadow ${
+                              className={`h-3 w-3 md:h-[14px] md:w-[14px] drop-shadow ${
                                 i < stars ? "fill-white text-white" : "fill-white/30 text-white/30"
                               }`}
                             />
