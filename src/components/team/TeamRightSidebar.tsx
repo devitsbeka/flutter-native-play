@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Tv, Users, Trophy, ChevronRight } from "lucide-react";
 import { GameInvitationsSection } from "./GameInvitationsSection";
+import { ActiveRoomsWidget } from "./widgets/ActiveRoomsWidget";
+import { MyTriviasWidget } from "./widgets/MyTriviasWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFriends, Friend } from "@/hooks/useFriends";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,6 +13,9 @@ interface TeamRightSidebarProps {
   onJoinRoom: (roomCode: string) => void;
   onOpenTV: () => void;
   onOpenFriendChat: (friend: Friend) => void;
+  activeTab: string;
+  onViewAllRooms: () => void;
+  onViewAllTrivias: () => void;
 }
 
 export function TeamRightSidebar({ 
@@ -18,6 +23,9 @@ export function TeamRightSidebar({
   onJoinRoom,
   onOpenTV,
   onOpenFriendChat,
+  activeTab,
+  onViewAllRooms,
+  onViewAllTrivias,
 }: TeamRightSidebarProps) {
   const { t } = useLanguage();
   const { friends, onlineUsers } = useFriends();
@@ -80,6 +88,16 @@ export function TeamRightSidebar({
             </motion.button>
           </div>
         </motion.div>
+
+        {/* Active Rooms Widget - Hidden when on Rooms tab */}
+        {activeTab !== "rooms" && (
+          <ActiveRoomsWidget onViewAll={onViewAllRooms} onJoinRoom={onJoinRoom} />
+        )}
+
+        {/* My Trivias Widget - Hidden when on My Trivia tab */}
+        {activeTab !== "my-content" && (
+          <MyTriviasWidget onViewAll={onViewAllTrivias} />
+        )}
 
         {/* Weekly Challenge Widget */}
         <motion.div
