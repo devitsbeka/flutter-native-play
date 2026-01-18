@@ -83,12 +83,12 @@ export function ShopItemCard({
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
-      className="relative"
+      className="relative pt-3"
     >
       {/* Badge - positioned on right */}
       {badgeStyle && !isPurchased && (
         <motion.div
-          className="absolute -top-2 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
+          className="absolute top-0 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white z-10"
           style={{
             background: badgeStyle.bg,
             boxShadow: badgeStyle.shadow,
@@ -103,7 +103,7 @@ export function ShopItemCard({
       {/* Savings Badge - positioned on left */}
       {savings && !isPurchased && (
         <motion.div
-          className="absolute -top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-900 z-10"
+          className="absolute top-0 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-900 z-10"
           style={{
             background: "linear-gradient(180deg, hsl(50 95% 65%) 0%, hsl(45 90% 55%) 100%)",
             boxShadow: "0 2px 0 hsl(40 80% 45%)",

@@ -12,7 +12,7 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
   const { t } = useLanguage();
 
   return (
-    <div className="sticky top-0 z-30 border-b border-purple-900/10">
+    <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-purple-900/10">
       <div className="px-4 pt-4 pb-3">
         {/* Top Row: Title + Actions */}
         <div className="flex items-center justify-between">
