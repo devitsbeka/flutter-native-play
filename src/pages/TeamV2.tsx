@@ -557,18 +557,16 @@ function TeamContentV2() {
                 onAddClick={() => setShowCreateModal(true)}
                 addButtonText="+ ახალი ოთახი"
               />
-              <div className="px-4 pt-2 pb-4 flex justify-center">
-                <div className="w-full max-w-[1215px]">
-                  <MyRoomsSection 
-                    hideTV 
-                    onCreateRoom={() => setShowCreateModal(true)}
-                    onShowAllRooms={() => setShowAllGamesModal(true)}
-                    vertical
-                    filter={roomsFilter}
-                    searchQuery={roomsSearchQuery}
-                    sort={roomsSort}
-                  />
-                </div>
+              <div className="px-4 pt-2 pb-4">
+                <MyRoomsSection 
+                  hideTV 
+                  onCreateRoom={() => setShowCreateModal(true)}
+                  onShowAllRooms={() => setShowAllGamesModal(true)}
+                  vertical
+                  filter={roomsFilter}
+                  searchQuery={roomsSearchQuery}
+                  sort={roomsSort}
+                />
               </div>
             </div>
           )}
@@ -586,15 +584,13 @@ function TeamContentV2() {
                 onAddClick={() => setShowCreateTypeModal(true)}
                 addButtonText="+ შექმენი ტრივია"
               />
-              <div className="px-4 pt-2 pb-4 flex justify-center">
-                <div className="w-full max-w-[900px]">
-                  <ExplorePortfolioFeed 
-                    searchQuery={roomsSearchQuery}
-                    onPlayQuiz={(post, collectionPosts) => {
-                      setPlayingQuiz({ post, collectionPosts });
-                    }}
-                  />
-                </div>
+              <div className="px-4 pt-2 pb-4">
+                <ExplorePortfolioFeed 
+                  searchQuery={roomsSearchQuery}
+                  onPlayQuiz={(post, collectionPosts) => {
+                    setPlayingQuiz({ post, collectionPosts });
+                  }}
+                />
               </div>
             </div>
           )}
@@ -612,15 +608,13 @@ function TeamContentV2() {
                 onAddClick={() => setShowCreateTypeModal(true)}
                 addButtonText="+ ახალი ტრივია"
               />
-              <div className="px-4 pt-2 pb-4 flex justify-center">
-                <div className="w-full max-w-[1215px]">
-                  <MyTriviaTab 
-                    onCreateQuiz={() => setShowCreateTypeModal(true)}
-                    onPlay={(post, collectionPosts) => {
-                      setPlayingQuiz({ post, collectionPosts });
-                    }}
-                  />
-                </div>
+              <div className="px-4 pt-2 pb-4">
+                <MyTriviaTab 
+                  onCreateQuiz={() => setShowCreateTypeModal(true)}
+                  onPlay={(post, collectionPosts) => {
+                    setPlayingQuiz({ post, collectionPosts });
+                  }}
+                />
               </div>
             </div>
           )}
