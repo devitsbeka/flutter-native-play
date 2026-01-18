@@ -355,8 +355,8 @@ export default function Index() {
                 <Menu className="w-6 h-6 text-gray-600" />
               </motion.button>
               
-              {/* Spotlight Search Bar */}
-              <div className="flex-1">
+              {/* Spotlight Search Bar - Hidden on mobile */}
+              <div className="hidden md:flex flex-1">
                 <SpotlightSearch />
               </div>
             </div>
