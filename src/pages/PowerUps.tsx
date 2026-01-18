@@ -93,6 +93,9 @@ export default function PowerUps() {
         productType = "frame";
       } else if (item.powerType && item.amount) {
         valueReceived = { [item.powerType]: item.amount };
+      } else if (item.id === "power_combo_bundle") {
+        valueReceived = { "5050": 3, freeze: 3, replace: 3, "time-drain": 3 };
+        productType = "bundle";
       } else if (item.id.includes("bundle")) {
         let bundleAmount = 2;
         let coinAmount = 0;
@@ -141,6 +144,13 @@ export default function PowerUps() {
         await unlockFrame(item.frameId);
       } else if (item.powerType && item.amount) {
         await addPowerUp(item.powerType, item.amount);
+        await refetch();
+      } else if (item.id === "power_combo_bundle") {
+        // All 4 powers × 3 each
+        await addPowerUp("5050", 3);
+        await addPowerUp("freeze", 3);
+        await addPowerUp("replace", 3);
+        await addPowerUp("time-drain", 3);
         await refetch();
       } else if (item.id.includes("bundle")) {
         let bundleAmount = 2;
@@ -200,9 +210,9 @@ export default function PowerUps() {
       <ShopCurrencyBar onCurrencyPlusClick={handleCurrencyPlusClick} />
 
       {/* Standard Shop Layout - Hero carousel + product grids */}
-      <div className="flex flex-1 overflow-hidden pt-4">
+      <div className="flex flex-1 overflow-hidden">
         {/* Main Shop Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-6">
+        <div className="flex-1 overflow-y-auto px-6 pt-4">
           <ShopStandardLayout
             sections={SHOP_SECTIONS}
             gems={gems}

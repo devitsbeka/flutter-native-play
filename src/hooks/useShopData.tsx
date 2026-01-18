@@ -214,6 +214,18 @@ export function useShopData() {
         powerType: "time-drain",
         amount: 3,
       },
+      // Power Combo Bundle - all 4 powers at a discount
+      {
+        id: "power_combo_bundle",
+        name: t("shop.allPowers"),
+        description: `3× ${t("shop.eachPower")}`,
+        price: 28,
+        currency: "gems",
+        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        gradient: "linear-gradient(135deg, hsl(280 80% 60%) 0%, hsl(340 75% 55%) 100%)",
+        badge: "popular",
+        savings: 12,
+      },
     ];
 
     // Frames Section - generated from AVATAR_FRAMES
