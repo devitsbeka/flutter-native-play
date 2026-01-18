@@ -1,20 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface PurchaseTransaction {
   id: string;
-  user_id: string;
+  user_id: string | null;
   product_id: string | null;
   product_type: string;
   currency_used: string;
   amount_paid: number;
-  value_received: Record<string, unknown>;
+  value_received: Json;
   platform: string | null;
-  created_at: string;
+  created_at: string | null;
   profile?: {
     nickname: string;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 export interface PurchaseStats {
@@ -32,6 +33,10 @@ export interface PurchaseStats {
     gems: number;
     coins: number;
   }[];
+  // Real money analytics
+  totalUSDRevenue: number;
+  uniqueBuyers: number;
+  avgTransactionValue: number;
 }
 
 export function usePurchaseAnalytics(days: number = 30) {
@@ -41,6 +46,7 @@ export function usePurchaseAnalytics(days: number = 30) {
   const { data: transactions = [], isLoading, error, refetch } = useQuery({
     queryKey: ["purchase-analytics", days],
     queryFn: async () => {
+      // Get purchase transactions
       const { data, error } = await supabase
         .from("purchase_transactions")
         .select(`
@@ -51,27 +57,38 @@ export function usePurchaseAnalytics(days: number = 30) {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data as PurchaseTransaction[];
+      return (data || []) as PurchaseTransaction[];
     },
   });
 
-  // Calculate stats
+  // Calculate stats from real transaction data
   const stats: PurchaseStats = {
     totalTransactions: transactions.length,
     totalGemsPurchased: 0,
     totalCoinsPurchased: 0,
     totalGemsSpent: 0,
     totalCoinsSpent: 0,
+    totalUSDRevenue: 0,
+    uniqueBuyers: 0,
+    avgTransactionValue: 0,
     transactionsByType: {},
     transactionsByCurrency: {},
     recentTransactions: transactions.slice(0, 20),
     dailyStats: [],
   };
 
+  // Track unique buyers
+  const uniqueBuyerIds = new Set<string>();
+
   // Calculate aggregations
   const dailyMap: Record<string, { count: number; gems: number; coins: number }> = {};
 
   transactions.forEach((tx) => {
+    // Track unique buyers
+    if (tx.user_id) {
+      uniqueBuyerIds.add(tx.user_id);
+    }
+
     // By type
     stats.transactionsByType[tx.product_type] = 
       (stats.transactionsByType[tx.product_type] || 0) + 1;
@@ -85,22 +102,33 @@ export function usePurchaseAnalytics(days: number = 30) {
       stats.totalGemsSpent += tx.amount_paid;
     } else if (tx.currency_used === "coins") {
       stats.totalCoinsSpent += tx.amount_paid;
+    } else if (tx.currency_used === "usd") {
+      stats.totalUSDRevenue += tx.amount_paid;
     }
 
     // Value received
-    const value = tx.value_received as Record<string, number>;
-    if (value.gems) stats.totalGemsPurchased += value.gems;
-    if (value.coins) stats.totalCoinsPurchased += value.coins;
+    const value = tx.value_received as Record<string, number> | null;
+    if (value) {
+      if (value.gems) stats.totalGemsPurchased += value.gems;
+      if (value.coins) stats.totalCoinsPurchased += value.coins;
+    }
 
     // Daily aggregation
-    const date = new Date(tx.created_at).toISOString().split("T")[0];
-    if (!dailyMap[date]) {
-      dailyMap[date] = { count: 0, gems: 0, coins: 0 };
+    if (tx.created_at) {
+      const date = new Date(tx.created_at).toISOString().split("T")[0];
+      if (!dailyMap[date]) {
+        dailyMap[date] = { count: 0, gems: 0, coins: 0 };
+      }
+      dailyMap[date].count++;
+      if (tx.currency_used === "gems") dailyMap[date].gems += tx.amount_paid;
+      if (tx.currency_used === "coins") dailyMap[date].coins += tx.amount_paid;
     }
-    dailyMap[date].count++;
-    if (tx.currency_used === "gems") dailyMap[date].gems += tx.amount_paid;
-    if (tx.currency_used === "coins") dailyMap[date].coins += tx.amount_paid;
   });
+
+  stats.uniqueBuyers = uniqueBuyerIds.size;
+  stats.avgTransactionValue = transactions.length > 0 
+    ? stats.totalUSDRevenue / transactions.filter(t => t.currency_used === "usd").length || 0
+    : 0;
 
   // Convert daily map to array
   stats.dailyStats = Object.entries(dailyMap)
@@ -120,7 +148,7 @@ export function useVIPAnalytics() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["vip-analytics"],
     queryFn: async () => {
-      // Get all VIP subscriptions
+      // Get all VIP subscriptions from the database
       const { data: subscriptions, error } = await supabase
         .from("vip_subscriptions")
         .select("*")
@@ -137,11 +165,18 @@ export function useVIPAnalytics() {
         (s) => new Date(s.expires_at) <= now
       ) || [];
 
-      // Calculate stats
+      // Calculate stats from actual data
       const totalActive = activeSubscriptions.length;
       const totalExpired = expiredSubscriptions.length;
       
-      // Days distribution
+      // Tier distribution
+      const tierDistribution: Record<string, number> = {};
+      activeSubscriptions.forEach((s) => {
+        const tier = s.vip_tier || 'standard';
+        tierDistribution[tier] = (tierDistribution[tier] || 0) + 1;
+      });
+
+      // Days until expiration distribution
       const daysDistribution: Record<string, number> = {};
       activeSubscriptions.forEach((s) => {
         const daysLeft = Math.ceil(
@@ -151,11 +186,22 @@ export function useVIPAnalytics() {
         daysDistribution[bucket] = (daysDistribution[bucket] || 0) + 1;
       });
 
+      // Platform distribution
+      const platformDistribution: Record<string, number> = {};
+      subscriptions?.forEach((s) => {
+        const platform = s.purchase_platform || 'unknown';
+        platformDistribution[platform] = (platformDistribution[platform] || 0) + 1;
+      });
+
       return {
         totalActive,
         totalExpired,
-        churnRate: totalExpired > 0 ? (totalExpired / (totalActive + totalExpired)) * 100 : 0,
+        churnRate: (totalActive + totalExpired) > 0 
+          ? (totalExpired / (totalActive + totalExpired)) * 100 
+          : 0,
+        tierDistribution,
         daysDistribution,
+        platformDistribution,
         recentSubscriptions: subscriptions?.slice(0, 10) || [],
       };
     },
@@ -172,44 +218,130 @@ export function useEconomyHealth() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["economy-health"],
     queryFn: async () => {
-      // Get total coins and gems in circulation
-      const { data: profiles, error } = await supabase
+      // Get total coins and gems in circulation from profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("coins, gems");
+        .select("coins, gems, total_points, games_played");
       
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
       const totalCoins = profiles?.reduce((sum, p) => sum + (p.coins || 0), 0) || 0;
       const totalGems = profiles?.reduce((sum, p) => sum + (p.gems || 0), 0) || 0;
+      const totalXP = profiles?.reduce((sum, p) => sum + (p.total_points || 0), 0) || 0;
+      const totalGamesPlayed = profiles?.reduce((sum, p) => sum + (p.games_played || 0), 0) || 0;
       const totalUsers = profiles?.length || 0;
 
       // Get average balances
       const avgCoins = totalUsers > 0 ? Math.round(totalCoins / totalUsers) : 0;
       const avgGems = totalUsers > 0 ? Math.round(totalGems / totalUsers) : 0;
+      const avgXP = totalUsers > 0 ? Math.round(totalXP / totalUsers) : 0;
 
-      // Wealth distribution
-      const wealthBuckets = {
-        "0-1000 coins": 0,
-        "1000-5000 coins": 0,
-        "5000-10000 coins": 0,
-        "10000+ coins": 0,
+      // Wealth distribution (coins)
+      const coinBuckets: Record<string, number> = {
+        "0-1,000": 0,
+        "1,000-5,000": 0,
+        "5,000-10,000": 0,
+        "10,000-50,000": 0,
+        "50,000+": 0,
+      };
+
+      // Gem distribution
+      const gemBuckets: Record<string, number> = {
+        "0-10": 0,
+        "10-50": 0,
+        "50-100": 0,
+        "100-500": 0,
+        "500+": 0,
       };
 
       profiles?.forEach((p) => {
         const coins = p.coins || 0;
-        if (coins < 1000) wealthBuckets["0-1000 coins"]++;
-        else if (coins < 5000) wealthBuckets["1000-5000 coins"]++;
-        else if (coins < 10000) wealthBuckets["5000-10000 coins"]++;
-        else wealthBuckets["10000+ coins"]++;
+        if (coins < 1000) coinBuckets["0-1,000"]++;
+        else if (coins < 5000) coinBuckets["1,000-5,000"]++;
+        else if (coins < 10000) coinBuckets["5,000-10,000"]++;
+        else if (coins < 50000) coinBuckets["10,000-50,000"]++;
+        else coinBuckets["50,000+"]++;
+
+        const gems = p.gems || 0;
+        if (gems < 10) gemBuckets["0-10"]++;
+        else if (gems < 50) gemBuckets["10-50"]++;
+        else if (gems < 100) gemBuckets["50-100"]++;
+        else if (gems < 500) gemBuckets["100-500"]++;
+        else gemBuckets["500+"]++;
       });
+
+      // Get recent game activity (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: recentGames, error: gamesError } = await supabase
+        .from("game_plays")
+        .select("id, stars_earned, score")
+        .gte("played_at", sevenDaysAgo.toISOString());
+
+      if (gamesError) console.error("Games error:", gamesError);
+
+      const recentGamesCount = recentGames?.length || 0;
+      const coinsEarnedRecently = recentGames?.reduce((sum, g) => sum + ((g.score || 0) > 0 ? 1000 : 500), 0) || 0;
 
       return {
         totalCoins,
         totalGems,
+        totalXP,
         totalUsers,
         avgCoins,
         avgGems,
-        wealthBuckets,
+        avgXP,
+        totalGamesPlayed,
+        recentGamesCount,
+        coinsEarnedRecently,
+        coinBuckets,
+        gemBuckets,
+      };
+    },
+  });
+
+  return {
+    data,
+    isLoading,
+    error,
+  };
+}
+
+// Get total real-money revenue from IAP
+export function useIAPRevenue() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["iap-revenue"],
+    queryFn: async () => {
+      const { data: transactions, error } = await supabase
+        .from("purchase_transactions")
+        .select("*")
+        .eq("currency_used", "usd");
+      
+      if (error) throw error;
+
+      const totalRevenue = transactions?.reduce((sum, t) => sum + (t.amount_paid || 0), 0) || 0;
+      const totalTransactions = transactions?.length || 0;
+
+      // By product type
+      const revenueByType: Record<string, number> = {};
+      transactions?.forEach((t) => {
+        revenueByType[t.product_type] = (revenueByType[t.product_type] || 0) + t.amount_paid;
+      });
+
+      // By platform
+      const revenueByPlatform: Record<string, number> = {};
+      transactions?.forEach((t) => {
+        const platform = t.platform || 'unknown';
+        revenueByPlatform[platform] = (revenueByPlatform[platform] || 0) + t.amount_paid;
+      });
+
+      return {
+        totalRevenue,
+        totalTransactions,
+        avgTransactionValue: totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
+        revenueByType,
+        revenueByPlatform,
       };
     },
   });

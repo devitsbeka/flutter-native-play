@@ -66,7 +66,7 @@ export function RevenueAnalyticsTab() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
@@ -82,13 +82,26 @@ export function RevenueAnalyticsTab() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Unique Buyers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.uniqueBuyers.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Distinct users
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Gems Spent</CardTitle>
             <Gem className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalGemsSpent.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              In-app currency
+              Premium currency
             </p>
           </CardContent>
         </Card>
@@ -108,13 +121,13 @@ export function RevenueAnalyticsTab() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Coins Purchased</CardTitle>
+            <CardTitle className="text-sm font-medium">USD Revenue</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCoinsPurchased.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${stats.totalUSDRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Via gem exchange
+              Real money
             </p>
           </CardContent>
         </Card>
