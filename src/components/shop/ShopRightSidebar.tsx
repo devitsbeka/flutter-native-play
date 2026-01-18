@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Crown, Sparkles, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { cn } from "@/lib/utils";
 import { useMemo } from "react";
+import shopBg from "@/assets/shopbg.png";
 
 // White particle component for sidebar
 function SidebarParticle({ delay, left }: { delay: number; left: number }) {
@@ -33,26 +33,18 @@ const SIMPLIFIED_TIERS = [
     nameKa: "Solo",
     price: 9.99,
     icon: Crown,
-    benefits: [
-      "2x XP ბონუსი",
-      "VIP ბეჯი",
-      "რეკლამების გარეშე",
-    ],
-    gradient: "linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)",
-    buttonGradient: "linear-gradient(135deg, #7C3AED 0%, #9333EA 100%)",
+    benefits: ["2x XP ბონუსი", "VIP ბეჯი", "რეკლამების გარეშე"],
+    gradient: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
+    shadow: "#5B21B6",
   },
   {
     id: "family" as const,
     nameKa: "Family",
     price: 19.99,
     icon: Users,
-    benefits: [
-      "Solo-ს ყველა უპირატესობა",
-      "5 მეგობრის მოწვევა",
-      "PRO ყველა წევრისთვის",
-    ],
-    gradient: "linear-gradient(135deg, #EC4899 0%, #F472B6 100%)",
-    buttonGradient: "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)",
+    benefits: ["Solo + 5 მეგობარი", "PRO ყველა წევრისთვის"],
+    gradient: "linear-gradient(180deg, #EC4899 0%, #DB2777 100%)",
+    shadow: "#9D174D",
     popular: true,
   },
 ];
@@ -78,11 +70,23 @@ export function ShopRightSidebar() {
   }, []);
 
   return (
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
-      style={{
-        background: "linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)",
-      }}
+    <aside 
+      className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
     >
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${shopBg})` }}
+      />
+      
+      {/* Gradient overlay for better card visibility at bottom */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)",
+        }}
+      />
+
       {/* White Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle) => (
@@ -94,112 +98,80 @@ export function ShopRightSidebar() {
         ))}
       </div>
 
-      {/* Content Container - Flex column with justify-end to push tiers to bottom */}
-      <div className="flex-1 flex flex-col p-4 relative z-10">
-        {/* Visual Placeholder Area (top) */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-full h-48 rounded-2xl border-2 border-dashed border-white/20 flex items-center justify-center">
-            <span className="text-white/40 text-sm font-medium">Visual Coming Soon</span>
-          </div>
-        </div>
-
-        {/* Tier Cards (bottom) */}
-        <div className="space-y-3 mt-4">
+      {/* Content Container */}
+      <div className="flex-1 flex flex-col justify-end p-4 relative z-10">
+        {/* Compact Tier Cards - 3D Chunky Style */}
+        <div className="space-y-3">
           {SIMPLIFIED_TIERS.map((tier, index) => {
             const isCurrentTier = currentTier === tier.id;
             const TierIcon = tier.icon;
             
             return (
-              <motion.div
+              <motion.button
                 key={tier.id}
+                onClick={() => !isCurrentTier && handleUpgrade(tier.id)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="relative rounded-2xl p-4 overflow-hidden"
+                className="relative w-full py-3 px-4 rounded-2xl font-bold text-white transition-all text-left"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                  background: tier.gradient,
+                  boxShadow: `0 6px 0 ${tier.shadow}, 0 8px 16px rgba(0,0,0,0.3)`,
+                  cursor: isCurrentTier ? 'default' : 'pointer',
                 }}
+                whileHover={!isCurrentTier ? { scale: 1.02, y: -2 } : {}}
+                whileTap={!isCurrentTier ? { scale: 0.98, y: 0 } : {}}
+                disabled={isCurrentTier}
               >
                 {/* Popular Badge */}
-                {tier.popular && (
-                  <div className="absolute top-0 right-0">
-                    <div 
-                      className="text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-lg"
-                      style={{ background: tier.gradient }}
-                    >
-                      პოპულარული
-                    </div>
+                {tier.popular && !isCurrentTier && (
+                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+                    ⭐ TOP
                   </div>
                 )}
 
-                {/* Current Tier Badge */}
+                {/* Active Badge */}
                 {isCurrentTier && (
-                  <div className="absolute top-0 right-0">
-                    <div 
-                      className="text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-lg bg-green-500"
-                    >
-                      აქტიური
-                    </div>
+                  <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+                    ✓ აქტიური
                   </div>
                 )}
 
-                <div className="relative z-10">
-                  {/* Header */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ 
-                        background: tier.gradient,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                      }}
-                    >
-                      <TierIcon className="w-6 h-6 text-white" />
+                <div className="flex items-center gap-3">
+                  {/* Icon */}
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ 
+                      background: "rgba(255,255,255,0.2)",
+                      boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3)",
+                    }}
+                  >
+                    <TierIcon className="w-5 h-5 text-white" />
+                  </div>
+                  
+                  {/* Text Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-bold">{tier.nameKa}</span>
+                      <span className="text-lg font-bold">
+                        ₾{tier.price}
+                        <span className="text-xs opacity-70">/თვე</span>
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-lg">{tier.nameKa}</h3>
-                      <p className="text-xl font-bold text-gray-900">
-                        ₾{tier.price}<span className="text-sm text-gray-500 font-normal">/თვე</span>
-                      </p>
+                    <div className="text-xs text-white/80 mt-0.5 truncate">
+                      {tier.benefits.join(" • ")}
                     </div>
                   </div>
-
-                  {/* Benefits - Simplified */}
-                  <div className="space-y-2 mb-4">
-                    {tier.benefits.map((benefit, i) => (
-                      <div 
-                        key={i} 
-                        className="flex items-center gap-2"
-                      >
-                        <div 
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ background: tier.id === 'solo' ? '#7C3AED' : '#EC4899' }}
-                        />
-                        <span className="text-sm text-gray-700">
-                          {benefit}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Action Button */}
-                  {!isCurrentTier && (
-                    <motion.button
-                      onClick={() => handleUpgrade(tier.id)}
-                      className="w-full py-2.5 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2"
-                      style={{ 
-                        background: tier.buttonGradient,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                      }}
-                      whileHover={{ scale: 1.02, boxShadow: '0 6px 16px rgba(0,0,0,0.4)' }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      შეძენა
-                    </motion.button>
-                  )}
                 </div>
-              </motion.div>
+
+                {/* Upgrade indicator */}
+                {!isCurrentTier && (
+                  <div className="flex items-center justify-center gap-1 mt-2 text-xs text-white/90">
+                    <Sparkles className="w-3 h-3" />
+                    <span>შეძენა</span>
+                  </div>
+                )}
+              </motion.button>
             );
           })}
         </div>
