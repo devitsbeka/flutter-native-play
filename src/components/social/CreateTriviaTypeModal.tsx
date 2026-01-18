@@ -38,7 +38,7 @@ export function CreateTriviaTypeModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden max-w-[700px] md:max-w-[520px] mx-auto"
           style={{
             background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
           }}

@@ -348,7 +348,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
           </div>
 
           {/* Content */}
-          <div className="relative z-10 flex flex-col h-[calc(100vh-160px)] px-4">
+          <div className="relative z-10 flex flex-col h-[calc(100vh-160px)] px-4 max-w-[700px] md:max-w-[520px] mx-auto">
             <AnimatePresence mode="wait">
               {/* Round Complete Screen - Ask to continue */}
               {roundComplete && !allRoundsComplete ? (

@@ -659,7 +659,7 @@ export function GameStyleQuestionEditor({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col"
+      className="fixed inset-0 z-50 flex flex-col max-w-[700px] md:max-w-[600px] mx-auto"
       style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
     >
       {/* Header */}

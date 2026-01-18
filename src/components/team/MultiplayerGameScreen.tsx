@@ -163,7 +163,7 @@ export function MultiplayerGameScreen() {
   const answeredCount = Object.keys(opponentAnswers).length;
 
   return (
-    <div className="w-full h-[100dvh] flex flex-col bg-[#7E7BDC] overflow-hidden">
+    <div className="w-full h-[100dvh] flex flex-col bg-[#7E7BDC] overflow-hidden max-w-[700px] md:max-w-[520px] mx-auto">
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 

@@ -189,7 +189,7 @@ export function MultiplayerGameScreenV2() {
 
   return (
     <div className="w-full h-[100dvh] bg-[#7E7BDC] overflow-hidden">
-      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 

@@ -289,7 +289,7 @@ export function QuizGameScreenProd() {
   return (
     <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
       {/* Content wrapper with max-width for desktop/tablet, centered */}
-      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 
