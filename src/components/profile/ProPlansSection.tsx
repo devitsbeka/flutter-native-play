@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Crown, Check, Users, Sparkles, Zap, Shield, Gift, Star, Trophy } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -15,9 +14,13 @@ interface TierConfig {
   price: number;
   friendInvites: number;
   xpMultiplier: number;
+  // Cohesive color scheme per tier
   gradient: string;
   borderColor: string;
-  iconColor: string;
+  glowColor: string;
+  accentColor: string;
+  lightBg: string;
+  buttonGradient: string;
   popular?: boolean;
   benefits: {
     icon: React.ElementType;
@@ -34,9 +37,13 @@ export const PRO_TIERS: TierConfig[] = [
     price: 9.99,
     friendInvites: 1,
     xpMultiplier: 2,
-    gradient: 'from-violet-500 via-purple-500 to-fuchsia-500',
-    borderColor: 'border-purple-500/30',
-    iconColor: 'text-purple-400',
+    // Purple theme
+    gradient: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
+    borderColor: 'rgba(147, 51, 234, 0.4)',
+    glowColor: 'rgba(147, 51, 234, 0.25)',
+    accentColor: '#9333EA',
+    lightBg: 'rgba(147, 51, 234, 0.1)',
+    buttonGradient: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
     benefits: [
       { icon: Zap, text: '2x XP ბონუსი' },
       { icon: Shield, text: 'რეკლამების გარეშე' },
@@ -51,9 +58,13 @@ export const PRO_TIERS: TierConfig[] = [
     price: 19.99,
     friendInvites: 5,
     xpMultiplier: 2,
-    gradient: 'from-cyan-400 via-blue-500 to-indigo-600',
-    borderColor: 'border-blue-500/30',
-    iconColor: 'text-blue-400',
+    // Blue/Cyan theme
+    gradient: 'linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%)',
+    borderColor: 'rgba(14, 165, 233, 0.4)',
+    glowColor: 'rgba(14, 165, 233, 0.25)',
+    accentColor: '#0EA5E9',
+    lightBg: 'rgba(14, 165, 233, 0.1)',
+    buttonGradient: 'linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%)',
     popular: true,
     benefits: [
       { icon: Zap, text: '2x XP ბონუსი' },
@@ -71,9 +82,13 @@ export const PRO_TIERS: TierConfig[] = [
     price: 29.99,
     friendInvites: 10,
     xpMultiplier: 3,
-    gradient: 'from-amber-400 via-orange-500 to-rose-500',
-    borderColor: 'border-amber-500/50',
-    iconColor: 'text-amber-400',
+    // Amber/Orange theme
+    gradient: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
+    borderColor: 'rgba(245, 158, 11, 0.5)',
+    glowColor: 'rgba(245, 158, 11, 0.3)',
+    accentColor: '#F59E0B',
+    lightBg: 'rgba(245, 158, 11, 0.1)',
+    buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
     benefits: [
       { icon: Zap, text: '3x XP ბონუსი', highlight: true },
       { icon: Shield, text: 'რეკლამების გარეშე' },
@@ -106,11 +121,18 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl p-4 border border-amber-500/30"
+          className="rounded-2xl p-4"
+          style={{
+            background: PRO_TIERS.find(t => t.id === currentTier)?.lightBg,
+            border: `2px solid ${PRO_TIERS.find(t => t.id === currentTier)?.borderColor}`,
+          }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: PRO_TIERS.find(t => t.id === currentTier)?.gradient }}
+              >
                 <Crown className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -123,15 +145,16 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
               </div>
             </div>
             {friendInvitesRemaining > 0 && (
-              <Button
-                variant="secondary"
-                size="sm"
+              <motion.button
                 onClick={() => setShowInviteModal(true)}
-                className="gap-2"
+                className="px-4 py-2 rounded-full text-white text-sm font-medium flex items-center gap-2"
+                style={{ background: PRO_TIERS.find(t => t.id === currentTier)?.gradient }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Users className="w-4 h-4" />
                 მოწვევა
-              </Button>
+              </motion.button>
             )}
           </div>
         </motion.div>
@@ -150,15 +173,20 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={cn(
-                "relative rounded-2xl p-5 border bg-card overflow-hidden",
-                tier.borderColor,
-                tier.popular && "ring-2 ring-amber-500/50"
+                "relative rounded-2xl p-5 overflow-hidden bg-card"
               )}
+              style={{
+                border: `2px solid ${tier.borderColor}`,
+                boxShadow: `0 4px 24px -4px ${tier.glowColor}`,
+              }}
             >
               {/* Popular Badge */}
               {tier.popular && (
                 <div className="absolute top-0 right-0">
-                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl">
+                  <div 
+                    className="text-white text-xs font-bold px-3 py-1 rounded-bl-xl"
+                    style={{ background: tier.gradient }}
+                  >
                     პოპულარული
                   </div>
                 </div>
@@ -180,10 +208,13 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center",
-                      tier.gradient
-                    )}>
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ 
+                        background: tier.gradient,
+                        boxShadow: `0 4px 12px ${tier.glowColor}`,
+                      }}
+                    >
                       <Crown className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -195,7 +226,13 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
                   </div>
                   
                   {isCurrentTier && (
-                    <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
+                    <span 
+                      className="px-3 py-1 rounded-full text-sm font-medium"
+                      style={{ 
+                        background: tier.lightBg,
+                        color: tier.accentColor,
+                      }}
+                    >
                       აქტიური
                     </span>
                   )}
@@ -208,19 +245,17 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
                       key={i} 
                       className={cn(
                         "flex items-center gap-2",
-                        benefit.highlight && "text-primary font-medium"
+                        benefit.highlight && "font-medium"
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full flex items-center justify-center",
-                        benefit.highlight 
-                          ? "bg-primary/20" 
-                          : "bg-muted"
-                      )}>
-                        <benefit.icon className={cn(
-                          "w-3 h-3",
-                          benefit.highlight ? "text-primary" : tier.iconColor
-                        )} />
+                      <div 
+                        className="w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: tier.lightBg }}
+                      >
+                        <benefit.icon 
+                          className="w-3 h-3"
+                          style={{ color: tier.accentColor }}
+                        />
                       </div>
                       <span className={cn(
                         "text-sm",
@@ -234,19 +269,19 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
 
                 {/* Action Button */}
                 {!isCurrentTier && (
-                  <Button
+                  <motion.button
                     onClick={() => handleUpgrade(tier.id)}
-                    className={cn(
-                      "w-full gap-2",
-                      tier.popular 
-                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" 
-                        : ""
-                    )}
-                    variant={tier.popular ? "default" : "secondary"}
+                    className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+                    style={{ 
+                      background: tier.buttonGradient,
+                      boxShadow: `0 4px 16px ${tier.glowColor}`,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <Sparkles className="w-4 h-4" />
                     {isUpgrade ? 'განახლება' : 'არჩევა'}
-                  </Button>
+                  </motion.button>
                 )}
               </div>
             </motion.div>
