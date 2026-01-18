@@ -423,11 +423,11 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 max-w-[700px] md:max-w-[600px] mx-auto"
+          className="fixed inset-0 z-50"
           style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
         >
           <div className="fixed top-0 left-0 right-0 z-50 safe-top">
-            <div className="flex items-center justify-between px-4 py-3">
+            <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full flex items-center justify-between px-4 py-3">
               <button 
                 onClick={handleClose} 
                 className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
@@ -458,7 +458,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           </div>
 
           <div className="h-full overflow-y-auto pt-[60px] pb-32 safe-top">
-            <div className="p-5">
+            <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full p-5">
               <AnimatePresence mode="wait">
                 {renderStep()}
               </AnimatePresence>
@@ -466,8 +466,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
           </div>
 
           {/* Fixed bottom CTA */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 safe-bottom" style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}>
-            {renderBottomCTA()}
+          <div className="fixed bottom-0 left-0 right-0 safe-bottom" style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}>
+            <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full p-4 pb-6">
+              {renderBottomCTA()}
+            </div>
           </div>
         </motion.div>
       )}

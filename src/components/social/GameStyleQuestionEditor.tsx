@@ -659,11 +659,12 @@ export function GameStyleQuestionEditor({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col max-w-[700px] md:max-w-[600px] mx-auto"
+      className="fixed inset-0 z-50 flex flex-col"
       style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
     >
       {/* Header */}
-      <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3 flex items-center justify-between">
+      <div className="pt-[calc(env(safe-area-inset-top,8px)+16px)] px-4 py-3">
+        <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full flex items-center justify-between">
         <button
           onClick={handleBackClick}
           className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
@@ -705,6 +706,7 @@ export function GameStyleQuestionEditor({
         >
           <Trash2 className="w-5 h-5 text-white" />
         </button>
+        </div>
       </div>
 
       {/* Header Content (for round tabs) */}
