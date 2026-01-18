@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, Heart, Play, FolderOpen, ChevronLeft, Lock, Globe, PartyPopper } from "lucide-react";
+import { Gamepad2, Heart, Play, FolderOpen, ChevronLeft, Lock, Globe, PartyPopper, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,9 +30,10 @@ interface MyTriviasPickerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (item: { id: string; title: string; type: "trivia" | "collection" }) => void;
+  onCreateTrivia?: () => void;
 }
 
-export function MyTriviasPickerModal({ open, onOpenChange, onSelect }: MyTriviasPickerModalProps) {
+export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTrivia }: MyTriviasPickerModalProps) {
   const { user } = useAuth();
   const [tab, setTab] = useState("trivias");
 
@@ -113,21 +114,35 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect }: MyTrivias
           className="fixed inset-0 z-50 bg-background flex flex-col"
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-            <button
-              onClick={handleClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <div className="flex items-center gap-2">
-              <Gamepad2 className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground">ჩემი ტრივიები</h2>
+          <div className="flex-shrink-0 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleClose}
+                  className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+                </button>
+                <div className="flex items-center gap-2">
+                  <Gamepad2 className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-bold text-foreground">ჩემი ტრივიები</h2>
+                </div>
+              </div>
+              {onCreateTrivia && (
+                <button
+                  onClick={onCreateTrivia}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>შექმენი</span>
+                </button>
+              )}
             </div>
           </div>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -311,6 +326,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect }: MyTrivias
                 </TabsContent>
               </Tabs>
             )}
+            </div>
           </div>
         </motion.div>
       )}

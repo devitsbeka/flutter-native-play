@@ -1017,109 +1017,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               </AnimatePresence>
             </div>
 
-            {/* Create Trivia Option - Container that expands to show sub-options */}
-            <div className="rounded-2xl overflow-hidden">
-              <AnimatePresence mode="wait">
-                {showCreateOptionsMenu && selectionMode === "create" && !customTriviaQuestions ? (
-                  // Expanded state - show inspirational chips + 2 sub-options
-                  <motion.div
-                    key="create-options"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-4 space-y-3"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-white font-semibold">აირჩიე ტიპი</p>
-                      <button 
-                        onClick={() => {
-                          setShowCreateOptionsMenu(false);
-                          setSelectionMode(null);
-                        }}
-                        className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-                    
-                    
-                    {/* Trivia Option */}
-                    <motion.button
-                      onClick={() => handleCreateOptionSelect("trivia")}
-                      className="w-full flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                        <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-medium text-white">ტრივია</p>
-                        <p className="text-xs text-white/70">1 რაუნდი, სწრაფი შექმნა</p>
-                      </div>
-                    </motion.button>
-                    
-                    {/* Collection Option */}
-                    <motion.button
-                      onClick={() => handleCreateOptionSelect("collection")}
-                      className="w-full flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                        <img src={iconCollections} alt="" className="w-9 h-9 object-contain" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-medium text-white">კოლექცია</p>
-                        <p className="text-xs text-white/70">რამდენიმე რაუნდი ერთად</p>
-                      </div>
-                    </motion.button>
-                    
-                    {/* MyTrivia Party Option */}
-                    <motion.button
-                      onClick={() => handleCreateOptionSelect("personal")}
-                      className="w-full flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                        <img src={iconGroupOfPeople} alt="" className="w-9 h-9 object-contain" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-medium text-white">MyTrivia Party</p>
-                        <p className="text-xs text-white/70">შენი კითხვები, შენი პასუხები</p>
-                      </div>
-                    </motion.button>
-                  </motion.div>
-                ) : (
-                  // Collapsed state - regular button
-                  <motion.button
-                    key="create-button"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={() => handleOptionClick("create")}
-                    className={`relative w-full flex items-center gap-4 p-4 transition-all ${
-                      selectionMode === "create" && customTriviaQuestions
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25"
-                        : "bg-muted/50 border border-border/50 text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                      <img src={triviaBuzzer} alt="" className="w-8 h-8 object-contain" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className={`font-semibold ${selectionMode === "create" && customTriviaQuestions ? "text-white" : "text-foreground"}`}>
-                        შექმენი ტრივია
-                      </p>
-                      <p className={`text-sm ${selectionMode === "create" && customTriviaQuestions ? "text-white/70" : "text-muted-foreground"}`}>
-                        შექმენი შენი საკუთარი კითხვები
-                      </p>
-                    </div>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
         </div>
 
@@ -1263,6 +1160,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         open={showMyTriviasModal}
         onOpenChange={setShowMyTriviasModal}
         onSelect={handleMyTriviaSelect}
+        onCreateTrivia={() => {
+          setShowMyTriviasModal(false);
+          setShowCreateTriviaModal(true);
+        }}
       />
 
       {/* Personal Trivia Modal - Game UI Style */}
