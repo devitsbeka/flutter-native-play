@@ -22,14 +22,16 @@ export function PageHeader({
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else {
+    } else if (window.history.length > 1) {
       navigate(-1);
+    } else {
+      navigate('/profile');
     }
   };
 
   return (
     <header className={`sticky top-0 z-20 backdrop-blur-md ${className}`}>
-      <div className="flex items-center justify-between px-4 h-16 safe-top">
+      <div className="flex items-center justify-between px-4 h-16 safe-top max-w-[700px] md:max-w-[600px] mx-auto w-full">
         {/* Left: Back button + Title */}
         <div className="flex items-center gap-3">
           {showBack && (

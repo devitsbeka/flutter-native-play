@@ -62,7 +62,7 @@ export default function Support() {
     <div className="min-h-screen bg-background">
       <PageHeader title="დახმარება" />
 
-      <div className="p-4 pb-12 space-y-6">
+      <div className="p-4 pb-12 space-y-6 max-w-[700px] md:max-w-[600px] mx-auto">
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

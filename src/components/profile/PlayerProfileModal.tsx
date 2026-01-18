@@ -119,7 +119,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           >
             {/* Fixed Header */}
             <div className="flex-shrink-0 sticky top-0 z-10 bg-background border-b border-border">
-              <div className="flex items-center h-14 px-4">
+              <div className="flex items-center h-14 px-4 max-w-[700px] md:max-w-[600px] mx-auto w-full">
                 <motion.button
                   onClick={onClose}
                   className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
@@ -147,6 +147,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
               </div>
             ) : (
               <div className="flex-1 overflow-y-auto">
+                <div className="max-w-[700px] md:max-w-[600px] mx-auto">
                 {/* Profile Header */}
                 <div className="p-4 flex flex-col items-center">
                   <SmartAvatar
@@ -396,6 +397,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             )}
           </motion.div>
