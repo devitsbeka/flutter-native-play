@@ -602,6 +602,9 @@ function TeamContentV2() {
           onJoinRoom={handleJoinFromInvitation}
           onOpenTV={() => setShowTVModal(true)}
           onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
+          activeTab={activeTab}
+          onViewAllRooms={() => handleTabChange("rooms")}
+          onViewAllTrivias={() => handleTabChange("my-content")}
         />
       </div>
 
