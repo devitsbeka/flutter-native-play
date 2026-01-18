@@ -101,7 +101,7 @@ export function RoomFiltersBar({
       {/* Combined Filter & Sort Dropdown - hidden when search is open */}
       {!isSearchOpen && (
         <>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 min-w-0 flex-shrink">
                 <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
