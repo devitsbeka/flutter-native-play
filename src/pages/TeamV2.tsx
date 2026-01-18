@@ -553,14 +553,14 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowTeamMenu(true)}
+                onAddClick={() => setShowCreateModal(true)}
                 addButtonText="+ ახალი ოთახი"
               />
               <div className="px-4 pt-2 pb-4 flex justify-center">
                 <div className="w-full max-w-[1215px]">
                   <MyRoomsSection 
                     hideTV 
-                    onCreateRoom={() => setShowTeamMenu(true)}
+                    onCreateRoom={() => setShowCreateModal(true)}
                     onShowAllRooms={() => setShowAllGamesModal(true)}
                     vertical
                     filter={roomsFilter}
@@ -582,6 +582,8 @@ function TeamContentV2() {
                 onSortChange={setRoomsSort}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="+ შექმენი ტრივია"
               />
               <div className="px-4 pt-2 pb-4 flex justify-center">
                 <div className="w-full max-w-[900px]">
