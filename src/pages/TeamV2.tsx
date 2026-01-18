@@ -46,6 +46,8 @@ import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
+import { ChatModal } from "@/components/team/ChatModal";
+import { Friend } from "@/hooks/useFriends";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -182,6 +184,7 @@ function TeamContentV2() {
   const [showTeamMenu, setShowTeamMenu] = useState(false);
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
+  const [selectedChatFriend, setSelectedChatFriend] = useState<Friend | null>(null);
   const [showCategorySelectorModal, setShowCategorySelectorModal] = useState(false);
   const [isEditingRound, setIsEditingRound] = useState(false);
   const [pendingRandomPlay, setPendingRandomPlay] = useState(false);
@@ -598,6 +601,7 @@ function TeamContentV2() {
           onAcceptInvitation={handleAcceptInvitation}
           onJoinRoom={handleJoinFromInvitation}
           onOpenTV={() => setShowTVModal(true)}
+          onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
         />
       </div>
 
@@ -605,6 +609,13 @@ function TeamContentV2() {
       <TVMirrorModal 
         open={showTVModal} 
         onOpenChange={setShowTVModal} 
+      />
+
+      {/* Friend Chat Modal */}
+      <ChatModal
+        isOpen={!!selectedChatFriend}
+        onClose={() => setSelectedChatFriend(null)}
+        friend={selectedChatFriend}
       />
 
       {/* Modals */}

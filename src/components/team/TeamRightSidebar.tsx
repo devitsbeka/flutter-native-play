@@ -1,21 +1,29 @@
 import { motion } from "framer-motion";
-import { Tv, Users, Trophy, Sparkles, ChevronRight } from "lucide-react";
+import { Tv, Users, Trophy, ChevronRight } from "lucide-react";
 import { GameInvitationsSection } from "./GameInvitationsSection";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFriends, Friend } from "@/hooks/useFriends";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import tvIcon from "@/assets/tv-3d-icon.png";
 
 interface TeamRightSidebarProps {
   onAcceptInvitation: (invitationId: string) => Promise<string | null>;
   onJoinRoom: (roomCode: string) => void;
   onOpenTV: () => void;
+  onOpenFriendChat: (friend: Friend) => void;
 }
 
 export function TeamRightSidebar({ 
   onAcceptInvitation, 
   onJoinRoom,
-  onOpenTV 
+  onOpenTV,
+  onOpenFriendChat,
 }: TeamRightSidebarProps) {
   const { t } = useLanguage();
+  const { friends, onlineUsers } = useFriends();
+  
+  // Get online friends
+  const onlineFriends = friends.filter(f => onlineUsers.has(f.friendId));
 
   return (
     <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-border/50 bg-background/50 backdrop-blur-sm">
@@ -106,7 +114,7 @@ export function TeamRightSidebar({
           </div>
         </motion.div>
 
-        {/* Friends Online Widget */}
+        {/* Friends Online Widget - Facebook Style */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,54 +128,39 @@ export function TeamRightSidebar({
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-muted/50 border border-border/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg">
-                    👥
-                  </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-background" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground text-sm">3 მეგობარი ონლაინ</p>
-                  <p className="text-xs text-muted-foreground">მოიწვიე თამაშში</p>
-                </div>
+          <div className="rounded-2xl bg-muted/50 border border-border/50 overflow-hidden">
+            {onlineFriends.length > 0 ? (
+              <div className="divide-y divide-border/50">
+                {onlineFriends.slice(0, 5).map((friend) => (
+                  <button
+                    key={friend.id}
+                    onClick={() => onOpenFriendChat(friend)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors"
+                  >
+                    <div className="relative">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={friend.avatarUrl || undefined} />
+                        <AvatarFallback className="bg-muted text-muted-foreground">
+                          {friend.nickname?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    </div>
+                    
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="font-medium text-foreground text-sm truncate">{friend.nickname}</p>
+                      <p className="text-xs text-green-600">ონლაინ</p>
+                    </div>
+                    
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                ))}
               </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Daily Bonus Widget */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2 text-foreground">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-bold tracking-wide">
-              დღის ბონუსი
-            </span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-muted/50 border border-border/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-xl">
-                  🎁
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground text-sm">დღის საჩუქარი</p>
-                  <p className="text-xs text-muted-foreground">დააჭირე მისაღებად</p>
-                </div>
+            ) : (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                არცერთი მეგობარი არ არის ონლაინ
               </div>
-              <div className="px-2 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">
-                +50 💎
-              </div>
-            </div>
+            )}
           </div>
         </motion.div>
       </div>
