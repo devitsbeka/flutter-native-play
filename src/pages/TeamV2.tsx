@@ -554,7 +554,7 @@ function TeamContentV2() {
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
             <div className="px-4 pt-4 pb-4">
-              <div className="max-w-[700px]">
+              <div className="max-w-[700px] md:max-w-[900px]">
                 <MyRoomsSection 
                   hideTV 
                   onCreateRoom={() => setShowTeamMenu(true)}

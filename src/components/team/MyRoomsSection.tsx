@@ -129,7 +129,7 @@ export function MyRoomsSection({
           )}
         </motion.div>
       ) : vertical ? (
-        <div className="grid grid-cols-2 gap-3 pb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pb-4">
           {rooms.map((room, index) => (
             <RoomCardGrid
               key={room.id}
@@ -410,7 +410,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
             <img 
               src={room.room_icon} 
               alt="" 
-              className="w-12 h-12 object-contain drop-shadow-lg"
+              className="w-[58px] h-[58px] object-contain drop-shadow-lg"
             />
           </div>
         )}
