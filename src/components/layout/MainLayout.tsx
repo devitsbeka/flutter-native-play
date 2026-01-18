@@ -38,13 +38,13 @@ export function MainLayout({
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide">
+      <main className="flex-1 h-screen overflow-y-auto relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide">
         {children}
       </main>
 
       {/* Mobile Bottom Navigation - hidden on lg+ */}
       {showBottomNav && (
-        <div className="lg:hidden">
+        <div className="md:hidden">
           <UniversalBottomNav
             onPlayClick={onPlayClick}
             playsRemaining={playsRemaining}
