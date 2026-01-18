@@ -15,6 +15,7 @@ import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
+import { ShopPowerUpGuide } from "@/components/shop/ShopPowerUpGuide";
 import { ShopCurrencyBar } from "@/components/shop/ShopCurrencyBar";
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
@@ -200,14 +201,24 @@ export default function PowerUps() {
 
       {/* Standard Shop Layout - Hero carousel + product grids */}
       <div className="flex-1 overflow-y-auto pt-4">
-        <ShopStandardLayout
-          sections={SHOP_SECTIONS}
-          gems={gems}
-          purchasedItems={purchasedItems}
-          isPurchasing={isPurchasing}
-          isFrameUnlocked={isFrameUnlocked}
-          onItemClick={handlePurchase}
-        />
+        <div className="xl:flex xl:gap-6 xl:px-6">
+          {/* Main Shop Content */}
+          <div className="xl:flex-1">
+            <ShopStandardLayout
+              sections={SHOP_SECTIONS}
+              gems={gems}
+              purchasedItems={purchasedItems}
+              isPurchasing={isPurchasing}
+              isFrameUnlocked={isFrameUnlocked}
+              onItemClick={handlePurchase}
+            />
+          </div>
+
+          {/* Power-Up Guide Sidebar - Desktop only */}
+          <div className="hidden xl:block xl:w-80 xl:flex-shrink-0 xl:pr-2">
+            <ShopPowerUpGuide />
+          </div>
+        </div>
       </div>
 
       {/* Modals */}
