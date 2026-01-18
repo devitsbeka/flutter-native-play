@@ -1,5 +1,13 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
+export interface TransactionLog {
+  productId?: string;
+  productType: string;
+  valueReceived: Json;
+  platform?: string;
+}
 
 export function useCurrency() {
   const { user, profile, updateProfile } = useAuth();
@@ -7,6 +15,33 @@ export function useCurrency() {
   // Current balances with defaults
   const coins = profile?.coins ?? 0;
   const gems = profile?.gems ?? 0;
+
+  // Log a purchase transaction to the database
+  const logTransaction = async (
+    currencyUsed: "gems" | "coins" | "usd",
+    amountPaid: number,
+    transaction: TransactionLog
+  ): Promise<void> => {
+    if (!user) return;
+
+    try {
+      const insertData = {
+        user_id: user.id,
+        product_id: transaction.productId || null,
+        product_type: transaction.productType,
+        currency_used: currencyUsed,
+        amount_paid: amountPaid,
+        value_received: transaction.valueReceived,
+        platform: transaction.platform || "web",
+      };
+      
+      const { error } = await supabase.from("purchase_transactions").insert([insertData]);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error logging transaction:", error);
+      // Don't throw - transaction logging shouldn't block the purchase
+    }
+  };
 
   // Add coins to user balance using secure RPC
   const addCoins = async (amount: number): Promise<boolean> => {
@@ -33,7 +68,8 @@ export function useCurrency() {
   };
 
   // Spend coins from user balance using secure RPC with database-level locking
-  const spendCoins = async (amount: number): Promise<boolean> => {
+  // Optionally logs the transaction if transactionLog is provided
+  const spendCoins = async (amount: number, transactionLog?: TransactionLog): Promise<boolean> => {
     if (!user || amount <= 0) return false;
 
     try {
@@ -55,6 +91,12 @@ export function useCurrency() {
       if (data && data.length > 0) {
         await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
+
+      // Log transaction if provided
+      if (transactionLog) {
+        await logTransaction("coins", amount, transactionLog);
+      }
+
       return true;
     } catch (error) {
       console.error("Error spending coins:", error);
@@ -87,7 +129,8 @@ export function useCurrency() {
   };
 
   // Spend gems from user balance using secure RPC with database-level locking
-  const spendGems = async (amount: number): Promise<boolean> => {
+  // Optionally logs the transaction if transactionLog is provided
+  const spendGems = async (amount: number, transactionLog?: TransactionLog): Promise<boolean> => {
     if (!user || amount <= 0) return false;
 
     try {
@@ -109,6 +152,12 @@ export function useCurrency() {
       if (data && data.length > 0) {
         await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
+
+      // Log transaction if provided
+      if (transactionLog) {
+        await logTransaction("gems", amount, transactionLog);
+      }
+
       return true;
     } catch (error) {
       console.error("Error spending gems:", error);
@@ -157,5 +206,6 @@ export function useCurrency() {
     canAffordCoins,
     canAffordGems,
     addCurrency,
+    logTransaction,
   };
 }

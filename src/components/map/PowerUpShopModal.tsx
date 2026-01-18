@@ -122,7 +122,11 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
 
     setIsPurchasing(true);
     try {
-      const spent = await spendCoins(totalPrice);
+      const spent = await spendCoins(totalPrice, {
+        productId: selectedType,
+        productType: "powerup",
+        valueReceived: { [selectedType]: quantity },
+      });
       if (!spent) {
         setIsPurchasing(false);
         return;

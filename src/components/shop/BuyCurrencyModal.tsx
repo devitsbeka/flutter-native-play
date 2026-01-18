@@ -75,7 +75,11 @@ export function BuyCurrencyModal({
     setIsPurchasing(packageIndex);
 
     try {
-      const spent = await spendGems(pkg.gems);
+      const spent = await spendGems(pkg.gems, {
+        productId: `coin_pack_${pkg.coins}`,
+        productType: "coins",
+        valueReceived: { coins: pkg.coins },
+      });
       if (!spent) {
         setIsPurchasing(null);
         return;

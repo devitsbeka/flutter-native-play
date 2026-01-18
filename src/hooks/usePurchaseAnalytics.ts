@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -40,20 +41,45 @@ export interface PurchaseStats {
 }
 
 export function usePurchaseAnalytics(days: number = 30) {
+  const queryClient = useQueryClient();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
+
+  // Subscribe to realtime updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('purchase-transactions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'purchase_transactions',
+        },
+        () => {
+          // Refetch data when new transaction is inserted
+          queryClient.invalidateQueries({ queryKey: ["purchase-analytics"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+  const queryStartDate = new Date();
+  queryStartDate.setDate(queryStartDate.getDate() - days);
 
   const { data: transactions = [], isLoading, error, refetch } = useQuery({
     queryKey: ["purchase-analytics", days],
     queryFn: async () => {
-      // Get purchase transactions
       const { data, error } = await supabase
         .from("purchase_transactions")
         .select(`
           *,
           profile:profiles!purchase_transactions_user_id_fkey(nickname, avatar_url)
         `)
-        .gte("created_at", startDate.toISOString())
+        .gte("created_at", queryStartDate.toISOString())
         .order("created_at", { ascending: false });
       
       if (error) throw error;
