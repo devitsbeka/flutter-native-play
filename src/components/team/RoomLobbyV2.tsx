@@ -246,7 +246,7 @@ export function RoomLobbyV2() {
       className="min-h-screen relative overflow-hidden"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
-      <div className="relative z-10 min-h-screen flex flex-col px-4 py-6 max-w-[700px] md:max-w-[520px] mx-auto w-full">
+      <div className="relative z-10 min-h-screen flex flex-col px-4 sm:px-6 py-6 sm:max-w-[520px] mx-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <motion.button
