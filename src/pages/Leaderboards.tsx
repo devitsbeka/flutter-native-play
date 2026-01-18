@@ -133,10 +133,10 @@ export default function Leaderboards() {
 
   return (
     <MainLayout showPlayButton={false}>
-    <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden bg-transparent">
-      {/* Header Bar - transparent, overlays on background */}
-      <div className="absolute top-0 left-0 right-0 z-50">
-        <div className="px-4 pt-4 pb-3">
+    <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden bg-background">
+      {/* Header Bar - sticky with white background */}
+      <div className="sticky top-0 left-0 right-0 z-50">
+        <div className="px-4 pt-4 pb-3 bg-background/95 backdrop-blur-md">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
               {language === 'ka' ? 'რეიტინგი' : 'Leaderboard'}
@@ -215,7 +215,7 @@ export default function Leaderboards() {
           </div>
 
           {/* Scrollable Player List */}
-          <div className="bg-white/90 backdrop-blur-sm px-3 pt-3 pb-32">
+          <div className="bg-background px-3 pt-3 pb-32 min-h-[50vh]">
             {isLoading && leaderboard.length === 0 ? (
               // Show skeleton rows while loading
               Array.from({ length: 10 }).map((_, i) => (

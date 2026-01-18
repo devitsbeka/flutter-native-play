@@ -154,11 +154,11 @@ export function UnifiedDesktopNav({
             </span>
             
             {/* Tablet: stacked layout with LIVE badge on top-right */}
-            <div className="hidden md:flex lg:hidden flex-col items-center relative">
-              <span className="text-sm font-slackey text-foreground tracking-tight leading-tight text-center">
-                My<br/>Trivia
+            <div className="hidden md:flex lg:hidden items-center relative">
+              <span className="text-[11px] font-slackey text-foreground tracking-tight whitespace-nowrap">
+                MyTrivia
               </span>
-              <div className="absolute -top-1 -right-3 scale-75">
+              <div className="absolute -top-2 -right-4 scale-[0.65]">
                 <LiveBadge />
               </div>
             </div>
