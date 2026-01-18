@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
@@ -44,16 +44,17 @@ export function CreateTriviaTypeModal({
           }}
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-4 safe-top">
-            <button
-              onClick={handleClose}
-              className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center hover:bg-white/25 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-white/80" />
-              <h2 className="text-xl font-bold text-white">რა შევქმნათ?</h2>
+          <div className="flex-shrink-0 safe-top">
+            <div className="max-w-2xl lg:mx-auto w-full flex items-center justify-between px-4 py-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleClose}
+                  className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center hover:bg-white/25 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-white" />
+                </button>
+                <h2 className="text-xl font-bold text-white">რა შევქმნათ?</h2>
+              </div>
             </div>
           </div>
 

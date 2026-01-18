@@ -314,14 +314,14 @@ export function RoomIconPickerModal({
         >
           {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <button 
-                onClick={onClose} 
-                className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
-              >
-                <ChevronLeft className="w-6 h-6 text-foreground" />
-              </button>
-              <div className="flex-1">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={onClose} 
+                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5 text-foreground" />
+                </button>
                 <h1 className="text-lg font-bold text-foreground">აირჩიე აიკონი</h1>
               </div>
             </div>
