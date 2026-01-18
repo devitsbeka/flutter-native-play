@@ -116,10 +116,11 @@ export function ShopRightSidebar() {
         ))}
       </div>
 
-      {/* Content Container */}
-      <div className="h-full flex flex-col justify-center p-3 relative z-10 overflow-hidden">
-        {/* გახდი PRO Title - On video background */}
-        <div className="text-center mb-3 mt-[30px]">
+      {/* Content Container - Absolute positioned, no scroll */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 z-10 pointer-events-none">
+        <div className="w-full max-w-[290px] mt-[30px] pointer-events-auto">
+          {/* გახდი PRO Title - On video background */}
+          <div className="text-center mb-3">
           <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
             <Crown className="w-5 h-5 text-purple-400" />
             <h2 className="text-lg font-bold text-white">გახდი PRO</h2>
@@ -255,6 +256,7 @@ export function ShopRightSidebar() {
               </motion.div>
             );
           })}
+          </div>
         </div>
       </div>
     </aside>
