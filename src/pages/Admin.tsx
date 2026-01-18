@@ -19,7 +19,8 @@ import {
   Workflow,
   FileArchive,
   Flag,
-  Palette
+  Palette,
+  Coins
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,11 @@ const mainNavItems: NavItem[] = [
     to: '/admin/design', 
     icon: Palette, 
     label: 'დიზაინი' 
+  },
+  { 
+    to: '/admin/economy', 
+    icon: Coins, 
+    label: 'ეკონომიკა' 
   },
 ];
 

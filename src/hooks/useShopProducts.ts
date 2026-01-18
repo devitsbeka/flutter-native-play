@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface ShopProduct {
   id: string;
@@ -8,7 +9,7 @@ export interface ShopProduct {
   category: string;
   price: number;
   currency: string;
-  value: unknown | null;
+  value: Json | null;
   is_active: boolean;
   is_featured: boolean;
   is_popular: boolean;
