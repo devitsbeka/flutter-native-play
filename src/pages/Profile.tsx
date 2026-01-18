@@ -10,7 +10,7 @@ import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal"
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { ProfileRightSidebar } from "@/components/profile/ProfileRightSidebar";
+
 
 export default function Profile() {
   const { user, profile, signOut } = useAuth();
@@ -54,9 +54,7 @@ export default function Profile() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="flex min-h-screen bg-background">
-        {/* Main Content */}
-        <div className="flex-1 min-h-screen">
+      <div className="min-h-screen bg-background">
           {/* Header with Video Background */}
           <div className="relative pt-12 pb-20 px-6 overflow-hidden">
             {/* Video Background */}
@@ -267,14 +265,10 @@ export default function Profile() {
             )}
           </div>
 
-          <AvatarGeneratorModal
-            isOpen={showAvatarGenerator}
-            onClose={() => setShowAvatarGenerator(false)}
-          />
-        </div>
-
-        {/* Right Sidebar - Desktop Only */}
-        <ProfileRightSidebar />
+        <AvatarGeneratorModal
+          isOpen={showAvatarGenerator}
+          onClose={() => setShowAvatarGenerator(false)}
+        />
       </div>
     </MainLayout>
   );
