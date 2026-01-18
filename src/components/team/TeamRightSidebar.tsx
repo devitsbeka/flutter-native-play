@@ -34,7 +34,7 @@ export function TeamRightSidebar({
   const onlineFriends = friends.filter(f => onlineUsers.has(f.friendId));
 
   return (
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-border/50 bg-background/50 backdrop-blur-sm">
+    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-border/50 bg-background/50 backdrop-blur-sm">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Game Invitations Widget */}
         <GameInvitationsSection
