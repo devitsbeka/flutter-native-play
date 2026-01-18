@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gamepad2, Heart, Play, FolderOpen, ChevronLeft, Lock, Globe, PartyPopper, Plus } from "lucide-react";
+import { Heart, Play, FolderOpen, ChevronLeft, Lock, Globe, PartyPopper, Plus, Gamepad2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,18 +115,15 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
         >
           {/* Fixed Header */}
           <div className="flex-shrink-0 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between gap-3 px-4 py-3">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleClose}
-                  className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
                 >
-                  <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+                  <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
-                <div className="flex items-center gap-2">
-                  <Gamepad2 className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-bold text-foreground">ჩემი ტრივიები</h2>
-                </div>
+                <h2 className="text-lg font-bold text-foreground">ჩემი ტრივიები</h2>
               </div>
               {onCreateTrivia && (
                 <button

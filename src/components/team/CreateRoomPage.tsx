@@ -535,22 +535,26 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
       {/* Header - simplified */}
-      <div className="flex items-center gap-3 px-4 py-4 border-b border-border/30">
-        <button
-          onClick={onClose}
-          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-foreground" />
-        </button>
-        <h1 className="text-xl font-display text-foreground flex-1">{t("team.newRoom")}</h1>
-        
-        {/* Help Button */}
-        <button
-          onClick={() => setShowHowItWorksModal(true)}
-          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-        >
-          <HelpCircle className="w-5 h-5 text-muted-foreground" />
-        </button>
+      <div className="border-b border-border/30">
+        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <h1 className="text-xl font-display text-foreground">{t("team.newRoom")}</h1>
+          </div>
+          
+          {/* Help Button */}
+          <button
+            onClick={() => setShowHowItWorksModal(true)}
+            className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+          >
+            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
