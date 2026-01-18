@@ -61,7 +61,7 @@ export default function WorldHome() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 content-area -mt-12 rounded-t-3xl relative z-10 px-4 py-6 pb-24">
+      <div className="flex-1 content-area -mt-12 rounded-t-3xl relative z-10 px-4 py-6 pb-24 max-w-[700px] md:max-w-[600px] mx-auto w-full">
         <h2 className="text-lg font-semibold text-foreground mb-4">
           Choose a Continent
         </h2>

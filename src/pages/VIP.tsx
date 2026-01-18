@@ -89,7 +89,7 @@ export default function VIP() {
       <PageHeader title="მაღაზია" />
 
       {/* Content */}
-      <div className="p-4 pb-8">
+      <div className="p-4 pb-8 max-w-[700px] md:max-w-[600px] mx-auto">
         {/* Hero */}
         <motion.div
           className="relative overflow-hidden rounded-3xl p-6 mb-6"

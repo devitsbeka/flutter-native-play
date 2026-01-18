@@ -188,7 +188,7 @@ export default function Notifications() {
 
       {/* Header - reduced size */}
       <div className="relative z-10 px-4 pt-4 pb-3 border-b border-border/40">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 max-w-[700px] md:max-w-[600px] mx-auto w-full">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
               <Bell className="w-4 h-4 text-primary" />
@@ -205,7 +205,7 @@ export default function Notifications() {
       </div>
 
       {/* Content - full width, hidden scroll */}
-      <div className="relative z-10 px-0 overflow-y-auto scrollbar-hide">
+      <div className="relative z-10 px-0 overflow-y-auto scrollbar-hide max-w-[700px] md:max-w-[600px] mx-auto">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
