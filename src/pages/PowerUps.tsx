@@ -215,7 +215,7 @@ export default function PowerUps() {
             <ShopCurrencyBar />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
-            <div className="px-6 pt-4">
+            <div className="pt-4">
               <ShopStandardLayout
                 sections={SHOP_SECTIONS}
                 gems={gems}

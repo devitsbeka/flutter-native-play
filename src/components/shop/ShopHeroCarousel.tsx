@@ -108,7 +108,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   };
 
   return (
-    <div className="relative px-4 mb-6 pt-3">
+    <div className="relative px-[15px] mb-6 pt-3">
       <div 
         className="relative overflow-hidden rounded-3xl" 
         style={{ height: 240 }}
