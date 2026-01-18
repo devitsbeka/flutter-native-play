@@ -553,14 +553,29 @@ function TeamContentV2() {
 
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
-            <div className="px-4 pt-4 pb-4 flex justify-center">
-              <div className="w-full max-w-[1215px]">
-                <MyRoomsSection 
-                  hideTV 
-                  onCreateRoom={() => setShowTeamMenu(true)}
-                  onShowAllRooms={() => setShowAllGamesModal(true)}
-                  vertical
-                />
+            <div className="flex flex-col">
+              <RoomFiltersBar
+                filter={roomsFilter}
+                onFilterChange={setRoomsFilter}
+                sort={roomsSort}
+                onSortChange={setRoomsSort}
+                searchQuery={roomsSearchQuery}
+                onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowTeamMenu(true)}
+                addButtonText="+ ახალი ოთახი"
+              />
+              <div className="px-4 pt-2 pb-4 flex justify-center">
+                <div className="w-full max-w-[1215px]">
+                  <MyRoomsSection 
+                    hideTV 
+                    onCreateRoom={() => setShowTeamMenu(true)}
+                    onShowAllRooms={() => setShowAllGamesModal(true)}
+                    vertical
+                    filter={roomsFilter}
+                    searchQuery={roomsSearchQuery}
+                    sort={roomsSort}
+                  />
+                </div>
               </div>
             </div>
           )}
