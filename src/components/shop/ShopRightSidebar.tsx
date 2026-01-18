@@ -84,7 +84,7 @@ export function ShopRightSidebar() {
 
   return (
     <aside 
-      className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden shrink-0"
+      className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen fixed top-0 right-0 border-l border-white/10 z-20 overflow-hidden"
     >
       {/* Background Video */}
       <video
