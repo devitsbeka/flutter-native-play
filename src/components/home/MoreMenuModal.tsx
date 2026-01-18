@@ -77,7 +77,7 @@ export function MoreMenuModal({
       variant="primary"
       title="მეტი"
     >
-      <div className="flex flex-col gap-2 py-2">
+      <div className="flex flex-col gap-2 py-2 max-w-[700px] md:max-w-[600px] mx-auto w-full">
         <MenuItem
           icon={Settings}
           label="პარამეტრები"

@@ -7,7 +7,7 @@ export default function TermsOfServiceEN() {
     <div className="min-h-screen bg-background">
       <PageHeader title="Terms of Service" />
       
-      <div className="p-4 pb-12">
+      <div className="p-4 pb-12 max-w-[700px] md:max-w-[600px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
