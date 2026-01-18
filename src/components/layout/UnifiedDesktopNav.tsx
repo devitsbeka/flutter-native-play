@@ -42,7 +42,7 @@ const navItems = [
   { id: "explore", label: "აღმოჩენა", icon: Compass, path: "/discover" },
   { id: "shop", label: "მაღაზია", icon: Store, path: "/power-ups" },
   { id: "rank", label: "რეიტინგი", icon: Trophy, path: "/leaderboards" },
-  { id: "team", label: "Live", icon: Users, path: "/team" },
+  { id: "team", label: "ონლაინ თამაში", icon: Users, path: "/team" },
 ];
 
 export function UnifiedDesktopNav({

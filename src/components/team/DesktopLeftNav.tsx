@@ -27,7 +27,7 @@ const navItems = [
   { id: "home", label: "მთავარი", icon: Home, path: "/" },
   { id: "search", label: "ძიება", icon: Search, path: "/search" },
   { id: "explore", label: "აღმოჩენა", icon: Compass, path: "/explore" },
-  { id: "team", label: "გუნდი", icon: Users, path: "/team" },
+  { id: "team", label: "ონლაინ თამაში", icon: Users, path: "/team" },
 ];
 
 export function DesktopLeftNav({ 
