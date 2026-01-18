@@ -78,7 +78,7 @@ export function ShopRightSidebar() {
   }, []);
 
   return (
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-white/10 z-20 relative overflow-hidden"
+    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
       style={{
         background: "linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%)",
       }}
@@ -194,7 +194,7 @@ export function ShopRightSidebar() {
                       whileTap={{ scale: 0.98 }}
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      განახლება
+                      შეძენა
                     </motion.button>
                   )}
                 </div>
