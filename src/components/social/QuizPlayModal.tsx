@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Share2, ChevronRight, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Button } from "@/components/ui/button";
@@ -289,6 +290,18 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
     
     return "disabled";
   };
+
+  // Detect true/false questions
+  const isTrueFalseQuestion = useMemo(() => {
+    if (!shuffledAnswers) return false;
+    if (shuffledAnswers.length !== 2) return false;
+    
+    const answers = shuffledAnswers.map(a => a.toLowerCase());
+    return (
+      (answers.includes("მართალია") && answers.includes("მცდარია")) ||
+      (answers.includes("true") && answers.includes("false"))
+    );
+  }, [shuffledAnswers]);
 
   const answerLabels = ['A', 'B', 'C', 'D'];
 
@@ -617,26 +630,50 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   />
 
                   {/* Answer Buttons */}
-                  <div className="space-y-3 flex-1">
-                    {shuffledAnswers.map((answer, index) => (
-                      <motion.div
-                        key={answer}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <QuizAnswerButton
-                          label={answerLabels[index]}
-                          text={answer}
-                          state={getAnswerState(answer)}
-                          onClick={() => handleAnswer(answer)}
-                          disabled={showResult}
-                          showLabel={true}
-                          className="w-full"
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+                  {isTrueFalseQuestion ? (
+                    <div className="flex-1 flex gap-3 items-center justify-center">
+                      {shuffledAnswers.map((answer, index) => {
+                        const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
+                        return (
+                          <motion.div
+                            key={answer}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex-1"
+                          >
+                            <QuizTrueFalseButton
+                              variant={isTrue ? "true" : "false"}
+                              state={getAnswerState(answer) as QuizTrueFalseState}
+                              onClick={() => handleAnswer(answer)}
+                              disabled={showResult}
+                            />
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="space-y-3 flex-1">
+                      {shuffledAnswers.map((answer, index) => (
+                        <motion.div
+                          key={answer}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <QuizAnswerButton
+                            label={answerLabels[index]}
+                            text={answer}
+                            state={getAnswerState(answer)}
+                            onClick={() => handleAnswer(answer)}
+                            disabled={showResult}
+                            showLabel={true}
+                            className="w-full"
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

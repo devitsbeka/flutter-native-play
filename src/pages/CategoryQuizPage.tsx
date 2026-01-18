@@ -35,6 +35,7 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { PowerUpType as UIPowerUpType } from "@/components/ui/quiz-power-up-button";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
@@ -576,6 +577,18 @@ export default function CategoryQuizPage() {
   // Get AI-analyzed icon slug for current question (highest priority)
   const aiIconSlug = useAIIconSlug(currentQuestion?.question, dbCategory?.name);
 
+  // Detect true/false questions
+  const isTrueFalseQuestion = useMemo(() => {
+    if (!currentQuestion?.allAnswers) return false;
+    if (currentQuestion.allAnswers.length !== 2) return false;
+    
+    const answers = currentQuestion.allAnswers.map(a => a.toLowerCase());
+    return (
+      (answers.includes("მართალია") && answers.includes("მცდარია")) ||
+      (answers.includes("true") && answers.includes("false"))
+    );
+  }, [currentQuestion?.allAnswers]);
+
   // Georgian answer labels
   const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
   
@@ -964,34 +977,63 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Answer Buttons */}
-      <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-hidden min-h-0">
-        <AnimatePresence mode="wait">
-          {currentQuestion?.allAnswers?.map((answer, index) => {
-            // Skip hidden answers (from 50/50 power-up)
-            if (hiddenAnswers.includes(answer)) return null;
-            
-            return (
-              <motion.div
-                key={`${currentQuestionIndex}-${index}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex-shrink-0"
-              >
-                <QuizAnswerButton
-                  label={ANSWER_LABELS[index]}
-                  text={answer}
-                  state={getAnswerState(answer)}
-                  onClick={() => handleAnswerSelect(answer)}
-                  disabled={isAnswered || hiddenAnswers.includes(answer)}
-                  showLabel={true}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+      {isTrueFalseQuestion ? (
+        <div className="flex-1 px-4 pt-2 flex gap-3 items-center justify-center">
+          <AnimatePresence mode="wait">
+            {currentQuestion?.allAnswers?.map((answer, index) => {
+              const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
+              if (hiddenAnswers.includes(answer)) return null;
+              
+              return (
+                <motion.div
+                  key={`${currentQuestionIndex}-${index}`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-1"
+                >
+                  <QuizTrueFalseButton
+                    variant={isTrue ? "true" : "false"}
+                    state={getAnswerState(answer) as QuizTrueFalseState}
+                    onClick={() => handleAnswerSelect(answer)}
+                    disabled={isAnswered || hiddenAnswers.includes(answer)}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-hidden min-h-0">
+          <AnimatePresence mode="wait">
+            {currentQuestion?.allAnswers?.map((answer, index) => {
+              // Skip hidden answers (from 50/50 power-up)
+              if (hiddenAnswers.includes(answer)) return null;
+              
+              return (
+                <motion.div
+                  key={`${currentQuestionIndex}-${index}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-shrink-0"
+                >
+                  <QuizAnswerButton
+                    label={ANSWER_LABELS[index]}
+                    text={answer}
+                    state={getAnswerState(answer)}
+                    onClick={() => handleAnswerSelect(answer)}
+                    disabled={isAnswered || hiddenAnswers.includes(answer)}
+                    showLabel={true}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Bottom Area - Power-ups OR Next Button (same as QuizGameScreenProd) */}
       <div className="px-4 pb-4 pt-2 flex-shrink-0">
