@@ -48,15 +48,23 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
               className="w-full flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors text-left"
             >
               {/* Room Icon/Avatar */}
-              <div className="relative">
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                  style={{
-                    background: room.background_gradient || "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)"
-                  }}
-                >
-                  {room.room_icon || "🎮"}
-                </div>
+              <div className="relative flex-shrink-0">
+                {room.room_icon && room.room_icon.startsWith("http") ? (
+                  <img 
+                    src={room.room_icon} 
+                    alt="" 
+                    className="w-10 h-10 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                    style={{
+                      background: room.background_gradient || "linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)"
+                    }}
+                  >
+                    {room.room_icon || "🎮"}
+                  </div>
+                )}
                 {room.status === "playing" && (
                   <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 rounded text-[10px] font-bold text-white">
                     LIVE
