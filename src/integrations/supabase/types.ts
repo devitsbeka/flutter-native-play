@@ -451,6 +451,42 @@ export type Database = {
           },
         ]
       }
+      friend_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          invited_email: string
+          invited_user_id: string | null
+          inviter_id: string
+          status: string | null
+          tier_granted: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invited_email: string
+          invited_user_id?: string | null
+          inviter_id: string
+          status?: string | null
+          tier_granted: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invited_email?: string
+          invited_user_id?: string | null
+          inviter_id?: string
+          status?: string | null
+          tier_granted?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           accepted_at: string | null
@@ -3034,6 +3070,7 @@ export type Database = {
           auto_renew: boolean | null
           created_at: string
           expires_at: string
+          friend_invites_remaining: number | null
           id: string
           purchase_platform: string | null
           started_at: string
@@ -3047,6 +3084,7 @@ export type Database = {
           auto_renew?: boolean | null
           created_at?: string
           expires_at: string
+          friend_invites_remaining?: number | null
           id?: string
           purchase_platform?: string | null
           started_at?: string
@@ -3060,6 +3098,7 @@ export type Database = {
           auto_renew?: boolean | null
           created_at?: string
           expires_at?: string
+          friend_invites_remaining?: number | null
           id?: string
           purchase_platform?: string | null
           started_at?: string

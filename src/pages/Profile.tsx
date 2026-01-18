@@ -2,39 +2,34 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Settings, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { HexBadge } from "@/components/shared/HexBadge";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-const badges = [
-  { icon: "🏆", color: "yellow" as const, locked: false },
-  { icon: "⚡", color: "purple" as const, locked: false },
-  { icon: "🎯", color: "coral" as const, locked: false },
-  { icon: "🌟", color: "pink" as const, locked: false },
-  { icon: "🔥", color: "green" as const, locked: false },
-  { icon: "💎", color: "mint" as const, locked: true },
-  { icon: "👑", color: "yellow" as const, locked: true },
-  { icon: "🚀", color: "purple" as const, locked: true },
-];
+import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
+import { useVipStatus } from "@/hooks/useVipStatus";
 
 export default function Profile() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("Badge");
+  const { subscription, isVip } = useVipStatus();
+  const [activeTab, setActiveTab] = useState("Stats");
   const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const tabs = [
-    { key: "Badge", label: t("profile.badge") },
     { key: "Stats", label: t("profile.stats") },
     { key: "Details", label: t("profile.details") },
+    { key: "PRO", label: "PRO" },
   ];
+
+  // Get current tier from subscription
+  const currentTier = subscription?.vip_tier as ProTier | undefined;
+  const friendInvitesRemaining = (subscription as any)?.friend_invites_remaining || 0;
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
@@ -73,16 +68,31 @@ export default function Profile() {
   return (
     <MainLayout showPlayButton={false}>
       <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="gradient-teal pt-12 pb-20 px-6">
-        <div className="flex justify-between items-start mb-8">
-          <h1 className="text-2xl font-bold text-primary-foreground">{t("profile.title")}</h1>
-          <button
-            onClick={() => navigate("/settings")}
-            className="p-2 rounded-full bg-primary-foreground/10"
-          >
-            <Settings className="w-5 h-5 text-primary-foreground" />
-          </button>
+      {/* Header with Video Background */}
+      <div className="relative pt-12 pb-20 px-6 overflow-hidden">
+        {/* Video Background */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/videos/floating-blob.mp4" type="video/mp4" />
+        </video>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50" />
+        
+        <div className="relative z-10">
+          <div className="flex justify-between items-start mb-8">
+            <h1 className="text-2xl font-bold text-white">{t("profile.title")}</h1>
+            <button
+              onClick={() => navigate("/settings")}
+              className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+            >
+              <Settings className="w-5 h-5 text-white" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -201,30 +211,6 @@ export default function Profile() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === "Badge" && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-4 gap-4"
-          >
-            {badges.map((badge, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex justify-center"
-              >
-                <HexBadge
-                  icon={badge.icon}
-                  color={badge.color}
-                  locked={badge.locked}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-
         {activeTab === "Stats" && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -276,6 +262,18 @@ export default function Profile() {
               <span className="text-foreground">{t("profile.memberSince")}</span>
               <span className="text-muted-foreground">{t("profile.recently")}</span>
             </div>
+          </motion.div>
+        )}
+
+        {activeTab === "PRO" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <ProPlansSection 
+              currentTier={currentTier}
+              friendInvitesRemaining={friendInvitesRemaining}
+            />
           </motion.div>
         )}
       </div>

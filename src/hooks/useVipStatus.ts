@@ -11,6 +11,7 @@ export interface VipSubscription {
   started_at: string;
   expires_at: string;
   auto_renew: boolean;
+  friend_invites_remaining?: number;
 }
 
 export type VipDuration = "day" | "week" | "month";
