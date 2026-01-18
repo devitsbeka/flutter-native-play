@@ -38,7 +38,7 @@ export function CreateTriviaTypeModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden max-w-[700px] md:max-w-[520px] mx-auto"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
           style={{
             background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
           }}
@@ -58,7 +58,7 @@ export function CreateTriviaTypeModal({
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 safe-bottom">
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 safe-bottom max-w-2xl lg:mx-auto w-full">
             {/* Single Trivia Card */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
