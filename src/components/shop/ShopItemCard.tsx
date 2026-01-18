@@ -133,7 +133,7 @@ export function ShopItemCard({
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
-          aspectRatio: "1 / 1.1",
+          aspectRatio: "1 / 1.25",
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
@@ -153,7 +153,7 @@ export function ShopItemCard({
         
         {/* Description */}
         {showDescription && description && (
-          <p className="text-gray-500 text-xs line-clamp-2 mb-3 flex-1">{description}</p>
+          <p className="text-gray-500 text-xs line-clamp-3 mb-3 flex-1">{description}</p>
         )}
 
         {/* Price / Status - Bottom */}

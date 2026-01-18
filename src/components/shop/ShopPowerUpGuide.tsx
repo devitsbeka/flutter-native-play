@@ -89,9 +89,18 @@ function PowerUpGuideCard({ icon, titleKey, color }: PowerUpGuideCardProps) {
 
 export function ShopPowerUpGuide() {
   return (
-    <div className="space-y-4">
+    <div 
+      className="sticky top-4 p-5 rounded-3xl space-y-4"
+      style={{
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.75) 100%)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 4px 24px -4px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.9)',
+        border: '1px solid rgba(0,0,0,0.06)',
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center gap-2 px-2">
+      <div className="flex items-center gap-2">
         <Lightbulb className="w-5 h-5 text-amber-500" />
         <h3 className="font-bold text-slate-700">როგორ გამოვიყენოთ ძალები</h3>
       </div>
