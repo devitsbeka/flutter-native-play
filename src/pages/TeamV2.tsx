@@ -27,7 +27,7 @@ import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import { LiveBadge } from "@/components/social/LiveBadge";
-import { SocialFeed } from "@/components/social/SocialFeed";
+import { ExplorePortfolioFeed } from "@/components/social/ExplorePortfolioFeed";
 import { MyTriviaTab } from "@/components/social/MyTriviaTab";
 import { CreateQuizModal } from "@/components/social/CreateQuizModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
@@ -584,8 +584,9 @@ function TeamContentV2() {
                 onSearchQueryChange={setRoomsSearchQuery}
               />
               <div className="px-4 pt-2 pb-4 flex justify-center">
-                <div className="w-full max-w-[700px]">
-                  <SocialFeed 
+                <div className="w-full max-w-[900px]">
+                  <ExplorePortfolioFeed 
+                    searchQuery={roomsSearchQuery}
                     onPlayQuiz={(post, collectionPosts) => {
                       setPlayingQuiz({ post, collectionPosts });
                     }}
