@@ -99,25 +99,20 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         >
           {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
-            <div className="flex items-center gap-3 px-4 py-3">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center gap-3 px-4 py-3">
               <button 
                 onClick={handleClose} 
-                className="p-2 -ml-2 hover:bg-muted rounded-xl transition-colors"
+                className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
               >
-                <ChevronLeft className="w-6 h-6 text-foreground" />
+                <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Tv className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-lg font-bold text-foreground">TV-სთან დაკავშირება</h1>
-              </div>
+              <h1 className="text-lg font-bold text-foreground">TV-სთან დაკავშირება</h1>
             </div>
           </div>
 
           {/* Scrollable Content */}
           <div className="h-full overflow-y-auto pt-[60px] pb-6 safe-top">
-            <div className="p-5">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
               <AnimatePresence mode="wait">
                 {isConnected ? (
                   <motion.div

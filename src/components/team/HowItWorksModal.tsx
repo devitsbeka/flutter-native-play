@@ -44,18 +44,21 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
           className="fixed inset-0 z-50 bg-background flex flex-col"
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <h2 className="text-lg font-bold text-foreground">როგორ მუშაობს?</h2>
+          <div className="flex-shrink-0 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center gap-3 px-4 py-3">
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <h2 className="text-lg font-bold text-foreground">როგორ მუშაობს?</h2>
+            </div>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-6">
             {/* Friends explanation */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -98,13 +101,16 @@ export const HowItWorksModal = ({ isOpen, onClose }: HowItWorksModalProps) => {
             >
               <span className="font-medium text-foreground">გართობა გარანტირებულია! 🎉</span>
             </motion.div>
+            </div>
           </div>
 
           {/* Fixed Footer */}
-          <div className="flex-shrink-0 p-4 border-t border-border/50 bg-background">
-            <ChunkyButton onClick={onClose} className="w-full">
-              გასაგებია!
-            </ChunkyButton>
+          <div className="flex-shrink-0 border-t border-border/50 bg-background">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-4">
+              <ChunkyButton onClick={onClose} className="w-full">
+                გასაგებია!
+              </ChunkyButton>
+            </div>
           </div>
         </motion.div>
       )}
