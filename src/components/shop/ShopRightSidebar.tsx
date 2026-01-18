@@ -117,7 +117,7 @@ export function ShopRightSidebar() {
       </div>
 
       {/* Content Container - Absolute positioned, no scroll */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-[180px] p-4 z-10 pointer-events-none">
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-[150px] p-4 z-10 pointer-events-none">
         <div className="w-full max-w-[290px] pointer-events-auto">
           {/* გახდი PRO Title - On video background */}
           <div className="text-center mb-3">
