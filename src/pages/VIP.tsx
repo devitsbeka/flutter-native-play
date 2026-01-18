@@ -47,12 +47,6 @@ const vipBenefits = [
   },
 ];
 
-// Pricing constants
-const MONTHLY_PRICE = 9.99;
-const ANNUAL_PRICE = 79.99;
-const MONTHLY_TOTAL = MONTHLY_PRICE * 12;
-const SAVINGS = MONTHLY_TOTAL - ANNUAL_PRICE;
-const SAVINGS_PERCENT = Math.round((SAVINGS / MONTHLY_TOTAL) * 100);
 
 export default function VIP() {
   const navigate = useNavigate();
@@ -61,21 +55,6 @@ export default function VIP() {
   const { isVip, getDaysRemaining } = useVipStatus();
   const [restoring, setRestoring] = useState(false);
 
-  const handlePurchaseMonthly = async () => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    await purchase(IAP_PRODUCTS.VIP_MONTHLY);
-  };
-
-  const handlePurchaseAnnual = async () => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    await purchase(IAP_PRODUCTS.VIP_ANNUAL);
-  };
 
   const handleRestore = async () => {
     setRestoring(true);
@@ -162,68 +141,6 @@ export default function VIP() {
           </motion.div>
         )}
 
-        {/* Pricing */}
-        <motion.div
-          className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-slate-200"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm text-slate-600">თვიური გამოწერა</p>
-              <p className="text-2xl font-display font-bold text-slate-800">
-                ₾{MONTHLY_PRICE}<span className="text-sm text-slate-600 font-normal">/თვე</span>
-              </p>
-            </div>
-          </div>
-          <ChunkyButton 
-            className="w-full"
-            onClick={handlePurchaseMonthly}
-            disabled={purchasing}
-          >
-            <Crown className="w-5 h-5 mr-2" />
-            {purchasing ? "მიმდინარეობს..." : "გააქტიურე VIP"}
-          </ChunkyButton>
-        </motion.div>
-
-        {/* Annual option */}
-        <motion.div
-          className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 mb-4 border border-amber-200"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-amber-500" />
-            <span className="font-semibold text-slate-800">წლიური გამოწერა</span>
-            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
-              საუკეთესო ფასი
-            </span>
-          </div>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-2xl font-display font-bold text-slate-800">
-                ₾{ANNUAL_PRICE}<span className="text-sm text-slate-600 font-normal">/წელი</span>
-              </p>
-              <p className="text-sm text-slate-600">
-                ₾{(ANNUAL_PRICE / 12).toFixed(2)}/თვე • დაზოგე ₾{SAVINGS.toFixed(0)}
-              </p>
-            </div>
-            <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-              -{SAVINGS_PERCENT}% დაზოგვა
-            </div>
-          </div>
-          <ChunkyButton 
-            className="w-full"
-            variant="primary"
-            onClick={handlePurchaseAnnual}
-            disabled={purchasing}
-          >
-            <Crown className="w-5 h-5 mr-2" />
-            {purchasing ? "მიმდინარეობს..." : "წლიური გამოწერა"}
-          </ChunkyButton>
-        </motion.div>
 
         {/* Restore Purchases */}
         <motion.button
