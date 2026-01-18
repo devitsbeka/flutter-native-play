@@ -55,7 +55,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       <motion.div
         ref={ref}
         className={cn(
-          "relative w-full rounded-2xl overflow-hidden",
+          "relative w-full md:max-w-2xl md:mx-auto rounded-2xl overflow-hidden",
           isFrozen && "ring-4 ring-cyan-400/50",
           className
         )}
