@@ -189,7 +189,7 @@ export function MultiplayerGameScreenV2() {
 
   return (
     <div className="w-full h-[100dvh] bg-[#7E7BDC] overflow-hidden">
-      <div className="w-full h-full flex flex-col max-w-[700px] lg:max-w-3xl mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 
@@ -394,7 +394,7 @@ export function MultiplayerGameScreenV2() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex-shrink-0 relative"
+                  className="flex-shrink-0 relative w-full"
                 >
                   <QuizAnswerButton
                     label={ANSWER_LABELS[index]}
@@ -451,7 +451,7 @@ export function MultiplayerGameScreenV2() {
                   variant="secondary"
                   size="xl"
                   onClick={handleNext}
-                  className="w-full md:max-w-sm md:mx-auto"
+                  className="w-full"
                 >
                   {isLastQuestion ? t("game.viewResults") : t("game.nextQuestion")}
                 </ChunkyButton>

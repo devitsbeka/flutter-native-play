@@ -57,7 +57,7 @@ const QuizNextButton = React.forwardRef<HTMLButtonElement, QuizNextButtonProps>(
       <motion.button
         ref={ref}
         className={cn(
-          "relative w-full md:max-w-sm md:mx-auto h-[60px] rounded-2xl overflow-hidden",
+          "relative w-full h-[60px] rounded-2xl overflow-hidden",
           "font-bold text-lg",
           className
         )}

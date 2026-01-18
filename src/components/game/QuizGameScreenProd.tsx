@@ -289,7 +289,7 @@ export function QuizGameScreenProd() {
   return (
     <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
       {/* Content wrapper with max-width for desktop/tablet, centered */}
-      <div className="w-full h-full flex flex-col max-w-[700px] lg:max-w-3xl mx-auto">
+      <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Safe area padding for notched phones */}
       <div className="pt-[env(safe-area-inset-top)]" />
 
@@ -393,7 +393,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Answer Buttons */}
-      <div className="flex-1 px-4 lg:px-8 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0 items-center">
+      <div className="flex-1 px-4 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
         <AnimatePresence mode="wait">
           {currentQuestion.allAnswers.map((answer, index) => {
             const isHidden = hiddenAnswers.includes(answer);
@@ -406,7 +406,7 @@ export function QuizGameScreenProd() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex-shrink-0"
+                className="flex-shrink-0 w-full"
               >
                 <QuizAnswerButton
                   label={ANSWER_LABELS[index]}
@@ -437,7 +437,7 @@ export function QuizGameScreenProd() {
                   variant="secondary"
                   size="xl"
                   onClick={handleNext}
-                  className="w-full md:max-w-sm md:mx-auto"
+                  className="w-full"
                 >
                   {isLastQuestion ? t("game.results") : t("game.nextQuestion")}
                 </ChunkyButton>
