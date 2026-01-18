@@ -143,7 +143,7 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
       </motion.div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom">
+      <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom max-w-2xl lg:mx-auto">
         {/* Top section - Full-width horizontal cards */}
         <div className="space-y-3 mb-4">
           {topOptions.map((option, index) => (
@@ -155,7 +155,7 @@ export const TeamMenuScreen = forwardRef<HTMLDivElement, TeamMenuScreenProps>(
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={option.onClick}
-              className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+              className="relative w-full md:max-w-lg md:mx-auto p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
               style={{
                 background: "rgba(255, 255, 255, 0.12)",
                 backdropFilter: "blur(12px)",
