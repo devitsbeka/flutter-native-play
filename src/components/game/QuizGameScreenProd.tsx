@@ -9,6 +9,7 @@ import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { QuizTrueFalseButton, type QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { QuizPowerUpBar } from "@/components/ui/quiz-power-up-bar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { TimerBadge } from "@/components/game/TimerBadge";
@@ -265,6 +266,18 @@ export function QuizGameScreenProd() {
     });
   }, [currentQuestion, hiddenAnswers, replacedAnswer]);
 
+  // Detect true/false questions
+  const isTrueFalseQuestion = useMemo(() => {
+    if (!currentQuestion?.allAnswers) return false;
+    if (currentQuestion.allAnswers.length !== 2) return false;
+    
+    const answers = currentQuestion.allAnswers.map(a => a.toLowerCase());
+    return (
+      (answers.includes("მართალია") && answers.includes("მცდარია")) ||
+      (answers.includes("true") && answers.includes("false"))
+    );
+  }, [currentQuestion?.allAnswers]);
+
   // Get player avatar state
   const getPlayerState = useCallback(() => {
     if (!answerRevealed) return "active";
@@ -393,34 +406,63 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Answer Buttons */}
-      <div className="flex-1 px-4 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
-        <AnimatePresence mode="wait">
-          {currentQuestion.allAnswers.map((answer, index) => {
-            const isHidden = hiddenAnswers.includes(answer);
-            if (isHidden) return null;
+      {isTrueFalseQuestion ? (
+        <div className="flex-1 px-4 flex gap-3 items-center justify-center">
+          <AnimatePresence mode="wait">
+            {currentQuestion.allAnswers.map((answer, index) => {
+              const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
+              if (hiddenAnswers.includes(answer)) return null;
+              
+              return (
+                <motion.div
+                  key={`${currentQuestionIndex}-${index}`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-1"
+                >
+                  <QuizTrueFalseButton
+                    variant={isTrue ? "true" : "false"}
+                    state={getAnswerState(answer) as QuizTrueFalseState}
+                    onClick={() => handleAnswer(answer)}
+                    disabled={answerRevealed}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="flex-1 px-4 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
+          <AnimatePresence mode="wait">
+            {currentQuestion.allAnswers.map((answer, index) => {
+              const isHidden = hiddenAnswers.includes(answer);
+              if (isHidden) return null;
 
-            return (
-              <motion.div
-                key={`${currentQuestionIndex}-${index}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex-shrink-0 w-full"
-              >
-                <QuizAnswerButton
-                  label={ANSWER_LABELS[index]}
-                  text={answer}
-                  state={getAnswerState(answer)}
-                  onClick={() => handleAnswer(answer)}
-                  disabled={answerRevealed}
-                  showLabel={true}
-                />
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+              return (
+                <motion.div
+                  key={`${currentQuestionIndex}-${index}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-shrink-0 w-full"
+                >
+                  <QuizAnswerButton
+                    label={ANSWER_LABELS[index]}
+                    text={answer}
+                    state={getAnswerState(answer)}
+                    onClick={() => handleAnswer(answer)}
+                    disabled={answerRevealed}
+                    showLabel={true}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Bottom Area - Power-ups OR Next Button */}
       <div className="px-4 pb-2 [@media(max-height:700px)]:pb-1 flex-shrink-0">
