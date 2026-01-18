@@ -496,8 +496,8 @@ function TeamContentV2() {
                   {/* Tabs with equal distribution */}
                   {[
                     { id: "explore", label: "აღმოაჩინე" },
-                    { id: "rooms", label: "ჩემი ოთახები" },
-                    { id: "my-content", label: "ჩემი ტრივიები" },
+                    { id: "rooms", label: "ოთახები" },
+                    { id: "my-content", label: "ჩემი ტრივია" },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -530,18 +530,6 @@ function TeamContentV2() {
         {/* Content Area - Full width like Shop/PowerUps */}
         <div className="flex-1 overflow-y-auto pb-24 lg:pb-0">
           
-          {/* Mobile Full-Width Create Button */}
-          <div className="sm:hidden px-4 pt-3">
-            <ChunkyButton 
-              onClick={() => setShowTeamMenu(true)}
-              variant="primary"
-              size="md"
-              className="w-full justify-center"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              {activeTab === "my-content" ? "ახალი ტრივია" : "ახალი ოთახი"}
-            </ChunkyButton>
-          </div>
 
 
           {/* Rooms Tab */}
