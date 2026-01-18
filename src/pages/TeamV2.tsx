@@ -523,17 +523,6 @@ function TeamContentV2() {
                     ))}
                   </div>
                 </div>
-                
-                {/* New Room Button - Far Right (hidden on mobile) */}
-                <ChunkyButton 
-                  onClick={() => setShowTeamMenu(true)}
-                  variant="primary"
-                  size="sm"
-                  className="hidden sm:flex flex-shrink-0"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  {activeTab === "my-content" ? "ახალი ტრივია" : "ახალი ოთახი"}
-                </ChunkyButton>
               </div>
             </div>
           </div>
