@@ -84,7 +84,7 @@ export function ShopRightSidebar() {
 
   return (
     <aside 
-      className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
+      className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden shrink-0"
     >
       {/* Background Video */}
       <video
@@ -117,9 +117,9 @@ export function ShopRightSidebar() {
       </div>
 
       {/* Content Container */}
-      <div className="flex-1 flex flex-col justify-center p-3 relative z-10 max-h-full">
+      <div className="h-full flex flex-col justify-center p-3 relative z-10 overflow-hidden">
         {/* გახდი PRO Title - On video background */}
-        <div className="text-center mb-3">
+        <div className="text-center mb-3 mt-[30px]">
           <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
             <Crown className="w-5 h-5 text-purple-400" />
             <h2 className="text-lg font-bold text-white">გახდი PRO</h2>
