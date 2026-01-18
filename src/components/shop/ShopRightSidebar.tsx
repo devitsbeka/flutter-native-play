@@ -1,8 +1,8 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Sparkles, Users, ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import shopBgVideo from "@/assets/shopbg.mp4";
 
 // White particle component for sidebar
@@ -67,6 +67,7 @@ export function ShopRightSidebar() {
   const navigate = useNavigate();
   const { subscription } = useVipStatus();
   const currentTier = subscription?.vip_tier as SimplifiedTier | undefined;
+  const [hoveredTier, setHoveredTier] = useState<string | null>(null);
 
   const handleUpgrade = (tierId: SimplifiedTier) => {
     navigate('/vip', { state: { selectedTier: tierId } });
@@ -117,10 +118,11 @@ export function ShopRightSidebar() {
 
       {/* Content Container */}
       <div className="flex-1 flex flex-col justify-end p-4 relative z-10">
-        {/* Tier Cards - Taller with proper CTAs */}
-        <div className="space-y-4">
+        {/* Tier Cards - Compact with hover expand */}
+        <div className="space-y-3">
           {SIMPLIFIED_TIERS.map((tier, index) => {
             const isCurrentTier = currentTier === tier.id;
+            const isHovered = hoveredTier === tier.id;
             const TierIcon = tier.icon;
             
             return (
@@ -129,92 +131,118 @@ export function ShopRightSidebar() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.15 }}
-                className="relative rounded-2xl overflow-hidden"
+                onMouseEnter={() => setHoveredTier(tier.id)}
+                onMouseLeave={() => setHoveredTier(null)}
+                className="relative rounded-2xl overflow-hidden cursor-pointer"
                 style={{
                   background: tier.gradient,
-                  boxShadow: `0 8px 0 ${tier.shadow}, 0 12px 24px rgba(0,0,0,0.4)`,
+                  boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 20px rgba(0,0,0,0.4)`,
                 }}
+                onClick={() => !isCurrentTier && handleUpgrade(tier.id)}
               >
                 {/* Popular Badge */}
                 {tier.popular && !isCurrentTier && (
-                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg flex items-center gap-1">
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
                     <Sparkles className="w-3 h-3" />
-                    პოპულარული
+                    TOP
                   </div>
                 )}
 
                 {/* Active Badge */}
                 {isCurrentTier && (
-                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg flex items-center gap-1">
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
                     <Check className="w-3 h-3" />
                     აქტიური
                   </div>
                 )}
 
                 {/* Card Content */}
-                <div className="p-4">
-                  {/* Header */}
-                  <div className="flex items-center gap-3 mb-3">
+                <div className="p-3">
+                  {/* Header - Always visible */}
+                  <div className="flex items-center gap-3">
                     <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ 
                         background: "rgba(255,255,255,0.2)",
-                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 4px 0 rgba(0,0,0,0.2)",
+                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
                       }}
                     >
-                      <TierIcon className="w-6 h-6 text-white" />
+                      <TierIcon className="w-5 h-5 text-white" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{tier.nameKa}</h3>
+                    <div className="flex-1">
+                      <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black text-white">₾{tier.price}</span>
-                        <span className="text-sm text-white/70">/თვე</span>
+                        <span className="text-xl font-black text-white">₾{tier.price}</span>
+                        <span className="text-xs text-white/70">/თვე</span>
                       </div>
                     </div>
+                    {!isHovered && !isCurrentTier && (
+                      <ChevronRight className="w-5 h-5 text-white/70" />
+                    )}
                   </div>
 
-                  {/* Benefits List */}
-                  <ul className="space-y-2 mb-4">
-                    {tier.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-white/90">
-                        <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <Check className="w-2.5 h-2.5 text-white" />
-                        </div>
-                        {benefit}
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Expandable Benefits List */}
+                  <AnimatePresence>
+                    {isHovered && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="overflow-hidden"
+                      >
+                        <ul className="space-y-1.5 mt-3 pt-3 border-t border-white/20">
+                          {tier.benefits.map((benefit, i) => (
+                            <motion.li 
+                              key={i} 
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.05 }}
+                              className="flex items-center gap-2 text-sm text-white/90"
+                            >
+                              <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <Check className="w-2.5 h-2.5 text-white" />
+                              </div>
+                              {benefit}
+                            </motion.li>
+                          ))}
+                        </ul>
 
-                  {/* CTA Button */}
-                  <motion.button
-                    onClick={() => !isCurrentTier && handleUpgrade(tier.id)}
-                    disabled={isCurrentTier}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2"
-                    style={{
-                      background: isCurrentTier 
-                        ? "rgba(255,255,255,0.15)" 
-                        : "rgba(255,255,255,0.95)",
-                      color: isCurrentTier ? "rgba(255,255,255,0.6)" : tier.shadow,
-                      boxShadow: isCurrentTier 
-                        ? "none" 
-                        : "0 4px 0 rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.3)",
-                      cursor: isCurrentTier ? 'default' : 'pointer',
-                    }}
-                    whileHover={!isCurrentTier ? { scale: 1.02, y: -2 } : {}}
-                    whileTap={!isCurrentTier ? { scale: 0.98, y: 0 } : {}}
-                  >
-                    {isCurrentTier ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        აქტიურია
-                      </>
-                    ) : (
-                      <>
-                        {tier.ctaText}
-                        <ChevronRight className="w-4 h-4" />
-                      </>
+                        {/* CTA Button */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.15 }}
+                          className="mt-3"
+                        >
+                          <button
+                            className="w-full py-2.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                            style={{
+                              background: isCurrentTier 
+                                ? "rgba(255,255,255,0.15)" 
+                                : "rgba(255,255,255,0.95)",
+                              color: isCurrentTier ? "rgba(255,255,255,0.6)" : tier.shadow,
+                              boxShadow: isCurrentTier 
+                                ? "none" 
+                                : "0 3px 0 rgba(0,0,0,0.15)",
+                            }}
+                          >
+                            {isCurrentTier ? (
+                              <>
+                                <Check className="w-4 h-4" />
+                                აქტიურია
+                              </>
+                            ) : (
+                              <>
+                                {tier.ctaText}
+                                <ChevronRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </button>
+                        </motion.div>
+                      </motion.div>
                     )}
-                  </motion.button>
+                  </AnimatePresence>
                 </div>
               </motion.div>
             );
