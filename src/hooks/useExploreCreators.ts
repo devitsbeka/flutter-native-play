@@ -88,7 +88,7 @@ export function useExploreCreators(searchQuery: string = "") {
           playsCount: post.plays_count || 0,
           commentsCount: 0,
           questions: ((post.questions as Json[]) || []).map((q: any) => ({
-            question: q.question || "",
+            question: q.question_text || q.question || "",
             correct_answer: q.correct_answer || "",
             incorrect_answers: q.incorrect_answers || [],
             icon_slug: q.icon_slug,
