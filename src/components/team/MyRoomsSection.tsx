@@ -203,10 +203,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
         colors={gradientPreset.colors}
         gradientSize="125% 125%"
         gradientOrigin="bottom-middle"
-        enableNoise={true}
-        noisePatternAlpha={25}
-        noiseIntensity={0.8}
-        noisePatternRefreshInterval={3}
+        enableNoise={false}
         className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
       >
         {/* Cover image with radial fade - flip based on index for variety */}
@@ -352,10 +349,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
         colors={gradientPreset.colors}
         gradientSize="125% 125%"
         gradientOrigin="bottom-middle"
-        enableNoise={true}
-        noisePatternAlpha={25}
-        noiseIntensity={0.8}
-        noisePatternRefreshInterval={3}
+        enableNoise={false}
         className="relative w-full h-full p-3 flex flex-col"
       >
         {/* Cover image with radial fade */}
