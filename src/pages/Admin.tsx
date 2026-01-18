@@ -242,8 +242,10 @@ export default function Admin() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden bg-muted/30">
-        <Outlet />
+      <main className="flex-1 overflow-auto bg-muted/30">
+        <div className="p-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
