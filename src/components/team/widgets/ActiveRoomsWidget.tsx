@@ -80,12 +80,12 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                 <p className="font-medium text-foreground text-sm truncate">
                   {room.room_name || room.category_name || "თამაშის ოთახი"}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
                   <span>{room.participants.length} მოთამაშე</span>
                   <span>•</span>
-                  <span>
+                  <span className="truncate">
                     {formatDistanceToNow(new Date(room.last_activity_at || room.created_at), { 
-                      addSuffix: true, 
+                      addSuffix: false, 
                       locale: ka 
                     })}
                   </span>
