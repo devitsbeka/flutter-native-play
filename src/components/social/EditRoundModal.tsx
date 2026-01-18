@@ -461,7 +461,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                       
                       return (
                         <CarouselItem key={index} className="flex items-center justify-center w-full px-6">
-                          <div className="w-full space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto px-2 scrollbar-hide">
+                          <div className="w-full max-w-[700px] md:max-w-[520px] mx-auto space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto px-2 scrollbar-hide">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
                               <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
