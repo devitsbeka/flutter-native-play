@@ -338,7 +338,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.03 }}
       onClick={onJoin}
-      className={`aspect-square rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+      className={`aspect-[2.5/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -350,7 +350,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
         gradientSize="125% 125%"
         gradientOrigin="bottom-middle"
         enableNoise={false}
-        className="relative w-full h-full p-3 flex flex-col"
+        className="relative w-full h-full p-3 flex flex-row items-center gap-3"
       >
         {/* Cover image with radial fade */}
         <div 
@@ -371,66 +371,62 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
           />
         </div>
         
-        {/* Top: Status badge */}
-        <div className="relative z-10">
-          {isPlaying ? (
-            <LiveBadge />
-          ) : isCompleted ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-              დასრულდა
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              მოლოდინი
-            </span>
-          )}
-        </div>
-        
-        {/* Middle: Room icon */}
+        {/* Left: Room icon */}
         {room.room_icon && (
-          <div className="flex-1 flex items-center justify-center relative z-10">
+          <div className="relative z-10 flex-shrink-0">
             <img 
               src={room.room_icon} 
               alt="" 
-              className="w-[58px] h-[58px] object-contain drop-shadow-lg"
+              className="w-12 h-12 object-contain drop-shadow-lg"
             />
           </div>
         )}
         
-        {/* Bottom: Name and participants */}
-        <div className="relative z-10 mt-auto">
-          <h3 className="font-display text-white text-xl leading-tight truncate drop-shadow-md mb-2">
+        {/* Center: Name and category */}
+        <div className="relative z-10 flex-1 min-w-0">
+          <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
             {displayName}
           </h3>
+          {room.category_name && (
+            <p className="text-white/70 text-xs truncate mt-0.5">{room.category_name}</p>
+          )}
+        </div>
+        
+        {/* Right: Status + participants */}
+        <div className="relative z-10 flex items-center gap-2 flex-shrink-0">
+          {isPlaying ? (
+            <LiveBadge />
+          ) : isCompleted ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+              დასრულდა
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              მოლოდინი
+            </span>
+          )}
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg">
-              <Users className="w-3.5 h-3.5 text-white/80" />
-              <span className="text-sm font-bold text-white">{room.participants.length}</span>
-            </div>
-            
-            {/* Larger avatars */}
-            <div className="flex -space-x-2.5">
-              {room.participants.slice(0, 2).map((p) => (
-                <div 
-                  key={p.user_id} 
-                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/30 flex-shrink-0 bg-white/20"
-                >
-                  {p.avatar_url ? (
-                    <img 
-                      src={p.avatar_url} 
-                      alt={p.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
-                      {p.nickname?.charAt(0).toUpperCase() || "?"}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          {/* Avatars */}
+          <div className="flex -space-x-2">
+            {room.participants.slice(0, 2).map((p) => (
+              <div 
+                key={p.user_id} 
+                className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/30 flex-shrink-0 bg-white/20"
+              >
+                {p.avatar_url ? (
+                  <img 
+                    src={p.avatar_url} 
+                    alt={p.nickname}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
+                    {p.nickname?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </GradientBackground>
