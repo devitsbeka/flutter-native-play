@@ -41,7 +41,7 @@ import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
 
-import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
+import { TeamProSidebar } from "@/components/team/TeamProSidebar";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
 import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
@@ -630,15 +630,7 @@ function TeamContentV2() {
           </div>
 
           {/* Desktop Right Sidebar - Shows on xl screens only */}
-          <TeamRightSidebar 
-            onAcceptInvitation={handleAcceptInvitation}
-            onJoinRoom={handleJoinFromInvitation}
-            onOpenTV={() => setShowTVModal(true)}
-            onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
-            activeTab={activeTab}
-            onViewAllRooms={() => handleTabChange("rooms")}
-            onViewAllTrivias={() => handleTabChange("my-content")}
-          />
+          <TeamProSidebar />
         </div>
       </div>
 
