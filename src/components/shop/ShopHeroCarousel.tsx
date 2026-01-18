@@ -116,10 +116,10 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   };
 
   return (
-    <div className="relative px-4 mb-6">
+    <div className="relative px-4 mb-6 pt-3">
       <div 
         className="relative overflow-hidden rounded-3xl" 
-        style={{ height: 220 }}
+        style={{ height: 230 }}
       >
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
@@ -147,7 +147,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
             {/* Content - Centered */}
-            <div className="relative z-10 p-5 flex flex-col items-center justify-center h-full text-center">
+            <div className="relative z-10 p-5 pt-7 flex flex-col items-center justify-center h-full text-center">
               {/* Badge */}
               <motion.div
                 className="px-3 py-1 rounded-full text-xs font-bold text-white mb-3"
