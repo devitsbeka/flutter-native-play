@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -25,7 +25,6 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
 
   const tabs = useMemo(() => [
     { id: "all", label: t("discover.all") },
@@ -34,15 +33,6 @@ export default function Discover() {
     { id: "fun", label: t("discover.fun") },
     { id: "educational", label: t("discover.educational") },
   ], [t]);
-
-  // Track scroll position for compact header
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 60);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const { categories, loading } = useCategories();
   const { progress } = useCategoryProgress();
@@ -179,81 +169,70 @@ export default function Discover() {
 
         {/* Content above mask */}
         <div className="relative z-10">
-          {/* Sticky header section */}
-          <div className={`sticky top-0 z-20 bg-white/50 backdrop-blur-sm transition-all duration-300 ${isScrolled ? 'shadow-sm' : ''}`}>
-            {/* Header with Page Title - hide when scrolled */}
-            <AnimatePresence>
-              {!isScrolled && (
-                <motion.div
-                  initial={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
-                  <div className="border-b border-purple-900/10">
-                    <PageHeader
-                      title={t("discover.title")}
-                      showBack={false}
-                      rightElements={
-                        <div className="flex items-center gap-2">
-                          <HeaderActions />
-                          <button
-                            onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                            className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
-                            style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                          >
-                            {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-                          </button>
-                        </div>
-                      }
-                    />
+          {/* Sticky header section - always visible */}
+          <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-sm">
+            {/* Header with Page Title */}
+            <div className="border-b border-purple-900/10">
+              <PageHeader
+                title={t("discover.title")}
+                showBack={false}
+                rightElements={
+                  <div className="flex items-center gap-2">
+                    <HeaderActions />
+                    <button
+                      onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
+                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                    >
+                      {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+                    </button>
                   </div>
+                }
+              />
+            </div>
 
-                  {/* Expandable Search Bar */}
-                  <AnimatePresence>
-                    {isSearchExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden px-4 pt-2 pb-2"
-                      >
-                        <div
-                          className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
-                            isSearchFocused ? "ring-2 ring-primary/30" : ""
-                          }`}
-                        >
-                          <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={() => setIsSearchFocused(true)}
-                            onBlur={() => setIsSearchFocused(false)}
-                            placeholder={t("discover.searchPlaceholder")}
-                            className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-base outline-none"
-                            autoFocus
-                          />
-                          {searchQuery && (
-                            <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </motion.div>
+            {/* Expandable Search Bar */}
+            <AnimatePresence>
+              {isSearchExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden px-4 pt-2 pb-2"
+                >
+                  <div
+                    className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
+                      isSearchFocused ? "ring-2 ring-primary/30" : ""
+                    }`}
+                  >
+                    <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      onBlur={() => setIsSearchFocused(false)}
+                      placeholder={t("discover.searchPlaceholder")}
+                      className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-base outline-none"
+                      autoFocus
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
+                        <X className="w-4 h-4" />
+                      </button>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Tabs */}
-            <div className={`px-4 ${isScrolled ? 'py-2' : 'pt-2 pb-1'}`}>
+            {/* Tabs - always visible */}
+            <div className="px-4 pt-2 pb-1">
               <IconTabBar
                 tabs={tabs}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                compact={isScrolled}
+                compact={false}
               />
             </div>
           </div>
