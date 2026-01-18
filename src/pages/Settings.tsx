@@ -51,7 +51,7 @@ export default function Settings() {
     <MainLayout showPlayButton={false}>
     <div className="min-h-screen bg-background">
 
-      <div className="p-4 pb-12 space-y-2">
+      <div className="p-4 pb-12 space-y-2 max-w-[700px] md:max-w-[600px] mx-auto">
         {settingsItems.map((item, index) => {
           const Icon = item.icon;
           return (
