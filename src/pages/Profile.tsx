@@ -88,7 +88,7 @@ export default function Profile() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-3xl shadow-lg p-6 mb-6"
+              className="mb-6"
             >
               <div className="flex flex-col items-center">
                 <div 
@@ -103,7 +103,7 @@ export default function Profile() {
                   onMouseLeave={() => setShowVideo(false)}
                 >
                   {/* Static Avatar */}
-                  <div className="relative w-28 h-28 rounded-full ring-4 ring-primary overflow-hidden">
+                  <div className="relative w-36 h-36 rounded-full ring-4 ring-primary overflow-hidden">
                     <img 
                       src={profile.avatar_url || "/placeholder.svg"}
                       alt="Avatar"
@@ -130,16 +130,6 @@ export default function Profile() {
                     )}
                   </div>
                   
-                  {/* Sparkle indicator for animated avatars */}
-                  {profile.animated_avatar_url && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg z-20"
-                    >
-                      <Sparkles className="w-3 h-3 text-white" />
-                    </motion.div>
-                  )}
                   
                   <button
                     onClick={() => setShowAvatarGenerator(true)}
@@ -156,27 +146,6 @@ export default function Profile() {
                 </p>
               </div>
 
-              {/* Stats Row */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground">
-                    {profile.total_points.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground uppercase">{t("profile.points")}</p>
-                </div>
-                <div className="text-center border-x border-border">
-                  <p className="text-2xl font-bold text-foreground">
-                    #{Math.floor(Math.random() * 100) + 1}
-                  </p>
-                  <p className="text-xs text-muted-foreground uppercase">{t("profile.worldRank")}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-foreground">
-                    #{Math.floor(Math.random() * 20) + 1}
-                  </p>
-                  <p className="text-xs text-muted-foreground uppercase">{t("profile.localRank")}</p>
-                </div>
-              </div>
             </motion.div>
 
             {/* Tabs */}
