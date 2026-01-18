@@ -35,11 +35,12 @@ export function ShopRightSidebar() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08 }}
               className={cn(
-                "relative rounded-2xl p-4 overflow-hidden bg-card/80 backdrop-blur-sm"
+                "relative rounded-2xl p-4 overflow-hidden"
               )}
               style={{
+                background: 'rgba(255, 255, 255, 0.95)',
                 border: `1.5px solid ${tier.borderColor}`,
-                boxShadow: `0 4px 16px -4px ${tier.glowColor}`,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
               }}
             >
               {/* Popular Badge */}
@@ -72,7 +73,7 @@ export function ShopRightSidebar() {
                 animate={{ x: ['-100%', '200%'] }}
                 transition={{ duration: 3, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }}
                 style={{
-                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
                   width: '50%',
                 }}
               />

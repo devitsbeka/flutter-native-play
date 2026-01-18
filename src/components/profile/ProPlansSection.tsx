@@ -59,13 +59,13 @@ export const PRO_TIERS: TierConfig[] = [
     price: 19.99,
     friendInvites: 5,
     xpMultiplier: 2,
-    // Blue/Cyan theme
-    gradient: 'linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%)',
-    borderColor: 'rgba(14, 165, 233, 0.4)',
-    glowColor: 'rgba(14, 165, 233, 0.25)',
-    accentColor: '#0EA5E9',
-    lightBg: 'rgba(14, 165, 233, 0.1)',
-    buttonGradient: 'linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%)',
+    // Orange theme
+    gradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    glowColor: 'rgba(245, 158, 11, 0.2)',
+    accentColor: '#F59E0B',
+    lightBg: 'rgba(245, 158, 11, 0.1)',
+    buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
     popular: true,
     benefits: [
       { icon: Zap, text: '2x XP ბონუსი' },
