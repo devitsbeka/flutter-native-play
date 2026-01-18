@@ -115,12 +115,10 @@ export function ShopRightSidebar() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={cn(
-                  "relative rounded-2xl p-4 overflow-hidden backdrop-blur-sm"
-                )}
+                className="relative rounded-2xl p-4 overflow-hidden"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.12)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                 }}
               >
                 {/* Popular Badge */}
@@ -150,31 +148,34 @@ export function ShopRightSidebar() {
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-3">
                     <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ 
                         background: tier.gradient,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
                     >
-                      <TierIcon className="w-5 h-5 text-white" />
+                      <TierIcon className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-white">{tier.nameKa}</h3>
-                      <p className="text-lg font-bold text-white">
-                        ₾{tier.price}<span className="text-xs text-white/60 font-normal">/თვე</span>
+                      <h3 className="font-bold text-gray-900 text-lg">{tier.nameKa}</h3>
+                      <p className="text-xl font-bold text-gray-900">
+                        ₾{tier.price}<span className="text-sm text-gray-500 font-normal">/თვე</span>
                       </p>
                     </div>
                   </div>
 
                   {/* Benefits - Simplified */}
-                  <div className="space-y-1.5 mb-3">
+                  <div className="space-y-2 mb-4">
                     {tier.benefits.map((benefit, i) => (
                       <div 
                         key={i} 
                         className="flex items-center gap-2"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-white/60 flex-shrink-0" />
-                        <span className="text-xs text-white/80">
+                        <div 
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ background: tier.id === 'solo' ? '#7C3AED' : '#EC4899' }}
+                        />
+                        <span className="text-sm text-gray-700">
                           {benefit}
                         </span>
                       </div>
