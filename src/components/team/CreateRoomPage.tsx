@@ -558,7 +558,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4 space-y-5">
         {/* Room Name with Icon - AI generated */}
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">შეარჩიე ოთახის სახელი</h2>
@@ -1079,10 +1080,12 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
 
       {/* Footer - Normal Button */}
-      <div className="px-4 py-4 border-t border-border/30">
+      <div className="border-t border-border/30">
+        <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-4">
         <ChunkyButton
           onClick={handleCreate}
           disabled={loading || isCreating || !hasValidSelection}
@@ -1097,6 +1100,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           )}
           შექმნა
         </ChunkyButton>
+        </div>
       </div>
 
       {/* TV Play Modal */}

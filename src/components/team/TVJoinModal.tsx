@@ -45,21 +45,21 @@ export const TVJoinModal: React.FC<TVJoinModalProps> = ({ open, onOpenChange }) 
           className="fixed inset-0 z-50 bg-background flex flex-col"
         >
           {/* Fixed Header */}
-          <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-            <button
-              onClick={handleClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <div className="flex items-center gap-2">
-              <Tv className="w-5 h-5 text-primary" />
+          <div className="flex-shrink-0 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center gap-3 px-4 py-3">
+              <button
+                onClick={handleClose}
+                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              </button>
               <h2 className="text-lg font-bold text-foreground">Join TV Game</h2>
             </div>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center">
+          <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -100,6 +100,7 @@ export const TVJoinModal: React.FC<TVJoinModalProps> = ({ open, onOpenChange }) 
                 </ChunkyButton>
               </motion.div>
             </motion.div>
+            </div>
           </div>
         </motion.div>
       )}
