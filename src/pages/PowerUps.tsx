@@ -15,7 +15,7 @@ import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
-import { ShopPowerUpGuide } from "@/components/shop/ShopPowerUpGuide";
+import { ShopProSidebar } from "@/components/shop/ShopProSidebar";
 import { ShopCurrencyBar } from "@/components/shop/ShopCurrencyBar";
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
@@ -214,9 +214,9 @@ export default function PowerUps() {
             />
           </div>
 
-          {/* Power-Up Guide Sidebar - Desktop only */}
+          {/* PRO Sidebar - Desktop only */}
           <div className="hidden xl:block xl:w-80 xl:flex-shrink-0 xl:pr-2 xl:pt-0">
-            <ShopPowerUpGuide />
+            <ShopProSidebar />
           </div>
         </div>
       </div>
