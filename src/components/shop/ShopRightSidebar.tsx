@@ -117,9 +117,9 @@ export function ShopRightSidebar() {
       </div>
 
       {/* Content Container */}
-      <div className="flex-1 flex flex-col justify-end p-4 relative z-10">
+      <div className="flex-1 flex flex-col justify-center p-3 relative z-10 max-h-full">
         {/* გახდი PRO Title - On video background */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3">
           <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
             <Crown className="w-5 h-5 text-purple-400" />
             <h2 className="text-lg font-bold text-white">გახდი PRO</h2>
@@ -127,7 +127,7 @@ export function ShopRightSidebar() {
         </div>
 
         {/* Tier Cards - Compact with hover expand */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {SIMPLIFIED_TIERS.map((tier, index) => {
             const isCurrentTier = currentTier === tier.id;
             const isHovered = hoveredTier === tier.id;
