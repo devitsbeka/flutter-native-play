@@ -2,7 +2,7 @@ import { ReactNode, memo, useRef, useCallback } from "react";
 import leaderboardBgBronze from "@/assets/leaderboard-bg-bronze.png";
 import leaderboardBgSilver from "@/assets/leaderboard-bg-silver.png";
 import leaderboardBgGold from "@/assets/leaderboard-bg-gold.png";
-import leaderboardBgDesktop from "@/assets/leaderboard-bg-desktop-new.png";
+import leaderboardBgDesktop from "@/assets/leaderboard-bg-desktop.png";
 
 interface LeaderboardHeroBackgroundProps {
   children?: ReactNode;
