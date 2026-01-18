@@ -88,14 +88,12 @@ function PowerUpGuideCard({ icon, titleKey, color }: PowerUpGuideCardProps) {
 }
 
 export function ShopPowerUpGuide() {
-  const { t } = useLanguage();
-
   return (
-    <div className="sticky top-4 space-y-4">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2 px-2">
         <Lightbulb className="w-5 h-5 text-amber-500" />
-        <h3 className="font-bold text-slate-700">{t("powerups.tutorial.title")}</h3>
+        <h3 className="font-bold text-slate-700">როგორ გამოვიყენოთ ძალები</h3>
       </div>
 
       {/* Power-up cards */}
