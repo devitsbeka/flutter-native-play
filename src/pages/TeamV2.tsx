@@ -416,7 +416,7 @@ function TeamContentV2() {
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Flex wrapper for main content + right sidebar */}
-      <div className="flex h-full w-full">
+      <div className="flex h-screen w-full">
         {/* Main Content Area */}
         <main id="team-main-content" className="flex-1 h-screen overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
         {/* Sticky Header - matching Shop/PowerUps style */}
