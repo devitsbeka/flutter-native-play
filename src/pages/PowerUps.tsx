@@ -197,34 +197,38 @@ export default function PowerUps() {
 
   return (
     <MainLayout showPlayButton={false}>
-    <div className="min-h-screen flex flex-col pb-24">
-      <GlobalSplineBackground />
-      
-      {/* Sticky Header - Title only */}
-      <ShopHeader
-        onHelpClick={() => setShowTutorialModal(true)}
-        onCurrencyPlusClick={handleCurrencyPlusClick}
-      />
+      {/* Flex wrapper for main content + right sidebar (matching TeamV2 layout) */}
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
+            <GlobalSplineBackground />
+            
+            {/* Sticky Header - Title only */}
+            <ShopHeader
+              onHelpClick={() => setShowTutorialModal(true)}
+              onCurrencyPlusClick={handleCurrencyPlusClick}
+            />
 
-      {/* Currency Bar - on video background */}
-      <ShopCurrencyBar />
+            {/* Currency Bar - on video background */}
+            <ShopCurrencyBar />
 
-      {/* Standard Shop Layout - Hero carousel + product grids */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Main Shop Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 pt-4">
-          <ShopStandardLayout
-            sections={SHOP_SECTIONS}
-            gems={gems}
-            purchasedItems={purchasedItems}
-            isPurchasing={isPurchasing}
-            isFrameUnlocked={isFrameUnlocked}
-            onItemClick={handlePurchase}
-          />
+            {/* Standard Shop Layout - Hero carousel + product grids */}
+            <div className="px-6 pt-4">
+              <ShopStandardLayout
+                sections={SHOP_SECTIONS}
+                gems={gems}
+                purchasedItems={purchasedItems}
+                isPurchasing={isPurchasing}
+                isFrameUnlocked={isFrameUnlocked}
+                onItemClick={handlePurchase}
+              />
+            </div>
+          </div>
+
+          {/* Desktop Right Sidebar - Shows on xl screens only */}
+          <ShopRightSidebar />
         </div>
-
-        {/* Right Sidebar - Fixed */}
-        <ShopRightSidebar />
       </div>
 
       {/* Modals */}
@@ -264,9 +268,6 @@ export default function PowerUps() {
         onClose={() => setShowBuyModal(false)}
         currencyType={selectedCurrency}
       />
-
-      {/* Bottom Navigation */}
-    </div>
     </MainLayout>
   );
 }
