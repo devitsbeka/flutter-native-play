@@ -286,7 +286,8 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
 
             {/* Scrollable Content */}
             <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
-              <div className="p-4 space-y-4">
+              <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+                <div className="p-4 space-y-4">
                 {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -406,19 +407,22 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                     </div>
                   )}
                 </div>
+                </div>
               </div>
             </div>
 
             {/* Fixed Footer */}
             {selectedSlug && (
               <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-background safe-bottom">
-                <button
+                <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
+                  <button
                   onClick={handleRemove}
                   className="w-full flex items-center justify-center gap-2 py-3 text-sm text-destructive hover:bg-destructive/10 rounded-xl transition-colors border border-destructive/20"
                 >
-                  <X className="w-4 h-4" />
-                  აიკონის წაშლა
-                </button>
+                    <X className="w-4 h-4" />
+                    აიკონის წაშლა
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>
