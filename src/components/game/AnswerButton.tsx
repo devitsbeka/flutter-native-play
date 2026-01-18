@@ -54,7 +54,7 @@ export function AnswerButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "w-full md:max-w-2xl md:mx-auto relative rounded-2xl px-6 py-4 font-semibold text-base transition-all",
+        "w-full relative rounded-2xl px-6 py-4 font-semibold text-base transition-all",
         "disabled:opacity-60 disabled:pointer-events-none",
         styles.text
       )}

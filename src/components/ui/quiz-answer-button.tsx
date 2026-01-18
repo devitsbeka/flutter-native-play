@@ -91,7 +91,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           scale: { type: "spring", stiffness: 400, damping: 17 }
         }}
         className={cn(
-          "relative w-full md:max-w-2xl md:mx-auto rounded-2xl font-bold text-lg",
+          "relative w-full rounded-2xl font-bold text-lg",
           "disabled:cursor-not-allowed",
           isLoading && "cursor-wait",
           isDisabledState && "opacity-40 cursor-not-allowed",
