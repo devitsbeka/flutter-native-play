@@ -167,79 +167,76 @@ export default function Discover() {
       {/* Subtle overlay for depth */}
       <div className="fixed inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/20 pointer-events-none z-0" />
 
-        {/* Content above mask */}
-        <div className="relative z-10">
-          {/* Sticky header section - always visible */}
-          <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-sm">
-            {/* Header with Page Title */}
-            <div className="border-b border-purple-900/10">
-              <PageHeader
-                title={t("discover.title")}
-                showBack={false}
-                rightElements={
-                  <div className="flex items-center gap-2">
-                    <HeaderActions />
-                    <button
-                      onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
-                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                    >
-                      {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-                    </button>
-                  </div>
-                }
-              />
-            </div>
-
-            {/* Expandable Search Bar */}
-            <AnimatePresence>
-              {isSearchExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden px-4 pt-2 pb-2"
-                >
-                  <div
-                    className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
-                      isSearchFocused ? "ring-2 ring-primary/30" : ""
-                    }`}
+        {/* Sticky header section - always visible */}
+        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-sm">
+          {/* Header with Page Title */}
+          <div>
+            <PageHeader
+              title={t("discover.title")}
+              showBack={false}
+              rightElements={
+                <div className="flex items-center gap-2">
+                  <HeaderActions />
+                  <button
+                    onClick={() => setIsSearchExpanded(!isSearchExpanded)}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
+                    style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
                   >
-                    <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onFocus={() => setIsSearchFocused(true)}
-                      onBlur={() => setIsSearchFocused(false)}
-                      placeholder={t("discover.searchPlaceholder")}
-                      className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-base outline-none"
-                      autoFocus
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+                  </button>
+                </div>
+              }
+            />
+          </div>
 
-            {/* Tabs - always visible */}
-            <div className="px-4 pt-2 pb-1">
-              <IconTabBar
-                tabs={tabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                compact={false}
-              />
-            </div>
+          {/* Expandable Search Bar */}
+          <AnimatePresence>
+            {isSearchExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden px-4 pt-2 pb-2"
+              >
+                <div
+                  className={`flex items-center gap-3 bg-white/90 border border-slate-200 rounded-full px-4 py-3 transition-all shadow-sm ${
+                    isSearchFocused ? "ring-2 ring-primary/30" : ""
+                  }`}
+                >
+                  <Search className="w-5 h-5 text-slate-500 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    placeholder={t("discover.searchPlaceholder")}
+                    className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-base outline-none"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Tabs - always visible */}
+          <div className="px-4 pt-2 pb-1">
+            <IconTabBar
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              compact={false}
+            />
           </div>
         </div>
 
         {/* Content */}
-        <div className="py-4">
+        <div className="py-4 relative z-10">
           {loading ? (
             <div className="flex items-center justify-center h-48">
               <div className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
