@@ -15,7 +15,7 @@ export function ShopRightSidebar() {
   };
 
   return (
-    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-border/50 bg-background/50 backdrop-blur-sm">
+    <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-border/50 bg-background z-20">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Header - matching TeamRightSidebar style */}
         <div className="flex items-center gap-2 text-primary">
