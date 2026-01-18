@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
 
-export type ProTier = 'pro' | 'pro_plus' | 'pro_elite';
+export type ProTier = 'pro' | 'pro_plus' | 'pro_master';
 
 interface TierConfig {
   id: ProTier;
@@ -34,7 +34,7 @@ export const PRO_TIERS: TierConfig[] = [
     price: 9.99,
     friendInvites: 1,
     xpMultiplier: 2,
-    gradient: 'from-purple-500 to-indigo-600',
+    gradient: 'from-violet-500 via-purple-500 to-fuchsia-500',
     borderColor: 'border-purple-500/30',
     iconColor: 'text-purple-400',
     benefits: [
@@ -51,9 +51,9 @@ export const PRO_TIERS: TierConfig[] = [
     price: 19.99,
     friendInvites: 5,
     xpMultiplier: 2,
-    gradient: 'from-amber-500 to-orange-600',
-    borderColor: 'border-amber-500/30',
-    iconColor: 'text-amber-400',
+    gradient: 'from-cyan-400 via-blue-500 to-indigo-600',
+    borderColor: 'border-blue-500/30',
+    iconColor: 'text-blue-400',
     popular: true,
     benefits: [
       { icon: Zap, text: '2x XP ბონუსი' },
@@ -65,15 +65,15 @@ export const PRO_TIERS: TierConfig[] = [
     ]
   },
   {
-    id: 'pro_elite',
-    name: 'PRO Elite',
-    nameKa: 'PRO ელიტა',
+    id: 'pro_master',
+    name: 'PRO Master',
+    nameKa: 'PRO მასტერი',
     price: 29.99,
     friendInvites: 10,
     xpMultiplier: 3,
-    gradient: 'from-yellow-400 via-amber-500 to-orange-500',
-    borderColor: 'border-yellow-500/50',
-    iconColor: 'text-yellow-400',
+    gradient: 'from-amber-400 via-orange-500 to-rose-500',
+    borderColor: 'border-amber-500/50',
+    iconColor: 'text-amber-400',
     benefits: [
       { icon: Zap, text: '3x XP ბონუსი', highlight: true },
       { icon: Shield, text: 'რეკლამების გარეშე' },

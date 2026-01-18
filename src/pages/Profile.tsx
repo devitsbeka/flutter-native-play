@@ -83,7 +83,7 @@ export default function Profile() {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50" />
         
-        <div className="relative z-10">
+        <div className="relative z-10 max-w-[700px] md:max-w-[600px] mx-auto">
           <div className="flex justify-between items-start mb-8">
             <h1 className="text-2xl font-bold text-white">{t("profile.title")}</h1>
             <button
@@ -96,7 +96,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="px-6 -mt-16 relative z-10">
+      <div className="px-6 -mt-16 relative z-10 max-w-[700px] md:max-w-[600px] mx-auto w-full">
         {/* Avatar Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
