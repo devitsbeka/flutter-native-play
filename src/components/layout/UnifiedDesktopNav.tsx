@@ -7,12 +7,9 @@ import {
   Store, 
   Trophy, 
   Users, 
-  Bell, 
   Menu,
-  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useNotifications } from "@/hooks/useNotifications";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLeaderboardPrefetch } from "@/hooks/useLeaderboardPrefetch";
@@ -24,7 +21,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { AccountSwitcherModal } from "@/components/home/AccountSwitcherModal";
 import { MoreMenuModal } from "@/components/home/MoreMenuModal";
 import { LanguageSelectorModal } from "@/components/layout/LanguageSelectorModal";
 
@@ -56,7 +52,6 @@ export function UnifiedDesktopNav({
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useAuth();
-  const { unreadCount } = useNotifications();
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
   const { prefetchAllTiers } = useLeaderboardPrefetch();
@@ -64,7 +59,6 @@ export function UnifiedDesktopNav({
   const { currentLanguage } = useLanguage();
   
   // Modal states
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
@@ -161,10 +155,10 @@ export function UnifiedDesktopNav({
           </motion.div>
         </div>
 
-        {/* Profile Button - opens modal */}
+        {/* Profile Button - navigates directly to profile */}
         <div className="px-2 lg:px-3 mb-4">
           <motion.button
-            onClick={() => setIsAccountModalOpen(true)}
+            onClick={() => navigate("/profile")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-full text-foreground transition-colors"
             style={{
               background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
@@ -185,7 +179,6 @@ export function UnifiedDesktopNav({
             <span className="text-[15px] font-medium hidden lg:inline truncate flex-1 text-left">
               {profile?.nickname || "მომხმარებელი"}
             </span>
-            <ChevronDown className="w-4 h-4 hidden lg:block text-muted-foreground" />
           </motion.button>
         </div>
 
@@ -236,13 +229,6 @@ export function UnifiedDesktopNav({
         </div>
       </nav>
 
-      {/* Account Switcher Modal */}
-      <AccountSwitcherModal
-        isOpen={isAccountModalOpen}
-        onClose={() => setIsAccountModalOpen(false)}
-        onViewProfile={() => navigate("/profile")}
-        profile={profile}
-      />
 
       {/* More Menu Modal */}
       <MoreMenuModal
