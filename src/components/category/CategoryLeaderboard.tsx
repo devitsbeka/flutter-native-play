@@ -1,10 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Play, User, Star, TrendingUp, TrendingDown, Sparkles, Gift } from "lucide-react";
+import { Trophy, User, Star, TrendingUp, TrendingDown, Sparkles, Gift } from "lucide-react";
 import { useCategoryLeaderboard } from "@/hooks/useCategoryLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { WeeklyRewardsPreview } from "@/components/leaderboard/WeeklyRewardsPreview";
 import { getDaysRemainingInWeek } from "@/config/leaderboardRewards";
 import medalGold from "@/assets/icons/medal-gold.png";
@@ -14,14 +13,12 @@ import medalBronze from "@/assets/icons/medal-bronze.png";
 interface CategoryLeaderboardProps {
   categoryId: string;
   categoryName: string;
-  onPlay: () => void;
   lightMode?: boolean;
 }
 
 export function CategoryLeaderboard({
   categoryId,
   categoryName,
-  onPlay,
   lightMode = false,
 }: CategoryLeaderboardProps) {
   const { user } = useAuth();
@@ -75,62 +72,53 @@ export function CategoryLeaderboard({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Play Button Area */}
-      <div className="mb-6">
-        <ChunkyButton
-          onClick={onPlay}
-          className="w-full"
-          size="lg"
-          variant="mint"
-          icon={<Play className="h-5 w-5 fill-current" />}
+      {/* User's Current Position */}
+      {user && userRank && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-4 rounded-2xl border"
+          style={{
+            background: lightMode ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.05)',
+            borderColor: lightMode ? '#E2E8F0' : 'rgba(255,255,255,0.1)',
+          }}
         >
-          {t('common.play')}
-        </ChunkyButton>
-
-        {/* User's Current Position */}
-        {user && userRank && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-4"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                  {getRankIcon(userRank.rank)}
-                </div>
-                <div>
-                  <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.yourRank')}</p>
-                  <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
-                </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+                {getRankIcon(userRank.rank)}
               </div>
-              <div className="text-right">
-                <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.stars')}</p>
-                <div className="flex items-center gap-1 justify-end">
-                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                  <p className="text-xl font-bold text-amber-500">{userRank.total_stars}</p>
-                </div>
+              <div>
+                <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.yourRank')}</p>
+                <p className={`text-xl font-bold ${lightMode ? "text-slate-800" : "text-white"}`}>#{userRank.rank}</p>
               </div>
             </div>
-          </motion.div>
-        )}
-
-        {user && !userRank && !isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`mt-4 p-4 rounded-2xl border text-center ${
-              lightMode 
-                ? "bg-white/60 border-slate-200" 
-                : "bg-white/5 border-white/10"
-            }`}
-          >
-            <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>
-              {t('leaderboard.playToAppear')}
-            </p>
-          </motion.div>
+            <div className="text-right">
+              <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>{t('leaderboard.stars')}</p>
+              <div className="flex items-center gap-1 justify-end">
+                <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                <p className="text-xl font-bold text-amber-500">{userRank.total_stars}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       )}
-      </div>
+
+      {user && !userRank && !isLoading && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`mb-4 p-4 rounded-2xl border text-center ${
+            lightMode 
+              ? "bg-white/60 border-slate-200" 
+              : "bg-white/5 border-white/10"
+          }`}
+        >
+          <p className={`text-sm ${lightMode ? "text-slate-500" : "text-white/60"}`}>
+            {t('leaderboard.playToAppear')}
+          </p>
+        </motion.div>
+      )}
 
       {/* Leaderboard Header with Rewards Button */}
       <div className="flex items-center justify-between mb-4">

@@ -221,57 +221,59 @@ export default function CategoryPage() {
         </div>
 
         {/* Floating Tabs - positioned to straddle video/content boundary */}
-        <div className="relative px-5 -mt-7 z-20">
-          <div 
-            className="flex gap-1 rounded-2xl p-1.5"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8), inset 0 1px 0 0 rgba(255,255,255,1)',
-              border: '1px solid rgba(0,0,0,0.06)',
-            }}
-          >
-            <button
-              onClick={() => setActiveTab("leaderboard")}
-              className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
+        <div className="relative px-5 md:px-24 lg:px-32 -mt-7 z-20">
+          <div className="max-w-3xl mx-auto">
+            <div 
+              className="flex gap-1 rounded-2xl p-1.5"
               style={{
-                background: activeTab === "leaderboard" 
-                  ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
-                  : 'transparent',
-                boxShadow: activeTab === "leaderboard"
-                  ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
-                  : 'none',
-                color: activeTab === "leaderboard" ? '#1E293B' : '#94A3B8',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%)',
+                boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8), inset 0 1px 0 0 rgba(255,255,255,1)',
+                border: '1px solid rgba(0,0,0,0.06)',
               }}
             >
-              <Trophy className="h-4 w-4" />
-              {t('category.leaderboard')}
-            </button>
-            <button
-              onClick={() => setActiveTab("map")}
-              className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
-              style={{
-                background: activeTab === "map" 
-                  ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
-                  : 'transparent',
-                boxShadow: activeTab === "map"
-                  ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
-                  : 'none',
-                color: activeTab === "map" ? '#1E293B' : '#94A3B8',
-              }}
-            >
-              <Map className="h-4 w-4" />
-              {t('category.map')}
-            </button>
+              <button
+                onClick={() => setActiveTab("leaderboard")}
+                className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
+                style={{
+                  background: activeTab === "leaderboard" 
+                    ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
+                    : 'transparent',
+                  boxShadow: activeTab === "leaderboard"
+                    ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
+                    : 'none',
+                  color: activeTab === "leaderboard" ? '#1E293B' : '#94A3B8',
+                }}
+              >
+                <Trophy className="h-4 w-4" />
+                {t('category.leaderboard')}
+              </button>
+              <button
+                onClick={() => setActiveTab("map")}
+                className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
+                style={{
+                  background: activeTab === "map" 
+                    ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
+                    : 'transparent',
+                  boxShadow: activeTab === "map"
+                    ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
+                    : 'none',
+                  color: activeTab === "map" ? '#1E293B' : '#94A3B8',
+                }}
+              >
+                <Map className="h-4 w-4" />
+                {t('category.map')}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Main Content Section - clean white background */}
-        <div className="flex-1 px-5 pt-5 pb-8 overflow-auto">
+        <div className="flex-1 px-5 md:px-24 lg:px-32 pt-5 pb-8 overflow-auto">
+          <div className="max-w-3xl mx-auto">
             {activeTab === "leaderboard" ? (
               <CategoryLeaderboard
                 categoryId={categoryId || ""}
                 categoryName={category.name}
-                onPlay={handlePlayFromLeaderboard}
                 lightMode
               />
             ) : (
@@ -280,6 +282,14 @@ export default function CategoryPage() {
                   <h2 className="text-lg font-bold text-slate-800">
                     {t('category.chooseLevel')}
                   </h2>
+                  <ChunkyButton
+                    onClick={handlePlayFromLeaderboard}
+                    size="sm"
+                    variant="mint"
+                    icon={<Play className="h-4 w-4 fill-current" />}
+                  >
+                    {t('common.play')}
+                  </ChunkyButton>
                 </div>
 
                 {/* All levels completed message */}
@@ -409,6 +419,7 @@ export default function CategoryPage() {
                 )}
               </>
             )}
+          </div>
         </div>
       </div>
     </PageTransition>
