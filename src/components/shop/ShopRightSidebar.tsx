@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Crown, Sparkles, Users } from "lucide-react";
+import { Crown, Sparkles, Users, ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useMemo } from "react";
-import shopBg from "@/assets/shopbg.png";
+import shopBgVideo from "@/assets/shopbg.mp4";
 
 // White particle component for sidebar
 function SidebarParticle({ delay, left }: { delay: number; left: number }) {
@@ -30,22 +30,34 @@ function SidebarParticle({ delay, left }: { delay: number; left: number }) {
 const SIMPLIFIED_TIERS = [
   {
     id: "solo" as const,
-    nameKa: "Solo",
+    nameKa: "Solo PRO",
     price: 9.99,
     icon: Crown,
-    benefits: ["2x XP ბონუსი", "VIP ბეჯი", "რეკლამების გარეშე"],
-    gradient: "linear-gradient(180deg, #8B5CF6 0%, #7C3AED 100%)",
-    shadow: "#5B21B6",
+    benefits: [
+      "2x XP ბონუსი ყველა თამაშში",
+      "ექსკლუზიური VIP ბეჯი",
+      "რეკლამების გარეშე",
+      "პრიორიტეტული მხარდაჭერა",
+    ],
+    gradient: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)",
+    shadow: "#4C1D95",
+    ctaText: "გააქტიურება",
   },
   {
     id: "family" as const,
-    nameKa: "Family",
+    nameKa: "Family PRO",
     price: 19.99,
     icon: Users,
-    benefits: ["Solo + 5 მეგობარი", "PRO ყველა წევრისთვის"],
-    gradient: "linear-gradient(180deg, #EC4899 0%, #DB2777 100%)",
+    benefits: [
+      "Solo PRO + 5 მეგობარი",
+      "საოჯახო ლიდერბორდი",
+      "ყველა PRO ფუნქცია",
+      "ერთობლივი გამოწვევები",
+    ],
+    gradient: "linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)",
     shadow: "#9D174D",
     popular: true,
+    ctaText: "შეძენა",
   },
 ];
 
@@ -73,17 +85,22 @@ export function ShopRightSidebar() {
     <aside 
       className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-screen sticky top-0 border-l border-white/10 z-20 relative overflow-hidden"
     >
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${shopBg})` }}
-      />
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      >
+        <source src={shopBgVideo} type="video/mp4" />
+      </video>
       
       {/* Gradient overlay for better card visibility at bottom */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)",
+          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
         }}
       />
 
@@ -100,78 +117,106 @@ export function ShopRightSidebar() {
 
       {/* Content Container */}
       <div className="flex-1 flex flex-col justify-end p-4 relative z-10">
-        {/* Compact Tier Cards - 3D Chunky Style */}
-        <div className="space-y-3">
+        {/* Tier Cards - Taller with proper CTAs */}
+        <div className="space-y-4">
           {SIMPLIFIED_TIERS.map((tier, index) => {
             const isCurrentTier = currentTier === tier.id;
             const TierIcon = tier.icon;
             
             return (
-              <motion.button
+              <motion.div
                 key={tier.id}
-                onClick={() => !isCurrentTier && handleUpgrade(tier.id)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative w-full py-3 px-4 rounded-2xl font-bold text-white transition-all text-left"
+                transition={{ delay: index * 0.15 }}
+                className="relative rounded-2xl overflow-hidden"
                 style={{
                   background: tier.gradient,
-                  boxShadow: `0 6px 0 ${tier.shadow}, 0 8px 16px rgba(0,0,0,0.3)`,
-                  cursor: isCurrentTier ? 'default' : 'pointer',
+                  boxShadow: `0 8px 0 ${tier.shadow}, 0 12px 24px rgba(0,0,0,0.4)`,
                 }}
-                whileHover={!isCurrentTier ? { scale: 1.02, y: -2 } : {}}
-                whileTap={!isCurrentTier ? { scale: 0.98, y: 0 } : {}}
-                disabled={isCurrentTier}
               >
                 {/* Popular Badge */}
                 {tier.popular && !isCurrentTier && (
-                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-                    ⭐ TOP
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    პოპულარული
                   </div>
                 )}
 
                 {/* Active Badge */}
                 {isCurrentTier && (
-                  <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-                    ✓ აქტიური
+                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    აქტიური
                   </div>
                 )}
 
-                <div className="flex items-center gap-3">
-                  {/* Icon */}
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ 
-                      background: "rgba(255,255,255,0.2)",
-                      boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3)",
+                {/* Card Content */}
+                <div className="p-4">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ 
+                        background: "rgba(255,255,255,0.2)",
+                        boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 4px 0 rgba(0,0,0,0.2)",
+                      }}
+                    >
+                      <TierIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">{tier.nameKa}</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-black text-white">₾{tier.price}</span>
+                        <span className="text-sm text-white/70">/თვე</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Benefits List */}
+                  <ul className="space-y-2 mb-4">
+                    {tier.benefits.map((benefit, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-white/90">
+                        <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <Check className="w-2.5 h-2.5 text-white" />
+                        </div>
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA Button */}
+                  <motion.button
+                    onClick={() => !isCurrentTier && handleUpgrade(tier.id)}
+                    disabled={isCurrentTier}
+                    className="w-full py-3 px-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2"
+                    style={{
+                      background: isCurrentTier 
+                        ? "rgba(255,255,255,0.15)" 
+                        : "rgba(255,255,255,0.95)",
+                      color: isCurrentTier ? "rgba(255,255,255,0.6)" : tier.shadow,
+                      boxShadow: isCurrentTier 
+                        ? "none" 
+                        : "0 4px 0 rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.3)",
+                      cursor: isCurrentTier ? 'default' : 'pointer',
                     }}
+                    whileHover={!isCurrentTier ? { scale: 1.02, y: -2 } : {}}
+                    whileTap={!isCurrentTier ? { scale: 0.98, y: 0 } : {}}
                   >
-                    <TierIcon className="w-5 h-5 text-white" />
-                  </div>
-                  
-                  {/* Text Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-base font-bold">{tier.nameKa}</span>
-                      <span className="text-lg font-bold">
-                        ₾{tier.price}
-                        <span className="text-xs opacity-70">/თვე</span>
-                      </span>
-                    </div>
-                    <div className="text-xs text-white/80 mt-0.5 truncate">
-                      {tier.benefits.join(" • ")}
-                    </div>
-                  </div>
+                    {isCurrentTier ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        აქტიურია
+                      </>
+                    ) : (
+                      <>
+                        {tier.ctaText}
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </motion.button>
                 </div>
-
-                {/* Upgrade indicator */}
-                {!isCurrentTier && (
-                  <div className="flex items-center justify-center gap-1 mt-2 text-xs text-white/90">
-                    <Sparkles className="w-3 h-3" />
-                    <span>შეძენა</span>
-                  </div>
-                )}
-              </motion.button>
+              </motion.div>
             );
           })}
         </div>
