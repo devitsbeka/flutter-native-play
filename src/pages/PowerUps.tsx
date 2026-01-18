@@ -207,7 +207,7 @@ export default function PowerUps() {
       />
 
       {/* Currency Bar - on video background */}
-      <ShopCurrencyBar onCurrencyPlusClick={handleCurrencyPlusClick} />
+      <ShopCurrencyBar />
 
       {/* Standard Shop Layout - Hero carousel + product grids */}
       <div className="flex flex-1 overflow-hidden">
