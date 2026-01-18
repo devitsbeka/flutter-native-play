@@ -11,7 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useShopData, ShopItem } from "@/hooks/useShopData";
 
 import { MainLayout } from "@/components/layout/MainLayout";
-import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
+
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
@@ -202,8 +202,6 @@ export default function PowerUps() {
         <div className="flex flex-1 overflow-hidden">
           {/* Main Content Area */}
           <div className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
-            <GlobalSplineBackground />
-            
             {/* Sticky Header - Title only */}
             <ShopHeader
               onHelpClick={() => setShowTutorialModal(true)}
