@@ -77,7 +77,56 @@ export default function PowerUps() {
     setIsPurchasing(item.id);
 
     try {
-      const spent = await spendGems(item.price);
+      // Build value received for transaction log
+      let valueReceived: { [key: string]: number | string } = {};
+      let productType = "powerup";
+      
+      if (item.value) {
+        valueReceived = { coins: item.value };
+        productType = "coins";
+      } else if (item.vipDuration) {
+        valueReceived = { vip_days: item.vipDuration };
+        productType = "vip";
+      } else if (item.frameId) {
+        valueReceived = { frame_id: item.frameId };
+        productType = "frame";
+      } else if (item.powerType && item.amount) {
+        valueReceived = { [item.powerType]: item.amount };
+      } else if (item.id.includes("bundle")) {
+        let bundleAmount = 2;
+        let coinAmount = 0;
+        
+        if (item.id === "starter_bundle") {
+          bundleAmount = 2;
+          coinAmount = 200;
+        } else if (item.id === "starter_bundle_medium") {
+          bundleAmount = 5;
+          coinAmount = 500;
+        } else if (item.id === "starter_bundle_large") {
+          bundleAmount = 10;
+          coinAmount = 1000;
+        } else if (item.id.includes("small")) {
+          bundleAmount = 2;
+        } else if (item.id.includes("large")) {
+          bundleAmount = 10;
+        } else {
+          bundleAmount = 5;
+        }
+        valueReceived = { 
+          "5050": bundleAmount, 
+          freeze: bundleAmount, 
+          replace: bundleAmount, 
+          "time-drain": bundleAmount,
+          ...(coinAmount > 0 ? { coins: coinAmount } : {})
+        };
+        productType = "bundle";
+      }
+
+      const spent = await spendGems(item.price, {
+        productId: item.id,
+        productType,
+        valueReceived,
+      });
       if (!spent) {
         setIsPurchasing(null);
         return;

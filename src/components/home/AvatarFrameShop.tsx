@@ -62,7 +62,11 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     setIsPurchasing(true);
 
     try {
-      const spent = await spendGems(frame.price);
+      const spent = await spendGems(frame.price, {
+        productId: frame.id,
+        productType: "frame",
+        valueReceived: { frame_id: frame.id },
+      });
       if (!spent) {
         setIsPurchasing(false);
         return;

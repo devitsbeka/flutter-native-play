@@ -262,7 +262,33 @@ export function GemShopModal({ isOpen, onClose, defaultCategory }: GemShopModalP
     setIsPurchasing(item.id);
 
     try {
-      const spent = await spendGems(item.price);
+      // Build value received for transaction log
+      let valueReceived: { [key: string]: number | string } = {};
+      
+      if (item.category === "coins" && item.value) {
+        valueReceived = { coins: item.value };
+      } else if (item.category === "vip" && item.vipDuration) {
+        valueReceived = { vip_days: item.vipDuration };
+      } else if (item.category === "powerup") {
+        if (item.powerType && item.amount) {
+          valueReceived = { [item.powerType]: item.amount };
+        } else {
+          const bundleAmount = item.id.includes("small") ? 2 : item.id.includes("large") ? 10 : 5;
+          valueReceived = { 
+            "5050": bundleAmount, 
+            freeze: bundleAmount, 
+            replace: bundleAmount, 
+            "time-drain": bundleAmount 
+          };
+        }
+      }
+
+      const spent = await spendGems(item.price, {
+        productId: item.id,
+        productType: item.category,
+        valueReceived,
+      });
+      
       if (!spent) {
         setIsPurchasing(null);
         return;
