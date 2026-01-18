@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Settings, Sparkles } from "lucide-react";
+import { Settings, Sparkles, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
@@ -22,15 +22,23 @@ export default function Profile() {
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const tabs = [
-    { key: "Stats", label: t("profile.stats") },
-    { key: "Details", label: t("profile.details") },
-    { key: "PRO", label: "PRO" },
-  ];
-
   // Get current tier from subscription
   const currentTier = subscription?.vip_tier as ProTier | undefined;
   const friendInvitesRemaining = (subscription as any)?.friend_invites_remaining || 0;
+
+  // Dynamic PRO tab label
+  const getProTabLabel = () => {
+    if (currentTier && ['pro', 'pro_plus', 'pro_master'].includes(currentTier)) {
+      return "ჩემი PRO";
+    }
+    return "გახდი PRO";
+  };
+
+  const tabs = [
+    { key: "Stats", label: t("profile.stats") },
+    { key: "Details", label: t("profile.details") },
+    { key: "PRO", label: getProTabLabel() },
+  ];
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
@@ -168,15 +176,15 @@ export default function Profile() {
                 animate={{ opacity: 1 }}
                 className="space-y-4"
               >
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
                   <span className="text-foreground">{t("profile.gamesPlayed")}</span>
                   <span className="font-bold text-foreground">{profile.games_played}</span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
                   <span className="text-foreground">{t("profile.gamesWon")}</span>
                   <span className="font-bold text-foreground">{profile.games_won}</span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
                   <span className="text-foreground">{t("profile.winRate")}</span>
                   <span className="font-bold text-foreground">
                     {profile.games_played > 0
@@ -184,7 +192,7 @@ export default function Profile() {
                       : 0}%
                   </span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
                   <span className="text-foreground">{t("profile.bestStreak")}</span>
                   <span className="font-bold text-foreground">{profile.best_streak}</span>
                 </div>
@@ -197,19 +205,35 @@ export default function Profile() {
                 animate={{ opacity: 1 }}
                 className="space-y-4"
               >
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
-                  <span className="text-foreground">{t("profile.email")}</span>
-                  <span className="text-muted-foreground truncate max-w-[180px]">
-                    {user.email}
-                  </span>
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
+                  <span className="text-foreground flex-shrink-0">{t("profile.email")}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-muted-foreground truncate">
+                      {user.email}
+                    </span>
+                    <button 
+                      onClick={() => navigate("/settings")}
+                      className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors flex-shrink-0"
+                    >
+                      <Pencil className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
-                  <span className="text-foreground">{t("profile.country")}</span>
-                  <span className="text-foreground">
-                    {profile.country_code || t("profile.notSet")}
-                  </span>
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
+                  <span className="text-foreground flex-shrink-0">{t("profile.country")}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-foreground">
+                      {profile.country_code || t("profile.notSet")}
+                    </span>
+                    <button 
+                      onClick={() => navigate("/settings")}
+                      className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors"
+                    >
+                      <Pencil className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center shadow-sm border border-border/50">
+                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
                   <span className="text-foreground">{t("profile.memberSince")}</span>
                   <span className="text-muted-foreground">{t("profile.recently")}</span>
                 </div>
@@ -224,6 +248,8 @@ export default function Profile() {
                 <ProPlansSection 
                   currentTier={currentTier}
                   friendInvitesRemaining={friendInvitesRemaining}
+                  subscriptionStartDate={(subscription as any)?.started_at}
+                  subscriptionExpiryDate={(subscription as any)?.expires_at}
                 />
               </motion.div>
             )}

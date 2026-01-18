@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
+import { format } from "date-fns";
 
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master';
 
@@ -104,9 +105,16 @@ export const PRO_TIERS: TierConfig[] = [
 interface ProPlansSectionProps {
   currentTier?: ProTier | null;
   friendInvitesRemaining?: number;
+  subscriptionStartDate?: string;
+  subscriptionExpiryDate?: string;
 }
 
-export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: ProPlansSectionProps) {
+export function ProPlansSection({ 
+  currentTier, 
+  friendInvitesRemaining = 0,
+  subscriptionStartDate,
+  subscriptionExpiryDate
+}: ProPlansSectionProps) {
   const navigate = useNavigate();
   const [showInviteModal, setShowInviteModal] = useState(false);
 
@@ -268,7 +276,21 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
                 </div>
 
                 {/* Action Button */}
-                {!isCurrentTier && (
+                {isCurrentTier ? (
+                  <div className="text-center space-y-2">
+                    {/* Show subscription dates */}
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>დაწყება: {subscriptionStartDate ? format(new Date(subscriptionStartDate), 'dd.MM.yyyy') : '-'}</p>
+                      <p>ვადა: {subscriptionExpiryDate ? format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') : '-'}</p>
+                    </div>
+                    <motion.button
+                      className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 opacity-70 cursor-default"
+                      style={{ background: tier.buttonGradient }}
+                    >
+                      აქტიური
+                    </motion.button>
+                  </div>
+                ) : (
                   <motion.button
                     onClick={() => handleUpgrade(tier.id)}
                     className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
@@ -280,7 +302,7 @@ export function ProPlansSection({ currentTier, friendInvitesRemaining = 0 }: Pro
                     whileTap={{ scale: 0.98 }}
                   >
                     <Sparkles className="w-4 h-4" />
-                    {isUpgrade ? 'განახლება' : 'არჩევა'}
+                    ყიდვა
                   </motion.button>
                 )}
               </div>
