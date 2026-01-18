@@ -7,7 +7,7 @@ export function ShopCurrencyBar() {
   const { coins, gems } = useCurrency();
 
   return (
-    <div className="px-4 py-3">
+    <div className="px-[15px] py-3">
       <div className="flex items-center gap-4">
         {/* Coins Balance */}
         <div className="flex items-center gap-2">

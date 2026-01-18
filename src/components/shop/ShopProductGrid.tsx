@@ -32,14 +32,14 @@ export function ShopProductGrid({
       transition={{ duration: 0.4 }}
     >
       {/* Section Header */}
-      <div className="px-4 mb-3">
+      <div className="px-[15px] mb-3">
         <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
           {title}
         </h2>
       </div>
 
       {/* Products Grid */}
-      <div className="px-4">
+      <div className="px-[15px]">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {items.map((item, index) => {
             const canAfford = gems >= item.price;

@@ -13,7 +13,7 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
 
   return (
     <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-purple-900/10">
-      <div className="px-4 pt-4 pb-3">
+      <div className="px-[15px] pt-4 pb-3">
         {/* Full width row: Title on left, Actions on far right */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
