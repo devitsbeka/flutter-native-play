@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Bell, Check, Clock, MessageCircle } from "lucide-react";
+import { Bell, Check, Clock, Menu, MessageCircle } from "lucide-react";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
@@ -342,9 +342,24 @@ export default function Index() {
       >
         <div className="min-h-screen flex flex-col w-full relative">
         <header className="relative z-20 px-4 py-3 safe-top border-b border-purple-900/10">
-          <div className="flex items-center justify-between">
-            {/* Spotlight Search Bar */}
-            <SpotlightSearch />
+          <div className="flex items-center justify-between gap-3">
+            {/* Left side: Burger menu (mobile only) + Search */}
+            <div className="flex items-center gap-2 flex-1">
+              {/* Burger Menu - Mobile Only */}
+              <motion.button
+                className="md:hidden p-2 rounded-full hover:bg-white/30 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsSideMenuOpen(true)}
+              >
+                <Menu className="w-6 h-6 text-gray-600" />
+              </motion.button>
+              
+              {/* Spotlight Search Bar */}
+              <div className="flex-1">
+                <SpotlightSearch />
+              </div>
+            </div>
             
             {/* Notification icons */}
             <div className="flex items-center gap-1">
