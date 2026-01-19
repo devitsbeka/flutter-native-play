@@ -20,7 +20,6 @@ interface DesktopActionCardsProps {
 interface ActionCardProps {
   iconSrc: string;
   title: string;
-  description: string;
   statusText: string;
   expandedDetails?: string;
   actionLabel?: string;
@@ -59,7 +58,6 @@ const Sparkle = ({ delay, x, y, size, color }: { delay: number; x: number; y: nu
 const ActionCard = ({
   iconSrc,
   title,
-  description,
   statusText,
   expandedDetails,
   actionLabel = "გახსნა",
@@ -120,7 +118,6 @@ const ActionCard = ({
         {/* Text content */}
         <div className="flex-1 min-w-0 z-10">
           <p className="text-sm font-bold text-gray-800 truncate">{title}</p>
-          <p className="text-xs text-gray-600/80 truncate mb-1">{description}</p>
           <p className="text-xs font-semibold text-gray-700 truncate">
             {statusText}
           </p>
@@ -186,7 +183,6 @@ export function DesktopActionCards({
       <ActionCard
         iconSrc={giftBottleIcon}
         title="დღიური საჩუქარი"
-        description="მიიღე ყოველდღიური ჯილდო"
         statusText={canClaimDaily ? "მზად არის! 🎁" : `დარჩა: ${dailyTimeLeft || "00:00:00"}`}
         expandedDetails="ყოველდღიური შესვლით იღებ მონეტებს, გემებს და სპეციალურ ჯილდოებს."
         actionLabel={canClaimDaily ? "აიღე ჯილდო" : "ნახე დეტალები"}
@@ -201,7 +197,6 @@ export function DesktopActionCards({
       <ActionCard
         iconSrc={missionCrystalIcon}
         title="მისიები"
-        description="შეასრულე დავალებები"
         statusText={allMissionsDone ? "ყველა შესრულებულია ✓" : `${completedCount}/${totalCount} შესრულებული`}
         expandedDetails="დაასრულე დავალებები და მიიღე დამატებითი ჯილდოები."
         actionLabel="ნახე მისიები"
@@ -217,9 +212,8 @@ export function DesktopActionCards({
       <ActionCard
         iconSrc={chestBoxIcon}
         title="სკივრი"
-        description="გახსენი საიდუმლო სკივრი"
         statusText={canClaimChest ? "გახსენი ახლა! 📦" : `დარჩა: ${chestTimeLeft || "00:00:00"}`}
-        expandedDetails="საიდუმლო სკივრში შეიძლება იყოს იშვიათი ჯილდოები და პაუერ-აფები."
+        expandedDetails="საიდუმლო სკივრში შეიძლება იყოს იშვიათი ჯილდოები და დამხმარე ძალები."
         actionLabel={canClaimChest ? "გახსენი სკივრი" : "ნახე დეტალები"}
         onClick={onChestClick}
         isReady={canClaimChest}
@@ -232,9 +226,8 @@ export function DesktopActionCards({
       <ActionCard
         iconSrc={powersIcon}
         title="ძალები"
-        description="გამოიყენე თამაშში"
         statusText={totalPowerUps > 0 ? `${totalPowerUps} ხელმისაწვდომია` : "არ გაქვს ძალები"}
-        expandedDetails="პაუერ-აფები გეხმარება კითხვებზე პასუხის გაცემაში."
+        expandedDetails="ძალები გეხმარება კითხვებზე პასუხის გაცემაში."
         actionLabel="მართე ძალები"
         onClick={onPowersClick}
         badgeCount={totalPowerUps}

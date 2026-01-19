@@ -253,6 +253,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
       <GameModal
         isOpen={isOpen}
         onClose={onClose}
+        fullScreen={false}
         icon={headerIcon}
         title={t("dailyRewards.title")}
         subtitle={t("dailyRewards.subtitle")}
