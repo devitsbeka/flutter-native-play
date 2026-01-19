@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useLeaderboardPrefetch } from "@/hooks/useLeaderboardPrefetch";
+import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { Avatar } from "@/components/shared/Avatar";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import {
@@ -54,7 +54,7 @@ export function UnifiedDesktopNav({
   const { profile, signOut } = useAuth();
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
-  const { prefetchAllTiers } = useLeaderboardPrefetch();
+  const { prefetchRoute } = useNavigationPrefetch();
 
   const { currentLanguage } = useLanguage();
   
@@ -72,12 +72,10 @@ export function UnifiedDesktopNav({
     navigate("/");
   };
 
-  // Prefetch leaderboard data on hover
+  // Prefetch route data and code on hover
   const handleNavHover = useCallback((path: string) => {
-    if (path === "/leaderboards") {
-      prefetchAllTiers();
-    }
-  }, [prefetchAllTiers]);
+    prefetchRoute(path);
+  }, [prefetchRoute]);
 
   // NavButton component for consistency - all icons use strokeWidth 1.5
   const NavButton = ({

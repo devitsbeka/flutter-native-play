@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { useAvatarFrames } from "@/hooks/useAvatarFrames";
+import { useAvatarFrames, AVATAR_FRAMES } from "@/hooks/useAvatarFrames";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useShopData, ShopItem } from "@/hooks/useShopData";
+import { useShopPageData } from "@/hooks/useShopPageData";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
@@ -27,14 +28,21 @@ import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 export default function PowerUps() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Use consolidated shop data hook for faster loading
+  const { data: shopData } = useShopPageData();
+  
   const { addPowerUp, refetch } = useUserPowerUps();
   const { gems, spendGems, addCoins } = useCurrency();
   const { activateVip } = useVipStatus();
-  const { unlockFrame, isFrameUnlocked } = useAvatarFrames();
+  const { unlockFrame } = useAvatarFrames();
   const { playSound } = useSound();
   const { notify } = useNotificationModal();
   const { t } = useLanguage();
   const { SHOP_SECTIONS } = useShopData();
+  
+  // Use prefetched frame unlock check
+  const isFrameUnlocked = (frameId: string) => shopData.unlockedFrames.has(frameId);
 
   const [showTutorialModal, setShowTutorialModal] = useState(false);
   const [showPowerShopModal, setShowPowerShopModal] = useState(false);
