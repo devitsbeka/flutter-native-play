@@ -420,8 +420,8 @@ function TeamContentV2() {
         <div className="flex flex-1 overflow-hidden">
           {/* Main Content Area */}
           <div id="team-main-content" className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
-        {/* Sticky Header - matching Shop/PowerUps style */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
+            {/* Sticky Header - matching Shop/PowerUps style */}
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
               <div className="flex items-center gap-2">
@@ -521,6 +521,7 @@ function TeamContentV2() {
                       <span className="relative z-10">{tab.label}</span>
                     </button>
                   ))}
+                </div>
               </div>
             </div>
           </div>
@@ -617,8 +618,7 @@ function TeamContentV2() {
             </div>
           )}
           
-        </div>
-
+            </div>
           </div>
 
           {/* Desktop Right Sidebar - Shows on xl screens only */}
