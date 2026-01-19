@@ -129,13 +129,13 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
 
   return (
     <motion.div
-      className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+      className="md:bg-card md:rounded-2xl md:border md:border-border md:shadow-sm overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {/* Creator Header */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="px-0 py-4 md:p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <Avatar className="w-12 h-12 border-2 border-border">
@@ -178,7 +178,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
       </div>
       
       {/* Trivia Display - List on mobile, Carousel on tablet+ */}
-      <div className="px-4 pb-4">
+      <div className="px-0 pb-4 md:px-4">
         {/* Mobile: Vertical List */}
         <div className="flex flex-col gap-3 md:hidden">
           {creator.trivias.map((trivia) => (

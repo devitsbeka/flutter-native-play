@@ -91,7 +91,7 @@ export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfol
       </div>
       
       {/* Bottom Section with Stats */}
-      <div className="p-3 bg-card">
+      <div className="p-3 bg-card relative z-10">
         {/* Stats Row */}
         <div className="flex items-center justify-between">
           {/* Player Count */}
