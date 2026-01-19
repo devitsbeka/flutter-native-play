@@ -330,13 +330,19 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
   const coverImage = roomCoverPlaceholder;
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
+  // Calculate time ago
+  const timeAgo = formatDistanceToNow(new Date(room.last_activity_at || room.created_at), { 
+    addSuffix: false, 
+    locale: ka 
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.03 }}
       onClick={onJoin}
-      className={`aspect-[2.2/1] md:aspect-[1.28/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+      className={`aspect-[1.1/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -348,7 +354,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
         gradientSize="125% 125%"
         gradientOrigin="bottom-middle"
         enableNoise={false}
-        className="relative w-full h-full p-3 md:pb-[15px] flex flex-col justify-between"
+        className="relative w-full h-full p-3 flex flex-col"
       >
         {/* Cover image with radial fade */}
         <div 
@@ -369,74 +375,87 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
           />
         </div>
         
-        {/* Top Row: Avatars left, Status Badge right */}
-        <div className="relative z-10 flex items-start justify-between">
-          {/* Top Left: Player Avatars */}
-          <div className="flex -space-x-2">
-            {room.participants.slice(0, 4).map((p) => (
-              <div 
-                key={p.user_id} 
-                className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openProfile(p.user_id);
-                }}
-              >
-                {p.avatar_url ? (
-                  <img 
-                    src={p.avatar_url} 
-                    alt={p.nickname}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
-                    {p.nickname?.charAt(0).toUpperCase() || "?"}
-                  </div>
-                )}
-              </div>
-            ))}
-            {room.participants.length > 4 && (
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
-                <span className="text-white text-[10px] font-bold">
-                  +{room.participants.length - 4}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Top Right: Status Badge */}
+        {/* Top Left: Status Badge */}
+        <div className="relative z-10">
           {isPlaying ? (
             <LiveBadge />
           ) : isCompleted ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
               დასრულდა
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               მოლოდინი
             </span>
           )}
         </div>
         
-        {/* Bottom Left: Icon + Title + Category */}
-        <div className="relative z-10 flex items-center gap-3">
-          {room.room_icon && (
-            <div className="flex-shrink-0">
+        {/* Middle: Icon + Title + Category + Time */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center py-3">
+          <div className="flex items-center gap-3">
+            {room.room_icon && (
               <img 
                 src={room.room_icon} 
                 alt="" 
-                className="w-12 h-12 md:w-14 md:h-14 object-contain drop-shadow-lg"
+                className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg flex-shrink-0"
               />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h3 className="font-display text-white text-lg md:text-xl leading-tight line-clamp-2 drop-shadow-md">
-              {displayName}
-            </h3>
-            {room.category_name && (
-              <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
             )}
+            <div className="min-w-0 flex-1">
+              <h3 className="font-display text-white text-lg md:text-xl leading-tight line-clamp-2 drop-shadow-md">
+                {displayName}
+              </h3>
+              {room.category_name && (
+                <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
+              )}
+            </div>
+          </div>
+          <p className="text-white/50 text-sm mt-2 ml-1">{timeAgo}</p>
+        </div>
+        
+        {/* Bottom: Glass container with player count + avatars */}
+        <div className="relative z-10">
+          <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between">
+            {/* Left: Player count */}
+            <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
+              <Users className="w-4 h-4 text-white" />
+              <span className="text-white font-bold text-sm">
+                {room.participants.length}
+              </span>
+            </div>
+            
+            {/* Right: Avatars */}
+            <div className="flex -space-x-2">
+              {room.participants.slice(0, 4).map((p) => (
+                <div 
+                  key={p.user_id} 
+                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openProfile(p.user_id);
+                  }}
+                >
+                  {p.avatar_url ? (
+                    <img 
+                      src={p.avatar_url} 
+                      alt={p.nickname}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
+                      {p.nickname?.charAt(0).toUpperCase() || "?"}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {room.participants.length > 4 && (
+                <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                  <span className="text-white text-[10px] font-bold">
+                    +{room.participants.length - 4}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </GradientBackground>
