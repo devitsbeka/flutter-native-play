@@ -397,6 +397,8 @@ export const ru: KaTranslations = {
     passwordMismatch: "Пароли не совпадают",
     passwordChanged: "Пароль изменен!",
     nameChanged: "Имя изменено!",
+    deleteAccount: "Удалить аккаунт",
+    deleteAccountDescription: "Удалите свой аккаунт навсегда",
   },
   avatar: {
     title: "Ваш аватар",

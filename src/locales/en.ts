@@ -458,6 +458,8 @@ export const en: KaTranslations = {
     passwordMismatch: "Passwords don't match",
     passwordChanged: "Password changed!",
     nameChanged: "Name changed!",
+    deleteAccount: "Delete Account",
+    deleteAccountDescription: "Permanently delete your account",
   },
 
   // ==========================================

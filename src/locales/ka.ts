@@ -456,6 +456,8 @@ export const ka = {
     passwordMismatch: "პაროლები არ ემთხვევა",
     passwordChanged: "პაროლი შეიცვალა!",
     nameChanged: "სახელი შეიცვალა!",
+    deleteAccount: "ანგარიშის წაშლა",
+    deleteAccountDescription: "სამუდამოდ წაშალე შენი ანგარიში",
   },
 
   // ==========================================
