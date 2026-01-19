@@ -16,6 +16,8 @@ import { LevelUpModal } from "@/components/home/LevelUpModal";
 import { useGameStake } from "@/hooks/useGameStake";
 import { useTrivia, ExhaustionInfo } from "@/hooks/useTrivia";
 import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
+import { useToast } from "@/hooks/use-toast";
+import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { REWARDS } from "@/config/rewardConfig";
@@ -231,6 +233,7 @@ export function MatchResultScreen() {
   const { t } = useLanguage();
   const { awardWin, awardDraw, awardLose, netWinProfit, netLoss, stakeAmount } = useGameStake();
   const { exhaustionInfo } = useTrivia();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const isWin = userScore > opponentScore;
@@ -355,19 +358,46 @@ export function MatchResultScreen() {
         // Update mission progress
         const sessionData = missionTracker.getSessionData();
         
+        // Helper to show toast if mission completed
+        const handleMissionResult = (result: { 
+          completed: boolean; 
+          missionTitle?: string;
+          rewardCoins?: number;
+          rewardGems?: number;
+          rewardXp?: number;
+          rewardPowerUp?: string | null;
+          rewardPowerUpCount?: number;
+        }) => {
+          if (result.completed && result.missionTitle) {
+            setTimeout(() => {
+              showMissionCompleteToast(toast, {
+                title: result.missionTitle!,
+                coins: result.rewardCoins || 0,
+                gems: result.rewardGems || 0,
+                xp: result.rewardXp || 0,
+                powerUp: result.rewardPowerUp,
+                powerUpCount: result.rewardPowerUpCount,
+              });
+            }, 1500); // Delay to let result screen animate in first
+          }
+        };
+        
         // Update correct answers mission
         if (sessionData.correctAnswers > 0) {
-          await updateMissionProgress("answer_correct", sessionData.correctAnswers);
+          const result = await updateMissionProgress("answer_correct", sessionData.correctAnswers);
+          handleMissionResult(result);
         }
         
         // Update win games mission
         if (isWin) {
-          await updateMissionProgress("win_games", 1);
+          const result = await updateMissionProgress("win_games", 1);
+          handleMissionResult(result);
         }
         
         // Update categories played mission
         if (sessionData.categoriesPlayed > 0) {
-          await updateMissionProgress("play_categories", sessionData.categoriesPlayed);
+          const result = await updateMissionProgress("play_categories", sessionData.categoriesPlayed);
+          handleMissionResult(result);
         }
       };
 

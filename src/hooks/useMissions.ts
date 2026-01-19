@@ -397,7 +397,16 @@ export function useMissions() {
   const updateMissionProgress = async (
     missionId: string,
     progressIncrement: number
-  ): Promise<{ completed: boolean; xpEarned: number }> => {
+  ): Promise<{ 
+    completed: boolean; 
+    xpEarned: number;
+    missionTitle?: string;
+    rewardCoins?: number;
+    rewardGems?: number;
+    rewardXp?: number;
+    rewardPowerUp?: string | null;
+    rewardPowerUpCount?: number;
+  }> => {
     if (!user) return { completed: false, xpEarned: 0 };
 
     const allMissions = [...dailyMissions, ...weeklyMissions];
@@ -425,7 +434,16 @@ export function useMissions() {
         .update(updates)
         .eq("id", mission.id);
 
-      return { completed: isCompleted, xpEarned: 0 };
+      return { 
+        completed: isCompleted, 
+        xpEarned: isCompleted ? mission.reward_xp : 0,
+        missionTitle: mission.mission_title,
+        rewardCoins: mission.reward_coins,
+        rewardGems: mission.reward_gems,
+        rewardXp: mission.reward_xp,
+        rewardPowerUp: mission.reward_power_up,
+        rewardPowerUpCount: mission.reward_power_up_count,
+      };
     } catch (error) {
       console.error("Error updating mission progress:", error);
       return { completed: false, xpEarned: 0 };
