@@ -59,7 +59,7 @@ export function FeedFiltersBar({
   const currentLabel = filterOptions.find(opt => opt.value === sortFilter)?.label || "ყველა";
 
   return (
-    <div className="px-3 py-2">
+    <div className="px-[7px] py-2">
       <div className="flex items-center gap-1.5">
         {/* Search button - left side */}
         <AnimatePresence mode="wait">
