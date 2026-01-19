@@ -591,13 +591,11 @@ function TeamContentV2() {
           {activeTab === "my-content" && (
             <div className="flex flex-col">
               <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-                <RoomFiltersBar
-                  filter={roomsFilter}
-                  onFilterChange={setRoomsFilter}
-                  sort={roomsSort}
-                  onSortChange={setRoomsSort}
-                  searchQuery={roomsSearchQuery}
-                  onSearchQueryChange={setRoomsSearchQuery}
+                <FeedFiltersBar
+                  sortFilter={sortFilter}
+                  onSortFilterChange={setSortFilter}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
                   onAddClick={() => setShowCreateTypeModal(true)}
                   addButtonText="+ ახალი ტრივია"
                 />
@@ -608,6 +606,8 @@ function TeamContentV2() {
                   onPlay={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
                   }}
+                  searchQuery={searchQuery}
+                  sortFilter={sortFilter}
                 />
               </div>
             </div>
