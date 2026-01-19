@@ -155,38 +155,30 @@ export default function TriviaLobby() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
 
-        {/* Title & Creator */}
+        {/* Creator Avatar - Right Side */}
+        {creator && (
+          <button
+            onClick={() => openProfile(creator.user_id)}
+            className="absolute top-4 right-4 z-10"
+          >
+            <Avatar className="w-9 h-9 border-2 border-white/40 shadow-lg">
+              <AvatarImage src={creator.avatar_url || undefined} />
+              <AvatarFallback className="text-sm bg-white/20 text-white">
+                {creator.nickname?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        )}
+
+        {/* Title */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold text-white drop-shadow-lg mb-2"
+            className="text-2xl font-bold text-white drop-shadow-lg"
           >
             {trivia.title}
           </motion.h1>
-
-          {/* Creator Info */}
-          {creator && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center gap-2"
-            >
-              <button
-                onClick={() => openProfile(creator.user_id)}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-              >
-                <Avatar className="w-6 h-6 border border-white/30">
-                  <AvatarImage src={creator.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs bg-white/20 text-white">
-                    {creator.nickname?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-white/90 font-medium">{creator.nickname}</span>
-              </button>
-            </motion.div>
-          )}
         </div>
       </div>
 
