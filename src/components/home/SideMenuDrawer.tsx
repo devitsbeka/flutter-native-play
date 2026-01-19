@@ -47,7 +47,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   };
 
   const handlePlayClick = () => {
-    setIsTeamMenuOpen(true);
+    onClose();
+    navigate('/game');
   };
 
   const handleCategorySelect = (category: { id: string; name: string }) => {
@@ -195,7 +196,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Big Play Button - Simplified 3D Mint Style */}
-              <div className="px-4 py-4">
+              <div className="px-4 pt-0 pb-4">
                 <motion.button
                   onClick={handlePlayClick}
                   whileHover={{ scale: 1.02 }}
