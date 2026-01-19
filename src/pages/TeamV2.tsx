@@ -419,9 +419,9 @@ function TeamContentV2() {
       <div className="min-h-screen flex flex-col">
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
-            {/* Sticky Header - matching Shop/PowerUps style */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
+          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
+            {/* Scrollable Header Section - Title, Buttons, Friends Bar, Tabs */}
+            <div className="bg-background">
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
               <div className="flex items-center gap-2">
@@ -524,10 +524,12 @@ function TeamContentV2() {
                 </div>
               </div>
             </div>
-          </div>
+              </div>
+            </div>
 
-          {/* Filter Bars - Always visible in sticky header */}
-          <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
+            {/* Sticky Filter Bar - Only this stays at top on mobile */}
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative">
+              <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
             {activeTab === "rooms" && (
               <RoomFiltersBar
                 filter={roomsFilter}
@@ -563,17 +565,17 @@ function TeamContentV2() {
                 onAddClick={() => setShowCreateTypeModal(true)}
                 addButtonText="+ ახალი ტრივია"
               />
-            )}
-          </div>
-          
-          {/* Fade gradient below sticky header */}
-          <div 
-            className="h-4 -mb-4 pointer-events-none"
-            style={{
-              background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
-            }}
-          />
-        </div>
+              )}
+              </div>
+              
+              {/* Fade gradient below sticky header - mobile only */}
+              <div 
+                className="h-4 -mb-4 pointer-events-none md:hidden"
+                style={{
+                  background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
+                }}
+              />
+            </div>
 
 
         {/* Content Area - Full width like Shop/PowerUps */}
