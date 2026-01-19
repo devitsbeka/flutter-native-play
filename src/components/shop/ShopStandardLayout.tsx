@@ -39,6 +39,8 @@ export function ShopStandardLayout({
   const handleBuy = async () => {
     if (selectedItem) {
       await onItemClick(selectedItem);
+      // Small delay to let success modal render before closing this one
+      await new Promise(resolve => setTimeout(resolve, 50));
       setSelectedItem(null);
     }
   };

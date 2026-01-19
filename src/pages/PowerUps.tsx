@@ -217,7 +217,7 @@ export default function PowerUps() {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Main Content Area */}
-          <div className="flex-1 overflow-auto relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
+          <div className="flex-1 relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
             <GlobalSplineBackground />
 
             {/* Currency Bar - on video background */}
