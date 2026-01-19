@@ -135,7 +135,7 @@ export function FeedFiltersBar({
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/80 dark:bg-card/50 border border-border/30">
                       <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-foreground whitespace-nowrap">{currentLabel}</span>
+                      <span className="text-[13px] font-medium text-foreground whitespace-nowrap">{currentLabel}</span>
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
@@ -168,7 +168,7 @@ export function FeedFiltersBar({
                   onClick={onAddClick}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
                 >
-                  <span className="text-xs font-bold">{addButtonText}</span>
+                  <span className="text-[13px] font-bold">{addButtonText}</span>
                 </motion.button>
               )}
             </>

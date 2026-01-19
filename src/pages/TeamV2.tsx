@@ -524,6 +524,18 @@ function TeamContentV2() {
                 </div>
               </div>
             </div>
+
+            {/* Filter bar for My Trivia tab - part of sticky header */}
+            {activeTab === "my-content" && (
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="+ ახალი ტრივია"
+              />
+            )}
           </div>
         </div>
 
@@ -589,27 +601,15 @@ function TeamContentV2() {
 
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
-            <div className="flex flex-col">
-              <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-                <FeedFiltersBar
-                  sortFilter={sortFilter}
-                  onSortFilterChange={setSortFilter}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                  onAddClick={() => setShowCreateTypeModal(true)}
-                  addButtonText="+ ახალი ტრივია"
-                />
-              </div>
-              <div className="px-4 pt-2 pb-4">
-                <MyTriviaTab 
-                  onCreateQuiz={() => setShowCreateTypeModal(true)}
-                  onPlay={(post, collectionPosts) => {
-                    setPlayingQuiz({ post, collectionPosts });
-                  }}
-                  searchQuery={searchQuery}
-                  sortFilter={sortFilter}
-                />
-              </div>
+            <div className="px-4 pt-2 pb-4">
+              <MyTriviaTab 
+                onCreateQuiz={() => setShowCreateTypeModal(true)}
+                onPlay={(post, collectionPosts) => {
+                  setPlayingQuiz({ post, collectionPosts });
+                }}
+                searchQuery={searchQuery}
+                sortFilter={sortFilter}
+              />
             </div>
           )}
           
