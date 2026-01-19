@@ -8,7 +8,7 @@ import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
 import { FriendInvitesTracker } from "./FriendInvitesTracker";
 
-export type ProTier = 'pro' | 'pro_plus' | 'pro_master';
+export type ProTier = 'pro' | 'pro_plus' | 'pro_master' | 'standard';
 
 interface TierConfig {
   id: ProTier;
@@ -87,6 +87,7 @@ const TIER_PRODUCT_IDS: Record<ProTier, string> = {
   'pro': IAP_PRODUCTS.VIP_MONTHLY,
   'pro_plus': IAP_PRODUCTS.VIP_ANNUAL,
   'pro_master': IAP_PRODUCTS.VIP_ANNUAL,
+  'standard': IAP_PRODUCTS.VIP_MONTHLY,
 };
 
 export function ProPlansSection({ 
@@ -118,8 +119,11 @@ export function ProPlansSection({
   const currentTierConfig = PRO_TIERS.find(t => t.id === currentTier);
 
   // Determine which scenario to show
+  // 'standard' tier from DB = basic PRO (solo)
+  // 'pro' tier = solo PRO
+  // 'pro_plus' or 'pro_master' = family PRO
   const isNotPro = !currentTier;
-  const isSoloPro = currentTier === 'pro';
+  const isSoloPro = currentTier === 'pro' || currentTier === 'standard';
   const isFamilyPro = currentTier === 'pro_plus' || currentTier === 'pro_master';
 
   return (
