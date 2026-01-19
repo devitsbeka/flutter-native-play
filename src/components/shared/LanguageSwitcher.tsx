@@ -19,7 +19,8 @@ const LanguageDropdown = React.forwardRef<
     animate={{ opacity: 1, scale: 1, y: 0 }}
     exit={{ opacity: 0, scale: 0.95, y: -8 }}
     transition={{ duration: 0.15 }}
-    className="fixed right-4 top-16 z-[100] bg-card border border-border rounded-xl p-2 shadow-xl min-w-[300px] max-h-[400px] overflow-y-auto"
+    className="fixed left-4 right-4 top-20 z-[200] bg-background border border-border rounded-xl p-3 shadow-2xl max-h-[60vh] overflow-y-auto"
+    style={{ backgroundColor: 'hsl(var(--background))' }}
   >
     <div className="grid grid-cols-2 gap-1">
       {languages.map(lang => (
