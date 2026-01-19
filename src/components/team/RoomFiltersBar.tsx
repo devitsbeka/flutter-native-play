@@ -56,7 +56,8 @@ export function RoomFiltersBar({
   const currentSortLabel = sortOptions.find((opt) => opt.value === sort)?.label || "ბოლო აქტივობით";
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2">
+    <div className="px-[7px] py-2">
+      <div className="flex items-center gap-1.5">
       {/* Search button - left side */}
       <div className={isSearchOpen ? "flex-1" : "flex-shrink-0"}>
         <AnimatePresence mode="wait">
@@ -159,6 +160,7 @@ export function RoomFiltersBar({
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
