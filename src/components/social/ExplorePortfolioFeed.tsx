@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Users } from "lucide-react";
-import { useExploreCreators, Creator } from "@/hooks/useExploreCreators";
-import { CreatorPortfolioCard } from "./CreatorPortfolioCard";
-import { QuickProfileModal } from "./QuickProfileModal";
+import { usePlayerFeedItems } from "@/hooks/usePlayerFeedItems";
+import { PlayerFeedItem } from "./PlayerFeedItem";
 import { SamplePost } from "@/data/samplePosts";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
 
@@ -13,25 +11,8 @@ interface ExplorePortfolioFeedProps {
 }
 
 export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePortfolioFeedProps) {
-  const { data: creators = [], isLoading } = useExploreCreators(searchQuery);
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const { data: feedItems = [], isLoading } = usePlayerFeedItems(searchQuery);
   const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
-
-  const handlePlayTrivia = (trivia: SamplePost) => {
-    onPlayQuiz(trivia);
-  };
-
-  const handleViewProfile = (creator: Creator) => {
-    setSelectedCreator(creator);
-  };
-
-  const handleLikeTrivia = (trivia: SamplePost) => {
-    toggleLike(trivia.id);
-  };
-
-  const handleSaveTrivia = (trivia: SamplePost) => {
-    toggleSave(trivia.id);
-  };
 
   if (isLoading) {
     return (
@@ -42,14 +23,14 @@ export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePo
     );
   }
 
-  if (creators.length === 0) {
+  if (feedItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
           <Users className="w-8 h-8 text-muted-foreground" />
         </div>
         <div className="text-center">
-          <h3 className="font-semibold text-foreground mb-1">შემქმნელები ვერ მოიძებნა</h3>
+          <h3 className="font-semibold text-foreground mb-1">პოსტები ვერ მოიძებნა</h3>
           <p className="text-sm text-muted-foreground">
             {searchQuery ? "სცადეთ სხვა საძიებო სიტყვა" : "ჯერ არავის არ აქვს გამოქვეყნებული ტრივია"}
           </p>
@@ -60,31 +41,25 @@ export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePo
 
   return (
     <div className="space-y-4">
-      {creators.map((creator, index) => (
+      {feedItems.map((feedItem, index) => (
         <motion.div
-          key={creator.user_id}
+          key={feedItem.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
+          transition={{ duration: 0.3, delay: index * 0.05 }}
         >
-          <CreatorPortfolioCard
-            creator={creator}
-            onPlayTrivia={handlePlayTrivia}
-            onViewProfile={handleViewProfile}
-            onLikeTrivia={handleLikeTrivia}
-            onSaveTrivia={handleSaveTrivia}
-            userLikes={userLikes}
-            userSaves={userSaves}
+          <PlayerFeedItem
+            player={feedItem.player}
+            item={feedItem.item}
+            itemType={feedItem.itemType}
+            onPlayTrivia={feedItem.itemType === 'trivia' ? onPlayQuiz : undefined}
+            onLike={toggleLike}
+            onSave={toggleSave}
+            isLiked={userLikes.includes(feedItem.item.id)}
+            isSaved={userSaves.includes(feedItem.item.id)}
           />
         </motion.div>
       ))}
-
-      {/* Quick Profile Modal */}
-      <QuickProfileModal
-        creator={selectedCreator}
-        isOpen={!!selectedCreator}
-        onClose={() => setSelectedCreator(null)}
-      />
     </div>
   );
 }

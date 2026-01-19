@@ -1,0 +1,242 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { SamplePost } from "@/data/samplePosts";
+import { Json } from "@/integrations/supabase/types";
+
+export interface PlayerInfo {
+  user_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  country_code: string | null;
+  trivia_count: number;
+  total_plays: number;
+  friendship_status: 'none' | 'pending_sent' | 'pending_received' | 'friends';
+  friendship_id?: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  title: string;
+  description: string | null;
+  cover_image: string | null;
+  cover_gradient: string;
+  plays_count: number;
+  likes_count: number;
+  saves_count: number;
+  created_at: string;
+  user_id: string;
+}
+
+export interface PlayerFeedItem {
+  id: string;
+  player: PlayerInfo;
+  item: SamplePost | CollectionItem;
+  itemType: 'trivia' | 'collection';
+  createdAt: string;
+}
+
+export function usePlayerFeedItems(searchQuery: string = "") {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["player-feed-items", user?.id, searchQuery],
+    queryFn: async (): Promise<PlayerFeedItem[]> => {
+      // Fetch all public posts
+      const { data: posts, error: postsError } = await supabase
+        .from("user_quiz_posts")
+        .select("*")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false });
+
+      if (postsError) throw postsError;
+
+      // Fetch all public collections
+      const { data: collections, error: collectionsError } = await supabase
+        .from("quiz_collections")
+        .select("*")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false });
+
+      if (collectionsError) throw collectionsError;
+
+      // Get unique user IDs from both posts and collections
+      const postUserIds = (posts || []).map(p => p.user_id);
+      const collectionUserIds = (collections || []).map(c => c.user_id);
+      const userIds = [...new Set([...postUserIds, ...collectionUserIds])];
+
+      // Fetch profiles for those users
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: profileData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("user_id, nickname, avatar_url, country_code")
+          .in("user_id", userIds);
+        if (profilesError) throw profilesError;
+        profiles = profileData || [];
+      }
+
+      // Fetch friendship status for current user
+      let friendships: { id: string; user_id: string; friend_id: string; status: string }[] = [];
+      if (user) {
+        const { data: friendshipData } = await supabase
+          .from("friendships")
+          .select("id, user_id, friend_id, status")
+          .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+        
+        friendships = friendshipData || [];
+      }
+
+      // Create profile map
+      const profileMap = new Map(profiles.map(p => [p.user_id, p]));
+
+      // Count trivias and plays per user
+      const userTriviaStats = new Map<string, { count: number; plays: number }>();
+      (posts || []).forEach(post => {
+        const stats = userTriviaStats.get(post.user_id) || { count: 0, plays: 0 };
+        stats.count += 1;
+        stats.plays += post.plays_count || 0;
+        userTriviaStats.set(post.user_id, stats);
+      });
+
+      // Helper to get friendship status
+      const getFriendshipInfo = (userId: string): { status: PlayerInfo['friendship_status']; id?: string } => {
+        const friendship = friendships.find(f => f.user_id === userId || f.friend_id === userId);
+        if (!friendship) return { status: 'none' };
+        
+        if (friendship.status === 'accepted') {
+          return { status: 'friends', id: friendship.id };
+        } else if (friendship.status === 'pending') {
+          return {
+            status: friendship.user_id === user?.id ? 'pending_sent' : 'pending_received',
+            id: friendship.id
+          };
+        }
+        return { status: 'none' };
+      };
+
+      // Helper to create PlayerInfo
+      const createPlayerInfo = (userId: string): PlayerInfo | null => {
+        const profile = profileMap.get(userId);
+        if (!profile) return null;
+
+        const stats = userTriviaStats.get(userId) || { count: 0, plays: 0 };
+        const friendshipInfo = getFriendshipInfo(userId);
+
+        return {
+          user_id: userId,
+          nickname: profile.nickname || "User",
+          avatar_url: profile.avatar_url,
+          country_code: profile.country_code,
+          trivia_count: stats.count,
+          total_plays: stats.plays,
+          friendship_status: friendshipInfo.status,
+          friendship_id: friendshipInfo.id,
+        };
+      };
+
+      // Build feed items from posts
+      const feedItems: PlayerFeedItem[] = [];
+
+      (posts || []).forEach(post => {
+        const player = createPlayerInfo(post.user_id);
+        if (!player) return;
+
+        const profile = profileMap.get(post.user_id);
+
+        const samplePost: SamplePost = {
+          id: post.id,
+          username: profile?.nickname || "user",
+          displayName: profile?.nickname || "User",
+          avatarUrl: profile?.avatar_url || "",
+          verified: false,
+          createdAt: post.created_at || new Date().toISOString(),
+          title: post.title || "Untitled",
+          description: post.description || "",
+          subject: post.subject || "",
+          hashtags: (post.hashtags as string[]) || [],
+          coverGradient: post.cover_gradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          coverImage: post.cover_image || undefined,
+          questionCount: Array.isArray(post.questions) ? post.questions.length : 0,
+          answerFormat: "4_answers",
+          likesCount: post.likes_count || 0,
+          savesCount: post.saves_count || 0,
+          playsCount: post.plays_count || 0,
+          commentsCount: 0,
+          questions: ((post.questions as Json[]) || []).map((q: any) => ({
+            question: q.question_text || q.question || "",
+            correct_answer: q.correct_answer || "",
+            incorrect_answers: q.incorrect_answers || [],
+            icon_slug: q.icon_slug,
+          })),
+          isUserPost: false,
+          isPublic: post.is_public ?? true,
+        };
+
+        feedItems.push({
+          id: `trivia-${post.id}`,
+          player,
+          item: samplePost,
+          itemType: 'trivia',
+          createdAt: post.created_at || new Date().toISOString(),
+        });
+      });
+
+      // Build feed items from collections
+      (collections || []).forEach(collection => {
+        const player = createPlayerInfo(collection.user_id);
+        if (!player) return;
+
+        const collectionItem: CollectionItem = {
+          id: collection.id,
+          title: collection.title,
+          description: collection.description,
+          cover_image: collection.cover_image,
+          cover_gradient: collection.cover_gradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          plays_count: collection.plays_count || 0,
+          likes_count: collection.likes_count || 0,
+          saves_count: collection.saves_count || 0,
+          created_at: collection.created_at || new Date().toISOString(),
+          user_id: collection.user_id,
+        };
+
+        feedItems.push({
+          id: `collection-${collection.id}`,
+          player,
+          item: collectionItem,
+          itemType: 'collection',
+          createdAt: collection.created_at || new Date().toISOString(),
+        });
+      });
+
+      // Sort by created_at descending
+      feedItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        return feedItems.filter(feedItem => {
+          // Search in player nickname
+          if (feedItem.player.nickname.toLowerCase().includes(query)) return true;
+
+          // Search in item title
+          if (feedItem.itemType === 'trivia') {
+            const trivia = feedItem.item as SamplePost;
+            if (trivia.title.toLowerCase().includes(query)) return true;
+            if (trivia.subject.toLowerCase().includes(query)) return true;
+            if (trivia.hashtags.some(h => h.toLowerCase().includes(query))) return true;
+          } else {
+            const collection = feedItem.item as CollectionItem;
+            if (collection.title.toLowerCase().includes(query)) return true;
+            if (collection.description?.toLowerCase().includes(query)) return true;
+          }
+
+          return false;
+        });
+      }
+
+      return feedItems;
+    },
+    staleTime: 30000,
+  });
+}
