@@ -484,7 +484,7 @@ function TeamContentV2() {
                 </div>
 
                 {/* Unified Tab Bar - Full Width */}
-                <div className="w-full max-w-full md:max-w-[1115px] mx-auto px-4 pt-3 pb-2 overflow-hidden">
+                <div className="w-full max-w-[100vw] md:max-w-[1115px] mx-auto px-4 pt-3 pb-2 overflow-hidden box-border">
                   <div className="flex items-center justify-between gap-3">
                     {/* Tab container - takes available space */}
                     <div 
