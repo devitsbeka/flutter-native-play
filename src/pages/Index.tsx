@@ -369,7 +369,7 @@ export default function Index() {
                 className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsAdFreeModalOpen(true)}
+                onClick={() => navigate("/profile?tab=PRO")}
               >
                 <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
               </motion.button>
