@@ -36,6 +36,7 @@ export const es: KaTranslations = {
     limited: "Limitado",
     new: "Nuevo",
     or: "o",
+    owned: "Adquirido",
   },
   auth: {
     createAccount: "Crear cuenta",
@@ -602,6 +603,7 @@ export const es: KaTranslations = {
     purchasedPower: "¡Comprado {count}x {name}! ⚡",
     coinsDescription: "Usa monedas para comprar poderes",
     vipDescription: "Obtén beneficios y bonificaciones exclusivas",
+    eachPower: "cada poder",
   },
   help: {
     title: "Ayuda",

@@ -39,6 +39,7 @@ export const en: KaTranslations = {
     limited: "Limited",
     new: "New",
     or: "or",
+    owned: "Owned",
   },
 
   // ==========================================
@@ -716,6 +717,7 @@ export const en: KaTranslations = {
     purchasedPower: "Purchased {count}x {name}! ⚡",
     coinsDescription: "Use coins to buy powers",
     vipDescription: "Get exclusive benefits and bonuses",
+    eachPower: "each power",
   },
 
   // ==========================================

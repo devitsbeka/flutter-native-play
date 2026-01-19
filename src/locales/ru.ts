@@ -36,6 +36,7 @@ export const ru: KaTranslations = {
     limited: "Ограничено",
     new: "Новое",
     or: "или",
+    owned: "Приобретено",
   },
   auth: {
     createAccount: "Создать аккаунт",
@@ -619,6 +620,7 @@ export const ru: KaTranslations = {
     purchasedPower: "Куплено {count}x {name}! ⚡",
     coinsDescription: "Используйте монеты для покупки сил",
     vipDescription: "Получите эксклюзивные бонусы и преимущества",
+    eachPower: "каждая сила",
   },
   help: {
     title: "Помощь",
