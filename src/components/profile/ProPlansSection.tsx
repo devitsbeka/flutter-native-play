@@ -1,10 +1,8 @@
 import { motion } from "framer-motion";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
-import { FriendInvitesTracker } from "./FriendInvitesTracker";
-import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
@@ -103,14 +101,7 @@ export function ProPlansSection({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
-  const { fetchInvites } = useFriendInvites();
   const { purchase, purchasing } = useInAppPurchases();
-  const [invitesKey, setInvitesKey] = useState(0);
-
-  const handleInviteSent = useCallback(() => {
-    fetchInvites();
-    setInvitesKey(prev => prev + 1);
-  }, [fetchInvites]);
 
   const handleUpgrade = async (tier: ProTier) => {
     const tierConfig = PRO_TIERS.find(t => t.id === tier);
@@ -324,18 +315,12 @@ export function ProPlansSection({
         })}
       </div>
 
-      {/* Friend Invites Tracker - Show for PRO subscribers */}
-      {currentTier && (
-        <FriendInvitesTracker key={invitesKey} className="mt-6" />
-      )}
-
       {/* Invite Modal */}
       <ProInviteFriendsModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         invitesRemaining={friendInvitesRemaining}
         currentTier={currentTier}
-        onInviteSent={handleInviteSent}
       />
 
       {/* Purchase Success Modal */}

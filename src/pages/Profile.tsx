@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
+import { FriendInvitesTracker } from "@/components/profile/FriendInvitesTracker";
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
@@ -17,7 +18,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { subscription, isVip } = useVipStatus();
-  const [activeTab, setActiveTab] = useState("Stats");
+  const [activeTab, setActiveTab] = useState("PRO");
   const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -161,6 +162,11 @@ export default function Profile() {
                 </button>
               ))}
             </div>
+
+            {/* Friend Invites Tracker - Show below tabs for PRO subscribers */}
+            {currentTier && activeTab === "PRO" && (
+              <FriendInvitesTracker className="mb-6" />
+            )}
 
             {/* Tab Content */}
             {activeTab === "Stats" && (
