@@ -911,7 +911,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="py-4 space-y-4"
+      className="space-y-4"
     >
       {/* Drafts Section */}
       {drafts && drafts.length > 0 && (
