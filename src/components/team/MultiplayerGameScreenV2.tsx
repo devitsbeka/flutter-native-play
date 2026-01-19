@@ -8,7 +8,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
+
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
@@ -157,20 +157,6 @@ export function MultiplayerGameScreenV2() {
     );
   }, [currentQuestion?.allAnswers]);
 
-  // Get player avatar state
-  const getPlayerState = useCallback(() => {
-    if (!answerRevealed) return "active";
-    return lastQuestionResult?.correct ? "correct" : "wrong";
-  }, [answerRevealed, lastQuestionResult]);
-
-  // Get opponent avatar states - pick top opponent
-  const topOpponent = opponents[0];
-  const getOpponentState = useCallback(() => {
-    if (!answerRevealed || !topOpponent) return "default";
-    const oppAnswer = opponentAnswers[topOpponent.user_id];
-    if (!oppAnswer) return "default";
-    return oppAnswer.is_correct ? "correct" : "wrong";
-  }, [answerRevealed, topOpponent, opponentAnswers]);
 
   // Show loading while questions are being fetched
   if (!currentQuestion) {
@@ -291,32 +277,8 @@ export function MultiplayerGameScreenV2() {
         </motion.div>
       )}
 
-      {/* Players Row */}
-      <div className="flex items-start justify-between px-4 pt-2 flex-shrink-0 z-10">
-        {/* Player (Left) */}
-        <QuizPlayerAvatar
-          avatarUrl={profile?.avatar_url}
-          animatedAvatarUrl={profile?.animated_avatar_url}
-          score={myScore}
-          position="left"
-          state={getPlayerState()}
-          size="large"
-        />
-
-        {/* Top Opponent (Right) */}
-        {topOpponent && (
-          <QuizPlayerAvatar
-            avatarUrl={topOpponent.avatar_url}
-            score={topOpponent.score || 0}
-            position="right"
-            state={getOpponentState()}
-            size="large"
-          />
-        )}
-      </div>
-
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-3 relative">
+      <div className="px-4 flex-shrink-0 mt-4 relative">
         {/* Category Icon - use question's icon_slug if available (for custom questions) */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-20 z-20 w-28 h-28">
           <DynamicIcon 
