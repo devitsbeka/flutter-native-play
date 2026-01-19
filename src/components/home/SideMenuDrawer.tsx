@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight } from "lucide-react";
+import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,7 +29,7 @@ const navItemsConfig = [
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { t } = useLanguage();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
@@ -55,6 +55,12 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
     setIsCategorySelectorOpen(false);
     onClose();
     navigate(`/category/${category.id}`);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    onClose();
+    navigate("/");
   };
 
   if (!isOpen) return null;
@@ -263,8 +269,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 </div>
               </div>
 
-              {/* Settings Navigation Button */}
-              <div className="px-4 pb-4 pt-2 border-t border-border/30 mt-2">
+              {/* Settings and Logout */}
+              <div className="px-4 pb-4 pt-2 border-t border-border/30 mt-2 flex flex-col gap-1">
                 <motion.button
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -279,6 +285,24 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   </span>
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
                 </motion.button>
+
+                {/* Logout Button */}
+                {user && (
+                  <motion.button
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 }}
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-destructive/10 active:scale-98"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                      <LogOut className="w-5 h-5 text-destructive" />
+                    </div>
+                    <span className="text-base font-medium text-destructive flex-1 text-left">
+                      {t("menu.signOut")}
+                    </span>
+                  </motion.button>
+                )}
               </div>
             </div>
           </motion.div>
