@@ -51,54 +51,6 @@ export const PRO_TIERS: TierConfig[] = [
       { icon: Star, text: 'VIP ბეჯი' },
       { icon: Users, text: '1 მეგობრის მოწვევა', highlight: true },
     ]
-  },
-  {
-    id: 'pro_plus',
-    name: 'PRO+',
-    nameKa: 'PRO+',
-    price: 19.99,
-    friendInvites: 5,
-    xpMultiplier: 2,
-    // Orange theme
-    gradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-    glowColor: 'rgba(245, 158, 11, 0.2)',
-    accentColor: '#F59E0B',
-    lightBg: 'rgba(245, 158, 11, 0.1)',
-    buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
-    popular: true,
-    benefits: [
-      { icon: Zap, text: '2x XP ბონუსი' },
-      { icon: Shield, text: 'რეკლამების გარეშე' },
-      { icon: Star, text: 'VIP ბეჯი + ფრეიმები' },
-      { icon: Gift, text: 'ყოველდღიური ჯილდოები' },
-      { icon: Sparkles, text: 'ექსკლუზიური ავატარები' },
-      { icon: Users, text: '5 მეგობრის მოწვევა', highlight: true },
-    ]
-  },
-  {
-    id: 'pro_master',
-    name: 'PRO Master',
-    nameKa: 'PRO მასტერი',
-    price: 29.99,
-    friendInvites: 10,
-    xpMultiplier: 3,
-    // Amber/Orange theme
-    gradient: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
-    borderColor: 'rgba(245, 158, 11, 0.5)',
-    glowColor: 'rgba(245, 158, 11, 0.3)',
-    accentColor: '#F59E0B',
-    lightBg: 'rgba(245, 158, 11, 0.1)',
-    buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #F97316 100%)',
-    benefits: [
-      { icon: Zap, text: '3x XP ბონუსი', highlight: true },
-      { icon: Shield, text: 'რეკლამების გარეშე' },
-      { icon: Star, text: 'ყველა ბეჯი და ფრეიმი' },
-      { icon: Gift, text: 'პრემიუმ ყოველდღიური ჯილდოები' },
-      { icon: Sparkles, text: 'ყველა ავატარი' },
-      { icon: Trophy, text: 'ექსკლუზიური ლიდერბორდი' },
-      { icon: Users, text: '10 მეგობრის მოწვევა', highlight: true },
-    ]
   }
 ];
 

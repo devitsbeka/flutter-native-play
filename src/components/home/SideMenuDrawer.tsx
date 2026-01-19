@@ -158,7 +158,10 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 {user ? (
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
                     <button 
-                      onClick={() => setIsAvatarModalOpen(true)}
+                      onClick={() => {
+                        onClose();
+                        navigate('/profile');
+                      }}
                       className="h-16 w-16 rounded-2xl bg-background/50 backdrop-blur flex items-center justify-center overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
                     >
                       <Avatar
