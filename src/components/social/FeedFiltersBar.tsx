@@ -135,7 +135,7 @@ export function FeedFiltersBar({
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 dark:bg-card/50 border border-border/30">
                       <Filter className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">{currentLabel}</span>
+                      <span className="text-sm font-medium text-foreground whitespace-nowrap">{currentLabel}</span>
                       <ChevronDown className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </DropdownMenuTrigger>
