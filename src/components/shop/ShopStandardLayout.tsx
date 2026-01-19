@@ -1,9 +1,8 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopHeroCarousel } from "./ShopHeroCarousel";
 import { ShopProductGrid } from "./ShopProductGrid";
-import { ShopItemDetailModal } from "./ShopItemDetailModal";
 
 interface ShopStandardLayoutProps {
   sections: ShopSection[];
@@ -23,7 +22,6 @@ export function ShopStandardLayout({
   onItemClick,
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
 
   const handleSlideClick = (sectionId: string) => {
     const ref = sectionRefs.current.get(sectionId);
@@ -32,22 +30,9 @@ export function ShopStandardLayout({
     }
   };
 
-  const handleItemClick = (item: ShopItem) => {
-    setSelectedItem(item);
-  };
-
-  const handleBuy = async () => {
-    if (selectedItem) {
-      // Close detail modal FIRST to prevent overlap
-      const item = selectedItem;
-      setSelectedItem(null);
-      
-      // Small delay to let the modal animate out
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Then run purchase (which will open success modal)
-      await onItemClick(item);
-    }
+  const handleItemClick = async (item: ShopItem) => {
+    // Directly purchase without opening detail modal
+    await onItemClick(item);
   };
 
   // Filter out frames section
@@ -80,19 +65,6 @@ export function ShopStandardLayout({
           />
         </motion.div>
       ))}
-
-      {/* Item Detail Modal */}
-      {selectedItem && (
-        <ShopItemDetailModal
-          isOpen={!!selectedItem}
-          onClose={() => setSelectedItem(null)}
-          item={selectedItem}
-          canAfford={gems >= selectedItem.price}
-          isPurchased={purchasedItems.has(selectedItem.id)}
-          isLoading={isPurchasing === selectedItem.id}
-          onBuy={handleBuy}
-        />
-      )}
     </div>
   );
 }
