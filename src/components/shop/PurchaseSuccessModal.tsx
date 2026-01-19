@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
 import { Check, Sparkles } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -13,6 +13,25 @@ interface PurchaseSuccessModalProps {
   icon?: React.ReactNode;
 }
 
+// Helper to forcefully remove any confetti canvas elements
+function cleanupConfettiCanvas() {
+  confetti.reset();
+  
+  // Also manually remove any orphaned confetti canvas elements
+  const canvases = document.querySelectorAll('canvas');
+  canvases.forEach(canvas => {
+    // Confetti library creates canvases with specific styles
+    const style = canvas.style;
+    if (
+      style.position === 'fixed' && 
+      style.pointerEvents === 'none' &&
+      (style.zIndex === '9999' || parseInt(style.zIndex) > 1000)
+    ) {
+      canvas.remove();
+    }
+  });
+}
+
 export function PurchaseSuccessModal({
   isOpen,
   onClose,
@@ -21,16 +40,19 @@ export function PurchaseSuccessModal({
   icon,
 }: PurchaseSuccessModalProps) {
   const { t } = useLanguage();
+  const wasOpenRef = useRef(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Memoized close handler to ensure cleanup
   const handleClose = useCallback(() => {
-    // Reset confetti canvas to prevent touch blocking
-    confetti.reset();
+    cleanupConfettiCanvas();
     onClose();
   }, [onClose]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      
       // Trigger confetti
       confetti({
         particleCount: 100,
@@ -41,33 +63,50 @@ export function PurchaseSuccessModal({
       });
 
       // Auto close after 3 seconds
-      const timer = setTimeout(handleClose, 3000);
-      return () => {
-        clearTimeout(timer);
-        // Always reset confetti on cleanup to prevent scroll blocking
-        confetti.reset();
-      };
+      timerRef.current = setTimeout(() => {
+        cleanupConfettiCanvas();
+        onClose();
+      }, 3000);
     }
-  }, [isOpen, handleClose]);
+    
+    if (!isOpen && wasOpenRef.current) {
+      wasOpenRef.current = false;
+      cleanupConfettiCanvas();
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isOpen, onClose]);
 
-  // Cleanup confetti when component unmounts or closes
+  // Final cleanup on unmount
   useEffect(() => {
     return () => {
-      confetti.reset();
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      cleanupConfettiCanvas();
     };
   }, []);
 
+  // Handler for when exit animation completes
+  const handleExitComplete = useCallback(() => {
+    cleanupConfettiCanvas();
+  }, []);
+
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" onExitComplete={handleExitComplete}>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
           onClick={handleClose}
-          style={{ touchAction: "none" }} // Prevent scroll while modal is open
         >
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
@@ -94,8 +133,8 @@ export function PurchaseSuccessModal({
                   ease: "easeOut",
                   repeat: Infinity,
                 }}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-success/40"
-                style={{ width: 80, height: 80, pointerEvents: "none" }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-success/40 pointer-events-none"
+                style={{ width: 80, height: 80 }}
               />
             ))}
 

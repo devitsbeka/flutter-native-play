@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -255,7 +255,13 @@ export default function PowerUps() {
 
       <PurchaseSuccessModal
         isOpen={showSuccess}
-        onClose={() => setShowSuccess(false)}
+        onClose={() => {
+          setShowSuccess(false);
+          // Ensure body scroll is restored after modal closes
+          document.body.style.overflow = '';
+          document.body.style.position = '';
+          document.body.style.touchAction = '';
+        }}
         itemName={successItem.name}
         quantity={successItem.quantity}
       />
