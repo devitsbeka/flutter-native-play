@@ -4,6 +4,7 @@ import { Plus, Users, Tv, Airplay, Cast, UserPlus } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, RoomSort } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
@@ -325,6 +326,7 @@ interface RoomCardGridProps {
 }
 
 function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
+  const { openProfile } = usePlayerProfile();
   const displayName = room.room_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
@@ -414,7 +416,11 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
             {room.participants.slice(0, 5).map((p) => (
               <div 
                 key={p.user_id} 
-                className="w-7 h-7 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20"
+                className="w-7 h-7 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openProfile(p.user_id);
+                }}
               >
                 {p.avatar_url ? (
                   <img 

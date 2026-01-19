@@ -7,6 +7,7 @@ import { TriviaPortfolioCard } from "./TriviaPortfolioCard";
 import { Creator } from "@/hooks/useExploreCreators";
 import { SamplePost } from "@/data/samplePosts";
 import { useFriends } from "@/hooks/useFriends";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { 
   Carousel, 
   CarouselContent, 
@@ -41,6 +42,7 @@ function formatNumber(num: number): string {
 
 export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: CreatorPortfolioCardProps) {
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
+  const { openProfile } = usePlayerProfile();
   const [friendshipStatus, setFriendshipStatus] = useState(creator.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -137,13 +139,18 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
       {/* Creator Header */}
       <div className="px-0 py-4 md:p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <Avatar className="w-12 h-12 border-2 border-border">
-            <AvatarImage src={creator.avatar_url || undefined} />
-            <AvatarFallback className="bg-muted text-lg">
-              {creator.nickname.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          {/* Avatar - Clickable to open profile */}
+          <div 
+            onClick={() => openProfile(creator.user_id)}
+            className="cursor-pointer hover:scale-105 transition-transform active:scale-95"
+          >
+            <Avatar className="w-12 h-12 border-2 border-border">
+              <AvatarImage src={creator.avatar_url || undefined} />
+              <AvatarFallback className="bg-muted text-lg">
+                {creator.nickname.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           
           {/* Name and Stats */}
           <div>
@@ -168,11 +175,11 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
           <Button 
             variant="ghost" 
             size="sm" 
-            className="gap-1.5"
+            className="gap-1.5 hidden md:flex"
             onClick={() => onViewProfile(creator)}
           >
             <Eye className="w-4 h-4" />
-            <span className="hidden sm:inline">პროფილი</span>
+            <span>პროფილი</span>
           </Button>
         </div>
       </div>
