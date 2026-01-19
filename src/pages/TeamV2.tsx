@@ -562,9 +562,8 @@ function TeamContentV2() {
               addButtonText="+ ახალი ტრივია"
             />
           )}
-
-          </div>
         </div>
+
 
         {/* Content Area - Full width like Shop/PowerUps */}
         <div className="flex-1 pb-24 lg:pb-0">
