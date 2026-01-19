@@ -154,7 +154,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 onClick={onAddClick}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground shadow-sm flex-shrink-0"
               >
-                <span className="text-sm font-bold">{addButtonText}</span>
+                <span className="text-[13px] font-bold">{addButtonText}</span>
               </motion.button>
             )}
           </>

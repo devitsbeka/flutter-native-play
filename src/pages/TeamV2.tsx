@@ -509,7 +509,7 @@ function TeamContentV2() {
                           <button
                             key={tab.id}
                             onClick={() => handleTabChange(tab.id)}
-                            className={`relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[11px] sm:text-sm font-semibold transition-colors ${
+                            className={`relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-colors ${
                             activeTab === tab.id
                               ? "text-foreground"
                               : "text-muted-foreground hover:text-foreground"
@@ -549,7 +549,7 @@ function TeamContentV2() {
                     searchQuery={roomsSearchQuery}
                     onSearchQueryChange={setRoomsSearchQuery}
                     onAddClick={() => setShowCreateModal(true)}
-                    addButtonText="+ ახალი ოთახი"
+                    addButtonText="+ ოთახი"
                   />
                 )}
 
@@ -564,7 +564,7 @@ function TeamContentV2() {
                     searchQuery={roomsSearchQuery}
                     onSearchQueryChange={setRoomsSearchQuery}
                     onAddClick={() => setShowCreateTypeModal(true)}
-                    addButtonText="+ შექმენი ტრივია"
+                    addButtonText="შექმენი ტრივია"
                   />
                 )}
 
@@ -576,7 +576,7 @@ function TeamContentV2() {
                     searchQuery={searchQuery}
                     onSearchQueryChange={setSearchQuery}
                     onAddClick={() => setShowCreateTypeModal(true)}
-                    addButtonText="+ ახალი ტრივია"
+                    addButtonText="+ ტრივია"
                   />
                 )}
               </div>
