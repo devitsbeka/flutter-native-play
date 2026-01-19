@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -7,41 +8,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface LanguageSwitcherProps {
   compact?: boolean;
 }
-
-// Forward ref wrapper for AnimatePresence children
-const LanguageDropdown = React.forwardRef<
-  HTMLDivElement,
-  { languages: readonly { code: string; flag: string; nativeName: string }[]; language: string; onSelect: (code: string) => void }
->(({ languages, language, onSelect }, ref) => (
-  <motion.div
-    ref={ref}
-    initial={{ opacity: 0, scale: 0.95, y: -8 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    exit={{ opacity: 0, scale: 0.95, y: -8 }}
-    transition={{ duration: 0.15 }}
-    className="fixed left-4 right-4 top-20 z-[200] bg-background border border-border rounded-xl p-3 shadow-2xl max-h-[60vh] overflow-y-auto"
-    style={{ backgroundColor: 'hsl(var(--background))' }}
-  >
-    <div className="grid grid-cols-2 gap-1">
-      {languages.map(lang => (
-        <button
-          key={lang.code}
-          onClick={() => onSelect(lang.code)}
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-accent/50 text-left",
-            language === lang.code && "bg-primary/10 ring-1 ring-primary/50"
-          )}
-        >
-          <span className="text-xl">{lang.flag}</span>
-          <span className="text-sm font-medium">{lang.nativeName}</span>
-        </button>
-      ))}
-    </div>
-  </motion.div>
-));
-
-LanguageDropdown.displayName = 'LanguageDropdown';
-
 export const LanguageSwitcher = React.forwardRef<HTMLDivElement, LanguageSwitcherProps>(
   ({ compact = false }, ref) => {
     const { language, setLanguage, languages, currentLanguage } = useLanguage();
@@ -58,7 +24,7 @@ export const LanguageSwitcher = React.forwardRef<HTMLDivElement, LanguageSwitche
     useEffect(() => {
       const handleClickOutside = (e: MouseEvent) => {
         const target = e.target as HTMLElement;
-        if (!target.closest('.language-switcher')) {
+        if (!target.closest('.language-switcher') && !target.closest('.language-dropdown-portal')) {
           setIsExpanded(false);
         }
       };
@@ -93,12 +59,43 @@ export const LanguageSwitcher = React.forwardRef<HTMLDivElement, LanguageSwitche
         </button>
 
         <AnimatePresence>
-          {isExpanded && (
-            <LanguageDropdown
-              languages={languages}
-              language={language}
-              onSelect={handleSelect}
-            />
+          {isExpanded && createPortal(
+            <div className="language-dropdown-portal">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[9998] bg-black/30"
+                onClick={() => setIsExpanded(false)}
+              />
+              {/* Dropdown */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="fixed left-4 right-4 top-20 z-[9999] bg-background border border-border rounded-xl p-3 shadow-2xl max-h-[60vh] overflow-y-auto"
+                style={{ backgroundColor: 'hsl(var(--background))' }}
+              >
+                <div className="grid grid-cols-2 gap-1">
+                  {languages.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleSelect(lang.code)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-accent/50 text-left",
+                        language === lang.code && "bg-primary/10 ring-1 ring-primary/50"
+                      )}
+                    >
+                      <span className="text-xl">{lang.flag}</span>
+                      <span className="text-sm font-medium">{lang.nativeName}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </div>,
+            document.body
           )}
         </AnimatePresence>
       </div>
