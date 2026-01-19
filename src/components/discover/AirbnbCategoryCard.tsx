@@ -357,7 +357,7 @@ export function AirbnbCategoryCard({
                   </motion.div>
                   
                   {/* Progress count inside the bar */}
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
                     <span 
                       className={`font-bold tracking-wide ${isFull ? 'text-sm' : 'text-xs'}`}
                       style={{
