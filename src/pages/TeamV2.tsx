@@ -528,7 +528,7 @@ function TeamContentV2() {
             </div>
 
             {/* Sticky Filter Bar - Only search/filter/+ button stays at top on mobile */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative">
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative w-full max-w-full overflow-hidden">
               {/* Filter Bar Section */}
               <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
                 {activeTab === "rooms" && (
