@@ -2,8 +2,10 @@ import { motion } from "framer-motion";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
+import { FriendInvitesTracker } from "./FriendInvitesTracker";
+import { useFriendInvites } from "@/hooks/useFriendInvites";
 import { format } from "date-fns";
 
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master';
@@ -92,6 +94,13 @@ export function ProPlansSection({
 }: ProPlansSectionProps) {
   const navigate = useNavigate();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const { fetchInvites } = useFriendInvites();
+  const [invitesKey, setInvitesKey] = useState(0);
+
+  const handleInviteSent = useCallback(() => {
+    fetchInvites();
+    setInvitesKey(prev => prev + 1);
+  }, [fetchInvites]);
 
   const handleUpgrade = (tier: ProTier) => {
     navigate('/vip', { state: { selectedTier: tier } });
@@ -286,12 +295,18 @@ export function ProPlansSection({
         })}
       </div>
 
+      {/* Friend Invites Tracker - Show for PRO subscribers */}
+      {currentTier && (
+        <FriendInvitesTracker key={invitesKey} className="mt-6" />
+      )}
+
       {/* Invite Modal */}
       <ProInviteFriendsModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         invitesRemaining={friendInvitesRemaining}
         currentTier={currentTier}
+        onInviteSent={handleInviteSent}
       />
 
       <style>{`

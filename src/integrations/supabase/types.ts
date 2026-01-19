@@ -487,6 +487,7 @@ export type Database = {
           invited_email: string
           invited_user_id: string | null
           inviter_id: string
+          referral_code: string | null
           status: string | null
           tier_granted: string
         }
@@ -498,6 +499,7 @@ export type Database = {
           invited_email: string
           invited_user_id?: string | null
           inviter_id: string
+          referral_code?: string | null
           status?: string | null
           tier_granted: string
         }
@@ -509,6 +511,7 @@ export type Database = {
           invited_email?: string
           invited_user_id?: string | null
           inviter_id?: string
+          referral_code?: string | null
           status?: string | null
           tier_granted?: string
         }
@@ -1382,6 +1385,7 @@ export type Database = {
           id: string
           nickname: string
           preferred_language: string
+          referred_by_invite_id: string | null
           region: string | null
           total_points: number | null
           updated_at: string
@@ -1401,6 +1405,7 @@ export type Database = {
           id?: string
           nickname: string
           preferred_language?: string
+          referred_by_invite_id?: string | null
           region?: string | null
           total_points?: number | null
           updated_at?: string
@@ -1420,12 +1425,21 @@ export type Database = {
           id?: string
           nickname?: string
           preferred_language?: string
+          referred_by_invite_id?: string | null
           region?: string | null
           total_points?: number | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_invite_id_fkey"
+            columns: ["referred_by_invite_id"]
+            isOneToOne: false
+            referencedRelation: "friend_invites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_transactions: {
         Row: {
@@ -3236,6 +3250,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_referral_code: { Args: never; Returns: string }
       generate_room_code: { Args: never; Returns: string }
       get_category_question_counts: {
         Args: never
