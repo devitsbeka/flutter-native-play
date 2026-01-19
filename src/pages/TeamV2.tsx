@@ -527,42 +527,52 @@ function TeamContentV2() {
           </div>
 
           {/* Filter Bars - Always visible in sticky header */}
-          {activeTab === "rooms" && (
-            <RoomFiltersBar
-              filter={roomsFilter}
-              onFilterChange={setRoomsFilter}
-              sort={roomsSort}
-              onSortChange={setRoomsSort}
-              searchQuery={roomsSearchQuery}
-              onSearchQueryChange={setRoomsSearchQuery}
-              onAddClick={() => setShowCreateModal(true)}
-              addButtonText="+ ახალი ოთახი"
-            />
-          )}
+          <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
+            {activeTab === "rooms" && (
+              <RoomFiltersBar
+                filter={roomsFilter}
+                onFilterChange={setRoomsFilter}
+                sort={roomsSort}
+                onSortChange={setRoomsSort}
+                searchQuery={roomsSearchQuery}
+                onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowCreateModal(true)}
+                addButtonText="+ ახალი ოთახი"
+              />
+            )}
 
-          {activeTab === "explore" && (
-            <RoomFiltersBar
-              filter={roomsFilter}
-              onFilterChange={setRoomsFilter}
-              sort={roomsSort}
-              onSortChange={setRoomsSort}
-              searchQuery={roomsSearchQuery}
-              onSearchQueryChange={setRoomsSearchQuery}
-              onAddClick={() => setShowCreateTypeModal(true)}
-              addButtonText="+ შექმენი ტრივია"
-            />
-          )}
+            {activeTab === "explore" && (
+              <RoomFiltersBar
+                filter={roomsFilter}
+                onFilterChange={setRoomsFilter}
+                sort={roomsSort}
+                onSortChange={setRoomsSort}
+                searchQuery={roomsSearchQuery}
+                onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="+ შექმენი ტრივია"
+              />
+            )}
 
-          {activeTab === "my-content" && (
-            <FeedFiltersBar
-              sortFilter={sortFilter}
-              onSortFilterChange={setSortFilter}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              onAddClick={() => setShowCreateTypeModal(true)}
-              addButtonText="+ ახალი ტრივია"
-            />
-          )}
+            {activeTab === "my-content" && (
+              <FeedFiltersBar
+                sortFilter={sortFilter}
+                onSortFilterChange={setSortFilter}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="+ ახალი ტრივია"
+              />
+            )}
+          </div>
+          
+          {/* Fade gradient below sticky header */}
+          <div 
+            className="h-4 -mb-4 pointer-events-none"
+            style={{
+              background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
+            }}
+          />
         </div>
 
 
