@@ -330,11 +330,6 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
   const coverImage = roomCoverPlaceholder;
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
-  // Calculate time ago
-  const timeAgo = formatDistanceToNow(new Date(room.last_activity_at || room.created_at), { 
-    addSuffix: false, 
-    locale: ka 
-  });
 
   return (
     <motion.div
@@ -342,7 +337,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.03 }}
       onClick={onJoin}
-      className={`aspect-[1.1/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+      className={`aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -410,7 +405,6 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
               )}
             </div>
           </div>
-          <p className="text-white/50 text-sm mt-2 ml-1">{timeAgo}</p>
         </div>
         
         {/* Bottom: Glass container with player count + avatars */}
