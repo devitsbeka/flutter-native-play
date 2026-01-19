@@ -303,3 +303,8 @@ export function useBackgroundGeneration() {
   }
   return context;
 }
+
+// Safe version that returns null if outside provider (for conditional usage)
+export function useBackgroundGenerationSafe() {
+  return useContext(BackgroundGenerationContext);
+}

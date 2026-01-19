@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useBackgroundGeneration, GenerationJob } from '@/contexts/BackgroundGenerationContext';
+import { useBackgroundGenerationSafe, GenerationJob } from '@/contexts/BackgroundGenerationContext';
 
 export interface GenerationNotification {
   id: string;
@@ -17,7 +17,8 @@ export interface GenerationNotification {
 }
 
 export function useGenerationNotifications() {
-  const { activeJobs } = useBackgroundGeneration();
+  const context = useBackgroundGenerationSafe();
+  const activeJobs = context?.activeJobs ?? [];
   const previousJobsRef = useRef<Map<string, GenerationJob>>(new Map());
 
   // Convert active jobs to notification format
