@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { GameModal } from "@/components/ui/game-modal";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -209,21 +208,6 @@ export function ShopItemDetailModal({
   onBuy,
 }: ShopItemDetailModalProps) {
   const { t } = useLanguage();
-  const scrollPositionRef = useRef(0);
-
-  // Capture and restore scroll position to prevent scroll lock
-  useEffect(() => {
-    if (isOpen) {
-      scrollPositionRef.current = window.scrollY;
-      return () => {
-        // Restore scroll position after modal closes
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollPositionRef.current);
-        });
-      };
-    }
-  }, [isOpen]);
-  
   if (!item) return null;
 
   const currencyIcon = item.currency === "gems" ? iconGem : iconCoin;
