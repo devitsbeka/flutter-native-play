@@ -7,7 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal";
+import { AvatarModal } from "@/components/home/AvatarModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -213,10 +213,10 @@ export default function Profile() {
             )}
           </div>
 
-        <AvatarGeneratorModal
-          isOpen={showAvatarGenerator}
-          onClose={() => setShowAvatarGenerator(false)}
-        />
+      <AvatarModal
+        isOpen={showAvatarGenerator}
+        onClose={() => setShowAvatarGenerator(false)}
+      />
       </div>
     </MainLayout>
   );
