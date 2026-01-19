@@ -559,8 +559,8 @@ function TeamContentV2() {
                   addButtonText="+ ახალი ოთახი"
                 />
               </div>
-              <div className="px-4 pt-2 pb-4">
-                <MyRoomsSection 
+              <div className="px-4 pt-1 pb-4">
+                <MyRoomsSection
                   hideTV 
                   onCreateRoom={() => setShowCreateModal(true)}
                   onShowAllRooms={() => setShowAllGamesModal(true)}
@@ -588,8 +588,8 @@ function TeamContentV2() {
                   addButtonText="+ შექმენი ტრივია"
                 />
               </div>
-              <div className="px-4 pt-2 pb-4">
-                <ExplorePortfolioFeed 
+              <div className="px-4 pt-1 pb-4">
+                <ExplorePortfolioFeed
                   searchQuery={roomsSearchQuery}
                   onPlayQuiz={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
@@ -601,8 +601,8 @@ function TeamContentV2() {
 
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
-            <div className="px-4 pt-2 pb-4">
-              <MyTriviaTab 
+            <div className="px-4 pt-1 pb-4">
+              <MyTriviaTab
                 onCreateQuiz={() => setShowCreateTypeModal(true)}
                 onPlay={(post, collectionPosts) => {
                   setPlayingQuiz({ post, collectionPosts });
