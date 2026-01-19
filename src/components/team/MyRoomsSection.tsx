@@ -350,7 +350,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
         gradientSize="125% 125%"
         gradientOrigin="bottom-middle"
         enableNoise={false}
-        className="relative w-full h-full p-3 flex flex-row items-center gap-3"
+        className="relative w-full h-full p-3 flex flex-col justify-between"
       >
         {/* Cover image with radial fade */}
         <div 
@@ -371,29 +371,8 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
           />
         </div>
         
-        {/* Left: Room icon */}
-        {room.room_icon && (
-          <div className="relative z-10 flex-shrink-0">
-            <img 
-              src={room.room_icon} 
-              alt="" 
-              className="w-12 h-12 object-contain drop-shadow-lg"
-            />
-          </div>
-        )}
-        
-        {/* Center: Name and category */}
-        <div className="relative z-10 flex-1 min-w-0">
-          <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
-            {displayName}
-          </h3>
-          {room.category_name && (
-            <p className="text-white/70 text-xs truncate mt-0.5">{room.category_name}</p>
-          )}
-        </div>
-        
-        {/* Right: Status + participants */}
-        <div className="relative z-10 flex items-center gap-2 flex-shrink-0">
+        {/* Top Left: Status Badge */}
+        <div className="relative z-10">
           {isPlaying ? (
             <LiveBadge />
           ) : isCompleted ? (
@@ -406,13 +385,36 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
               მოლოდინი
             </span>
           )}
-          
-          {/* Avatars */}
+        </div>
+        
+        {/* Center: Icon + Title */}
+        <div className="relative z-10 flex items-center gap-3">
+          {room.room_icon && (
+            <div className="flex-shrink-0">
+              <img 
+                src={room.room_icon} 
+                alt="" 
+                className="w-14 h-14 object-contain drop-shadow-lg"
+              />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
+              {displayName}
+            </h3>
+            {room.category_name && (
+              <p className="text-white/70 text-xs truncate mt-0.5">{room.category_name}</p>
+            )}
+          </div>
+        </div>
+        
+        {/* Bottom: Player Avatars */}
+        <div className="relative z-10 flex items-center">
           <div className="flex -space-x-2">
-            {room.participants.slice(0, 2).map((p) => (
+            {room.participants.slice(0, 5).map((p) => (
               <div 
                 key={p.user_id} 
-                className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/30 flex-shrink-0 bg-white/20"
+                className="w-7 h-7 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20"
               >
                 {p.avatar_url ? (
                   <img 
@@ -427,6 +429,15 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
                 )}
               </div>
             ))}
+            
+            {/* +N indicator if more than 6 participants */}
+            {room.participants.length > 6 && (
+              <div className="w-7 h-7 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-[10px] font-bold">
+                  +{room.participants.length - 5}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </GradientBackground>
