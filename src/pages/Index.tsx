@@ -340,7 +340,7 @@ export default function Index() {
         showPlayButton={true}
         showBottomNav={!isSideMenuOpen}
       >
-        <div className="min-h-screen flex flex-col w-full relative">
+        <div className="h-[100dvh] md:min-h-screen flex flex-col w-full relative overflow-hidden md:overflow-visible">
         <header className="relative z-20 px-4 py-3 safe-top border-b border-purple-900/10">
           <div className="flex items-center justify-between gap-3">
             {/* Left side: Burger menu (mobile only) + Search */}
@@ -447,7 +447,7 @@ export default function Index() {
           )}
 
           {/* Main content area */}
-          <div className="flex-1 relative h-[calc(100vh-60px)] lg:h-screen overflow-hidden">
+          <div className="flex-1 relative overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none md:pr-[280px]">
             
