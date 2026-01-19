@@ -226,69 +226,15 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
           />
         </div>
         
-        {/* Top section with status, room name, category */}
+        {/* Top row - Avatars left, Status badge right */}
         <div className="relative z-10 px-2 pb-4">
-          {/* Status badge row */}
-          <div className="flex items-center justify-between mb-3">
-            {isPlaying ? (
-              <LiveBadge />
-            ) : isCompleted ? (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                დასრულდა
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                მოლოდინი
-              </span>
-            )}
-          </div>
-          
-          {/* Room name with icon */}
-          <div className="flex items-center gap-2 mb-1">
-            {room.room_icon && (
-              <img 
-                src={room.room_icon} 
-                alt="" 
-                className="w-6 h-6 object-contain drop-shadow-md"
-              />
-            )}
-            <h3 className="font-bold text-white text-base md:text-[16px] leading-tight truncate drop-shadow-md">
-              {displayName}
-            </h3>
-          </div>
-          
-          {/* Category - white text */}
-          {room.category_name && (
-            <p className="text-sm text-white/80 truncate font-medium drop-shadow-sm">
-              {room.category_name}
-            </p>
-          )}
-          
-          {/* Created date */}
-          <p className="text-xs text-white/60 mt-1">
-            {formatDistanceToNow(new Date(room.created_at), { 
-              addSuffix: true, 
-              locale: ka 
-            })}
-          </p>
-        </div>
-        
-        {/* Bottom section - frosted glass style */}
-        <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-4 rounded-xl">
-          {/* Bottom row: players and avatars */}
-          <div className="flex items-center justify-between">
-            {/* Players count */}
-            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-              <Users className="w-4 h-4 text-white/80" />
-              <span className="text-sm font-bold text-white">{room.participants.length}</span>
-            </div>
-            
-            {/* Avatars */}
-            <div className="flex -space-x-3">
+          <div className="flex items-start justify-between mb-8">
+            {/* Top left - Avatars */}
+            <div className="flex -space-x-2">
               {room.participants.slice(0, 3).map((p) => (
                 <div 
                   key={p.user_id} 
-                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30 flex-shrink-0 bg-white/20"
+                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 shadow-md"
                 >
                   {p.avatar_url ? (
                     <img 
@@ -304,13 +250,63 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
                 </div>
               ))}
               {room.participants.length > 3 && (
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
                   <span className="text-xs font-bold text-white">
                     +{room.participants.length - 3}
                   </span>
                 </div>
               )}
             </div>
+
+            {/* Top right - Status badge */}
+            {isPlaying ? (
+              <LiveBadge />
+            ) : isCompleted ? (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                დასრულდა
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                მოლოდინი
+              </span>
+            )}
+          </div>
+          
+          {/* Bottom left - Room name with icon and category */}
+          <div className="flex items-center gap-2.5 mb-1">
+            {room.room_icon && (
+              <img 
+                src={room.room_icon} 
+                alt="" 
+                className="w-10 h-10 object-contain drop-shadow-lg"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-md">
+                {displayName}
+              </h3>
+              {room.category_name && (
+                <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
+                  {room.category_name}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom section - players count only (avatars moved to top) */}
+        <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-white/80" />
+              <span className="text-sm font-bold text-white">{room.participants.length} მოთამაშე</span>
+            </div>
+            <p className="text-xs text-white/60">
+              {formatDistanceToNow(new Date(room.created_at), { 
+                addSuffix: true, 
+                locale: ka 
+              })}
+            </p>
           </div>
         </div>
       </GradientBackground>
