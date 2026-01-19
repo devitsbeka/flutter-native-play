@@ -521,9 +521,47 @@ function TeamContentV2() {
                       <span className="relative z-10">{tab.label}</span>
                     </button>
                   ))}
-                </div>
               </div>
             </div>
+          </div>
+
+          {/* Filter Bars - Always visible in sticky header */}
+          {activeTab === "rooms" && (
+            <RoomFiltersBar
+              filter={roomsFilter}
+              onFilterChange={setRoomsFilter}
+              sort={roomsSort}
+              onSortChange={setRoomsSort}
+              searchQuery={roomsSearchQuery}
+              onSearchQueryChange={setRoomsSearchQuery}
+              onAddClick={() => setShowCreateModal(true)}
+              addButtonText="+ ახალი ოთახი"
+            />
+          )}
+
+          {activeTab === "explore" && (
+            <RoomFiltersBar
+              filter={roomsFilter}
+              onFilterChange={setRoomsFilter}
+              sort={roomsSort}
+              onSortChange={setRoomsSort}
+              searchQuery={roomsSearchQuery}
+              onSearchQueryChange={setRoomsSearchQuery}
+              onAddClick={() => setShowCreateTypeModal(true)}
+              addButtonText="+ შექმენი ტრივია"
+            />
+          )}
+
+          {activeTab === "my-content" && (
+            <FeedFiltersBar
+              sortFilter={sortFilter}
+              onSortFilterChange={setSortFilter}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              onAddClick={() => setShowCreateTypeModal(true)}
+              addButtonText="+ ახალი ტრივია"
+            />
+          )}
 
           </div>
         </div>
@@ -536,18 +574,6 @@ function TeamContentV2() {
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
             <div className="flex flex-col">
-              <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-                <RoomFiltersBar
-                  filter={roomsFilter}
-                  onFilterChange={setRoomsFilter}
-                  sort={roomsSort}
-                  onSortChange={setRoomsSort}
-                  searchQuery={roomsSearchQuery}
-                  onSearchQueryChange={setRoomsSearchQuery}
-                  onAddClick={() => setShowCreateModal(true)}
-                  addButtonText="+ ახალი ოთახი"
-                />
-              </div>
               <div className="px-4 pt-1 pb-4">
                 <MyRoomsSection
                   hideTV 
@@ -565,18 +591,6 @@ function TeamContentV2() {
           {/* Explore Tab */}
           {activeTab === "explore" && (
             <div className="flex flex-col">
-              <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-                <RoomFiltersBar
-                  filter={roomsFilter}
-                  onFilterChange={setRoomsFilter}
-                  sort={roomsSort}
-                  onSortChange={setRoomsSort}
-                  searchQuery={roomsSearchQuery}
-                  onSearchQueryChange={setRoomsSearchQuery}
-                  onAddClick={() => setShowCreateTypeModal(true)}
-                  addButtonText="+ შექმენი ტრივია"
-                />
-              </div>
               <div className="px-4 pt-1 pb-4">
                 <ExplorePortfolioFeed
                   searchQuery={roomsSearchQuery}
@@ -591,16 +605,6 @@ function TeamContentV2() {
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
             <div className="flex flex-col">
-              <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
-                <FeedFiltersBar
-                  sortFilter={sortFilter}
-                  onSortFilterChange={setSortFilter}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                  onAddClick={() => setShowCreateTypeModal(true)}
-                  addButtonText="+ ახალი ტრივია"
-                />
-              </div>
               <div className="px-4 pt-1 pb-4">
                 <MyTriviaTab
                   onCreateQuiz={() => setShowCreateTypeModal(true)}
