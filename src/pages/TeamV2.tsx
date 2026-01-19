@@ -426,7 +426,7 @@ function TeamContentV2() {
       <div className="min-h-screen flex flex-col">
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-x-hidden">
+          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-x-hidden overflow-y-auto h-[calc(100dvh-80px)] lg:h-auto lg:overflow-visible">
             {/* Scrollable Header Section - Title, Buttons, Friends Bar, Tabs */}
             <div className="bg-background">
               <div className="px-4 pt-4 pb-2">
@@ -583,7 +583,7 @@ function TeamContentV2() {
               
               {/* Fade gradient below sticky header - mobile only */}
               <div 
-                className="h-4 -mb-4 pointer-events-none md:hidden"
+                className="h-4 -mb-4 pointer-events-none"
                 style={{
                   background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
                 }}
