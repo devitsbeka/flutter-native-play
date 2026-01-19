@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info, Heart } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { QuizPlayModal } from "@/components/social/QuizPlayModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 
+// Lazy load the heavy modal - only loads when user clicks Play
+const QuizPlayModal = lazy(() => 
+  import("@/components/social/QuizPlayModal").then(m => ({ default: m.QuizPlayModal }))
+);
 // Georgian time format helper
 function formatGeorgianTimeAgo(date: Date): string {
   const now = new Date();
@@ -327,14 +330,18 @@ export default function TriviaLobby() {
         </motion.div>
       </div>
 
-      {/* Quiz Play Modal */}
-      <QuizPlayModal
-        open={isPlayModalOpen}
-        onOpenChange={(open) => {
-          if (!open) handlePlayComplete();
-        }}
-        post={samplePost}
-      />
+      {/* Quiz Play Modal - Lazy loaded */}
+      {isPlayModalOpen && (
+        <Suspense fallback={null}>
+          <QuizPlayModal
+            open={isPlayModalOpen}
+            onOpenChange={(open) => {
+              if (!open) handlePlayComplete();
+            }}
+            post={samplePost}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
