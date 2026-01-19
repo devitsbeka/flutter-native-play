@@ -390,6 +390,8 @@ export const es: KaTranslations = {
     passwordMismatch: "Las contraseñas no coinciden",
     passwordChanged: "¡Contraseña cambiada!",
     nameChanged: "¡Nombre cambiado!",
+    deleteAccount: "Eliminar cuenta",
+    deleteAccountDescription: "Elimina tu cuenta permanentemente",
   },
   avatar: {
     title: "Tu avatar",
