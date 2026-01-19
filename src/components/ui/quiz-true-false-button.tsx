@@ -116,7 +116,7 @@ export function QuizTrueFalseButton({
       animate={isRevealed ? state : "initial"}
       whileTap={!disabled ? "tap" : undefined}
       className={cn(
-        "w-full relative cursor-pointer h-[92px]",
+        "w-full relative cursor-pointer h-[130px]",
         disabled && "cursor-default",
         className
       )}
@@ -136,7 +136,7 @@ export function QuizTrueFalseButton({
       
       {/* Main Face */}
         <motion.div 
-          className="relative flex flex-col items-center justify-center rounded-3xl gap-1.5 h-full overflow-hidden"
+          className="relative flex flex-col items-center justify-center rounded-3xl gap-2 h-full overflow-hidden"
         style={{ background: styles.bg }}
         animate={{
           background: styles.bg
@@ -170,13 +170,13 @@ export function QuizTrueFalseButton({
         >
           {isTrue ? (
             <Check 
-              className="w-10 h-10" 
+              className="w-14 h-14" 
               strokeWidth={3.5} 
               style={{ color: styles.iconColor }}
             />
           ) : (
             <X 
-              className="w-10 h-10" 
+              className="w-14 h-14" 
               strokeWidth={3.5} 
               style={{ color: styles.iconColor }}
             />
@@ -185,7 +185,7 @@ export function QuizTrueFalseButton({
         
         {/* Label Text */}
         <motion.span 
-          className="font-bold text-base"
+          className="font-bold text-lg"
           style={{ color: styles.text }}
           animate={{
             scale: isRevealed ? [1, 1.1, 1] : 1,

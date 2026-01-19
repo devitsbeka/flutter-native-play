@@ -339,7 +339,7 @@ export function MultiplayerGameScreenV2() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center my-2 flex-shrink-0">
+      <div className="flex justify-center my-4 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -350,7 +350,7 @@ export function MultiplayerGameScreenV2() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         /* True/False Layout - side by side cards */
-        <div className="flex-1 px-4 flex gap-3 items-center justify-center">
+        <div className="px-4 flex gap-2 items-center justify-center mt-4">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
