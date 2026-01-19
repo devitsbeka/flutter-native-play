@@ -58,7 +58,7 @@ export function MyTriviasWidget({ onViewAll }: MyTriviasWidgetProps) {
           {trivias.map((trivia) => (
             <button
               key={trivia.id}
-              onClick={() => navigate(`/team?playTrivia=${trivia.id}`)}
+              onClick={() => navigate(`/trivia/${trivia.id}`)}
               className="w-full flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors text-left"
             >
               {/* Cover Image/Gradient */}

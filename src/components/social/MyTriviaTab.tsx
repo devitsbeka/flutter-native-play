@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Plus, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2, Check } from "lucide-react";
 import glitchIcon from "@/assets/glitch.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -82,6 +83,7 @@ interface MyTriviaTabProps {
 
 // Compact quiz card for inside collections
 function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; profile: any; onEdit: (quiz: any) => void; onPlay?: (quiz: any) => void }) {
+  const navigate = useNavigate();
   // Get icon from quiz's icon_slug or first question's icon
   const iconSlug = quiz.icon_slug || (Array.isArray(quiz.questions) ? quiz.questions[0]?.icon_slug : null);
   
@@ -137,7 +139,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
           size="sm" 
           variant="secondary" 
           className="text-xs px-2 py-1 h-7"
-          onClick={() => onPlay?.(convertQuizToSamplePost(quiz, null))}
+          onClick={() => navigate(`/trivia/${quiz.id}`)}
         >
           <Play className="w-3 h-3" />
         </ChunkyButton>
@@ -358,6 +360,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
 
 // Personal trivia card with distinct styling
 function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
+  const navigate = useNavigate();
   const gradientProps = getGradientProps(post.cover_gradient);
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
@@ -487,7 +490,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             size="sm" 
             variant="secondary" 
             className="flex-1 text-xs"
-            onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
+            onClick={() => navigate(`/trivia/${post.id}`)}
           >
             <Play className="w-3.5 h-3.5" />
             <span>ითამაშე</span>
@@ -500,6 +503,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
 
 // Standalone quiz card (not in a collection)
 function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
+  const navigate = useNavigate();
   const gradientProps = getGradientProps(post.cover_gradient);
 
   // Tilt animation for new items - random left or right tilt
@@ -626,7 +630,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             size="sm" 
             variant="secondary" 
             className="flex-1 text-xs"
-            onClick={() => onPlay?.(convertQuizToSamplePost(post, profile))}
+            onClick={() => navigate(`/trivia/${post.id}`)}
           >
             <Play className="w-3.5 h-3.5" />
             <span>ითამაშე</span>
