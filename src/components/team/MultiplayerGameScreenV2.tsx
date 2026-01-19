@@ -278,9 +278,9 @@ export function MultiplayerGameScreenV2() {
       )}
 
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-4 relative">
+      <div className="px-4 flex-shrink-0 mt-16 relative">
         {/* Category Icon - use question's icon_slug if available (for custom questions) */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-20 z-20 w-28 h-28">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
           <DynamicIcon 
             slug={currentQuestion?.iconSlug || undefined}
             categoryId={currentRoom?.category_id || undefined}
@@ -399,7 +399,7 @@ export function MultiplayerGameScreenV2() {
       )}
 
       {/* Bottom Area - Next Button */}
-      <div className="px-4 pb-4 pt-2 flex-shrink-0">
+      <div className="px-4 pb-6 pt-6 mt-auto flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed && (
