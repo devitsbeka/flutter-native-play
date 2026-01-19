@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Settings, Sparkles, Pencil, ChevronRight } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
@@ -10,10 +10,6 @@ import { AvatarGeneratorModal } from "@/components/profile/AvatarGeneratorModal"
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
-import { EmailEditModal } from "@/components/profile/EmailEditModal";
-import { CountrySelectModal } from "@/components/profile/CountrySelectModal";
-import { DetailsSettingsMenu } from "@/components/profile/DetailsSettingsMenu";
-import { countryCoordinates } from "@/lib/countryCoordinates";
 
 
 export default function Profile() {
@@ -24,25 +20,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("Stats");
   const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showCountryModal, setShowCountryModal] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Get country info
-  const getCountryInfo = (code: string | null) => {
-    if (!code) return { name: t("profile.notSet"), flag: "🌍" };
-    const countryData = countryCoordinates[code.toLowerCase()];
-    const flag = code.toUpperCase() === 'UK' ? '🇬🇧' : 
-      code.toUpperCase().split('').map(char => 
-        String.fromCodePoint(127397 + char.charCodeAt(0))
-      ).join('');
-    return { 
-      name: countryData?.name || code.toUpperCase(), 
-      flag 
-    };
-  };
-
-  const countryInfo = getCountryInfo(profile?.country_code || null);
 
   // Get current tier from subscription
   const currentTier = subscription?.vip_tier as ProTier | undefined;
@@ -58,7 +36,6 @@ export default function Profile() {
 
   const tabs = [
     { key: "Stats", label: t("profile.stats") },
-    { key: "Details", label: t("profile.details") },
     { key: "PRO", label: getProTabLabel() },
   ];
 
@@ -103,12 +80,6 @@ export default function Profile() {
             <div className="relative z-10 max-w-[700px] md:max-w-[600px] mx-auto">
               <div className="flex justify-between items-start mb-8">
                 <h1 className="text-2xl font-bold text-white">{t("profile.title")}</h1>
-                <button
-                  onClick={() => navigate("/settings")}
-                  className="p-2 rounded-full bg-white/30 backdrop-blur-md border border-white/20 shadow-lg"
-                >
-                  <Settings className="w-5 h-5 text-white drop-shadow-md" />
-                </button>
               </div>
             </div>
           </div>
@@ -221,47 +192,6 @@ export default function Profile() {
               </motion.div>
             )}
 
-            {activeTab === "Details" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-4"
-              >
-                {/* Email Row - Editable */}
-                <button
-                  onClick={() => setShowEmailModal(true)}
-                  className="w-full bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30 hover:bg-secondary/30 transition-colors"
-                >
-                  <span className="text-foreground flex-shrink-0">{t("profile.email")}</span>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-muted-foreground truncate max-w-[180px]">
-                      {user.email}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </div>
-                </button>
-
-                {/* Country Row - Editable */}
-                <button
-                  onClick={() => setShowCountryModal(true)}
-                  className="w-full bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30 hover:bg-secondary/30 transition-colors"
-                >
-                  <span className="text-foreground flex-shrink-0">{t("profile.country")}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{countryInfo.flag}</span>
-                    <span className="text-foreground">{countryInfo.name}</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </button>
-
-                {/* Divider */}
-                <div className="h-px bg-border/50 my-2" />
-
-                {/* Settings Menu */}
-                <DetailsSettingsMenu />
-              </motion.div>
-            )}
-
             {activeTab === "PRO" && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -280,18 +210,6 @@ export default function Profile() {
         <AvatarGeneratorModal
           isOpen={showAvatarGenerator}
           onClose={() => setShowAvatarGenerator(false)}
-        />
-
-        <EmailEditModal
-          isOpen={showEmailModal}
-          onClose={() => setShowEmailModal(false)}
-          currentEmail={user.email || ""}
-        />
-
-        <CountrySelectModal
-          isOpen={showCountryModal}
-          onClose={() => setShowCountryModal(false)}
-          currentCountryCode={profile.country_code}
         />
       </div>
     </MainLayout>
