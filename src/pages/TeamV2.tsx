@@ -483,14 +483,8 @@ function TeamContentV2() {
                   />
                 </div>
 
-              </div>
-            </div>
-
-            {/* Sticky Header - Tabs + Filter Bar stay at top on mobile */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative w-full">
-              {/* Tabs Section */}
-              <div className="px-4 pt-3 pb-2">
-                <div className="w-full max-w-[1115px] mx-auto">
+                {/* Unified Tab Bar - Full Width */}
+                <div className="w-full max-w-[1115px] mx-auto px-4 pt-3 pb-2">
                   <div className="flex items-center justify-between gap-3">
                     {/* Tab container - takes available space */}
                     <div 
@@ -531,7 +525,10 @@ function TeamContentV2() {
                   </div>
                 </div>
               </div>
+            </div>
 
+            {/* Sticky Filter Bar - Only search/filter/+ button stays at top on mobile */}
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative">
               {/* Filter Bar Section */}
               <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
                 {activeTab === "rooms" && (
