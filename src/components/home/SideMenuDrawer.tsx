@@ -205,7 +205,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Big Play Button - Simplified 3D Mint Style */}
-              <div className="px-4 pt-0 pb-4">
+              <div className="px-4 pb-4" style={{ marginTop: "-5px" }}>
                 <motion.button
                   onClick={handlePlayClick}
                   whileHover={{ scale: 1.02 }}
@@ -245,7 +245,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
 
               {/* Navigation Items (replacing bottom nav) */}
               <div className="px-4 pb-2">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col" style={{ gap: "2px" }}>
                   {navItemsConfig.map((item, index) => {
                     const Icon = item.icon;
                     return (
