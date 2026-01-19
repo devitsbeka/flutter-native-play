@@ -183,7 +183,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999]"
             onClick={onClose}
           />
 
@@ -193,7 +193,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 bottom-0 w-full md:w-[45%] lg:w-[35%] z-[100] flex flex-col overflow-hidden bg-background border-l border-border shadow-2xl"
+            className="fixed top-0 right-0 bottom-0 w-full md:w-[45%] lg:w-[35%] z-[9999] flex flex-col overflow-hidden bg-background border-l border-border shadow-2xl"
           >
 
             {/* Header */}
