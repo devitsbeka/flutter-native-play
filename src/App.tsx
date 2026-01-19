@@ -77,8 +77,11 @@ const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const AdminFlow = lazy(() => import("./pages/admin/Flow"));
 const AdminDesign = lazy(() => import("./pages/admin/Design"));
 const AdminEconomy = lazy(() => import("./pages/admin/Economy"));
+const AdminSettings = lazy(() => import("./pages/admin/Settings"));
 
-// Dev pages
+// Shop pages
+const ShopSuccess = lazy(() => import("./pages/shop/Success"));
+const ShopCancel = lazy(() => import("./pages/shop/Cancel"));
 const Styleguide = lazy(() => import("./pages/Styleguide"));
 const AllButtons = lazy(() => import("./pages/AllButtons"));
 const ModalsShowcase = lazy(() => import("./pages/ModalsShowcase"));
@@ -152,7 +155,10 @@ const App = () => (
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="design" element={<AdminDesign />} />
                   <Route path="economy" element={<AdminEconomy />} />
+                  <Route path="settings" element={<AdminSettings />} />
                 </Route>
+                <Route path="/shop/success" element={<ShopSuccess />} />
+                <Route path="/shop/cancel" element={<ShopCancel />} />
                 <Route path="/styleguide" element={<Styleguide />} />
                 <Route path="/all-buttons" element={<AllButtons />} />
                 <Route path="/modals" element={<ModalsShowcase />} />

@@ -135,3 +135,9 @@ verify_jwt = false
 
 [functions.run-generation-job]
 verify_jwt = false
+
+[functions.create-gem-checkout]
+verify_jwt = false
+
+[functions.stripe-gem-webhook]
+verify_jwt = false

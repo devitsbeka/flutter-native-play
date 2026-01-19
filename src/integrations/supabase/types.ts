@@ -59,6 +59,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          description: string | null
+          is_secret: boolean | null
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          description?: string | null
+          is_secret?: boolean | null
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          description?: string | null
+          is_secret?: boolean | null
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       avatar_generations: {
         Row: {
           animated_avatar_url: string | null
@@ -738,6 +765,48 @@ export type Database = {
         }
         Relationships: []
       }
+      gem_purchases: {
+        Row: {
+          amount_gel: number
+          checkout_session_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          gems_received: number
+          id: string
+          payment_intent_id: string | null
+          payment_provider: string | null
+          product_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_gel: number
+          checkout_session_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          gems_received: number
+          id?: string
+          payment_intent_id?: string | null
+          payment_provider?: string | null
+          product_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_gel?: number
+          checkout_session_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          gems_received?: number
+          id?: string
+          payment_intent_id?: string | null
+          payment_provider?: string | null
+          product_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       generation_job_questions: {
         Row: {
           category_id: string | null
@@ -887,6 +956,7 @@ export type Database = {
       }
       iap_products: {
         Row: {
+          bonus_percentage: number | null
           coins_value: number | null
           created_at: string | null
           description: string | null
@@ -896,12 +966,14 @@ export type Database = {
           is_subscription: boolean | null
           name: string
           platform: string | null
+          price_gel: number | null
           price_usd: number
           sort_order: number | null
           subscription_duration_days: number | null
           updated_at: string | null
         }
         Insert: {
+          bonus_percentage?: number | null
           coins_value?: number | null
           created_at?: string | null
           description?: string | null
@@ -911,12 +983,14 @@ export type Database = {
           is_subscription?: boolean | null
           name: string
           platform?: string | null
+          price_gel?: number | null
           price_usd: number
           sort_order?: number | null
           subscription_duration_days?: number | null
           updated_at?: string | null
         }
         Update: {
+          bonus_percentage?: number | null
           coins_value?: number | null
           created_at?: string | null
           description?: string | null
@@ -926,6 +1000,7 @@ export type Database = {
           is_subscription?: boolean | null
           name?: string
           platform?: string | null
+          price_gel?: number | null
           price_usd?: number
           sort_order?: number | null
           subscription_duration_days?: number | null
