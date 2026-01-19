@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, memo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { X, Send, MessageCircle, Users, Search, ArrowLeft, MoreVertical, Trash2 } from "lucide-react";
 import { useMyRooms } from "@/hooks/useMyRooms";
@@ -330,7 +331,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
   const isLoading = roomsLoading || friendsLoading || previewsLoading;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -671,6 +672,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
