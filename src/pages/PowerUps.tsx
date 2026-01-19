@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -28,7 +28,11 @@ import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
 
 export default function PowerUps() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  
+  // Get initial scroll section from URL query param
+  const initialScrollSection = searchParams.get("section") || undefined;
   
   // Use consolidated shop data hook for faster loading
   const { data: shopData } = useShopPageData();
@@ -253,6 +257,7 @@ export default function PowerUps() {
                 isPurchasing={isPurchasing || (isStripeProcessing ? "stripe" : null)}
                 isFrameUnlocked={isFrameUnlocked}
                 onItemClick={handlePurchase}
+                initialScrollSection={initialScrollSection}
               />
             </div>
           </div>

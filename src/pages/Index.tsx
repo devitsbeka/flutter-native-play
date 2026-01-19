@@ -503,22 +503,32 @@ export default function Index() {
                     </span>
                   </div>
                   <div className="flex items-center gap-6 mt-1">
-                    <div className="flex items-center gap-2">
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=coins")}
+                    >
                       <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <img src={coinIcon} alt="Coins" className="w-9 h-9" />
                       </div>
                       <span className="font-bold text-gray-700 text-base">
                         {user ? (coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    </motion.button>
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=gems-lari")}
+                    >
                       <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <img src={gemIcon} alt="Gems" className="w-9 h-9" />
                       </div>
                       <span className="font-bold text-gray-700 text-base">
                         {user ? (gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
                       </span>
-                    </div>
+                    </motion.button>
                   </div>
                   <div className="mt-20">
                     <DesktopPlayButtonLarge
@@ -583,22 +593,32 @@ export default function Index() {
                 </div>
                 
                 <div className="flex items-center gap-6 mt-1">
-                  <div className="flex items-center gap-2">
+                  <motion.button
+                    className="flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/power-ups?section=coins")}
+                  >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                       <img src={coinIcon} alt="Coins" className="w-10 h-10" />
                     </div>
                     <span className="font-bold text-gray-700 text-lg">
                       {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  </motion.button>
+                  <motion.button
+                    className="flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/power-ups?section=gems-lari")}
+                  >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                       <img src={gemIcon} alt="Gems" className="w-10 h-10" />
                     </div>
                     <span className="font-bold text-gray-700 text-lg">
                       {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
                     </span>
-                  </div>
+                  </motion.button>
                 </div>
 
                 <div className="mt-20">
@@ -792,22 +812,32 @@ export default function Index() {
                 </div>
                 
                 <div className="flex items-center gap-6 mt-1">
-                  <div className="flex items-center gap-2">
+                  <motion.button
+                    className="flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/power-ups?section=coins")}
+                  >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                       <img src={coinIcon} alt="Coins" className="w-10 h-10" />
                     </div>
                     <span className="font-bold text-gray-700 text-lg">
                       {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  </motion.button>
+                  <motion.button
+                    className="flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/power-ups?section=gems-lari")}
+                  >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                       <img src={gemIcon} alt="Gems" className="w-10 h-10" />
                     </div>
                     <span className="font-bold text-gray-700 text-lg">
                       {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
                     </span>
-                  </div>
+                  </motion.button>
                 </div>
               </motion.div>
             </motion.div>
