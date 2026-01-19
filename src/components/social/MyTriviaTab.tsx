@@ -137,7 +137,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
         </div>
         <ChunkyButton 
           size="sm" 
-          variant="secondary" 
+          variant="outline" 
           className="text-xs px-2 py-1 h-7"
           onClick={() => navigate(`/trivia/${quiz.id}`)}
         >
@@ -283,7 +283,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
               disabled={isPosting}
               className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
                 collection.is_public === false
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                   : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
               }`}
             >
@@ -291,7 +291,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : collection.is_public === false ? (
                 <>
-                  <Globe className="w-3.5 h-3.5" />
+                  <Globe className="w-3.5 h-3.5 text-emerald-500" />
                   <span>გამოაქვეყნე</span>
                 </>
               ) : (
@@ -468,7 +468,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             disabled={isPosting}
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
               post.is_public === false
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                 : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
             }`}
           >
@@ -476,7 +476,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : post.is_public === false ? (
               <>
-                <Globe className="w-3.5 h-3.5" />
+                <Globe className="w-3.5 h-3.5 text-emerald-500" />
                 <span>გამოაქვეყნე</span>
               </>
             ) : (
@@ -488,7 +488,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </button>
           <ChunkyButton 
             size="sm" 
-            variant="secondary" 
+            variant="outline" 
             className="flex-1 text-xs"
             onClick={() => navigate(`/trivia/${post.id}`)}
           >
@@ -608,7 +608,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             disabled={isPosting}
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
               post.is_public === false
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                 : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
             }`}
           >
@@ -616,7 +616,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : post.is_public === false ? (
               <>
-                <Globe className="w-3.5 h-3.5" />
+                <Globe className="w-3.5 h-3.5 text-emerald-500" />
                 <span>გამოაქვეყნე</span>
               </>
             ) : (
@@ -628,7 +628,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           </button>
           <ChunkyButton 
             size="sm" 
-            variant="secondary" 
+            variant="outline" 
             className="flex-1 text-xs"
             onClick={() => navigate(`/trivia/${post.id}`)}
           >

@@ -151,9 +151,9 @@ export function TriviaPortfolioCard({
           {/* Play Button - Always visible */}
           <button 
             onClick={handlePlayClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-transparent border-2 border-purple-500 text-purple-500 rounded-full text-sm font-medium hover:bg-purple-500/10 transition-colors"
           >
-            <Play className="w-4 h-4 fill-current" />
+            <Play className="w-4 h-4 text-purple-500" />
             <span>ითამაშე</span>
           </button>
         </div>

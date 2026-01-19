@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline" | "white" | "whitePurple";
+  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline" | "outlineGreen" | "white" | "whitePurple";
   size?: "sm" | "md" | "compact" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -94,15 +94,26 @@ const variantStyles = {
     particle: "bg-[#6B5B95]/60",
   },
   outline: {
-    face: "bg-transparent border-2 border-primary",
-    textColor: "text-primary",
+    face: "bg-transparent border-2 border-purple-500",
+    textColor: "text-purple-500",
     depth: "hsl(270 50% 85%)",
     border: "hsl(270 50% 70%)",
     innerBorder: "transparent",
     outerStroke: "hsl(270 50% 60%)",
-    glow: "hsl(var(--primary) / 0.15)",
-    shine: "from-primary/10 via-transparent to-transparent",
-    particle: "bg-primary/60",
+    glow: "rgba(168, 85, 247, 0.15)",
+    shine: "from-purple-500/10 via-transparent to-transparent",
+    particle: "bg-purple-500/60",
+  },
+  outlineGreen: {
+    face: "bg-transparent border-2 border-emerald-500",
+    textColor: "text-emerald-500",
+    depth: "hsl(160 50% 85%)",
+    border: "hsl(160 50% 70%)",
+    innerBorder: "transparent",
+    outerStroke: "hsl(160 50% 60%)",
+    glow: "rgba(16, 185, 129, 0.15)",
+    shine: "from-emerald-500/10 via-transparent to-transparent",
+    particle: "bg-emerald-500/60",
   },
 };
 
