@@ -43,8 +43,15 @@ import { TabsContent } from "@/components/ui/tabs";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
-import { FeedFiltersBar, SortFilter } from "@/components/social/FeedFiltersBar";
-import { RoomFiltersBar, RoomFilter, RoomSort } from "@/components/team/RoomFiltersBar";
+import { 
+  UnifiedFiltersBar, 
+  roomFilterOptions, 
+  roomSortOptions, 
+  myTriviaFilterOptions,
+  RoomFilter, 
+  RoomSort, 
+  MyTriviaFilter 
+} from "@/components/team/UnifiedFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
 import { ChatModal } from "@/components/team/ChatModal";
 import { Friend } from "@/hooks/useFriends";
@@ -174,7 +181,7 @@ function TeamContentV2() {
   const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
   const [previewPost, setPreviewPost] = useState<SamplePost | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
-  const [sortFilter, setSortFilter] = useState<SortFilter>("all");
+  const [sortFilter, setSortFilter] = useState<MyTriviaFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
@@ -532,11 +539,13 @@ function TeamContentV2() {
               {/* Filter Bar Section */}
               <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
                 {activeTab === "rooms" && (
-                  <RoomFiltersBar
+                  <UnifiedFiltersBar<RoomFilter, RoomSort>
                     filter={roomsFilter}
-                    onFilterChange={setRoomsFilter}
+                    onFilterChange={(f) => setRoomsFilter(f)}
+                    filterOptions={roomFilterOptions}
                     sort={roomsSort}
-                    onSortChange={setRoomsSort}
+                    onSortChange={(s) => setRoomsSort(s)}
+                    sortOptions={roomSortOptions}
                     searchQuery={roomsSearchQuery}
                     onSearchQueryChange={setRoomsSearchQuery}
                     onAddClick={() => setShowCreateModal(true)}
@@ -545,11 +554,13 @@ function TeamContentV2() {
                 )}
 
                 {activeTab === "explore" && (
-                  <RoomFiltersBar
+                  <UnifiedFiltersBar<RoomFilter, RoomSort>
                     filter={roomsFilter}
-                    onFilterChange={setRoomsFilter}
+                    onFilterChange={(f) => setRoomsFilter(f)}
+                    filterOptions={roomFilterOptions}
                     sort={roomsSort}
-                    onSortChange={setRoomsSort}
+                    onSortChange={(s) => setRoomsSort(s)}
+                    sortOptions={roomSortOptions}
                     searchQuery={roomsSearchQuery}
                     onSearchQueryChange={setRoomsSearchQuery}
                     onAddClick={() => setShowCreateTypeModal(true)}
@@ -558,9 +569,10 @@ function TeamContentV2() {
                 )}
 
                 {activeTab === "my-content" && (
-                  <FeedFiltersBar
-                    sortFilter={sortFilter}
-                    onSortFilterChange={setSortFilter}
+                  <UnifiedFiltersBar<MyTriviaFilter, string>
+                    filter={sortFilter}
+                    onFilterChange={(f) => setSortFilter(f)}
+                    filterOptions={myTriviaFilterOptions}
                     searchQuery={searchQuery}
                     onSearchQueryChange={setSearchQuery}
                     onAddClick={() => setShowCreateTypeModal(true)}
