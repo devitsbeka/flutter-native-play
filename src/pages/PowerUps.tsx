@@ -188,6 +188,15 @@ export default function PowerUps() {
       setPurchasedItems((prev) => new Set([...prev, item.id]));
       setSuccessItem({ name: item.name, quantity: item.amount || 1 });
       setShowSuccess(true);
+
+      // Clear purchased state after 4 seconds so user can buy again
+      setTimeout(() => {
+        setPurchasedItems((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(item.id);
+          return newSet;
+        });
+      }, 4000);
     } catch (error) {
       console.error("Purchase failed:", error);
       notify.error(t("shop.purchaseFailed"));

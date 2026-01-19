@@ -24,9 +24,6 @@ export function PurchaseSuccessModal({
 
   useEffect(() => {
     if (isOpen) {
-      // Lock body scroll
-      document.body.style.overflow = 'hidden';
-      
       // Trigger confetti
       confetti({
         particleCount: 100,
@@ -38,12 +35,7 @@ export function PurchaseSuccessModal({
 
       // Auto close after 3 seconds
       const timer = setTimeout(onClose, 3000);
-      return () => {
-        clearTimeout(timer);
-        document.body.style.overflow = '';
-      };
-    } else {
-      document.body.style.overflow = '';
+      return () => clearTimeout(timer);
     }
   }, [isOpen, onClose]);
 
