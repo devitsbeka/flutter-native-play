@@ -407,7 +407,7 @@ export function QuizGameScreenProd() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="px-4 pt-3 flex gap-2">
+        <div className="px-4 pt-3 flex gap-1.5">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
