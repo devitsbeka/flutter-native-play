@@ -369,50 +369,14 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
           />
         </div>
         
-        {/* Top Left: Status Badge */}
-        <div className="relative z-10">
-          {isPlaying ? (
-            <LiveBadge />
-          ) : isCompleted ? (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-              დასრულდა
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              მოლოდინი
-            </span>
-          )}
-        </div>
-        
-        {/* Center: Icon + Title */}
-        <div className="relative z-10 flex items-center gap-3">
-          {room.room_icon && (
-            <div className="flex-shrink-0">
-              <img 
-                src={room.room_icon} 
-                alt="" 
-                className="w-14 h-14 object-contain drop-shadow-lg"
-              />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h3 className="font-display text-white text-base md:text-[16px] leading-tight line-clamp-2 drop-shadow-md">
-              {displayName}
-            </h3>
-            {room.category_name && (
-              <p className="text-white/70 text-xs truncate mt-0.5">{room.category_name}</p>
-            )}
-          </div>
-        </div>
-        
-        {/* Bottom: Player Avatars */}
-        <div className="relative z-10 flex items-center">
+        {/* Top Row: Avatars left, Status Badge right */}
+        <div className="relative z-10 flex items-start justify-between">
+          {/* Top Left: Player Avatars */}
           <div className="flex -space-x-2">
-            {room.participants.slice(0, 5).map((p) => (
+            {room.participants.slice(0, 4).map((p) => (
               <div 
                 key={p.user_id} 
-                className="w-7 h-7 md:w-[34px] md:h-[34px] rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95"
+                className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
                 onClick={(e) => {
                   e.stopPropagation();
                   openProfile(p.user_id);
@@ -431,14 +395,47 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
                 )}
               </div>
             ))}
-            
-            {/* +N indicator if more than 6 participants */}
-            {room.participants.length > 6 && (
-              <div className="w-7 h-7 md:w-[34px] md:h-[34px] rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+            {room.participants.length > 4 && (
+              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                 <span className="text-white text-[10px] font-bold">
-                  +{room.participants.length - 5}
+                  +{room.participants.length - 4}
                 </span>
               </div>
+            )}
+          </div>
+
+          {/* Top Right: Status Badge */}
+          {isPlaying ? (
+            <LiveBadge />
+          ) : isCompleted ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+              დასრულდა
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              მოლოდინი
+            </span>
+          )}
+        </div>
+        
+        {/* Bottom Left: Icon + Title + Category */}
+        <div className="relative z-10 flex items-center gap-3">
+          {room.room_icon && (
+            <div className="flex-shrink-0">
+              <img 
+                src={room.room_icon} 
+                alt="" 
+                className="w-12 h-12 md:w-14 md:h-14 object-contain drop-shadow-lg"
+              />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-white text-lg md:text-xl leading-tight line-clamp-2 drop-shadow-md">
+              {displayName}
+            </h3>
+            {room.category_name && (
+              <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
             )}
           </div>
         </div>
