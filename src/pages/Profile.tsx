@@ -11,6 +11,7 @@ import { AvatarModal } from "@/components/home/AvatarModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 
 export default function Profile() {
@@ -63,8 +64,11 @@ export default function Profile() {
   return (
     <MainLayout showPlayButton={false}>
       <div className="min-h-screen bg-background">
+          {/* Page Header with Back Button */}
+          <PageHeader title={t("profile.title")} />
+
           {/* Header with Video Background */}
-          <div className="relative pt-12 pb-20 px-6 overflow-hidden">
+          <div className="relative pt-4 pb-20 px-6 overflow-hidden">
             {/* Video Background */}
             <video 
               autoPlay 
@@ -77,12 +81,6 @@ export default function Profile() {
             </video>
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50" />
-            
-            <div className="relative z-10 max-w-[700px] md:max-w-[600px] mx-auto">
-              <div className="flex justify-between items-start mb-8">
-                <h1 className="text-2xl font-bold text-white">{t("profile.title")}</h1>
-              </div>
-            </div>
           </div>
 
           <div className="px-6 -mt-16 relative z-10 max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
