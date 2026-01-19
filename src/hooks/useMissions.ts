@@ -543,6 +543,21 @@ export function useMissions() {
   const allDailyComplete = dailyMissions.length > 0 && completedDaily === dailyMissions.length;
   const allDailyClaimed = dailyMissions.length > 0 && claimedDaily === dailyMissions.length;
 
+  // Calculate overall progress percentage (weighted by individual mission progress)
+  const overallProgress = (() => {
+    if (allMissions.length === 0) return 0;
+    
+    let totalProgress = 0;
+    let totalTarget = 0;
+    
+    allMissions.forEach(mission => {
+      totalProgress += Math.min(mission.current_progress, mission.target_value);
+      totalTarget += mission.target_value;
+    });
+    
+    return totalTarget > 0 ? Math.round((totalProgress / totalTarget) * 100) : 0;
+  })();
+
   return {
     dailyMissions,
     weeklyMissions,
@@ -561,6 +576,7 @@ export function useMissions() {
     totalWeekly: weeklyMissions.length,
     allDailyComplete,
     allDailyClaimed,
+    overallProgress,
     // Legacy exports for backward compatibility
     missions: allMissions,
     completedCount: completedDaily + completedWeekly,
