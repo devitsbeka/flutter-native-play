@@ -73,14 +73,14 @@ export default function SettingsPrivacy() {
   const privacyItems = [
     {
       icon: FileText,
-      label: t("privacy.privacyPolicy"),
+      label: "კონფიდენციალურობის პოლიტიკა",
       route: "/privacy-policy",
       color: "bg-blue-500/10",
       iconColor: "text-blue-500",
     },
     {
       icon: FileText,
-      label: t("privacy.termsOfService"),
+      label: "მომსახურების პირობები",
       route: "/terms",
       color: "bg-emerald-500/10",
       iconColor: "text-emerald-500",
@@ -92,23 +92,6 @@ export default function SettingsPrivacy() {
       <PageHeader title={t("menu.privacy")} />
 
       <div className="p-4 pb-12 space-y-6 max-w-[700px] md:max-w-[600px] mx-auto">
-        {/* Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 text-center"
-        >
-          <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-xl font-display font-bold text-foreground mb-2">
-            კონფიდენციალურობა
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            მართე შენი მონაცემები და კონფიდენციალურობის პარამეტრები
-          </p>
-        </motion.div>
-
         {/* Policy Links */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -162,7 +145,7 @@ export default function SettingsPrivacy() {
               </div>
               <div className="flex-1 text-left">
                 <span className="font-medium text-foreground block">
-                  {t("privacy.exportData")}
+                  მონაცემების ექსპორტი
                 </span>
                 <span className="text-sm text-muted-foreground">
                   ჩამოტვირთე შენი მონაცემები
@@ -181,7 +164,7 @@ export default function SettingsPrivacy() {
                 </div>
                 <div className="flex-1 text-left">
                   <span className="font-medium text-destructive block">
-                    {t("privacy.deleteAccount")}
+                    ანგარიშის წაშლა
                   </span>
                   <span className="text-sm text-muted-foreground">
                     სამუდამოდ წაშალე ანგარიში
