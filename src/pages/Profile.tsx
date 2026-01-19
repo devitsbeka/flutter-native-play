@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
-import { FriendInvitesTracker } from "@/components/profile/FriendInvitesTracker";
+
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
@@ -163,10 +163,6 @@ export default function Profile() {
               ))}
             </div>
 
-            {/* Friend Invites Tracker - Show below tabs for PRO subscribers */}
-            {currentTier && activeTab === "PRO" && (
-              <FriendInvitesTracker className="mb-6" />
-            )}
 
             {/* Tab Content */}
             {activeTab === "Stats" && (

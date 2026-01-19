@@ -6,6 +6,7 @@ import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
 import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
+import { FriendInvitesTracker } from "./FriendInvitesTracker";
 
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master';
 
@@ -116,50 +117,109 @@ export function ProPlansSection({
     }
   };
 
+  const currentTierConfig = PRO_TIERS.find(t => t.id === currentTier);
+
   return (
     <div className="space-y-6">
-      {/* Current Status */}
-      {currentTier && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-4"
-          style={{
-            background: PRO_TIERS.find(t => t.id === currentTier)?.lightBg,
-            border: `2px solid ${PRO_TIERS.find(t => t.id === currentTier)?.borderColor}`,
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ background: PRO_TIERS.find(t => t.id === currentTier)?.gradient }}
-              >
-                <Crown className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-foreground font-semibold">
-                  {PRO_TIERS.find(t => t.id === currentTier)?.nameKa || 'PRO'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {friendInvitesRemaining} მოწვევა დარჩენილი
-                </p>
+      {/* PRO Status Card - Shows clearly if user is PRO or not */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl p-5 bg-card border-2"
+        style={{
+          borderColor: currentTier 
+            ? currentTierConfig?.borderColor 
+            : 'hsl(var(--border))',
+          boxShadow: currentTier 
+            ? `0 4px 20px ${currentTierConfig?.glowColor}` 
+            : 'none',
+        }}
+      >
+        {currentTier ? (
+          // USER IS PRO
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-14 h-14 rounded-xl flex items-center justify-center"
+                  style={{ background: currentTierConfig?.gradient }}
+                >
+                  <Crown className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-bold text-foreground">
+                      {currentTierConfig?.nameKa || 'PRO'}
+                    </p>
+                    <span 
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold"
+                      style={{ 
+                        background: currentTierConfig?.lightBg,
+                        color: currentTierConfig?.accentColor,
+                      }}
+                    >
+                      აქტიური
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    ვადა: {subscriptionExpiryDate 
+                      ? format(new Date(subscriptionExpiryDate), 'dd.MM.yyyy') 
+                      : 'უვადო'}
+                  </p>
+                </div>
               </div>
             </div>
-            {friendInvitesRemaining > 0 && (
-              <motion.button
-                onClick={() => setShowInviteModal(true)}
-                className="px-4 py-2 rounded-full text-white text-sm font-medium flex items-center gap-2"
-                style={{ background: PRO_TIERS.find(t => t.id === currentTier)?.gradient }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Users className="w-4 h-4" />
-                მოწვევა
-              </motion.button>
-            )}
+
+            {/* Invites Section */}
+            <div 
+              className="rounded-xl p-4"
+              style={{ background: currentTierConfig?.lightBg }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" style={{ color: currentTierConfig?.accentColor }} />
+                  <span className="font-medium text-foreground">
+                    მეგობრების მოწვევა
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">
+                    {friendInvitesRemaining} დარჩენილი
+                  </span>
+                  {friendInvitesRemaining > 0 && (
+                    <motion.button
+                      onClick={() => setShowInviteModal(true)}
+                      className="px-4 py-2 rounded-full text-white text-sm font-medium"
+                      style={{ background: currentTierConfig?.gradient }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      მოწვევა
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        ) : (
+          // USER IS NOT PRO
+          <div className="text-center py-2">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+              <Crown className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              ჯერ არ ხარ PRO
+            </h3>
+            <p className="text-sm text-muted-foreground mb-1">
+              აირჩიე გეგმა და მიიღე ექსკლუზიური ბენეფიტები
+            </p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Friend Invites Tracker - Only show if user is PRO */}
+      {currentTier && (
+        <FriendInvitesTracker />
       )}
 
       {/* Tier Cards */}
