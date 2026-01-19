@@ -504,7 +504,7 @@ function TeamContentV2() {
                       onClick={() => handleTabChange(tab.id)}
                       className={`relative flex-1 flex items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
                         activeTab === tab.id
-                          ? "text-primary"
+                          ? "text-foreground"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
