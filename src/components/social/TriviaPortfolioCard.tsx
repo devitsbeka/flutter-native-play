@@ -53,11 +53,12 @@ export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfol
   return (
     <motion.div
       className={cn(
-        "relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg cursor-pointer flex-shrink-0",
+        "relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg cursor-pointer",
         "hover:shadow-xl transition-shadow duration-300",
+        !className?.includes('w-full') && "flex-shrink-0",
         className
       )}
-      style={{ width: 260, minWidth: 260 }}
+      style={!className?.includes('w-full') ? { width: 260, minWidth: 260 } : undefined}
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onPlay?.(trivia)}
