@@ -177,26 +177,41 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
         </div>
       </div>
       
-      {/* Trivia Carousel */}
+      {/* Trivia Display - List on mobile, Carousel on tablet+ */}
       <div className="px-4 pb-4">
-        <Carousel
-          opts={{
-            align: "start",
-            dragFree: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent allowOverflow className="-ml-3">
-            {creator.trivias.map((trivia) => (
-              <CarouselItem key={trivia.id} className="pl-3 basis-auto">
-                <TriviaPortfolioCard
-                  trivia={trivia}
-                  onPlay={onPlayTrivia}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        {/* Mobile: Vertical List */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {creator.trivias.map((trivia) => (
+            <TriviaPortfolioCard
+              key={trivia.id}
+              trivia={trivia}
+              onPlay={onPlayTrivia}
+              className="w-full"
+            />
+          ))}
+        </div>
+        
+        {/* Tablet & Desktop: Horizontal Carousel */}
+        <div className="hidden md:block">
+          <Carousel
+            opts={{
+              align: "start",
+              dragFree: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent allowOverflow className="-ml-3">
+              {creator.trivias.map((trivia) => (
+                <CarouselItem key={trivia.id} className="pl-3 basis-auto">
+                  <TriviaPortfolioCard
+                    trivia={trivia}
+                    onPlay={onPlayTrivia}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
       </div>
     </motion.div>
   );
