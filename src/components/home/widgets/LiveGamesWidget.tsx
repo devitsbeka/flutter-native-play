@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useMyRooms } from "@/hooks/useMyRooms";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
@@ -8,6 +9,7 @@ import glitchIcon from "@/assets/glitch.png";
 
 export function LiveGamesWidget() {
   const navigate = useNavigate();
+  const { openProfile } = usePlayerProfile();
   const { rooms, loading } = useMyRooms();
 
   // Filter to show only active rooms (waiting or playing) - max 2 to save space
@@ -90,7 +92,11 @@ export function LiveGamesWidget() {
                   {room.participants.slice(0, 4).map((participant) => (
                     <Avatar
                       key={participant.user_id}
-                      className="w-7 h-7 border-2 border-card"
+                      className="w-7 h-7 border-2 border-card cursor-pointer hover:scale-110 transition-transform"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openProfile(participant.user_id);
+                      }}
                     >
                       <AvatarImage src={participant.avatar_url || undefined} />
                       <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-bold">

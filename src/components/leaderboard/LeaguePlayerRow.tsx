@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LeagueEntry } from "@/hooks/useLeagueLeaderboard";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import pirateCoinAnimation from "@/assets/lottie/pirate-coin.json";
 
 interface LeaguePlayerRowProps {
@@ -54,6 +55,7 @@ export const LeaguePlayerRow = forwardRef<HTMLDivElement, LeaguePlayerRowProps>(
     },
     ref
   ) {
+  const { openProfile } = usePlayerProfile();
   const rankStyle = RANK_COLORS[entry.rank];
   const isTopThree = entry.rank <= 3;
 
@@ -109,8 +111,11 @@ export const LeaguePlayerRow = forwardRef<HTMLDivElement, LeaguePlayerRowProps>(
       }
       layout={!isFixed}
     >
-      {/* Avatar with Rank Badge overlay */}
-      <div className="relative shrink-0">
+      {/* Avatar with Rank Badge overlay - Clickable */}
+      <div 
+        className="relative shrink-0 cursor-pointer hover:scale-105 transition-transform active:scale-95"
+        onClick={() => openProfile(entry.user_id)}
+      >
         <Avatar className={`h-12 w-12 ${isCurrentUser ? "ring-2 ring-primary" : ""}`}>
           <AvatarImage src={entry.avatar_url || undefined} alt={entry.nickname} />
           <AvatarFallback className={`${getAvatarColor(entry.nickname)} text-white font-bold text-lg`}>
