@@ -12,6 +12,7 @@ interface MainLayoutProps {
   showPlayButton?: boolean;
   showBottomNav?: boolean;
   className?: string;
+  disableScroll?: boolean;
 }
 
 export function MainLayout({
@@ -24,6 +25,7 @@ export function MainLayout({
   showPlayButton = true,
   showBottomNav = true,
   className = "",
+  disableScroll = false,
 }: MainLayoutProps) {
   return (
     <div className={`min-h-screen flex w-full ${className}`}>
@@ -38,7 +40,11 @@ export function MainLayout({
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 h-screen overflow-y-auto relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide">
+      <main className={`flex-1 relative bg-transparent scroll-smooth scrollbar-hide ${
+        disableScroll 
+          ? 'h-[100dvh] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
+          : 'h-screen overflow-y-auto pb-24 md:pb-0'
+      }`}>
         {children}
       </main>
 
