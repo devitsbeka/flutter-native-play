@@ -397,7 +397,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-2 [@media(max-height:700px)]:py-1 flex-shrink-0">
+      <div className="flex justify-center py-4 [@media(max-height:700px)]:py-2 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -407,7 +407,7 @@ export function QuizGameScreenProd() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="w-full px-4 pt-3 flex gap-1.5">
+        <div className="w-full px-4 pt-4 flex gap-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
