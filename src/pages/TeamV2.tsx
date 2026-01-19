@@ -419,7 +419,7 @@ function TeamContentV2() {
       <div className="min-h-screen flex flex-col">
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background">
+          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-x-hidden">
             {/* Scrollable Header Section - Title, Buttons, Friends Bar, Tabs */}
             <div className="bg-background">
               <div className="px-4 pt-4 pb-2">
@@ -484,7 +484,7 @@ function TeamContentV2() {
                 </div>
 
                 {/* Unified Tab Bar - Full Width */}
-                <div className="w-full max-w-[100vw] md:max-w-[1115px] mx-auto px-4 pt-3 pb-2 overflow-hidden box-border">
+                <div className="w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
                   <div className="flex items-center justify-between gap-3">
                     {/* Tab container - takes available space */}
                     <div 
