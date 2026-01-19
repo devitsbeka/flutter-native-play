@@ -38,10 +38,15 @@ export function ShopStandardLayout({
 
   const handleBuy = async () => {
     if (selectedItem) {
-      await onItemClick(selectedItem);
-      // Small delay to let success modal render before closing this one
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Close detail modal FIRST to prevent overlap
+      const item = selectedItem;
       setSelectedItem(null);
+      
+      // Small delay to let the modal animate out
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Then run purchase (which will open success modal)
+      await onItemClick(item);
     }
   };
 
@@ -49,7 +54,7 @@ export function ShopStandardLayout({
   const displaySections = sections.filter(section => section.id !== "frames");
 
   return (
-    <div className="flex-1 overflow-y-auto pb-8">
+    <div className="flex-1 pb-8">
       {/* Hero Carousel */}
       <ShopHeroCarousel onSlideClick={handleSlideClick} />
 

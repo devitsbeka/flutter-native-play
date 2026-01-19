@@ -215,7 +215,7 @@ export default function PowerUps() {
           onCurrencyPlusClick={handleCurrencyPlusClick}
         />
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1">
           {/* Main Content Area */}
           <div className="flex-1 relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
             <GlobalSplineBackground />
