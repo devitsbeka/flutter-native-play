@@ -45,7 +45,7 @@ export function CreateTriviaTypeModal({
         >
           {/* Fixed Header */}
           <div className="flex-shrink-0 safe-top">
-            <div className="max-w-2xl lg:mx-auto w-full flex items-center justify-between px-4 py-4">
+            <div className="max-w-2xl mx-auto w-full flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleClose}
@@ -59,7 +59,7 @@ export function CreateTriviaTypeModal({
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 safe-bottom max-w-2xl lg:mx-auto w-full">
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 safe-bottom max-w-2xl mx-auto w-full">
             {/* Single Trivia Card */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
