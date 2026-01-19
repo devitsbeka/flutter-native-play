@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Crown, Sparkles, Zap, Gift, Image, Ban, Star } from "lucide-react";
+import { Sparkles, Zap, Gift, Image, Ban, Star } from "lucide-react";
+import crown3d from "@/assets/icons/crown-3d.png";
 import { useNavigate } from "react-router-dom";
 import { VIP_BENEFITS } from "@/hooks/useVipStatus";
 
@@ -8,7 +9,7 @@ const BENEFIT_ICONS: Record<string, React.ReactNode> = {
   "🎰": <Gift className="w-5 h-5 text-purple-500" />,
   "🎨": <Image className="w-5 h-5 text-pink-500" />,
   "⚡": <Zap className="w-5 h-5 text-yellow-500" />,
-  "👑": <Crown className="w-5 h-5 text-amber-600" />,
+  "👑": <img src={crown3d} alt="Crown" className="w-5 h-5 object-contain" />,
   "🚫": <Ban className="w-5 h-5 text-red-500" />,
 };
 
@@ -62,7 +63,7 @@ export function ShopProSidebar() {
             ease: "easeInOut"
           }}
         >
-          <Crown className="w-7 h-7 text-white drop-shadow-md" />
+          <img src={crown3d} alt="Crown" className="w-8 h-8 object-contain" />
         </motion.div>
         <div>
           <h3 
@@ -152,7 +153,7 @@ export function ShopProSidebar() {
         />
         
         <span className="relative z-10 flex items-center justify-center gap-2">
-          <Crown className="w-5 h-5" />
+          <img src={crown3d} alt="Crown" className="w-6 h-6 object-contain" />
           PRO-ს გააქტიურება
         </span>
       </motion.button>
