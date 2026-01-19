@@ -28,7 +28,7 @@ export function IconTab({ label, isActive, onClick }: IconTabProps) {
         }}
       >
         <span 
-          className={`font-semibold whitespace-nowrap text-sm ${
+          className={`font-semibold whitespace-nowrap text-[15px] md:text-sm ${
             isActive ? 'text-white' : 'text-slate-600'
           }`}
         >
