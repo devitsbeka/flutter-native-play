@@ -578,14 +578,9 @@ function TeamContentV2() {
             </div>
 
             {/* Content Area - Full width like Shop/PowerUps */}
-            <div className="flex-1">
-          
-
-
-          {/* Rooms Tab */}
-          {activeTab === "rooms" && (
-            <div className="flex flex-col">
-              <div className="px-4 pt-4 pb-4">
+            <div className="flex-1 px-4 pt-4 pb-4">
+              {/* Rooms Tab */}
+              {activeTab === "rooms" && (
                 <MyRoomsSection
                   hideTV 
                   onCreateRoom={() => setShowCreateModal(true)}
@@ -595,28 +590,20 @@ function TeamContentV2() {
                   searchQuery={roomsSearchQuery}
                   sort={roomsSort}
                 />
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Explore Tab */}
-          {activeTab === "explore" && (
-            <div className="flex flex-col">
-              <div className="px-4 pt-4 pb-4">
+              {/* Explore Tab */}
+              {activeTab === "explore" && (
                 <ExplorePortfolioFeed
                   searchQuery={roomsSearchQuery}
                   onPlayQuiz={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
                   }}
                 />
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* My Trivia Tab */}
-          {activeTab === "my-content" && (
-            <div className="flex flex-col">
-              <div className="px-4 pt-4 pb-4">
+              {/* My Trivia Tab */}
+              {activeTab === "my-content" && (
                 <MyTriviaTab
                   onCreateQuiz={() => setShowCreateTypeModal(true)}
                   onPlay={(post, collectionPosts) => {
@@ -625,10 +612,7 @@ function TeamContentV2() {
                   searchQuery={searchQuery}
                   sortFilter={sortFilter}
                 />
-              </div>
-            </div>
-          )}
-          
+              )}
             </div>
           </div>
 
