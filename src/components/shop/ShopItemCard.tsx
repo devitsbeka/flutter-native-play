@@ -173,7 +173,7 @@ export function ShopItemCard({
               }}
             >
               <img src={currencyIcon} alt="" className="w-4 h-4" />
-              <span className="font-bold text-sm text-[#9359DD]">{price}</span>
+              <span className="font-bold text-sm text-[#9359DD]">{price} {t('shop.buy')}</span>
             </motion.div>
           )}
         </div>
