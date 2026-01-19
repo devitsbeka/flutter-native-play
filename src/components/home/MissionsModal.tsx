@@ -603,6 +603,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       <GameModal
         isOpen={isOpen}
         onClose={onClose}
+        fullScreen={false}
         icon={headerIcon}
         title={t("missions.title")}
         subtitle={t("missions.subtitle")}
