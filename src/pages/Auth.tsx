@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
-import { ArrowLeft, Mail, Lock, User, Apple } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Apple, Gift } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref');
   const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -62,7 +65,7 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await signUp(email, password, nickname);
+        const { error, data } = await signUp(email, password, nickname);
         if (error) {
           if (error.message.includes("already registered")) {
             notify.error(t("auth.alreadyHaveAccount"), { description: t("auth.invalidCredentials") });
@@ -70,7 +73,45 @@ export default function Auth() {
             notify.error(t("common.error"), { description: error.message });
           }
         } else {
-          notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: "🎉" });
+          // Handle referral code if present
+          if (referralCode && data?.user) {
+            try {
+              // Find the invite by referral code
+              const { data: invite } = await supabase
+                .from('friend_invites')
+                .select('*')
+                .eq('referral_code', referralCode)
+                .eq('status', 'pending')
+                .single();
+
+              if (invite) {
+                // Update the invite status
+                await supabase
+                  .from('friend_invites')
+                  .update({
+                    status: 'accepted',
+                    invited_user_id: data.user.id,
+                    accepted_at: new Date().toISOString(),
+                  })
+                  .eq('id', invite.id);
+
+                // Update the new user's profile with referral info
+                await supabase
+                  .from('profiles')
+                  .update({ referred_by_invite_id: invite.id })
+                  .eq('user_id', data.user.id);
+
+                notify.success("მოგესალმებით! 🎁", { 
+                  description: "მიიღე PRO სტატუსი მეგობრის მოწვევით!", 
+                  icon: "🎉" 
+                });
+              }
+            } catch (err) {
+              console.error('Error processing referral:', err);
+            }
+          } else {
+            notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: "🎉" });
+          }
           navigate("/");
         }
       } else {
@@ -135,6 +176,29 @@ export default function Auth() {
       </motion.button>
 
       <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+        {/* Referral Banner */}
+        {referralCode && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Gift className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  მოწვეული ხარ! 🎁
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  დარეგისტრირდი და მიიღე PRO სტატუსი უფასოდ
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
