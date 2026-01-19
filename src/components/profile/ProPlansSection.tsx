@@ -51,6 +51,29 @@ export const PRO_TIERS: TierConfig[] = [
       { icon: Star, text: 'VIP ბეჯი' },
       { icon: Users, text: '1 მეგობრის მოწვევა', highlight: true },
     ]
+  },
+  {
+    id: 'pro_plus',
+    name: 'სამეგობრო PRO',
+    nameKa: 'სამეგობრო PRO',
+    price: 19.99,
+    friendInvites: 5,
+    xpMultiplier: 2,
+    // Orange/Amber theme
+    gradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+    glowColor: 'rgba(245, 158, 11, 0.25)',
+    accentColor: '#F59E0B',
+    lightBg: 'rgba(245, 158, 11, 0.1)',
+    buttonGradient: 'linear-gradient(135deg, #F59E0B 0%, #FB923C 100%)',
+    popular: true,
+    benefits: [
+      { icon: Zap, text: '2x XP ბონუსი' },
+      { icon: Shield, text: 'რეკლამების გარეშე' },
+      { icon: Star, text: 'VIP ბეჯი + ფრეიმები' },
+      { icon: Gift, text: 'ყოველდღიური ჯილდოები' },
+      { icon: Users, text: '5 მეგობრის მოწვევა', highlight: true },
+    ]
   }
 ];
 
