@@ -35,7 +35,7 @@ interface FeedFiltersBarProps {
 const filterOptions: { value: SortFilter; label: string }[] = [
   { value: "all", label: "ყველა" },
   { value: "private", label: "პირადი" },
-  { value: "published", label: "გამოქვეყნებული" },
+  { value: "published", label: "საჯარო" },
   { value: "trivias", label: "ტრივიები" },
   { value: "collections", label: "კოლექციები" },
   { value: "personal", label: "MyTrivia Party" },
