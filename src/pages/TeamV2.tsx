@@ -633,6 +633,7 @@ function TeamContentV2() {
           />
         </div>
       </div>
+      </div>
 
       {/* TV Modal */}
       <TVMirrorModal 
