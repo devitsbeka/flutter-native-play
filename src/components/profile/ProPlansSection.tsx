@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Trophy } from "lucide-react";
+import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
 import { FriendInvitesTracker } from "./FriendInvitesTracker";
 import { useFriendInvites } from "@/hooks/useFriendInvites";
+import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
 
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master';
@@ -86,15 +87,24 @@ interface ProPlansSectionProps {
   subscriptionExpiryDate?: string;
 }
 
+// Map tier IDs to native product IDs
+const TIER_PRODUCT_IDS: Record<ProTier, string> = {
+  'pro': IAP_PRODUCTS.VIP_MONTHLY,
+  'pro_plus': IAP_PRODUCTS.VIP_ANNUAL,
+  'pro_master': IAP_PRODUCTS.VIP_ANNUAL,
+};
+
 export function ProPlansSection({ 
   currentTier, 
   friendInvitesRemaining = 0,
   subscriptionStartDate,
   subscriptionExpiryDate
 }: ProPlansSectionProps) {
-  const navigate = useNavigate();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [purchasedTierName, setPurchasedTierName] = useState("");
   const { fetchInvites } = useFriendInvites();
+  const { purchase, purchasing } = useInAppPurchases();
   const [invitesKey, setInvitesKey] = useState(0);
 
   const handleInviteSent = useCallback(() => {
@@ -102,8 +112,17 @@ export function ProPlansSection({
     setInvitesKey(prev => prev + 1);
   }, [fetchInvites]);
 
-  const handleUpgrade = (tier: ProTier) => {
-    navigate('/vip', { state: { selectedTier: tier } });
+  const handleUpgrade = async (tier: ProTier) => {
+    const tierConfig = PRO_TIERS.find(t => t.id === tier);
+    if (!tierConfig) return;
+    
+    const productId = TIER_PRODUCT_IDS[tier];
+    const result = await purchase(productId);
+    
+    if (result.success) {
+      setPurchasedTierName(tierConfig.nameKa);
+      setShowSuccessModal(true);
+    }
   };
 
   return (
@@ -277,16 +296,26 @@ export function ProPlansSection({
                 ) : (
                   <motion.button
                     onClick={() => handleUpgrade(tier.id)}
-                    className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
+                    disabled={purchasing}
+                    className="w-full py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-70"
                     style={{ 
                       background: tier.buttonGradient,
                       boxShadow: `0 4px 16px ${tier.glowColor}`,
                     }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: purchasing ? 1 : 1.02 }}
+                    whileTap={{ scale: purchasing ? 1 : 0.98 }}
                   >
-                    <Sparkles className="w-4 h-4" />
-                    ყიდვა
+                    {purchasing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        მუშავდება...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        ყიდვა
+                      </>
+                    )}
                   </motion.button>
                 )}
               </div>
@@ -307,6 +336,14 @@ export function ProPlansSection({
         invitesRemaining={friendInvitesRemaining}
         currentTier={currentTier}
         onInviteSent={handleInviteSent}
+      />
+
+      {/* Purchase Success Modal */}
+      <PurchaseSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        itemName={purchasedTierName}
+        icon={<Crown className="w-8 h-8 text-amber-500" />}
       />
 
       <style>{`
