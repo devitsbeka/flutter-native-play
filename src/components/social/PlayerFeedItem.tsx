@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, UserCheck, Clock, Users, Heart, Bookmark, Play, Layers } from "lucide-react";
+import { UserPlus, UserCheck, Clock, Users, Play, Layers } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PlayerInfo, CollectionItem } from "@/hooks/usePlayerFeedItems";
@@ -9,6 +9,8 @@ import { useFriends } from "@/hooks/useFriends";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
+import bookmark3dIcon from "@/assets/icons/bookmark-3d.png";
 
 interface PlayerFeedItemProps {
   player: PlayerInfo;
@@ -278,25 +280,27 @@ export function PlayerFeedItem({
               {/* Like Button */}
               <button 
                 onClick={handleLikeClick}
-                className={cn(
-                  "flex items-center gap-1.5 transition-colors",
-                  isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-                )}
+                className="flex items-center gap-1.5 transition-all"
               >
-                <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
-                <span className="text-sm font-medium">{likesCount || 0}</span>
+                <img 
+                  src={purpleHeartIcon} 
+                  alt="Like" 
+                  className={`w-5 h-5 object-contain transition-all ${isLiked ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                />
+                <span className={cn("text-sm font-medium", isLiked ? "text-foreground" : "text-muted-foreground")}>{likesCount || 0}</span>
               </button>
               
               {/* Save/Bookmark Button */}
               <button 
                 onClick={handleSaveClick}
-                className={cn(
-                  "flex items-center gap-1.5 transition-colors",
-                  isSaved ? "text-primary" : "text-muted-foreground hover:text-primary"
-                )}
+                className="flex items-center gap-1.5 transition-all"
               >
-                <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
-                <span className="text-sm font-medium">{savesCount || 0}</span>
+                <img 
+                  src={bookmark3dIcon} 
+                  alt="Save" 
+                  className={`w-5 h-5 object-contain transition-all ${isSaved ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                />
+                <span className={cn("text-sm font-medium", isSaved ? "text-foreground" : "text-muted-foreground")}>{savesCount || 0}</span>
               </button>
             </div>
             
