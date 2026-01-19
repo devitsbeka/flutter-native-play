@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Mail, Globe, User, Lock, HelpCircle, Shield, LogOut, ChevronRight, Loader2, Check } from "lucide-react";
+import { Mail, Globe, User, Lock, HelpCircle, Shield, Trash2, ChevronRight, Loader2, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { user, profile, signOut, updateProfile, fetchProfile } = useAuth();
+  const { user, profile, updateProfile, fetchProfile } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
 
@@ -121,10 +121,6 @@ export default function Settings() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
 
   return (
     <MainLayout showPlayButton={false}>
@@ -308,21 +304,26 @@ export default function Settings() {
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </motion.button>
 
-          {/* Sign Out */}
+          {/* Delete Account */}
           {user && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              onClick={handleSignOut}
+              onClick={() => navigate("/settings/privacy")}
               className="w-full flex items-center gap-4 p-4 rounded-xl bg-card border border-border hover:bg-destructive/10 transition-colors"
             >
               <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <LogOut className="w-6 h-6 text-destructive" />
+                <Trash2 className="w-6 h-6 text-destructive" />
               </div>
-              <span className="flex-1 text-left font-medium text-destructive">
-                {t("menu.signOut")}
-              </span>
+              <div className="flex flex-col items-start flex-1">
+                <span className="text-left font-medium text-destructive">
+                  {t("settings.deleteAccount")}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t("settings.deleteAccountDescription")}
+                </span>
+              </div>
               <ChevronRight className="w-5 h-5 text-destructive/50" />
             </motion.button>
           )}
