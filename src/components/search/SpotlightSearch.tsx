@@ -387,7 +387,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500">
                     <Zap className="w-4 h-4 text-white" />
                   </div>
-                  <span>პაუერ-აფები</span>
+                  <span>ძალები</span>
                 </CommandItem>
                 <CommandItem 
                   onSelect={() => { setOpen(false); navigate("/vip"); }}

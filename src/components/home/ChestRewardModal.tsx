@@ -131,6 +131,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreen={false}
       variant="gold"
       icon={chestIcon}
       title={canClaimChest ? t("chest.titleOpened") : t("chest.title")}

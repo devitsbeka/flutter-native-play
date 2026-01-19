@@ -204,7 +204,7 @@ const pageCategories: CategoryDefinition[] = [
     icon: "💎",
     pages: [
       { id: "vip", label: "VIP", labelGe: "VIP", Component: VIP, route: "/vip" },
-      { id: "powerups", label: "Power-Ups", labelGe: "პაუერაფები", Component: PowerUps, route: "/power-ups" },
+      { id: "powerups", label: "Power-Ups", labelGe: "ძალები", Component: PowerUps, route: "/power-ups" },
     ],
   },
   {
@@ -262,7 +262,7 @@ const modalCategories: CategoryDefinition[] = [
       { id: "chest-reward-modal", label: "Chest Reward", labelGe: "სკივრის ჯილდო", Component: ChestRewardModal, isModal: true, modalProps: { chestType: "gold" } },
       { id: "streak-modal", label: "Streak", labelGe: "სტრიკი", Component: StreakModal, isModal: true, modalProps: { currentStreak: 7, bestStreak: 14 } },
       { id: "missions-modal", label: "Missions", labelGe: "მისიები", Component: MissionsModal, isModal: true, modalProps: {} },
-      { id: "my-powers-modal", label: "My Powers", labelGe: "ჩემი პაუერაფები", Component: MyPowersModal, isModal: true, modalProps: {} },
+      { id: "my-powers-modal", label: "My Powers", labelGe: "ჩემი ძალები", Component: MyPowersModal, isModal: true, modalProps: {} },
       { id: "level-info-modal", label: "Level Info", labelGe: "ლეველის ინფო", Component: LevelInfoModal, isModal: true, modalProps: { levelInfo: { level: 5, currentXp: 450, nextLevelXp: 1000, totalXp: 4500 } } },
       { id: "settings-modal", label: "Settings", labelGe: "პარამეტრები", Component: SettingsModal, isModal: true, modalProps: {} },
       { id: "sound-settings-modal", label: "Sound Settings", labelGe: "ხმის პარამეტრები", Component: SoundSettingsModal, isModal: true, modalProps: {} },

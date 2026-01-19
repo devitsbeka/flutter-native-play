@@ -34,6 +34,7 @@ export function MyPowersModal({ isOpen, onClose }: MyPowersModalProps) {
     <GameModal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreen={false}
       title={t("modals.myPowers")}
       icon={<img src={powerBottleIcon} alt="" className="w-20 h-20 object-contain" />}
       variant="info"
