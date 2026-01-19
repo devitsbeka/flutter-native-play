@@ -312,7 +312,7 @@ export function AvatarCircle({
             }}
           />
           
-          <span className="relative font-bold text-white text-base drop-shadow-sm">Level {level}</span>
+          <span className="relative font-bold text-white text-base drop-shadow-sm">დონე {level}</span>
           <span className="relative text-white/80 text-xs drop-shadow-sm">
             {xpCurrent !== undefined ? xpCurrent.toLocaleString() : 0} / {xpTotal !== undefined ? xpTotal.toLocaleString() : 0} XP
           </span>

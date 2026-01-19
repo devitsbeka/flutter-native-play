@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopHeroCarousel } from "./ShopHeroCarousel";
@@ -11,6 +11,7 @@ interface ShopStandardLayoutProps {
   isPurchasing: string | null;
   isFrameUnlocked: (frameId: string) => boolean;
   onItemClick: (item: ShopItem) => Promise<void>;
+  initialScrollSection?: string;
 }
 
 export function ShopStandardLayout({
@@ -20,8 +21,25 @@ export function ShopStandardLayout({
   isPurchasing,
   isFrameUnlocked,
   onItemClick,
+  initialScrollSection,
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const hasScrolled = useRef(false);
+
+  // Scroll to initial section on mount
+  useEffect(() => {
+    if (initialScrollSection && !hasScrolled.current) {
+      // Small delay to ensure refs are set
+      const timer = setTimeout(() => {
+        const ref = sectionRefs.current.get(initialScrollSection);
+        if (ref) {
+          ref.scrollIntoView({ behavior: "smooth", block: "start" });
+          hasScrolled.current = true;
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [initialScrollSection]);
 
   const handleSlideClick = (sectionId: string) => {
     const ref = sectionRefs.current.get(sectionId);
