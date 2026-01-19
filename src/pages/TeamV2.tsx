@@ -484,7 +484,7 @@ function TeamContentV2() {
                 </div>
 
                 {/* Unified Tab Bar - Full Width */}
-                <div className="w-full max-w-[1115px] mx-auto px-4 pt-3 pb-2">
+                <div className="w-full max-w-full md:max-w-[1115px] mx-auto px-4 pt-3 pb-2 overflow-hidden">
                   <div className="flex items-center justify-between gap-3">
                     {/* Tab container - takes available space */}
                     <div 
@@ -499,10 +499,10 @@ function TeamContentV2() {
                         { id: "rooms", label: "ოთახები" },
                         { id: "my-content", label: "ჩემი ტრივია" },
                       ].map((tab) => (
-                        <button
-                          key={tab.id}
-                          onClick={() => handleTabChange(tab.id)}
-                          className={`relative flex-1 flex items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
+                          <button
+                            key={tab.id}
+                            onClick={() => handleTabChange(tab.id)}
+                            className={`relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[11px] sm:text-sm font-semibold transition-colors ${
                             activeTab === tab.id
                               ? "text-foreground"
                               : "text-muted-foreground hover:text-foreground"
@@ -518,7 +518,7 @@ function TeamContentV2() {
                               transition={{ type: "spring", stiffness: 400, damping: 30 }}
                             />
                           )}
-                          <span className="relative z-10">{tab.label}</span>
+                          <span className="relative z-10 truncate">{tab.label}</span>
                         </button>
                       ))}
                     </div>
