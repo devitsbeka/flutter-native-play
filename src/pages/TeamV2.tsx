@@ -419,153 +419,153 @@ function TeamContentV2() {
       <div className="min-h-screen flex flex-col">
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
+          <div id="team-main-content" className="flex-1 overflow-y-auto relative pb-24 lg:pb-0 bg-background scroll-smooth scrollbar-hide">
             {/* Scrollable Header Section - Title, Buttons, Friends Bar, Tabs */}
             <div className="bg-background">
-          <div className="px-4 pt-4 pb-2">
-            <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-                  ონლაინ თამაში
-                </h1>
-              </div>
+              <div className="px-4 pt-4 pb-2">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+                      ონლაინ თამაში
+                    </h1>
+                  </div>
 
-              <div className="flex items-center gap-2">
-                {/* QR Scanner */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowQRScanner(true)}
-                  className="flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
-                  style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                >
-                  <ScanLine className="w-5 h-5" />
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowNotificationsPanel(true)}
-                  className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
-                  style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                >
-                  <Bell className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  )}
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowRoomChatsPanel(true)}
-                  className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
-                  style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  {unreadMessagesCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                      {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                    </span>
-                  )}
-                </motion.button>
-              </div>
-            </div>
-
-            {/* Friends Bar - show on all tabs */}
-            <div className="py-2">
-              <FriendsStoriesBar
-                onAddFriendClick={() => setShowAddFriendModal(true)}
-                onFriendClick={() => {}}
-                onShowAllFriends={() => setShowAllFriendsModal(true)}
-              />
-            </div>
-
-            {/* Unified Tab Bar with Create Button - Full Width */}
-            <div className="w-full max-w-[1115px] mx-auto">
-              <div className="flex items-center justify-between gap-3">
-                {/* Tab container - takes available space */}
-                <div 
-                  className="flex-1 flex rounded-2xl bg-muted p-1.5"
-                  style={{
-                    boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
-                  }}
-                >
-                  {/* Tabs with equal distribution */}
-                  {[
-                    { id: "explore", label: "აღმოაჩინე" },
-                    { id: "rooms", label: "ოთახები" },
-                    { id: "my-content", label: "ჩემი ტრივია" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleTabChange(tab.id)}
-                      className={`relative flex-1 flex items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
-                        activeTab === tab.id
-                          ? "text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
+                  <div className="flex items-center gap-2">
+                    {/* QR Scanner */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowQRScanner(true)}
+                      className="flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
+                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
                     >
-                      {activeTab === tab.id && (
-                        <motion.div
-                          layoutId="activeTabTeam"
-                          className="absolute inset-0 rounded-xl bg-white"
-                          style={{
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                          }}
-                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                        />
+                      <ScanLine className="w-5 h-5" />
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowNotificationsPanel(true)}
+                      className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
+                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                    >
+                      <Bell className="w-5 h-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
                       )}
-                      <span className="relative z-10">{tab.label}</span>
-                    </button>
-                  ))}
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowRoomChatsPanel(true)}
+                      className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
+                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      {unreadMessagesCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
+                          {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
+                        </span>
+                      )}
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
-            </div>
+
+                {/* Friends Bar - show on all tabs */}
+                <div className="py-2">
+                  <FriendsStoriesBar
+                    onAddFriendClick={() => setShowAddFriendModal(true)}
+                    onFriendClick={() => {}}
+                    onShowAllFriends={() => setShowAllFriendsModal(true)}
+                  />
+                </div>
+
+                {/* Unified Tab Bar with Create Button - Full Width */}
+                <div className="w-full max-w-[1115px] mx-auto">
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Tab container - takes available space */}
+                    <div 
+                      className="flex-1 flex rounded-2xl bg-muted p-1.5"
+                      style={{
+                        boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
+                      }}
+                    >
+                      {/* Tabs with equal distribution */}
+                      {[
+                        { id: "explore", label: "აღმოაჩინე" },
+                        { id: "rooms", label: "ოთახები" },
+                        { id: "my-content", label: "ჩემი ტრივია" },
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => handleTabChange(tab.id)}
+                          className={`relative flex-1 flex items-center justify-center gap-2 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
+                            activeTab === tab.id
+                              ? "text-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {activeTab === tab.id && (
+                            <motion.div
+                              layoutId="activeTabTeam"
+                              className="absolute inset-0 rounded-xl bg-white"
+                              style={{
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              }}
+                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                          )}
+                          <span className="relative z-10">{tab.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Sticky Filter Bar - Only this stays at top on mobile */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative">
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md md:relative w-full overflow-hidden">
               <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
-            {activeTab === "rooms" && (
-              <RoomFiltersBar
-                filter={roomsFilter}
-                onFilterChange={setRoomsFilter}
-                sort={roomsSort}
-                onSortChange={setRoomsSort}
-                searchQuery={roomsSearchQuery}
-                onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateModal(true)}
-                addButtonText="+ ახალი ოთახი"
-              />
-            )}
+                {activeTab === "rooms" && (
+                  <RoomFiltersBar
+                    filter={roomsFilter}
+                    onFilterChange={setRoomsFilter}
+                    sort={roomsSort}
+                    onSortChange={setRoomsSort}
+                    searchQuery={roomsSearchQuery}
+                    onSearchQueryChange={setRoomsSearchQuery}
+                    onAddClick={() => setShowCreateModal(true)}
+                    addButtonText="+ ახალი ოთახი"
+                  />
+                )}
 
-            {activeTab === "explore" && (
-              <RoomFiltersBar
-                filter={roomsFilter}
-                onFilterChange={setRoomsFilter}
-                sort={roomsSort}
-                onSortChange={setRoomsSort}
-                searchQuery={roomsSearchQuery}
-                onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateTypeModal(true)}
-                addButtonText="+ შექმენი ტრივია"
-              />
-            )}
+                {activeTab === "explore" && (
+                  <RoomFiltersBar
+                    filter={roomsFilter}
+                    onFilterChange={setRoomsFilter}
+                    sort={roomsSort}
+                    onSortChange={setRoomsSort}
+                    searchQuery={roomsSearchQuery}
+                    onSearchQueryChange={setRoomsSearchQuery}
+                    onAddClick={() => setShowCreateTypeModal(true)}
+                    addButtonText="+ შექმენი ტრივია"
+                  />
+                )}
 
-            {activeTab === "my-content" && (
-              <FeedFiltersBar
-                sortFilter={sortFilter}
-                onSortFilterChange={setSortFilter}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                onAddClick={() => setShowCreateTypeModal(true)}
-                addButtonText="+ ახალი ტრივია"
-              />
-              )}
+                {activeTab === "my-content" && (
+                  <FeedFiltersBar
+                    sortFilter={sortFilter}
+                    onSortFilterChange={setSortFilter}
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    onAddClick={() => setShowCreateTypeModal(true)}
+                    addButtonText="+ ახალი ტრივია"
+                  />
+                )}
               </div>
               
               {/* Fade gradient below sticky header - mobile only */}
@@ -577,9 +577,8 @@ function TeamContentV2() {
               />
             </div>
 
-
-        {/* Content Area - Full width like Shop/PowerUps */}
-        <div className="flex-1 pb-24 lg:pb-0">
+            {/* Content Area - Full width like Shop/PowerUps */}
+            <div className="flex-1">
           
 
 
