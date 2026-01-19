@@ -5,7 +5,7 @@ import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown,
 import { t } from "@/lib/i18n";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
-import { useLeaderboardPrefetch } from "@/hooks/useLeaderboardPrefetch";
+import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { toast } from "sonner";
 
 interface UniversalBottomNavProps {
@@ -39,16 +39,16 @@ export function UniversalBottomNav({
   const location = useLocation();
   const { pendingChallenges } = usePendingChallenges();
   const { indicators } = useNewContentIndicators();
-  const { prefetchAllTiers } = useLeaderboardPrefetch();
+  const { prefetchRoute } = useNavigationPrefetch();
   
   const isHome = location.pathname === "/";
   const isTeam = location.pathname === "/team";
   const isActive = (path: string) => location.pathname === path;
 
-  // Prefetch leaderboard data on touch start (mobile)
-  const handleLeaderboardTouchStart = useCallback(() => {
-    prefetchAllTiers();
-  }, [prefetchAllTiers]);
+  // Prefetch route data and code on touch start (mobile)
+  const handleRouteTouchStart = useCallback((path: string) => {
+    prefetchRoute(path);
+  }, [prefetchRoute]);
 
   // Determine center button behavior
   const showPlayButton = isHome;
@@ -101,7 +101,10 @@ export function UniversalBottomNav({
         {/* Navigation items container */}
         <div className="flex items-center py-5 min-h-[80px] overflow-visible">
           {/* Explore */}
-          <div className="flex-1 flex justify-center">
+          <div 
+            className="flex-1 flex justify-center"
+            onTouchStart={() => handleRouteTouchStart("/discover")}
+          >
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/discover")) {
@@ -118,7 +121,10 @@ export function UniversalBottomNav({
           </div>
 
           {/* Shop */}
-          <div className="flex-1 flex justify-center pr-4">
+          <div 
+            className="flex-1 flex justify-center pr-4"
+            onTouchStart={() => handleRouteTouchStart("/power-ups")}
+          >
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/power-ups")) {
@@ -157,7 +163,7 @@ export function UniversalBottomNav({
           {/* Rank */}
           <div 
             className="flex-1 flex justify-center pl-4"
-            onTouchStart={handleLeaderboardTouchStart}
+            onTouchStart={() => handleRouteTouchStart("/leaderboards")}
           >
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
@@ -175,7 +181,10 @@ export function UniversalBottomNav({
           </div>
 
           {/* Team */}
-          <div className="flex-1 flex justify-center">
+          <div 
+            className="flex-1 flex justify-center"
+            onTouchStart={() => handleRouteTouchStart("/team")}
+          >
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/team")) {

@@ -237,6 +237,10 @@ export function usePlayerFeedItems(searchQuery: string = "") {
 
       return feedItems;
     },
-    staleTime: 30000,
+    staleTime: 5 * 60 * 1000, // 5 minutes - content doesn't change frequently
+    gcTime: 15 * 60 * 1000, // 15 minutes cache
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
   });
 }
