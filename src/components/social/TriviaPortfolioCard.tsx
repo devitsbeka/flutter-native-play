@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Heart, Bookmark, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SamplePost } from "@/data/samplePosts";
+import { useNavigate } from "react-router-dom";
 
 interface TriviaPortfolioCardProps {
   trivia: SamplePost;
@@ -47,6 +48,8 @@ export function TriviaPortfolioCard({
   isSaved = false, 
   className 
 }: TriviaPortfolioCardProps) {
+  const navigate = useNavigate();
+  
   // Use the trivia's actual cover_gradient or cover_image, fallback to random gradient
   const coverGradient = trivia.coverGradient || getRandomGradient(trivia.id);
   const coverImage = trivia.coverImage;
@@ -64,7 +67,11 @@ export function TriviaPortfolioCard({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onPlay?.(trivia);
+    navigate(`/trivia/${trivia.id}`);
+  };
+  
+  const handleCardClick = () => {
+    navigate(`/trivia/${trivia.id}`);
   };
   
   return (
@@ -78,7 +85,7 @@ export function TriviaPortfolioCard({
       style={!className?.includes('w-full') ? { width: 260, minWidth: 260 } : undefined}
       whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
-      onClick={() => onPlay?.(trivia)}
+      onClick={handleCardClick}
     >
       {/* Cover Section */}
       <div className="h-32 relative overflow-hidden">
