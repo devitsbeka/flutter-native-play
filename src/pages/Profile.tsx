@@ -68,7 +68,7 @@ export default function Profile() {
           <PageHeader title={t("profile.title")} />
 
           {/* Header with Video Background */}
-          <div className="relative pt-4 pb-20 px-6 overflow-hidden">
+          <div className="relative pt-12 pb-20 px-6 overflow-hidden">
             {/* Video Background */}
             <video 
               autoPlay 
