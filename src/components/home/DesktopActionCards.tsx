@@ -131,21 +131,71 @@ const ActionCard = ({
             <div className="mt-2 w-full">
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden relative">
                 <motion.div
-                  className="h-full rounded-full relative"
+                  className="h-full rounded-full relative overflow-hidden"
                   style={{
                     background: "linear-gradient(90deg, #8B5CF6 0%, #A855F7 50%, #C084FC 100%)",
+                    boxShadow: progressPercent > 50 ? "0 0 8px rgba(139, 92, 246, 0.5)" : "none",
                   }}
                   initial={{ width: 0 }}
                   animate={{ width: `${progressPercent}%` }}
                   transition={{ duration: 0.8, ease: "easeOut", delay: delay + 0.3 }}
                 >
-                  {/* Shimmer effect */}
+                  {/* Shimmer sweep effect */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
                     animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5, ease: "easeInOut" }}
                   />
+                  
+                  {/* Sparkle particles on the bar */}
+                  {progressPercent > 0 && (
+                    <>
+                      <motion.div
+                        className="absolute w-1 h-1 bg-white rounded-full"
+                        style={{ right: "10%", top: "20%" }}
+                        animate={{ 
+                          opacity: [0, 1, 0],
+                          scale: [0.5, 1.2, 0.5],
+                        }}
+                        transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}
+                      />
+                      <motion.div
+                        className="absolute w-1.5 h-1.5 bg-white rounded-full"
+                        style={{ right: "30%", top: "50%" }}
+                        animate={{ 
+                          opacity: [0, 1, 0],
+                          scale: [0.5, 1.5, 0.5],
+                        }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+                      />
+                      <motion.div
+                        className="absolute w-1 h-1 bg-white rounded-full"
+                        style={{ right: "50%", top: "30%" }}
+                        animate={{ 
+                          opacity: [0, 1, 0],
+                          scale: [0.5, 1, 0.5],
+                        }}
+                        transition={{ duration: 1, repeat: Infinity, delay: 1 }}
+                      />
+                    </>
+                  )}
                 </motion.div>
+                
+                {/* Glow effect at the end of progress */}
+                {progressPercent > 0 && (
+                  <motion.div
+                    className="absolute top-0 bottom-0 w-3 rounded-full"
+                    style={{
+                      left: `calc(${progressPercent}% - 6px)`,
+                      background: "radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(168,85,247,0.4) 50%, transparent 70%)",
+                    }}
+                    animate={{ 
+                      opacity: [0.5, 1, 0.5],
+                      scale: [0.8, 1.2, 0.8],
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
               </div>
               <p className="text-[10px] text-gray-500 mt-1 text-right font-medium">
                 {progressPercent}% პროგრესი

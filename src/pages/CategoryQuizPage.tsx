@@ -8,6 +8,8 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { RegisterPromptModal } from "@/components/home/RegisterPromptModal";
@@ -97,6 +99,7 @@ export default function CategoryQuizPage() {
   
   // Mission tracking
   const { updateMissionProgress } = useMissions();
+  const { toast: showToast } = useToast();
   
   // Power-up state
   const { powerUps, usePowerUp: consumePowerUp } = useUserPowerUps();
@@ -416,17 +419,44 @@ export default function CategoryQuizPage() {
       
       // Update mission progress for correct answers and category played
       if (user) {
+        // Helper to show toast if mission completed
+        const handleMissionResult = (result: { 
+          completed: boolean; 
+          missionTitle?: string;
+          rewardCoins?: number;
+          rewardGems?: number;
+          rewardXp?: number;
+          rewardPowerUp?: string | null;
+          rewardPowerUpCount?: number;
+        }) => {
+          if (result.completed && result.missionTitle) {
+            setTimeout(() => {
+              showMissionCompleteToast(showToast, {
+                title: result.missionTitle!,
+                coins: result.rewardCoins || 0,
+                gems: result.rewardGems || 0,
+                xp: result.rewardXp || 0,
+                powerUp: result.rewardPowerUp,
+                powerUpCount: result.rewardPowerUpCount,
+              });
+            }, 1500);
+          }
+        };
+
         // Update correct answers mission
         if (score > 0) {
-          await updateMissionProgress("answer_correct", score);
+          const result = await updateMissionProgress("answer_correct", score);
+          handleMissionResult(result);
         }
         
         // Update categories played mission (1 category per quiz)
-        await updateMissionProgress("play_categories", 1);
+        const catResult = await updateMissionProgress("play_categories", 1);
+        handleMissionResult(catResult);
         
         // Update win games mission if passed (at least 1 star)
         if (result.stars >= 1) {
-          await updateMissionProgress("win_games", 1);
+          const winResult = await updateMissionProgress("win_games", 1);
+          handleMissionResult(winResult);
         }
       }
     } else if (user) {
