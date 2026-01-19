@@ -20,7 +20,8 @@ import {
   FileArchive,
   Flag,
   Palette,
-  Coins
+  Coins,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,11 @@ const mainNavItems: NavItem[] = [
     to: '/admin/economy', 
     icon: Coins, 
     label: 'ეკონომიკა' 
+  },
+  { 
+    to: '/admin/settings', 
+    icon: Settings, 
+    label: 'პარამეტრები' 
   },
 ];
 

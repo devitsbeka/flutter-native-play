@@ -9,6 +9,7 @@ import freezeIcon from "@/assets/powers/freeze.png";
 import replaceIcon from "@/assets/powers/replace.png";
 import timeDrainIcon from "@/assets/powers/time-drain.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import gemIcon from "@/assets/icons/icon-gem.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
 import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
@@ -18,7 +19,7 @@ export interface ShopItem {
   name: string;
   description: string;
   price: number;
-  currency: "gems" | "coins";
+  currency: "gems" | "coins" | "lari";
   icon: React.ReactNode;
   gradient: string;
   badge?: "popular" | "best-value" | "limited" | "new" | null;
@@ -28,6 +29,7 @@ export interface ShopItem {
   amount?: number;
   value?: number;
   frameId?: string;
+  bonusPercentage?: number;
 }
 
 export interface ShopSection {
@@ -289,6 +291,56 @@ export function useShopData() {
       },
     ];
 
+    // Gems Section (Real Money - Lari)
+    const GEMS_ITEMS: ShopItem[] = [
+      {
+        id: "gems_100",
+        name: `100 ${t("common.gems")}`,
+        description: t("shop.smallPackage"),
+        price: 2,
+        currency: "lari",
+        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(290 75% 55%) 100%)",
+        value: 100,
+      },
+      {
+        id: "gems_500",
+        name: `500 ${t("common.gems")}`,
+        description: t("shop.mediumPackage"),
+        price: 8,
+        currency: "lari",
+        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(275 80% 58%) 0%, hsl(295 75% 52%) 100%)",
+        value: 500,
+      },
+      {
+        id: "gems_1500",
+        name: `1500 ${t("common.gems")}`,
+        description: `${t("shop.largePackage")} +20%`,
+        price: 20,
+        currency: "lari",
+        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(280 82% 55%) 0%, hsl(300 78% 50%) 100%)",
+        value: 1500,
+        badge: "popular",
+        savings: 20,
+        bonusPercentage: 20,
+      },
+      {
+        id: "gems_5000",
+        name: `5000 ${t("common.gems")}`,
+        description: `${t("shop.megaPackage")} +40%`,
+        price: 60,
+        currency: "lari",
+        icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(285 85% 52%) 0%, hsl(310 80% 48%) 100%)",
+        value: 5000,
+        badge: "best-value",
+        savings: 40,
+        bonusPercentage: 40,
+      },
+    ];
+
     // Section definitions
     const SHOP_SECTIONS: ShopSection[] = [
       {
@@ -332,6 +384,13 @@ export function useShopData() {
         description: t("shop.withBonuses"),
         videoSrc: "/videos/coins.mp4",
         items: COINS_ITEMS,
+      },
+      {
+        id: "gems-lari",
+        title: t("common.gems"),
+        description: "₾ ლარით შეძენა",
+        videoSrc: "/videos/gems.mp4",
+        items: GEMS_ITEMS,
       },
     ];
 
