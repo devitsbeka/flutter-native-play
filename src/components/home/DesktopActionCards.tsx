@@ -29,6 +29,8 @@ interface ActionCardProps {
   bgGradient: string;
   particleColor: string;
   delay?: number;
+  progressPercent?: number;
+  showProgressBar?: boolean;
 }
 
 // Sparkle particle component
@@ -65,6 +67,8 @@ const ActionCard = ({
   isReady = false,
   badgeCount,
   delay = 0,
+  progressPercent,
+  showProgressBar = false,
 }: ActionCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -121,6 +125,33 @@ const ActionCard = ({
           <p className="text-xs font-semibold text-gray-700 truncate">
             {statusText}
           </p>
+          
+          {/* Progress bar */}
+          {showProgressBar && progressPercent !== undefined && (
+            <div className="mt-2 w-full">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                <motion.div
+                  className="h-full rounded-full relative"
+                  style={{
+                    background: "linear-gradient(90deg, #8B5CF6 0%, #A855F7 50%, #C084FC 100%)",
+                  }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: delay + 0.3 }}
+                >
+                  {/* Shimmer effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                  />
+                </motion.div>
+              </div>
+              <p className="text-[10px] text-gray-500 mt-1 text-right font-medium">
+                {progressPercent}% პროგრესი
+              </p>
+            </div>
+          )}
         </div>
 
       </div>
@@ -170,7 +201,7 @@ export function DesktopActionCards({
   vertical = false,
 }: DesktopActionCardsProps) {
   const { canClaimDaily, dailyTimeLeft, canClaimChest, chestTimeLeft } = useRewardTimers();
-  const { completedCount, totalCount } = useMissions();
+  const { completedCount, totalCount, overallProgress } = useMissions();
   const { powerUps } = useUserPowerUps();
   
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
@@ -206,6 +237,8 @@ export function DesktopActionCards({
         bgGradient=""
         particleColor=""
         delay={0.15}
+        progressPercent={overallProgress}
+        showProgressBar={!allMissionsDone}
       />
 
       {/* Chest Card */}
