@@ -122,7 +122,7 @@ const ActionCard = ({
         {/* Text content */}
         <div className="flex-1 min-w-0 z-10">
           <p className="text-sm font-bold text-gray-800 truncate">{title}</p>
-          <p className="text-xs font-semibold text-gray-700 truncate">
+          <p className="text-xs font-medium text-gray-400 truncate">
             {statusText}
           </p>
           
@@ -197,7 +197,7 @@ const ActionCard = ({
                   />
                 )}
               </div>
-              <p className="text-[10px] text-gray-500 mt-1 text-right font-medium">
+              <p className="text-[10px] text-gray-400 mt-1 text-left font-medium">
                 {progressPercent}% პროგრესი
               </p>
             </div>
@@ -218,7 +218,7 @@ const ActionCard = ({
           >
             <div className="pt-3 pb-1 mt-3 border-t border-gray-200/60">
               {expandedDetails && (
-                <p className="text-xs text-gray-600 mb-3">{expandedDetails}</p>
+                <p className="text-xs text-gray-400 mb-3">{expandedDetails}</p>
               )}
               <motion.span
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold"
@@ -278,7 +278,7 @@ export function DesktopActionCards({
       <ActionCard
         iconSrc={missionCrystalIcon}
         title="მისიები"
-        statusText={allMissionsDone ? "ყველა შესრულებულია ✓" : `${completedCount}/${totalCount} შესრულებული`}
+        statusText={allMissionsDone ? "ყველა შესრულებულია ✓" : `${completedCount}/${totalCount}`}
         expandedDetails="დაასრულე დავალებები და მიიღე დამატებითი ჯილდოები."
         actionLabel="ნახე მისიები"
         onClick={onMissionsClick}
