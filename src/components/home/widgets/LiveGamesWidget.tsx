@@ -77,34 +77,61 @@ export function LiveGamesWidget() {
               transition={{ delay: index * 0.1 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(`/room/${room.room_code}`)}
-              className="bg-muted/30 rounded-xl p-3 cursor-pointer hover:bg-muted/50 transition-colors group border border-border/40"
+              className="relative rounded-xl p-3.5 cursor-pointer transition-colors group border border-border/40 overflow-hidden min-h-[100px]"
+              style={{
+                background: 'linear-gradient(135deg, hsl(var(--primary)/0.15) 0%, hsl(var(--primary)/0.25) 100%)',
+              }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-[13px] font-semibold text-foreground truncate">
-                    {room.room_name || room.category_name || "თამაშის ოთახი"}
-                  </h4>
-                  <p className="text-[11px] text-muted-foreground">
-                    {room.participants.length} მოთამაშე • {formatDistanceToNow(new Date(room.created_at), { addSuffix: true, locale: ka })}
-                  </p>
-                </div>
-                <div className="flex items-center -space-x-2">
-                  {room.participants.slice(0, 4).map((participant) => (
-                    <Avatar
-                      key={participant.user_id}
-                      className="w-7 h-7 border-2 border-card cursor-pointer hover:scale-110 transition-transform"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openProfile(participant.user_id);
-                      }}
-                    >
-                      <AvatarImage src={participant.avatar_url || undefined} />
-                      <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-bold">
-                        {participant.nickname.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                </div>
+              {/* Top left - User avatars */}
+              <div className="absolute top-3 left-3 flex items-center -space-x-2">
+                {room.participants.slice(0, 4).map((participant) => (
+                  <Avatar
+                    key={participant.user_id}
+                    className="w-8 h-8 border-2 border-card/80 cursor-pointer hover:scale-110 transition-transform shadow-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openProfile(participant.user_id);
+                    }}
+                  >
+                    <AvatarImage src={participant.avatar_url || undefined} />
+                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-bold">
+                      {participant.nickname.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {room.participants.length > 4 && (
+                  <span className="w-8 h-8 rounded-full bg-muted/80 border-2 border-card/80 flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                    +{room.participants.length - 4}
+                  </span>
+                )}
+              </div>
+
+              {/* Top right - LIVE badge */}
+              <div className="absolute top-3 right-3">
+                <span 
+                  className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-white"
+                  style={{
+                    background: '#EF4444',
+                    boxShadow: '0 2px 0 #B91C1C, 0 3px 6px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  <motion.span
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-1.5 h-1.5 rounded-full bg-white mr-1"
+                  />
+                  LIVE
+                </span>
+              </div>
+
+              {/* Bottom left - Room name and description */}
+              <div className="absolute bottom-3 left-3 right-3">
+                <h4 className="text-[15px] font-bold text-foreground truncate">
+                  {room.room_name || "თამაშის ოთახი"}
+                </h4>
+                <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+                  {room.category_name || `${room.participants.length} მოთამაშე`}
+                </p>
               </div>
             </motion.div>
           ))}
