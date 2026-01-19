@@ -252,7 +252,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
                 className="w-6 h-6 object-contain drop-shadow-md"
               />
             )}
-            <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-md">
+            <h3 className="font-bold text-white text-base md:text-[16px] leading-tight truncate drop-shadow-md">
               {displayName}
             </h3>
           </div>
@@ -401,7 +401,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
+            <h3 className="font-display text-white text-base md:text-[16px] leading-tight line-clamp-2 drop-shadow-md">
               {displayName}
             </h3>
             {room.category_name && (
