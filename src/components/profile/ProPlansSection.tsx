@@ -117,10 +117,15 @@ export function ProPlansSection({
   const familyTier = PRO_TIERS.find(t => t.id === 'pro_plus')!;
   const currentTierConfig = PRO_TIERS.find(t => t.id === currentTier);
 
+  // Determine which scenario to show
+  const isNotPro = !currentTier;
+  const isSoloPro = currentTier === 'pro';
+  const isFamilyPro = currentTier === 'pro_plus' || currentTier === 'pro_master';
+
   return (
     <div className="space-y-4">
       {/* SCENARIO 1: Not PRO - Show both tier cards */}
-      {!currentTier && (
+      {isNotPro && (
         <>
           {PRO_TIERS.map((tier, index) => (
             <TierCard
@@ -135,7 +140,7 @@ export function ProPlansSection({
       )}
 
       {/* SCENARIO 2: PRO Solo - Show current status + upgrade to Family */}
-      {currentTier === 'pro' && (
+      {isSoloPro && (
         <>
           {/* Current tier mini status */}
           <motion.div
@@ -276,7 +281,7 @@ export function ProPlansSection({
       )}
 
       {/* SCENARIO 3: PRO Family - Show invite management */}
-      {currentTier === 'pro_plus' && (
+      {isFamilyPro && (
         <>
           {/* Family status card with invite panel */}
           <motion.div
