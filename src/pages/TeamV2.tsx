@@ -584,7 +584,7 @@ function TeamContentV2() {
           {/* Rooms Tab */}
           {activeTab === "rooms" && (
             <div className="flex flex-col">
-              <div className="px-4 pt-1 pb-4">
+              <div className="px-4 pt-4 pb-4">
                 <MyRoomsSection
                   hideTV 
                   onCreateRoom={() => setShowCreateModal(true)}
@@ -601,7 +601,7 @@ function TeamContentV2() {
           {/* Explore Tab */}
           {activeTab === "explore" && (
             <div className="flex flex-col">
-              <div className="px-4 pt-1 pb-4">
+              <div className="px-4 pt-4 pb-4">
                 <ExplorePortfolioFeed
                   searchQuery={roomsSearchQuery}
                   onPlayQuiz={(post, collectionPosts) => {
@@ -615,7 +615,7 @@ function TeamContentV2() {
           {/* My Trivia Tab */}
           {activeTab === "my-content" && (
             <div className="flex flex-col">
-              <div className="px-4 pt-1 pb-4">
+              <div className="px-4 pt-4 pb-4">
                 <MyTriviaTab
                   onCreateQuiz={() => setShowCreateTypeModal(true)}
                   onPlay={(post, collectionPosts) => {
