@@ -186,13 +186,13 @@ export function PlayerFeedItem({
 
   return (
     <motion.div
-      className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+      className="overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       {/* Player Header */}
-      <div className="p-3 flex items-center justify-between">
+      <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-t-2xl border border-border/30">
         <div className="flex items-center gap-3">
           {/* Avatar - Clickable to open profile */}
           <div 
@@ -230,7 +230,7 @@ export function PlayerFeedItem({
       
       {/* Content Card */}
       <div 
-        className="mx-3 mb-3 rounded-xl border-2 border-primary/30 overflow-hidden cursor-pointer"
+        className="rounded-xl overflow-hidden cursor-pointer"
         onClick={handleCardClick}
       >
         {/* Cover Section */}
@@ -271,7 +271,7 @@ export function PlayerFeedItem({
         </div>
         
         {/* Bottom Section with Stats and Actions */}
-        <div className="p-3 bg-card">
+        <div className="p-3 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-b-xl border border-t-0 border-border/30">
           <div className="flex items-center justify-between">
             {/* Stats - Like and Save */}
             <div className="flex items-center gap-3">
