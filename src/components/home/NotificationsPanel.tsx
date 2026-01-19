@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
@@ -173,7 +174,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   // Limit notifications in panel
   const displayedNotifications = notifications.slice(0, 15);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -287,6 +288,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
