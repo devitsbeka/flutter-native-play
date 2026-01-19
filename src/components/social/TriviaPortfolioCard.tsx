@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
-import { Users, Play } from "lucide-react";
+import { Heart, Bookmark, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SamplePost } from "@/data/samplePosts";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface TriviaPortfolioCardProps {
   trivia: SamplePost;
   onPlay?: (trivia: SamplePost) => void;
+  onLike?: (trivia: SamplePost) => void;
+  onSave?: (trivia: SamplePost) => void;
+  isLiked?: boolean;
+  isSaved?: boolean;
   className?: string;
 }
 
@@ -35,25 +38,39 @@ function getRandomGradient(id: string) {
   return FALLBACK_GRADIENTS[hash % FALLBACK_GRADIENTS.length];
 }
 
-export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfolioCardProps) {
+export function TriviaPortfolioCard({ 
+  trivia, 
+  onPlay, 
+  onLike, 
+  onSave, 
+  isLiked = false, 
+  isSaved = false, 
+  className 
+}: TriviaPortfolioCardProps) {
   // Use the trivia's actual cover_gradient or cover_image, fallback to random gradient
   const coverGradient = trivia.coverGradient || getRandomGradient(trivia.id);
   const coverImage = trivia.coverImage;
   const gradientProps = getGradientProps(coverGradient);
   
-  // Generate fake player avatars for display
-  const playerAvatars = [
-    `https://api.dicebear.com/9.x/adventurer/svg?seed=${trivia.id}-1&backgroundColor=b6e3f4`,
-    `https://api.dicebear.com/9.x/adventurer/svg?seed=${trivia.id}-2&backgroundColor=c0aede`,
-    `https://api.dicebear.com/9.x/adventurer/svg?seed=${trivia.id}-3&backgroundColor=ffd5dc`,
-  ];
-  
-  const extraPlayers = Math.max(0, trivia.playsCount - 3);
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onLike?.(trivia);
+  };
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSave?.(trivia);
+  };
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onPlay?.(trivia);
+  };
   
   return (
     <motion.div
       className={cn(
-        "relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg cursor-pointer",
+        "relative bg-card rounded-2xl border-2 border-primary/30 overflow-hidden shadow-lg",
         "hover:shadow-xl transition-shadow duration-300",
         !className?.includes('w-full') && "flex-shrink-0",
         className
@@ -63,7 +80,7 @@ export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfol
       whileTap={{ scale: 0.98 }}
       onClick={() => onPlay?.(trivia)}
     >
-      {/* Cover Section - matches My Trivias exactly */}
+      {/* Cover Section */}
       <div className="h-32 relative overflow-hidden">
         {coverImage ? (
           <>
@@ -90,44 +107,46 @@ export function TriviaPortfolioCard({ trivia, onPlay, className }: TriviaPortfol
         </div>
       </div>
       
-      {/* Bottom Section with Stats */}
+      {/* Bottom Section with Stats and Actions */}
       <div className="p-3 bg-card relative z-10">
-        {/* Stats Row */}
         <div className="flex items-center justify-between">
-          {/* Player Count */}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 rounded-full">
-            <Users className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium text-primary">{trivia.playsCount}</span>
+          {/* Stats - Like and Save */}
+          <div className="flex items-center gap-3">
+            {/* Like Button */}
+            <button 
+              onClick={handleLikeClick}
+              className={cn(
+                "flex items-center gap-1.5 transition-colors",
+                isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+              )}
+            >
+              <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
+              <span className="text-sm font-medium">{trivia.likesCount || 0}</span>
+            </button>
+            
+            {/* Save/Bookmark Button */}
+            <button 
+              onClick={handleSaveClick}
+              className={cn(
+                "flex items-center gap-1.5 transition-colors",
+                isSaved ? "text-primary" : "text-muted-foreground hover:text-primary"
+              )}
+            >
+              <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
+              <span className="text-sm font-medium">{trivia.savesCount || 0}</span>
+            </button>
           </div>
           
-          {/* Avatar Stack */}
-          <div className="flex items-center">
-            <div className="flex -space-x-2">
-              {playerAvatars.slice(0, 3).map((avatar, i) => (
-                <Avatar key={i} className="w-6 h-6 border-2 border-card">
-                  <AvatarImage src={avatar} />
-                  <AvatarFallback className="bg-primary/10 text-xs text-primary">?</AvatarFallback>
-                </Avatar>
-              ))}
-            </div>
-            {extraPlayers > 0 && (
-              <div className="ml-1 px-1.5 py-0.5 bg-primary/10 rounded-full">
-                <span className="text-xs font-medium text-primary">+{extraPlayers > 999 ? '999+' : extraPlayers}</span>
-              </div>
-            )}
-          </div>
+          {/* Play Button - Always visible */}
+          <button 
+            onClick={handlePlayClick}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>ითამაშე</span>
+          </button>
         </div>
       </div>
-      
-      {/* Play Overlay on Hover */}
-      <motion.div
-        className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-20"
-        initial={false}
-      >
-        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-          <Play className="w-7 h-7 text-primary fill-primary ml-1" />
-        </div>
-      </motion.div>
     </motion.div>
   );
 }

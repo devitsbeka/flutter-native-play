@@ -21,6 +21,10 @@ interface CreatorPortfolioCardProps {
   creator: Creator;
   onPlayTrivia: (trivia: SamplePost) => void;
   onViewProfile: (creator: Creator) => void;
+  onLikeTrivia?: (trivia: SamplePost) => void;
+  onSaveTrivia?: (trivia: SamplePost) => void;
+  userLikes?: string[];
+  userSaves?: string[];
 }
 
 // Get country flag emoji from country code
@@ -40,7 +44,7 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: CreatorPortfolioCardProps) {
+export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [] }: CreatorPortfolioCardProps) {
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
   const [friendshipStatus, setFriendshipStatus] = useState(creator.friendship_status);
@@ -193,6 +197,10 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
               key={trivia.id}
               trivia={trivia}
               onPlay={onPlayTrivia}
+              onLike={onLikeTrivia}
+              onSave={onSaveTrivia}
+              isLiked={userLikes.includes(trivia.id)}
+              isSaved={userSaves.includes(trivia.id)}
               className="w-full"
             />
           ))}
@@ -213,6 +221,10 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile }: C
                   <TriviaPortfolioCard
                     trivia={trivia}
                     onPlay={onPlayTrivia}
+                    onLike={onLikeTrivia}
+                    onSave={onSaveTrivia}
+                    isLiked={userLikes.includes(trivia.id)}
+                    isSaved={userSaves.includes(trivia.id)}
                   />
                 </CarouselItem>
               ))}

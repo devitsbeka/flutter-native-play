@@ -5,6 +5,7 @@ import { useExploreCreators, Creator } from "@/hooks/useExploreCreators";
 import { CreatorPortfolioCard } from "./CreatorPortfolioCard";
 import { QuickProfileModal } from "./QuickProfileModal";
 import { SamplePost } from "@/data/samplePosts";
+import { useSocialFeed } from "@/hooks/useSocialFeed";
 
 interface ExplorePortfolioFeedProps {
   searchQuery?: string;
@@ -14,6 +15,7 @@ interface ExplorePortfolioFeedProps {
 export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePortfolioFeedProps) {
   const { data: creators = [], isLoading } = useExploreCreators(searchQuery);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
+  const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
 
   const handlePlayTrivia = (trivia: SamplePost) => {
     onPlayQuiz(trivia);
@@ -21,6 +23,14 @@ export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePo
 
   const handleViewProfile = (creator: Creator) => {
     setSelectedCreator(creator);
+  };
+
+  const handleLikeTrivia = (trivia: SamplePost) => {
+    toggleLike(trivia.id);
+  };
+
+  const handleSaveTrivia = (trivia: SamplePost) => {
+    toggleSave(trivia.id);
   };
 
   if (isLoading) {
@@ -61,6 +71,10 @@ export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePo
             creator={creator}
             onPlayTrivia={handlePlayTrivia}
             onViewProfile={handleViewProfile}
+            onLikeTrivia={handleLikeTrivia}
+            onSaveTrivia={handleSaveTrivia}
+            userLikes={userLikes}
+            userSaves={userSaves}
           />
         </motion.div>
       ))}
