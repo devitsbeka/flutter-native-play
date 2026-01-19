@@ -340,7 +340,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.03 }}
       onClick={onJoin}
-      className={`aspect-[2.2/1] md:aspect-[1.67/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+      className={`aspect-[2.2/1] md:aspect-[1.28/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
         room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -352,7 +352,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
         gradientSize="125% 125%"
         gradientOrigin="bottom-middle"
         enableNoise={false}
-        className="relative w-full h-full p-3 flex flex-col justify-between"
+        className="relative w-full h-full p-3 md:pb-[15px] flex flex-col justify-between"
       >
         {/* Cover image with radial fade */}
         <div 
@@ -416,7 +416,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
             {room.participants.slice(0, 5).map((p) => (
               <div 
                 key={p.user_id} 
-                className="w-7 h-7 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95"
+                className="w-7 h-7 md:w-[34px] md:h-[34px] rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95"
                 onClick={(e) => {
                   e.stopPropagation();
                   openProfile(p.user_id);
@@ -438,7 +438,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
             
             {/* +N indicator if more than 6 participants */}
             {room.participants.length > 6 && (
-              <div className="w-7 h-7 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 md:w-[34px] md:h-[34px] rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-[10px] font-bold">
                   +{room.participants.length - 5}
                 </span>
