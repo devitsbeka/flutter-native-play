@@ -490,52 +490,53 @@ function TeamContentV2() {
                   />
                 </div>
 
-                {/* Unified Tab Bar - Full Width */}
-                <div className="w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
-                  <div className="flex items-center justify-between gap-3">
-                    {/* Tab container - takes available space */}
-                    <div 
-                      className="flex-1 flex rounded-2xl bg-muted p-1.5"
-                      style={{
-                        boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
-                      }}
-                    >
-                      {/* Tabs with equal distribution */}
-                      {[
-                        { id: "explore", label: "აღმოაჩინე" },
-                        { id: "rooms", label: "ოთახები" },
-                        { id: "my-content", label: "ჩემი ტრივია" },
-                      ].map((tab) => (
-                          <button
-                            key={tab.id}
-                            onClick={() => handleTabChange(tab.id)}
-                            className={`relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-colors ${
-                            activeTab === tab.id
-                              ? "text-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          {activeTab === tab.id && (
-                            <motion.div
-                              layoutId="activeTabTeam"
-                              className="absolute inset-0 rounded-xl bg-white"
-                              style={{
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                              }}
-                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                            />
-                          )}
-                          <span className="relative z-10 truncate">{tab.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Sticky Filter Bar - stays fixed at top on all screen sizes */}
+            {/* Sticky Section: Tabs + Filter Bar */}
             <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
+              {/* Unified Tab Bar - Full Width */}
+              <div className="px-4 w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
+                <div className="flex items-center justify-between gap-3">
+                  {/* Tab container - takes available space */}
+                  <div 
+                    className="flex-1 flex rounded-2xl bg-muted p-1.5"
+                    style={{
+                      boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
+                    }}
+                  >
+                    {/* Tabs with equal distribution */}
+                    {[
+                      { id: "explore", label: "აღმოაჩინე" },
+                      { id: "rooms", label: "ოთახები" },
+                      { id: "my-content", label: "ჩემი ტრივია" },
+                    ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => handleTabChange(tab.id)}
+                          className={`relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-colors ${
+                          activeTab === tab.id
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {activeTab === tab.id && (
+                          <motion.div
+                            layoutId="activeTabTeam"
+                            className="absolute inset-0 rounded-xl bg-white"
+                            style={{
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            }}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10 truncate">{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Filter Bar Section */}
               <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
                 {activeTab === "rooms" && (
@@ -581,7 +582,7 @@ function TeamContentV2() {
                 )}
               </div>
               
-              {/* Fade gradient below sticky header - mobile only */}
+              {/* Fade gradient below sticky header */}
               <div 
                 className="h-4 -mb-4 pointer-events-none"
                 style={{
