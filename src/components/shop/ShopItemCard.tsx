@@ -6,13 +6,14 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export type ShopItemBadge = "popular" | "best-value" | "limited" | "new" | null;
+export type ShopItemCurrency = "gems" | "coins" | "lari";
 
 export interface ShopItemCardProps {
   id: string;
   name: string;
   description: string;
   price: number;
-  currency: "gems" | "coins";
+  currency: ShopItemCurrency;
   icon: React.ReactNode;
   gradient: string;
   badge?: ShopItemBadge;
@@ -41,7 +42,8 @@ export function ShopItemCard({
   onClick,
 }: ShopItemCardProps) {
   const { t } = useLanguage();
-  const currencyIcon = currency === "gems" ? gemIcon : coinIcon;
+  const currencyIcon = currency === "gems" ? gemIcon : currency === "coins" ? coinIcon : null;
+  const isLari = currency === "lari";
 
   const BADGE_STYLES: Record<string, { textKey: string; bg: string; shadow: string }> = {
     popular: {
@@ -165,6 +167,15 @@ export function ShopItemCard({
             </div>
           ) : isLoading ? (
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          ) : isLari ? (
+            <motion.div
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full"
+              style={{
+                background: "linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1))",
+              }}
+            >
+              <span className="font-bold text-sm text-green-600 dark:text-green-400">₾{price}</span>
+            </motion.div>
           ) : (
             <motion.div
               className="flex items-center gap-1.5 px-4 py-2 rounded-full"
@@ -172,7 +183,7 @@ export function ShopItemCard({
                 background: "linear-gradient(135deg, rgba(147, 89, 221, 0.15), rgba(147, 89, 221, 0.08))",
               }}
             >
-              <img src={currencyIcon} alt="" className="w-4 h-4" />
+              <img src={currencyIcon!} alt="" className="w-4 h-4" />
               <span className="font-bold text-sm text-[#9359DD]">{price} {t('shop.buy')}</span>
             </motion.div>
           )}

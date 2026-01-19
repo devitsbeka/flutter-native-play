@@ -10,6 +10,7 @@ import { useNotificationModal } from "@/hooks/useNotificationModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useShopData, ShopItem } from "@/hooks/useShopData";
 import { useShopPageData } from "@/hooks/useShopPageData";
+import { useGemPurchase } from "@/hooks/useGemPurchase";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
@@ -40,6 +41,7 @@ export default function PowerUps() {
   const { notify } = useNotificationModal();
   const { t } = useLanguage();
   const { SHOP_SECTIONS } = useShopData();
+  const { initiateCheckout, isProcessing: isStripeProcessing } = useGemPurchase();
   
   // Use prefetched frame unlock check
   const isFrameUnlocked = (frameId: string) => shopData.unlockedFrames.has(frameId);
@@ -75,6 +77,17 @@ export default function PowerUps() {
     if (!user) {
       notify.error(t("shop.loginRequired"));
       navigate("/auth");
+      return;
+    }
+
+    // Handle Lari purchases via Stripe
+    if (item.currency === "lari") {
+      await initiateCheckout({
+        id: item.id,
+        name: item.name,
+        gems: item.value || 0,
+        priceGel: item.price,
+      });
       return;
     }
 
@@ -237,7 +250,7 @@ export default function PowerUps() {
                 sections={SHOP_SECTIONS}
                 gems={gems}
                 purchasedItems={purchasedItems}
-                isPurchasing={isPurchasing}
+                isPurchasing={isPurchasing || (isStripeProcessing ? "stripe" : null)}
                 isFrameUnlocked={isFrameUnlocked}
                 onItemClick={handlePurchase}
               />
