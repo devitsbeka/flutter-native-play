@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Heart, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, Bookmark, FileEdit, Trash2, Check } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import glitchIcon from "@/assets/glitch.png";
+import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
+import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
+import pushButton3d from "@/assets/icons/push-button-3d.png";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
@@ -124,15 +127,15 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
           <Pencil className="w-4 h-4" />
         </button>
         <div className="flex items-center gap-1 text-xs">
-          <Heart className="w-3 h-3" />
+          <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
           <span>{quiz.likes_count || 0}</span>
         </div>
         <div className="flex items-center gap-1 text-xs">
-          <Bookmark className="w-3 h-3" />
+          <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
           <span>{quiz.saves_count || 0}</span>
         </div>
         <div className="flex items-center gap-1 text-xs">
-          <Play className="w-3 h-3" />
+          <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
           <span>{quiz.plays_count || 0}</span>
         </div>
         <ChunkyButton 
@@ -263,15 +266,15 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
           {/* Stats Row */}
           <div className="flex items-center gap-3 mt-3">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Heart className="w-3.5 h-3.5" />
+              <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
               <span>{collection.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Bookmark className="w-3.5 h-3.5" />
+              <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
               <span>{collection.saves_count || 0}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Play className="w-3.5 h-3.5" />
+              <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
               <span>{collection.plays_count || 0}</span>
             </div>
           </div>
@@ -448,15 +451,15 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         {/* Stats Row */}
         <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Heart className="w-4 h-4" />
+            <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
             <span>{post.likes_count || 0}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Bookmark className="w-4 h-4" />
+            <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
             <span>{post.saves_count || 0}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Play className="w-4 h-4" />
+            <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
             <span>{post.plays_count || 0}</span>
           </div>
         </div>
@@ -587,15 +590,15 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         {/* Stats Row */}
         <div className="flex items-center gap-3 mt-4 pt-3 border-t border-border">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Heart className="w-4 h-4" />
+            <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
             <span>{post.likes_count || 0}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Bookmark className="w-4 h-4" />
+            <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
             <span>{post.saves_count || 0}</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Play className="w-4 h-4" />
+            <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
             <span>{post.plays_count || 0}</span>
           </div>
         </div>
