@@ -17,7 +17,7 @@ interface ShopItemDetailModalProps {
     name: string;
     description: string;
     price: number;
-    currency: "gems" | "coins";
+    currency: "gems" | "coins" | "lari";
     icon: React.ReactNode;
   } | null;
   canAfford: boolean;
