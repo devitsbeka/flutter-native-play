@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { Check, Sparkles } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -22,6 +22,13 @@ export function PurchaseSuccessModal({
 }: PurchaseSuccessModalProps) {
   const { t } = useLanguage();
 
+  // Memoized close handler to ensure cleanup
+  const handleClose = useCallback(() => {
+    // Reset confetti canvas to prevent touch blocking
+    confetti.reset();
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
     if (isOpen) {
       // Trigger confetti
@@ -34,20 +41,33 @@ export function PurchaseSuccessModal({
       });
 
       // Auto close after 3 seconds
-      const timer = setTimeout(onClose, 3000);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(handleClose, 3000);
+      return () => {
+        clearTimeout(timer);
+        // Always reset confetti on cleanup to prevent scroll blocking
+        confetti.reset();
+      };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
+
+  // Cleanup confetti when component unmounts or closes
+  useEffect(() => {
+    return () => {
+      confetti.reset();
+    };
+  }, []);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
-          onClick={onClose}
+          onClick={handleClose}
+          style={{ touchAction: "none" }} // Prevent scroll while modal is open
         >
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
@@ -75,7 +95,7 @@ export function PurchaseSuccessModal({
                   repeat: Infinity,
                 }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-success/40"
-                style={{ width: 80, height: 80 }}
+                style={{ width: 80, height: 80, pointerEvents: "none" }}
               />
             ))}
 
@@ -159,7 +179,7 @@ export function PurchaseSuccessModal({
                   delay: 0.3 + i * 0.05,
                   ease: "easeOut",
                 }}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xl"
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xl pointer-events-none"
               >
                 ✨
               </motion.div>
@@ -171,7 +191,7 @@ export function PurchaseSuccessModal({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <ChunkyButton onClick={onClose} variant="primary" className="w-full">
+              <ChunkyButton onClick={handleClose} variant="primary" className="w-full">
                 {t("shop.continue")}
               </ChunkyButton>
             </motion.div>
