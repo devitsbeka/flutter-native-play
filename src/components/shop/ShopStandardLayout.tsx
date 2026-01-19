@@ -11,7 +11,7 @@ interface ShopStandardLayoutProps {
   purchasedItems: Set<string>;
   isPurchasing: string | null;
   isFrameUnlocked: (frameId: string) => boolean;
-  onItemClick: (item: ShopItem) => void;
+  onItemClick: (item: ShopItem) => Promise<void>;
 }
 
 export function ShopStandardLayout({
@@ -36,9 +36,9 @@ export function ShopStandardLayout({
     setSelectedItem(item);
   };
 
-  const handleBuy = () => {
+  const handleBuy = async () => {
     if (selectedItem) {
-      onItemClick(selectedItem);
+      await onItemClick(selectedItem);
       setSelectedItem(null);
     }
   };
