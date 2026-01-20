@@ -86,11 +86,11 @@ export function CategoryPickerSection({
                   whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
-                  <GripVertical className="w-3 h-3 text-white/40" />
+                  <GripVertical className="w-[15px] h-[15px] text-white/40" />
                   {item.icon_slug ? (
-                    <DynamicIcon slug={item.icon_slug} size={14} />
+                    <DynamicIcon slug={item.icon_slug} size={15} />
                   ) : item.source_type === "random" ? (
-                    <Shuffle className="w-3.5 h-3.5 text-white/70" />
+                    <Shuffle className="w-[15px] h-[15px] text-white/70" />
                   ) : null}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
@@ -105,7 +105,7 @@ export function CategoryPickerSection({
                       }}
                       className="ml-0.5 p-0.5 rounded-full hover:bg-white/20 transition-colors"
                     >
-                      <X className="w-3 h-3 text-white/50 hover:text-white/80" />
+                      <X className="w-[15px] h-[15px] text-white/50 hover:text-white/80" />
                     </button>
                   )}
                 </Reorder.Item>
@@ -123,9 +123,9 @@ export function CategoryPickerSection({
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
                   {item.icon_slug ? (
-                    <DynamicIcon slug={item.icon_slug} size={14} />
+                    <DynamicIcon slug={item.icon_slug} size={15} />
                   ) : item.source_type === "random" ? (
-                    <Shuffle className="w-3.5 h-3.5 text-white/70" />
+                    <Shuffle className="w-[15px] h-[15px] text-white/70" />
                   ) : null}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
