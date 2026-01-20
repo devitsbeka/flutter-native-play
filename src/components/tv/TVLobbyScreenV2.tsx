@@ -26,7 +26,6 @@ interface InvitedGuest {
 
 export const TVLobbyScreenV2: React.FC = () => {
   const { code, sessionId, players, categoryName, categoryIcon, isHost, startGame } = useTVGame();
-  const { queue, addCategoryToQueue, removeFromQueue } = useTVSessionQueue(sessionId);
   const [roomName, setRoomName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -35,6 +34,9 @@ export const TVLobbyScreenV2: React.FC = () => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [invitedGuests, setInvitedGuests] = useState<InvitedGuest[]>([]);
   const [roomId, setRoomId] = useState<string | null>(null);
+  
+  // Use queue with room fallback
+  const { queue, addCategoryToQueue, removeFromQueue } = useTVSessionQueue(sessionId, roomId);
 
   // Hard switch: guests join via sessionId QR to avoid 4-digit collisions.
   const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : `${window.location.origin}/join`;

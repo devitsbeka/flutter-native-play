@@ -50,8 +50,11 @@ const TVHostController: React.FC = () => {
     resetGame,
   } = useTVGame();
 
-  // Multi-round queue support
-  const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId || null);
+  // Room ID for queue fallback
+  const [roomId, setRoomId] = useState<string | null>(null);
+
+  // Multi-round queue support - now with room fallback
+  const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId || null, roomId);
 
   // UI-only local state (not game logic)
   const [loading, setLoading] = useState(true);
@@ -137,6 +140,11 @@ const TVHostController: React.FC = () => {
         setError('Session not found');
         setLoading(false);
         return;
+      }
+
+      // Store room_id for queue fallback
+      if (sessionData.room_id) {
+        setRoomId(sessionData.room_id);
       }
 
       // Note: Host verification is also handled by context's isHost state
