@@ -11,11 +11,13 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 interface TVSetupInlineProps {
   onComplete: () => void;
   onCancel: () => void;
+  roomId?: string; // Pass room ID directly from parent context
 }
 
 export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
   onComplete,
   onCancel,
+  roomId: propRoomId,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -45,10 +47,12 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
         return;
       }
 
-      // Fetch current room context (category, queue, name) from the URL or context
-      // We need to get the room_id from where we came from
-      const roomIdFromUrl = window.location.pathname.match(/\/room\/([^/]+)/)?.[1] || 
+      // Use room ID from props first, fallback to URL parsing
+      const roomIdFromUrl = propRoomId || 
+                            window.location.pathname.match(/\/room\/([^/]+)/)?.[1] || 
                             window.location.pathname.match(/\/team\/([^/]+)/)?.[1];
+      
+      console.log('[TVSetupInline] Room ID resolution:', { propRoomId, roomIdFromUrl });
       
       let roomName = null;
       let categoryName = null;
