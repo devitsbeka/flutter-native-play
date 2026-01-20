@@ -300,7 +300,7 @@ export function GameResultsScreenV2() {
       </div>
 
       {/* Middle Section: Category + Scorecard (with 40px top spacing) */}
-      <div className="flex-1 flex flex-col items-center gap-4 px-4" style={{ paddingTop: '40px' }}>
+      <div className="flex-1 min-h-0 flex flex-col items-center gap-4 px-4 overflow-hidden" style={{ paddingTop: '40px' }}>
         {/* Category */}
         {currentRoom?.category_name && (
           <motion.div
@@ -318,7 +318,7 @@ export function GameResultsScreenV2() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3 max-h-[280px] overflow-y-auto"
+          className="w-full max-w-xs bg-white/10 backdrop-blur-sm rounded-2xl p-3 flex-1 min-h-0 overflow-y-auto"
         >
           <div className="space-y-2">
           {rankedParticipants.map((p, idx) => (
@@ -365,7 +365,8 @@ export function GameResultsScreenV2() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="p-4 pb-8 space-y-3"
+        className="p-4 space-y-3"
+        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}
       >
         <ChunkyButton
           variant="mint"
