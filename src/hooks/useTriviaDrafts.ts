@@ -8,6 +8,7 @@ export interface TriviaDraftData {
   user_id: string;
   title: string | null;
   questions: any[];
+  draft_type: 'trivia' | 'personal';
   created_at: string;
   updated_at: string;
 }
@@ -35,11 +36,13 @@ export function useTriviaDrafts() {
     mutationFn: async ({ 
       draftId, 
       title, 
-      questions 
+      questions,
+      draft_type = 'trivia'
     }: { 
       draftId?: string; 
       title: string | null; 
       questions: any[];
+      draft_type?: 'trivia' | 'personal';
     }) => {
       if (!user) throw new Error("Not authenticated");
 
@@ -47,6 +50,7 @@ export function useTriviaDrafts() {
         user_id: user.id,
         title,
         questions,
+        draft_type,
         updated_at: new Date().toISOString(),
       };
 

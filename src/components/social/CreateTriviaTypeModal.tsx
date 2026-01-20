@@ -11,7 +11,7 @@ interface CreateTriviaTypeModalProps {
   onOpenChange: (open: boolean) => void;
   onSelectSingle: (draftId?: string) => void;
   onSelectCollection: (draftId?: string) => void;
-  onSelectPersonal?: () => void;
+  onSelectPersonal?: (draftId?: string) => void;
   onSelectGameRoom?: () => void;
 }
 
@@ -23,9 +23,11 @@ export function CreateTriviaTypeModal({
   onSelectPersonal,
   onSelectGameRoom,
 }: CreateTriviaTypeModalProps) {
-  const handleResumeDraft = (draftId: string, type: "collection" | "trivia") => {
+  const handleResumeDraft = (draftId: string, type: "collection" | "trivia" | "personal") => {
     if (type === "trivia") {
       onSelectSingle(draftId);
+    } else if (type === "personal") {
+      onSelectPersonal?.(draftId);
     } else {
       onSelectCollection(draftId);
     }
