@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Tv, Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle } from 'lucide-react';
+import { Tv, Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -11,6 +11,7 @@ import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
+import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 
 interface Category {
   id: string;
@@ -19,14 +20,6 @@ interface Category {
   icon: string;
   color: string;
 }
-
-const OPTION_COLORS = [
-  { bg: 'bg-red-500', hover: 'hover:bg-red-600', label: 'A' },
-  { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', label: 'B' },
-  { bg: 'bg-yellow-500', hover: 'hover:bg-yellow-600', label: 'C' },
-  { bg: 'bg-green-500', hover: 'hover:bg-green-600', label: 'D' },
-];
-
 type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed';
 
 const TVHostController: React.FC = () => {
@@ -43,10 +36,8 @@ const TVHostController: React.FC = () => {
     timeRemaining,
     myScore,
     myAnswer,
-    sessionId: contextSessionId,
     code: gameCode,
     submitAnswer,
-    startNextRound,
     joinSession,
     startGame,
     startPlaying,
@@ -55,15 +46,15 @@ const TVHostController: React.FC = () => {
     resetGame,
   } = useTVGame();
 
+  // Multi-round queue support
+  const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId || null);
+
   // UI-only local state (not game logic)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [session, setSession] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [showCategorySelector, setShowCategorySelector] = useState(false);
-  // isLoadingQuestions removed - questions now fetched in startGame only
   const [lastResult, setLastResult] = useState<boolean | null>(null);
   const [nickname, setNickname] = useState('Host');
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
@@ -149,8 +140,7 @@ const TVHostController: React.FC = () => {
         return;
       }
 
-      setSession(sessionData);
-
+      // Session loaded successfully
       // Load categories
       const { data: categoriesData } = await supabase
         .from('categories')
@@ -262,27 +252,38 @@ const TVHostController: React.FC = () => {
     }
   };
 
-  // P1-2: Validate category before starting game
+  // P1-2: Start game from queue or selected category
   const handleStartGame = async () => {
     if (!sessionId) return;
 
-    // Validate category selection before starting
-    if (!selectedCategory?.id) {
-      toast.error('გთხოვთ აირჩიოთ კატეგორია');
-      return;
-    }
-
-    tvLog('Host starting game', { sessionId, selectedCategory });
+    tvLog('Host starting game', { sessionId, selectedCategory, hasQueue });
 
     try {
-      // Use context's startGame which properly fetches questions with all filters
+      // If queue has items, start from the first item
+      if (hasQueue && queue[0]?.category_id) {
+        const firstQueued = queue[0];
+        await removeFromQueue(firstQueued.id);
+        await startGame(firstQueued.category_id);
+        return;
+      }
+
+      // Otherwise use selected category
+      if (!selectedCategory?.id) {
+        toast.error('გთხოვთ აირჩიოთ კატეგორია');
+        return;
+      }
+
       await startGame(selectedCategory.id);
-      
-      // TV display's countdown screen will trigger startPlaying when countdown ends
     } catch (error) {
       tvLogError('handleStartGame', error);
       toast.error('თამაშის დაწყება ვერ მოხერხდა');
     }
+  };
+
+  // Add category to queue
+  const handleAddToQueue = async (category: Category) => {
+    await addCategoryToQueue({ id: category.id, name: category.name });
+    toast.success(`${category.name} დაემატა რიგში`);
   };
 
   const handleEndGame = async () => {
@@ -422,36 +423,78 @@ const TVHostController: React.FC = () => {
           )}
         </AnimatePresence>
 
+        {/* Queue Display */}
+        {queue.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-4 bg-white/5 rounded-xl p-3 border border-white/10"
+          >
+            <p className="text-sm text-purple-200 mb-2">რაუნდების რიგი:</p>
+            <div className="flex flex-wrap gap-2">
+              {queue.map((item) => (
+                <div
+                  key={item.id}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-400/30"
+                >
+                  <span className="text-xs text-purple-200">{item.position + 1}.</span>
+                  <span className="text-sm text-white">{item.category_name}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromQueue(item.id);
+                    }}
+                    className="text-purple-300 hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Categories grid */}
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mb-24">
           {categories.map((category, index) => (
-            <motion.button
+            <motion.div
               key={category.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
-              onClick={() => handleSelectCategory(category)}
-              disabled={false}
               className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${
                 selectedCategory?.id === category.id
                   ? 'bg-purple-500/30 border-purple-400'
-                  : 'bg-white/10 border-white/20 hover:border-purple-400/50'
+                  : 'bg-white/10 border-white/20'
               }`}
             >
-              <span className="text-2xl">{category.icon}</span>
-              <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-              {selectedCategory?.id === category.id ? (
-                <Check className="w-5 h-5 text-green-400" />
-              ) : (
-                <ChevronRight className="w-5 h-5 text-purple-300" />
-              )}
-            </motion.button>
+              <button
+                onClick={() => handleSelectCategory(category)}
+                className="flex-1 flex items-center gap-3"
+              >
+                <span className="text-2xl">{category.icon}</span>
+                <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                {selectedCategory?.id === category.id && (
+                  <Check className="w-5 h-5 text-green-400" />
+                )}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToQueue(category);
+                }}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                title="დაამატე რიგში"
+              >
+                <Plus className="w-4 h-4 text-purple-300" />
+              </button>
+            </motion.div>
           ))}
         </div>
 
-        {/* Start Game Button - shows when category is selected and players joined */}
+        {/* Start Game Button - shows when category is selected OR queue has items */}
         <AnimatePresence>
-          {selectedCategory && (
+          {(selectedCategory || hasQueue) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -468,7 +511,9 @@ const TVHostController: React.FC = () => {
               >
                 {players.length === 0 
                   ? 'მოთამაშეები უნდა შემოუერთდნენ' 
-                  : `თამაშის დაწყება (${players.length} მოთამაშე)`}
+                  : hasQueue 
+                    ? `დაწყება (${queue.length} რაუნდი რიგში)`
+                    : `თამაშის დაწყება (${players.length} მოთამაშე)`}
               </ChunkyButton>
             </motion.div>
           )}
