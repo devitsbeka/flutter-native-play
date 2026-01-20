@@ -77,7 +77,7 @@ export function CategoryPickerSection({
               axis="x" 
               values={queue} 
               onReorder={onReorderQueue}
-              className="flex gap-2 overflow-x-auto pb-2"
+              className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4"
               style={{ touchAction: "pan-y" }}
             >
               {queue.map((item, index) => (
@@ -126,7 +126,7 @@ export function CategoryPickerSection({
               ))}
             </Reorder.Group>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
               {queue.map((item, index) => (
                 <motion.div
                   key={item.id}
