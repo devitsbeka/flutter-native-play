@@ -37,10 +37,14 @@ const TVHostController: React.FC = () => {
     myScore,
     myAnswer,
     code: gameCode,
+    categoryName,
+    categoryIcon,
+    roundNumber,
     submitAnswer,
     joinSession,
     startGame,
     startPlaying,
+    markReady,
     isHost,
     leaveSession,
     resetGame,
@@ -555,8 +559,6 @@ const TVHostController: React.FC = () => {
 
   // Round Intro phase - show ready screen between rounds
   if (localPhase === 'round-intro') {
-    const { markReady, categoryName, categoryIcon, roundNumber, players: allPlayers } = useTVGame();
-    
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <motion.div

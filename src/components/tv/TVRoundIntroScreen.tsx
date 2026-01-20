@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
-import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -19,7 +19,6 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
     categoryName, 
     categoryIcon,
     roundNumber,
-    myPlayerId,
   } = useTVGame();
 
   const [isReady, setIsReady] = useState(false);
@@ -76,7 +75,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
           {categoryIcon ? (
             <span className="text-5xl sm:text-6xl">{categoryIcon}</span>
           ) : (
-            <QuizCategoryIcon size={64} emoji="🎲" />
+            <span className="text-5xl sm:text-6xl">🎲</span>
           )}
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
