@@ -207,7 +207,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
         </div>
         
         {/* Tablet & Desktop: Horizontal Carousel */}
-        <div className="hidden md:block">
+        <div className="hidden md:block overflow-hidden">
           <Carousel
             opts={{
               align: "start",
