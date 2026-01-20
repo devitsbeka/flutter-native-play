@@ -170,12 +170,13 @@ export default function TriviaLobby() {
           </button>
         )}
 
-        {/* Title */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+        {/* Title - Centered */}
+        <div className="absolute inset-0 flex items-center justify-center p-4">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold text-white drop-shadow-lg"
+            className="text-2xl font-bold text-white drop-shadow-lg text-center"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
           >
             {trivia.title}
           </motion.h1>
@@ -303,7 +304,7 @@ export default function TriviaLobby() {
         >
           <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            საჯარო ტრივიების თამაშისას შენი ქულა ავტომატურად აისახება ლიდერბორდზე და შენც მონაწილეობ რეიტინგში.
+            ქულა ავტომატურად აისახება ლიდერბორდზე.
           </p>
         </motion.div>
       </div>
