@@ -595,7 +595,7 @@ function TeamContentV2() {
             </div>
 
             {/* Content Area - Full width like Shop/PowerUps */}
-            <div className="flex-1 px-4 pt-4 pb-4">
+            <div className="flex-1 px-4 pt-4 pb-4 overflow-hidden max-w-full">
               {/* Rooms Tab */}
               {activeTab === "rooms" && (
                 <MyRoomsSection
