@@ -175,7 +175,7 @@ export function QuestionScreen() {
 
   const timerPercentage = (timeRemaining / timePerQuestion) * 100;
   const isRevealed = answerState === "revealed";
-  const letters = ["A", "B", "C", "D"];
+  const letters = ["ა", "ბ", "გ", "დ"];
 
   // Filter visible answers based on power-ups
   const visibleAnswers = currentQuestion.allAnswers.filter(answer => {

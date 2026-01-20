@@ -303,7 +303,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
     );
   }, [shuffledAnswers]);
 
-  const answerLabels = ['A', 'B', 'C', 'D'];
+  const answerLabels = ['ა', 'ბ', 'გ', 'დ'];
 
   if (!post) return null;
 
