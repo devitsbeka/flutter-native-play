@@ -543,6 +543,7 @@ export function RoomLobbyV2() {
             <TVSetupInline
               onComplete={handleTVSetupComplete}
               onCancel={() => setIsTVModeEnabled(false)}
+              roomId={currentRoom.id}
             />
           )}
         </AnimatePresence>
