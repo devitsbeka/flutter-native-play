@@ -152,6 +152,32 @@ export function useRoomCategoryQueue(roomId: string | null) {
     }
   }, [roomId]);
 
+  // Reorder queue items (for drag-and-drop)
+  const reorderQueue = useCallback(async (newOrder: QueueItem[]) => {
+    if (!roomId) return false;
+    
+    // Optimistically update local state first
+    setQueue(newOrder);
+    
+    try {
+      // Update positions in database
+      await Promise.all(
+        newOrder.map((item, index) =>
+          supabase
+            .from("room_category_queue")
+            .update({ position: index })
+            .eq("id", item.id)
+        )
+      );
+      
+      return true;
+    } catch (e) {
+      console.error("Error reordering queue:", e);
+      fetchQueue(); // Refetch on error to restore correct state
+      return false;
+    }
+  }, [roomId, fetchQueue]);
+
   return {
     queue,
     loading,
@@ -159,6 +185,7 @@ export function useRoomCategoryQueue(roomId: string | null) {
     removeFromQueue,
     popFromQueue,
     clearQueue,
+    reorderQueue,
     refetch: fetchQueue,
   };
 }

@@ -431,23 +431,25 @@ export function CategoryPickerModal({
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-white/5 backdrop-blur-sm border-t border-white/10"
           >
-            <div className="max-w-md mx-auto space-y-2">
+            <div className="max-w-md mx-auto space-y-3">
+              {/* Primary action - Select now */}
               <ChunkyButton
                 variant="white"
                 size="lg"
                 className="w-full"
                 onClick={handleSelectNow}
               >
-                დაყენება ახლავე
+                არჩევა
               </ChunkyButton>
               
+              {/* Secondary action - Add to queue */}
               {showQueueOption && onAddToQueue && (
                 <ChunkyButton
                   variant="secondary"
-                  size="md"
-                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  size="lg"
+                  className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
                   onClick={handleAddToQueue}
-                  icon={<Plus className="w-4 h-4" />}
+                  icon={<Plus className="w-5 h-5" />}
                 >
                   რიგში დამატება
                 </ChunkyButton>
