@@ -72,7 +72,7 @@ export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePo
       </div>
 
       {/* Desktop/Tablet: Grouped feed - player + horizontal carousel */}
-      <div className="hidden md:block space-y-6 overflow-hidden">
+      <div className="hidden md:block space-y-6 overflow-hidden w-full max-w-full">
         {creators.map((creator, index) => (
           <motion.div
             key={creator.user_id}

@@ -429,7 +429,7 @@ function TeamContentV2() {
       <div className="min-h-screen flex flex-col">
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-x-hidden overflow-y-auto h-[calc(100dvh-80px)] lg:h-auto lg:overflow-visible">
+          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-hidden min-w-0">
             {/* Scrollable Header Section - Title, Buttons, Friends Bar, Tabs */}
             <div className="bg-background">
               <div className="px-4 pt-4 pb-2">

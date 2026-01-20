@@ -207,11 +207,12 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
         </div>
         
         {/* Tablet & Desktop: Horizontal Carousel */}
-        <div className="hidden md:block overflow-hidden">
+        <div className="hidden md:block overflow-hidden w-full max-w-full">
           <Carousel
             opts={{
               align: "start",
               dragFree: true,
+              containScroll: "trimSnaps",
             }}
             className="w-full"
           >
