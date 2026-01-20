@@ -113,6 +113,52 @@ JSON FORMAT:
 }`;
 }
 
+// Theme-to-icon mapping for personal questions
+const PERSONAL_THEME_ICONS: Record<string, string[]> = {
+  // Sleeping/habits
+  'ძილი': ['sleeping', 'bed', 'pillow', 'moon', 'owl', 'alarm-clock', 'dream', 'night'],
+  'ხვრინავს': ['sleeping', 'bed', 'moon', 'snoring', 'pillow'],
+  'იძინებს': ['sleeping', 'bed', 'moon', 'owl', 'night', 'stars'],
+  'ძილმოყვარე': ['sloth', 'sleeping', 'bed', 'couch', 'lazy'],
+  
+  // Time related
+  'დააგვიანებს': ['clock', 'alarm', 'running', 'hourglass', 'watch', 'time'],
+  'დრო': ['clock', 'watch', 'hourglass', 'time', 'calendar'],
+  'წუთი': ['clock', 'stopwatch', 'timer', 'hourglass'],
+  
+  // Food related
+  'მაცივარი': ['refrigerator', 'kitchen', 'food', 'midnight', 'snack'],
+  'ხაჭაპური': ['cheese', 'bread', 'food', 'fork', 'plate', 'restaurant'],
+  'საჭმელი': ['fork', 'plate', 'chef', 'cooking', 'spoon', 'restaurant'],
+  'ჭამა': ['fork', 'plate', 'food', 'eating', 'restaurant'],
+  
+  // Phone/social
+  'ტელეფონი': ['smartphone', 'phone', 'call', 'chat', 'mobile', 'notification'],
+  'მესიჯი': ['message', 'chat', 'envelope', 'notification', 'speech-bubble'],
+  'ზარი': ['phone', 'call', 'ring', 'mobile'],
+  
+  // Forgetfulness
+  'დაივიწყება': ['question-mark', 'brain', 'keys', 'wallet', 'confused', 'thinking'],
+  'საფულე': ['wallet', 'money', 'bag', 'lost'],
+  'გასაღები': ['key', 'keys', 'lock', 'door'],
+  
+  // Personality traits
+  'დრამატული': ['theater', 'drama', 'mask', 'stage', 'spotlight', 'star'],
+  'მომთმენი': ['meditation', 'calm', 'peace', 'zen', 'patience'],
+  'ტირილი': ['tear', 'cry', 'emotion', 'heart', 'movie'],
+  'სიცილი': ['laugh', 'smile', 'happy', 'comedy', 'joy'],
+  'ბრაზი': ['angry', 'storm', 'fire', 'explosion'],
+  
+  // Entertainment
+  'სერიალი': ['tv', 'movie', 'popcorn', 'couch', 'remote'],
+  'ფილმი': ['movie', 'film', 'camera', 'cinema', 'popcorn'],
+  'მუსიკა': ['music', 'headphones', 'guitar', 'piano', 'notes'],
+  
+  // Phrases
+  'ფრაზა': ['speech-bubble', 'quote', 'talk', 'chat', 'speaking'],
+  'ხუმრობა': ['laugh', 'comedy', 'smile', 'joke', 'fun'],
+};
+
 // Build system prompt for PERSONAL mode (family/friends questions)
 function buildPersonalPrompt(subject: string, difficulty: string, isTrueFalse: boolean, focusCategory: { theme: string; examples: string[] }): string {
   return `You are a CREATIVE party game question generator for friends & family. Your goal is to create FUN, PERSONAL questions that spark laughter and memories.
@@ -160,6 +206,21 @@ ${focusCategory.examples.map(e => `- ${e}`).join('\n')}
   3. Case endings are correct
   4. The sentence sounds natural to a Georgian speaker
 
+💎 ICON_KEYWORDS - CRITICAL FOR VARIETY:
+- Generate 3-5 UNIQUE visual keywords based on THIS specific question's theme
+- DO NOT use generic words like "family" or "friends"
+- Think about VISUAL OBJECTS that represent the question's concept
+- Use ENGLISH keywords for icon matching
+
+EXAMPLES OF GOOD ICON_KEYWORDS:
+- "ვინ ხვრინავს ძილში?" → ["sleeping", "bed", "moon", "pillow", "snoring"]
+- "ვის უყვარს ხაჭაპური?" → ["cheese", "bread", "food", "fork", "plate"]
+- "ვინ დააგვიანებდა?" → ["clock", "alarm", "running", "watch", "time"]
+- "ვინ არის ყველაზე დრამატული?" → ["theater", "drama", "mask", "stage", "star"]
+- "ვინ იძინებს ყველაზე გვიან?" → ["owl", "night", "moon", "stars", "lamp"]
+- "ვის ტელეფონი მუდამ დამჯდარია?" → ["phone", "battery", "charging", "smartphone"]
+- "ვინ მიაკითხავდა მაცივარს შუაღამეს?" → ["refrigerator", "midnight", "food", "snack", "kitchen"]
+
 LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
 LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
 
@@ -171,7 +232,7 @@ JSON FORMAT:
   "correct_answer": "...",
   "incorrect_answers": ["...", "...", "..."],
   "difficulty": "${difficulty}",
-  "icon_keywords": ["family", "friends"]
+  "icon_keywords": ["specific", "visual", "keywords", "for", "this_question"]
 }`;
 }
 
@@ -369,27 +430,88 @@ Return ONLY valid JSON.`;
 
     if (questionData.icon_keywords?.length) {
       const keywords = questionData.icon_keywords.map((k: string) => k.toLowerCase());
+      console.log(`Icon search with keywords: ${keywords.join(', ')}`);
       
-      // Try exact slug match
-      const { data: exactMatch } = await supabase
+      // Tier 1: Try exact slug match with randomization
+      const { data: exactMatches } = await supabase
         .from('icon_library')
         .select('slug')
         .in('slug', keywords)
-        .limit(1);
+        .limit(5);
 
-      if (exactMatch && exactMatch.length > 0) {
-        iconSlug = exactMatch[0].slug;
-      } else {
-        // Try tag search
-        const { data: tagMatch } = await supabase
-          .from('icon_library')
-          .select('slug')
-          .or(keywords.map((k: string) => `tags.cs.{${k}}`).join(','))
-          .limit(1);
-
-        if (tagMatch && tagMatch.length > 0) {
-          iconSlug = tagMatch[0].slug;
+      if (exactMatches && exactMatches.length > 0) {
+        // Pick random from matches for variety
+        iconSlug = exactMatches[Math.floor(Math.random() * exactMatches.length)].slug;
+        console.log(`Tier 1 (exact match): Found ${exactMatches.length} icons, picked: ${iconSlug}`);
+      }
+      
+      // Tier 2: Slug contains keyword (ilike search)
+      if (!iconSlug) {
+        for (const keyword of keywords) {
+          if (keyword.length >= 3) {
+            const { data: partialMatches } = await supabase
+              .from('icon_library')
+              .select('slug')
+              .ilike('slug', `%${keyword}%`)
+              .limit(8);
+            
+            if (partialMatches && partialMatches.length > 0) {
+              // Pick random from matches for variety
+              iconSlug = partialMatches[Math.floor(Math.random() * partialMatches.length)].slug;
+              console.log(`Tier 2 (partial match for '${keyword}'): Found ${partialMatches.length} icons, picked: ${iconSlug}`);
+              break;
+            }
+          }
         }
+      }
+
+      // Tier 3: Tag-based search with randomization
+      if (!iconSlug) {
+        for (const keyword of keywords) {
+          const { data: tagMatches } = await supabase
+            .from('icon_library')
+            .select('slug')
+            .contains('tags', [keyword])
+            .limit(10);
+
+          if (tagMatches && tagMatches.length > 0) {
+            // Pick random from matches for variety
+            iconSlug = tagMatches[Math.floor(Math.random() * tagMatches.length)].slug;
+            console.log(`Tier 3 (tag match for '${keyword}'): Found ${tagMatches.length} icons, picked: ${iconSlug}`);
+            break;
+          }
+        }
+      }
+      
+      // Tier 4: Use theme mapping fallback for personal questions
+      if (!iconSlug && mode === "personal") {
+        // Check question text for Georgian theme keywords
+        const questionLower = questionData.question_text.toLowerCase();
+        
+        for (const [theme, iconOptions] of Object.entries(PERSONAL_THEME_ICONS)) {
+          if (questionLower.includes(theme.toLowerCase())) {
+            // Try to find one of the theme icons
+            const shuffledOptions = shuffleArray(iconOptions);
+            for (const iconOption of shuffledOptions) {
+              const { data: themeMatch } = await supabase
+                .from('icon_library')
+                .select('slug')
+                .ilike('slug', `%${iconOption}%`)
+                .limit(3);
+              
+              if (themeMatch && themeMatch.length > 0) {
+                iconSlug = themeMatch[Math.floor(Math.random() * themeMatch.length)].slug;
+                console.log(`Tier 4 (theme '${theme}' -> '${iconOption}'): Found ${themeMatch.length} icons, picked: ${iconSlug}`);
+                break;
+              }
+            }
+            if (iconSlug) break;
+          }
+        }
+      }
+      
+      if (!iconSlug) {
+        console.log('No icon found for keywords, will use category fallback');
       }
     }
 
