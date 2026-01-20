@@ -94,6 +94,7 @@ interface MultiplayerContextType extends MultiplayerState {
   enterRoom: (roomCode: string) => Promise<boolean>;
   startGame: () => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
+  startNextFromQueue: () => Promise<void>; // Continue with next queued category
   submitAnswer: (answer: string, timeRemaining: number) => Promise<void>;
   nextQuestion: () => void;
   exitRoom: () => void;
@@ -1027,6 +1028,125 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
   }, [state.currentRoom, user]);
 
+  // Start next round from queue - pop queue item and start with that category
+  const startNextFromQueue = useCallback(async () => {
+    if (!state.currentRoom || !user) return;
+    
+    const roomId = state.currentRoom.id;
+    
+    // Fetch first queue item
+    const { data: queueItems } = await supabase
+      .from("room_category_queue")
+      .select("*")
+      .eq("room_id", roomId)
+      .order("position", { ascending: true })
+      .limit(1);
+    
+    const nextItem = queueItems?.[0];
+    
+    if (nextItem) {
+      // Check if it's a user_trivia (custom questions)
+      if (nextItem.source_type === "user_trivia" && nextItem.user_trivia_id) {
+        // Fetch custom trivia questions
+        const { data: triviaPost } = await supabase
+          .from("user_quiz_posts")
+          .select("questions, title")
+          .eq("id", nextItem.user_trivia_id)
+          .single();
+        
+        if (triviaPost?.questions) {
+          const customQuestions = triviaPost.questions as any[];
+          
+          // Clear old questions and store custom ones
+          await supabase.from("room_questions").delete().eq("room_id", roomId);
+          await supabase.from("player_answers").delete().eq("room_id", roomId);
+          
+          await Promise.all(customQuestions.map((q: any, index: number) => {
+            const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
+            const shuffledAnswers = shuffleArray(allAnswers);
+            
+            return supabase.from("room_questions").insert({
+              room_id: roomId,
+              question_index: index,
+              question_text: q.question_text,
+              correct_answer: q.correct_answer,
+              incorrect_answers: q.incorrect_answers,
+              difficulty: q.difficulty || "medium",
+              shuffled_answers: shuffledAnswers,
+              icon_slug: q.icon_slug || null,
+            });
+          }));
+          
+          // Update room with custom trivia info
+          await supabase
+            .from("game_rooms")
+            .update({
+              category_id: null,
+              category_name: triviaPost.title || nextItem.category_name,
+              total_questions: customQuestions.length,
+            })
+            .eq("id", roomId);
+          
+          // Update local state
+          setState(prev => ({
+            ...prev,
+            currentRoom: prev.currentRoom ? {
+              ...prev.currentRoom,
+              category_id: null,
+              category_name: triviaPost.title || nextItem.category_name,
+              total_questions: customQuestions.length,
+            } : null,
+          }));
+        }
+      } else {
+        // Regular category or random - update room's category
+        await supabase
+          .from("game_rooms")
+          .update({
+            category_id: nextItem.source_type === "random" ? null : nextItem.category_id,
+            category_name: nextItem.source_type === "random" ? "შემთხვევითი" : nextItem.category_name,
+          })
+          .eq("id", roomId);
+        
+        // Update local state with new category
+        setState(prev => ({
+          ...prev,
+          currentRoom: prev.currentRoom ? {
+            ...prev.currentRoom,
+            category_id: nextItem.source_type === "random" ? null : nextItem.category_id,
+            category_name: nextItem.source_type === "random" ? "შემთხვევითი" : nextItem.category_name,
+          } : null,
+        }));
+      }
+      
+      // Remove from queue
+      await supabase
+        .from("room_category_queue")
+        .delete()
+        .eq("id", nextItem.id);
+      
+      // Reorder remaining queue items
+      const { data: remaining } = await supabase
+        .from("room_category_queue")
+        .select("id")
+        .eq("room_id", roomId)
+        .order("position", { ascending: true });
+      
+      if (remaining && remaining.length > 0) {
+        await Promise.all(
+          remaining.map((item, index) =>
+            supabase.from("room_category_queue")
+              .update({ position: index })
+              .eq("id", item.id)
+          )
+        );
+      }
+    }
+    
+    // Now start the round with the (potentially updated) category
+    await startNewRound();
+  }, [state.currentRoom, user, startNewRound]);
+
   // Leave room permanently
   const leaveRoomPermanently = useCallback(async () => {
     if (!state.currentRoom || !user) return;
@@ -1112,6 +1232,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     enterRoom,
     startGame,
     startNewRound,
+    startNextFromQueue,
     submitAnswer,
     nextQuestion,
     exitRoom,
