@@ -76,6 +76,8 @@ const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = getQuestionTime();
 
+const REVEAL_DURATION_MS = 5000;
+
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
   const mapping: Record<string, TVPhase> = {
@@ -155,6 +157,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  // Prevent repeated reveal updates from timer/presence sync
+  const revealRequestedRef = useRef(false);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -164,6 +169,26 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  const requestRevealIfEligible = useCallback(async (reason: string) => {
+    if (!isHost) return;
+    if (!state.sessionId) return;
+    if (state.phase !== 'question') return;
+    if (revealRequestedRef.current) return;
+    if (state.questions.length === 0) return;
+    if (state.players.length === 0) return;
+
+    revealRequestedRef.current = true;
+    tvLogPhase('question', 'reveal', reason);
+
+    await supabase
+      .from('tv_sessions')
+      .update({
+        status: 'reveal',
+        reveal_start_time: new Date().toISOString(),
+      })
+      .eq('id', state.sessionId);
+  }, [isHost, state.sessionId, state.phase, state.questions.length, state.players.length]);
+
   // Timer effect for question phase
   useEffect(() => {
     if (state.phase === 'question' && state.timeRemaining > 0) {
@@ -172,31 +197,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setState(prev => {
           if (prev.timeRemaining <= 1) {
             tvLogTimer('expired');
-            // Time's up - directly go to next question (skip reveal phase)
-            if (isHost && prev.phase === 'question') {
-              const nextIndex = prev.currentQuestionIndex + 1;
-              tvLog('Timer expired, advancing to next question', { nextIndex, total: prev.questions.length });
-              
-              if (nextIndex >= prev.questions.length) {
-                // Game over
-                tvLogPhase('question', 'completed', 'all questions answered');
-                supabase
-                  .from('tv_sessions')
-                  .update({ status: 'completed' })
-                  .eq('id', prev.sessionId)
-                  .then(() => tvLog('Game completed'));
-              } else {
-                // Move to next question directly
-                supabase
-                  .from('tv_sessions')
-                  .update({
-                    status: 'playing',
-                    current_question_index: nextIndex,
-                    question_start_time: new Date().toISOString(),
-                  })
-                  .eq('id', prev.sessionId)
-                  .then(() => tvLog('Moved to next question', { index: nextIndex }));
-              }
+            // Time's up - enter reveal (host drives DB state)
+            if (isHost && prev.phase === 'question' && prev.sessionId) {
+              // Mark reveal requested (avoids double updates from sync)
+              revealRequestedRef.current = true;
+              supabase
+                .from('tv_sessions')
+                .update({ status: 'reveal', reveal_start_time: new Date().toISOString() })
+                .eq('id', prev.sessionId)
+                .then(() => tvLogPhase('question', 'reveal', 'timer expired'));
             }
             return { ...prev, timeRemaining: 0 };
           }
@@ -212,6 +221,50 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
   }, [state.phase, state.timeRemaining, isHost, state.sessionId]);
+
+  // Auto-advance from reveal after a fixed duration (host only)
+  useEffect(() => {
+    if (!isHost) return;
+    if (!state.sessionId) return;
+    if (state.phase !== 'reveal') return;
+
+    const t = setTimeout(async () => {
+      const nextIndex = state.currentQuestionIndex + 1;
+      if (nextIndex >= state.questions.length) {
+        await supabase
+          .from('tv_sessions')
+          .update({ status: 'completed', reveal_start_time: null })
+          .eq('id', state.sessionId);
+      } else {
+        // Reset answers via local state + presence track; presence sync will update everyone.
+        setMyAnswer(null);
+        if (presenceChannelRef.current) {
+          await presenceChannelRef.current.track({
+            nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Host',
+            avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
+            score: myScore,
+            hasAnswered: false,
+            lastAnswerCorrect: null,
+            lastAnswer: null,
+            isHost: true,
+          });
+        }
+
+        revealRequestedRef.current = false;
+        await supabase
+          .from('tv_sessions')
+          .update({
+            status: 'playing',
+            current_question_index: nextIndex,
+            question_start_time: new Date().toISOString(),
+            reveal_start_time: null,
+          })
+          .eq('id', state.sessionId);
+      }
+    }, REVEAL_DURATION_MS);
+
+    return () => clearTimeout(t);
+  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore]);
 
   // Create TV session (called by TV display)
   const createSession = useCallback(async (): Promise<string | null> => {
@@ -413,6 +466,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             current_question_index: number;
             questions: Json | null;
             question_start_time: string | null;
+            reveal_start_time?: string | null;
             category_name: string | null;
             category_icon: string | null;
             is_paired: boolean;
@@ -456,6 +510,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (isNewQuestion) {
               tvLog('New question', { index: newData.current_question_index });
               setMyAnswer(null);
+              revealRequestedRef.current = false;
             }
 
             return {
@@ -516,10 +571,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         });
 
-        // Sort by score descending
-        players.sort((a, b) => b.score - a.score);
+        // Host should always appear first, then sort by score
+        players.sort((a, b) => {
+          if (a.isHost !== b.isHost) return a.isHost ? -1 : 1;
+          return b.score - a.score;
+        });
 
         setState(prev => ({ ...prev, players }));
+
+        // If everyone answered, host moves game to reveal (no manual next)
+        if (isHost && state.phase === 'question' && players.length > 0 && players.every(p => p.hasAnswered)) {
+          requestRevealIfEligible('all players answered');
+        }
         
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
       })
@@ -771,50 +834,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    const nextIndex = state.currentQuestionIndex + 1;
-    tvLog('Starting next round', { nextIndex, totalQuestions: state.questions.length });
-
-    try {
-      if (nextIndex >= state.questions.length) {
-        // Game over - use 'completed' which is a valid DB constraint value
-        tvLogPhase('question', 'results', 'all questions answered');
-        await supabase
-          .from('tv_sessions')
-          .update({ status: 'completed' })
-          .eq('id', state.sessionId);
-      } else {
-        // Reset all players' hasAnswered status via presence update
-        // Move to next question
-        await supabase
-          .from('tv_sessions')
-          .update({
-            status: 'playing',
-            current_question_index: nextIndex,
-            question_start_time: new Date().toISOString(),
-          })
-          .eq('id', state.sessionId);
-
-        tvLogTimer('reset', QUESTION_TIME);
-
-        // Reset own answer state
-        setMyAnswer(null);
-
-        // Update presence to reset hasAnswered
-        if (presenceChannelRef.current) {
-          await presenceChannelRef.current.track({
-            nickname: state.players.find(p => p.id === myPlayerId)?.nickname || 'Host',
-            avatar_url: state.players.find(p => p.id === myPlayerId)?.avatar_url,
-            score: myScore,
-            hasAnswered: false,
-            lastAnswerCorrect: null,
-            lastAnswer: null,
-            isHost: true,
-          });
-        }
-      }
-    } catch (error) {
-      tvLogError('startNextRound', error);
-    }
+    // Hard rule: no manual next during a question; transition is driven by
+    // (all answered) OR (timer elapsed) -> reveal -> auto-advance.
+    await requestRevealIfEligible('manual next blocked; forcing reveal if eligible');
   }, [state.sessionId, state.currentQuestionIndex, state.questions.length, state.players, isHost, myPlayerId, myScore]);
 
   // Update room name (host only)

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Tv, Play, SkipForward, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle } from 'lucide-react';
+import { Tv, Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -59,7 +59,6 @@ const TVHostController: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
-  const [guestJoinCode, setGuestJoinCode] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
@@ -104,7 +103,7 @@ const TVHostController: React.FC = () => {
     playersCount: players.length 
   });
 
-  const joinUrl = `${window.location.origin}/join?code=${guestJoinCode || gameCode}`;
+  const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : `${window.location.origin}/join`;
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
 
@@ -151,7 +150,6 @@ const TVHostController: React.FC = () => {
       }
 
       setSession(sessionData);
-      setGuestJoinCode(sessionData.pairing_code || '');
 
       // Load categories
       const { data: categoriesData } = await supabase
@@ -165,11 +163,11 @@ const TVHostController: React.FC = () => {
       }
 
       // Join session via context (handles presence channel)
-      if (!hasJoinedRef.current && sessionData.pairing_code) {
+      if (!hasJoinedRef.current) {
         hasJoinedRef.current = true;
         try {
           await joinSession(
-            sessionData.pairing_code,
+            sessionId,
             profile?.nickname || 'Host',
             profile?.avatar_url
           );
@@ -287,17 +285,6 @@ const TVHostController: React.FC = () => {
     }
   };
 
-  const handleNextQuestion = async () => {
-    if (!sessionId) return;
-
-    try {
-      // Use context's startNextRound which handles question advancement
-      await startNextRound();
-    } catch (error) {
-      tvLogError('handleNextQuestion', error);
-    }
-  };
-
   const handleEndGame = async () => {
     if (!sessionId) return;
     
@@ -311,7 +298,7 @@ const TVHostController: React.FC = () => {
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(guestJoinCode || gameCode || '');
+    navigator.clipboard.writeText(gameCode || '');
     setCopied(true);
     toast.success('კოდი დაკოპირდა!');
     setTimeout(() => setCopied(false), 2000);
@@ -353,7 +340,7 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  const displayCode = guestJoinCode || gameCode || '';
+  const displayCode = gameCode || '';
 
   // Category selection phase
   if (localPhase === 'category-select') {
@@ -751,19 +738,9 @@ const TVHostController: React.FC = () => {
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col items-center justify-center">
           <Check className="w-16 h-16 text-green-400 mb-4" />
           <p className="text-white text-xl font-bold">პასუხი გაგზავნილია!</p>
-          <p className="text-purple-300 mb-6">უყურე TV-ს...</p>
+          <p className="text-purple-300 mb-6">დაველოდოთ სხვა მოთამაშეებს...</p>
           
-          {/* Host control buttons - only show after answering */}
-          <div className="w-full space-y-3 mt-4">
-            <ChunkyButton
-              variant="primary"
-              className="w-full"
-              onClick={handleNextQuestion}
-            >
-              <SkipForward className="w-5 h-5 mr-2" />
-              {currentQuestionIndex + 1 >= totalQuestions ? 'შედეგების ჩვენება' : 'შემდეგი კითხვა'}
-            </ChunkyButton>
-            
+          <div className="w-full mt-4">
             <ChunkyButton
               variant="secondary"
               className="w-full"

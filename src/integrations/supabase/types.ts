@@ -2271,6 +2271,50 @@ export type Database = {
           },
         ]
       }
+      tv_session_queue: {
+        Row: {
+          category_id: string | null
+          category_name: string | null
+          created_at: string
+          icon_slug: string | null
+          id: string
+          position: number
+          session_id: string
+          source_type: string
+          user_trivia_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          category_name?: string | null
+          created_at?: string
+          icon_slug?: string | null
+          id?: string
+          position: number
+          session_id: string
+          source_type?: string
+          user_trivia_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          category_name?: string | null
+          created_at?: string
+          icon_slug?: string | null
+          id?: string
+          position?: number
+          session_id?: string
+          source_type?: string
+          user_trivia_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_session_queue_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_sessions: {
         Row: {
           accumulated_scores: Json | null
@@ -2286,6 +2330,7 @@ export type Database = {
           pairing_code: string | null
           question_start_time: string | null
           questions: Json | null
+          reveal_start_time: string | null
           room_id: string | null
           room_name: string | null
           round_number: number | null
@@ -2307,6 +2352,7 @@ export type Database = {
           pairing_code?: string | null
           question_start_time?: string | null
           questions?: Json | null
+          reveal_start_time?: string | null
           room_id?: string | null
           room_name?: string | null
           round_number?: number | null
@@ -2328,6 +2374,7 @@ export type Database = {
           pairing_code?: string | null
           question_start_time?: string | null
           questions?: Json | null
+          reveal_start_time?: string | null
           room_id?: string | null
           room_name?: string | null
           round_number?: number | null
