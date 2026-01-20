@@ -23,6 +23,7 @@ export const TVIdleScreen: React.FC = () => {
     roomName,
     totalRoundsPlayed,
     accumulatedScores,
+    sessionId,
   } = useTVGame();
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -61,9 +62,7 @@ export const TVIdleScreen: React.FC = () => {
   };
 
   // Hard switch: guests join via sessionId QR to avoid 4-digit collisions.
-  const joinUrl = typeof window !== 'undefined' && (useTVGame() as any).sessionId
-    ? `${window.location.origin}/join/session/${(useTVGame() as any).sessionId}`
-    : '';
+  const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-8">

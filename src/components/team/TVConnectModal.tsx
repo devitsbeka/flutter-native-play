@@ -46,17 +46,13 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         return;
       }
 
-      // Generate a 6-character guest join code
-      const guestJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
       // Update the TV session - pair it with this host (no category/questions yet)
       const { error: updateError } = await supabase
         .from('tv_sessions')
         .update({
           host_user_id: user.id,
           is_paired: true,
-          status: 'waiting',
-          pairing_code: guestJoinCode, // 6-char code for guests
+          status: 'paired',
         })
         .eq('id', session.id);
 

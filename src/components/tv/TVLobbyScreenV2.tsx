@@ -5,6 +5,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { Pencil, Crown, Users, Play, Shuffle, Check, X } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
+import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 
 const MAX_PLAYERS = 8;
 
@@ -17,6 +18,7 @@ interface Category {
 
 export const TVLobbyScreenV2: React.FC = () => {
   const { code, sessionId, players, categoryName, categoryIcon, isHost, startGame } = useTVGame();
+  const { queue, addCategoryToQueue, removeFromQueue } = useTVSessionQueue(sessionId);
   const [roomName, setRoomName] = useState('TV კვიზი');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(roomName);
@@ -89,12 +91,20 @@ export const TVLobbyScreenV2: React.FC = () => {
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
+    // If a queue exists, always play the first queued round
+    const queued = queue[0];
+    if (queued?.category_id) {
+      await removeFromQueue(queued.id);
+      await startGame(queued.category_id);
+      return;
+    }
+
     if (selectedCategory) {
-      startGame(selectedCategory.id);
+      await startGame(selectedCategory.id);
     } else if (categories.length > 0) {
       const randomCat = categories[Math.floor(Math.random() * categories.length)];
-      startGame(randomCat.id);
+      await startGame(randomCat.id);
     }
   };
 
@@ -213,6 +223,46 @@ export const TVLobbyScreenV2: React.FC = () => {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Queue (Host only) */}
+          {isHost && sessionId && (
+            <div className="mt-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-purple-200/80">რაუნდების რიგი</span>
+                {selectedCategory && (
+                  <button
+                    onClick={() => addCategoryToQueue({ id: selectedCategory.id, name: selectedCategory.name })}
+                    className="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors text-xs text-white"
+                  >
+                    + დამატება
+                  </button>
+                )}
+              </div>
+
+              {queue.length === 0 ? (
+                <p className="text-xs text-purple-300/60">დაამატე რამდენიმე კატეგორია და TV ავტომატურად გააგრძელებს.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {queue.map((item) => (
+                    <div
+                      key={item.id}
+                      className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/10 border border-white/10"
+                    >
+                      <span className="text-xs text-white/90">{(item.position + 1)}.</span>
+                      <span className="text-xs text-white">{item.category_name || 'რაუნდი'}</span>
+                      <button
+                        onClick={() => removeFromQueue(item.id)}
+                        className="text-xs text-purple-200/70 hover:text-purple-200"
+                        aria-label="Remove"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Player Count */}
@@ -327,7 +377,7 @@ export const TVLobbyScreenV2: React.FC = () => {
             whileTap={{ scale: 0.95 }}
           >
             <Play className="w-5 h-5" />
-            თამაშის დაწყება
+            {queue.length > 0 ? 'დაწყება (რიგიდან)' : 'თამაშის დაწყება'}
           </motion.button>
         </motion.div>
       )}

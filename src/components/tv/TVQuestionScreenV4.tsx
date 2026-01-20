@@ -3,15 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Check, X, Clock } from 'lucide-react';
+import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
-
-const OPTION_COLORS = [
-  { bg: 'bg-red-500/90', label: 'bg-red-600' },
-  { bg: 'bg-blue-500/90', label: 'bg-blue-600' },
-  { bg: 'bg-yellow-500/90', label: 'bg-yellow-600' },
-  { bg: 'bg-green-500/90', label: 'bg-green-600' },
-];
 
 export const TVQuestionScreenV4: React.FC = () => {
   const { 
@@ -185,23 +179,22 @@ export const TVQuestionScreenV4: React.FC = () => {
           </div>
         </div>
 
-        {/* Answer Options 2x2 Grid */}
+        {/* Answer Options 2x2 Grid (single-style, matches standard UI) */}
         <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
           {currentQuestion.options.slice(0, 4).map((option, index) => (
             <motion.div
               key={index}
-              className={`${OPTION_COLORS[index].bg} rounded-xl p-4 flex items-center gap-3`}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 + index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
             >
-              <span className={`${OPTION_COLORS[index].label} text-white font-bold text-lg w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0`}>
-                {GEORGIAN_LABELS[index]}
-              </span>
-              <span className="text-white text-base md:text-lg font-medium flex-1 line-clamp-3">
-                {option}
-              </span>
+              <QuizAnswerButton
+                state="default"
+                label={GEORGIAN_LABELS[index]}
+                text={option}
+                disabled
+                className="min-h-[96px]"
+              />
             </motion.div>
           ))}
         </div>
