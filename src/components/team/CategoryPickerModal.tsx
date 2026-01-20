@@ -255,8 +255,8 @@ export function CategoryPickerModal({
                 className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all text-left"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <Library className="w-7 h-7 text-white" />
+                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                    <Library className="w-7 h-7 text-purple-400" />
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-white text-lg">ბიბლიოთეკა</p>
@@ -273,8 +273,8 @@ export function CategoryPickerModal({
                 className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all text-left"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                    <Sparkles className="w-7 h-7 text-white" />
+                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-purple-400" />
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-white text-lg">ჩემი ტრივიები</p>
