@@ -185,7 +185,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     <div className="w-px h-8 bg-border" />
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-1">
-                        <Trophy className="w-4 h-4 text-amber-500" />
+                        <Trophy className="w-4 h-4 text-primary" />
                         <span className="font-bold text-foreground">{data.stats.gamesWon}</span>
                       </div>
                       <span className="text-xs text-muted-foreground">მოგებული</span>
@@ -193,7 +193,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     <div className="w-px h-8 bg-border" />
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-1">
-                        <Target className="w-4 h-4 text-green-500" />
+                        <Target className="w-4 h-4 text-primary" />
                         <span className="font-bold text-foreground">{data.stats.winRate}%</span>
                       </div>
                       <span className="text-xs text-muted-foreground">მოგება</span>
@@ -201,7 +201,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     <div className="w-px h-8 bg-border" />
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-1">
-                        <Flame className="w-4 h-4 text-orange-500" />
+                        <Flame className="w-4 h-4 text-primary" />
                         <span className="font-bold text-foreground">{data.stats.bestStreak}</span>
                       </div>
                       <span className="text-xs text-muted-foreground">სტრიქი</span>
@@ -245,14 +245,10 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
                 {/* Tabs - Trivias, Collections, Trophies */}
                 <Tabs defaultValue="trivias" className="px-4 pb-4">
-                  <TabsList className="grid w-full grid-cols-3 mb-4 h-auto py-2">
+                  <TabsList className="grid w-full grid-cols-2 mb-4 h-auto py-2">
                     <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrivia} alt="" className="w-9 h-9" />
-                      <span className="text-xs">ტრივია</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="collections" className="flex flex-col items-center gap-0.5">
-                      <img src={iconCollections} alt="" className="w-9 h-9" />
-                      <span className="text-xs">კოლექციები</span>
+                      <span className="text-xs">ტრივიები</span>
                     </TabsTrigger>
                     <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrophy} alt="" className="w-9 h-9" />
@@ -282,77 +278,77 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   </TabsContent>
 
                   <TabsContent value="trivias">
-                    {data.trivias.length === 0 ? (
+                    {data.trivias.length === 0 && data.collections.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <p>ჯერ არ აქვს ტრივიები</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        {data.trivias.map((trivia) => (
-                          <motion.div
-                            key={trivia.id}
-                            initial={{ y: 10, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            onClick={() => handlePlayTrivia(trivia.id)}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
-                          >
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
-                              {trivia.cover_image ? (
-                                <img src={trivia.cover_image} alt="" className="w-full h-full object-cover rounded-lg" />
-                              ) : (
-                                <Gamepad2 className="w-6 h-6 text-primary" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-foreground truncate">{trivia.title}</p>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Play className="w-3 h-3" /> {trivia.plays_count || 0}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
-                                </span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="collections">
-                    {data.collections.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <p>ჯერ არ აქვს კოლექციები</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        {data.collections.map((collection) => (
-                          <motion.div
-                            key={collection.id}
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            onClick={() => handlePlayCollection(collection.id)}
-                            className="rounded-xl overflow-hidden border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
-                          >
-                            <div 
-                              className="aspect-video"
-                              style={{ background: collection.cover_gradient }}
-                            >
-                              {collection.cover_image && (
-                                <img src={collection.cover_image} alt="" className="w-full h-full object-cover" />
-                              )}
-                            </div>
-                            <div className="p-2 bg-card">
-                              <p className="font-medium text-sm text-foreground truncate">{collection.title}</p>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Play className="w-3 h-3" /> {collection.plays_count || 0}
-                                </span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
+                      <div className="space-y-4">
+                        {/* Trivias */}
+                        {data.trivias.length > 0 && (
+                          <div className="space-y-3">
+                            {data.trivias.map((trivia) => (
+                              <motion.div
+                                key={trivia.id}
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                onClick={() => handlePlayTrivia(trivia.id)}
+                                className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
+                              >
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                                  {trivia.cover_image ? (
+                                    <img src={trivia.cover_image} alt="" className="w-full h-full object-cover rounded-lg" />
+                                  ) : (
+                                    <Gamepad2 className="w-6 h-6 text-primary" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-foreground truncate">{trivia.title}</p>
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <Play className="w-3 h-3" /> {trivia.plays_count || 0}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
+                                    </span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Collections */}
+                        {data.collections.length > 0 && (
+                          <div className="grid grid-cols-2 gap-3">
+                            {data.collections.map((collection) => (
+                              <motion.div
+                                key={collection.id}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                onClick={() => handlePlayCollection(collection.id)}
+                                className="rounded-xl overflow-hidden border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
+                              >
+                                <div 
+                                  className="aspect-video"
+                                  style={{ background: collection.cover_gradient }}
+                                >
+                                  {collection.cover_image && (
+                                    <img src={collection.cover_image} alt="" className="w-full h-full object-cover" />
+                                  )}
+                                </div>
+                                <div className="p-2 bg-card">
+                                  <p className="font-medium text-sm text-foreground truncate">{collection.title}</p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <Play className="w-3 h-3" /> {collection.plays_count || 0}
+                                    </span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </TabsContent>
