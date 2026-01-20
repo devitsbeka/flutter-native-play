@@ -56,7 +56,9 @@ export function CategoryPickerSection({
           </div>
         </div>
         {isHost && (
-          <Plus className="w-5 h-5 text-white/60" />
+          <div className="w-10 h-10 rounded-xl border border-dashed border-white/40 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-white/60" />
+          </div>
         )}
       </div>
 
