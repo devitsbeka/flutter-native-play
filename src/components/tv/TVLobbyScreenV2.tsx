@@ -24,7 +24,8 @@ export const TVLobbyScreenV2: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-  const joinUrl = `${window.location.origin}/join?code=${code}`;
+  // Hard switch: guests join via sessionId QR to avoid 4-digit collisions.
+  const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : `${window.location.origin}/join`;
 
   // Fetch categories
   useEffect(() => {
@@ -51,11 +52,11 @@ export const TVLobbyScreenV2: React.FC = () => {
   useEffect(() => {
     const loadRoomName = async () => {
       if (!sessionId) return;
-      const { data } = await supabase
+       const { data } = await supabase
         .from('tv_sessions')
         .select('room_name')
         .eq('id', sessionId)
-        .single();
+         .maybeSingle();
       if (data?.room_name) {
         setRoomName(data.room_name);
         setEditedName(data.room_name);

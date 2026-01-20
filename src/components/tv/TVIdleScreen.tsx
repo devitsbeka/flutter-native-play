@@ -60,8 +60,9 @@ export const TVIdleScreen: React.FC = () => {
     }
   };
 
-  const joinUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/join?code=${code}` 
+  // Hard switch: guests join via sessionId QR to avoid 4-digit collisions.
+  const joinUrl = typeof window !== 'undefined' && (useTVGame() as any).sessionId
+    ? `${window.location.origin}/join/session/${(useTVGame() as any).sessionId}`
     : '';
 
   return (

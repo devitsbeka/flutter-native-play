@@ -11,12 +11,14 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const TVJoinContent: React.FC = () => {
-  const { code: urlCode } = useParams<{ code: string }>();
+  const { code: urlCode, sessionId: urlSessionId } = useParams<{ code?: string; sessionId?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryCode = searchParams.get('code');
+  const querySessionId = searchParams.get('session');
   
-  const initialCode = urlCode || queryCode || '';
+  // Hard switch: QR should pass sessionId; manual entry uses 4-digit TV code.
+  const initialCode = urlSessionId || querySessionId || urlCode || queryCode || '';
   
   const { phase, sessionId, questions, leaveSession } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);

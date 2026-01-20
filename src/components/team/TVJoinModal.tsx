@@ -16,15 +16,15 @@ export const TVJoinModal: React.FC<TVJoinModalProps> = ({ open, onOpenChange }) 
   const navigate = useNavigate();
 
   const handleJoin = () => {
-    if (code.length < 4) return;
+    if (code.length !== 4) return;
     setLoading(true);
     // Use /join/:code which uses TVGameContext with proper code lookup
-    navigate(`/join/${code.toUpperCase()}`);
+    navigate(`/join/${code}`);
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Accept both 4-digit numeric and 6-char alphanumeric codes
-    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    // Hard switch: only accept the 4-digit code shown on the TV.
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
     setCode(value);
   };
 
@@ -80,7 +80,7 @@ export const TVJoinModal: React.FC<TVJoinModalProps> = ({ open, onOpenChange }) 
                 onChange={handleCodeChange}
                 placeholder="Enter code"
                 className="text-center text-2xl font-mono tracking-widest h-16 rounded-xl"
-                maxLength={6}
+                maxLength={4}
                 autoFocus
               />
 
