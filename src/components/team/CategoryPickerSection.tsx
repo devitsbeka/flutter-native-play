@@ -106,12 +106,9 @@ export function CategoryPickerSection({
                     >
                       <button
                         type="button"
-                        onMouseDown={(e) => {
+                        onClick={(e) => {
                           e.stopPropagation();
-                          onRemoveQueueItem(item.id);
-                        }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
+                          e.preventDefault();
                           onRemoveQueueItem(item.id);
                         }}
                         className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"

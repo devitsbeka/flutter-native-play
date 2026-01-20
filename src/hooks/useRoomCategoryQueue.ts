@@ -92,6 +92,14 @@ export function useRoomCategoryQueue(roomId: string | null) {
   const removeFromQueue = useCallback(async (itemId: string) => {
     if (!roomId) return false;
     
+    // Check if item exists before trying to remove (prevents double-delete)
+    const itemToRemove = queue.find(q => q.id === itemId);
+    if (!itemToRemove) return false;
+    
+    // Optimistic update - immediately remove from local state
+    const remaining = queue.filter(q => q.id !== itemId);
+    setQueue(remaining.map((item, index) => ({ ...item, position: index })));
+    
     setLoading(true);
     try {
       const { error } = await supabase
@@ -101,25 +109,28 @@ export function useRoomCategoryQueue(roomId: string | null) {
       
       if (error) throw error;
       
-      // Reorder remaining items
-      const remaining = queue.filter(q => q.id !== itemId);
-      await Promise.all(
-        remaining.map((item, index) =>
-          supabase
-            .from("room_category_queue")
-            .update({ position: index })
-            .eq("id", item.id)
-        )
-      );
+      // Reorder remaining items in database
+      if (remaining.length > 0) {
+        await Promise.all(
+          remaining.map((item, index) =>
+            supabase
+              .from("room_category_queue")
+              .update({ position: index })
+              .eq("id", item.id)
+          )
+        );
+      }
       
       return true;
     } catch (e) {
       console.error("Error removing from queue:", e);
+      // On error, refetch to restore correct state
+      await fetchQueue();
       return false;
     } finally {
       setLoading(false);
     }
-  }, [roomId, queue]);
+  }, [roomId, queue, fetchQueue]);
 
   // Pop first item from queue (for game start)
   const popFromQueue = useCallback(async (): Promise<QueueItem | null> => {
