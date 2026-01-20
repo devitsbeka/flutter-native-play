@@ -776,7 +776,7 @@ export function GameStyleQuestionEditor({
               {/* Empty State with Idea Button */}
               {!question.question ? (
                 <div className="flex flex-col items-center justify-center py-4 pt-6">
-                  <div className="flex justify-center mb-2 overflow-visible">
+                  <div className="flex justify-center mb-2 pt-2 px-4 overflow-visible">
                     <button
                       type="button"
                       onClick={() => setIconPickerIndex(index)}
@@ -791,14 +791,14 @@ export function GameStyleQuestionEditor({
                             style={{ width: 40, height: 40 }}
                             className="object-contain"
                           />
-                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                          <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
                             <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
                           </div>
                         </>
                       ) : (
                         <>
                           <Smile style={{ width: 32, height: 32 }} className="text-muted-foreground" />
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                          <div className="absolute bottom-0 right-0 translate-y-1/4 translate-x-1/4 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
                             <Plus className="w-3 h-3 text-slate-600" />
                           </div>
                         </>
@@ -832,7 +832,7 @@ export function GameStyleQuestionEditor({
               ) : (
                 <>
                   {/* Icon */}
-                  <div className="flex justify-center mb-2 pt-2 overflow-visible">
+                  <div className="flex justify-center mb-2 pt-4 px-4 overflow-visible">
                     <button
                       type="button"
                       onClick={() => setIconPickerIndex(index)}
@@ -847,14 +847,14 @@ export function GameStyleQuestionEditor({
                             style={{ width: 40, height: 40 }}
                             className="object-contain"
                           />
-                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                          <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
                             <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
                           </div>
                         </>
                       ) : (
                         <>
                           <Smile style={{ width: 32, height: 32 }} className="text-muted-foreground" />
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                          <div className="absolute bottom-0 right-0 translate-y-1/4 translate-x-1/4 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
                             <Plus className="w-3 h-3 text-slate-600" />
                           </div>
                         </>
