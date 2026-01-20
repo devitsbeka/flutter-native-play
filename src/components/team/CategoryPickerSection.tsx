@@ -30,7 +30,9 @@ export function CategoryPickerSection({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => isHost && onOpenPicker()}
-      className={`w-full p-4 mb-6 ${isHost ? "cursor-pointer" : ""}`}
+      className={`w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6 ${
+        isHost ? "cursor-pointer hover:bg-white/15 transition-colors" : ""
+      }`}
     >
       {/* Main category display */}
       <div className="flex items-center justify-between">
