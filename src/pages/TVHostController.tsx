@@ -74,7 +74,7 @@ const TVHostController: React.FC = () => {
     const mapping: Record<string, LocalPhase> = {
       'idle': 'category-select',
       'pairing': 'category-select',
-      'lobby': 'waiting',
+      'lobby': 'lobby', // Show lobby UI instead of waiting
       'countdown': 'countdown',
       'question': 'playing',
       'reveal': 'reveal',
@@ -83,7 +83,9 @@ const TVHostController: React.FC = () => {
     return mapping[phase] || 'category-select';
   };
   
-  const localPhase = mapContextPhaseToLocal(contextPhase);
+  // Determine actual phase - if we have a queue, show lobby instead of category-select
+  const rawLocalPhase = mapContextPhaseToLocal(contextPhase);
+  const localPhase: LocalPhase = (rawLocalPhase === 'category-select' && hasQueue) ? 'lobby' : rawLocalPhase;
   
   // Debug logging for phase issues
   console.log('[TVHostController] Phase debug:', { 
@@ -594,7 +596,177 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Waiting phase - show category selector and players
+  // Lobby phase - shows queue and ready to start
+  if (localPhase === 'lobby') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 mb-6"
+        >
+          <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10">
+            <ArrowLeft className="w-5 h-5 text-purple-200" />
+          </button>
+          <Tv className="w-6 h-6 text-purple-300" />
+          <span className="font-bold text-white">TV თამაში</span>
+        </motion.div>
+
+        {/* QR Code section */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-4"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <QrCode className="w-5 h-5 text-purple-300" />
+            <h2 className="font-bold text-white">მოთამაშეებმა დაასკანერონ</h2>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="bg-white p-3 rounded-xl">
+              <QRCodeSVG value={joinUrl} size={100} level="H" />
+            </div>
+            <div className="flex-1 flex flex-col justify-center">
+              <p className="text-sm text-purple-200 mb-1">კოდი:</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-mono font-bold text-white tracking-wider">
+                  {displayCode}
+                </span>
+                <button
+                  onClick={handleCopyCode}
+                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                >
+                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-purple-300" />}
+                </button>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <Users className="w-4 h-4 text-purple-300" />
+                <span className="text-sm text-purple-200">{players.length} მოთამაშე</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Connected players */}
+        {players.length > 0 && (
+          <motion.div 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="flex gap-3 flex-wrap">
+              {players.map((player, index) => (
+                <motion.div
+                  key={player.id}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`flex items-center gap-2 bg-white/10 rounded-full px-3 py-2 border ${player.isHost ? 'border-yellow-500' : 'border-white/20'}`}
+                >
+                  <Avatar imageUrl={player.avatar_url || undefined} emoji={player.nickname?.[0] || '👤'} size="sm" />
+                  <span className="text-sm font-medium text-white">{player.nickname}</span>
+                  {player.isHost && (
+                    <span className="text-xs bg-yellow-500/30 text-yellow-300 px-1.5 py-0.5 rounded">HOST</span>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Queue Display - prominent */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 bg-purple-500/10 rounded-xl p-4 border border-purple-400/30"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-300" />
+              რაუნდების რიგი ({queue.length})
+            </h3>
+            <button
+              onClick={() => {
+                // Navigate back to category-select to add more
+                // We can do this by clearing the queue temporarily
+              }}
+              className="text-sm text-purple-300 hover:text-white"
+            >
+              + დამატება
+            </button>
+          </div>
+
+          {queue.length === 0 ? (
+            <p className="text-purple-300 text-sm">რიგი ცარიელია - აირჩიე კატეგორიები</p>
+          ) : (
+            <div className="space-y-2">
+              {queue.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/10"
+                >
+                  <span className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs text-purple-200 font-bold">
+                    {index + 1}
+                  </span>
+                  <span className="flex-1 text-white font-medium">{item.category_name}</span>
+                  <button
+                    onClick={() => removeFromQueue(item.id)}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-purple-300 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Add more categories section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-24"
+        >
+          <h4 className="text-purple-200 text-sm mb-2">კატეგორიის დამატება:</h4>
+          <div className="flex flex-wrap gap-2">
+            {categories.slice(0, 6).map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleAddToQueue(category)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/20 hover:border-purple-400/50 transition-colors"
+              >
+                <span className="text-lg">{category.icon}</span>
+                <span className="text-sm text-white">{category.name}</span>
+                <Plus className="w-3 h-3 text-purple-300" />
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Start Game Button */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent">
+          <ChunkyButton
+            variant="primary"
+            className="w-full"
+            onClick={handleStartGame}
+            disabled={players.length < 1 || queue.length === 0}
+          >
+            <Play className="w-5 h-5 mr-2" />
+            {queue.length === 0 
+              ? 'დაამატე რაუნდები რიგში' 
+              : players.length < 1 
+                ? 'საჭიროა მინ. 1 მოთამაშე' 
+                : `დაწყება (${queue.length} რაუნდი)`}
+          </ChunkyButton>
+        </div>
+      </div>
+    );
+  }
+
   if (localPhase === 'waiting') {
     const joinUrlCustom = `https://mytrivia.io/join?code=${displayCode}`;
     
