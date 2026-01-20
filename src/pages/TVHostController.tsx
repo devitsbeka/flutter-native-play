@@ -271,14 +271,29 @@ const TVHostController: React.FC = () => {
   const handleStartGame = async () => {
     if (!sessionId) return;
 
-    tvLog('Host starting game', { sessionId, selectedCategory, hasQueue });
+    tvLog('Host starting game', { sessionId, selectedCategory, hasQueue, queue });
 
     try {
       // If queue has items, start from the first item
-      if (hasQueue && queue[0]?.category_id) {
+      if (hasQueue && queue.length > 0) {
         const firstQueued = queue[0];
-        await removeFromQueue(firstQueued.id);
-        await startGame(firstQueued.category_id);
+        
+        // Handle based on source_type
+        if (firstQueued.source_type === 'user_trivia' && firstQueued.user_trivia_id) {
+          // Start with user trivia questions
+          await startGame(undefined, firstQueued.user_trivia_id);
+        } else if (firstQueued.category_id) {
+          // Start with category questions
+          await startGame(firstQueued.category_id);
+        } else {
+          toast.error('არასწორი რაუნდის ტიპი');
+          return;
+        }
+        
+        // Remove from queue (but not if it's the initial category marker from room)
+        if (!firstQueued.id.startsWith('initial-')) {
+          await removeFromQueue(firstQueued.id);
+        }
         return;
       }
 
