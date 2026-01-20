@@ -430,8 +430,8 @@ function TeamContentV2() {
         <div className="flex flex-1">
           {/* Main Content Area */}
           <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-hidden min-w-0">
-            {/* Scrollable Header Section - Title, Buttons, Friends Bar, Tabs */}
-            <div className="bg-background">
+            {/* Sticky Header Section - Title, Buttons, Friends Bar, Tabs, Filters */}
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
                   <div className="flex items-center gap-2">
@@ -494,10 +494,7 @@ function TeamContentV2() {
                 </div>
 
               </div>
-            </div>
 
-            {/* Sticky Section: Tabs + Filter Bar */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
               {/* Unified Tab Bar - Full Width */}
               <div className="px-4 w-full md:max-w-[1115px] mx-auto pt-3 pb-2 overflow-hidden">
                 <div className="flex items-center justify-between gap-3">
