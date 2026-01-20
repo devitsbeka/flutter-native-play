@@ -7,6 +7,7 @@ import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
 import { TVRevealScreenV2 } from '@/components/tv/TVRevealScreenV2';
 import { TVResultsScreenV2 } from '@/components/tv/TVResultsScreenV2';
 import { TVIdleScreen } from '@/components/tv/TVIdleScreen';
+import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
 import { Loader2 } from 'lucide-react';
 
 const CODE_REFRESH_INTERVAL = 5 * 60 * 1000; // Refresh code every 5 minutes if no players
@@ -84,6 +85,8 @@ const TVLobbyContent: React.FC = () => {
       return <TVQuestionScreenV4 />;
     case 'reveal':
       return <TVRevealScreenV2 />;
+    case 'round-intro':
+      return <TVRoundIntroScreen isController={false} />;
     case 'results':
     case 'completed': // Map 'completed' status from DB to results phase
       return <TVResultsScreenV2 />;

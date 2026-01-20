@@ -20,7 +20,7 @@ interface Category {
   icon: string;
   color: string;
 }
-type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed';
+type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed' | 'round-intro';
 
 const TVHostController: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -79,6 +79,7 @@ const TVHostController: React.FC = () => {
       'question': 'playing',
       'reveal': 'reveal',
       'results': 'completed',
+      'round-intro': 'round-intro',
     };
     return mapping[phase] || 'category-select';
   };
@@ -552,7 +553,59 @@ const TVHostController: React.FC = () => {
     );
   }
 
+  // Round Intro phase - show ready screen between rounds
+  if (localPhase === 'round-intro') {
+    const { markReady, categoryName, categoryIcon, roundNumber, players: allPlayers } = useTVGame();
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <span className="px-4 py-2 rounded-full bg-purple-500/30 border border-purple-400/50 text-purple-200 font-medium">
+            რაუნდი {roundNumber}
+          </span>
+        </motion.div>
+
+        <motion.h1
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-2xl font-bold text-white mb-6 text-center"
+        >
+          შემდეგი რაუნდი
+        </motion.h1>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8 flex flex-col items-center"
+        >
+          <div 
+            className="w-20 h-20 rounded-2xl flex items-center justify-center mb-3 border-2 border-purple-400/50"
+            style={{ background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)' }}
+          >
+            <span className="text-4xl">{categoryIcon || '🎲'}</span>
+          </div>
+          <h2 className="text-xl font-bold text-white">{categoryName || 'კატეგორია'}</h2>
+        </motion.div>
+
+        <ChunkyButton
+          variant="primary"
+          size="lg"
+          onClick={() => markReady()}
+          icon={<Check className="w-5 h-5" />}
+        >
+          მზად ვარ
+        </ChunkyButton>
+      </div>
+    );
+  }
+
   // No reveal phase handling needed - timer directly advances to next question
+
 
   // Completed phase - show game over screen with leaderboard
   if (localPhase === 'completed') {
