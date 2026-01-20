@@ -1,5 +1,5 @@
 import { motion, Reorder } from "framer-motion";
-import { ChevronDown, Shuffle, X, GripVertical } from "lucide-react";
+import { Plus, Shuffle, X, GripVertical } from "lucide-react";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
@@ -55,7 +55,7 @@ export function CategoryPickerSection({
           </div>
         </div>
         {isHost && (
-          <ChevronDown className="w-5 h-5 text-white/60" />
+          <Plus className="w-5 h-5 text-white/60" />
         )}
       </div>
 
