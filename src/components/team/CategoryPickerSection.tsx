@@ -1,7 +1,6 @@
 import { motion, Reorder } from "framer-motion";
-import { Plus, Shuffle, X, GripVertical } from "lucide-react";
+import { Plus, Shuffle, X, GripVertical, Library, Sparkles } from "lucide-react";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
-import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface CategoryPickerSectionProps {
   categoryName: string | null;
@@ -38,13 +37,22 @@ export function CategoryPickerSection({
       {/* Main category display */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
-            {iconSlug ? (
-              <DynamicIcon slug={iconSlug} size={28} />
-            ) : categoryId && categoryName !== "შემთხვევითი" ? (
-              <DynamicIcon categoryId={categoryId} size={28} fallbackEmoji="❓" />
-            ) : (
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden"
+            style={{ 
+              background: categoryName === "შემთხვევითი" || !categoryName
+                ? "rgba(168, 85, 247, 0.2)"
+                : categoryId 
+                  ? "linear-gradient(135deg, #3b82f6, #06b6d4)"
+                  : "linear-gradient(135deg, #f59e0b, #f97316)"
+            }}
+          >
+            {categoryName === "შემთხვევითი" || !categoryName ? (
               <Shuffle className="w-6 h-6 text-purple-400" />
+            ) : categoryId ? (
+              <Library className="w-6 h-6 text-white" />
+            ) : (
+              <Sparkles className="w-6 h-6 text-white" />
             )}
           </div>
           <div>
@@ -89,11 +97,13 @@ export function CategoryPickerSection({
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
                   <GripVertical className="w-[18px] h-[18px] text-white/40" />
-                  {item.icon_slug ? (
-                    <DynamicIcon slug={item.icon_slug} size={18} />
-                  ) : item.source_type === "random" ? (
-                    <Shuffle className="w-[18px] h-[18px] text-white/70" />
-                  ) : null}
+                  {item.source_type === "random" ? (
+                    <Shuffle className="w-[18px] h-[18px] text-purple-400" />
+                  ) : item.source_type === "category" ? (
+                    <Library className="w-[18px] h-[18px] text-blue-400" />
+                  ) : (
+                    <Sparkles className="w-[18px] h-[18px] text-amber-400" />
+                  )}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
                       ? "შემთხვევითი" 
@@ -133,11 +143,13 @@ export function CategoryPickerSection({
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20"
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
-                  {item.icon_slug ? (
-                    <DynamicIcon slug={item.icon_slug} size={18} />
-                  ) : item.source_type === "random" ? (
-                    <Shuffle className="w-[18px] h-[18px] text-white/70" />
-                  ) : null}
+                  {item.source_type === "random" ? (
+                    <Shuffle className="w-[18px] h-[18px] text-purple-400" />
+                  ) : item.source_type === "category" ? (
+                    <Library className="w-[18px] h-[18px] text-blue-400" />
+                  ) : (
+                    <Sparkles className="w-[18px] h-[18px] text-amber-400" />
+                  )}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
                       ? "შემთხვევითი" 
