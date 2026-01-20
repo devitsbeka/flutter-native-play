@@ -47,10 +47,10 @@ export function CategoryPickerSection({
             )}
           </div>
           <div>
-            <p className="text-white font-semibold" style={{ fontSize: "20px" }}>
+            <p className="text-white font-semibold text-[20px] leading-tight">
               {hasCategory ? categoryName : "აირჩიე კატეგორია"}
             </p>
-            <p className="text-white/60" style={{ fontSize: "16px" }}>
+            <p className="text-white/60 text-[16px] leading-snug">
               {hasCategory ? "მიმდინარე კატეგორია" : "დააჭირე არჩევისთვის"}
             </p>
           </div>
