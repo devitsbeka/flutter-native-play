@@ -6,9 +6,10 @@ import { useDrafts } from "@/hooks/useDrafts";
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
+import iconGroupOfPeople from "@/assets/group-of-people.png";
 
 interface DraftsListProps {
-  onResumeDraft: (draftId: string, type: "collection" | "trivia") => void;
+  onResumeDraft: (draftId: string, type: "collection" | "trivia" | "personal") => void;
   onClose: () => void;
 }
 
@@ -42,10 +43,11 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
       </div>
       
       <div className="space-y-2 max-h-48 overflow-y-auto">
-        {/* Trivia Drafts */}
-        {triviaDrafts?.slice(0, 3).map((draft) => {
+        {/* Trivia Drafts (both trivia and personal) */}
+        {triviaDrafts?.slice(0, 5).map((draft) => {
           const questionCount = Array.isArray(draft.questions) ? draft.questions.length : 0;
-          const displayTitle = draft.title || "უსათაურო ტრივია";
+          const isPersonal = draft.draft_type === 'personal';
+          const displayTitle = draft.title || (isPersonal ? "უსათაურო MyTrivia" : "უსათაურო ტრივია");
           
           return (
             <motion.div
@@ -54,10 +56,14 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
             >
-              {/* Draft Preview - Trivia icon */}
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/30 to-violet-600/30 flex items-center justify-center flex-shrink-0">
+              {/* Draft Preview - Different icon for personal vs trivia */}
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                isPersonal 
+                  ? "bg-gradient-to-br from-pink-500/30 to-rose-600/30" 
+                  : "bg-gradient-to-br from-purple-500/30 to-violet-600/30"
+              }`}>
                 <img 
-                  src={triviaBuzzer} 
+                  src={isPersonal ? iconGroupOfPeople : triviaBuzzer} 
                   alt="" 
                   className="w-7 h-7 object-contain"
                 />
@@ -97,7 +103,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <button
                   onClick={() => {
                     onClose();
-                    onResumeDraft(draft.id, "trivia");
+                    onResumeDraft(draft.id, isPersonal ? "personal" : "trivia");
                   }}
                   className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                 >

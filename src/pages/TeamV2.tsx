@@ -188,6 +188,7 @@ function TeamContentV2() {
   const [roomsSort, setRoomsSort] = useState<RoomSort>("recent");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [personalTriviaDraftId, setPersonalTriviaDraftId] = useState<string | null>(null);
   const [showTeamMenu, setShowTeamMenu] = useState(false);
   const [showCreateRoomScreen, setShowCreateRoomScreen] = useState(false);
   const [showTVModal, setShowTVModal] = useState(false);
@@ -419,7 +420,8 @@ function TeamContentV2() {
     showCreateRoomScreen ||
     showCreateModal ||
     showTeamMenu ||
-    showBlindTriviaModal;
+    showBlindTriviaModal ||
+    showCreateTypeModal;
 
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
@@ -794,11 +796,19 @@ function TeamContentV2() {
           }
           setShowCreateCollectionModal(true);
         }}
-        onSelectPersonal={activeTab !== "explore" ? () => setShowPersonalTriviaModal(true) : undefined}
+        onSelectPersonal={activeTab !== "explore" ? (draftId) => {
+          if (draftId) setPersonalTriviaDraftId(draftId);
+          setShowPersonalTriviaModal(true);
+        } : undefined}
       />
       <GameStylePersonalTrivia
         isOpen={showPersonalTriviaModal}
-        onClose={() => setShowPersonalTriviaModal(false)}
+        onClose={() => {
+          setShowPersonalTriviaModal(false);
+          setPersonalTriviaDraftId(null);
+        }}
+        resumeDraftId={personalTriviaDraftId}
+        onDraftResumed={() => setPersonalTriviaDraftId(null)}
         onSave={async (questions, title) => {
           if (!user) return;
           

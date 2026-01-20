@@ -2099,6 +2099,7 @@ export type Database = {
       trivia_drafts: {
         Row: {
           created_at: string
+          draft_type: string | null
           id: string
           questions: Json
           title: string | null
@@ -2107,6 +2108,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          draft_type?: string | null
           id?: string
           questions?: Json
           title?: string | null
@@ -2115,6 +2117,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          draft_type?: string | null
           id?: string
           questions?: Json
           title?: string | null

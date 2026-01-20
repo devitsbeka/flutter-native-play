@@ -54,6 +54,8 @@ interface GameStylePersonalTriviaProps {
       icon_slug?: string | null;
     }>;
   } | null;
+  resumeDraftId?: string | null;
+  onDraftResumed?: () => void;
 }
 
 // Draggable Answer Item Component
@@ -215,6 +217,8 @@ export function GameStylePersonalTrivia({
   onClose,
   onSave,
   initialData,
+  resumeDraftId,
+  onDraftResumed,
 }: GameStylePersonalTriviaProps) {
   const { toast } = useToast();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
@@ -262,6 +266,51 @@ export function GameStylePersonalTrivia({
       ],
     }];
   });
+
+  // Track current draft ID for updates
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+
+  // Load draft when resumeDraftId is provided
+  useEffect(() => {
+    if (!resumeDraftId || !user || !isOpen) return;
+    
+    const loadDraft = async () => {
+      const { data, error } = await supabase
+        .from("trivia_drafts")
+        .select("*")
+        .eq("id", resumeDraftId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (error || !data) {
+        sonnerToast.error("დრაფტის ჩატვირთვა ვერ მოხერხდა");
+        return;
+      }
+      
+      // Convert stored format to component format
+      const loadedQuestions: PersonalQuestion[] = (data.questions as any[]).map((q: any, idx: number) => ({
+        id: `loaded-${idx}`,
+        question: q.question || "",
+        answers: (q.answers || []).map((a: any, i: number) => ({
+          id: `a-loaded-${idx}-${i}`,
+          text: a.text || "",
+          isCorrect: a.isCorrect || false,
+        })),
+        iconSlug: q.iconSlug,
+        backgroundImageUrl: q.backgroundImageUrl,
+      }));
+      
+      if (loadedQuestions.length > 0) {
+        setQuestions(loadedQuestions);
+      }
+      setTitle(data.title || "");
+      setCurrentDraftId(resumeDraftId);
+      onDraftResumed?.();
+      sonnerToast.success("დრაფტი ჩაიტვირთა");
+    };
+    
+    loadDraft();
+  }, [resumeDraftId, user, isOpen, onDraftResumed]);
 
   // Character limits
   const QUESTION_MAX = 65;
@@ -1141,18 +1190,35 @@ export function GameStylePersonalTrivia({
                                 backgroundImageUrl: q.backgroundImageUrl
                               }));
                               
-                              const { error } = await supabase.from("trivia_drafts").insert({
-                                user_id: user.id,
-                                title: draftName.trim(),
-                                questions: questionsData
-                              });
-                              
-                              if (error) throw error;
+                              if (currentDraftId) {
+                                // Update existing draft
+                                const { error } = await supabase.from("trivia_drafts")
+                                  .update({
+                                    title: draftName.trim(),
+                                    questions: questionsData,
+                                    draft_type: 'personal',
+                                    updated_at: new Date().toISOString()
+                                  })
+                                  .eq("id", currentDraftId);
+                                
+                                if (error) throw error;
+                              } else {
+                                // Insert new draft
+                                const { error } = await supabase.from("trivia_drafts").insert({
+                                  user_id: user.id,
+                                  title: draftName.trim(),
+                                  questions: questionsData,
+                                  draft_type: 'personal'
+                                });
+                                
+                                if (error) throw error;
+                              }
                               
                               sonnerToast.success("დრაფტი შეინახა!");
                               setShowExitConfirm(false);
                               setShowDraftNameInput(false);
                               setDraftName("");
+                              setCurrentDraftId(null);
                               onClose();
                             } catch (error) {
                               sonnerToast.error("დრაფტის შენახვა ვერ მოხერხდა");
