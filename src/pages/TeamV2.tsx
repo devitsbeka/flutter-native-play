@@ -781,7 +781,12 @@ function TeamContentV2() {
       <CreateTriviaTypeModal
         open={showCreateTypeModal}
         onOpenChange={setShowCreateTypeModal}
-        onSelectSingle={() => setShowCreateQuizModal(true)}
+        onSelectSingle={(draftId) => {
+          if (draftId) {
+            setEditingDraftId(draftId);
+          }
+          setShowBlindTriviaModal(true);
+        }}
         onSelectCollection={(draftId) => {
           if (draftId) {
             setEditingDraftId(draftId);
@@ -820,11 +825,17 @@ function TeamContentV2() {
       />
       <CreateBlindTriviaModal
         open={showBlindTriviaModal}
-        onOpenChange={setShowBlindTriviaModal}
+        onOpenChange={(open) => {
+          setShowBlindTriviaModal(open);
+          if (!open) setEditingDraftId(null);
+        }}
         onTriviaReady={() => {
           setShowBlindTriviaModal(false);
+          setEditingDraftId(null);
           setActiveTab("my-content");
         }}
+        resumeDraftId={editingDraftId}
+        onDraftResumed={() => setEditingDraftId(null)}
       />
       <CreateQuizModal
         open={showCreateQuizModal}
