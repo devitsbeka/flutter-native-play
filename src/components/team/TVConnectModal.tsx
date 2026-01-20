@@ -35,7 +35,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         .select('*')
         .eq('tv_pairing_code', code)
         .eq('is_paired', false)
-        .single();
+        .maybeSingle();
 
       if (error || !session) {
         toast.error('კოდი არ მოიძებნა ან უკვე დაკავშირებულია');
