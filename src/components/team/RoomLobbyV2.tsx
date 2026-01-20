@@ -12,12 +12,15 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomChat } from "@/hooks/useRoomChat";
 import { useRoomMatchHistory } from "@/hooks/useRoomMatchHistory";
+import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
 import { GradientPicker } from "./GradientPicker";
 import { getGradientById } from "@/config/roomGradients";
 import { Switch } from "@/components/ui/switch";
+import { CategoryPickerSection } from "./CategoryPickerSection";
+import { CategoryPickerModal } from "./CategoryPickerModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,10 +65,12 @@ export function RoomLobbyV2() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
+  const { queue, addToQueue, removeFromQueue } = useRoomCategoryQueue(currentRoom?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   
   // Calculate unread count

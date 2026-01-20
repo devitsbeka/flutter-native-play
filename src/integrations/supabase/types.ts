@@ -1771,6 +1771,50 @@ export type Database = {
           },
         ]
       }
+      room_category_queue: {
+        Row: {
+          category_id: string | null
+          category_name: string | null
+          created_at: string | null
+          icon_slug: string | null
+          id: string
+          position: number
+          room_id: string
+          source_type: string
+          user_trivia_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          category_name?: string | null
+          created_at?: string | null
+          icon_slug?: string | null
+          id?: string
+          position: number
+          room_id: string
+          source_type: string
+          user_trivia_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          category_name?: string | null
+          created_at?: string | null
+          icon_slug?: string | null
+          id?: string
+          position?: number
+          room_id?: string
+          source_type?: string
+          user_trivia_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_category_queue_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_chat_messages: {
         Row: {
           avatar_url: string | null
