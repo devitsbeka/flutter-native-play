@@ -18,6 +18,7 @@ import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
 import { GradientPicker } from "./GradientPicker";
 import { getGradientById } from "@/config/roomGradients";
+import { getCategoryIconSlug } from "@/data/categoryIconMap";
 import { Switch } from "@/components/ui/switch";
 import { CategoryPickerSection } from "./CategoryPickerSection";
 import { CategoryPickerModal } from "./CategoryPickerModal";
@@ -478,6 +479,15 @@ export function RoomLobbyV2() {
         <CategoryPickerSection
           categoryName={currentRoom.category_name}
           categoryId={currentRoom.category_id}
+          iconSlug={
+            currentRoom.category_name === "შემთხვევითი" 
+              ? null
+              : currentRoom.category_id 
+                ? getCategoryIconSlug(currentRoom.category_id) 
+                : currentRoom.category_name 
+                  ? getCategoryIconSlug(currentRoom.category_name)
+                  : null
+          }
           isHost={isHost}
           queue={queue}
           onOpenPicker={() => setShowCategoryPicker(true)}

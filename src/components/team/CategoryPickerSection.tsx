@@ -41,6 +41,8 @@ export function CategoryPickerSection({
           <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
             {iconSlug ? (
               <DynamicIcon slug={iconSlug} size={28} />
+            ) : categoryId && categoryName !== "შემთხვევითი" ? (
+              <DynamicIcon categoryId={categoryId} size={28} fallbackEmoji="❓" />
             ) : (
               <Shuffle className="w-6 h-6 text-purple-400" />
             )}
