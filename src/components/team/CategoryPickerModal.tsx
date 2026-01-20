@@ -93,11 +93,10 @@ export function CategoryPickerModal({
     queryFn: async (): Promise<UserTrivia[]> => {
       if (!user?.id) return [];
       
-      const result = await (supabase as any)
+      const result = await supabase
         .from("user_quiz_posts")
         .select("id, title, cover_image, cover_gradient, plays_count, questions")
         .eq("user_id", user.id)
-        .eq("status", "published")
         .order("created_at", { ascending: false });
 
       if (result.error) throw result.error;
@@ -235,8 +234,8 @@ export function CategoryPickerModal({
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Shuffle className="w-7 h-7 text-white" />
+                  <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                    <Shuffle className="w-7 h-7 text-purple-400" />
                   </div>
                   <div className="flex-1">
                     <p className="font-semibold text-white text-lg">შემთხვევითი</p>
