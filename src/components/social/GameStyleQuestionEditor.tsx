@@ -190,6 +190,7 @@ function DraggableAnswerItem({
     <Reorder.Item
       value={answer}
       dragControls={dragControls}
+      dragListener={false}
       whileDrag={{
         scale: 1.02,
         boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
@@ -730,22 +731,27 @@ export function GameStyleQuestionEditor({
               className="flex-[0_0_100%] min-w-0 px-4 flex flex-col"
             >
               {/* Question Card */}
-              <div className="relative rounded-3xl overflow-hidden shadow-lg mb-4">
+              <div className="relative rounded-3xl shadow-lg mb-4">
+                {/* Background image wrapper - overflow-hidden only here */}
+                <div className="absolute inset-0 rounded-3xl overflow-hidden">
+                  {question.backgroundImageUrl && (
+                    <>
+                      <img 
+                        src={question.backgroundImageUrl} 
+                        className="absolute inset-0 w-full h-full object-cover"
+                        alt=""
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#5B21B6]/80 via-[#5B21B6]/70 to-[#5B21B6]/90" />
+                    </>
+                  )}
+                </div>
                 {question.backgroundImageUrl && (
-                  <>
-                    <img 
-                      src={question.backgroundImageUrl} 
-                      className="absolute inset-0 w-full h-full object-cover"
-                      alt=""
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#5B21B6]/80 via-[#5B21B6]/70 to-[#5B21B6]/90" />
-                    <button
-                      onClick={removeBackgroundImage}
-                      className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </>
+                  <button
+                    onClick={removeBackgroundImage}
+                    className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
                 
             <div className={cn(
