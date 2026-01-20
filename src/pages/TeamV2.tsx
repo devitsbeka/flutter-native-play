@@ -429,8 +429,8 @@ function TeamContentV2() {
       <div className="flex min-h-full">
         {/* Main Content Area */}
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
-          {/* Sticky Header Section - Title, Buttons, Friends Bar, Tabs, Filters */}
-          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
+          {/* NON-STICKY: Title, Buttons, Friends Bar, Tabs */}
+          <div className="bg-background w-full max-w-full">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
                   <div className="flex items-center gap-2">
@@ -535,60 +535,60 @@ function TeamContentV2() {
                   </div>
                 </div>
               </div>
-
-              {/* Filter Bar Section */}
-              <div className="bg-background/95 backdrop-blur-sm border-b border-border/50">
-                {activeTab === "rooms" && (
-                  <UnifiedFiltersBar<RoomFilter, RoomSort>
-                    filter={roomsFilter}
-                    onFilterChange={(f) => setRoomsFilter(f)}
-                    filterOptions={roomFilterOptions}
-                    sort={roomsSort}
-                    onSortChange={(s) => setRoomsSort(s)}
-                    sortOptions={roomSortOptions}
-                    searchQuery={roomsSearchQuery}
-                    onSearchQueryChange={setRoomsSearchQuery}
-                    onAddClick={() => setShowCreateModal(true)}
-                    addButtonText="+ ოთახი"
-                  />
-                )}
-
-                {activeTab === "explore" && (
-                  <UnifiedFiltersBar<RoomFilter, RoomSort>
-                    filter={roomsFilter}
-                    onFilterChange={(f) => setRoomsFilter(f)}
-                    filterOptions={roomFilterOptions}
-                    sort={roomsSort}
-                    onSortChange={(s) => setRoomsSort(s)}
-                    sortOptions={roomSortOptions}
-                    searchQuery={roomsSearchQuery}
-                    onSearchQueryChange={setRoomsSearchQuery}
-                    onAddClick={() => setShowCreateTypeModal(true)}
-                    addButtonText="შექმენი ტრივია"
-                  />
-                )}
-
-                {activeTab === "my-content" && (
-                  <UnifiedFiltersBar<MyTriviaFilter, string>
-                    filter={sortFilter}
-                    onFilterChange={(f) => setSortFilter(f)}
-                    filterOptions={myTriviaFilterOptions}
-                    searchQuery={searchQuery}
-                    onSearchQueryChange={setSearchQuery}
-                    onAddClick={() => setShowCreateTypeModal(true)}
-                    addButtonText="+ ტრივია"
-                  />
-                )}
-              </div>
-              
-              {/* Fade gradient below sticky header */}
-              <div 
-                className="h-4 -mb-4 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
-                }}
-              />
             </div>
+
+          {/* STICKY: Only Filter Bar */}
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
+            {activeTab === "rooms" && (
+              <UnifiedFiltersBar<RoomFilter, RoomSort>
+                filter={roomsFilter}
+                onFilterChange={(f) => setRoomsFilter(f)}
+                filterOptions={roomFilterOptions}
+                sort={roomsSort}
+                onSortChange={(s) => setRoomsSort(s)}
+                sortOptions={roomSortOptions}
+                searchQuery={roomsSearchQuery}
+                onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowCreateModal(true)}
+                addButtonText="+ ოთახი"
+              />
+            )}
+
+            {activeTab === "explore" && (
+              <UnifiedFiltersBar<RoomFilter, RoomSort>
+                filter={roomsFilter}
+                onFilterChange={(f) => setRoomsFilter(f)}
+                filterOptions={roomFilterOptions}
+                sort={roomsSort}
+                onSortChange={(s) => setRoomsSort(s)}
+                sortOptions={roomSortOptions}
+                searchQuery={roomsSearchQuery}
+                onSearchQueryChange={setRoomsSearchQuery}
+                onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="შექმენი ტრივია"
+              />
+            )}
+
+            {activeTab === "my-content" && (
+              <UnifiedFiltersBar<MyTriviaFilter, string>
+                filter={sortFilter}
+                onFilterChange={(f) => setSortFilter(f)}
+                filterOptions={myTriviaFilterOptions}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                onAddClick={() => setShowCreateTypeModal(true)}
+                addButtonText="+ ტრივია"
+              />
+            )}
+            
+            {/* Fade gradient below sticky filter bar */}
+            <div 
+              className="h-4 -mb-4 pointer-events-none"
+              style={{
+                background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
+              }}
+            />
+          </div>
 
             {/* Content Area - Full width like Shop/PowerUps */}
             <div className="flex-1 px-4 pt-4 pb-4 overflow-hidden max-w-full">
