@@ -1,16 +1,23 @@
 import { motion } from "framer-motion";
-import { Trash2, FileText, Clock } from "lucide-react";
+import { Trash2, FileText, Clock, Layers } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { useDrafts } from "@/hooks/useDrafts";
+import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
+import iconCollections from "@/assets/icon-collections.png";
 
 interface DraftsListProps {
-  onResumeDraft: (draftId: string) => void;
+  onResumeDraft: (draftId: string, type: "collection" | "trivia") => void;
   onClose: () => void;
 }
 
 export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
-  const { drafts, isLoading, deleteDraft, isDeletingDraft } = useDrafts();
+  const { drafts: collectionDrafts, isLoading: isLoadingCollections, deleteDraft: deleteCollectionDraft, isDeletingDraft: isDeletingCollection } = useDrafts();
+  const { drafts: triviaDrafts, isLoading: isLoadingTrivias, deleteDraft: deleteTriviaDraft, isDeletingDraft: isDeletingTrivia } = useTriviaDrafts();
+
+  const isLoading = isLoadingCollections || isLoadingTrivias;
+  const isDeletingDraft = isDeletingCollection || isDeletingTrivia;
 
   if (isLoading) {
     return (
@@ -20,49 +27,50 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
     );
   }
 
-  if (!drafts || drafts.length === 0) {
+  const hasCollectionDrafts = collectionDrafts && collectionDrafts.length > 0;
+  const hasTriviaDrafts = triviaDrafts && triviaDrafts.length > 0;
+
+  if (!hasCollectionDrafts && !hasTriviaDrafts) {
     return null;
   }
 
   return (
-    <div className="border-t border-border pt-4 mt-2">
+    <div className="border-t border-white/20 pt-4 mt-2">
       <div className="flex items-center gap-2 mb-3 px-1">
-        <FileText className="w-4 h-4 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground">შენახული დრაფტები</span>
+        <FileText className="w-4 h-4 text-white/60" />
+        <span className="text-xs font-medium text-white/60">შენახული დრაფტები</span>
       </div>
       
-      <div className="space-y-2 max-h-40 overflow-y-auto">
-        {drafts.slice(0, 5).map((draft) => {
-          const roundsConfig = draft.rounds_config as { subject: string }[] | undefined;
-          const subjects = roundsConfig?.map(r => r.subject).filter(Boolean).join(", ") || "უსათაურო";
-          const displayTitle = draft.title || subjects;
+      <div className="space-y-2 max-h-48 overflow-y-auto">
+        {/* Trivia Drafts */}
+        {triviaDrafts?.slice(0, 3).map((draft) => {
+          const questionCount = Array.isArray(draft.questions) ? draft.questions.length : 0;
+          const displayTitle = draft.title || "უსათაურო ტრივია";
           
           return (
             <motion.div
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors group"
+              className="flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
             >
-              {/* Draft Preview */}
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-600/20 flex items-center justify-center flex-shrink-0">
-                {draft.cover_image ? (
-                  <img 
-                    src={draft.cover_image} 
-                    alt="" 
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <FileText className="w-5 h-5 text-primary" />
-                )}
+              {/* Draft Preview - Trivia icon */}
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/30 to-violet-600/30 flex items-center justify-center flex-shrink-0">
+                <img 
+                  src={triviaBuzzer} 
+                  alt="" 
+                  className="w-7 h-7 object-contain"
+                />
               </div>
               
               {/* Draft Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="text-sm font-medium text-white truncate">
                   {displayTitle}
                 </p>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <span>{questionCount} კითხვა</span>
+                  <span>•</span>
                   <Clock className="w-3 h-3" />
                   <span>
                     {formatDistanceToNow(new Date(draft.updated_at), { 
@@ -78,10 +86,10 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteDraft(draft.id);
+                    deleteTriviaDraft(draft.id);
                   }}
                   disabled={isDeletingDraft}
-                  className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -89,9 +97,86 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <button
                   onClick={() => {
                     onClose();
-                    onResumeDraft(draft.id);
+                    onResumeDraft(draft.id, "trivia");
                   }}
-                  className="px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                >
+                  გაგრძელება
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
+
+        {/* Collection Drafts */}
+        {collectionDrafts?.slice(0, 3).map((draft) => {
+          const roundsConfig = draft.rounds_config as { subject: string }[] | undefined;
+          const subjects = roundsConfig?.map(r => r.subject).filter(Boolean).join(", ") || "უსათაურო";
+          const displayTitle = draft.title || subjects;
+          const roundCount = roundsConfig?.length || 0;
+          
+          return (
+            <motion.div
+              key={draft.id}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+            >
+              {/* Draft Preview - Collection icon or cover */}
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-600/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {draft.cover_image ? (
+                  <img 
+                    src={draft.cover_image} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={iconCollections} 
+                    alt="" 
+                    className="w-7 h-7 object-contain"
+                  />
+                )}
+              </div>
+              
+              {/* Draft Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {displayTitle}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Layers className="w-3 h-3" />
+                  <span>{roundCount} რაუნდი</span>
+                  <span>•</span>
+                  <Clock className="w-3 h-3" />
+                  <span>
+                    {formatDistanceToNow(new Date(draft.updated_at), { 
+                      addSuffix: true, 
+                      locale: ka 
+                    })}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteCollectionDraft(draft.id);
+                  }}
+                  disabled={isDeletingDraft}
+                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                
+                <button
+                  onClick={() => {
+                    onClose();
+                    onResumeDraft(draft.id, "collection");
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
                 >
                   გაგრძელება
                 </button>

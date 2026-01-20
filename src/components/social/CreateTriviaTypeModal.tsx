@@ -9,7 +9,7 @@ import { DraftsList } from "./DraftsList";
 interface CreateTriviaTypeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectSingle: () => void;
+  onSelectSingle: (draftId?: string) => void;
   onSelectCollection: (draftId?: string) => void;
   onSelectPersonal?: () => void;
   onSelectGameRoom?: () => void;
@@ -23,8 +23,12 @@ export function CreateTriviaTypeModal({
   onSelectPersonal,
   onSelectGameRoom,
 }: CreateTriviaTypeModalProps) {
-  const handleResumeDraft = (draftId: string) => {
-    onSelectCollection(draftId);
+  const handleResumeDraft = (draftId: string, type: "collection" | "trivia") => {
+    if (type === "trivia") {
+      onSelectSingle(draftId);
+    } else {
+      onSelectCollection(draftId);
+    }
   };
 
   const handleClose = () => onOpenChange(false);

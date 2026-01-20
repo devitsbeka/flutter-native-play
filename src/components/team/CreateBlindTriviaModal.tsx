@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -8,6 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 import { GameStyleQuestionEditor, convertToEditorQuestions, EditorQuestion, convertToGeneratedQuestions } from "@/components/social/GameStyleQuestionEditor";
+import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface GeneratedQuestion {
   question_text: string;
@@ -21,6 +25,8 @@ interface CreateBlindTriviaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTriviaReady: (questions: GeneratedQuestion[], title: string, subject: string) => void;
+  resumeDraftId?: string | null;
+  onDraftResumed?: () => void;
 }
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
@@ -65,8 +71,11 @@ interface TopicSuggestion {
   icon_slug: string;
 }
 
-export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: CreateBlindTriviaModalProps) {
-  const { toast } = useToast();
+export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resumeDraftId, onDraftResumed }: CreateBlindTriviaModalProps) {
+  const { toast: toastHook } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { saveDraft, loadDraft, deleteDraft } = useTriviaDrafts();
   
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
@@ -84,6 +93,10 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
   // Topic suggestions state
   const [topicSuggestions, setTopicSuggestions] = useState<TopicSuggestion[]>([]);
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+  
+  // Draft state
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+  const isClosingRef = useRef(false);
 
   const fetchTopicSuggestions = useCallback(async () => {
     setIsLoadingTopics(true);
@@ -112,12 +125,34 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     setIsLoadingTopics(false);
   }, []);
 
+  // Load draft if resumeDraftId is provided
   useEffect(() => {
-    if (open) {
+    if (open && resumeDraftId) {
+      loadDraft(resumeDraftId).then(draft => {
+        if (draft) {
+          setCurrentDraftId(draft.id);
+          setTitle(draft.title || "");
+          
+          // Convert stored questions to editor format
+          if (draft.questions && Array.isArray(draft.questions) && draft.questions.length > 0) {
+            const converted = convertToEditorQuestions(draft.questions);
+            setEditorQuestions(converted);
+            setStep(4); // Go directly to editor
+          }
+          
+          toast.success("დრაფტი ჩაიტვირთა");
+          onDraftResumed?.();
+        }
+      });
+    }
+  }, [open, resumeDraftId, loadDraft, onDraftResumed]);
+
+  useEffect(() => {
+    if (open && !resumeDraftId) {
       resetForm();
       fetchTopicSuggestions();
     }
-  }, [open, fetchTopicSuggestions]);
+  }, [open, resumeDraftId, fetchTopicSuggestions]);
 
   const resetForm = () => {
     setStep(1);
@@ -128,9 +163,41 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     setGenerationProgress(0);
     setEditorQuestions([]);
     setIsPublic(true);
+    setCurrentDraftId(null);
+    isClosingRef.current = false;
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    // Auto-save draft if there's content in editor (step 4)
+    const hasContent = editorQuestions.some(q => q.question.trim().length > 0);
+    
+    if (user && hasContent && step === 4 && !isClosingRef.current) {
+      isClosingRef.current = true;
+      try {
+        // Convert editor questions to storage format
+        const questionsData = editorQuestions.map(q => ({
+          question_text: q.question,
+          correct_answer: q.answers.find(a => a.isCorrect)?.text || "",
+          incorrect_answers: q.answers.filter(a => !a.isCorrect).map(a => a.text),
+          icon_slug: q.iconSlug,
+        }));
+        
+        const savedDraft = await saveDraft({
+          draftId: currentDraftId || undefined,
+          title: title || subject || null,
+          questions: questionsData,
+        });
+        
+        if (savedDraft) {
+          setCurrentDraftId(savedDraft.id);
+          queryClient.invalidateQueries({ queryKey: ["trivia-drafts"] });
+          toast.success("დრაფტი ავტომატურად შეინახა");
+        }
+      } catch (error) {
+        console.error("Auto-save failed:", error);
+      }
+    }
+    
     resetForm();
     onOpenChange(false);
   };
@@ -173,7 +240,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
-      toast({
+      toastHook({
         title: "შეცდომა 😕",
         description: error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა",
         variant: "destructive",
@@ -183,11 +250,23 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady }: Cr
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
+    // Delete draft if it exists (trivia is being used)
+    if (currentDraftId) {
+      try {
+        await supabase.from("trivia_drafts").delete().eq("id", currentDraftId);
+        queryClient.invalidateQueries({ queryKey: ["trivia-drafts"] });
+      } catch (error) {
+        console.error("Failed to delete draft:", error);
+      }
+    }
+    
     // Convert back to GeneratedQuestion format
     const questions = convertToGeneratedQuestions(editorQuestions);
+    isClosingRef.current = true; // Prevent auto-save on close
     onTriviaReady(questions, title, subject);
-    handleClose();
+    resetForm();
+    onOpenChange(false);
   };
 
   const renderStep = () => {
