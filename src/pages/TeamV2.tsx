@@ -418,7 +418,8 @@ function TeamContentV2() {
     showPersonalTriviaModal ||
     showCreateRoomScreen ||
     showCreateModal ||
-    showTeamMenu;
+    showTeamMenu ||
+    showBlindTriviaModal;
 
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
