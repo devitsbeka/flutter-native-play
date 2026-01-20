@@ -241,7 +241,7 @@ export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult
     case 'tv':
       return getTVQuestions(categoryUuid!, count, language);
     case 'vs':
-      return getVSQuestions(count, language);
+      return getVSQuestions(categoryUuid, count, language);
     default:
       throw new Error(`Unknown mode: ${ctx.mode}`);
   }
@@ -537,6 +537,130 @@ async function getTVQuestions(
 // ============================================================================
 
 async function getVSQuestions(
+  categoryUuid: string | undefined,
+  count: number,
+  language: string
+): Promise<QuestionResult> {
+  // If a specific category is selected, use single-category mode
+  if (categoryUuid) {
+    return getSingleCategoryVSQuestions(categoryUuid, count, language);
+  }
+  
+  // Otherwise, use multi-category random mode (original behavior)
+  return getMultiCategoryVSQuestions(count, language);
+}
+
+/**
+ * Get VS questions from a SINGLE selected category
+ */
+async function getSingleCategoryVSQuestions(
+  categoryUuid: string,
+  count: number,
+  language: string
+): Promise<QuestionResult> {
+  let exhausted = false;
+  let wasReset = false;
+  
+  // Get category info
+  const categoryInfo = await getCategoryInfo(categoryUuid);
+  
+  // Get seen question IDs
+  const seenIds = getSeenQuestionIds();
+  let excludeIds = [...seenIds];
+  
+  // Get total available in this category
+  const { count: totalCount } = await supabase
+    .from('questions')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_active', true)
+    .eq('in_production', true)
+    .eq('language', language)
+    .eq('category_id', categoryUuid);
+  
+  const totalAvailable = totalCount || 0;
+  
+  // Check if exhausted
+  if (seenIds.length >= totalAvailable && totalAvailable > 0) {
+    clearSeenQuestions();
+    wasReset = true;
+    exhausted = true;
+    excludeIds = [];
+  }
+  
+  // Query questions from specific category
+  let query = supabase
+    .from('questions')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+    .eq('is_active', true)
+    .eq('in_production', true)
+    .eq('language', language)
+    .eq('category_id', categoryUuid);
+  
+  if (excludeIds.length > 0) {
+    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+  }
+  
+  let { data: questions } = await query.limit(count * 3);
+  
+  // If not enough, clear exclusions and retry
+  if (!questions || questions.length < count) {
+    clearSeenQuestions();
+    wasReset = true;
+    exhausted = true;
+    
+    const { data: resetQuestions } = await supabase
+      .from('questions')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language)
+      .eq('category_id', categoryUuid)
+      .limit(count * 3);
+    
+    questions = resetQuestions || [];
+  }
+  
+  if (!questions || questions.length === 0) {
+    return {
+      questions: [],
+      exhausted: true,
+      exhaustionInfo: { totalAvailable, totalSeen: seenIds.length, wasReset, usedFallback: false },
+      language,
+      categoryUuid,
+    };
+  }
+  
+  // Filter, format, and select
+  const rawQuestions = questions as RawQuestion[];
+  const validQuestions = rawQuestions
+    .filter(isValidQuestionLength)
+    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  
+  const selected = shuffleArray(validQuestions).slice(0, count);
+  
+  // Mark as seen
+  if (selected.length > 0) {
+    markQuestionsAsAskedGlobally(selected.map(q => q.id));
+  }
+  
+  return {
+    questions: selected,
+    exhausted,
+    exhaustionInfo: {
+      totalAvailable,
+      totalSeen: seenIds.length,
+      wasReset,
+      usedFallback: false,
+    },
+    language,
+    categoryUuid,
+  };
+}
+
+/**
+ * Get VS questions from MULTIPLE random categories (original behavior)
+ */
+async function getMultiCategoryVSQuestions(
   count: number,
   language: string
 ): Promise<QuestionResult> {

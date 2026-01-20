@@ -645,6 +645,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         allAnswers: q.allAnswers,
         difficulty: q.difficulty,
         category: state.currentRoom!.category_name || q.category || "General",
+        iconSlug: q.iconSlug,
       }));
       
       // Update used_question_ids on game_rooms
@@ -681,6 +682,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         incorrect_answers: q.incorrectAnswers,
         shuffled_answers: q.allAnswers, // Store pre-shuffled order for all players
         difficulty: q.difficulty,
+        icon_slug: q.iconSlug, // Store icon for display
       })
     ));
     
