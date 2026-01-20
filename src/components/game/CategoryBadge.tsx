@@ -30,8 +30,9 @@ export function CategoryBadge({ category, color = "hsl(280 60% 55%)" }: Category
       
       {/* Category Name */}
       <h2 
-        className="font-display text-2xl font-bold uppercase tracking-wide"
+        className="font-display font-bold uppercase tracking-wide"
         style={{ 
+          fontSize: "21px",
           color: "white",
           textShadow: "0 2px 4px hsl(0 0% 0% / 0.3)"
         }}
