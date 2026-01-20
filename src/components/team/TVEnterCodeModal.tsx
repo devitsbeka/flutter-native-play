@@ -101,9 +101,6 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
       const trackerKey = `tv_${categoryUUID}`;
       markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
 
-      // Generate a 6-character player join code
-      const playerJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
       // Update the TV session - pair it with this host
       const { error: updateError } = await supabase
         .from('tv_sessions')
@@ -111,8 +108,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
           host_user_id: user.id,
           room_id: roomId,
           is_paired: true,
-          status: 'waiting',
-          pairing_code: playerJoinCode, // This is the code guests use to join
+          status: 'paired',
           questions: formattedQuestions as unknown as any,
         })
         .eq('id', session.id);

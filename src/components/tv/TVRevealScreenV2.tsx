@@ -1,38 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { TVLeaderboardPanel } from './TVLeaderboardPanel';
 import { Check, X } from 'lucide-react';
+import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 
-const OPTION_COLORS = [
-  { bg: 'from-red-500 to-red-600', dimmed: 'from-red-900/50 to-red-900/30', label: 'A' },
-  { bg: 'from-blue-500 to-blue-600', dimmed: 'from-blue-900/50 to-blue-900/30', label: 'B' },
-  { bg: 'from-yellow-500 to-yellow-600', dimmed: 'from-yellow-900/50 to-yellow-900/30', label: 'C' },
-  { bg: 'from-green-500 to-green-600', dimmed: 'from-green-900/50 to-green-900/30', label: 'D' },
-];
+const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
 export const TVRevealScreenV2: React.FC = () => {
-  const { questions, currentQuestionIndex, players, isHost, startNextRound } = useTVGame();
-  const [showNextButton, setShowNextButton] = useState(false);
+  const { questions, currentQuestionIndex, players } = useTVGame();
   
   const currentQuestion = questions[currentQuestionIndex];
   const correctAnswer = currentQuestion?.correct_answer;
   
   const correctPlayers = players.filter(p => p.lastAnswerCorrect === true);
   const wrongPlayers = players.filter(p => p.lastAnswerCorrect === false);
-
-  // Auto-advance after 5 seconds (host only)
-  useEffect(() => {
-    setShowNextButton(true);
-    
-    if (isHost) {
-      const timer = setTimeout(() => {
-        startNextRound();
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isHost, startNextRound]);
 
   if (!currentQuestion) {
     return (
@@ -64,37 +46,19 @@ export const TVRevealScreenV2: React.FC = () => {
               const isCorrect = option === correctAnswer;
               
               return (
-              <motion.div
+                <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
-                  className={`relative rounded-xl p-3 flex items-center gap-3 shadow-lg overflow-hidden min-h-[64px] ${
-                    isCorrect 
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 ring-2 ring-green-400/50' 
-                      : `bg-gradient-to-r ${OPTION_COLORS[index].dimmed} opacity-60`
-                  }`}
                 >
-                  {/* Correct indicator */}
-                  {isCorrect && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.5, type: 'spring' }}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 bg-white rounded-full flex items-center justify-center"
-                    >
-                      <Check className="w-4 h-4 text-green-600" />
-                    </motion.div>
-                  )}
-
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0 self-start mt-0.5 ${
-                    isCorrect ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'
-                  }`}>
-                    {OPTION_COLORS[index].label}
-                  </div>
-                  <p className={`text-base font-semibold flex-1 line-clamp-2 ${isCorrect ? 'text-white' : 'text-white/60'}`}>
-                    {option}
-                  </p>
+                  <QuizAnswerButton
+                    state={isCorrect ? 'correct' : 'disabled'}
+                    label={GEORGIAN_LABELS[index]}
+                    text={option}
+                    disabled
+                    className="min-h-[64px]"
+                  />
                 </motion.div>
               );
             })}
@@ -142,20 +106,13 @@ export const TVRevealScreenV2: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Next question indicator */}
-          {showNextButton && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-3 text-center flex-shrink-0"
-            >
-              <p className="text-purple-300 text-sm">
-                {currentQuestionIndex + 1 < questions.length 
-                  ? 'შემდეგი კითხვა იწყება...'
-                  : 'საბოლოო შედეგები...'}
-              </p>
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-3 text-center flex-shrink-0"
+          >
+            <p className="text-purple-300 text-sm">შემდეგი კითხვა იწყება...</p>
+          </motion.div>
         </div>
 
         {/* Leaderboard - Fixed width */}

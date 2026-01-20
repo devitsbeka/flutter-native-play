@@ -9,17 +9,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
  */
 export const TVPairingScreenV3: React.FC = () => {
   const { code } = useTVGame();
-  const [fourDigitCode, setFourDigitCode] = useState<string>('');
-
-  // Generate a simple 4-digit code from the 6-char alphanumeric code
-  useEffect(() => {
-    if (code) {
-      // Create a 4-digit code by hashing the alphanumeric code
-      const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const digits = String(hash % 10000).padStart(4, '0');
-      setFourDigitCode(digits);
-    }
-  }, [code]);
+  const fourDigitCode = (code || '').padStart(4, '0');
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center p-6 overflow-hidden">
@@ -108,7 +98,7 @@ export const TVPairingScreenV3: React.FC = () => {
 
             {/* Full Code (smaller) */}
             <p className="text-purple-300/60 text-sm">
-              ან გამოიყენეთ კოდი: <span className="font-mono font-bold text-purple-200">{code}</span>
+              კოდი: <span className="font-mono font-bold text-purple-200">{fourDigitCode}</span>
             </p>
           </div>
         </motion.div>

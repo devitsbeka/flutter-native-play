@@ -160,6 +160,73 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Prevent repeated reveal updates from timer/presence sync
   const revealRequestedRef = useRef(false);
 
+  const startNextRoundFromQueueIfAny = useCallback(async () => {
+    if (!isHost) return false;
+    if (!state.sessionId) return false;
+
+    const { data: queueItems } = await supabase
+      .from('tv_session_queue')
+      .select('*')
+      .eq('session_id', state.sessionId)
+      .order('position', { ascending: true })
+      .limit(1);
+
+    const nextItem = queueItems?.[0] as any | undefined;
+    if (!nextItem?.category_id) return false;
+
+    // Remove from queue first
+    await supabase.from('tv_session_queue').delete().eq('id', nextItem.id);
+
+    // Reorder remaining items
+    const { data: remaining } = await supabase
+      .from('tv_session_queue')
+      .select('id')
+      .eq('session_id', state.sessionId)
+      .order('position', { ascending: true });
+    if (remaining?.length) {
+      await Promise.all(
+        remaining.map((item, index) =>
+          supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
+        )
+      );
+    }
+
+    // Fetch questions for the queued category
+    const { getQuestions } = await import('@/services/questionService');
+    const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+
+    const result = await getQuestions({
+      mode: 'tv',
+      categoryUuid: nextItem.category_id,
+      count: 10,
+    });
+
+    const formattedQuestions = result.questions.map(q => ({
+      id: q.id,
+      question_text: q.question,
+      correct_answer: q.correctAnswer,
+      options: q.allAnswers,
+    }));
+
+    markQuestionsAsAsked(`tv_${nextItem.category_id}`, formattedQuestions.map((q) => q.id));
+
+    // Advance to next round
+    await supabase
+      .from('tv_sessions')
+      .update({
+        status: 'countdown',
+        questions: formattedQuestions as unknown as Json,
+        current_question_index: 0,
+        question_start_time: null,
+        reveal_start_time: null,
+        category_name: nextItem.category_name || null,
+      })
+      .eq('id', state.sessionId);
+
+    revealRequestedRef.current = false;
+    return true;
+  }, [isHost, state.sessionId]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -231,10 +298,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const t = setTimeout(async () => {
       const nextIndex = state.currentQuestionIndex + 1;
       if (nextIndex >= state.questions.length) {
-        await supabase
-          .from('tv_sessions')
-          .update({ status: 'completed', reveal_start_time: null })
-          .eq('id', state.sessionId);
+        const startedNext = await startNextRoundFromQueueIfAny();
+        if (!startedNext) {
+          await supabase
+            .from('tv_sessions')
+            .update({ status: 'completed', reveal_start_time: null })
+            .eq('id', state.sessionId);
+        }
       } else {
         // Reset answers via local state + presence track; presence sync will update everyone.
         setMyAnswer(null);
@@ -264,7 +334,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, REVEAL_DURATION_MS);
 
     return () => clearTimeout(t);
-  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore]);
+  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny]);
 
   // Create TV session (called by TV display)
   const createSession = useCallback(async (): Promise<string | null> => {

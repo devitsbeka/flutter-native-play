@@ -149,17 +149,13 @@ export function useTVDiscovery() {
           return null;
         }
 
-        // Generate a player join code for guests
-        const playerJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
         // Pair with the TV
         const { error: updateError } = await supabase
           .from('tv_sessions')
           .update({
             is_paired: true,
             host_user_id: user.id,
-            status: 'waiting',
-            pairing_code: playerJoinCode, // Code for guests to join
+            status: 'paired',
           })
           .eq('id', session.id);
 
@@ -178,7 +174,7 @@ export function useTVDiscovery() {
         setConnectedSessionId(session.id);
         stopScanning();
 
-        return { sessionId: session.id, playerJoinCode };
+        return { sessionId: session.id, playerJoinCode: tv.pairingCode };
       } catch (err) {
         console.error('Connection error:', err);
         setConnectionState('error');
@@ -214,17 +210,13 @@ export function useTVDiscovery() {
           return null;
         }
 
-        // Generate a player join code for guests
-        const playerJoinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        
         // Pair with the TV
         const { error: updateError } = await supabase
           .from('tv_sessions')
           .update({
             is_paired: true,
             host_user_id: user.id,
-            status: 'waiting',
-            pairing_code: playerJoinCode, // Code for guests to join
+            status: 'paired',
           })
           .eq('id', session.id);
 
@@ -237,7 +229,7 @@ export function useTVDiscovery() {
         setConnectionState('connected');
         setConnectedSessionId(session.id);
 
-        return { sessionId: session.id, playerJoinCode };
+        return { sessionId: session.id, playerJoinCode: code };
       } catch (err) {
         console.error('Connection error:', err);
         setConnectionState('error');
