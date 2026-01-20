@@ -747,17 +747,26 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                 : "არასწორი პასუხის რედაქტირება"
             }
           </h3>
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            className="h-12"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleEditSave();
-              }
-            }}
-          />
+          {editingField.type === 'question' ? (
+            <textarea
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="w-full min-h-[120px] p-3 rounded-lg border border-input bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+              autoFocus
+            />
+          ) : (
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="h-12"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleEditSave();
+                }
+              }}
+            />
+          )}
           <div className="flex gap-2">
             <ChunkyButton
               variant="outline"
