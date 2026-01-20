@@ -215,7 +215,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             }}
             className="w-full"
           >
-            <CarouselContent allowOverflow className="-ml-3">
+            <CarouselContent className="-ml-3">
               {creator.trivias.map((trivia) => (
                 <CarouselItem key={trivia.id} className="pl-3 basis-auto">
                   <TriviaPortfolioCard
