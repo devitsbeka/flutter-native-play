@@ -38,11 +38,11 @@ export function CategoryPickerSection({
       {/* Main category display */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center overflow-hidden">
+          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
             {iconSlug ? (
               <DynamicIcon slug={iconSlug} size={28} />
             ) : (
-              <Shuffle className="w-6 h-6 text-primary" />
+              <Shuffle className="w-6 h-6 text-purple-400" />
             )}
           </div>
           <div>
@@ -74,14 +74,16 @@ export function CategoryPickerSection({
               axis="x" 
               values={queue} 
               onReorder={onReorderQueue}
-              className="flex flex-wrap gap-2"
+              className="flex gap-2 overflow-x-auto pb-2"
+              style={{ touchAction: "pan-y" }}
             >
               {queue.map((item, index) => (
                 <Reorder.Item
                   key={item.id}
                   value={item}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 cursor-grab active:cursor-grabbing select-none"
-                  whileDrag={{ scale: 1.05, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
+                  layout
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 cursor-grab active:cursor-grabbing select-none touch-none shrink-0"
+                  whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
                   <GripVertical className="w-3 h-3 text-white/40" />
