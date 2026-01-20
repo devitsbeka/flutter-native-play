@@ -98,20 +98,27 @@ export function CategoryPickerSection({
                       : item.category_name || "ტრივია"}
                   </span>
                   {onRemoveQueueItem && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        onRemoveQueueItem(item.id);
-                      }}
-                      onPointerDown={(e) => {
+                    <motion.div
+                      drag={false}
+                      onPointerDownCapture={(e) => {
                         e.stopPropagation();
                       }}
-                      className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"
-                      style={{ pointerEvents: "auto" }}
                     >
-                      <X className="w-[18px] h-[18px] text-white/50 hover:text-white/80" />
-                    </button>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          onRemoveQueueItem(item.id);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          onRemoveQueueItem(item.id);
+                        }}
+                        className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"
+                      >
+                        <X className="w-[18px] h-[18px] text-white/50 hover:text-white/80" />
+                      </button>
+                    </motion.div>
                   )}
                 </Reorder.Item>
               ))}
