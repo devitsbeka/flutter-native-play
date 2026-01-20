@@ -7,8 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, RotateCcw, Star, Crown } from "lucide-react";
+import { ArrowLeft, RotateCcw, Star, Crown, Shuffle, Library, ChevronRight } from "lucide-react";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -43,8 +44,11 @@ export function GameResultsScreenV2() {
     exitRoom,
     continueInRoom,
     startNewRound,
+    startNextFromQueue,
     isHost,
   } = useMultiplayerV2();
+
+  const { queue } = useRoomCategoryQueue(currentRoom?.id || null);
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
 
@@ -201,11 +205,19 @@ export function GameResultsScreenV2() {
     continueInRoom();
   };
 
+  // Get next queue item for display
+  const nextQueueItem = queue[0];
+
   const handlePlayAgain = async () => {
     setIsStartingRematch(true);
     try {
-      // Any player can start a new round
-      await startNewRound();
+      if (queue.length > 0) {
+        // Continue with next queued category
+        await startNextFromQueue();
+      } else {
+        // No queue - repeat same category
+        await startNewRound();
+      }
     } catch (error) {
       console.error("Error starting new round:", error);
       toast.error(t("game.couldNotStartRound"));
@@ -360,7 +372,7 @@ export function GameResultsScreenV2() {
         </motion.div>
       </div>
 
-      {/* Bottom Section: Buttons */}
+      {/* Bottom Section: Next Round Preview + Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -368,15 +380,52 @@ export function GameResultsScreenV2() {
         className="p-4 space-y-3"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}
       >
+        {/* Next Round Preview - show if queue has items */}
+        {nextQueueItem && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            className="p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+          >
+            <p className="text-white/50 text-xs mb-2">შემდეგი რაუნდი:</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                {nextQueueItem.source_type === "random" ? (
+                  <Shuffle className="w-5 h-5 text-purple-300" />
+                ) : (
+                  <Library className="w-5 h-5 text-purple-300" />
+                )}
+              </div>
+              <span className="flex-1 text-white font-medium truncate">
+                {nextQueueItem.source_type === "random" 
+                  ? "შემთხვევითი" 
+                  : nextQueueItem.category_name || "კატეგორია"}
+              </span>
+              {queue.length > 1 && (
+                <span className="text-white/40 text-sm flex items-center gap-1">
+                  +{queue.length - 1} მეტი
+                  <ChevronRight className="w-4 h-4" />
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         <ChunkyButton
           variant="mint"
           size="lg"
           className="w-full"
           onClick={handlePlayAgain}
           disabled={isStartingRematch}
-          icon={<RotateCcw className="w-5 h-5" />}
+          icon={nextQueueItem ? <ChevronRight className="w-5 h-5" /> : <RotateCcw className="w-5 h-5" />}
         >
-          {isStartingRematch ? t("game.starting") : t("game.newRound")}
+          {isStartingRematch 
+            ? t("game.starting") 
+            : nextQueueItem 
+              ? `გაგრძელება: ${nextQueueItem.source_type === "random" ? "შემთხვევითი" : (nextQueueItem.category_name || "კატეგორია")}`
+              : t("game.newRound")
+          }
         </ChunkyButton>
 
         <ChunkyButton
