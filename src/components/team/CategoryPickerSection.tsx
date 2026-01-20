@@ -78,19 +78,19 @@ export function CategoryPickerSection({
               style={{ touchAction: "pan-y" }}
             >
               {queue.map((item, index) => (
-                <Reorder.Item
+                  <Reorder.Item
                   key={item.id}
                   value={item}
                   layout
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 cursor-grab active:cursor-grabbing select-none touch-none shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 cursor-grab active:cursor-grabbing select-none touch-none shrink-0"
                   whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
-                  <GripVertical className="w-[15px] h-[15px] text-white/40" />
+                  <GripVertical className="w-[18px] h-[18px] text-white/40" />
                   {item.icon_slug ? (
-                    <DynamicIcon slug={item.icon_slug} size={15} />
+                    <DynamicIcon slug={item.icon_slug} size={18} />
                   ) : item.source_type === "random" ? (
-                    <Shuffle className="w-[15px] h-[15px] text-white/70" />
+                    <Shuffle className="w-[18px] h-[18px] text-white/70" />
                   ) : null}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
@@ -101,11 +101,16 @@ export function CategoryPickerSection({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         onRemoveQueueItem(item.id);
                       }}
-                      className="ml-0.5 p-0.5 rounded-full hover:bg-white/20 transition-colors"
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                      }}
+                      className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"
+                      style={{ pointerEvents: "auto" }}
                     >
-                      <X className="w-[15px] h-[15px] text-white/50 hover:text-white/80" />
+                      <X className="w-[18px] h-[18px] text-white/50 hover:text-white/80" />
                     </button>
                   )}
                 </Reorder.Item>
@@ -119,13 +124,13 @@ export function CategoryPickerSection({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20"
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
                   {item.icon_slug ? (
-                    <DynamicIcon slug={item.icon_slug} size={15} />
+                    <DynamicIcon slug={item.icon_slug} size={18} />
                   ) : item.source_type === "random" ? (
-                    <Shuffle className="w-[15px] h-[15px] text-white/70" />
+                    <Shuffle className="w-[18px] h-[18px] text-white/70" />
                   ) : null}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
