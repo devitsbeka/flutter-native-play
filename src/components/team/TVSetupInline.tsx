@@ -45,13 +45,74 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
         return;
       }
 
-      // Don't regenerate pairing_code - use the existing one so TV and host have same QR
+      // Fetch current room context (category, queue, name) from the URL or context
+      // We need to get the room_id from where we came from
+      const roomIdFromUrl = window.location.pathname.match(/\/room\/([^/]+)/)?.[1] || 
+                            window.location.pathname.match(/\/team\/([^/]+)/)?.[1];
+      
+      let roomName = null;
+      let categoryName = null;
+      let categoryIcon = null;
+      let roomId = null;
+      
+      // If we have a room ID, fetch its data and sync to TV session
+      if (roomIdFromUrl) {
+        const { data: roomData } = await supabase
+          .from('game_rooms')
+          .select('id, room_name, category_name, category_id')
+          .eq('id', roomIdFromUrl)
+          .maybeSingle();
+        
+        if (roomData) {
+          roomId = roomData.id;
+          roomName = roomData.room_name;
+          categoryName = roomData.category_name;
+          
+          // Fetch category icon
+          if (roomData.category_id) {
+            const { data: cat } = await supabase
+              .from('categories')
+              .select('icon')
+              .eq('id', roomData.category_id)
+              .maybeSingle();
+            categoryIcon = cat?.icon;
+          }
+          
+          // Copy room_category_queue to tv_session_queue
+          const { data: queueItems } = await supabase
+            .from('room_category_queue')
+            .select('*')
+            .eq('room_id', roomId)
+            .order('position');
+          
+          if (queueItems && queueItems.length > 0) {
+            // Insert queue items into tv_session_queue
+            await supabase.from('tv_session_queue').insert(
+              queueItems.map((item, index) => ({
+                session_id: session.id,
+                position: index,
+                source_type: item.source_type,
+                category_id: item.category_id,
+                category_name: item.category_name,
+                icon_slug: item.icon_slug,
+                user_trivia_id: item.user_trivia_id,
+              }))
+            );
+          }
+        }
+      }
+
+      // Update TV session with room data and host
       const { error: updateError } = await supabase
         .from('tv_sessions')
         .update({
           host_user_id: user.id,
           is_paired: true,
-          status: 'paired',  // Use 'paired' for DB constraint
+          status: 'paired',
+          room_id: roomId,
+          room_name: roomName,
+          category_name: categoryName,
+          category_icon: categoryIcon,
         })
         .eq('id', session.id);
 
