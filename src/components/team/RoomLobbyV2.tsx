@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut } from "lucide-react";
@@ -504,12 +505,11 @@ export function RoomLobbyV2() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg, #f97316, #3b82f6)" }}
-                >
-                  <Tv className="w-5 h-5 text-white" />
-                </div>
+                <img 
+                  src={retroTvIcon} 
+                  alt="TV" 
+                  className="w-10 h-10 object-contain"
+                />
                 <div>
                   <p className="text-white font-medium text-sm">TV რეჟიმი</p>
                   <p className="text-white/60 text-xs">კითხვები ტელევიზორზე</p>
