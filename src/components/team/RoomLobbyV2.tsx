@@ -357,77 +357,88 @@ export function RoomLobbyV2() {
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:max-w-[520px] mx-auto w-full">
-        <div className="flex items-center justify-between">
-          <motion.button
-            onClick={handleExitRoom}
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ArrowLeft className="w-4 h-4 text-white" />
-          </motion.button>
-
-          <div className="flex items-center gap-2">
-            {/* Chat toggle */}
+      <div className="sticky top-0 z-30 sm:max-w-[520px] mx-auto w-full">
+        {/* Header content with subtle background blur */}
+        <div className="px-4 sm:px-6 py-4 backdrop-blur-md bg-black/10">
+          <div className="flex items-center justify-between">
             <motion.button
-              onClick={() => setShowChat(!showChat)}
-              className="flex items-center justify-center w-10 h-10 rounded-xl relative bg-white/10 backdrop-blur-sm border border-white/20"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <MessageCircle className="w-4 h-4 text-white" />
-              {unreadMessageCount > 0 && !showChat && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unreadMessageCount}
-                </span>
-              )}
-            </motion.button>
-
-            {/* Share button */}
-            <motion.button
-              onClick={handleShare}
+              onClick={handleExitRoom}
               className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Share2 className="w-4 h-4 text-white" />
+              <ArrowLeft className="w-4 h-4 text-white" />
             </motion.button>
 
-            {/* Three-dot menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <motion.button
-                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <MoreVertical className="w-4 h-4 text-white" />
-                </motion.button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-card border-border">
-                <DropdownMenuItem onClick={() => setShowHowItWorks(true)} className="cursor-pointer">
-                  <Info className="w-4 h-4 mr-2" />
-                  როგორ მუშაობს
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLeaveConfirm} className="cursor-pointer">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  ოთახიდან გასვლა
-                </DropdownMenuItem>
-                {isHost && (
-                  <DropdownMenuItem 
-                    onClick={handleDeleteRoom} 
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    ოთახის წაშლა
-                  </DropdownMenuItem>
+            <div className="flex items-center gap-2">
+              {/* Chat toggle */}
+              <motion.button
+                onClick={() => setShowChat(!showChat)}
+                className="flex items-center justify-center w-10 h-10 rounded-xl relative bg-white/10 backdrop-blur-sm border border-white/20"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <MessageCircle className="w-4 h-4 text-white" />
+                {unreadMessageCount > 0 && !showChat && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadMessageCount}
+                  </span>
                 )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </motion.button>
+
+              {/* Share button */}
+              <motion.button
+                onClick={handleShare}
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Share2 className="w-4 h-4 text-white" />
+              </motion.button>
+
+              {/* Three-dot menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <motion.button
+                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <MoreVertical className="w-4 h-4 text-white" />
+                  </motion.button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                  <DropdownMenuItem onClick={() => setShowHowItWorks(true)} className="cursor-pointer">
+                    <Info className="w-4 h-4 mr-2" />
+                    როგორ მუშაობს
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLeaveConfirm} className="cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    ოთახიდან გასვლა
+                  </DropdownMenuItem>
+                  {isHost && (
+                    <DropdownMenuItem 
+                      onClick={handleDeleteRoom} 
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      ოთახის წაშლა
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
+        
+        {/* Fade-out gradient for smooth transition */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-8 -mb-8 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), transparent)'
+          }}
+        />
       </div>
 
       {/* Scrollable content area */}
