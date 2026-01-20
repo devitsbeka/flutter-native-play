@@ -519,11 +519,11 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             )}
                             
                             {/* Large Tappable Icon - Trigger Button */}
-                            <div className="flex flex-col items-center gap-1">
+                            <div className="flex flex-col items-center gap-1 overflow-visible">
                               <button
                                 type="button"
                                 onClick={() => setIconPickerIndex(index)}
-                                className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
+                                className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40 overflow-visible"
                                 style={{ width: 80, height: 80 }}
                               >
                                 {q.icon_slug ? (
@@ -534,8 +534,8 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                       style={{ width: 80, height: 80 }}
                                       className="object-contain"
                                     />
-                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
-                                      <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                                    <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200/50 z-10">
+                                      <RefreshCw className="w-4 h-4 text-slate-600" />
                                     </div>
                                   </>
                                 ) : (
