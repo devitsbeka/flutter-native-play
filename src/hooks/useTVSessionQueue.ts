@@ -13,9 +13,15 @@ export interface TVQueueItem {
   created_at: string;
 }
 
-export function useTVSessionQueue(sessionId: string | null) {
+/**
+ * Hook to manage TV session queue with fallback to room_category_queue
+ * @param sessionId - The TV session ID
+ * @param roomIdFallback - Optional room ID to fallback to room_category_queue if TV queue is empty
+ */
+export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: string | null) {
   const [queue, setQueue] = useState<TVQueueItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [usingRoomFallback, setUsingRoomFallback] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!sessionId) {
@@ -23,15 +29,53 @@ export function useTVSessionQueue(sessionId: string | null) {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // First try TV session queue
+    const { data: tvData, error: tvError } = await supabase
       .from("tv_session_queue")
       .select("*")
       .eq("session_id", sessionId)
       .order("position", { ascending: true });
+    
+    if (!tvError && tvData && tvData.length > 0) {
+      setQueue(tvData as TVQueueItem[]);
+      setUsingRoomFallback(false);
+      setLoading(false);
+      return;
+    }
+    
+    // Fallback to room_category_queue if available
+    if (roomIdFallback) {
+      const { data: roomData, error: roomError } = await supabase
+        .from("room_category_queue")
+        .select("*")
+        .eq("room_id", roomIdFallback)
+        .order("position", { ascending: true });
+      
+      if (!roomError && roomData && roomData.length > 0) {
+        // Map room queue items to TV queue format
+        const mappedQueue: TVQueueItem[] = roomData.map(item => ({
+          id: item.id,
+          session_id: sessionId,
+          position: item.position,
+          source_type: item.source_type,
+          category_id: item.category_id,
+          category_name: item.category_name,
+          icon_slug: item.icon_slug,
+          user_trivia_id: item.user_trivia_id,
+          created_at: item.created_at || new Date().toISOString(),
+        }));
+        setQueue(mappedQueue);
+        setUsingRoomFallback(true);
+        setLoading(false);
+        return;
+      }
+    }
+    
+    setQueue([]);
+    setUsingRoomFallback(false);
     setLoading(false);
-    if (error) return;
-    setQueue((data || []) as TVQueueItem[]);
-  }, [sessionId]);
+  }, [sessionId, roomIdFallback]);
 
   useEffect(() => {
     refetch();
@@ -39,7 +83,9 @@ export function useTVSessionQueue(sessionId: string | null) {
 
   useEffect(() => {
     if (!sessionId) return;
-    const channel = supabase
+    
+    // Subscribe to TV session queue changes
+    const tvChannel = supabase
       .channel(`tv_session_queue_${sessionId}`)
       .on(
         "postgres_changes",
@@ -54,10 +100,34 @@ export function useTVSessionQueue(sessionId: string | null) {
         }
       )
       .subscribe();
+    
+    // Also subscribe to room queue changes if we have a room fallback
+    let roomChannel: ReturnType<typeof supabase.channel> | null = null;
+    if (roomIdFallback) {
+      roomChannel = supabase
+        .channel(`room_category_queue_${roomIdFallback}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "room_category_queue",
+            filter: `room_id=eq.${roomIdFallback}`,
+          },
+          () => {
+            refetch();
+          }
+        )
+        .subscribe();
+    }
+    
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tvChannel);
+      if (roomChannel) {
+        supabase.removeChannel(roomChannel);
+      }
     };
-  }, [sessionId, refetch]);
+  }, [sessionId, roomIdFallback, refetch]);
 
   const addCategoryToQueue = useCallback(
     async (category: { id: string; name: string; icon_slug?: string | null }) => {
@@ -103,6 +173,7 @@ export function useTVSessionQueue(sessionId: string | null) {
     queue,
     loading,
     hasQueue,
+    usingRoomFallback,
     refetch,
     addCategoryToQueue,
     removeFromQueue,
