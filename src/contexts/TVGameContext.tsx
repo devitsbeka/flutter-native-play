@@ -30,7 +30,7 @@ export interface TVQuestion {
   options: string[];
 }
 
-export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle';
+export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle' | 'round-intro';
 
 interface TVGameState {
   code: string | null;
@@ -64,6 +64,7 @@ interface TVGameContextType extends TVGameState {
   resetGame: () => Promise<void>; // Reset game for play again
   // Player actions
   submitAnswer: (answer: string) => Promise<{ correct: boolean; points: number }>;
+  markReady: () => Promise<void>; // Mark player as ready for next round
   // Shared
   leaveSession: () => void;
   isHost: boolean;
@@ -92,6 +93,7 @@ export const mapDbStatusToPhase = (status: string): TVPhase => {
     'completed': 'results',
     'idle': 'idle',
     'pairing': 'pairing',
+    'round-intro': 'round-intro',
   };
   return mapping[status] || (status as TVPhase);
 };
@@ -210,11 +212,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     markQuestionsAsAsked(`tv_${nextItem.category_id}`, formattedQuestions.map((q) => q.id));
 
-    // Advance to next round
+    // Go to round-intro phase instead of countdown - wait for all players to be ready
     await supabase
       .from('tv_sessions')
       .update({
-        status: 'countdown',
+        status: 'round-intro',
         questions: formattedQuestions as unknown as Json,
         current_question_index: 0,
         question_start_time: null,
@@ -890,6 +892,47 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [state.sessionId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost]);
 
+  // Mark player as ready for next round (presence update)
+  const markReady = useCallback(async () => {
+    if (!presenceChannelRef.current || !myPlayerId) return;
+    
+    const myPlayer = state.players.find(p => p.id === myPlayerId);
+    await presenceChannelRef.current.track({
+      nickname: myPlayer?.nickname || 'Player',
+      avatar_url: myPlayer?.avatar_url,
+      score: myScore,
+      hasAnswered: false,
+      lastAnswerCorrect: null,
+      lastAnswer: null,
+      isHost,
+      isReadyForNextRound: true,
+    });
+    tvLog('Player marked ready for next round', { playerId: myPlayerId.slice(0, 8) });
+  }, [state.players, myPlayerId, myScore, isHost]);
+
+  // Auto-advance from round-intro when all players are ready (host only)
+  useEffect(() => {
+    if (!isHost) return;
+    if (!state.sessionId) return;
+    if (state.phase !== 'round-intro') return;
+    if (state.players.length === 0) return;
+
+    // Check if all players are ready
+    const allReady = state.players.every(p => (p as any).isReadyForNextRound);
+    
+    if (allReady) {
+      tvLog('All players ready, starting countdown');
+      // Transition to countdown
+      supabase
+        .from('tv_sessions')
+        .update({ status: 'countdown' })
+        .eq('id', state.sessionId)
+        .then(() => {
+          tvLogPhase('round-intro', 'countdown', 'all players ready');
+        });
+    }
+  }, [isHost, state.sessionId, state.phase, state.players]);
+
   // Start next round (host only)
   const startNextRound = useCallback(async () => {
     tvLog('startNextRound called', { sessionId: state.sessionId, isHost, phase: state.phase });
@@ -1101,6 +1144,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         saveRoundHistory,
         resetGame,
         submitAnswer,
+        markReady,
         leaveSession,
         isHost,
         myPlayerId,
