@@ -357,7 +357,7 @@ export function RoomLobbyV2() {
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 sm:max-w-[520px] mx-auto w-full">
+      <div className="sticky top-0 z-30 w-full">
         {/* Header content with subtle background blur */}
         <div className="px-4 sm:px-6 py-4 backdrop-blur-md bg-black/10">
           <div className="flex items-center justify-between">
