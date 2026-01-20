@@ -77,7 +77,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      className="w-full max-w-md mx-auto overflow-hidden"
+      className="w-full max-w-md mx-auto overflow-hidden mb-6"
     >
       <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
         <AnimatePresence mode="wait">
