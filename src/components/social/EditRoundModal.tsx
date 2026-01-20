@@ -547,9 +547,16 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                 
                                 {/* Badge positioned relative to the padded wrapper - NOT inside the button */}
                                 {q.icon_slug && (
-                                  <div className="absolute top-0 right-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200/50">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setIconPickerIndex(index);
+                                    }}
+                                    className="absolute top-0 right-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200/50 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
+                                  >
                                     <RefreshCw className="w-4 h-4 text-slate-600" />
-                                  </div>
+                                  </button>
                                 )}
                               </div>
                               {missingIcon && !hasCriticalIssue && (
