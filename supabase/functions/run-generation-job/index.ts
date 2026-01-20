@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const QUESTION_MAX_LENGTH = 120;
+const QUESTION_MAX_LENGTH = 70;
 const ANSWER_MAX_LENGTH = 35;
 
 interface GeneratedQuestion {
@@ -191,8 +191,14 @@ serve(async (req) => {
 გენერირე ${batchSize} უნიკალური კითხვა კატეგორიაში: ${currentCategory.name}
 სირთულე: ${difficulty}
 
+⚠️ კრიტიკული სიგრძის წესი:
+- კითხვა: მაქსიმუმ ${QUESTION_MAX_LENGTH} სიმბოლო (ძალიან მოკლე!)
+- ეს ძალიან მოკლეა - იყავი ლაკონური!
+- მაგალითი: "ვინ მოიგო ჩემპიონთა ლიგა 2022-ში?" = 36 სიმბოლო ✓
+- თუ კითხვა გრძელია, გადააკეთე მოკლედ!
+
 მკაცრი წესები:
-1. კითხვა: მაქსიმუმ ${QUESTION_MAX_LENGTH} სიმბოლო
+1. კითხვა: მაქსიმუმ ${QUESTION_MAX_LENGTH} სიმბოლო (მკაცრი!)
 2. პასუხი: მაქსიმუმ ${ANSWER_MAX_LENGTH} სიმბოლო
 3. 3 არასწორი პასუხი, თითოეული მაქს ${ANSWER_MAX_LENGTH} სიმბოლო
 4. ქართულ ენაზე

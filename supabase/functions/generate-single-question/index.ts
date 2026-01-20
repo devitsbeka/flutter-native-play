@@ -7,8 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// App-wide character limits - Georgian text needs more space
-const QUESTION_MAX_LENGTH = 120;
+// App-wide character limits - strict for gameplay display
+const QUESTION_MAX_LENGTH = 70;
 const ANSWER_MAX_LENGTH = 35;
 
 // Fisher-Yates shuffle for randomizing answer positions
@@ -87,7 +87,12 @@ GENERATE: Factual trivia questions with FACTUAL answers about the topic.
 - Use proper Georgian verb conjugations
 - Questions must be natural-sounding Georgian sentences
 
-LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
+⚠️ LENGTH RULES - VERY STRICT:
+- Question: MAX ${QUESTION_MAX_LENGTH} chars (VERY SHORT! Be concise!)
+- Answer: MAX ${ANSWER_MAX_LENGTH} chars
+- Example good length: "ვინ მოიგო ჩემპიონთა ლიგა 2022-ში?" = 36 chars ✓
+- If question is too long, REWRITE it shorter!
+
 LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
 
 ${isTrueFalse ? `TRUE/FALSE FORMAT - CRITICAL RULES:
@@ -221,7 +226,12 @@ EXAMPLES OF GOOD ICON_KEYWORDS:
 - "ვის ტელეფონი მუდამ დამჯდარია?" → ["phone", "battery", "charging", "smartphone"]
 - "ვინ მიაკითხავდა მაცივარს შუაღამეს?" → ["refrigerator", "midnight", "food", "snack", "kitchen"]
 
-LIMITS: Question ≤${QUESTION_MAX_LENGTH} chars, Answer ≤${ANSWER_MAX_LENGTH} chars
+⚠️ LENGTH RULES - VERY STRICT:
+- Question: MAX ${QUESTION_MAX_LENGTH} chars (VERY SHORT! Be concise!)
+- Answer: MAX ${ANSWER_MAX_LENGTH} chars  
+- Example: "ვინ არის ყველაზე დრამატული?" = 28 chars ✓
+- If question is too long, REWRITE it shorter!
+
 LANGUAGE: Georgian only - MUST BE GRAMMATICALLY PERFECT
 
 ${isTrueFalse ? `TRUE/FALSE format` : `4 MULTIPLE CHOICE answers`}
