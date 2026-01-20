@@ -356,10 +356,12 @@ export function RoomLobbyV2() {
       className="min-h-screen relative overflow-hidden flex flex-col"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
-      {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 py-6 pb-32 sm:max-w-[520px] mx-auto w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+      {/* Sticky Header */}
+      <div 
+        className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:max-w-[520px] mx-auto w-full"
+        style={{ background: roomGradient?.gradient || 'var(--background)' }}
+      >
+        <div className="flex items-center justify-between">
           <motion.button
             onClick={handleExitRoom}
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
@@ -429,6 +431,10 @@ export function RoomLobbyV2() {
             </DropdownMenu>
           </div>
         </div>
+      </div>
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 pb-32 sm:max-w-[520px] mx-auto w-full">
 
         {/* Room Name Section */}
         <div className="text-center mb-4 space-y-3">
