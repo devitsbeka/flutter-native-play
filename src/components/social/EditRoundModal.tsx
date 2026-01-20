@@ -51,6 +51,14 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
   const [hasChanges, setHasChanges] = useState(false);
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   
+  // Edit state for question text and answers
+  const [editingField, setEditingField] = useState<{
+    type: 'question' | 'correct' | 'incorrect';
+    questionIndex: number;
+    answerIndex?: number;
+  } | null>(null);
+  const [editValue, setEditValue] = useState("");
+  
   // Track original values to detect changes
   const [originalValues, setOriginalValues] = useState<{
     title: string;
@@ -130,6 +138,42 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
       i === index ? { ...q, icon_slug: iconSlug } : q
     ));
   }, []);
+
+  const updateQuestionText = useCallback((index: number, newText: string) => {
+    setQuestions(prev => prev.map((q, i) => 
+      i === index ? { ...q, question_text: newText } : q
+    ));
+  }, []);
+
+  const updateCorrectAnswer = useCallback((index: number, newText: string) => {
+    setQuestions(prev => prev.map((q, i) => 
+      i === index ? { ...q, correct_answer: newText } : q
+    ));
+  }, []);
+
+  const updateIncorrectAnswer = useCallback((questionIndex: number, answerIndex: number, newText: string) => {
+    setQuestions(prev => prev.map((q, qIdx) => {
+      if (qIdx !== questionIndex) return q;
+      const newIncorrect = [...q.incorrect_answers];
+      newIncorrect[answerIndex] = newText;
+      return { ...q, incorrect_answers: newIncorrect };
+    }));
+  }, []);
+
+  const handleEditSave = useCallback(() => {
+    if (!editingField || !editValue.trim()) return;
+    
+    if (editingField.type === 'question') {
+      updateQuestionText(editingField.questionIndex, editValue.trim());
+    } else if (editingField.type === 'correct') {
+      updateCorrectAnswer(editingField.questionIndex, editValue.trim());
+    } else if (editingField.type === 'incorrect' && editingField.answerIndex !== undefined) {
+      updateIncorrectAnswer(editingField.questionIndex, editingField.answerIndex, editValue.trim());
+    }
+    
+    setEditingField(null);
+    setEditValue("");
+  }, [editingField, editValue, updateQuestionText, updateCorrectAnswer, updateIncorrectAnswer]);
 
   const deleteQuestion = useCallback((index: number) => {
     const newQuestions = questions.filter((_, i) => i !== index);
@@ -508,40 +552,62 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                               )}
                             </div>
                             
-                            {/* Question Text (READ-ONLY) */}
-                            <div className="text-center">
-                              <p className="text-lg font-medium text-white leading-relaxed">
+                            {/* Question Text - Editable */}
+                            <button
+                              onClick={() => {
+                                setEditingField({ type: 'question', questionIndex: index });
+                                setEditValue(q.question_text);
+                              }}
+                              className="text-center w-full group cursor-pointer"
+                            >
+                              <p className="text-lg font-medium text-white leading-relaxed group-hover:bg-white/10 rounded-lg px-2 py-1 transition-colors">
                                 {q.question_text}
                               </p>
-                            </div>
+                              <span className="text-xs text-white/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                დააჭირე რედაქტირებისთვის
+                              </span>
+                            </button>
                             
-                            {/* Answers (READ-ONLY) - Game Style */}
+                            {/* Answers - Editable Game Style */}
                             <div className="space-y-2">
                               {/* Correct Answer - Green chunky button */}
-                              <div className="relative">
+                              <button
+                                onClick={() => {
+                                  setEditingField({ type: 'correct', questionIndex: index });
+                                  setEditValue(q.correct_answer);
+                                }}
+                                className="relative w-full group cursor-pointer text-left"
+                              >
                                 <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
-                                <div className="relative p-3 rounded-xl bg-emerald-500 flex items-center gap-3">
+                                <div className="relative p-3 rounded-xl bg-emerald-500 flex items-center gap-3 group-hover:bg-emerald-400 transition-colors">
                                   <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
                                     <Check className="w-4 h-4 text-emerald-600" />
                                   </div>
-                                  <span className="text-white font-semibold">
+                                  <span className="text-white font-semibold flex-1">
                                     {q.correct_answer}
                                   </span>
                                 </div>
-                              </div>
+                              </button>
                               {/* Incorrect Answers - White chunky buttons */}
                               {q.incorrect_answers.map((ans, i) => (
-                                <div key={i} className="relative">
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    setEditingField({ type: 'incorrect', questionIndex: index, answerIndex: i });
+                                    setEditValue(ans);
+                                  }}
+                                  className="relative w-full group cursor-pointer text-left"
+                                >
                                   <div className="absolute inset-0 bg-gray-300 rounded-xl translate-y-1" />
-                                  <div className="relative p-3 rounded-xl bg-white flex items-center gap-3">
+                                  <div className="relative p-3 rounded-xl bg-white flex items-center gap-3 group-hover:bg-gray-100 transition-colors">
                                     <div className="w-7 h-7 rounded-full bg-sky-300 flex items-center justify-center flex-shrink-0">
                                       <span className="text-slate-700 font-bold text-sm">
-                                        {String.fromCharCode(66 + i)}
+                                        {['ბ', 'გ', 'დ'][i]}
                                       </span>
                                     </div>
-                                    <span className="text-slate-700 font-medium">{ans}</span>
+                                    <span className="text-slate-700 font-medium flex-1">{ans}</span>
                                   </div>
-                                </div>
+                                </button>
                               ))}
                             </div>
                             
@@ -652,6 +718,67 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
         incorrectAnswers={questions[iconPickerIndex]?.incorrect_answers}
         large
       />,
+      document.body
+    )}
+
+    {/* Edit Text Dialog */}
+    {editingField !== null && createPortal(
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60"
+        onClick={() => {
+          setEditingField(null);
+          setEditValue("");
+        }}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-background rounded-2xl p-4 w-full max-w-md space-y-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-lg font-bold text-foreground">
+            {editingField.type === 'question' 
+              ? "კითხვის რედაქტირება" 
+              : editingField.type === 'correct'
+                ? "სწორი პასუხის რედაქტირება"
+                : "არასწორი პასუხის რედაქტირება"
+            }
+          </h3>
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="h-12"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleEditSave();
+              }
+            }}
+          />
+          <div className="flex gap-2">
+            <ChunkyButton
+              variant="outline"
+              onClick={() => {
+                setEditingField(null);
+                setEditValue("");
+              }}
+              className="flex-1"
+            >
+              გაუქმება
+            </ChunkyButton>
+            <ChunkyButton
+              onClick={handleEditSave}
+              disabled={!editValue.trim()}
+              className="flex-1"
+            >
+              შენახვა
+            </ChunkyButton>
+          </div>
+        </motion.div>
+      </motion.div>,
       document.body
     )}
     </>
