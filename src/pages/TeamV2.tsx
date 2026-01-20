@@ -429,7 +429,7 @@ function TeamContentV2() {
       <div className="min-h-screen flex flex-col">
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-hidden min-w-0">
+          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-x-hidden overflow-y-visible min-w-0">
             {/* Sticky Header Section - Title, Buttons, Friends Bar, Tabs, Filters */}
             <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
               <div className="px-4 pt-4 pb-2">
