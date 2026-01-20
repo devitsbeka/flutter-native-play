@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Shuffle, Library, Sparkles, ArrowLeft, Search, Plus, Check } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +41,7 @@ interface CategoryPickerModalProps {
     icon_slug?: string | null;
   }) => void;
   showQueueOption?: boolean;
+  roomGradient?: string;
 }
 
 export function CategoryPickerModal({
@@ -52,6 +52,7 @@ export function CategoryPickerModal({
   onSelectTrivia,
   onAddToQueue,
   showQueueOption = true,
+  roomGradient,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
   const [view, setView] = useState<ViewState>("main");
@@ -174,269 +175,265 @@ export function CategoryPickerModal({
 
   if (!isOpen) return null;
 
+  const defaultGradient = "linear-gradient(135deg, #1a1a2e, #16213e)";
+  const backgroundStyle = roomGradient || defaultGradient;
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center"
-        onClick={onClose}
+        className="fixed inset-0 z-50 flex flex-col"
+        style={{ background: backgroundStyle }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 100 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="w-full max-w-md max-h-[85vh] bg-card rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            {view !== "main" ? (
-              <motion.button
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={handleBack}
-                className="p-2 rounded-xl bg-secondary hover:bg-secondary/80"
-              >
-                <ArrowLeft className="w-5 h-5 text-foreground" />
-              </motion.button>
-            ) : (
-              <div className="w-9" />
-            )}
-            <h2 className="text-lg font-bold text-foreground">
-              {view === "main" && "აირჩიე კატეგორია"}
-              {view === "library" && "ბიბლიოთეკა"}
-              {view === "my-trivias" && "ჩემი ტრივიები"}
-            </h2>
+        {/* Glass header */}
+        <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm border-b border-white/10">
+          {view !== "main" ? (
             <motion.button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-secondary hover:bg-secondary/80"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={handleBack}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
             >
-              <X className="w-5 h-5 text-foreground" />
+              <ArrowLeft className="w-5 h-5 text-white" />
             </motion.button>
-          </div>
+          ) : (
+            <div className="w-9" />
+          )}
+          <h2 className="text-lg font-bold text-white">
+            {view === "main" && "აირჩიე კატეგორია"}
+            {view === "library" && "ბიბლიოთეკა"}
+            {view === "my-trivias" && "ჩემი ტრივიები"}
+          </h2>
+          <motion.button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <X className="w-5 h-5 text-white" />
+          </motion.button>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {view === "main" && (
-              <div className="space-y-3">
-                {/* Random option */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedItem({ type: "random" })}
-                  className={`w-full p-4 rounded-2xl border transition-all text-left ${
-                    selectedItem?.type === "random"
-                      ? "bg-primary/20 border-primary"
-                      : "bg-secondary border-border hover:border-primary/50"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                      <Shuffle className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground text-lg">შემთხვევითი</p>
-                      <p className="text-muted-foreground text-sm">რანდომ კატეგორია თამაშისთვის</p>
-                    </div>
-                    {selectedItem?.type === "random" && (
-                      <Check className="w-5 h-5 text-primary" />
-                    )}
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {view === "main" && (
+            <div className="space-y-3 max-w-md mx-auto">
+              {/* Random option */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedItem({ type: "random" })}
+                className={`w-full p-4 rounded-2xl backdrop-blur-sm transition-all text-left ${
+                  selectedItem?.type === "random"
+                    ? "bg-white/20 border-2 border-white/50"
+                    : "bg-white/10 border border-white/20 hover:bg-white/15"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Shuffle className="w-7 h-7 text-white" />
                   </div>
-                </motion.button>
-
-                {/* Library option */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setView("library")}
-                  className="w-full p-4 rounded-2xl bg-secondary border border-border hover:border-primary/50 transition-all text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                      <Library className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground text-lg">ბიბლიოთეკა</p>
-                      <p className="text-muted-foreground text-sm">აირჩიე კატეგორია სიიდან</p>
-                    </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-white text-lg">შემთხვევითი</p>
+                    <p className="text-white/60 text-sm">რანდომ კატეგორია თამაშისთვის</p>
                   </div>
-                </motion.button>
-
-                {/* My Trivias option */}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setView("my-trivias")}
-                  className="w-full p-4 rounded-2xl bg-secondary border border-border hover:border-primary/50 transition-all text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                      <Sparkles className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground text-lg">ჩემი ტრივიები</p>
-                      <p className="text-muted-foreground text-sm">აირჩიე შენი შექმნილი ტრივიებიდან</p>
-                    </div>
-                  </div>
-                </motion.button>
-              </div>
-            )}
-
-            {view === "library" && (
-              <div className="space-y-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="კატეგორიის ძიება..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
+                  {selectedItem?.type === "random" && (
+                    <Check className="w-5 h-5 text-white" />
+                  )}
                 </div>
+              </motion.button>
 
-                {/* Categories grid */}
-                {loadingCategories ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              {/* Library option */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setView("library")}
+                className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <Library className="w-7 h-7 text-white" />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {filteredCategories.map((cat, index) => (
+                  <div className="flex-1">
+                    <p className="font-semibold text-white text-lg">ბიბლიოთეკა</p>
+                    <p className="text-white/60 text-sm">აირჩიე კატეგორია სიიდან</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* My Trivias option */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setView("my-trivias")}
+                className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-white text-lg">ჩემი ტრივიები</p>
+                    <p className="text-white/60 text-sm">აირჩიე შენი შექმნილი ტრივიებიდან</p>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+          )}
+
+          {view === "library" && (
+            <div className="space-y-4 max-w-md mx-auto">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <input
+                  placeholder="კატეგორიის ძიება..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
+                />
+              </div>
+
+              {/* Categories grid */}
+              {loadingCategories ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {filteredCategories.map((cat, index) => (
+                    <motion.button
+                      key={cat.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => setSelectedItem({
+                        type: "category",
+                        id: cat.id,
+                        name: cat.name,
+                        iconSlug: cat.icon_slug,
+                      })}
+                      className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
+                        selectedItem?.type === "category" && selectedItem.id === cat.id
+                          ? "bg-white/20 border-2 border-white/50"
+                          : "bg-white/10 border border-white/20 hover:bg-white/15"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-10 h-10 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: `${cat.color}40` }}
+                        >
+                          {cat.icon_slug ? (
+                            <DynamicIcon slug={cat.icon_slug} size={22} />
+                          ) : (
+                            <span className="text-xl">{cat.icon}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white text-sm truncate">{cat.name}</p>
+                          <p className="text-white/50 text-xs">{cat.total_levels} დონე</p>
+                        </div>
+                        {selectedItem?.type === "category" && selectedItem.id === cat.id && (
+                          <Check className="w-4 h-4 text-white flex-shrink-0" />
+                        )}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {view === "my-trivias" && (
+            <div className="space-y-4 max-w-md mx-auto">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <input
+                  placeholder="ტრივიის ძიება..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:border-white/40 outline-none backdrop-blur-sm"
+                />
+              </div>
+
+              {/* Trivias list */}
+              {loadingTrivias ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : filteredTrivias.length === 0 ? (
+                <div className="text-center py-12">
+                  <Sparkles className="w-12 h-12 text-white/30 mx-auto mb-3" />
+                  <p className="text-white/60">ტრივია ვერ მოიძებნა</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredTrivias.map((trivia, index) => {
+                    const questionCount = Array.isArray(trivia.questions) ? trivia.questions.length : 0;
+                    
+                    return (
                       <motion.button
-                        key={cat.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.02 }}
+                        key={trivia.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
                         onClick={() => setSelectedItem({
-                          type: "category",
-                          id: cat.id,
-                          name: cat.name,
-                          iconSlug: cat.icon_slug,
+                          type: "trivia",
+                          id: trivia.id,
+                          name: trivia.title,
                         })}
-                        className={`p-4 rounded-xl border transition-all text-left ${
-                          selectedItem?.type === "category" && selectedItem.id === cat.id
-                            ? "bg-primary/20 border-primary"
-                            : "bg-secondary border-border hover:border-primary/50"
+                        className={`w-full p-3 rounded-xl backdrop-blur-sm transition-all text-left ${
+                          selectedItem?.type === "trivia" && selectedItem.id === trivia.id
+                            ? "bg-white/20 border-2 border-white/50"
+                            : "bg-white/10 border border-white/20 hover:bg-white/15"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-10 h-10 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: `${cat.color}30` }}
+                            className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"
+                            style={{ background: trivia.cover_gradient || "linear-gradient(135deg, #667eea, #764ba2)" }}
                           >
-                            {cat.icon_slug ? (
-                              <DynamicIcon slug={cat.icon_slug} size={22} />
-                            ) : (
-                              <span className="text-xl">{cat.icon}</span>
+                            {trivia.cover_image && (
+                              <img 
+                                src={trivia.cover_image} 
+                                alt="" 
+                                className="w-full h-full object-cover"
+                              />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground text-sm truncate">{cat.name}</p>
-                            <p className="text-muted-foreground text-xs">{cat.total_levels} დონე</p>
+                            <p className="font-medium text-white truncate">{trivia.title}</p>
+                            <p className="text-white/50 text-xs">
+                              {questionCount} კითხვა • {trivia.plays_count || 0} თამაში
+                            </p>
                           </div>
-                          {selectedItem?.type === "category" && selectedItem.id === cat.id && (
-                            <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                          {selectedItem?.type === "trivia" && selectedItem.id === trivia.id && (
+                            <Check className="w-5 h-5 text-white flex-shrink-0" />
                           )}
                         </div>
                       </motion.button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {view === "my-trivias" && (
-              <div className="space-y-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="ტრივიის ძიება..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
+                    );
+                  })}
                 </div>
+              )}
+            </div>
+          )}
+        </div>
 
-                {/* Trivias list */}
-                {loadingTrivias ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : filteredTrivias.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">ტრივია ვერ მოიძებნა</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredTrivias.map((trivia, index) => {
-                      const questionCount = Array.isArray(trivia.questions) ? trivia.questions.length : 0;
-                      
-                      return (
-                        <motion.button
-                          key={trivia.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          onClick={() => setSelectedItem({
-                            type: "trivia",
-                            id: trivia.id,
-                            name: trivia.title,
-                          })}
-                          className={`w-full p-3 rounded-xl border transition-all text-left ${
-                            selectedItem?.type === "trivia" && selectedItem.id === trivia.id
-                              ? "bg-primary/20 border-primary"
-                              : "bg-secondary border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"
-                              style={{ background: trivia.cover_gradient || "linear-gradient(135deg, #667eea, #764ba2)" }}
-                            >
-                              {trivia.cover_image && (
-                                <img 
-                                  src={trivia.cover_image} 
-                                  alt="" 
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-foreground truncate">{trivia.title}</p>
-                              <p className="text-muted-foreground text-xs">
-                                {questionCount} კითხვა • {trivia.plays_count || 0} თამაში
-                              </p>
-                            </div>
-                            {selectedItem?.type === "trivia" && selectedItem.id === trivia.id && (
-                              <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                            )}
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Footer buttons - show when item selected */}
-          {selectedItem && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 border-t border-border space-y-2"
-            >
+        {/* Footer buttons - show when item selected */}
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-white/5 backdrop-blur-sm border-t border-white/10"
+          >
+            <div className="max-w-md mx-auto space-y-2">
               <ChunkyButton
-                variant="primary"
+                variant="white"
                 size="lg"
                 className="w-full"
                 onClick={handleSelectNow}
@@ -448,16 +445,16 @@ export function CategoryPickerModal({
                 <ChunkyButton
                   variant="secondary"
                   size="md"
-                  className="w-full"
+                  className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
                   onClick={handleAddToQueue}
                   icon={<Plus className="w-4 h-4" />}
                 >
                   რიგში დამატება
                 </ChunkyButton>
               )}
-            </motion.div>
-          )}
-        </motion.div>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </AnimatePresence>
   );

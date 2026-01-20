@@ -351,10 +351,11 @@ export function RoomLobbyV2() {
 
   return (
     <div 
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-hidden flex flex-col"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
-      <div className="relative z-10 min-h-screen flex flex-col px-4 sm:px-6 py-6 sm:max-w-[520px] mx-auto w-full">
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto relative z-10 px-4 sm:px-6 py-6 pb-32 sm:max-w-[520px] mx-auto w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <motion.button
@@ -496,8 +497,8 @@ export function RoomLobbyV2() {
                   <Tv className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-white font-semibold">TV-ზე თამაში</p>
-                  <p className="text-white/60 text-sm">წვეულების რეჟიმი</p>
+                  <p className="text-white font-medium text-sm">TV რეჟიმი</p>
+                  <p className="text-white/60 text-xs">კითხვები ტელევიზორზე</p>
                 </div>
               </div>
               <Switch
@@ -508,94 +509,83 @@ export function RoomLobbyV2() {
           </motion.div>
         )}
 
-        {/* TV Setup Inline Widget */}
+        {/* TV Setup (when enabled) */}
         <AnimatePresence>
-          {isTVModeEnabled && (
-            <div className="mb-6">
-              <TVSetupInline
-                onComplete={handleTVSetupComplete}
-                onCancel={() => setIsTVModeEnabled(false)}
-              />
-            </div>
+          {isTVModeEnabled && currentRoom && (
+            <TVSetupInline
+              onComplete={handleTVSetupComplete}
+              onCancel={() => setIsTVModeEnabled(false)}
+            />
           )}
         </AnimatePresence>
 
-        {/* Full-Screen Chat Modal */}
+        {/* Chat Overlay */}
         <AnimatePresence>
           {showChat && (
             <>
-              {/* Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60]"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
                 onClick={() => setShowChat(false)}
               />
-
-              {/* Chat Modal */}
               <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed inset-0 z-[60] bg-card flex flex-col"
+                className="fixed right-0 top-0 bottom-0 w-full sm:w-[360px] bg-card z-40 flex flex-col"
               >
-                {/* Header with title and close button */}
+                {/* Chat Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
-                  <h2 className="text-xl font-bold text-foreground truncate">
-                    {roomName}
-                  </h2>
-                  <motion.button
+                  <h3 className="font-semibold text-foreground">{t("team.chat")}</h3>
+                  <button
                     onClick={() => setShowChat(false)}
-                    className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 border border-border flex-shrink-0"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="p-2 rounded-lg bg-secondary"
                   >
-                    <X className="w-5 h-5 text-foreground" />
-                  </motion.button>
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
                 </div>
 
-                {/* Participants row - avatars only, scrollable, clickable for mentions */}
-                <div className="flex items-center gap-3 px-4 py-3 overflow-x-auto border-b border-border/50 bg-muted/30 scrollbar-hide">
-                  {participants.map((p) => (
-                    <motion.button
-                      key={p.user_id}
-                      onClick={() => handleMentionPlayer(p.nickname)}
-                      className="flex-shrink-0 focus:outline-none"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <div className="w-11 h-11 rounded-full overflow-hidden bg-muted ring-2 ring-transparent hover:ring-primary transition-all">
-                        {p.avatar_url ? (
-                          <img src={p.avatar_url} alt={p.nickname} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                            {p.nickname?.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                    </motion.button>
-                  ))}
+                {/* Quick mention chips */}
+                <div className="px-4 py-2 border-b border-border overflow-x-auto flex gap-2">
+                  {participants
+                    .filter((p) => p.user_id !== user?.id)
+                    .slice(0, 5)
+                    .map((p) => (
+                      <button
+                        key={p.user_id}
+                        onClick={() => handleMentionPlayer(p.nickname)}
+                        className="flex-shrink-0 px-3 py-1 rounded-full bg-secondary text-xs text-foreground hover:bg-secondary/80 transition-colors"
+                      >
+                        @{p.nickname}
+                      </button>
+                    ))}
                 </div>
 
-                {/* Messages area - scrollable */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      {t("team.noMessagesYet")}
-                    </p>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center text-muted-foreground text-sm py-8">
+                      <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                      <p>{t("team.noMessages")}</p>
+                    </div>
                   ) : (
                     messages.map((msg) => (
                       <div
                         key={msg.id}
-                        className={`flex items-start gap-2 ${
+                        className={`flex items-end gap-2 ${
                           msg.user_id === user?.id ? "flex-row-reverse" : ""
                         }`}
                       >
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                           {msg.avatar_url ? (
-                            <img src={msg.avatar_url} alt="" className="w-full h-full object-cover" />
+                            <img
+                              src={msg.avatar_url}
+                              alt={msg.nickname}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                               {msg.nickname?.charAt(0).toUpperCase()}
@@ -639,7 +629,7 @@ export function RoomLobbyV2() {
         </AnimatePresence>
 
         {/* Scoreboard */}
-        <div className="flex-1 w-full">
+        <div className="w-full">
           <RoomScoreboard
             participants={participants as any}
             matches={matches}
@@ -648,10 +638,11 @@ export function RoomLobbyV2() {
             maxPlayers={currentRoom.max_players || 10}
           />
         </div>
+      </div>
 
-        {/* Bottom Action Area */}
-        <div className="mt-auto pt-4 pb-6">
-          {/* Start Game Button (Host only) */}
+      {/* Fixed Bottom Button */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+        <div className="max-w-[520px] mx-auto">
           {isHost ? (
             <ChunkyButton
               variant="white"
@@ -664,7 +655,7 @@ export function RoomLobbyV2() {
               {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
             </ChunkyButton>
           ) : (
-            <div className="text-center py-4">
+            <div className="text-center py-2">
               <motion.div
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -817,6 +808,7 @@ export function RoomLobbyV2() {
         onSelectTrivia={handleSelectTrivia}
         onAddToQueue={handleAddToQueue}
         showQueueOption={true}
+        roomGradient={roomGradient?.gradient}
       />
     </div>
   );
