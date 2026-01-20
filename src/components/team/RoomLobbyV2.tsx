@@ -240,6 +240,109 @@ export function RoomLobbyV2() {
     });
   };
 
+  // Category selection handlers
+  const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
+    if (!currentRoom) return;
+    
+    try {
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          category_id: category.id, 
+          category_name: category.name 
+        })
+        .eq("id", currentRoom.id);
+      
+      toast.success("კატეგორია შეიცვალა");
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast.error("კატეგორიის შეცვლა ვერ მოხერხდა");
+    }
+  };
+
+  const handleSelectRandom = async () => {
+    if (!currentRoom) return;
+    
+    try {
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          category_id: null, 
+          category_name: "შემთხვევითი" 
+        })
+        .eq("id", currentRoom.id);
+      
+      toast.success("შემთხვევითი კატეგორია");
+    } catch (error) {
+      console.error("Error setting random:", error);
+    }
+  };
+
+  const handleSelectTrivia = async (trivia: { id: string; title: string }) => {
+    if (!currentRoom) return;
+    
+    try {
+      // Fetch trivia questions
+      const { data: triviaData } = await supabase
+        .from("user_quiz_posts")
+        .select("questions")
+        .eq("id", trivia.id)
+        .single();
+      
+      if (!triviaData?.questions) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      // Store questions in room_questions
+      const questions = triviaData.questions as any[];
+      
+      // Clear existing questions
+      await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+      
+      // Insert new questions
+      await Promise.all(questions.map((q: any, index: number) => 
+        supabase.from("room_questions").insert({
+          room_id: currentRoom.id,
+          question_index: index,
+          question_text: q.question_text || q.question,
+          correct_answer: q.correct_answer || q.correctAnswer,
+          incorrect_answers: q.incorrect_answers || q.incorrectAnswers,
+          difficulty: q.difficulty || "medium",
+          icon_slug: q.icon_slug || null,
+        })
+      ));
+
+      // Update room with trivia info
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          category_id: null,
+          category_name: trivia.title,
+          total_questions: questions.length,
+        })
+        .eq("id", currentRoom.id);
+      
+      toast.success("ტრივია დაემატა");
+    } catch (error) {
+      console.error("Error setting trivia:", error);
+      toast.error("ტრივიის დამატება ვერ მოხერხდა");
+    }
+  };
+
+  const handleAddToQueue = async (item: {
+    source_type: "category" | "random" | "user_trivia";
+    category_id?: string | null;
+    category_name?: string | null;
+    user_trivia_id?: string | null;
+    icon_slug?: string | null;
+  }) => {
+    const success = await addToQueue(item);
+    if (success) {
+      toast.success("რიგში დაემატა");
+    }
+  };
+
   if (!currentRoom) return null;
 
   const canStartGame = participants.length >= (currentRoom.min_players || 2);
@@ -325,17 +428,7 @@ export function RoomLobbyV2() {
         </div>
 
         {/* Room Name Section */}
-        <div className="text-center mb-6 space-y-3">
-          {/* Category badge */}
-          {currentRoom.category_name && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium"
-            >
-              <span>{currentRoom.category_name}</span>
-            </motion.div>
-          )}
+        <div className="text-center mb-4 space-y-3">
 
           {/* Room Name */}
           <motion.div
@@ -379,6 +472,16 @@ export function RoomLobbyV2() {
             </div>
           </motion.div>
         </div>
+
+        {/* Category Picker Section */}
+        <CategoryPickerSection
+          categoryName={currentRoom.category_name}
+          categoryId={currentRoom.category_id}
+          isHost={isHost}
+          queue={queue}
+          onOpenPicker={() => setShowCategoryPicker(true)}
+          onRemoveQueueItem={removeFromQueue}
+        />
 
         {/* TV Mode Toggle - Host only */}
         {isHost && (
@@ -703,6 +806,17 @@ export function RoomLobbyV2() {
         currentIconUrl={currentRoom?.room_icon || null}
         roomName={roomName}
         onConfirm={handleUpdateRoomIconAndName}
+      />
+
+      {/* Category Picker Modal */}
+      <CategoryPickerModal
+        isOpen={showCategoryPicker}
+        onClose={() => setShowCategoryPicker(false)}
+        onSelectCategory={handleSelectCategory}
+        onSelectRandom={handleSelectRandom}
+        onSelectTrivia={handleSelectTrivia}
+        onAddToQueue={handleAddToQueue}
+        showQueueOption={true}
       />
     </div>
   );
