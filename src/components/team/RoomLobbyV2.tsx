@@ -465,7 +465,7 @@ export function RoomLobbyV2() {
                 {roomName}
               </h2>
               {isHost && (
-                <>
+                <div className="flex items-center gap-1">
                   <motion.button
                     onClick={() => setShowIconPicker(true)}
                     className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
@@ -484,7 +484,7 @@ export function RoomLobbyV2() {
                   >
                     <Palette className="w-4 h-4" />
                   </motion.button>
-                </>
+                </div>
               )}
             </div>
           </motion.div>
