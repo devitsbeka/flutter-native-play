@@ -37,22 +37,13 @@ export function CategoryPickerSection({
       {/* Main category display */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden"
-            style={{ 
-              background: categoryName === "შემთხვევითი" || !categoryName
-                ? "rgba(168, 85, 247, 0.2)"
-                : categoryId 
-                  ? "linear-gradient(135deg, #3b82f6, #06b6d4)"
-                  : "linear-gradient(135deg, #f59e0b, #f97316)"
-            }}
-          >
+          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
             {categoryName === "შემთხვევითი" || !categoryName ? (
               <Shuffle className="w-6 h-6 text-purple-400" />
             ) : categoryId ? (
-              <Library className="w-6 h-6 text-white" />
+              <Library className="w-6 h-6 text-purple-400" />
             ) : (
-              <Sparkles className="w-6 h-6 text-white" />
+              <Sparkles className="w-6 h-6 text-purple-400" />
             )}
           </div>
           <div>
@@ -100,9 +91,9 @@ export function CategoryPickerSection({
                   {item.source_type === "random" ? (
                     <Shuffle className="w-[18px] h-[18px] text-purple-400" />
                   ) : item.source_type === "category" ? (
-                    <Library className="w-[18px] h-[18px] text-blue-400" />
+                    <Library className="w-[18px] h-[18px] text-purple-400" />
                   ) : (
-                    <Sparkles className="w-[18px] h-[18px] text-amber-400" />
+                    <Sparkles className="w-[18px] h-[18px] text-purple-400" />
                   )}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
@@ -146,9 +137,9 @@ export function CategoryPickerSection({
                   {item.source_type === "random" ? (
                     <Shuffle className="w-[18px] h-[18px] text-purple-400" />
                   ) : item.source_type === "category" ? (
-                    <Library className="w-[18px] h-[18px] text-blue-400" />
+                    <Library className="w-[18px] h-[18px] text-purple-400" />
                   ) : (
-                    <Sparkles className="w-[18px] h-[18px] text-amber-400" />
+                    <Sparkles className="w-[18px] h-[18px] text-purple-400" />
                   )}
                   <span className="text-white/80 text-xs font-medium">
                     {item.source_type === "random" 
