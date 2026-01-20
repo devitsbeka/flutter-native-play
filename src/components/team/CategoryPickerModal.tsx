@@ -170,7 +170,10 @@ export function CategoryPickerModal({
       });
     }
 
+    // Close modal and reset state
+    onClose();
     setSelectedItem(null);
+    setView("main");
   };
 
   if (!isOpen) return null;
@@ -442,17 +445,17 @@ export function CategoryPickerModal({
                 არჩევა
               </ChunkyButton>
               
-              {/* Secondary action - Add to queue */}
+              {/* Secondary action - Add to queue - Dashed outline style */}
               {showQueueOption && onAddToQueue && (
-                <ChunkyButton
-                  variant="secondary"
-                  size="lg"
-                  className="w-full bg-white/20 border-white/30 text-white hover:bg-white/30"
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleAddToQueue}
-                  icon={<Plus className="w-5 h-5" />}
+                  className="w-full flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold rounded-2xl bg-transparent border-2 border-dashed border-white/60 text-white hover:border-white hover:bg-white/5 transition-all"
                 >
+                  <Plus className="w-5 h-5" />
                   რიგში დამატება
-                </ChunkyButton>
+                </motion.button>
               )}
             </div>
           </motion.div>
