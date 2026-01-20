@@ -797,7 +797,7 @@ export function GameStyleQuestionEditor({
                             style={{ width: 40, height: 40 }}
                             className="object-contain"
                           />
-                          <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50 z-30">
                             <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
                           </div>
                         </>
@@ -853,7 +853,7 @@ export function GameStyleQuestionEditor({
                             style={{ width: 40, height: 40 }}
                             className="object-contain"
                           />
-                          <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50">
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm border border-slate-200/50 z-30">
                             <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
                           </div>
                         </>
