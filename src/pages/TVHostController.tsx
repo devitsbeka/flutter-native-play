@@ -788,28 +788,6 @@ const TVHostController: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Add more categories section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-24"
-        >
-          <h4 className="text-purple-200 text-sm mb-2">კატეგორიის დამატება:</h4>
-          <div className="flex flex-wrap gap-2">
-            {categories.slice(0, 6).map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleAddToQueue(category)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/20 hover:border-purple-400/50 transition-colors"
-              >
-                <span className="text-lg">{category.icon}</span>
-                <span className="text-sm text-white">{category.name}</span>
-                <Plus className="w-3 h-3 text-purple-300" />
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
         {/* Start Game Button */}
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent">
           <ChunkyButton

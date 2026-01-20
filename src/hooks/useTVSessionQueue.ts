@@ -30,21 +30,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     }
     setLoading(true);
     
-    // First try TV session queue
-    const { data: tvData, error: tvError } = await supabase
-      .from("tv_session_queue")
-      .select("*")
-      .eq("session_id", sessionId)
-      .order("position", { ascending: true });
-    
-    if (!tvError && tvData && tvData.length > 0) {
-      setQueue(tvData as TVQueueItem[]);
-      setUsingRoomFallback(false);
-      setLoading(false);
-      return;
-    }
-    
-    // Fallback to room_category_queue if available
+    // If linked to a room, use room_category_queue as source of truth
     if (roomIdFallback) {
       const { data: roomData, error: roomError } = await supabase
         .from("room_category_queue")
@@ -70,6 +56,20 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         setLoading(false);
         return;
       }
+    }
+    
+    // Fallback to TV session queue if no room queue
+    const { data: tvData, error: tvError } = await supabase
+      .from("tv_session_queue")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("position", { ascending: true });
+    
+    if (!tvError && tvData && tvData.length > 0) {
+      setQueue(tvData as TVQueueItem[]);
+      setUsingRoomFallback(false);
+      setLoading(false);
+      return;
     }
     
     setQueue([]);
