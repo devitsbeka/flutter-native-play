@@ -21,6 +21,8 @@ export interface TVPlayer {
   lastAnswerCorrect: boolean | null;
   lastAnswer: string | null;
   isHost: boolean;
+  isActive?: boolean; // Tracks whether the player is currently connected
+  isReadyForNextRound?: boolean;
 }
 
 export interface TVQuestion {
@@ -639,6 +641,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               lastAnswerCorrect: rawPresence.lastAnswerCorrect as boolean | null,
               lastAnswer: rawPresence.lastAnswer as string | null,
               isHost: (rawPresence.isHost as boolean) || false,
+              isActive: rawPresence.isActive !== false, // Default to true if not explicitly false
+              isReadyForNextRound: (rawPresence.isReadyForNextRound as boolean) || false,
             });
           }
         });
@@ -651,9 +655,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setState(prev => ({ ...prev, players }));
 
-        // If everyone answered, host moves game to reveal (no manual next)
-        if (isHost && state.phase === 'question' && players.length > 0 && players.every(p => p.hasAnswered)) {
-          requestRevealIfEligible('all players answered');
+        // If every ACTIVE player answered, host moves game to reveal immediately
+        const activePlayers = players.filter(p => p.isActive !== false);
+        if (isHost && state.phase === 'question' && activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered)) {
+          requestRevealIfEligible('all active players answered');
         }
         
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
@@ -700,6 +705,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             lastAnswerCorrect: null,
             isHost: isHostPlayer,
             isTVDisplay,
+            isActive: true, // Mark as active on join
           });
           tvLog('Presence tracked', { nickname, isTV: isTVDisplay });
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
@@ -865,6 +871,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           lastAnswerCorrect: isCorrect,
           lastAnswer: answer,
           isHost,
+          isActive: true,
         });
       }
 
@@ -905,6 +912,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       lastAnswerCorrect: null,
       lastAnswer: null,
       isHost,
+      isActive: true,
       isReadyForNextRound: true,
     });
     tvLog('Player marked ready for next round', { playerId: myPlayerId.slice(0, 8) });

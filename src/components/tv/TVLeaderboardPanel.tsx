@@ -7,8 +7,13 @@ import { Trophy, Check, Clock } from 'lucide-react';
 export const TVLeaderboardPanel: React.FC = () => {
   const { players } = useTVGame();
 
-  // Sort by score descending
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  // Sort: active players first by score, then inactive players by score
+  const sortedPlayers = [...players].sort((a, b) => {
+    const aActive = (a as any).isActive !== false;
+    const bActive = (b as any).isActive !== false;
+    if (aActive !== bActive) return aActive ? -1 : 1;
+    return b.score - a.score;
+  });
 
   return (
     <motion.div
@@ -19,7 +24,7 @@ export const TVLeaderboardPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
         <Trophy className="w-6 h-6 text-yellow-400" />
-        <h3 className="text-white text-xl font-bold">Leaderboard</h3>
+        <h3 className="text-white text-xl font-bold">რეიტინგი</h3>
       </div>
 
       {/* Player list */}
@@ -33,7 +38,8 @@ export const TVLeaderboardPanel: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className={`flex items-center gap-3 p-3 rounded-xl ${
+              className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                (player as any).isActive === false ? 'opacity-50 grayscale' :
                 index === 0 ? 'bg-yellow-500/20 border border-yellow-500/30' :
                 index === 1 ? 'bg-gray-400/20 border border-gray-400/30' :
                 index === 2 ? 'bg-orange-600/20 border border-orange-600/30' :
@@ -64,15 +70,17 @@ export const TVLeaderboardPanel: React.FC = () => {
                   {player.nickname}
                 </p>
                 <div className="flex items-center gap-1">
-                  {player.hasAnswered ? (
+                  {(player as any).isActive === false ? (
+                    <span className="text-purple-400/70 text-xs">გათიშული</span>
+                  ) : player.hasAnswered ? (
                     <>
                       <Check className="w-3 h-3 text-green-400" />
-                      <span className="text-green-400 text-xs">Answered</span>
+                      <span className="text-green-400 text-xs">უპასუხა</span>
                     </>
                   ) : (
                     <>
                       <Clock className="w-3 h-3 text-purple-400" />
-                      <span className="text-purple-400 text-xs">Thinking...</span>
+                      <span className="text-purple-400 text-xs">ფიქრობს...</span>
                     </>
                   )}
                 </div>

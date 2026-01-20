@@ -190,7 +190,7 @@ export const TVLobbyScreenV2: React.FC = () => {
   }
 
   // Display name: use room name or default
-  const displayRoomName = roomName || 'TV კვიზი';
+  const displayRoomName = roomName || categoryName || 'მოთამაშეების მოლოდინში...';
 
   // Determine what to show in the central category area
   const hasMultiRound = queue.length > 0;
