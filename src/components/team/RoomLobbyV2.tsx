@@ -353,14 +353,11 @@ export function RoomLobbyV2() {
 
   return (
     <div 
-      className="min-h-screen relative overflow-hidden flex flex-col"
+      className="min-h-screen relative flex flex-col"
       style={{ background: roomGradient?.gradient || 'var(--background)' }}
     >
       {/* Sticky Header */}
-      <div 
-        className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:max-w-[520px] mx-auto w-full"
-        style={{ background: roomGradient?.gradient || 'var(--background)' }}
-      >
+      <div className="sticky top-0 z-30 px-4 sm:px-6 py-4 sm:max-w-[520px] mx-auto w-full">
         <div className="flex items-center justify-between">
           <motion.button
             onClick={handleExitRoom}
@@ -460,7 +457,7 @@ export function RoomLobbyV2() {
                 <>
                   <motion.button
                     onClick={() => setShowIconPicker(true)}
-                    className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
+                    className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     title="Edit room"
@@ -469,7 +466,7 @@ export function RoomLobbyV2() {
                   </motion.button>
                   <motion.button
                     onClick={() => setShowGradientPicker(true)}
-                    className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white/90 transition-colors flex items-center justify-center"
+                    className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     title="Change background"
