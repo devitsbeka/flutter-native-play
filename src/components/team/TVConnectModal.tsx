@@ -35,6 +35,9 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         .select('*')
         .eq('tv_pairing_code', code)
         .eq('is_paired', false)
+        // Multiple sessions can share the same 4-digit code; pick the most recent unpaired one.
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error || !session) {
