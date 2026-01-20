@@ -426,12 +426,11 @@ function TeamContentV2() {
   return (
     <MainLayout showPlayButton={false} showBottomNav={!isCreationModalOpen}>
       {/* Flex wrapper for main content + right sidebar */}
-      <div className="min-h-screen flex flex-col">
-        <div className="flex flex-1">
-          {/* Main Content Area */}
-          <div id="team-main-content" className="flex-1 relative pb-24 lg:pb-0 bg-background overflow-x-hidden overflow-y-visible min-w-0">
-            {/* Sticky Header Section - Title, Buttons, Friends Bar, Tabs, Filters */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
+      <div className="flex min-h-full">
+        {/* Main Content Area */}
+        <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
+          {/* Sticky Header Section - Title, Buttons, Friends Bar, Tabs, Filters */}
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md w-full max-w-full overflow-hidden">
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
                   <div className="flex items-center gap-2">
@@ -640,7 +639,6 @@ function TeamContentV2() {
             onViewAllRooms={() => handleTabChange("rooms")}
             onViewAllTrivias={() => handleTabChange("my-content")}
           />
-        </div>
       </div>
 
       {/* TV Modal */}
