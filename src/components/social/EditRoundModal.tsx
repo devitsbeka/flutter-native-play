@@ -519,34 +519,39 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                             )}
                             
                             {/* Large Tappable Icon - Trigger Button */}
-                            <div className="flex flex-col items-center gap-1 overflow-visible">
-                              <button
-                                type="button"
-                                onClick={() => setIconPickerIndex(index)}
-                                className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40 overflow-visible"
-                                style={{ width: 80, height: 80 }}
-                              >
-                                {q.icon_slug ? (
-                                  <>
+                            <div className="flex flex-col items-center gap-1">
+                              {/* Outer wrapper with padding to make space for badge */}
+                              <div className="relative pt-3 pr-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setIconPickerIndex(index)}
+                                  className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
+                                  style={{ width: 80, height: 80 }}
+                                >
+                                  {q.icon_slug ? (
                                     <img
                                       src={`https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${q.icon_slug}.png`}
                                       alt=""
                                       style={{ width: 80, height: 80 }}
                                       className="object-contain"
                                     />
-                                    <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200/50 z-10">
-                                      <RefreshCw className="w-4 h-4 text-slate-600" />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Smile style={{ width: 50, height: 50 }} className="text-white/60" />
-                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
-                                      <Plus className="w-3 h-3 text-slate-600" />
-                                    </div>
-                                  </>
+                                  ) : (
+                                    <>
+                                      <Smile style={{ width: 50, height: 50 }} className="text-white/60" />
+                                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                                        <Plus className="w-3 h-3 text-slate-600" />
+                                      </div>
+                                    </>
+                                  )}
+                                </button>
+                                
+                                {/* Badge positioned relative to the padded wrapper - NOT inside the button */}
+                                {q.icon_slug && (
+                                  <div className="absolute top-0 right-0 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md border border-slate-200/50">
+                                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                                  </div>
                                 )}
-                              </button>
+                              </div>
                               {missingIcon && !hasCriticalIssue && (
                                 <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
                               )}
