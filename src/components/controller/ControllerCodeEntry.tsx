@@ -20,15 +20,29 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
   const { joinSession } = useTVGame();
   const { user, profile } = useAuth();
 
+  const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+
   // Auto-join if authenticated and code is provided
   useEffect(() => {
     const attemptAutoJoin = async () => {
-      if (initialCode && user && profile && !loading) {
+      const trimmed = (initialCode || '').trim();
+      if (!trimmed || loading) return;
+
+      // If QR provided a session id and user is a guest, prompt for nickname immediately.
+      if (isUuid(trimmed) && !user) {
+        setShowGuestModal(true);
+        return;
+      }
+
+      if (user && profile) {
         setLoading(true);
         setError(null);
+
+        const codeForJoin = isUuid(trimmed) ? trimmed : trimmed.toUpperCase();
         
         const success = await joinSession(
-          initialCode.toUpperCase(), 
+          codeForJoin,
           profile.nickname, 
           profile.avatar_url || profile.animated_avatar_url || undefined
         );
@@ -54,8 +68,9 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     setLoading(true);
     setError(null);
     
+    const normalized = codeToJoin.trim();
     const success = await joinSession(
-      codeToJoin.toUpperCase(), 
+      isUuid(normalized) ? normalized : normalized.toUpperCase(),
       nickname, 
       avatarUrl
     );
@@ -90,7 +105,8 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
   };
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    // Hard switch: manual entry is the 4-digit code shown on the TV.
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
     setCode(value);
     setError(null);
   };
@@ -137,7 +153,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
               onChange={handleCodeChange}
               placeholder="შეიყვანეთ კოდი"
               className="bg-white/10 border-white/20 text-white placeholder:text-white/40 h-14 text-center text-2xl font-mono tracking-widest"
-              maxLength={6}
+              maxLength={4}
               autoFocus
             />
           </div>

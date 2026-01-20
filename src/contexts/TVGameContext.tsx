@@ -112,21 +112,11 @@ const getOrCreatePlayerId = (userId?: string): string => {
   return guestId;
 };
 
-// Helper to generate 6-char code
-const generateCode = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-};
+// Helper to generate 4-digit TV code
+const generate4DigitCode = (): string => String(Math.floor(1000 + Math.random() * 9000));
 
-// Generate 4-digit code from 6-char code
-const generate4DigitCode = (code: string): string => {
-  const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return String(hash % 10000).padStart(4, '0');
-};
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
 
 // Shuffle array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -226,13 +216,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Create TV session (called by TV display)
   const createSession = useCallback(async (): Promise<string | null> => {
     try {
-      const code = generateCode();
-      const fourDigitCode = generate4DigitCode(code);
+      const fourDigitCode = generate4DigitCode();
       
       const { data, error } = await supabase
         .from('tv_sessions')
         .insert({
-          pairing_code: code,
           tv_pairing_code: fourDigitCode,
           status: 'waiting',
           is_paired: false,
@@ -246,7 +234,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setState(prev => ({
         ...prev,
-        code,
+        code: fourDigitCode,
         sessionId: data.id,
         phase: 'pairing',
       }));
@@ -255,7 +243,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setupSessionSubscription(data.id);
       setupPresenceChannel(data.id, 'TV_DISPLAY', null, false, true); // isTVDisplay = true
 
-      return code;
+      return fourDigitCode;
     } catch (error) {
       console.error('Error creating TV session:', error);
       return null;
@@ -268,33 +256,40 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Clear any expired session bindings on join attempt
       clearExpiredBindings();
       
-      const upperCode = code.toUpperCase();
+      const raw = (code || '').trim();
+      const upperCode = raw.toUpperCase();
       
       // Get current auth user if any
       const { data: { user } } = await supabase.auth.getUser();
       const authUserId = user?.id || null;
-      
-      // Try to find session by 6-char pairing_code first
-      let { data: session, error } = await supabase
-        .from('tv_sessions')
-        .select('*')
-        .eq('pairing_code', upperCode)
-        .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal'])
-        .single();
 
-      // If not found, try 4-digit tv_pairing_code
-      if (error || !session) {
-        const { data: session4Digit, error: error4Digit } = await supabase
+      const isSessionIdJoin = isUuid(raw);
+      
+      let session: any = null;
+      let error: any = null;
+
+      if (isSessionIdJoin) {
+        const { data, error: byIdError } = await supabase
+          .from('tv_sessions')
+          .select('*')
+          .eq('id', raw)
+          .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
+          .maybeSingle();
+        session = data;
+        error = byIdError;
+      } else {
+        // Hard switch: manual entry is the 4-digit TV code
+        const { data, error: byCodeError } = await supabase
           .from('tv_sessions')
           .select('*')
           .eq('tv_pairing_code', upperCode)
-          .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal'])
-          .single();
-        
-        if (!error4Digit && session4Digit) {
-          session = session4Digit;
-          error = null;
-        }
+          .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        session = data;
+        error = byCodeError;
       }
 
       if (error || !session) {
@@ -373,7 +368,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       setState(prev => ({
         ...prev,
-        code: code.toUpperCase(),
+        code: session.tv_pairing_code || prev.code,
         sessionId: session.id,
         phase: mapDbStatusToPhase(session.status),  // Use proper mapping!
         questions,

@@ -124,6 +124,7 @@ const App = () => (
                 <Route path="/tv/:code" element={<TVDisplay />} />
                 <Route path="/join" element={<TVJoin />} />
                 <Route path="/join/:code" element={<TVJoin />} />
+                <Route path="/join/session/:sessionId" element={<TVJoin />} />
                 <Route path="/controller/:code" element={<Navigate to="/join" replace />} />
                 <Route path="/vip" element={<VIP />} />
                 <Route path="/discover" element={<Discover />} />
