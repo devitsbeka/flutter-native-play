@@ -34,7 +34,10 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
         .select('*')
         .eq('tv_pairing_code', code)
         .eq('is_paired', false)
-        .single();
+        // Multiple sessions can share the same 4-digit code; pick the most recent unpaired one.
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error || !session) {
         toast.error('კოდი არ მოიძებნა ან უკვე დაკავშირებულია');
