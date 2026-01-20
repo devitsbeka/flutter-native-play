@@ -70,7 +70,7 @@ export function RoomLobbyV2() {
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
-  const { queue, addToQueue, removeFromQueue } = useRoomCategoryQueue(currentRoom?.id || null);
+  const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   
   // Calculate unread count
@@ -482,6 +482,7 @@ export function RoomLobbyV2() {
           queue={queue}
           onOpenPicker={() => setShowCategoryPicker(true)}
           onRemoveQueueItem={removeFromQueue}
+          onReorderQueue={reorderQueue}
         />
 
         {/* TV Mode Toggle - Host only */}
