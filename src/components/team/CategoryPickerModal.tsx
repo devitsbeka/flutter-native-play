@@ -190,7 +190,7 @@ export function CategoryPickerModal({
         style={{ background: backgroundStyle }}
       >
         {/* Glass header */}
-        <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm border-b border-white/10">
+        <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm">
           {view !== "main" ? (
             <motion.button
               initial={{ opacity: 0, x: -10 }}
