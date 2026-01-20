@@ -30,28 +30,58 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     }
     setLoading(true);
     
-    // If linked to a room, use room_category_queue as source of truth
+    // If linked to a room, build full queue: initial category + room queue items
     if (roomIdFallback) {
+      // Get room's initial category (set during room creation)
+      const { data: roomInfo } = await supabase
+        .from("game_rooms")
+        .select("category_id, category_name")
+        .eq("id", roomIdFallback)
+        .maybeSingle();
+      
+      // Fetch queue items added in lobby
       const { data: roomData, error: roomError } = await supabase
         .from("room_category_queue")
         .select("*")
         .eq("room_id", roomIdFallback)
         .order("position", { ascending: true });
       
-      if (!roomError && roomData && roomData.length > 0) {
-        // Map room queue items to TV queue format
-        const mappedQueue: TVQueueItem[] = roomData.map(item => ({
-          id: item.id,
+      const fullQueue: TVQueueItem[] = [];
+      
+      // Add initial category as position 0 (if exists)
+      if (roomInfo?.category_id && roomInfo?.category_name) {
+        fullQueue.push({
+          id: `initial-${roomIdFallback}`,
           session_id: sessionId,
-          position: item.position,
-          source_type: item.source_type,
-          category_id: item.category_id,
-          category_name: item.category_name,
-          icon_slug: item.icon_slug,
-          user_trivia_id: item.user_trivia_id,
-          created_at: item.created_at || new Date().toISOString(),
-        }));
-        setQueue(mappedQueue);
+          position: 0,
+          source_type: "category",
+          category_id: roomInfo.category_id,
+          category_name: roomInfo.category_name,
+          icon_slug: null,
+          user_trivia_id: null,
+          created_at: new Date().toISOString(),
+        });
+      }
+      
+      // Add queue items with adjusted positions
+      if (!roomError && roomData) {
+        roomData.forEach((item, idx) => {
+          fullQueue.push({
+            id: item.id,
+            session_id: sessionId,
+            position: fullQueue.length + idx,
+            source_type: item.source_type,
+            category_id: item.category_id,
+            category_name: item.category_name,
+            icon_slug: item.icon_slug,
+            user_trivia_id: item.user_trivia_id,
+            created_at: item.created_at || new Date().toISOString(),
+          });
+        });
+      }
+      
+      if (fullQueue.length > 0) {
+        setQueue(fullQueue);
         setUsingRoomFallback(true);
         setLoading(false);
         return;

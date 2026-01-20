@@ -57,7 +57,7 @@ interface TVGameContextType extends TVGameState {
   // Controller actions
   joinSession: (code: string, nickname: string, avatarUrl?: string | null) => Promise<boolean>;
   // Host actions
-  startGame: (categoryId?: string) => Promise<void>;
+  startGame: (categoryId?: string, userTriviaId?: string) => Promise<void>;
   startPlaying: () => Promise<void>; // Trigger playing phase after countdown
   startNextRound: () => Promise<void>;
   updateRoomName: (name: string) => Promise<void>;
@@ -725,76 +725,132 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     presenceChannelRef.current = channel;
   };
 
-  // Start the game (host only)
-  const startGame = useCallback(async (categoryId?: string) => {
+  // Start the game (host only) - supports both categories and user trivias
+  const startGame = useCallback(async (categoryId?: string, userTriviaId?: string) => {
     if (!state.sessionId || !isHost) return;
 
-    // P1-2: Validate category is provided
-    if (!categoryId) {
-      tvLogError('startGame', 'No category ID provided');
+    // Validate that either categoryId or userTriviaId is provided
+    if (!categoryId && !userTriviaId) {
+      tvLogError('startGame', 'No category ID or user trivia ID provided');
       return;
     }
 
     try {
-      // Use unified questionService
-      const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
-      const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+      let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[] }[] = [];
+      let categoryName: string | null = null;
+      let categoryIcon: string | null = null;
 
-      // Resolve category UUID
-      const categoryUUID = await resolveCategoryUuid(categoryId);
-      if (!categoryUUID) {
-        tvLogError('startGame', 'Failed to resolve category UUID');
-        return;
+      if (userTriviaId) {
+        // Fetch questions from user-created trivia
+        tvLog('Starting game with user trivia', { userTriviaId });
+
+        const { data: triviaData } = await supabase
+          .from('user_quiz_posts')
+          .select('title')
+          .eq('id', userTriviaId)
+          .maybeSingle();
+
+        // Fetch user trivia questions using raw query
+        const { data: triviaQuestions, error: questionsError } = await supabase
+          .from('user_quiz_post_questions' as any)
+          .select('id, question_text, correct_answer, incorrect_answers, question_order')
+          .eq('post_id', userTriviaId)
+          .order('question_order', { ascending: true });
+
+        if (questionsError || !triviaQuestions || triviaQuestions.length === 0) {
+          tvLogError('startGame', 'No questions found for user trivia');
+          return;
+        }
+
+        categoryName = triviaData?.title || 'User Trivia';
+        categoryIcon = '🎯'; // Default icon for user trivias
+
+        // Format user trivia questions
+        formattedQuestions = (triviaQuestions as any[]).map((q: any) => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers) 
+            ? q.incorrect_answers as string[]
+            : [];
+          const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
+          
+          return {
+            id: q.id,
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            options: allAnswers,
+          };
+        });
+
+        tvLog('User trivia questions loaded', { count: formattedQuestions.length });
+
+      } else if (categoryId) {
+        // Use unified questionService for category questions
+        const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
+        const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+
+        // Resolve category UUID
+        const categoryUUID = await resolveCategoryUuid(categoryId);
+        if (!categoryUUID) {
+          tvLogError('startGame', 'Failed to resolve category UUID');
+          return;
+        }
+
+        tvLog('Using questionService for TV mode', { categoryId, categoryUUID });
+
+        // Fetch questions using unified service
+        const result = await getQuestions({
+          mode: 'tv',
+          categoryUuid: categoryUUID,
+          count: 10,
+        });
+
+        if (result.questions.length === 0) {
+          tvLogError('startGame', 'No questions available');
+          return;
+        }
+
+        // Log exhaustion info
+        if (result.exhaustionInfo) {
+          tvLog('Question exhaustion info', {
+            totalAvailable: result.exhaustionInfo.totalAvailable,
+            totalSeen: result.exhaustionInfo.totalSeen,
+            wasReset: result.exhaustionInfo.wasReset,
+            usedFallback: result.exhaustionInfo.usedFallback,
+          });
+        }
+
+        // Format questions for TV format
+        formattedQuestions = result.questions.map(q => ({
+          id: q.id,
+          question_text: q.question,
+          correct_answer: q.correctAnswer,
+          options: q.allAnswers, // Already shuffled by questionService
+        }));
+
+        // Track using standardized key
+        const trackerKey = `tv_${categoryUUID}`;
+        markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
+
+        // Get category info for session
+        const { data: category } = await supabase
+          .from('categories')
+          .select('name, icon')
+          .eq('id', categoryUUID)
+          .single();
+
+        categoryName = category?.name || null;
+        categoryIcon = category?.icon || null;
       }
 
-      tvLog('Using questionService for TV mode', { categoryId, categoryUUID });
-
-      // Fetch questions using unified service
-      const result = await getQuestions({
-        mode: 'tv',
-        categoryUuid: categoryUUID,
-        count: 10,
-      });
-
-      if (result.questions.length === 0) {
+      if (formattedQuestions.length === 0) {
         tvLogError('startGame', 'No questions available');
         return;
       }
 
-      // Log exhaustion info
-      if (result.exhaustionInfo) {
-        tvLog('Question exhaustion info', {
-          totalAvailable: result.exhaustionInfo.totalAvailable,
-          totalSeen: result.exhaustionInfo.totalSeen,
-          wasReset: result.exhaustionInfo.wasReset,
-          usedFallback: result.exhaustionInfo.usedFallback,
-        });
-      }
-
-      // Format questions for TV format
-      const formattedQuestions = result.questions.map(q => ({
-        id: q.id,
-        question_text: q.question,
-        correct_answer: q.correctAnswer,
-        options: q.allAnswers, // Already shuffled by questionService
-      }));
-
-      // Track using standardized key
-      const trackerKey = `tv_${categoryUUID}`;
-      markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
-
       tvLog('Starting game', { 
         questionCount: formattedQuestions.length, 
-        categoryId: categoryUUID, 
-        language: result.language 
+        categoryName,
+        isUserTrivia: !!userTriviaId,
       });
-
-      // Get category info for session
-      const { data: category } = await supabase
-        .from('categories')
-        .select('name, icon')
-        .eq('id', categoryUUID)
-        .single();
 
       // Start countdown with questions and category info
       await supabase
@@ -803,8 +859,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           status: 'countdown',
           questions: formattedQuestions as unknown as Json,
           current_question_index: 0,
-          category_name: category?.name || null,
-          category_icon: category?.icon || null,
+          category_name: categoryName,
+          category_icon: categoryIcon,
         })
         .eq('id', state.sessionId);
 
