@@ -7,6 +7,7 @@ import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
 import { TVQuestionScreenV3 } from '@/components/tv/TVQuestionScreenV3';
 import { TVRevealScreenV2 } from '@/components/tv/TVRevealScreenV2';
 import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
+import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
 import { TVErrorBoundary } from '@/components/tv/TVErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
@@ -144,6 +145,8 @@ const TVDisplayContent: React.FC = () => {
       return <TVQuestionScreenV3 />;
     case 'reveal':
       return <TVRevealScreenV2 />;
+    case 'round-intro':
+      return <TVRoundIntroScreen isController={false} />;
     case 'results':
     case 'completed':
       return <TVResultsScreen />;
