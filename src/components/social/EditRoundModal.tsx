@@ -572,7 +572,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                               }}
                               className="text-center w-full group cursor-pointer"
                             >
-                              <p className="text-lg font-medium text-white leading-relaxed group-hover:bg-white/10 rounded-lg px-2 py-1 transition-colors">
+                              <p className="text-base font-medium text-white leading-relaxed group-hover:bg-white/10 rounded-lg px-2 py-1 transition-colors">
                                 {q.question_text}
                               </p>
                               <span className="text-xs text-white/50 opacity-0 group-hover:opacity-100 transition-opacity">
