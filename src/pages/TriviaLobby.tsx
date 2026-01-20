@@ -7,6 +7,9 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
+import medalGold from "@/assets/icons/medal-gold.png";
+import medalSilver from "@/assets/icons/medal-silver.png";
+import medalBronze from "@/assets/icons/medal-bronze.png";
 
 // Lazy load the heavy modal - only loads when user clicks Play
 const QuizPlayModal = lazy(() => 
@@ -35,9 +38,9 @@ function formatGeorgianTimeAgo(date: Date): string {
 
 // Medal images for top 3
 const MEDAL_ICONS = {
-  1: "/lovable-uploads/2edc85b8-b43c-4e7e-9ec5-f7809840bdf8.png",
-  2: "/lovable-uploads/fbb2e46a-7bf2-4a81-80a1-43d48a6bfb3a.png",
-  3: "/lovable-uploads/69b62a5a-4178-4e78-a721-d50f9a1559f9.png",
+  1: medalGold,
+  2: medalSilver,
+  3: medalBronze,
 };
 
 // Helper to get gradient style
