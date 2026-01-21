@@ -307,18 +307,18 @@ export function AirbnbCategoryCard({
             )}
 
             {/* Progress Bar Area with gradient mask */}
-            <div className={`absolute left-0 right-0 ${isFull ? 'bottom-0' : 'bottom-0'}`}>
+             <div className={`absolute left-0 right-0 ${isFull ? 'bottom-0' : 'bottom-0'}`}>
               {/* Strong gradient mask for video fade */}
               <div 
-                className="absolute inset-x-0 pointer-events-none"
+                 className="absolute inset-x-0 pointer-events-none z-0"
                 style={progressGradientStyle}
               />
               
               {/* Progress bar content */}
-              <div className={`relative px-4 ${isFull ? 'pb-4 pt-12' : 'pb-3 pt-10'}`}>
+               <div className={`relative z-10 px-4 ${isFull ? 'pb-4 pt-12' : 'pb-3 pt-10'}`}>
                 {/* Progress bar with integrated count */}
                 <div 
-                  className={`relative rounded-full overflow-hidden ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70`}
+                   className={`relative isolate z-0 rounded-full overflow-hidden ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70`}
                   style={{
                     background: 'rgba(255,255,255,0.5)',
                     boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), 0 3px 0 rgba(0,0,0,0.06)',
@@ -326,7 +326,7 @@ export function AirbnbCategoryCard({
                 >
                   {/* Progress fill */}
                   <motion.div 
-                    className="h-full rounded-full relative overflow-hidden"
+                     className="h-full rounded-full relative overflow-hidden z-0"
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
                     transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
@@ -339,7 +339,7 @@ export function AirbnbCategoryCard({
                   >
                     {/* Shine on progress */}
                     <div 
-                      className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                       className="absolute inset-x-0 top-0 h-1/2 rounded-t-full z-0"
                       style={{
                         background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)',
                       }}
@@ -347,7 +347,7 @@ export function AirbnbCategoryCard({
                     {progressPercent > 10 && progressParticles.map((p) => (
                       <motion.div
                         key={p.id}
-                        className="absolute rounded-full bg-white/80"
+                         className="absolute rounded-full bg-white/80 z-0"
                         style={{
                           width: p.size,
                           height: p.size,
@@ -370,7 +370,7 @@ export function AirbnbCategoryCard({
                   </motion.div>
                   
                   {/* Progress count inside the bar */}
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                   <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                     <span 
                       className={`font-bold tracking-wide ${isFull ? 'text-sm' : 'text-xs'}`}
                       style={{
