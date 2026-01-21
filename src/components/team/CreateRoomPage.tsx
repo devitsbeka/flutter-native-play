@@ -159,10 +159,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       } else {
         console.error('Error generating room name:', error);
         setRoomName("სახალისო გუნდი");
+        toast({
+          title: "შეცდომა",
+          description: "ვერ მოხერხდა სახელის გენერირება",
+          variant: "destructive",
+        });
       }
     } catch (e) {
       console.error('Failed to generate room name:', e);
       setRoomName("სახალისო გუნდი");
+      toast({
+        title: "შეცდომა",
+        description: "ვერ მოხერხდა სახელის გენერირება",
+        variant: "destructive",
+      });
     } finally {
       setIsGeneratingName(false);
     }
@@ -564,61 +574,30 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">შეარჩიე ოთახის სახელი</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-            {/* Icon from 9k library - clickable to open picker */}
+            {/* Clickable area for Icon + Name - opens picker modal */}
             <button
               onClick={() => setShowIconPickerModal(true)}
               disabled={isGeneratingName}
-              className="relative w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0 transition-all hover:ring-2 hover:ring-primary/50 cursor-pointer group"
+              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
             >
-              {isGeneratingName ? (
-                <Loader2 className="w-5 h-5 text-primary animate-spin" />
-              ) : roomIcon ? (
-                <>
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
+                {isGeneratingName ? (
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                ) : roomIcon ? (
                   <img src={roomIcon} alt="" className="w-8 h-8 object-contain" />
-                  <div className="absolute inset-0 bg-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Pencil className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                </>
-              ) : (
-                <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
-              )}
+                ) : (
+                  <img src={triviaBuzzer} alt="" className="w-6 h-6 object-contain" />
+                )}
+              </div>
+              
+              {/* Room Name */}
+              <p className="font-semibold text-foreground text-sm truncate text-left">
+                {roomName}
+              </p>
             </button>
-            
-            {/* Editable name */}
-            <div className="flex-1 min-w-0">
-              {isEditingName ? (
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  onBlur={() => {
-                    if (editedName.trim()) {
-                      setRoomName(editedName.trim());
-                    }
-                    setIsEditingName(false);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (editedName.trim()) {
-                        setRoomName(editedName.trim());
-                      }
-                      setIsEditingName(false);
-                    } else if (e.key === 'Escape') {
-                      setIsEditingName(false);
-                    }
-                  }}
-                  autoFocus
-                  className="w-full bg-background border border-primary/30 rounded-lg px-2 py-1 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  placeholder="ოთახის სახელი"
-                />
-              ) : (
-                <p className="font-semibold text-foreground text-sm truncate">
-                  {roomName}
-                </p>
-              )}
-            </div>
-            
-            {/* Edit button - opens modal for both name and icon */}
+
+            {/* Edit button - opens modal */}
             <button
               onClick={() => setShowIconPickerModal(true)}
               disabled={isGeneratingName}
@@ -629,7 +608,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             
             {/* Regenerate button */}
             <button
-              onClick={generateRoomName}
+              onClick={(e) => {
+                e.stopPropagation();
+                generateRoomName();
+              }}
               disabled={isGeneratingName}
               className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
             >
