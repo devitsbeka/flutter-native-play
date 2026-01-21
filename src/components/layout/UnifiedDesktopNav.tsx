@@ -142,11 +142,13 @@ export function UnifiedDesktopNav({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="cursor-pointer"
-            onClick={() => navigate("/")}
+            className=""
           >
             {/* Desktop: horizontal layout */}
-            <span className="hidden lg:flex items-center">
+            <span
+              className="hidden lg:flex items-center cursor-pointer"
+              onClick={() => navigate("/")}
+            >
               <span className="text-xl font-slackey text-foreground tracking-tight">MyTrivia</span>
             </span>
             
@@ -166,7 +168,10 @@ export function UnifiedDesktopNav({
                   fallback={profile?.nickname?.charAt(0) || "?"}
                   size="sm"
                   playOnHover
-                  onClick={() => navigate("/profile")}
+                  onClick={() => {
+                    prefetchRoute("/profile");
+                    navigate("/profile");
+                  }}
                   clickable
                 />
               </div>
@@ -178,7 +183,10 @@ export function UnifiedDesktopNav({
         {/* Hidden on tablet because the tablet header already shows the avatar */}
         <div className="hidden lg:block px-2 lg:px-3 mb-4">
           <motion.button
-            onClick={() => navigate("/profile")}
+            onClick={() => {
+              prefetchRoute("/profile");
+              navigate("/profile");
+            }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-full text-foreground transition-colors"
             style={{
               background: "linear-gradient(180deg, #FFFFFF 0%, #FEFEFE 100%)",
