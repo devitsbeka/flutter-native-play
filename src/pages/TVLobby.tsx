@@ -4,7 +4,6 @@ import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
 import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
-import { TVRevealScreenV2 } from '@/components/tv/TVRevealScreenV2';
 import { TVResultsScreenV2 } from '@/components/tv/TVResultsScreenV2';
 import { TVIdleScreen } from '@/components/tv/TVIdleScreen';
 import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
@@ -84,7 +83,7 @@ const TVLobbyContent: React.FC = () => {
     case 'playing': // Map 'playing' status from DB to question phase
       return <TVQuestionScreenV4 />;
     case 'reveal':
-      return <TVRevealScreenV2 />;
+      return <TVQuestionScreenV4 />;
     case 'round-intro':
       return <TVRoundIntroScreen isController={false} />;
     case 'results':

@@ -4,6 +4,9 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Check, X, Clock } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
+import { TimerBadge } from '@/components/game/TimerBadge';
+import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
+import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -14,12 +17,15 @@ export const TVQuestionScreenV4: React.FC = () => {
     timeRemaining, 
     players,
     categoryName,
-    roomName 
+    roomName,
+    phase,
+    categoryIcon,
   } = useTVGame();
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
-  const timerPercent = (timeRemaining / 15) * 100;
+  const timerMax = 15;
+  const timerPercent = (timeRemaining / timerMax) * 100;
 
   // Group players by their answer status for current question
   const correctPlayers = players.filter(p => p.hasAnswered && p.lastAnswerCorrect === true);
@@ -37,6 +43,9 @@ export const TVQuestionScreenV4: React.FC = () => {
   const formatTime = (seconds: number) => {
     return `00:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const isReveal = phase === 'reveal';
+  const correctAnswer = currentQuestion.correct_answer;
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden">
@@ -131,69 +140,69 @@ export const TVQuestionScreenV4: React.FC = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Category & Room Name */}
-      <div className="flex justify-between items-center px-4 mb-2 flex-shrink-0">
-        <span className="text-white/80 text-sm font-medium">
-          {categoryName || 'კატეგორია'}
-        </span>
-        <span className="text-white/80 text-sm font-medium">
-          {roomName || 'ოთახის სახელი'}
-        </span>
+      {/* Top info row (category + timer + room) */}
+      <div className="flex items-center justify-between px-2 mb-3 flex-shrink-0">
+        <div className="min-w-0">
+          <div className="text-white/80 text-xs font-medium truncate">
+            {roomName || 'ოთახი'}
+          </div>
+          <div className="text-white font-bold text-lg truncate">
+            {categoryName || 'კატეგორია'}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="text-white/80 text-sm font-medium">
+            {currentQuestionIndex + 1} / {totalQuestions}
+          </div>
+          <TimerBadge seconds={timeRemaining} maxSeconds={timerMax} compact />
+        </div>
       </div>
 
-      {/* Question Card */}
+      {/* Question + answers (game UI) */}
       <motion.div 
         className="max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="bg-purple-500/40 backdrop-blur-sm rounded-2xl p-4 mb-3 flex-shrink-0">
-          {/* Timer and Question Number */}
-          <div className="flex justify-between items-center mb-3">
-            <motion.span 
-              className={`text-2xl font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-green-400'}`}
-              animate={timeRemaining <= 5 ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 0.5, repeat: timeRemaining <= 5 ? Infinity : 0 }}
-            >
-              {formatTime(timeRemaining)}
-            </motion.span>
-            <span className="text-white/80 text-sm font-medium">
-              {currentQuestionIndex + 1} / {totalQuestions}
-            </span>
+        <div className="relative flex justify-center mb-3 flex-shrink-0 pt-10 [@media(max-height:700px)]:pt-6">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20">
+            <QuizCategoryIcon emoji={categoryIcon || '🎯'} size={96} />
           </div>
-
-          {/* Question Text */}
-          <h2 className="text-xl md:text-2xl text-white font-bold text-center mb-4 leading-relaxed">
-            {currentQuestion.question_text}
-          </h2>
-
-          {/* Progress Bar */}
-          <div className="h-3 bg-white/20 rounded-full overflow-hidden">
-            <motion.div 
-              className="h-full bg-orange-400 rounded-full"
-              initial={{ width: '100%' }}
-              animate={{ width: `${timerPercent}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
+          <QuizQuestionCard
+            questionText={currentQuestion.question_text}
+            questionNumber={currentQuestionIndex + 1}
+            totalQuestions={totalQuestions}
+            timerSeconds={timeRemaining}
+            timerMaxSeconds={timerMax}
+            progressPercent={Math.max(0, Math.min(100, timerPercent))}
+            className="max-w-4xl"
+          />
         </div>
 
         {/* Answer Options 2x2 Grid (single-style, matches standard UI) */}
-        <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
+        <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 items-stretch">
           {currentQuestion.options.slice(0, 4).map((option, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 + index * 0.1 }}
+              className="flex"
             >
               <QuizAnswerButton
-                state="default"
+                state={
+                  isReveal
+                    ? option === correctAnswer
+                      ? 'correct'
+                      : 'disabled'
+                    : 'default'
+                }
                 label={GEORGIAN_LABELS[index]}
                 text={option}
                 disabled
-                className="min-h-[96px]"
+                className="w-full"
               />
             </motion.div>
           ))}

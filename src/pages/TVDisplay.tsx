@@ -4,8 +4,7 @@ import { TVGameProvider, useTVGame, mapDbStatusToPhase } from '@/contexts/TVGame
 import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
-import { TVQuestionScreenV3 } from '@/components/tv/TVQuestionScreenV3';
-import { TVRevealScreenV2 } from '@/components/tv/TVRevealScreenV2';
+import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
 import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
 import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
 import { TVErrorBoundary } from '@/components/tv/TVErrorBoundary';
@@ -142,9 +141,9 @@ const TVDisplayContent: React.FC = () => {
       return <TVCountdownScreenV2 />;
     case 'question':
     case 'playing':
-      return <TVQuestionScreenV3 />;
+      return <TVQuestionScreenV4 />;
     case 'reveal':
-      return <TVRevealScreenV2 />;
+      return <TVQuestionScreenV4 />;
     case 'round-intro':
       return <TVRoundIntroScreen isController={false} />;
     case 'results':
