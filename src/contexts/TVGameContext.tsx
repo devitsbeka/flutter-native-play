@@ -30,6 +30,7 @@ export interface TVQuestion {
   question_text: string;
   correct_answer: string;
   options: string[];
+  icon_slug?: string | null; // Per-question icon for display
 }
 
 export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle' | 'round-intro';
@@ -252,6 +253,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             question_text: q.question_text,
             correct_answer: q.correct_answer,
             options: allAnswers,
+            icon_slug: q.icon_slug || null,
           };
         });
       } else if (nextItem.category_id) {
@@ -273,6 +275,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           question_text: q.question,
           correct_answer: q.correctAnswer,
           options: q.allAnswers,
+          icon_slug: q.iconSlug,
         }));
 
         markQuestionsAsAsked(`tv_${categoryUUID}`, formattedQuestions.map((q) => q.id));
@@ -369,15 +372,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const requestRevealIfEligible = useCallback(async (reason: string) => {
+    // Use stateRef.current to avoid stale closure issues
+    const current = stateRef.current;
+    
     if (!isHost) return;
-    if (!state.sessionId) return;
-    if (state.phase !== 'question') return;
+    if (!current.sessionId) return;
+    if (current.phase !== 'question') return;
     if (revealRequestedRef.current) return;
-    if (state.questions.length === 0) return;
-    if (state.players.length === 0) return;
+    if (current.questions.length === 0) return;
+    if (current.players.length === 0) return;
 
     revealRequestedRef.current = true;
     tvLogPhase('question', 'reveal', reason);
+    tvLog('requestRevealIfEligible triggered', { 
+      reason, 
+      playerCount: current.players.length,
+      allAnswered: current.players.every(p => p.hasAnswered)
+    });
 
     await supabase
       .from('tv_sessions')
@@ -385,8 +396,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         status: 'reveal',
         reveal_start_time: new Date().toISOString(),
       })
-      .eq('id', state.sessionId);
-  }, [isHost, state.sessionId, state.phase, state.questions.length, state.players.length]);
+      .eq('id', current.sessionId);
+  }, [isHost]);
 
   // Timer effect for question phase
   useEffect(() => {
@@ -606,12 +617,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           question_text: string;
           correct_answer: string;
           options: string[];
+          icon_slug?: string | null;
         }>;
         questions = rawQuestions.map(q => ({
           id: q.id,
           question_text: q.question_text,
           correct_answer: q.correct_answer,
           options: q.options,
+          icon_slug: q.icon_slug,
         }));
       }
 
@@ -683,12 +696,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               question_text: string;
               correct_answer: string;
               options: string[];
+              icon_slug?: string | null;
             }>;
             questions = rawQuestions.map(q => ({
               id: q.id,
               question_text: q.question_text,
               correct_answer: q.correct_answer,
               options: q.options,
+              icon_slug: q.icon_slug,
             }));
           }
 
@@ -908,6 +923,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             question_text: q.question_text,
             correct_answer: q.correct_answer,
             options: allAnswers,
+            icon_slug: q.icon_slug || null,
           };
         });
 
@@ -955,6 +971,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           question_text: q.question,
           correct_answer: q.correctAnswer,
           options: q.allAnswers, // Already shuffled by questionService
+          icon_slug: q.iconSlug,
         }));
 
         // Track using standardized key

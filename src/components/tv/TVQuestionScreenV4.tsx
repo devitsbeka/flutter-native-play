@@ -47,6 +47,10 @@ export const TVQuestionScreenV4: React.FC = () => {
   const isReveal = phase === 'reveal';
   const correctAnswer = currentQuestion.correct_answer;
 
+  // Use question-specific icon if available, fallback to category icon
+  const questionIconSlug = currentQuestion.icon_slug;
+  const displayIcon = questionIconSlug || categoryIcon || '🎯';
+
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden">
       {/* Player Status Bar */}
@@ -168,7 +172,11 @@ export const TVQuestionScreenV4: React.FC = () => {
       >
         <div className="relative flex justify-center mb-3 flex-shrink-0 pt-10 [@media(max-height:700px)]:pt-6">
           <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20">
-            <QuizCategoryIcon emoji={categoryIcon || '🎯'} size={96} />
+            <QuizCategoryIcon 
+              iconSlug={questionIconSlug || undefined}
+              emoji={!questionIconSlug ? displayIcon : undefined}
+              size={96} 
+            />
           </div>
           <QuizQuestionCard
             questionText={currentQuestion.question_text}

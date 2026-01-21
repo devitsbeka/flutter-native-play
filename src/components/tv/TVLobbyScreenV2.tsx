@@ -6,6 +6,7 @@ import { Pencil, Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
+import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 
 const MAX_PLAYERS = 8;
 
@@ -281,7 +282,11 @@ export const TVLobbyScreenV2: React.FC = () => {
                 }}
               >
                 <span className="text-sm text-purple-200/80">{index + 1}.</span>
-                <span className="text-2xl">{item.icon_slug || '🎯'}</span>
+                <QuizCategoryIcon 
+                  iconSlug={item.icon_slug || undefined}
+                  emoji={!item.icon_slug ? '🎯' : undefined}
+                  size={28}
+                />
                 <span className="text-white font-medium">{item.category_name || 'რაუნდი'}</span>
                 {isHost && (
                   <button
