@@ -80,7 +80,8 @@ const TVGameContext = createContext<TVGameContextType | null>(null);
 const QUESTION_TIME = getQuestionTime();
 
 // Quick highlight only (no separate reveal screen)
-const REVEAL_DURATION_MS = 1100;
+// Keep it in the 1–2s range for readability before auto-advancing.
+const REVEAL_DURATION_MS = 1400;
 
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
@@ -710,7 +711,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               lastAnswerCorrect: rawPresence.lastAnswerCorrect as boolean | null,
               lastAnswer: rawPresence.lastAnswer as string | null,
               isHost: (rawPresence.isHost as boolean) || false,
-              isActive: rawPresence.isActive !== false, // Default to true if not explicitly false
+                // Treat players as active ONLY when explicitly tracked as active.
+                // This prevents invited/offline players from blocking auto-advance.
+                isActive: rawPresence.isActive === true,
               isReadyForNextRound: (rawPresence.isReadyForNextRound as boolean) || false,
             });
           }
@@ -725,7 +728,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setState(prev => ({ ...prev, players }));
 
         // If every ACTIVE player answered, host moves game to reveal immediately
-        const activePlayers = players.filter(p => p.isActive !== false);
+        const activePlayers = players.filter(p => p.isActive === true);
         if (isHost && state.phase === 'question' && activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered)) {
           requestRevealIfEligible('all active players answered');
         }

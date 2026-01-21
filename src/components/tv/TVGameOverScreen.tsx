@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Crown, Medal, LogOut } from 'lucide-react';
+import { Crown, Medal, LogOut } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
+import crown2 from '@/assets/icons/crown-2.png';
 
 interface Player {
   id: string;
@@ -19,6 +20,7 @@ interface TVGameOverScreenProps {
   onExit?: () => void;
   isHost?: boolean;
   onPlayAgain?: () => void;
+  hasMoreRounds?: boolean;
 }
 
 export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
@@ -27,6 +29,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
   onExit,
   isHost = false,
   onPlayAgain,
+  hasMoreRounds = false,
 }) => {
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -141,9 +144,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         className="text-center py-4"
       >
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Trophy className="w-8 h-8 text-yellow-500" />
           <h1 className="text-2xl font-bold">თამაში დასრულდა!</h1>
-          <Trophy className="w-8 h-8 text-yellow-500" />
         </div>
       </motion.div>
 
@@ -262,7 +263,14 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                     <span className={`font-semibold ${isCurrentPlayer ? 'text-primary' : ''}`}>
                       {player.nickname}
                       {isCurrentPlayer && ' (შენ)'}
-                      {player.isHost && ' 👑'}
+                      {player.isHost && (
+                        <img
+                          src={crown2}
+                          alt="Host"
+                          className="inline-block w-4 h-4 ml-1 align-text-bottom"
+                          loading="lazy"
+                        />
+                      )}
                     </span>
                   </div>
                   
@@ -278,19 +286,30 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
       </motion.div>
 
       {/* Waiting message */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="text-center text-muted-foreground mb-4"
-      >
+      {hasMoreRounds ? (
         <motion.div
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-center text-muted-foreground mb-4"
         >
-          შემდეგი რაუნდის მოლოდინი...
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          >
+            შემდეგი რაუნდის მოლოდინი...
+          </motion.div>
         </motion.div>
-      </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-center text-muted-foreground mb-4"
+        >
+          რაუნდები დასრულდა
+        </motion.div>
+      )}
 
       {/* Actions */}
       <motion.div
@@ -305,7 +324,6 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             variant="primary"
             className="flex-1"
           >
-            <Trophy className="w-5 h-5 mr-2" />
             ახალი თამაში
           </ChunkyButton>
         )}

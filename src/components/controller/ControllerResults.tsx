@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Trophy, RefreshCw, Loader2, Tv } from 'lucide-react';
+import { RefreshCw, Loader2, Tv } from 'lucide-react';
 
 export const ControllerResults: React.FC = () => {
   const { players, myPlayerId, myScore, isHost, resetGame } = useTVGame();
@@ -11,10 +11,6 @@ export const ControllerResults: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-        <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-      </motion.div>
-      
       <h1 className="text-3xl font-bold text-white mb-2">თამაში დასრულდა!</h1>
       
       <div className="bg-white/10 rounded-2xl p-6 mb-6 text-center">
