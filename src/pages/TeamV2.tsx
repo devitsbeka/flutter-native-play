@@ -24,6 +24,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { useUnreadMessages } from "@/hooks/useChat";
 import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import { LiveBadge } from "@/components/social/LiveBadge";
@@ -206,7 +207,13 @@ function TeamContentV2() {
   } | null>(null);
 
   const { unreadCount } = useNotifications();
-  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
+  const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
+  const unreadFriendCounts = useUnreadMessages();
+  const unreadFriendMessagesCount = Object.values(unreadFriendCounts).reduce(
+    (sum, n) => sum + n,
+    0
+  );
+  const unreadMessagesCount = unreadRoomMessagesCount + unreadFriendMessagesCount;
 
   // Handle join code from URL
   useEffect(() => {

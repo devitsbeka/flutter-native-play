@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Bell, MessageCircle } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
+import { useUnreadMessages } from "@/hooks/useChat";
 import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 
@@ -14,7 +15,13 @@ export function HeaderActions({ className = "" }: HeaderActionsProps) {
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const { unreadCount } = useNotifications();
-  const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
+  const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
+  const unreadFriendCounts = useUnreadMessages();
+  const unreadFriendMessagesCount = Object.values(unreadFriendCounts).reduce(
+    (sum, n) => sum + n,
+    0
+  );
+  const unreadMessagesCount = unreadRoomMessagesCount + unreadFriendMessagesCount;
 
   return (
     <>

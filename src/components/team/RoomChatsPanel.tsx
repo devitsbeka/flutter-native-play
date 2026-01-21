@@ -34,6 +34,7 @@ const filters: { id: FilterType; label: string }[] = [
 ];
 
 const SWIPE_THRESHOLD = 100;
+const TAP_MOVE_THRESHOLD = 8;
 
 interface ConversationCardProps {
   conversation: ConversationPreview;
@@ -47,6 +48,10 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
   const opacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [0, 1]);
   const deleteOpacity = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.5, 0]);
   const deleteScale = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.8, 0.5]);
+
+  // Tap vs swipe detection (mobile-friendly): if user doesn't meaningfully move, treat as tap.
+  const pointerDownXRef = useRef<number | null>(null);
+  const didMoveRef = useRef(false);
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.x < -SWIPE_THRESHOLD && onDelete) {
@@ -70,7 +75,7 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
     <div className="relative overflow-hidden">
       {/* Delete background indicator */}
       <motion.div 
-        className="absolute inset-0 bg-destructive flex items-center justify-end pr-6"
+        className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 pointer-events-none"
         style={{ opacity: deleteOpacity }}
       >
         <motion.div style={{ scale: deleteScale }}>
@@ -85,8 +90,22 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         style={{ x, opacity }}
-        onClick={onClick}
-        className="flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0 bg-background"
+        onPointerDown={(e) => {
+          pointerDownXRef.current = e.clientX;
+          didMoveRef.current = false;
+        }}
+        onPointerMove={(e) => {
+          if (pointerDownXRef.current == null) return;
+          if (Math.abs(e.clientX - pointerDownXRef.current) > TAP_MOVE_THRESHOLD) {
+            didMoveRef.current = true;
+          }
+        }}
+        onPointerUp={() => {
+          if (!didMoveRef.current) onClick();
+          pointerDownXRef.current = null;
+          didMoveRef.current = false;
+        }}
+        className="relative z-10 flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0 bg-background"
       >
         {/* Avatar - no badges */}
         <div className="relative flex-shrink-0">
