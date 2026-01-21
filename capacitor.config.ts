@@ -10,7 +10,9 @@ const config: CapacitorConfig = {
   //   cleartext: true,
   // },
   ios: {
+    minVersion: '14.0',
     contentInset: 'automatic',
+    preferredContentMode: 'mobile',
     infoPlist: {
       // App Tracking Transparency (iOS 14.5+) - Required for AdMob
       NSUserTrackingUsageDescription: 'This identifier will be used to deliver personalized ads to you.',
