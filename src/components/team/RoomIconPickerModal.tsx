@@ -4,6 +4,7 @@ import { RefreshCw, Check, Loader2, Search, X, ChevronLeft } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import triviaBuzzer from "@/assets/trivia-buzzer.svg";
 
 const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
 const MAX_RECENT_ICONS = 8;
@@ -322,7 +323,7 @@ export function RoomIconPickerModal({
                 >
                   <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
-                <h1 className="text-lg font-bold text-foreground">აირჩიე აიკონი</h1>
+                <h1 className="text-lg font-bold text-foreground">შეცვალე აიკონი/სახელი</h1>
               </div>
             </div>
           </div>
@@ -344,7 +345,7 @@ export function RoomIconPickerModal({
                       className="w-14 h-14 object-contain"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-primary/20" />
+                    <img src={triviaBuzzer} alt="" className="w-10 h-10 object-contain" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">

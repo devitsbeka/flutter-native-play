@@ -574,12 +574,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         <div>
           <h2 className="text-xs font-medium text-muted-foreground mb-2">შეარჩიე ოთახის სახელი</h2>
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-            {/* Clickable area for Icon + Name - opens picker modal */}
-            <button
-              onClick={() => setShowIconPickerModal(true)}
-              disabled={isGeneratingName}
-              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
-            >
+                  {/* Clickable area for Icon + Name - opens picker modal */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => !isGeneratingName && setShowIconPickerModal(true)}
+                    onKeyDown={(e) => e.key === 'Enter' && !isGeneratingName && setShowIconPickerModal(true)}
+                    className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
+                  >
               {/* Icon */}
               <div className="w-12 h-12 rounded-xl bg-background shadow-md flex items-center justify-center overflow-hidden shrink-0">
                 {isGeneratingName ? (
@@ -595,7 +597,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               <p className="font-semibold text-foreground text-sm truncate text-left">
                 {roomName}
               </p>
-            </button>
+                  </div>
 
             {/* Edit button - opens modal */}
             <button
