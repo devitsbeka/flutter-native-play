@@ -103,6 +103,9 @@ export function CreateTriviaTypeModal({
                 <p className="text-white/60 text-xs">1 რაუნდი, სწრაფი შექმნა</p>
               </div>
             </motion.button>
+            <p className="text-[10px] text-white/40 text-center -mt-1 mb-1">
+              💡 სწრაფი ერთი რაუნდი, იდეალურია დასაწყებად
+            </p>
 
             {/* Collection Card */}
             <motion.button
@@ -141,45 +144,53 @@ export function CreateTriviaTypeModal({
                 <p className="text-white/60 text-xs">რამდენიმე რაუნდი ერთად</p>
               </div>
             </motion.button>
+            <p className="text-[10px] text-white/40 text-center -mt-1 mb-1">
+              💡 იდეალურია თემატური ტურნირისთვის
+            </p>
 
             {/* MyTrivia Party Card */}
             {onSelectPersonal && (
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  handleClose();
-                  onSelectPersonal();
-                }}
-                className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
-                style={{
-                  background: "rgba(255, 255, 255, 0.12)",
-                  backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                }}
-              >
-                {/* Glow effect */}
-                <div
-                  className="absolute inset-0 opacity-20"
-                  style={{
-                    background: "radial-gradient(circle at left center, rgba(236, 72, 153, 0.4), transparent 50%)",
+              <>
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    handleClose();
+                    onSelectPersonal();
                   }}
-                />
-                
-                {/* Icon */}
-                <div className="relative shrink-0">
-                  <img src={iconGroupOfPeople} alt="" className="w-14 h-14 object-contain" />
-                </div>
-                
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-base">MyTrivia Party</h3>
-                  <p className="text-white/60 text-xs">შენი კითხვები, შენი პასუხები</p>
-                </div>
-              </motion.button>
+                  className="relative w-full p-4 rounded-2xl overflow-hidden text-left flex items-center gap-4"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.12)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
+                  }}
+                >
+                  {/* Glow effect */}
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      background: "radial-gradient(circle at left center, rgba(236, 72, 153, 0.4), transparent 50%)",
+                    }}
+                  />
+                  
+                  {/* Icon */}
+                  <div className="relative shrink-0">
+                    <img src={iconGroupOfPeople} alt="" className="w-14 h-14 object-contain" />
+                  </div>
+                  
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-white text-base">MyTrivia Party</h3>
+                    <p className="text-white/60 text-xs">შენი კითხვები, შენი პასუხები</p>
+                  </div>
+                </motion.button>
+                <p className="text-[10px] text-white/40 text-center -mt-1 mb-1">
+                  💡 იდეალურია მეგობრებთან გასართობად
+                </p>
+              </>
             )}
 
             {/* Game Room Card */}
@@ -228,10 +239,6 @@ export function CreateTriviaTypeModal({
               onClose={handleClose}
             />
 
-            {/* Hint */}
-            <p className="text-xs text-center text-white/50 pt-2">
-              💡 კოლექცია იდეალურია თემატური ტურნირისთვის
-            </p>
           </div>
         </motion.div>
       )}
