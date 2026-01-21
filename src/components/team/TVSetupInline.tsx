@@ -93,11 +93,18 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
           }
           
           // Copy room + room_category_queue into tv_session_queue
-          const { data: queueItems } = await supabase
+          const { data: queueItems, error: queueFetchError } = await supabase
             .from('room_category_queue')
             .select('*')
             .eq('room_id', roomId)
             .order('position');
+
+          console.log('[TVSetupInline] Room queue fetch:', { 
+            roomId, 
+            queueItems, 
+            queueFetchError,
+            initialCategory: roomData.category_id 
+          });
 
           const rowsToInsert: Array<{
             session_id: string;
@@ -138,17 +145,22 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             });
           }
 
+          console.log('[TVSetupInline] Rows to insert into tv_session_queue:', rowsToInsert);
+
           if (rowsToInsert.length > 0) {
-            const { error: insertQueueError } = await supabase.from('tv_session_queue').insert(rowsToInsert);
+            const { data: insertedRows, error: insertQueueError } = await supabase
+              .from('tv_session_queue')
+              .insert(rowsToInsert)
+              .select();
+              
             if (insertQueueError) {
-              console.error('[TVSetupInline] Failed to seed tv_session_queue', insertQueueError);
+              console.error('[TVSetupInline] FAILED to seed tv_session_queue:', insertQueueError);
+              toast.error('Queue sync failed - check console');
             } else {
-              const { count } = await supabase
-                .from('tv_session_queue')
-                .select('*', { count: 'exact', head: true })
-                .eq('session_id', session.id);
-              console.log('[TVSetupInline] Seeded tv_session_queue count:', count);
+              console.log('[TVSetupInline] SUCCESS - Seeded tv_session_queue:', insertedRows);
             }
+          } else {
+            console.warn('[TVSetupInline] No queue items to insert - queue will be empty on TV');
           }
         }
       }
