@@ -54,7 +54,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+              className="flex items-center gap-3 p-3 min-h-[76px] sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
             >
               {/* Draft Preview - Different icon for personal vs trivia */}
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -74,11 +74,11 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <p className="text-sm font-medium text-white truncate">
                   {displayTitle}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <span>{questionCount} კითხვა</span>
-                  <span>•</span>
-                  <Clock className="w-3 h-3" />
-                  <span>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-white/60 whitespace-nowrap">
+                  <span className="shrink-0">{questionCount} კითხვა</span>
+                  <span className="shrink-0">•</span>
+                  <Clock className="w-3 h-3 shrink-0" />
+                  <span className="truncate">
                     {formatDistanceToNow(new Date(draft.updated_at), { 
                       addSuffix: true, 
                       locale: ka 
@@ -126,7 +126,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+              className="flex items-center gap-3 p-3 min-h-[76px] sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
             >
               {/* Draft Preview - Collection icon or cover */}
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-600/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -150,12 +150,12 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <p className="text-sm font-medium text-white truncate">
                   {displayTitle}
                 </p>
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Layers className="w-3 h-3" />
-                  <span>{roundCount} რაუნდი</span>
-                  <span>•</span>
-                  <Clock className="w-3 h-3" />
-                  <span>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-white/60 whitespace-nowrap">
+                  <Layers className="w-3 h-3 shrink-0" />
+                  <span className="shrink-0">{roundCount} რაუნდი</span>
+                  <span className="shrink-0">•</span>
+                  <Clock className="w-3 h-3 shrink-0" />
+                  <span className="truncate">
                     {formatDistanceToNow(new Date(draft.updated_at), { 
                       addSuffix: true, 
                       locale: ka 
