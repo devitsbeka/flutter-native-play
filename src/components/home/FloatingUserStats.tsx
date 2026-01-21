@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Flame, Menu } from "lucide-react";
 import { Avatar } from "@/components/shared/Avatar";
 import { Profile } from "@/hooks/useAuth";
@@ -7,7 +8,7 @@ interface FloatingUserStatsProps {
   profile: Profile | null;
 }
 
-export function FloatingUserStats({ profile }: FloatingUserStatsProps) {
+export const FloatingUserStats = memo(function FloatingUserStats({ profile }: FloatingUserStatsProps) {
   return (
     <div className="flex items-center justify-between gap-3">
       {/* Burger Menu + User Avatar */}
@@ -34,4 +35,4 @@ export function FloatingUserStats({ profile }: FloatingUserStatsProps) {
       </div>
     </div>
   );
-}
+});
