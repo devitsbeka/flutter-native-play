@@ -80,6 +80,9 @@ export function useIconReviewQueue() {
       return;
     }
 
+    // Create Map for O(1) category lookups instead of O(n) .find() calls
+    const categoryMap = new Map(categories.map(c => [(c as any).uuid, c.name]));
+    
     // Map category names
     const questionsWithCategories: ReviewQuestion[] = (data || []).map(q => {
       const incorrectAnswers = Array.isArray(q.incorrect_answers) 
@@ -89,7 +92,7 @@ export function useIconReviewQueue() {
       return {
         ...q,
         incorrect_answers: incorrectAnswers,
-        category_name: categories.find(c => (c as any).uuid === q.category_id)?.name || 'უცნობი'
+        category_name: categoryMap.get(q.category_id) || 'უცნობი'
       };
     });
 

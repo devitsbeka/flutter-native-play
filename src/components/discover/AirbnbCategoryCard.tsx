@@ -67,11 +67,43 @@ export function AirbnbCategoryCard({
   onClick,
   variant = "compact",
 }: AirbnbCategoryCardProps) {
-  const pastel = getPastelColors(id);
+  const pastel = useMemo(() => getPastelColors(id), [id]);
   const isCompleted = progress >= totalLevels;
   const isFull = variant === "full";
   const iconSize = 128;
   const [isPressed, setIsPressed] = React.useState(false);
+
+  // Memoized style objects to prevent unnecessary re-renders
+  const buttonStyle = useMemo(() => ({
+    transform: isPressed ? "translateY(5px)" : "translateY(0px)",
+    touchAction: "manipulation" as const,
+  }), [isPressed]);
+
+  const depthLayerStyle = useMemo(() => ({
+    background: pastel.depth,
+    transform: isPressed ? 'translateY(2px)' : 'translateY(8px)',
+    transition: 'transform 0.1s ease-out',
+  }), [pastel.depth, isPressed]);
+
+  const mainCardStyle = useMemo(() => ({
+    background: `linear-gradient(145deg, ${pastel.base} 0%, ${pastel.accent} 100%)`,
+    boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.05)',
+  }), [pastel.base, pastel.accent]);
+
+  const innerFrameStyle = useMemo(() => ({
+    boxShadow: `inset 0 0 0 3px ${pastel.depth}40, inset 0 0 0 4px rgba(255,255,255,0.3)`,
+  }), [pastel.depth]);
+
+  const videoGradientStyle = useMemo(() => ({
+    height: isFull ? '50%' : '45%',
+    background: `linear-gradient(180deg, transparent 0%, ${pastel.base}50 30%, ${pastel.base}90 55%, ${pastel.base}cc 75%, ${pastel.base} 100%)`,
+  }), [isFull, pastel.base]);
+
+  const progressGradientStyle = useMemo(() => ({
+    bottom: 0,
+    height: isFull ? '120px' : '100px',
+    background: `linear-gradient(180deg, transparent 0%, ${pastel.base}40 20%, ${pastel.base}aa 45%, ${pastel.base}dd 65%, ${pastel.base} 85%)`,
+  }), [isFull, pastel.base]);
 
   const particles = useMemo(
     () =>
@@ -108,39 +140,27 @@ export function AirbnbCategoryCard({
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
       className="flex-shrink-0 w-full text-left"
-      style={{
-        transform: isPressed ? "translateY(5px)" : "translateY(0px)",
-        touchAction: "manipulation",
-      }}
+      style={buttonStyle}
     >
       {/* 3D Chunky Container with depth layer */}
       <div className="relative">
         {/* Bottom depth layer - the 3D effect */}
         <div 
           className="absolute inset-0 rounded-[28px]"
-          style={{
-            background: pastel.depth,
-            transform: isPressed ? 'translateY(2px)' : 'translateY(8px)',
-            transition: 'transform 0.1s ease-out',
-          }}
+          style={depthLayerStyle}
         />
         
         {/* Main card face */}
         <div 
           className="relative w-full rounded-[28px] overflow-hidden border-[3px] border-white/40"
-          style={{
-            background: `linear-gradient(145deg, ${pastel.base} 0%, ${pastel.accent} 100%)`,
-            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.05)',
-          }}
+          style={mainCardStyle}
         >
           {/* Video/Icon Area with inner frame */}
           <div className={`relative w-full ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'} m-2`} style={{ width: 'calc(100% - 16px)' }}>
             {/* Inner frame border matching container color */}
             <div 
               className="absolute inset-0 rounded-[20px] pointer-events-none z-[2]"
-              style={{
-                boxShadow: `inset 0 0 0 3px ${pastel.depth}40, inset 0 0 0 4px rgba(255,255,255,0.3)`,
-              }}
+              style={innerFrameStyle}
             />
             
             {/* Video content container */}
@@ -189,10 +209,7 @@ export function AirbnbCategoryCard({
                 {/* Gradient mask overlay on bottom of video */}
                 <div 
                   className="absolute inset-x-0 bottom-0 pointer-events-none z-[1]"
-                  style={{
-                    height: isFull ? '50%' : '45%',
-                    background: `linear-gradient(180deg, transparent 0%, ${pastel.base}50 30%, ${pastel.base}90 55%, ${pastel.base}cc 75%, ${pastel.base} 100%)`,
-                  }}
+                  style={videoGradientStyle}
                 />
               </>
             ) : (
@@ -294,11 +311,7 @@ export function AirbnbCategoryCard({
               {/* Strong gradient mask for video fade */}
               <div 
                 className="absolute inset-x-0 pointer-events-none"
-                style={{
-                  bottom: 0,
-                  height: isFull ? '120px' : '100px',
-                  background: `linear-gradient(180deg, transparent 0%, ${pastel.base}40 20%, ${pastel.base}aa 45%, ${pastel.base}dd 65%, ${pastel.base} 85%)`,
-                }}
+                style={progressGradientStyle}
               />
               
               {/* Progress bar content */}

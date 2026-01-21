@@ -12,10 +12,14 @@ export function useGeoLocation(): GeoLocationResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const detectLocation = async () => {
       try {
         // Use ip-api.com for free IP geolocation
-        const response = await fetch("https://ip-api.com/json/?fields=countryCode");
+        const response = await fetch("https://ip-api.com/json/?fields=countryCode", {
+          signal: controller.signal
+        });
         
         if (!response.ok) {
           throw new Error("Failed to fetch location");
@@ -29,6 +33,10 @@ export function useGeoLocation(): GeoLocationResult {
           setError("Could not determine country");
         }
       } catch (err) {
+        // Ignore AbortError - this is expected on cleanup
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
         console.error("Geolocation error:", err);
         setError(err instanceof Error ? err.message : "Location detection failed");
       } finally {
@@ -37,6 +45,11 @@ export function useGeoLocation(): GeoLocationResult {
     };
 
     detectLocation();
+
+    // Cleanup - abort fetch on unmount
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return { countryCode, loading, error };

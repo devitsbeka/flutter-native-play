@@ -142,20 +142,24 @@ export function useSocialFeed() {
         // Add like - trigger handles count automatically
         await supabase.from("quiz_post_likes").insert({ post_id: postId, user_id: user.id });
         
-        // Send notification to trivia creator
-        const { data: postData } = await supabase
-          .from("user_quiz_posts")
-          .select("user_id, title")
-          .eq("id", postId)
-          .single();
-        
-        if (postData && postData.user_id !== user.id) {
-          const { data: senderProfile } = await supabase
+        // Send notification to trivia creator - parallelize the queries
+        const [postResult, senderResult] = await Promise.all([
+          supabase
+            .from("user_quiz_posts")
+            .select("user_id, title")
+            .eq("id", postId)
+            .single(),
+          supabase
             .from("profiles")
             .select("nickname")
             .eq("user_id", user.id)
-            .single();
-          
+            .single()
+        ]);
+        
+        const postData = postResult.data;
+        const senderProfile = senderResult.data;
+        
+        if (postData && postData.user_id !== user.id) {
           await createNotification(
             postData.user_id,
             "trivia_liked",
@@ -319,16 +323,19 @@ export function useSocialFeed() {
     feedItems.push({ type: 'standalone', post });
   });
 
-  // Sort all by date (use first post date for collections)
-  feedItems.sort((a, b) => {
-    const dateA = a.type === 'collection' 
-      ? new Date(a.posts[0]?.createdAt || 0).getTime()
-      : new Date(a.post.createdAt).getTime();
-    const dateB = b.type === 'collection' 
-      ? new Date(b.posts[0]?.createdAt || 0).getTime()
-      : new Date(b.post.createdAt).getTime();
-    return dateB - dateA;
-  });
+  // Sort all by date - pre-compute timestamps to avoid repeated Date object creation
+  const feedItemsWithTimestamp = feedItems.map(item => ({
+    item,
+    timestamp: item.type === 'collection'
+      ? new Date(item.posts[0]?.createdAt || 0).getTime()
+      : new Date(item.post.createdAt).getTime()
+  }));
+
+  feedItemsWithTimestamp.sort((a, b) => b.timestamp - a.timestamp);
+  
+  // Replace feedItems with sorted version
+  feedItems.length = 0;
+  feedItemsWithTimestamp.forEach(x => feedItems.push(x.item));
 
   // Flatten for backward compatibility - but also export feedItems
   const allPosts: SamplePost[] = [...standalonePosts, ...samplePosts];

@@ -770,8 +770,11 @@ async function getMultiCategoryVSQuestions(
       const validFallback = (fallbackData as RawQuestion[]).filter(isValidQuestionLength);
       const shuffled = shuffleArray(validFallback).slice(0, needed);
       
+      // Create Map for O(1) category lookups instead of O(n) .find() calls
+      const categoryMap = new Map(categories.map(c => [c.id, c]));
+      
       for (const q of shuffled) {
-        const cat = categories.find(c => c.id === q.category_id);
+        const cat = categoryMap.get(q.category_id);
         selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
       }
     }

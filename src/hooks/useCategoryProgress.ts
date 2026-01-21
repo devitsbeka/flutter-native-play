@@ -92,11 +92,11 @@ export function useCategoryProgress() {
         };
       });
 
-      // Calculate current level for each category
+      // Calculate current level for each category - use Set for O(1) lookups
       Object.values(progressByCategory).forEach((catProgress) => {
-        const completedLevelNumbers = catProgress.completedLevels.map((l) => l.level_number);
+        const completedSet = new Set(catProgress.completedLevels.map((l) => l.level_number));
         let nextLevel = 1;
-        while (completedLevelNumbers.includes(nextLevel)) {
+        while (completedSet.has(nextLevel)) {
           nextLevel++;
         }
         catProgress.currentLevel = nextLevel;
@@ -147,11 +147,11 @@ export function useCategoryProgress() {
         });
       }
 
-      // Calculate current level for each category (next unplayed level)
+      // Calculate current level for each category - use Set for O(1) lookups
       Object.values(progressByCategory).forEach((catProgress) => {
-        const completedLevelNumbers = catProgress.completedLevels.map((l) => l.level_number);
+        const completedSet = new Set(catProgress.completedLevels.map((l) => l.level_number));
         let nextLevel = 1;
-        while (completedLevelNumbers.includes(nextLevel)) {
+        while (completedSet.has(nextLevel)) {
           nextLevel++;
         }
         catProgress.currentLevel = nextLevel;
