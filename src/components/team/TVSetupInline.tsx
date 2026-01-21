@@ -118,14 +118,17 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
 
           // Prepend initial room category first (if any)
           if (roomData.category_id) {
+            // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
+            const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
+            const iconSlug = CATEGORY_ID_TO_ICON[roomData.category_id] || null;
+            
             rowsToInsert.push({
               session_id: session.id,
               position: 0,
               source_type: 'category',
               category_id: roomData.category_id,
               category_name: roomData.category_name,
-              // NOTE: historically this column is used as an emoji in TV lobby UI
-              icon_slug: categoryIcon,
+              icon_slug: iconSlug,
               user_trivia_id: null,
             });
           }

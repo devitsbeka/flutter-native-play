@@ -12,6 +12,7 @@ import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
+import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 
 interface Category {
   id: string;
@@ -765,15 +766,7 @@ const TVHostController: React.FC = () => {
               <Sparkles className="w-5 h-5 text-purple-300" />
               რაუნდების რიგი ({queue.length})
             </h3>
-            <button
-              onClick={() => {
-                // Navigate back to category-select to add more
-                // We can do this by clearing the queue temporarily
-              }}
-              className="text-sm text-purple-300 hover:text-white"
-            >
-              + დამატება
-            </button>
+            {/* Queue is managed in game room, not here */}
           </div>
 
           {queue.length === 0 ? (
@@ -791,13 +784,13 @@ const TVHostController: React.FC = () => {
                   <span className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs text-purple-200 font-bold">
                     {index + 1}
                   </span>
+                  <QuizCategoryIcon 
+                    iconSlug={item.icon_slug || undefined}
+                    categoryId={item.category_id || undefined}
+                    size={24}
+                  />
                   <span className="flex-1 text-white font-medium">{item.category_name}</span>
-                  <button
-                    onClick={() => removeFromQueue(item.id)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-purple-300 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  {/* Queue is read-only in TV mode */}
                 </motion.div>
               ))}
             </div>

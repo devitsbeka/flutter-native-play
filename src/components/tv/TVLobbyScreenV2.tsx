@@ -295,29 +295,13 @@ export const TVLobbyScreenV2: React.FC = () => {
                 <span className="text-sm text-purple-200/80">{index + 1}.</span>
                 <QuizCategoryIcon 
                   iconSlug={item.icon_slug || undefined}
-                  emoji={!item.icon_slug ? '🎯' : undefined}
+                  categoryId={item.category_id || undefined}
                   size={28}
                 />
                 <span className="text-white font-medium">{item.category_name || 'რაუნდი'}</span>
-                {isHost && (
-                  <button
-                    onClick={() => removeFromQueue(item.id)}
-                    className="ml-1 p-1 rounded-full hover:bg-white/20 text-purple-200/70 hover:text-white transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                {/* Queue is read-only in TV mode - managed in game room */}
               </motion.div>
             ))}
-            {isHost && (
-              <button
-                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-purple-400/30 text-purple-300 hover:border-purple-400/60 hover:text-white transition-colors"
-              >
-                <span className="text-lg">+</span>
-                <span>დამატება</span>
-              </button>
-            )}
           </div>
         ) : (
           // Single category display
