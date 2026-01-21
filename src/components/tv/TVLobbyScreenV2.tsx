@@ -39,6 +39,17 @@ export const TVLobbyScreenV2: React.FC = () => {
   // Use queue with room fallback
   const { queue, addCategoryToQueue, removeFromQueue } = useTVSessionQueue(sessionId, roomId);
 
+  // Debug: log queue state changes
+  useEffect(() => {
+    console.log('[TVLobbyScreenV2] Queue state:', { 
+      sessionId, 
+      roomId, 
+      queueLength: queue.length, 
+      queue,
+      hasMultiRound: queue.length > 0
+    });
+  }, [sessionId, roomId, queue]);
+
   // Hard switch: guests join via sessionId QR to avoid 4-digit collisions.
   const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : `${window.location.origin}/join`;
 

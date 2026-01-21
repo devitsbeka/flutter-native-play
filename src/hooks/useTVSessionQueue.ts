@@ -30,6 +30,8 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     }
     setLoading(true);
 
+    console.log('[useTVSessionQueue] Fetching queue for sessionId:', sessionId, 'roomIdFallback:', roomIdFallback);
+
     // Prefer the TV session queue when present (single source of truth for actual playback)
     const { data: tvData, error: tvError } = await supabase
       .from("tv_session_queue")
@@ -37,7 +39,10 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       .eq("session_id", sessionId)
       .order("position", { ascending: true });
 
+    console.log('[useTVSessionQueue] tv_session_queue result:', { tvData, tvError, count: tvData?.length });
+
     if (!tvError && tvData && tvData.length > 0) {
+      console.log('[useTVSessionQueue] Using tv_session_queue directly:', tvData);
       setQueue(tvData as TVQueueItem[]);
       setUsingRoomFallback(false);
       setLoading(false);
@@ -46,6 +51,8 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     
     // If linked to a room, build full queue: initial category + room queue items
     if (roomIdFallback) {
+      console.log('[useTVSessionQueue] Attempting room fallback for roomId:', roomIdFallback);
+      
       // Get room's initial category (set during room creation)
       const { data: roomInfo } = await supabase
         .from("game_rooms")
@@ -53,12 +60,16 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         .eq("id", roomIdFallback)
         .maybeSingle();
       
+      console.log('[useTVSessionQueue] Room info:', roomInfo);
+      
       // Fetch queue items added in lobby
       const { data: roomData, error: roomError } = await supabase
         .from("room_category_queue")
         .select("*")
         .eq("room_id", roomIdFallback)
         .order("position", { ascending: true });
+      
+      console.log('[useTVSessionQueue] room_category_queue result:', { roomData, roomError });
       
       const fullQueue: TVQueueItem[] = [];
       
@@ -94,6 +105,8 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         });
       }
       
+      console.log('[useTVSessionQueue] Fallback fullQueue:', fullQueue);
+      
       if (fullQueue.length > 0) {
         setQueue(fullQueue);
         setUsingRoomFallback(true);
@@ -102,6 +115,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       }
     }
     
+    console.log('[useTVSessionQueue] No queue found, setting empty');
     setQueue([]);
     setUsingRoomFallback(false);
     setLoading(false);
