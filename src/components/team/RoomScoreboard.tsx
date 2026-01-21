@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Target, Users, Send, X } from "lucide-react";
+import { Crown, Swords, Users, Send, X } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -96,7 +96,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                         {getFlagEmoji(player.country_code || "GE")}
                       </div>
                     </div>
-                    <p className={`font-medium text-sm truncate max-w-[100px] mx-auto ${isInvited ? 'text-white/50' : 'text-foreground'}`}>
+                    <p className={`font-medium text-sm truncate max-w-[100px] mx-auto ${isInvited ? 'text-white/50' : 'text-white'}`}>
                       {player.user_id === currentUserId ? "შენ" : player.nickname}
                     </p>
                     {isInvited ? (
@@ -131,13 +131,10 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       </div>
                     ) : (
                       <div className="flex flex-col items-center mt-2">
-                        <div className="flex items-center gap-1">
-                          <Target className="w-4 h-4 text-primary" />
-                          <span className="text-2xl font-display font-bold text-foreground">
-                            {(player as any).total_score || 0}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
+                        <span className="text-2xl font-display font-bold text-white">
+                          {(player as any).total_score || 0}
+                        </span>
+                        <p className="text-xs text-white/60">
                           {player.total_rounds_played || 0} რაუნდი • {player.total_wins || 0} მოგ.
                         </p>
                       </div>
@@ -155,7 +152,7 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       >
                         <Swords className="w-6 h-6 text-white" />
                       </motion.div>
-                      <span className="text-xs text-muted-foreground mt-1">
+                      <span className="text-xs text-white/60 mt-1">
                         {sortedParticipants[0].total_rounds_played || 0} რაუნდი
                       </span>
                     </div>
