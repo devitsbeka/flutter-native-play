@@ -167,12 +167,19 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
     }
   }, [open]);
 
-  // Search icons when query changes
+  // Search icons when query changes - with faster response for Georgian
   useEffect(() => {
     if (!open) return;
     
+    const query = searchQuery.trim();
+    const queryIsGeorgian = isGeorgian(query);
+    
+    // Dynamic thresholds: faster for Georgian
+    const minChars = queryIsGeorgian ? 1 : 2;
+    const debounceTime = queryIsGeorgian ? 150 : 300;
+    
     const searchIcons = async () => {
-      if (!searchQuery.trim()) {
+      if (!query || query.length < minChars) {
         // Don't reset icons here - fetchRandomLibraryIcons handles it
         return;
       }
@@ -181,7 +188,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       try {
         // Always use smart search for both Georgian AND English queries
         const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-          body: { query: searchQuery, limit: 50 }
+          body: { query: query, limit: 50 }
         });
         
         if (error) throw error;
@@ -193,7 +200,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       }
     };
 
-    const debounce = setTimeout(searchIcons, 300);
+    const debounce = setTimeout(searchIcons, debounceTime);
     return () => clearTimeout(debounce);
   }, [searchQuery, open]);
 
@@ -295,8 +302,14 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="ძებნა..."
-                    className="pl-10 h-12 rounded-xl"
+                    className="pl-10 pr-10 h-12 rounded-xl"
                   />
+                  {/* Loading indicator inside search input */}
+                  {isLoading && searchQuery && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Current selected icon */}
