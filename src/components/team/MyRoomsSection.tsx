@@ -397,7 +397,7 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
               />
             )}
             <div className="min-w-0 flex-1">
-              <h3 className="font-display text-white text-lg md:text-xl leading-tight line-clamp-2 drop-shadow-md">
+              <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
                 {displayName}
               </h3>
               {room.category_name && (
