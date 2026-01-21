@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
@@ -23,6 +24,24 @@ export function CreateTriviaTypeModal({
   onSelectPersonal,
   onSelectGameRoom,
 }: CreateTriviaTypeModalProps) {
+  const [currentHintIndex, setCurrentHintIndex] = useState(0);
+
+  const hints = [
+    "💡 ტრივია — სწრაფი ერთი რაუნდი, იდეალურია დასაწყებად",
+    "💡 კოლექცია — თემატური ტურნირი მრავალი რაუნდით",
+    "💡 MyTrivia Party — პერსონალური კითხვები მეგობრებისთვის"
+  ];
+
+  useEffect(() => {
+    if (!open) return;
+    
+    const interval = setInterval(() => {
+      setCurrentHintIndex((prev) => (prev + 1) % hints.length);
+    }, 2500);
+    
+    return () => clearInterval(interval);
+  }, [open]);
+
   const handleResumeDraft = (draftId: string, type: "collection" | "trivia" | "personal") => {
     if (type === "trivia") {
       onSelectSingle(draftId);
@@ -100,12 +119,9 @@ export function CreateTriviaTypeModal({
               {/* Text */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-white text-base">ტრივია</h3>
-                <p className="text-white/60 text-xs">1 რაუნდი, სწრაფი შექმნა</p>
+                <p className="text-white/60 text-xs">5-10 კითხვა, AI ქმნის ავტომატურად</p>
               </div>
             </motion.button>
-            <p className="text-[10px] text-white/40 text-center -mt-1 mb-1">
-              💡 სწრაფი ერთი რაუნდი, იდეალურია დასაწყებად
-            </p>
 
             {/* Collection Card */}
             <motion.button
@@ -141,12 +157,9 @@ export function CreateTriviaTypeModal({
               {/* Text */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-white text-base">კოლექცია</h3>
-                <p className="text-white/60 text-xs">რამდენიმე რაუნდი ერთად</p>
+                <p className="text-white/60 text-xs">რამდენიმე თემა, ერთი ტურნირი</p>
               </div>
             </motion.button>
-            <p className="text-[10px] text-white/40 text-center -mt-1 mb-1">
-              💡 იდეალურია თემატური ტურნირისთვის
-            </p>
 
             {/* MyTrivia Party Card */}
             {onSelectPersonal && (
@@ -184,12 +197,9 @@ export function CreateTriviaTypeModal({
                   {/* Text */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-white text-base">MyTrivia Party</h3>
-                    <p className="text-white/60 text-xs">შენი კითხვები, შენი პასუხები</p>
+                    <p className="text-white/60 text-xs">შენ წერ კითხვებს და პასუხებს</p>
                   </div>
                 </motion.button>
-                <p className="text-[10px] text-white/40 text-center -mt-1 mb-1">
-                  💡 იდეალურია მეგობრებთან გასართობად
-                </p>
               </>
             )}
 
@@ -239,6 +249,22 @@ export function CreateTriviaTypeModal({
               onClose={handleClose}
             />
 
+          </div>
+
+          {/* Rotating Hint at Bottom */}
+          <div className="flex-shrink-0 py-4 px-4 safe-bottom">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={currentHintIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-xs text-white/50 text-center"
+              >
+                {hints[currentHintIndex]}
+              </motion.p>
+            </AnimatePresence>
           </div>
         </motion.div>
       )}
