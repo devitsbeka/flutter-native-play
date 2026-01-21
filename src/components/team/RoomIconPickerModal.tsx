@@ -4,7 +4,7 @@ import { RefreshCw, Check, Loader2, Search, X, ChevronLeft } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import triviaBuzzer from "@/assets/trivia-buzzer.svg";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
 
 const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
 const MAX_RECENT_ICONS = 8;
