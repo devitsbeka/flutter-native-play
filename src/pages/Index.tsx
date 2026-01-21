@@ -43,6 +43,7 @@ import defaultGuestAvatar from "@/assets/avatars/bot-avatar-1.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
 
 import { t } from "@/lib/i18n";
+import { formatCompactNumber } from "@/lib/utils";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
 import { DesktopRightSidebarWidgets } from "@/components/home/DesktopSidebars";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -432,7 +433,7 @@ export default function Index() {
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
           {user && (
             <motion.div 
-              className="hidden md:flex fixed right-4 lg:right-6 xl:right-8 top-20 z-20 pointer-events-auto"
+              className="hidden lg:flex fixed right-4 lg:right-6 xl:right-8 top-20 z-20 pointer-events-auto"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
@@ -464,6 +465,133 @@ export default function Index() {
                 transition={{ duration: 0.5, type: "spring" }}
               >
                 <div className="relative">
+                  {/* Tablet portrait: use the same curved circular action buttons as mobile */}
+                  {user && (
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20 lg:hidden"
+                      style={{ top: -75, width: 340 }}
+                      data-walkthrough="powerups"
+                    >
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.3, type: "spring" }}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <ActionButtonWithParticles
+                          iconSrc={giftBottleIcon}
+                          alt="Gift"
+                          onClick={() => setIsDailyRewardsOpen(true)}
+                          background="linear-gradient(180deg, #FFF7ED 0%, #FED7AA 100%)"
+                          shadowColor="#FDBA74"
+                          delay={0.4}
+                          particleColor="rgba(253, 186, 116, 0.9)"
+                          glowColor="rgba(253, 186, 116, 0.5)"
+                          idleOffset={0}
+                          size={62}
+                          badge={
+                            canClaimDaily ? (
+                              <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                                <Check className="w-3.5 h-3.5" />
+                              </span>
+                            ) : (
+                              <motion.div
+                                className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg z-20"
+                                style={{
+                                  background: "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)",
+                                  boxShadow: "0 2px 8px rgba(252, 211, 77, 0.5)",
+                                  border: "2px solid white",
+                                }}
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                              >
+                                <Clock className="w-3.5 h-3.5 text-amber-700" />
+                              </motion.div>
+                            )
+                          }
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.35, type: "spring" }}
+                        style={{ marginBottom: 32 }}
+                      >
+                        <ActionButtonWithParticles
+                          iconSrc={missionCrystalIcon}
+                          alt="Mission"
+                          onClick={() => setShowMissionsModal(true)}
+                          background="linear-gradient(180deg, #E0F2FE 0%, #BAE6FD 100%)"
+                          shadowColor="#7DD3FC"
+                          delay={0.48}
+                          particleColor="rgba(125, 211, 252, 0.9)"
+                          glowColor="rgba(125, 211, 252, 0.5)"
+                          idleOffset={0.7}
+                          size={62}
+                          badge={
+                            incompleteMissions > 0 ? (
+                              <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-sky-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                                {incompleteMissions}
+                              </span>
+                            ) : (
+                              <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                                <Check className="w-3.5 h-3.5" />
+                              </span>
+                            )
+                          }
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.4, type: "spring" }}
+                        style={{ marginBottom: 32 }}
+                      >
+                        <ActionButtonWithParticles
+                          iconSrc={chestBoxIcon}
+                          alt="Chest"
+                          onClick={() => setIsChestModalOpen(true)}
+                          background="linear-gradient(180deg, #E8FFE6 0%, #D9FFD7 100%)"
+                          shadowColor="#A7D9A5"
+                          delay={0.56}
+                          particleColor="rgba(169, 217, 167, 0.9)"
+                          glowColor="rgba(169, 217, 167, 0.5)"
+                          idleOffset={1.4}
+                          size={62}
+                          badge={<ChestButtonBadge canClaimChest={canClaimChest} />}
+                        />
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.45, type: "spring" }}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <ActionButtonWithParticles
+                          iconSrc={powersIcon}
+                          alt="Powers"
+                          onClick={() => setShowMyPowersModal(true)}
+                          background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                          shadowColor="#C4B5FD"
+                          delay={0.64}
+                          particleColor="rgba(196, 181, 253, 0.9)"
+                          glowColor="rgba(196, 181, 253, 0.5)"
+                          idleOffset={2.1}
+                          size={62}
+                          badge={
+                            totalPowerUps > 0 ? (
+                              <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center shadow-md z-20">
+                                {totalPowerUps}
+                              </span>
+                            ) : undefined
+                          }
+                        />
+                      </motion.div>
+                    </div>
+                  )}
                   <motion.div 
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -512,9 +640,7 @@ export default function Index() {
                       <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <img src={coinIcon} alt="Coins" className="w-9 h-9" />
                       </div>
-                      <span className="font-bold text-gray-700 text-base">
-                        {user ? (coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
-                      </span>
+                      <span className="font-bold text-gray-700 text-base">{user ? formatCompactNumber(coins) : 0}</span>
                     </motion.button>
                     <motion.button
                       className="flex items-center gap-2 cursor-pointer"
@@ -525,9 +651,7 @@ export default function Index() {
                       <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                         <img src={gemIcon} alt="Gems" className="w-9 h-9" />
                       </div>
-                      <span className="font-bold text-gray-700 text-base">
-                        {user ? (gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
-                      </span>
+                      <span className="font-bold text-gray-700 text-base">{user ? formatCompactNumber(gems) : 0}</span>
                     </motion.button>
                   </div>
                   <div className="mt-20">
