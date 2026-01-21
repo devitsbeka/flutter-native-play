@@ -120,7 +120,7 @@ export function TriviaPortfolioCard({
       <div className="p-3 bg-card relative z-10">
         <div className="flex items-center justify-between">
           {/* Stats - Like and Save */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-[14px]">
             {/* Like Button */}
             <button 
               onClick={handleLikeClick}
