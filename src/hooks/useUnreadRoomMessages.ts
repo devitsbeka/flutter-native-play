@@ -35,21 +35,26 @@ export function useUnreadRoomMessages() {
         return;
       }
 
-      // Count unread messages for each room
-      const counts: UnreadCounts = {};
-      
-      for (const participation of participations as unknown as { room_id: string; last_read_at: string | null }[]) {
-        const lastReadAt = participation.last_read_at || new Date(0).toISOString();
-        
-        const { count, error: countError } = await supabase
-          .from("room_chat_messages")
-          .select("*", { count: "exact", head: true })
-          .eq("room_id", participation.room_id)
-          .gt("created_at", lastReadAt)
-          .neq("user_id", user.id); // Don't count own messages
+      // Build rooms array for RPC call - single query instead of N queries
+      const roomsParam = (participations as unknown as { room_id: string; last_read_at: string | null }[]).map(p => ({
+        room_id: p.room_id,
+        last_read_at: p.last_read_at || new Date(0).toISOString()
+      }));
 
-        if (!countError && count !== null) {
-          counts[participation.room_id] = count;
+      // Single RPC call to get all unread counts
+      const { data: unreadData, error: rpcError } = await supabase
+        .rpc('get_unread_counts_by_room', {
+          p_user_id: user.id,
+          p_rooms: roomsParam
+        });
+
+      if (rpcError) throw rpcError;
+
+      // Map results to counts object
+      const counts: UnreadCounts = {};
+      if (unreadData) {
+        for (const row of unreadData as { room_id: string; unread_count: number }[]) {
+          counts[row.room_id] = row.unread_count;
         }
       }
 

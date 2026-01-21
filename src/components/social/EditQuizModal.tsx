@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { CoverImagePicker } from "./CoverImagePicker";
@@ -141,7 +142,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       // Only add icon_slug and questions for quiz posts, not collections
       if (!isCollection) {
         updateData.icon_slug = iconSlug;
-        updateData.questions = JSON.parse(JSON.stringify(questions));
+        updateData.questions = structuredClone(questions) as unknown as Json;
       }
 
       const { error } = await supabase

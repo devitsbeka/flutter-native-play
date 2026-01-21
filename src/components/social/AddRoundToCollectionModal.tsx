@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
@@ -213,7 +214,7 @@ export function AddRoundToCollectionModal({
         cover_gradient: selectedGradient,
         question_count: generatedQuestions.length,
         answer_format: answerFormat,
-        questions: JSON.parse(JSON.stringify(generatedQuestions)),
+        questions: structuredClone(generatedQuestions) as unknown as Json,
         icon_slug: iconSlug,
         collection_id: collectionId,
         round_number: roundNumber,

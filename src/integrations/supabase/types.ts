@@ -3367,6 +3367,13 @@ export type Database = {
           weekly_xp: number
         }[]
       }
+      get_unread_counts_by_room: {
+        Args: { p_rooms: Json; p_user_id: string }
+        Returns: {
+          room_id: string
+          unread_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

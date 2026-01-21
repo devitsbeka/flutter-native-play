@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 interface PlayerScore {
   user_id: string;
@@ -51,7 +52,7 @@ export function useRoomMatchHistory(roomId: string | null) {
       .insert([{
         room_id: roomId,
         winner_user_id: winnerId,
-        player_scores: JSON.parse(JSON.stringify(playerScores)),
+        player_scores: structuredClone(playerScores) as unknown as Json,
       }]);
 
     if (!error) {
