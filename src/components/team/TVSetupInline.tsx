@@ -83,10 +83,14 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
           }
 
           // Reset existing TV queue to avoid stale/duplicate items
-          await supabase
+          const { error: clearQueueError } = await supabase
             .from('tv_session_queue')
             .delete()
             .eq('session_id', session.id);
+
+          if (clearQueueError) {
+            console.error('[TVSetupInline] Failed to clear tv_session_queue', clearQueueError);
+          }
           
           // Copy room + room_category_queue into tv_session_queue
           const { data: queueItems } = await supabase
@@ -135,7 +139,16 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
           }
 
           if (rowsToInsert.length > 0) {
-            await supabase.from('tv_session_queue').insert(rowsToInsert);
+            const { error: insertQueueError } = await supabase.from('tv_session_queue').insert(rowsToInsert);
+            if (insertQueueError) {
+              console.error('[TVSetupInline] Failed to seed tv_session_queue', insertQueueError);
+            } else {
+              const { count } = await supabase
+                .from('tv_session_queue')
+                .select('*', { count: 'exact', head: true })
+                .eq('session_id', session.id);
+              console.log('[TVSetupInline] Seeded tv_session_queue count:', count);
+            }
           }
         }
       }

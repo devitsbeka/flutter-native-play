@@ -25,6 +25,7 @@ const TVDisplayContent: React.FC = () => {
     players, 
     timeRemaining,
     code: sessionCode,
+    isPaired,
   } = useTVGame();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +126,7 @@ const TVDisplayContent: React.FC = () => {
   };
 
   // Check if we should show lobby (has players or is paired)
-  const showLobby = players.length > 0;
+  const showLobby = isPaired || players.length > 0;
 
   // Use the mapDbStatusToPhase utility for consistent phase mapping
   const normalizedPhase = mapDbStatusToPhase(phase);

@@ -163,6 +163,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  // Keep latest state available to realtime callbacks (avoid stale-closure bugs)
+  const stateRef = useRef<TVGameState>(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   // Prevent repeated reveal updates from timer/presence sync
   const revealRequestedRef = useRef(false);
 
@@ -170,6 +176,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!isHost) return false;
     if (!state.sessionId) return false;
 
+    // Prefer the explicit TV queue, but fallback to the room queue when TV queue is empty.
     const { data: queueItems } = await supabase
       .from('tv_session_queue')
       .select('*')
@@ -177,8 +184,33 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .order('position', { ascending: true })
       .limit(1);
 
-    const nextItem = queueItems?.[0] as any | undefined;
-    if (!nextItem) return false;
+    let nextItem = queueItems?.[0] as any | undefined;
+    let consumeFrom: 'tv' | 'room' = 'tv';
+
+    if (!nextItem) {
+      // Fallback: get room_id for this TV session, then consume from room_category_queue.
+      const { data: sessionRow } = await supabase
+        .from('tv_sessions')
+        .select('room_id')
+        .eq('id', state.sessionId)
+        .maybeSingle();
+
+      const roomId = (sessionRow as any)?.room_id as string | null | undefined;
+      if (!roomId) return false;
+
+      const { data: roomQueueItems } = await supabase
+        .from('room_category_queue')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('position', { ascending: true })
+        .limit(1);
+
+      nextItem = roomQueueItems?.[0] as any | undefined;
+      if (!nextItem) return false;
+      consumeFrom = 'room';
+      tvLog('TV queue empty; falling back to room queue', { roomId });
+    }
+
     if (!nextItem.category_id && !nextItem.user_trivia_id) return false;
 
     try {
@@ -277,20 +309,46 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Consume item after successful transition
-      await supabase.from('tv_session_queue').delete().eq('id', nextItem.id);
+      if (consumeFrom === 'tv') {
+        await supabase.from('tv_session_queue').delete().eq('id', nextItem.id);
 
-      // Reorder remaining items
-      const { data: remaining } = await supabase
-        .from('tv_session_queue')
-        .select('id')
-        .eq('session_id', state.sessionId)
-        .order('position', { ascending: true });
-      if (remaining?.length) {
-        await Promise.all(
-          remaining.map((item, index) =>
-            supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
-          )
-        );
+        // Reorder remaining items
+        const { data: remaining } = await supabase
+          .from('tv_session_queue')
+          .select('id')
+          .eq('session_id', state.sessionId)
+          .order('position', { ascending: true });
+        if (remaining?.length) {
+          await Promise.all(
+            remaining.map((item, index) =>
+              supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
+            )
+          );
+        }
+      } else {
+        // Room queue consumption
+        const { data: sessionRow } = await supabase
+          .from('tv_sessions')
+          .select('room_id')
+          .eq('id', state.sessionId)
+          .maybeSingle();
+        const roomId = (sessionRow as any)?.room_id as string | null | undefined;
+        if (roomId) {
+          await supabase.from('room_category_queue').delete().eq('id', nextItem.id);
+
+          const { data: remainingRoom } = await supabase
+            .from('room_category_queue')
+            .select('id')
+            .eq('room_id', roomId)
+            .order('position', { ascending: true });
+          if (remainingRoom?.length) {
+            await Promise.all(
+              remainingRoom.map((item, index) =>
+                supabase.from('room_category_queue').update({ position: index }).eq('id', item.id)
+              )
+            );
+          }
+        }
       }
 
       revealRequestedRef.current = false;
@@ -579,7 +637,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Setup subscriptions
       setupSessionSubscription(session.id);
-      setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, false); // isTVDisplay = false
+      setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, isTVDisplay);
 
       return true;
     } catch (error) {
@@ -729,7 +787,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // If every ACTIVE player answered, host moves game to reveal immediately
         const activePlayers = players.filter(p => p.isActive === true);
-        if (isHost && state.phase === 'question' && activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered)) {
+        const phaseNow = stateRef.current.phase;
+        if (isHost && phaseNow === 'question' && activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered)) {
           requestRevealIfEligible('all active players answered');
         }
         
