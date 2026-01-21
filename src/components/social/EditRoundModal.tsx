@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { CoverImagePicker } from "./CoverImagePicker";
@@ -208,7 +209,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
           cover_image: coverImage,
           is_public: isPublic,
           icon_slug: iconSlug,
-          questions: JSON.parse(JSON.stringify(questions)),
+          questions: structuredClone(questions) as unknown as Json,
         })
         .eq("id", round.id);
 

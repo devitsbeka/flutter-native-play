@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBackgroundGeneration } from "@/contexts/BackgroundGenerationContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -375,7 +376,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         cover_gradient: selectedGradient,
         question_count: questionsToSave.length,
         answer_format: answerFormat,
-        questions: JSON.parse(JSON.stringify(questionsToSave)),
+        questions: structuredClone(questionsToSave) as unknown as Json,
         icon_slug: iconSlug,
         is_public: isPublic,
       }]);

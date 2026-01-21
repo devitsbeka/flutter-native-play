@@ -1,6 +1,7 @@
 // Multiplayer Context V2 - Manages room-based trivia games
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "./AuthContext";
 import { TriviaQuestion } from "@/hooks/useTrivia";
 import { toast } from "sonner";
@@ -586,7 +587,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .insert([{
               room_id: roomId,
               game_number: 1,
-              questions_data: JSON.parse(JSON.stringify(questions)),
+              questions_data: structuredClone(questions) as unknown as Json,
             }])
             .select()
             .single();
@@ -699,7 +700,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .insert([{
         room_id: roomId,
         game_number: 1,
-        questions_data: JSON.parse(JSON.stringify(questions)),
+        questions_data: structuredClone(questions) as unknown as Json,
       }])
       .select()
       .single();
@@ -878,7 +879,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .insert([{
               room_id: roomId,
               game_number: 1,
-              questions_data: JSON.parse(JSON.stringify(questions)),
+              questions_data: structuredClone(questions) as unknown as Json,
             }])
             .select()
             .single();
@@ -991,7 +992,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .insert([{
           room_id: roomId,
           game_number: 1,
-          questions_data: JSON.parse(JSON.stringify(questions)),
+          questions_data: structuredClone(questions) as unknown as Json,
         }])
         .select()
         .single();
@@ -1137,7 +1138,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .insert([{
               room_id: roomId,
               game_number: 1,
-              questions_data: JSON.parse(JSON.stringify(questions)),
+              questions_data: structuredClone(questions) as unknown as Json,
             }])
             .select()
             .single();
@@ -1260,7 +1261,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .insert([{
           room_id: roomId,
           game_number: 1,
-          questions_data: JSON.parse(JSON.stringify(questions)),
+          questions_data: structuredClone(questions) as unknown as Json,
         }])
         .select()
         .single();
@@ -1385,7 +1386,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     return `${domain}/room/${roomCode}`;
   }, []);
 
-  const value: MultiplayerContextType = {
+  const value = useMemo<MultiplayerContextType>(() => ({
     ...state,
     participants,
     isHost,
@@ -1406,7 +1407,26 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     setShowCreateModal,
     showJoinModal,
     setShowJoinModal,
-  };
+  }), [
+    state,
+    participants,
+    isHost,
+    loading,
+    createRoom,
+    enterRoom,
+    startGame,
+    startNewRound,
+    startNextFromQueue,
+    submitAnswer,
+    nextQuestion,
+    exitRoom,
+    continueInRoom,
+    leaveRoomPermanently,
+    deleteRoom,
+    resetMultiplayer,
+    showCreateModal,
+    showJoinModal,
+  ]);
 
   return (
     <MultiplayerContext.Provider value={value}>

@@ -15,7 +15,7 @@ export interface DuplicateScanResult {
   duplicates: DuplicateResult[];
 }
 
-// Simple similarity check using normalized Levenshtein-like approach
+// Optimized text normalization
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
@@ -24,27 +24,64 @@ function normalizeText(text: string): string {
     .trim();
 }
 
-function calculateSimilarity(str1: string, str2: string): number {
-  const s1 = normalizeText(str1);
-  const s2 = normalizeText(str2);
-  
-  if (s1 === s2) return 1;
-  if (s1.length === 0 || s2.length === 0) return 0;
+// Extract keywords for similarity comparison
+function extractKeywords(text: string): Set<string> {
+  const normalized = normalizeText(text);
+  return new Set(normalized.split(' ').filter(w => w.length > 2));
+}
+
+// Pre-processed question structure for batch comparisons
+interface ProcessedQuestion {
+  id: string;
+  originalText: string;
+  normalized: string;
+  keywords: Set<string>;
+  length: number;
+}
+
+/**
+ * Optimized similarity calculation using pre-computed values
+ * Avoids repeated normalization and keyword extraction
+ */
+function calculateSimilarityOptimized(
+  norm1: string,
+  keywords1: Set<string>,
+  norm2: string,
+  keywords2: Set<string>
+): number {
+  if (norm1 === norm2) return 1;
+  if (norm1.length === 0 || norm2.length === 0) return 0;
   
   // Check if one contains the other
-  if (s1.includes(s2) || s2.includes(s1)) {
-    const shorter = Math.min(s1.length, s2.length);
-    const longer = Math.max(s1.length, s2.length);
+  if (norm1.includes(norm2) || norm2.includes(norm1)) {
+    const shorter = Math.min(norm1.length, norm2.length);
+    const longer = Math.max(norm1.length, norm2.length);
     return shorter / longer;
   }
   
-  // Word-based similarity
-  const words1 = new Set(s1.split(' '));
-  const words2 = new Set(s2.split(' '));
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
-  const union = new Set([...words1, ...words2]);
+  // Word-based similarity (Jaccard index) with pre-computed sets
+  if (keywords1.size === 0 || keywords2.size === 0) return 0;
   
-  return intersection.size / union.size;
+  let intersectionCount = 0;
+  for (const word of keywords1) {
+    if (keywords2.has(word)) intersectionCount++;
+  }
+  const unionSize = keywords1.size + keywords2.size - intersectionCount;
+  
+  return intersectionCount / unionSize;
+}
+
+/**
+ * Pre-process questions for efficient batch comparison
+ */
+function preprocessQuestions(questions: { id: string; question_text: string }[]): ProcessedQuestion[] {
+  return questions.map(q => ({
+    id: q.id,
+    originalText: q.question_text,
+    normalized: normalizeText(q.question_text),
+    keywords: extractKeywords(q.question_text),
+    length: q.question_text.length
+  }));
 }
 
 export function useDuplicateDetection() {
@@ -75,17 +112,37 @@ export function useDuplicateDetection() {
 
       if (error) throw error;
 
-      const duplicates: DuplicateResult[] = [];
+      // Pre-process existing questions - O(n)
+      const processedExisting = preprocessQuestions(
+        (existingQuestions || []).map(q => ({ id: q.id, question_text: q.question_text }))
+      );
 
+      const duplicates: DuplicateResult[] = [];
+      const lengthFilterThreshold = similarityThreshold * 0.5;
+
+      // Pre-process new questions
       for (const newQ of questions) {
-        for (const existingQ of existingQuestions || []) {
-          const similarity = calculateSimilarity(newQ.question_text, existingQ.question_text);
+        const newNormalized = normalizeText(newQ.question_text);
+        const newKeywords = extractKeywords(newQ.question_text);
+        const newLength = newQ.question_text.length;
+
+        for (const existingQ of processedExisting) {
+          // Early exit: length-based filtering
+          const lengthRatio = Math.min(newLength, existingQ.length) / Math.max(newLength, existingQ.length);
+          if (lengthRatio < lengthFilterThreshold) continue;
+
+          const similarity = calculateSimilarityOptimized(
+            newNormalized,
+            newKeywords,
+            existingQ.normalized,
+            existingQ.keywords
+          );
           
           if (similarity >= similarityThreshold) {
             duplicates.push({
               questionText: newQ.question_text,
               existingId: existingQ.id,
-              existingQuestion: existingQ.question_text,
+              existingQuestion: existingQ.originalText,
               similarity,
             });
             break; // Only report first match per new question
@@ -135,25 +192,43 @@ export function useDuplicateDetection() {
 
       if (error) throw error;
 
+      // Pre-process all questions once - O(n)
+      const processed = preprocessQuestions(
+        (questions || []).map(q => ({ id: q.id, question_text: q.question_text }))
+      );
+
       const duplicates: DuplicateResult[] = [];
       const checkedPairs = new Set<string>();
+      const lengthFilterThreshold = similarityThreshold * 0.5;
 
-      for (let i = 0; i < (questions || []).length; i++) {
-        for (let j = i + 1; j < (questions || []).length; j++) {
-          const q1 = questions![i];
-          const q2 = questions![j];
+      // O(n²) comparisons but with optimizations
+      for (let i = 0; i < processed.length; i++) {
+        const q1 = processed[i];
+        
+        for (let j = i + 1; j < processed.length; j++) {
+          const q2 = processed[j];
           
-          const pairKey = [q1.id, q2.id].sort().join('-');
+          const pairKey = `${q1.id}-${q2.id}`;
           if (checkedPairs.has(pairKey)) continue;
           checkedPairs.add(pairKey);
 
-          const similarity = calculateSimilarity(q1.question_text, q2.question_text);
+          // Early exit: length-based filtering
+          const lengthRatio = Math.min(q1.length, q2.length) / Math.max(q1.length, q2.length);
+          if (lengthRatio < lengthFilterThreshold) continue;
+
+          // Use pre-computed values for similarity
+          const similarity = calculateSimilarityOptimized(
+            q1.normalized,
+            q1.keywords,
+            q2.normalized,
+            q2.keywords
+          );
           
           if (similarity >= similarityThreshold) {
             duplicates.push({
-              questionText: q1.question_text,
+              questionText: q1.originalText,
               existingId: q2.id,
-              existingQuestion: q2.question_text,
+              existingQuestion: q2.originalText,
               similarity,
             });
           }
