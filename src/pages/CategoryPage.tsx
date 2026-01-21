@@ -156,17 +156,20 @@ export default function CategoryPage() {
   const availableLevels = category.totalLevels; // From database (based on actual questions)
   const hasCompletedAllAvailable = currentLevel > availableLevels;
   
-  const levels = Array.from({ length: TOTAL_DISPLAY_LEVELS }, (_, i) => {
-    const level = i + 1;
-    const hasEnoughQuestions = level <= availableLevels;
-    const completed = hasEnoughQuestions && isLevelCompleted(categoryId || "", level);
-    const isUnlocked = hasEnoughQuestions && level <= currentLevel;
-    const isCurrent = hasEnoughQuestions && level === currentLevel;
-    const isComingSoon = !hasEnoughQuestions; // Not enough questions for this level yet
-    const stars = getLevelStars(categoryId || "", level);
-    
-    return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars };
-  });
+  const levels = useMemo(() => 
+    Array.from({ length: TOTAL_DISPLAY_LEVELS }, (_, i) => {
+      const level = i + 1;
+      const hasEnoughQuestions = level <= availableLevels;
+      const completed = hasEnoughQuestions && isLevelCompleted(categoryId || "", level);
+      const isUnlocked = hasEnoughQuestions && level <= currentLevel;
+      const isCurrent = hasEnoughQuestions && level === currentLevel;
+      const isComingSoon = !hasEnoughQuestions; // Not enough questions for this level yet
+      const stars = getLevelStars(categoryId || "", level);
+      
+      return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars };
+    }),
+    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars]
+  );
 
   return (
     <PageTransition>
