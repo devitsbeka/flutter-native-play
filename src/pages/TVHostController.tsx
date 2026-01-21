@@ -670,6 +670,7 @@ const TVHostController: React.FC = () => {
         onExit={handleExit}
         onPlayAgain={handlePlayAgain}
         isHost={true}
+        hasMoreRounds={queue.length > 0}
       />
     );
   }
