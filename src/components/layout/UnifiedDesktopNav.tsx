@@ -14,6 +14,7 @@ import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { Avatar } from "@/components/shared/Avatar";
+import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import {
   Tooltip,
@@ -151,12 +152,26 @@ export function UnifiedDesktopNav({
               <LiveBadge />
             </span>
             
-            {/* Tablet: stacked layout with LIVE badge on top-right */}
-            <div className="hidden md:flex lg:hidden items-center relative">
-              <span className="text-[11px] font-slackey text-foreground tracking-tight whitespace-nowrap">
-                MyTrivia
-              </span>
-              <div className="absolute -top-2 -right-4 scale-[0.65]">
+            {/* Tablet: User Avatar instead of logo */}
+            <div className="hidden md:flex lg:hidden items-center justify-center relative">
+              <div 
+                className="relative rounded-full p-1"
+                style={{
+                  background: "linear-gradient(145deg, #FFFFFF 0%, #F5F3FA 100%)",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.9)"
+                }}
+              >
+                <SmartAvatar
+                  avatarUrl={profile?.avatar_url}
+                  animatedAvatarUrl={profile?.animated_avatar_url}
+                  fallback={profile?.nickname?.charAt(0) || "?"}
+                  size="sm"
+                  playOnHover
+                  onClick={() => navigate("/profile")}
+                  clickable
+                />
+              </div>
+              <div className="absolute -top-1 -right-3 scale-[0.6]">
                 <LiveBadge />
               </div>
             </div>
