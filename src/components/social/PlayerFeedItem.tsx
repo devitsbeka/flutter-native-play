@@ -264,9 +264,9 @@ export function PlayerFeedItem({
             </div>
           )}
           
-          {/* Question Count Badge - bottom right (for trivia only) */}
+          {/* Question Count Badge - top right (for trivia only) */}
           {isTrivia && questionCount > 0 && (
-            <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+            <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
               {questionCount} კითხვა
             </div>
           )}

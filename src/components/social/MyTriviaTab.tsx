@@ -423,7 +423,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             {post.title}
           </h4>
         </div>
-        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
           {post.question_count} კითხვა
         </div>
       </div>
@@ -561,7 +561,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             {post.title}
           </h4>
         </div>
-        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
           {post.question_count} კითხვა
         </div>
       </div>
