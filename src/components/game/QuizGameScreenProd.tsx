@@ -334,8 +334,8 @@ export function QuizGameScreenProd() {
         />
       </div>
 
-      {/* Players Row with Icon - Only show in vs/challenge mode */}
-      {opponent ? (
+      {/* Players Row - Only show avatars in vs/challenge mode (no icon) */}
+      {opponent && (
         <div className="flex items-center justify-between px-6 mt-1 mb-3 [@media(max-height:700px)]:mb-2 flex-shrink-0 z-10">
           {/* Player (Left) */}
           <QuizPlayerAvatar
@@ -347,18 +347,6 @@ export function QuizGameScreenProd() {
             size="default"
           />
 
-          {/* Center Icon - hand-picked icon priority, then AI, then category fallback */}
-          <div className="flex-shrink-0">
-            <DynamicIcon 
-              slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
-              categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
-              questionId={currentQuestion.id}
-              size={80}
-              className="drop-shadow-lg"
-              hideIfEmpty={true}
-            />
-          </div>
-
           {/* Opponent (Right) */}
           <QuizPlayerAvatar
             avatarUrl={botAvatars[opponentAvatarIndex]}
@@ -368,22 +356,21 @@ export function QuizGameScreenProd() {
             size="default"
           />
         </div>
-      ) : (
-        /* Solo Mode - Smaller centered icon since timer moved to header */
-        <div className="flex justify-center py-1 [@media(max-height:700px)]:py-0.5 flex-shrink-0 z-10">
+      )}
+
+      {/* Question Card with Overlapping Icon */}
+      <div className="px-4 flex-shrink-0 mt-10 mb-2 [@media(max-height:700px)]:mt-8 [@media(max-height:700px)]:mb-1 relative">
+        {/* Category Icon - overlaps card by 50% */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
             categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
             questionId={currentQuestion.id}
-            size={64}
-            className="drop-shadow-lg [@media(max-height:700px)]:scale-[0.85]"
+            size={opponent ? 80 : 64}
+            className="drop-shadow-lg"
             hideIfEmpty={true}
           />
         </div>
-      )}
-
-      {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-3 mb-2 [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:mb-1">
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}

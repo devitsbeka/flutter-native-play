@@ -151,11 +151,11 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
 
         {/* Question Text */}
         <div className={cn(
-          "px-5 py-2 [@media(max-height:700px)]:py-1.5",
+          "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
           (timerSeconds !== undefined || difficultyLabel) && "pt-16 [@media(max-height:700px)]:pt-14"
         )}>
           {isLoading ? (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
               <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mx-auto" />
             </div>
