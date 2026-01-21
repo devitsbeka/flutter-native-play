@@ -81,27 +81,61 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               .maybeSingle();
             categoryIcon = cat?.icon;
           }
+
+          // Reset existing TV queue to avoid stale/duplicate items
+          await supabase
+            .from('tv_session_queue')
+            .delete()
+            .eq('session_id', session.id);
           
-          // Copy room_category_queue to tv_session_queue
+          // Copy room + room_category_queue into tv_session_queue
           const { data: queueItems } = await supabase
             .from('room_category_queue')
             .select('*')
             .eq('room_id', roomId)
             .order('position');
-          
+
+          const rowsToInsert: Array<{
+            session_id: string;
+            position: number;
+            source_type: string;
+            category_id: string | null;
+            category_name: string | null;
+            icon_slug: string | null;
+            user_trivia_id: string | null;
+          }> = [];
+
+          // Prepend initial room category first (if any)
+          if (roomData.category_id) {
+            rowsToInsert.push({
+              session_id: session.id,
+              position: 0,
+              source_type: 'category',
+              category_id: roomData.category_id,
+              category_name: roomData.category_name,
+              // NOTE: historically this column is used as an emoji in TV lobby UI
+              icon_slug: categoryIcon,
+              user_trivia_id: null,
+            });
+          }
+
+          // Append lobby-selected queue items
           if (queueItems && queueItems.length > 0) {
-            // Insert queue items into tv_session_queue
-            await supabase.from('tv_session_queue').insert(
-              queueItems.map((item, index) => ({
+            queueItems.forEach((item: any, idx: number) => {
+              rowsToInsert.push({
                 session_id: session.id,
-                position: index,
+                position: rowsToInsert.length + idx,
                 source_type: item.source_type,
                 category_id: item.category_id,
                 category_name: item.category_name,
                 icon_slug: item.icon_slug,
                 user_trivia_id: item.user_trivia_id,
-              }))
-            );
+              });
+            });
+          }
+
+          if (rowsToInsert.length > 0) {
+            await supabase.from('tv_session_queue').insert(rowsToInsert);
           }
         }
       }

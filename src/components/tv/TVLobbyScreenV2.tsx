@@ -167,10 +167,16 @@ export const TVLobbyScreenV2: React.FC = () => {
   const handleStartGame = async () => {
     // If a queue exists, always play the first queued round
     const queued = queue[0];
-    if (queued?.category_id) {
-      await removeFromQueue(queued.id);
-      await startGame(queued.category_id);
-      return;
+    if (queued) {
+      // Start without mutating queue first; the game context will consume it after successfully starting.
+      if (queued.user_trivia_id) {
+        await startGame(undefined, queued.user_trivia_id);
+        return;
+      }
+      if (queued.category_id) {
+        await startGame(queued.category_id);
+        return;
+      }
     }
 
     if (selectedCategory) {

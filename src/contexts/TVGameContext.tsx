@@ -79,7 +79,8 @@ const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = getQuestionTime();
 
-const REVEAL_DURATION_MS = 5000;
+// Quick highlight only (no separate reveal screen)
+const REVEAL_DURATION_MS = 1100;
 
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
@@ -176,59 +177,127 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .limit(1);
 
     const nextItem = queueItems?.[0] as any | undefined;
-    if (!nextItem?.category_id) return false;
+    if (!nextItem) return false;
+    if (!nextItem.category_id && !nextItem.user_trivia_id) return false;
 
-    // Remove from queue first
-    await supabase.from('tv_session_queue').delete().eq('id', nextItem.id);
+    try {
+      let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[] }[] = [];
+      let nextCategoryName: string | null = nextItem.category_name || null;
+      // NOTE: category_icon is historically an emoji; tv_session_queue.icon_slug is used similarly in UI.
+      let nextCategoryIcon: string | null = nextItem.icon_slug || null;
 
-    // Reorder remaining items
-    const { data: remaining } = await supabase
-      .from('tv_session_queue')
-      .select('id')
-      .eq('session_id', state.sessionId)
-      .order('position', { ascending: true });
-    if (remaining?.length) {
-      await Promise.all(
-        remaining.map((item, index) =>
-          supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
-        )
-      );
+      if (nextItem.user_trivia_id) {
+        tvLog('Starting next round from queue (user trivia)', { userTriviaId: nextItem.user_trivia_id });
+
+        const { data: triviaData } = await supabase
+          .from('user_quiz_posts')
+          .select('title')
+          .eq('id', nextItem.user_trivia_id)
+          .maybeSingle();
+
+        const { data: triviaQuestions, error: questionsError } = await supabase
+          .from('user_quiz_post_questions' as any)
+          .select('id, question_text, correct_answer, incorrect_answers, question_order')
+          .eq('post_id', nextItem.user_trivia_id)
+          .order('question_order', { ascending: true });
+
+        if (questionsError || !triviaQuestions || triviaQuestions.length === 0) {
+          tvLogError('startNextRoundFromQueueIfAny', 'No questions found for user trivia');
+          return false;
+        }
+
+        nextCategoryName = nextCategoryName || triviaData?.title || 'User Trivia';
+        nextCategoryIcon = nextCategoryIcon || '🎯';
+
+        formattedQuestions = (triviaQuestions as any[]).map((q: any) => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers)
+            ? (q.incorrect_answers as string[])
+            : [];
+          const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
+          return {
+            id: q.id,
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            options: allAnswers,
+          };
+        });
+      } else if (nextItem.category_id) {
+        // Fetch questions for the queued category
+        const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
+        const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+
+        const categoryUUID = await resolveCategoryUuid(nextItem.category_id);
+        if (!categoryUUID) return false;
+
+        const result = await getQuestions({
+          mode: 'tv',
+          categoryUuid: categoryUUID,
+          count: 10,
+        });
+
+        formattedQuestions = result.questions.map(q => ({
+          id: q.id,
+          question_text: q.question,
+          correct_answer: q.correctAnswer,
+          options: q.allAnswers,
+        }));
+
+        markQuestionsAsAsked(`tv_${categoryUUID}`, formattedQuestions.map((q) => q.id));
+
+        const { data: category } = await supabase
+          .from('categories')
+          .select('name, icon')
+          .eq('id', categoryUUID)
+          .maybeSingle();
+
+        nextCategoryName = nextCategoryName || category?.name || null;
+        nextCategoryIcon = nextCategoryIcon || category?.icon || null;
+      }
+
+      if (formattedQuestions.length === 0) return false;
+
+      // Go to round-intro phase instead of countdown - wait for all players to be ready
+      const { error: updateError } = await supabase
+        .from('tv_sessions')
+        .update({
+          status: 'round-intro',
+          questions: formattedQuestions as unknown as Json,
+          current_question_index: 0,
+          question_start_time: null,
+          reveal_start_time: null,
+          category_name: nextCategoryName,
+          category_icon: nextCategoryIcon,
+        })
+        .eq('id', state.sessionId);
+
+      if (updateError) {
+        tvLogError('startNextRoundFromQueueIfAny update session', updateError);
+        return false;
+      }
+
+      // Consume item after successful transition
+      await supabase.from('tv_session_queue').delete().eq('id', nextItem.id);
+
+      // Reorder remaining items
+      const { data: remaining } = await supabase
+        .from('tv_session_queue')
+        .select('id')
+        .eq('session_id', state.sessionId)
+        .order('position', { ascending: true });
+      if (remaining?.length) {
+        await Promise.all(
+          remaining.map((item, index) =>
+            supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
+          )
+        );
+      }
+
+      revealRequestedRef.current = false;
+      return true;
+    } catch (err) {
+      tvLogError('startNextRoundFromQueueIfAny', err);
+      return false;
     }
-
-    // Fetch questions for the queued category
-    const { getQuestions } = await import('@/services/questionService');
-    const { markQuestionsAsAsked } = await import('@/services/questionTracker');
-
-    const result = await getQuestions({
-      mode: 'tv',
-      categoryUuid: nextItem.category_id,
-      count: 10,
-    });
-
-    const formattedQuestions = result.questions.map(q => ({
-      id: q.id,
-      question_text: q.question,
-      correct_answer: q.correctAnswer,
-      options: q.allAnswers,
-    }));
-
-    markQuestionsAsAsked(`tv_${nextItem.category_id}`, formattedQuestions.map((q) => q.id));
-
-    // Go to round-intro phase instead of countdown - wait for all players to be ready
-    await supabase
-      .from('tv_sessions')
-      .update({
-        status: 'round-intro',
-        questions: formattedQuestions as unknown as Json,
-        current_question_index: 0,
-        question_start_time: null,
-        reveal_start_time: null,
-        category_name: nextItem.category_name || null,
-      })
-      .eq('id', state.sessionId);
-
-    revealRequestedRef.current = false;
-    return true;
   }, [isHost, state.sessionId]);
 
   // Cleanup on unmount
