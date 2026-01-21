@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { CATEGORY_ID_TO_ICON } from "@/data/categoryIconMap";
 
 export interface TVQueueItem {
   id: string;
@@ -75,6 +76,9 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       
       // Add initial category as position 0 (if exists)
       if (roomInfo?.category_id && roomInfo?.category_name) {
+        // Resolve icon_slug from CATEGORY_ID_TO_ICON instead of using null
+        const iconSlug = CATEGORY_ID_TO_ICON[roomInfo.category_id] || null;
+        
         fullQueue.push({
           id: `initial-${roomIdFallback}`,
           session_id: sessionId,
@@ -82,7 +86,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
           source_type: "category",
           category_id: roomInfo.category_id,
           category_name: roomInfo.category_name,
-          icon_slug: null,
+          icon_slug: iconSlug,
           user_trivia_id: null,
           created_at: new Date().toISOString(),
         });
