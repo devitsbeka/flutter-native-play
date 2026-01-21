@@ -75,6 +75,7 @@ export function RoomLobbyV2() {
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);
   const { queue, addToQueue, removeFromQueue, reorderQueue } = useRoomCategoryQueue(currentRoom?.id || null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
   
   // Calculate unread count
   const unreadMessageCount = Math.max(0, messages.length - lastSeenMessageCount);
@@ -234,13 +235,31 @@ export function RoomLobbyV2() {
     }
   };
 
-  const handleMentionPlayer = (nickname: string) => {
-    setChatMessage((prev) => {
-      if (!prev || prev.endsWith(' ')) {
-        return `${prev}@${nickname} `;
-      }
-      return `${prev} @${nickname} `;
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const focusChatInput = () => {
+    // Ensure focus happens after state update + render
+    requestAnimationFrame(() => {
+      chatInputRef.current?.focus();
     });
+  };
+
+  const handleMentionPlayer = (nickname: string) => {
+    const cleanNickname = nickname.trim();
+    if (!cleanNickname) return;
+
+    setChatMessage((prev) => {
+      const mention = `@${cleanNickname}`;
+      const pattern = new RegExp(`(^|\\s)${escapeRegExp(mention)}(\\s|$)`);
+
+      // If already mentioned, keep message as-is.
+      if (pattern.test(prev)) return prev;
+
+      if (!prev || prev.endsWith(" ")) return `${prev}${mention} `;
+      return `${prev} ${mention} `;
+    });
+
+    focusChatInput();
   };
 
   // Category selection handlers
@@ -447,9 +466,10 @@ export function RoomLobbyV2() {
               {/* Input area at bottom */}
               <div className="p-4 border-t border-border flex gap-2">
                 <Input
+                  ref={chatInputRef}
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="დაწერე შეტყობინება..."
+                  placeholder={t("team.writeMessagePlaceholder")}
                   className="flex-1"
                   onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 />
