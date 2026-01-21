@@ -451,7 +451,7 @@ export default function Index() {
           {/* Main content area */}
           <div className="flex-1 relative overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none md:pr-[280px]">
+           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none lg:pr-[280px]">
             
             {/* xl+ layout: Cards moved to fixed right side */}
 
