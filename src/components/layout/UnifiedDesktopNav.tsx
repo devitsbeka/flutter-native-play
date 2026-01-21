@@ -15,7 +15,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { Avatar } from "@/components/shared/Avatar";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { LiveBadge } from "@/components/social/LiveBadge";
 import {
   Tooltip,
   TooltipContent,
@@ -149,7 +148,6 @@ export function UnifiedDesktopNav({
             {/* Desktop: horizontal layout */}
             <span className="hidden lg:flex items-center">
               <span className="text-xl font-slackey text-foreground tracking-tight">MyTrivia</span>
-              <LiveBadge />
             </span>
             
             {/* Tablet: User Avatar instead of logo */}
@@ -171,9 +169,6 @@ export function UnifiedDesktopNav({
                   onClick={() => navigate("/profile")}
                   clickable
                 />
-              </div>
-              <div className="absolute -top-1 -right-3 scale-[0.6]">
-                <LiveBadge />
               </div>
             </div>
           </motion.div>
