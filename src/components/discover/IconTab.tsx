@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 
 interface IconTabProps {
@@ -6,7 +7,7 @@ interface IconTabProps {
   onClick: () => void;
 }
 
-export function IconTab({ label, isActive, onClick }: IconTabProps) {
+export const IconTab = memo(function IconTab({ label, isActive, onClick }: IconTabProps) {
   return (
     <motion.button
       onClick={onClick}
@@ -37,4 +38,4 @@ export function IconTab({ label, isActive, onClick }: IconTabProps) {
       </div>
     </motion.button>
   );
-}
+});

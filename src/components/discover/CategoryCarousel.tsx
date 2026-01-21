@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useCallback, memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
@@ -27,7 +27,7 @@ interface CategoryCarouselProps {
   getBadge?: (category: Category, index: number) => string | undefined;
 }
 
-export function CategoryCarousel({
+function CategoryCarouselComponent({
   categories,
   progress,
   favorites,
@@ -39,7 +39,7 @@ export function CategoryCarousel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { hasNewLevels } = useNewLevels();
 
-  const scroll = (direction: "left" | "right") => {
+  const scroll = useCallback((direction: "left" | "right") => {
     if (scrollRef.current) {
       const scrollAmount = 180;
       scrollRef.current.scrollBy({
@@ -47,7 +47,10 @@ export function CategoryCarousel({
         behavior: "smooth",
       });
     }
-  };
+  }, []);
+
+  const handleScrollLeft = useCallback(() => scroll("left"), [scroll]);
+  const handleScrollRight = useCallback(() => scroll("right"), [scroll]);
 
   if (categories.length === 0) return null;
 
@@ -55,13 +58,13 @@ export function CategoryCarousel({
     <div className="relative group">
       {/* Scroll Buttons - Hidden on mobile, visible on hover for desktop */}
       <button
-        onClick={() => scroll("left")}
+        onClick={handleScrollLeft}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
       >
         <ChevronLeft className="w-4 h-4" />
       </button>
       <button
-        onClick={() => scroll("right")}
+        onClick={handleScrollRight}
         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-background border border-border shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex"
       >
         <ChevronRight className="w-4 h-4" />
@@ -112,3 +115,5 @@ export function CategoryCarousel({
     </div>
   );
 }
+
+export const CategoryCarousel = memo(CategoryCarouselComponent);

@@ -1,5 +1,6 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
-import { User, Plus, X } from "lucide-react";
+import { User, Plus } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { Avatar } from "@/components/shared/Avatar";
 
@@ -13,7 +14,7 @@ interface AccountSwitcherModalProps {
   } | null;
 }
 
-export function AccountSwitcherModal({
+export const AccountSwitcherModal = memo(function AccountSwitcherModal({
   isOpen,
   onClose,
   onViewProfile,
@@ -91,4 +92,4 @@ export function AccountSwitcherModal({
       </div>
     </GameModal>
   );
-}
+});
