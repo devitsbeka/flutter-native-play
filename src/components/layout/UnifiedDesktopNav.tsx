@@ -154,11 +154,12 @@ export function UnifiedDesktopNav({
             
             {/* Tablet: User Avatar instead of logo */}
             <div className="hidden md:flex lg:hidden items-center justify-center relative">
-              <div 
-                className="relative rounded-full p-1"
+              <div
+                className="relative rounded-full p-1 w-12 h-12 aspect-square flex items-center justify-center"
                 style={{
                   background: "linear-gradient(145deg, #FFFFFF 0%, #F5F3FA 100%)",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.9)"
+                  boxShadow:
+                    "0 4px 20px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.9)",
                 }}
               >
                 <SmartAvatar
@@ -179,7 +180,8 @@ export function UnifiedDesktopNav({
         </div>
 
         {/* Profile Button - navigates directly to profile */}
-        <div className="px-2 lg:px-3 mb-4">
+        {/* Hidden on tablet because the tablet header already shows the avatar */}
+        <div className="hidden lg:block px-2 lg:px-3 mb-4">
           <motion.button
             onClick={() => navigate("/profile")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-full text-foreground transition-colors"
