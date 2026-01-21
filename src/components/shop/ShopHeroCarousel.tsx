@@ -111,7 +111,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
     <div className="relative px-[15px] mb-6 pt-3">
       <div 
         className="relative overflow-hidden rounded-3xl" 
-        style={{ height: 240 }}
+        style={{ height: 340 }}
       >
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div

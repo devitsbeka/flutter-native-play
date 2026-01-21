@@ -19,7 +19,7 @@ import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopRightSidebar } from "@/components/shop/ShopRightSidebar";
-import { ShopCurrencyBar } from "@/components/shop/ShopCurrencyBar";
+
 import { ShopStandardLayout } from "@/components/shop/ShopStandardLayout";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
@@ -245,8 +245,6 @@ export default function PowerUps() {
           <div className="flex-1 relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
             <GlobalSplineBackground />
 
-            {/* Currency Bar - on video background */}
-            <ShopCurrencyBar />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
             <div className="pt-4">

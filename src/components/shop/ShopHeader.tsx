@@ -2,6 +2,10 @@ import { motion } from "framer-motion";
 import { HelpCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { HeaderActions } from "@/components/shared/HeaderActions";
+import { useCurrency } from "@/hooks/useCurrency";
+import { formatCompactNumber } from "@/lib/utils";
+import gemIcon from "@/assets/icons/icon-gem.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 interface ShopHeaderProps {
   onHelpClick: () => void;
@@ -10,15 +14,38 @@ interface ShopHeaderProps {
 
 export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
   const { t } = useLanguage();
+  const { coins, gems } = useCurrency();
 
   return (
     <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-purple-900/10">
       <div className="px-[15px] pt-4 pb-3">
-        {/* Full width row: Title on left, Actions on far right */}
+        {/* Full width row: Title + Wallet on left, Actions on far right */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-            {t("shop.title")}
-          </h1>
+          {/* Left side: Title + Wallet */}
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+              {t("shop.title")}
+            </h1>
+            
+            {/* Wallet - Coins & Gems */}
+            <div className="flex items-center gap-3">
+              {/* Coins */}
+              <div className="flex items-center gap-1.5">
+                <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  <img src={coinIcon} alt="" className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-sm text-foreground">{formatCompactNumber(coins)}</span>
+              </div>
+              
+              {/* Gems */}
+              <div className="flex items-center gap-1.5">
+                <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  <img src={gemIcon} alt="" className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-sm text-foreground">{formatCompactNumber(gems)}</span>
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
             <HeaderActions />
