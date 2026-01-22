@@ -32,13 +32,6 @@ interface SearchResult {
   country_code: string | null;
 }
 
-// Custom 3D chunky icons for sharing platforms - ROUNDED (circular)
-const SmsIcon = () => (
-  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-md" style={{ boxShadow: "0 3px 0 hsl(142 76% 30%)" }}>
-    <Phone className="w-6 h-6 text-white" />
-  </div>
-);
-
 const MessengerIcon = () => (
   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center shadow-md" style={{ boxShadow: "0 3px 0 hsl(280 70% 35%)" }}>
     <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -84,7 +77,6 @@ const FacebookIcon = () => (
 );
 
 const shareOptions = [
-  { id: "sms", label: "SMS", icon: SmsIcon, action: "sms" },
   { id: "messenger", label: "Messenger", icon: MessengerIcon, action: "messenger" },
   { id: "whatsapp", label: "WhatsApp", icon: WhatsAppIcon, action: "whatsapp" },
   { id: "x", label: "X", icon: XTwitterIcon, action: "twitter" },
@@ -157,9 +149,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
     let url = "";
     
     switch (platform) {
-      case "sms":
-        url = `sms:?body=${encodedMessage} ${encodedLink}`;
-        break;
       case "messenger":
         url = `fb-messenger://share?link=${encodedLink}`;
         break;
@@ -248,7 +237,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                 {/* Search Section */}
                 <div>
                   <div className={`relative ${narrow}`}>
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/90 z-10" />
                 <Input
                   type="text"
                   placeholder="მომხმარებლის ძებნა..."
@@ -372,47 +361,28 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                   <div className="flex-1 h-px bg-primary-foreground/25" />
                 </div>
 
-                {/* Share Options - Two Rows */}
-                <div className="flex flex-col items-center gap-5">
-              {/* First row: SMS, Messenger, WhatsApp */}
-              <div className="flex items-center justify-center gap-8">
-                {shareOptions.slice(0, 3).map((option, index) => (
-                  <motion.button
-                    key={option.id}
-                    onClick={() => handleShare(option.action)}
-                    className="flex flex-col items-center gap-2"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    whileHover={{ scale: 1.08, y: -2 }}
-                    whileTap={{ scale: 0.95, y: 0 }}
-                    disabled={isSharing}
-                  >
-                    <option.icon />
-                    <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-              
-              {/* Second row: X, Email (centered) */}
-              <div className="flex items-center justify-center gap-8">
-                {shareOptions.slice(3).map((option, index) => (
-                  <motion.button
-                    key={option.id}
-                    onClick={() => handleShare(option.action)}
-                    className="flex flex-col items-center gap-2"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: (index + 3) * 0.03 }}
-                    whileHover={{ scale: 1.08, y: -2 }}
-                    whileTap={{ scale: 0.95, y: 0 }}
-                    disabled={isSharing}
-                  >
-                    <option.icon />
-                    <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
-                  </motion.button>
-                ))}
-              </div>
+                {/* Share Options - One Row */}
+                <div className="w-full">
+                  <div className="mx-auto w-full max-w-[520px]">
+                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto pb-1">
+                      {shareOptions.map((option, index) => (
+                        <motion.button
+                          key={option.id}
+                          onClick={() => handleShare(option.action)}
+                          className="flex flex-col items-center gap-2 shrink-0"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          whileHover={{ scale: 1.08, y: -2 }}
+                          whileTap={{ scale: 0.95, y: 0 }}
+                          disabled={isSharing}
+                        >
+                          <option.icon />
+                          <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
