@@ -195,6 +195,70 @@ const TVHostController: React.FC = () => {
     };
   }, [sessionId, user?.id, joinSession]);
 
+  // Real-time sync: When items are added to room_category_queue, sync them to tv_session_queue
+  useEffect(() => {
+    if (!roomId || !sessionId) return;
+    
+    const channel = supabase
+      .channel(`room-queue-sync-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'room_category_queue',
+          filter: `room_id=eq.${roomId}`,
+        },
+        async (payload) => {
+          const newItem = payload.new as {
+            id: string;
+            source_type: string;
+            category_id: string | null;
+            category_name: string | null;
+            icon_slug: string | null;
+            user_trivia_id: string | null;
+            position: number;
+          };
+          
+          tvLog('Room queue INSERT detected, syncing to TV queue', newItem);
+          
+          // Get current TV queue length for position
+          const { data: currentQueue } = await supabase
+            .from('tv_session_queue')
+            .select('position')
+            .eq('session_id', sessionId)
+            .order('position', { ascending: false })
+            .limit(1);
+          
+          const nextPosition = currentQueue?.[0]?.position != null 
+            ? currentQueue[0].position + 1 
+            : 0;
+          
+          // Insert into TV queue
+          const { error: insertError } = await supabase.from('tv_session_queue').insert({
+            session_id: sessionId,
+            position: nextPosition,
+            source_type: newItem.source_type,
+            category_id: newItem.category_id,
+            category_name: newItem.category_name,
+            icon_slug: newItem.icon_slug,
+            user_trivia_id: newItem.user_trivia_id,
+          });
+          
+          if (insertError) {
+            tvLogError('Failed to sync room queue item to TV queue', insertError);
+          } else {
+            tvLog('Successfully synced queue item to TV queue at position', nextPosition);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, sessionId]);
+
   // Update lastResult when phase changes to reveal
   useEffect(() => {
     if (localPhase === 'reveal' && myAnswer && currentQuestion) {

@@ -152,40 +152,58 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             user_trivia_id: string | null;
           }> = [];
 
-          // Prepend initial room category OR user trivia first (if any)
-          if (roomData.category_id) {
-            // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
-            const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
-            const iconSlug = CATEGORY_ID_TO_ICON[roomData.category_id] || null;
-            
-            rowsToInsert.push({
-              session_id: session.id,
-              position: 0,
-              source_type: 'category',
-              category_id: roomData.category_id,
-              category_name: roomData.category_name,
-              icon_slug: iconSlug,
-              user_trivia_id: null,
-            });
-          } else if (roomData.user_trivia_id) {
-            // Handle user trivia as initial round
-            rowsToInsert.push({
-              session_id: session.id,
-              position: 0,
-              source_type: 'user_trivia',
-              category_id: null,
-              category_name: roomData.category_name,
-              icon_slug: null,
-              user_trivia_id: roomData.user_trivia_id,
-            });
+          // Check if initial category/trivia is already in queue at position 0
+          const initialAlreadyInQueue = queueItems?.some(
+            (item: any) => 
+              item.position === 0 && 
+              ((roomData.category_id && item.category_id === roomData.category_id) || 
+               (roomData.user_trivia_id && item.user_trivia_id === roomData.user_trivia_id))
+          );
+
+          console.log('[TVSetupInline] Initial already in queue check:', { 
+            initialAlreadyInQueue, 
+            categoryId: roomData.category_id, 
+            userTriviaId: roomData.user_trivia_id 
+          });
+
+          // Only prepend initial category/trivia if NOT already in queue
+          if (!initialAlreadyInQueue) {
+            if (roomData.category_id) {
+              // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
+              const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
+              const iconSlug = CATEGORY_ID_TO_ICON[roomData.category_id] || null;
+              
+              rowsToInsert.push({
+                session_id: session.id,
+                position: 0,
+                source_type: 'category',
+                category_id: roomData.category_id,
+                category_name: roomData.category_name,
+                icon_slug: iconSlug,
+                user_trivia_id: null,
+              });
+            } else if (roomData.user_trivia_id) {
+              // Handle user trivia as initial round
+              rowsToInsert.push({
+                session_id: session.id,
+                position: 0,
+                source_type: 'user_trivia',
+                category_id: null,
+                category_name: roomData.category_name,
+                icon_slug: null,
+                user_trivia_id: roomData.user_trivia_id,
+              });
+            }
           }
 
           // Append lobby-selected queue items
           if (queueItems && queueItems.length > 0) {
             queueItems.forEach((item: any, idx: number) => {
+              // Calculate position: if initial was prepended, offset by rowsToInsert.length; otherwise use idx
+              const position = initialAlreadyInQueue ? idx : rowsToInsert.length + idx;
               rowsToInsert.push({
                 session_id: session.id,
-                position: rowsToInsert.length + idx,
+                position: position,
                 source_type: item.source_type,
                 category_id: item.category_id,
                 category_name: item.category_name,
