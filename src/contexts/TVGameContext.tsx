@@ -206,8 +206,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const byId = new Map(players.map(p => [p.id, p]));
     for (const id of required) {
       const p = byId.get(id);
-      // If missing from presence or unanswered, we do NOT auto-advance.
-      if (!p || !p.hasAnswered) return false;
+      // Required set is intended to contain ONLY active players. However, to protect
+      // against stale IDs (disconnect/reconnect), if the player is missing we treat
+      // it as "not answered" and do not auto-advance.
+      if (!p || p.isActive !== true || !p.hasAnswered) return false;
     }
     return true;
   }, []);
@@ -583,7 +585,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // If we are still within the capture window, keep expanding requiredPlayers.
     if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
-      for (const p of state.players) requiredPlayersRef.current.add(p.id);
+      for (const p of state.players) {
+        if (p.isActive === true) requiredPlayersRef.current.add(p.id);
+      }
+    }
+
+    // After capture ends, prune required set to only currently active players.
+    if (requiredPlayersCaptureUntilRef.current && now > requiredPlayersCaptureUntilRef.current) {
+      const activeIds = new Set(state.players.filter(p => p.isActive === true).map(p => p.id));
+      requiredPlayersRef.current = new Set(
+        Array.from(requiredPlayersRef.current).filter((id) => activeIds.has(id))
+      );
     }
 
     // If this question involves multiple participants, wait for the capture window to finish
@@ -1031,8 +1043,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         );
 
         // During the capture window, build the required player set.
+        // IMPORTANT: only include ACTIVE players, so invited/offline/ghost entries
+        // never block auto-advance.
         if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
-          for (const p of players) requiredPlayersRef.current.add(p.id);
+          for (const p of players) {
+            if (p.isActive === true) requiredPlayersRef.current.add(p.id);
+          }
+        }
+
+        // After the capture window ends, keep the required set in sync with the
+        // currently active presence snapshot. This fixes cases where a player
+        // disconnects/reconnects (new id) and the old id would otherwise block
+        // auto-advance until timer expiry.
+        if (requiredPlayersCaptureUntilRef.current && now > requiredPlayersCaptureUntilRef.current) {
+          const activeIds = new Set(players.filter(p => p.isActive === true).map(p => p.id));
+          requiredPlayersRef.current = new Set(
+            Array.from(requiredPlayersRef.current).filter((id) => activeIds.has(id))
+          );
         }
 
         setState(prev => ({ ...prev, players }));
@@ -1098,6 +1125,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         tvLogPlayer('leave', key);
+
+        // If someone leaves, ensure they no longer block auto-advance for the
+        // current question.
+        requiredPlayersRef.current.delete(key);
+
         // Log player disconnect for debugging
         if (leftPresences && leftPresences.length > 0) {
           const leftPlayer = leftPresences[0] as { nickname?: string };
