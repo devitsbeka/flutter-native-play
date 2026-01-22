@@ -1,5 +1,5 @@
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Check, X } from "lucide-react";
 
@@ -91,14 +91,14 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
           scale: { type: "spring", stiffness: 400, damping: 17 }
         }}
         className={cn(
-          "relative w-full rounded-2xl font-bold text-lg",
+          "relative w-full h-full rounded-2xl font-bold text-lg",
           "disabled:cursor-not-allowed",
           isLoading && "cursor-wait",
           isDisabledState && "opacity-40 cursor-not-allowed",
           className
         )}
         style={{
-          marginBottom: depthHeight,
+          paddingBottom: depthHeight,
         }}
       >
         {/* Depth/Shadow Layer */}
@@ -113,7 +113,7 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         
         {/* Main Face */}
         <div
-          className="relative flex items-center min-h-[68px] [@media(max-height:700px)]:min-h-[60px] py-2.5 [@media(max-height:700px)]:py-2 rounded-2xl transition-transform duration-100"
+          className="relative flex items-center h-full min-h-[68px] [@media(max-height:700px)]:min-h-[60px] py-2.5 [@media(max-height:700px)]:py-2 rounded-2xl transition-transform duration-100"
           style={{
             background: styles.faceBg,
             transform: `translateY(${isPressed ? 2 : 0}px)`,
