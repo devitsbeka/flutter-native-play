@@ -658,8 +658,6 @@ const TVHostController: React.FC = () => {
 
   // Round Intro phase - show ready screen between rounds
   if (localPhase === 'round-intro') {
-    const iconSlug = categoryIcon && !isEmojiString(categoryIcon) ? categoryIcon : undefined;
-    const emoji = categoryIcon && isEmojiString(categoryIcon) ? categoryIcon : '🎲';
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <motion.div
@@ -678,12 +676,6 @@ const TVHostController: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="mb-8 flex flex-col items-center"
         >
-          <div 
-            className="w-20 h-20 rounded-2xl flex items-center justify-center mb-3 border-2 border-purple-400/50"
-            style={{ background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)' }}
-          >
-            <QuizCategoryIcon iconSlug={iconSlug} emoji={emoji} size={56} />
-          </div>
           <h2 className="text-xl font-bold text-white">{categoryName || 'კატეგორია'}</h2>
         </motion.div>
 
