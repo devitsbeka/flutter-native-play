@@ -51,6 +51,7 @@ const TVHostController: React.FC = () => {
     categoryName,
     categoryIcon,
     roundNumber,
+    totalRounds,
     submitAnswer,
     joinSession,
     startGame,
@@ -737,7 +738,7 @@ const TVHostController: React.FC = () => {
         onPlayAgain={handlePlayAgain}
         onContinueNextRound={handleContinueNextRound}
         isHost={true}
-        hasMoreRounds={queue.length > 0}
+          hasMoreRounds={roundNumber < totalRounds}
       />
     );
   }
