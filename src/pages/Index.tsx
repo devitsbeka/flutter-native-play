@@ -456,7 +456,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-12">
+            <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px]">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
