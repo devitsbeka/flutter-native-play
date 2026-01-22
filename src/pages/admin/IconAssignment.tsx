@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown, BarChart3, ArrowRightLeft } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown, BarChart3, ArrowRightLeft, Wrench } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -524,6 +524,29 @@ export default function IconAssignment() {
 
   // State for active tab
   const [activeTab, setActiveTab] = useState<string>('questions');
+  const [fixingBrokenRefs, setFixingBrokenRefs] = useState(false);
+
+  const fixBrokenIconReferences = useCallback(async () => {
+    setFixingBrokenRefs(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-broken-icon-references', {
+        body: { dryRun: false }
+      });
+
+      if (error) throw error;
+
+      toast.success(
+        `დასრულდა: ${data.updatedToCategory} კატეგორიაზე, ${data.clearedToNull} გასუფთავდა (გატეხილი: ${data.brokenFound})`
+      );
+
+      refetch();
+    } catch (err) {
+      console.error('Fix broken references error:', err);
+      toast.error('შეცდომა გატეხილი მინიჭებების გასწორებისას');
+    } finally {
+      setFixingBrokenRefs(false);
+    }
+  }, [refetch]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex h-full flex-col overflow-hidden">
@@ -563,6 +586,21 @@ export default function IconAssignment() {
               </div>
               <div className="text-xs text-muted-foreground">შეუმოწმ.</div>
             </div>
+            {fixingBrokenRefs ? (
+              <Button size="sm" variant="ghost" disabled className="gap-1" title="გატეხილი მინიჭებების გასწორება">
+                <Loader2 className="h-3 w-3 animate-spin" />
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={fixBrokenIconReferences}
+                title="გატეხილი icon_slug მინიჭებების გასწორება (კატეგორიის აიკონზე fallback)"
+              >
+                <Wrench className="h-4 w-4" />
+              </Button>
+            )}
+
             {isVerifying ? (
               <Button size="sm" variant="ghost" disabled className="gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
