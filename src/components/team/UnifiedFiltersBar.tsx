@@ -191,16 +191,32 @@ export const myTriviaFilterOptions: FilterOption<MyTriviaFilter>[] = [
   { value: "most_played", label: "ნათამაშები" },
 ];
 
+// Pre-defined filter options for explore/discover tab
+export const exploreFilterOptions: FilterOption<ExploreFilter>[] = [
+  { value: "all", label: "ყველა" },
+  { value: "friends", label: "მეგობრების" },
+  { value: "trivias", label: "ტრივიები" },
+  { value: "collections", label: "კოლექციები" },
+];
+
+export const exploreSortOptions: SortOption<ExploreSort>[] = [
+  { value: "recent", label: "უახლესი" },
+  { value: "most_played", label: "ნათამაშები" },
+  { value: "most_liked", label: "მოწონებული" },
+];
+
 // Type exports
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
 export type RoomSort = "recent" | "created_date";
-export type MyTriviaFilter = 
-  | "all" 
-  | "private" 
-  | "published" 
-  | "trivias" 
-  | "collections" 
-  | "most_liked" 
-  | "most_saved" 
+export type MyTriviaFilter =
+  | "all"
+  | "private"
+  | "published"
+  | "trivias"
+  | "collections"
+  | "most_liked"
+  | "most_saved"
   | "most_played"
   | "personal";
+export type ExploreFilter = "all" | "friends" | "trivias" | "collections";
+export type ExploreSort = "recent" | "most_played" | "most_liked";

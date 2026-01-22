@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SamplePost } from "@/data/samplePosts";
 import { Json } from "@/integrations/supabase/types";
+import { ExploreFilter, ExploreSort } from "@/components/team/UnifiedFiltersBar";
 
 export interface Creator {
   user_id: string;
@@ -16,11 +17,15 @@ export interface Creator {
   friendship_id?: string;
 }
 
-export function useExploreCreators(searchQuery: string = "") {
+export function useExploreCreators(
+  searchQuery: string = "",
+  filter: ExploreFilter = "all",
+  sort: ExploreSort = "recent"
+) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["explore-creators", user?.id, searchQuery],
+    queryKey: ["explore-creators", user?.id, searchQuery, filter, sort],
     queryFn: async (): Promise<Creator[]> => {
       // Fetch all public posts
       const { data: posts, error: postsError } = await supabase
@@ -142,13 +147,34 @@ export function useExploreCreators(searchQuery: string = "") {
         });
       });
 
-      // Apply search filter
+      // Get friend IDs for friends filter
+      const friendIds = new Set(
+        friendships
+          .filter(f => f.status === 'accepted')
+          .map(f => f.user_id === user?.id ? f.friend_id : f.user_id)
+      );
+
+      // Apply filter
       let filteredCreators = creators;
+      switch (filter) {
+        case "friends":
+          filteredCreators = creators.filter(c => friendIds.has(c.user_id));
+          break;
+        case "trivias":
+        case "collections":
+          // For desktop grouped view, we still show creators but the filter
+          // affects which items are shown - this is handled in the mobile view
+          // For grouped view, show all creators
+          break;
+        // "all" - no filtering needed
+      }
+
+      // Apply search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        filteredCreators = creators.filter(creator => 
+        filteredCreators = filteredCreators.filter(creator =>
           creator.nickname.toLowerCase().includes(query) ||
-          creator.trivias.some(t => 
+          creator.trivias.some(t =>
             t.title.toLowerCase().includes(query) ||
             t.subject.toLowerCase().includes(query) ||
             t.hashtags.some(h => h.toLowerCase().includes(query))
@@ -156,8 +182,28 @@ export function useExploreCreators(searchQuery: string = "") {
         );
       }
 
-      // Sort by total plays (most popular first)
-      filteredCreators.sort((a, b) => b.total_plays - a.total_plays);
+      // Apply sorting
+      switch (sort) {
+        case "most_played":
+          filteredCreators.sort((a, b) => b.total_plays - a.total_plays);
+          break;
+        case "most_liked":
+          filteredCreators.sort((a, b) => {
+            const aLikes = a.trivias.reduce((sum, t) => sum + t.likesCount, 0);
+            const bLikes = b.trivias.reduce((sum, t) => sum + t.likesCount, 0);
+            return bLikes - aLikes;
+          });
+          break;
+        case "recent":
+        default:
+          // Sort by most recent trivia from each creator
+          filteredCreators.sort((a, b) => {
+            const aLatest = Math.max(...a.trivias.map(t => new Date(t.createdAt).getTime()));
+            const bLatest = Math.max(...b.trivias.map(t => new Date(t.createdAt).getTime()));
+            return bLatest - aLatest;
+          });
+          break;
+      }
 
       return filteredCreators;
     },

@@ -6,17 +6,25 @@ import { PlayerFeedItem } from "./PlayerFeedItem";
 import { CreatorPortfolioCard } from "./CreatorPortfolioCard";
 import { SamplePost } from "@/data/samplePosts";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
+import { ExploreFilter, ExploreSort } from "@/components/team/UnifiedFiltersBar";
 
 interface ExplorePortfolioFeedProps {
   searchQuery?: string;
+  filter?: ExploreFilter;
+  sort?: ExploreSort;
   onPlayQuiz: (post: SamplePost, collectionPosts?: SamplePost[]) => void;
 }
 
-export function ExplorePortfolioFeed({ searchQuery = "", onPlayQuiz }: ExplorePortfolioFeedProps) {
+export function ExplorePortfolioFeed({
+  searchQuery = "",
+  filter = "all",
+  sort = "recent",
+  onPlayQuiz,
+}: ExplorePortfolioFeedProps) {
   // Flattened feed for mobile
-  const { data: feedItems = [], isLoading: isFlatLoading } = usePlayerFeedItems(searchQuery);
+  const { data: feedItems = [], isLoading: isFlatLoading } = usePlayerFeedItems(searchQuery, filter, sort);
   // Grouped feed for desktop/tablet
-  const { data: creators = [], isLoading: isGroupedLoading } = useExploreCreators(searchQuery);
+  const { data: creators = [], isLoading: isGroupedLoading } = useExploreCreators(searchQuery, filter, sort);
   const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
 
   const isLoading = isFlatLoading || isGroupedLoading;
