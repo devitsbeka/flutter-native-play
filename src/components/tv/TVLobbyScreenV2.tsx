@@ -303,10 +303,10 @@ export const TVLobbyScreenV2: React.FC = () => {
       </div>
 
       {/* Central Category/Rounds Display */}
-      <div className="mb-4">
+      <div className="mb-4 pl-[240px]">
         {hasMultiRound ? (
           // Multi-round queue display
-          <div className="flex flex-wrap justify-center gap-3 py-3">
+          <div className="flex flex-wrap justify-start gap-3 py-3">
             {queue.map((item, index) => (
               <motion.div
                 key={item.id}
@@ -412,7 +412,7 @@ export const TVLobbyScreenV2: React.FC = () => {
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-center">
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start -mt-[70px]">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -435,7 +435,7 @@ export const TVLobbyScreenV2: React.FC = () => {
           </div>
 
           {/* MyTriviaLive Logo */}
-          <div className="mt-4 flex items-center justify-center">
+          <div className="mt-1 flex items-center justify-center">
             <span 
               className="text-lg font-slackey text-white"
               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
