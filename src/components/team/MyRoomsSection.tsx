@@ -282,7 +282,7 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
               />
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-md">
+              <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
                 {displayName}
               </h3>
               {room.category_name && (

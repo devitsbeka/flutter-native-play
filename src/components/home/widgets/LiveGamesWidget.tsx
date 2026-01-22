@@ -126,7 +126,7 @@ export function LiveGamesWidget() {
 
               {/* Bottom left - Room name and description */}
               <div className="absolute bottom-3 left-3 right-3">
-                <h4 className="text-[15px] font-bold text-foreground truncate">
+                <h4 className="text-[15px] font-display text-foreground truncate">
                   {room.room_name || "თამაშის ოთახი"}
                 </h4>
                 <p className="text-[12px] text-muted-foreground truncate mt-0.5">
