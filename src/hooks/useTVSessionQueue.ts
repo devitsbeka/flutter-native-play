@@ -21,8 +21,8 @@ export interface TVQueueItem {
  * @param mockQueue - Optional mock queue for showcase/testing purposes
  */
 export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: string | null, mockQueue?: TVQueueItem[]) {
-  const [queue, setQueue] = useState<TVQueueItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [queue, setQueue] = useState<TVQueueItem[]>(mockQueue || []);
+  const [loading, setLoading] = useState(!mockQueue);
   const [usingRoomFallback, setUsingRoomFallback] = useState(false);
 
   // If mock queue is provided, use it directly (for showcase mode)
@@ -139,6 +139,13 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  // Sync state when mockQueue changes
+  useEffect(() => {
+    if (mockQueue !== undefined) {
+      setQueue(mockQueue);
+    }
+  }, [mockQueue]);
 
   // Skip realtime subscriptions in mock mode
   useEffect(() => {

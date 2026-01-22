@@ -48,11 +48,13 @@ export const TVLobbyScreenV2: React.FC = () => {
   const [newlyJoinedIds, setNewlyJoinedIds] = useState<Set<string>>(new Set());
   
   // Check if we have a context-provided queue (for showcase mode)
-  const isMockMode = contextQueue && contextQueue.length > 0 && sessionId === 'mock-session-id';
+  const isMockMode = sessionId === 'mock-session-id';
   
   // Convert context queue to TVQueueItem format for mock mode
   const mockQueueItems = useMemo(() => {
     if (!isMockMode) return undefined;
+    // Handle empty/undefined context queue in mock mode
+    if (!contextQueue || contextQueue.length === 0) return [];
     return contextQueue.map((item: any, index: number) => ({
       id: item.id || `mock-${index}`,
       session_id: sessionId || '',
