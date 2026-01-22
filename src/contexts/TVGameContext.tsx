@@ -44,6 +44,7 @@ interface TVGameState {
   currentQuestionIndex: number;
   timeRemaining: number;
   roundNumber: number;
+  totalRounds: number;
   categoryName: string | null;
   categoryIcon: string | null;
   roomName: string | null;
@@ -147,6 +148,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     currentQuestionIndex: 0,
     timeRemaining: QUESTION_TIME,
     roundNumber: 1,
+    totalRounds: 1,
     categoryName: null,
     categoryIcon: null,
     roomName: null,
@@ -353,6 +355,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         }
       }
+
+      // Increment round number for the next round
+      setState(prev => ({
+        ...prev,
+        roundNumber: prev.roundNumber + 1,
+      }));
+      tvLog('Advanced to next round', { newRoundNumber: state.roundNumber + 1 });
 
       revealRequestedRef.current = false;
       return true;
@@ -882,6 +891,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     try {
+      // Fetch queue count to calculate total rounds
+      const { data: queueItems } = await supabase
+        .from('tv_session_queue')
+        .select('id')
+        .eq('session_id', state.sessionId);
+      
+      const queueCount = queueItems?.length || 0;
+      const totalRoundsCount = 1 + queueCount; // Current round + queued rounds
+
       let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[] }[] = [];
       let categoryName: string | null = null;
       let categoryIcon: string | null = null;
@@ -1012,7 +1030,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         })
         .eq('id', state.sessionId);
 
+      // Update local state with round tracking
+      setState(prev => ({
+        ...prev,
+        roundNumber: 1,
+        totalRounds: totalRoundsCount,
+      }));
+
       tvLogPhase('lobby', 'countdown', 'startGame');
+      tvLog('Round tracking initialized', { roundNumber: 1, totalRounds: totalRoundsCount });
 
     } catch (error) {
       tvLogError('startGame', error);
@@ -1329,6 +1355,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       currentQuestionIndex: 0,
       timeRemaining: QUESTION_TIME,
       roundNumber: 1,
+      totalRounds: 1,
       categoryName: null,
       categoryIcon: null,
       roomName: null,
