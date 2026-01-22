@@ -86,6 +86,11 @@ const QUESTION_TIME = getQuestionTime();
 // synced into presence (observed on round 2/3).
 const AUTO_ADVANCE_GUARD_MS = 1500;
 
+// Presence may briefly "flicker" during gameplay (e.g., only host visible for a moment).
+// To prevent premature auto-advance, we capture the set of players seen during the
+// first few seconds of each question and require THAT set to answer before revealing.
+const PRESENCE_CAPTURE_WINDOW_MS = 3000;
+
 // Quick highlight only (no separate reveal screen)
 // Keep it in the 1–2s range for readability before auto-advancing.
 const REVEAL_DURATION_MS = 1400;
@@ -188,6 +193,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Prevent instant auto-advance at the start of a new question due to stale presence
   const questionStartedAtRef = useRef<number>(0);
+
+  // Robust auto-advance tracking for current question
+  const requiredPlayersRef = useRef<Set<string>>(new Set());
+  const requiredPlayersCaptureUntilRef = useRef<number>(0);
+  const maxPlayersSeenThisQuestionRef = useRef<number>(0);
+
+  const allRequiredAnswered = useCallback((players: TVPlayer[]) => {
+    const required = requiredPlayersRef.current;
+    if (!required || required.size === 0) return false;
+
+    const byId = new Map(players.map(p => [p.id, p]));
+    for (const id of required) {
+      const p = byId.get(id);
+      // If missing from presence or unanswered, we do NOT auto-advance.
+      if (!p || !p.hasAnswered) return false;
+    }
+    return true;
+  }, []);
 
   // Prevent double-click / concurrent next-round transitions from host
   const nextRoundInFlightRef = useRef(false);
@@ -830,6 +853,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setMyAnswer(null);
             revealRequestedRef.current = false;
             questionStartedAtRef.current = Date.now();
+
+            // Reset robust auto-advance tracking for this question.
+            requiredPlayersRef.current = new Set();
+            requiredPlayersCaptureUntilRef.current = Date.now() + PRESENCE_CAPTURE_WINDOW_MS;
+            maxPlayersSeenThisQuestionRef.current = 0;
 
             // Reset my presence for the new question so host does not treat me as already answered.
             if (presenceChannelRef.current && myPlayerId) {
