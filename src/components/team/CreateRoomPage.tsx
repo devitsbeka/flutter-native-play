@@ -303,14 +303,49 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setSelectionMode("library");
   };
 
-  const handleOptionClick = (mode: SelectionMode) => {
+  const hasAnyCreatedTriviasOrCollections = async () => {
+    if (!user?.id) return false;
+
+    const [{ data: trivia }, { data: collection }] = await Promise.all([
+      supabase
+        .from("user_quiz_posts")
+        .select("id")
+        .eq("user_id", user.id)
+        .neq("subject", "personal")
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("quiz_collections")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    return !!(trivia?.id || collection?.id);
+  };
+
+  const handleOptionClick = async (mode: SelectionMode) => {
     if (mode === "random") {
       selectRandomCategory();
-    } else if (mode === "library") {
+      return;
+    }
+    if (mode === "library") {
       setShowCategoriesModal(true);
-    } else if (mode === "my-trivias") {
+      return;
+    }
+    if (mode === "my-trivias") {
+      const hasAny = await hasAnyCreatedTriviasOrCollections();
+      if (!hasAny) {
+        // No content yet → take user directly to Create Trivia (screen #2)
+        onClose();
+        navigate("/team", { state: { openTrivia: true } });
+        return;
+      }
       setShowMyTriviasModal(true);
-    } else if (mode === "create") {
+      return;
+    }
+    if (mode === "create") {
       // Toggle the sub-menu for create options
       setShowCreateOptionsMenu(!showCreateOptionsMenu);
       setSelectionMode("create");
@@ -1092,7 +1127,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     </div>
                     <div className="flex-1 text-left">
                       <p className={`font-semibold ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white" : "text-foreground"}`}>
-                        ჩემი შექმნილი ტრივიები
+                        ჩემი ტრივია
                       </p>
                       <p className={`text-sm ${selectionMode === "my-trivias" && !challengeTrivia ? "text-white/70" : "text-muted-foreground"}`}>
                         აირჩიე შენი შექმნილი ტრივიებიდან
