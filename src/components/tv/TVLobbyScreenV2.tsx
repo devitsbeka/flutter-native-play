@@ -234,8 +234,8 @@ export const TVLobbyScreenV2: React.FC = () => {
     playerSlots.push(null);
   }
 
-  // Display name: use room name or default
-  const displayRoomName = roomName || categoryName || 'მოთამაშეების მოლოდინში...';
+  // Display name: use room name (category is shown in queue pills)
+  const displayRoomName = roomName || 'TV ოთახი';
 
   // Determine what to show in the central category area
   const hasMultiRound = queue.length > 0;
@@ -432,6 +432,26 @@ export const TVLobbyScreenV2: React.FC = () => {
             <div className="mt-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
               <span className="text-xl font-mono font-bold text-white tracking-widest">{code}</span>
             </div>
+          </div>
+
+          {/* MyTriviaLive Logo */}
+          <div className="mt-4 flex items-center justify-center">
+            <span 
+              className="text-lg font-slackey text-white"
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+            >
+              MyTrivia
+            </span>
+            <span 
+              className="ml-1.5 relative inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold uppercase text-white"
+              style={{
+                background: '#EF4444',
+                boxShadow: '0 2px 0 #B91C1C',
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse" />
+              LIVE
+            </span>
           </div>
         </div>
 

@@ -45,6 +45,7 @@ const createMockTVGameValue = (mockCtx: ReturnType<typeof useTVMock>) => ({
   error: null,
   isLoading: false,
   roomId: 'mock-room-id',
+  roomName: mockCtx.roomName, // Pass room name for lobby header
   categoryQueue: mockCtx.categoryQueue, // Pass the actual queue
   questionsPerRound: 5,
   currentQuestion: mockCtx.questions[mockCtx.currentQuestionIndex] || null,
