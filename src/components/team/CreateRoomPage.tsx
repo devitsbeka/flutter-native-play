@@ -32,6 +32,7 @@ import secretBookcase from "@/assets/secret-bookcase.png";
 import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
+import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPICS = [
@@ -73,12 +74,15 @@ interface Category {
 type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
 
 type PreRoomQueueItem = {
+  tmpId: string;
   source_type: "category" | "random" | "user_trivia";
   category_id?: string | null;
   category_name?: string | null;
   user_trivia_id?: string | null;
   icon_slug?: string | null;
 };
+
+type PreRoomQueueItemInput = Omit<PreRoomQueueItem, "tmpId">;
 
 interface CreateRoomPageProps {
   onClose: () => void;
@@ -353,12 +357,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     setQueuedRounds([]);
   };
 
-  const handleAddPreRoomQueueItem = (item: PreRoomQueueItem) => {
-    setQueuedRounds((prev) => [...prev, item]);
+  const handleAddPreRoomQueueItem = (item: PreRoomQueueItemInput) => {
+    const tmpId = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setQueuedRounds((prev) => [...prev, { ...item, tmpId }]);
     toast({
       title: "რიგში დაემატა",
       description: `დამატებითი რაუნდი: ${item.category_name || "შემთხვევითი"}`,
     });
+  };
+
+  const removeQueuedRound = (tmpId: string) => {
+    setQueuedRounds((prev) => prev.filter((x) => x.tmpId !== tmpId));
   };
 
   const persistQueuedRounds = async (roomId: string) => {
@@ -1080,6 +1091,13 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
 
           </div>
         </div>
+
+        {/* Pre-room queued rounds preview */}
+        <PreRoomQueuePreview
+          items={queuedRounds}
+          onRemove={removeQueuedRound}
+          onClear={() => setQueuedRounds([])}
+        />
 
         {/* Custom Trivia Preview */}
         <AnimatePresence>
