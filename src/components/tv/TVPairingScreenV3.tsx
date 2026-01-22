@@ -105,7 +105,7 @@ export const TVPairingScreenV3: React.FC = () => {
           className="mb-8"
         >
           <div 
-            className="inline-block rounded-2xl p-6"
+            className="inline-block rounded-2xl p-5"
             style={{
               background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
               backdropFilter: 'blur(20px)',
@@ -113,33 +113,28 @@ export const TVPairingScreenV3: React.FC = () => {
               boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
             }}
           >
-            <p className="text-purple-200 mb-3 text-base">შეიყვანეთ ეს კოდი თქვენს ტელეფონზე</p>
+            <p className="text-purple-200 mb-2.5 text-sm">შეიყვანეთ ეს კოდი თქვენს ტელეფონზე</p>
             
             {/* 4-Digit Code Display */}
-            <div className="flex justify-center gap-3 mb-3">
+            <div className="flex justify-center gap-2.5">
               {fourDigitCode.split('').map((digit, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + index * 0.1 }}
-                  className="w-16 h-20 rounded-xl flex items-center justify-center"
+                  className="w-12 h-16 rounded-lg flex items-center justify-center"
                   style={{
                     background: 'linear-gradient(180deg, #A855F7 0%, #7C3AED 100%)',
                     boxShadow: '0 6px 24px rgba(168, 85, 247, 0.4), inset 0 2px 4px rgba(255,255,255,0.3)',
                   }}
                 >
-                  <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                  <span className="text-3xl font-bold text-white" style={{ fontFamily: 'var(--font-display, inherit)' }}>
                     {digit}
                   </span>
                 </motion.div>
               ))}
             </div>
-
-            {/* Full Code (smaller) */}
-            <p className="text-purple-300/60 text-sm">
-              კოდი: <span className="font-mono font-bold text-purple-200">{fourDigitCode}</span>
-            </p>
           </div>
         </motion.div>
 
