@@ -355,8 +355,6 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const handleMyTriviaSelect = (item: { id: string; title: string; type: "trivia" | "collection" }) => {
     setChallengeTrivia(item);
     setSelectionMode("my-trivias");
-    // Update room name to trivia/collection title
-    setRoomName(item.title);
   };
 
   const handleCreateOptionSelect = (type: "trivia" | "collection" | "personal") => {
