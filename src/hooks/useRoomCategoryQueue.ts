@@ -45,7 +45,12 @@ export function useRoomCategoryQueue(roomId: string | null) {
         { event: "*", schema: "public", table: "room_category_queue", filter: `room_id=eq.${roomId}` },
         () => fetchQueue()
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Ensure we don't miss items created right before/while the subscription is attaching.
+        if (status === 'SUBSCRIBED') {
+          fetchQueue();
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
