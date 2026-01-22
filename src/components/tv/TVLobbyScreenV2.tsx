@@ -391,20 +391,25 @@ export const TVLobbyScreenV2: React.FC = () => {
       <div className="mb-4 pr-[240px]">
         {hasMultiRound ? (
           // Multi-round queue display
-          <div className="flex flex-wrap justify-start gap-1.5 py-3">
+          <div
+            className="flex flex-nowrap justify-start gap-1.5 py-3 overflow-x-auto scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+          >
             {queue.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-purple-400/50"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-purple-400/50 min-w-0 shrink-0"
                 style={{
                   background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)',
                 }}
               >
                 <span className="text-sm text-purple-200/80">{index + 1}.</span>
-                <span className="text-white font-medium">{item.category_name || 'რაუნდი'}</span>
+                <span className="text-white font-medium whitespace-nowrap truncate max-w-[180px]">
+                  {item.category_name || 'რაუნდი'}
+                </span>
                 {/* Queue is read-only in TV mode - managed in game room */}
               </motion.div>
             ))}

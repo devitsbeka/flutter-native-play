@@ -562,14 +562,32 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const nonHostCount = state.players.filter((p) => !p.isHost).length;
     if (state.isPaired && nonHostCount === 0) return;
     
-    // IMPORTANT: "All players or timer" rule
-    // We advance only when every connected presence player has answered.
-    // Using `isActive` here caused premature reveals when a player was temporarily not marked active.
-    const allConnectedAnswered = state.players.length > 0 && state.players.every(p => p.hasAnswered);
-    
-    if (allConnectedAnswered) {
+    // Robust rule: during the first few seconds of each question, capture the set of
+    // players we see in presence. From then on, auto-advance ONLY when that captured
+    // set has answered. This prevents presence "flicker" (briefly seeing only host)
+    // from causing premature reveal.
+    const now = Date.now();
+
+    // Ensure maxPlayersSeenThisQuestionRef is at least current count.
+    maxPlayersSeenThisQuestionRef.current = Math.max(
+      maxPlayersSeenThisQuestionRef.current,
+      state.players.length
+    );
+
+    // If we are still within the capture window, keep expanding requiredPlayers.
+    if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
+      for (const p of state.players) requiredPlayersRef.current.add(p.id);
+    }
+
+    // If presence count dropped below what we've seen this question, do not auto-advance.
+    // This guards against transient "only host" visibility.
+    if (state.players.length < maxPlayersSeenThisQuestionRef.current) return;
+
+    const allAnswered = allRequiredAnswered(state.players);
+
+    if (allAnswered) {
       console.log('[TV Backup Auto-Advance] All connected players answered - triggering reveal via effect');
-      requestRevealIfEligible('all connected players answered (backup effect)');
+      requestRevealIfEligible('all required players answered (backup effect)');
     }
   }, [state.phase, state.players, state.sessionId, isHost, requestRevealIfEligible]);
 
@@ -983,12 +1001,28 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return b.score - a.score;
         });
 
+        // ===== Robust auto-advance tracking =====
+        const now = Date.now();
+
+        // Track the largest presence size we've seen this question.
+        maxPlayersSeenThisQuestionRef.current = Math.max(
+          maxPlayersSeenThisQuestionRef.current,
+          players.length
+        );
+
+        // During the capture window, build the required player set.
+        if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
+          for (const p of players) requiredPlayersRef.current.add(p.id);
+        }
+
         setState(prev => ({ ...prev, players }));
 
         // If every CONNECTED player answered, host moves game to reveal immediately
         // Use fresh state from stateRef for most up-to-date phase
         const phaseNow = stateRef.current.phase;
-        const allConnectedAnswered = players.length > 0 && players.every(p => p.hasAnswered);
+        // Determine whether all required players have answered.
+        // If required set isn't established yet (e.g. still syncing), we do NOT auto-advance.
+        const allAnswered = allRequiredAnswered(players);
         const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= AUTO_ADVANCE_GUARD_MS;
         
         // Use isHostRef to get the latest isHost value (avoids stale closure)
@@ -998,7 +1032,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           isHost: isHostNow,
           phaseNow,
           connectedCount: players.length,
-          allConnectedAnswered,
+          requiredCount: requiredPlayersRef.current.size,
+          allAnswered,
           players: players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered, isActive: p.isActive })),
           revealAlreadyRequested: revealRequestedRef.current,
         });
@@ -1008,9 +1043,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const nonHostCount = players.filter((p) => !p.isHost).length;
         const pairedButOnlyHostVisible = stateRef.current.isPaired && nonHostCount === 0;
 
-        if (isHostNow && phaseNow === 'question' && allConnectedAnswered && !revealRequestedRef.current && canAutoAdvance && !pairedButOnlyHostVisible) {
-          console.log('[TV Auto-Advance] Triggering reveal - all connected players answered!');
-          requestRevealIfEligible('all connected players answered');
+        // Extra guard: if presence appears to have shrunk since we started this question,
+        // do NOT auto-advance (prevents transient "host only" snapshots).
+        const presenceShrunk = players.length < maxPlayersSeenThisQuestionRef.current;
+
+        if (
+          isHostNow &&
+          phaseNow === 'question' &&
+          allAnswered &&
+          !revealRequestedRef.current &&
+          canAutoAdvance &&
+          !pairedButOnlyHostVisible &&
+          !presenceShrunk
+        ) {
+          console.log('[TV Auto-Advance] Triggering reveal - all required players answered!');
+          requestRevealIfEligible('all required players answered');
         }
         
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
