@@ -137,9 +137,9 @@ export function UnifiedDesktopNav({
 
   return (
     <>
-      <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-6 pb-4 transition-all duration-200 z-50">
+      <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-6 pb-4 transition-all duration-200 z-50">
         {/* Logo */}
-        <div className="px-3 lg:px-4 mb-4 flex justify-center lg:justify-start">
+        <div className="px-3 lg:px-4 mb-[6px] lg:mb-4 flex justify-center lg:justify-start">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
