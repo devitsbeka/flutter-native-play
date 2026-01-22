@@ -499,7 +499,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [state.phase, state.timeRemaining, isHost, state.sessionId]);
 
-  // Backup auto-advance: Check if all active players answered whenever players state changes
+  // Backup auto-advance: Check if all CONNECTED players answered whenever players state changes
   useEffect(() => {
     if (!isHost) return;
     if (!state.sessionId) return;
@@ -509,12 +509,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Guard: don't allow auto-advance immediately on question load
     if (questionStartedAtRef.current && Date.now() - questionStartedAtRef.current < 300) return;
     
-    const activePlayers = state.players.filter(p => p.isActive === true);
-    const allActiveAnswered = activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered);
+    // IMPORTANT: "All players or timer" rule
+    // We advance only when every connected presence player has answered.
+    // Using `isActive` here caused premature reveals when a player was temporarily not marked active.
+    const allConnectedAnswered = state.players.length > 0 && state.players.every(p => p.hasAnswered);
     
-    if (allActiveAnswered) {
-      console.log('[TV Backup Auto-Advance] All active players answered - triggering reveal via effect');
-      requestRevealIfEligible('all active players answered (backup effect)');
+    if (allConnectedAnswered) {
+      console.log('[TV Backup Auto-Advance] All connected players answered - triggering reveal via effect');
+      requestRevealIfEligible('all connected players answered (backup effect)');
     }
   }, [state.phase, state.players, state.sessionId, isHost, requestRevealIfEligible]);
 
@@ -914,11 +916,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setState(prev => ({ ...prev, players }));
 
-        // If every ACTIVE player answered, host moves game to reveal immediately
+        // If every CONNECTED player answered, host moves game to reveal immediately
         // Use fresh state from stateRef for most up-to-date phase
-        const activePlayers = players.filter(p => p.isActive === true);
         const phaseNow = stateRef.current.phase;
-        const allActiveAnswered = activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered);
+        const allConnectedAnswered = players.length > 0 && players.every(p => p.hasAnswered);
         const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= 300;
         
         // Use isHostRef to get the latest isHost value (avoids stale closure)
@@ -927,15 +928,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('[TV Auto-Advance Check]', {
           isHost: isHostNow,
           phaseNow,
-          activeCount: activePlayers.length,
-          allActiveAnswered,
-          players: activePlayers.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered, isActive: p.isActive })),
+          connectedCount: players.length,
+          allConnectedAnswered,
+          players: players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered, isActive: p.isActive })),
           revealAlreadyRequested: revealRequestedRef.current,
         });
         
-        if (isHostNow && phaseNow === 'question' && allActiveAnswered && !revealRequestedRef.current && canAutoAdvance) {
-          console.log('[TV Auto-Advance] Triggering reveal - all active players answered!');
-          requestRevealIfEligible('all active players answered');
+        if (isHostNow && phaseNow === 'question' && allConnectedAnswered && !revealRequestedRef.current && canAutoAdvance) {
+          console.log('[TV Auto-Advance] Triggering reveal - all connected players answered!');
+          requestRevealIfEligible('all connected players answered');
         }
         
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
@@ -1258,9 +1259,38 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [state.sessionId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost]);
 
-  // Mark player as ready for next round (presence update)
+  // Mark ready for next round (host-only trigger)
   const markReady = useCallback(async () => {
     if (!presenceChannelRef.current || !myPlayerId) return;
+
+    // Host-only: the host decides when to start the next round.
+    // No more waiting for every player to press a ready button.
+    if (isHost && state.sessionId && state.phase === 'round-intro') {
+      const myPlayer = state.players.find(p => p.id === myPlayerId);
+      // Reset my presence flags (defensive) and move session to countdown.
+      await presenceChannelRef.current.track({
+        nickname: myPlayer?.nickname || 'Host',
+        avatar_url: myPlayer?.avatar_url,
+        score: myScore,
+        hasAnswered: false,
+        lastAnswerCorrect: null,
+        lastAnswer: null,
+        isHost,
+        isActive: true,
+        isReadyForNextRound: false,
+      });
+
+      setMyAnswer(null);
+      revealRequestedRef.current = false;
+
+      await supabase
+        .from('tv_sessions')
+        .update({ status: 'countdown' })
+        .eq('id', state.sessionId);
+
+      tvLogPhase('round-intro', 'countdown', 'host ready');
+      return;
+    }
     
     const myPlayer = state.players.find(p => p.id === myPlayerId);
     await presenceChannelRef.current.track({
@@ -1272,33 +1302,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       lastAnswer: null,
       isHost,
       isActive: true,
+      // Keep this field for backward compatibility, but it's no longer used to gate progression.
       isReadyForNextRound: true,
     });
     tvLog('Player marked ready for next round', { playerId: myPlayerId.slice(0, 8) });
-  }, [state.players, myPlayerId, myScore, isHost]);
+  }, [state.players, state.sessionId, state.phase, myPlayerId, myScore, isHost]);
 
-  // Auto-advance from round-intro when all players are ready (host only)
-  useEffect(() => {
-    if (!isHost) return;
-    if (!state.sessionId) return;
-    if (state.phase !== 'round-intro') return;
-    if (state.players.length === 0) return;
-
-    // Check if all players are ready
-    const allReady = state.players.every(p => (p as any).isReadyForNextRound);
-    
-    if (allReady) {
-      tvLog('All players ready, starting countdown');
-      // Transition to countdown
-      supabase
-        .from('tv_sessions')
-        .update({ status: 'countdown' })
-        .eq('id', state.sessionId)
-        .then(() => {
-          tvLogPhase('round-intro', 'countdown', 'all players ready');
-        });
-    }
-  }, [isHost, state.sessionId, state.phase, state.players]);
+  // NOTE: Previously we auto-advanced from round-intro when ALL players pressed ready.
+  // That stalled because regular controllers don't have a ready button.
+  // Now only the host triggers countdown via `markReady()`.
 
   // Start next round (host only)
   const startNextRound = useCallback(async () => {

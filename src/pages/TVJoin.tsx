@@ -7,6 +7,7 @@ import { ControllerCountdown } from '@/components/controller/ControllerCountdown
 import { ControllerQuestion } from '@/components/controller/ControllerQuestion';
 import { ControllerReveal } from '@/components/controller/ControllerReveal';
 import { ControllerResults } from '@/components/controller/ControllerResults';
+import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerRoundIntroWaiting';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -67,6 +68,8 @@ const TVJoinContent: React.FC = () => {
     case 'waiting':
     case 'lobby':
       return <ControllerLobby />;
+    case 'round-intro':
+      return <ControllerRoundIntroWaiting />;
     case 'countdown':
       return <ControllerCountdown />;
     case 'question':
