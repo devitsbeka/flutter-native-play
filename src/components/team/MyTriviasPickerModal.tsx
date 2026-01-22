@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Play, ChevronLeft, Lock, Globe, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,20 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
   const { user } = useAuth();
   const [tab, setTab] = useState("trivias");
   const [query, setQuery] = useState("");
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const apply = () => setIsDesktop(media.matches);
+    apply();
+    media.addEventListener?.("change", apply);
+    return () => media.removeEventListener?.("change", apply);
+  }, []);
+
+  // If collections tab is hidden (mobile) and user somehow landed on it, push back to trivias.
+  useEffect(() => {
+    if (!isDesktop && tab === "collections") setTab("trivias");
+  }, [isDesktop, tab]);
 
   // Regular trivias (exclude personal/party ones)
   const { data: trivias = [], isLoading: loadingTrivias } = useQuery({
@@ -172,18 +186,23 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
               </div>
             ) : (
               <Tabs value={tab} onValueChange={setTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="trivias" className="flex items-center gap-1.5 text-xs px-2">
-                    <img src={triviaBuzzerIcon} alt="" className="w-4 h-4 object-contain" />
-                    ტრივია ({filteredTrivias.length})
+                <TabsList className="grid w-full mb-4 grid-cols-2 md:grid-cols-3">
+                  <TabsTrigger value="trivias" className="flex items-center gap-2 text-sm md:text-sm px-3 py-2">
+                    <img src={triviaBuzzerIcon} alt="" className="w-16 h-16 md:w-16 md:h-16 object-contain" />
+                    <span className="font-semibold">
+                      ტრივია ({filteredTrivias.length}{!isDesktop ? ` + ${filteredCollections.length}` : ""})
+                    </span>
                   </TabsTrigger>
-                  <TabsTrigger value="collections" className="flex items-center gap-1.5 text-xs px-2">
-                    <img src={collectionMagnetIcon} alt="" className="w-4 h-4 object-contain" />
-                    კოლექციები ({filteredCollections.length})
+
+                  {/* Desktop-only: separate Collections tab */}
+                  <TabsTrigger value="collections" className="hidden md:flex items-center gap-2 text-sm px-3 py-2">
+                    <img src={collectionMagnetIcon} alt="" className="w-16 h-16 object-contain" />
+                    <span className="font-semibold">კოლექციები ({filteredCollections.length})</span>
                   </TabsTrigger>
-                  <TabsTrigger value="party" className="flex items-center gap-1.5 text-xs px-2">
-                    <img src={partyBlowerIcon} alt="" className="w-4 h-4 object-contain" />
-                    Party ({filteredPersonalTrivias.length})
+
+                  <TabsTrigger value="party" className="flex items-center gap-2 text-sm md:text-sm px-3 py-2">
+                    <img src={partyBlowerIcon} alt="" className="w-16 h-16 md:w-16 md:h-16 object-contain" />
+                    <span className="font-semibold">Party ({filteredPersonalTrivias.length})</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -240,6 +259,77 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                           </div>
                         </motion.button>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Mobile-only: show collections inside trivias */}
+                  {!isDesktop && (
+                    <div className="mt-6">
+                      <div className="flex items-center gap-2 mb-2 px-1">
+                        <img src={collectionMagnetIcon} alt="" className="w-8 h-8 object-contain" />
+                        <p className="text-base font-bold text-foreground">
+                          კოლექციები ({filteredCollections.length})
+                        </p>
+                      </div>
+
+                      {filteredCollections.length === 0 ? (
+                        <div className="py-6 text-center text-muted-foreground">
+                          <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს კოლექციები"}</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          {filteredCollections.map((collection, index) => (
+                            <motion.button
+                              key={collection.id}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: index * 0.03 }}
+                              onClick={() =>
+                                handleSelect({
+                                  id: collection.id,
+                                  title: collection.title,
+                                  type: "collection",
+                                })
+                              }
+                              className="rounded-xl overflow-hidden border border-border text-left"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <div
+                                className="aspect-video relative"
+                                style={{
+                                  background:
+                                    collection.cover_gradient ||
+                                    "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)/0.5))",
+                                }}
+                              >
+                                {collection.cover_image && (
+                                  <img
+                                    src={collection.cover_image}
+                                    alt=""
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                  />
+                                )}
+                              </div>
+                              <div className="p-2 bg-card">
+                                <div className="flex items-center gap-1">
+                                  <p className="font-medium text-sm text-foreground truncate">
+                                    {collection.title}
+                                  </p>
+                                  {collection.is_public === false ? (
+                                    <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                  ) : (
+                                    <Globe className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Play className="w-3 h-3" /> {collection.plays_count || 0}
+                                </div>
+                              </div>
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </TabsContent>
