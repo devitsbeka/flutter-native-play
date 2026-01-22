@@ -456,7 +456,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-center justify-center w-full px-4">
+            <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-12">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -464,7 +464,7 @@ export default function Index() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
               >
-                <div className="relative" style={{ transform: "translateY(35px)" }}>
+                <div className="relative">
                   {/* Tablet portrait: use the same curved circular action buttons as mobile */}
                   {user && (
                     <div
@@ -620,7 +620,7 @@ export default function Index() {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring" }}
-                  className="flex flex-col items-center mt-8 pointer-events-auto"
+                  className="flex flex-col items-center mt-6 pointer-events-auto"
                 >
                   <div className="flex items-center justify-center gap-2.5">
                     {user && profile?.country_code && (
@@ -654,7 +654,7 @@ export default function Index() {
                       <span className="font-bold text-gray-700 text-base">{user ? formatCompactNumber(gems) : 0}</span>
                     </motion.button>
                   </div>
-                  <div className="mt-20">
+                  <div className="mt-14">
                     <DesktopPlayButtonLarge
                       onClick={handlePlayClick}
                       playsRemaining={user ? playsRemaining : guestPlaysRemaining}
