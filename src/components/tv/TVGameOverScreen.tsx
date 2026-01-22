@@ -138,7 +138,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/20 via-background to-background p-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -146,7 +146,9 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         className="text-center py-4"
       >
         <div className="flex items-center justify-center gap-2 mb-2">
-          <h1 className="text-2xl font-bold">თამაში დასრულდა!</h1>
+          <h1 className="text-2xl font-bold text-white">
+            {hasMoreRounds ? 'რაუნდი დასრულდა!' : 'თამაში დასრულდა!'}
+          </h1>
         </div>
       </motion.div>
 
@@ -159,9 +161,9 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
           className="flex flex-col items-center mb-6"
         >
           <div className={`bg-gradient-to-r ${getRankColor(currentPlayerRank)} p-1 rounded-2xl mb-3`}>
-            <div className="bg-card rounded-xl px-8 py-4 flex flex-col items-center">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl px-8 py-4 flex flex-col items-center">
               {getMedalIcon(currentPlayerRank)}
-              <span className="text-lg font-bold mt-2">{getRankText(currentPlayerRank)}</span>
+              <span className="text-lg font-bold mt-2 text-white">{getRankText(currentPlayerRank)}</span>
               
               {/* Avatar */}
               <div className="relative mt-3">
@@ -190,9 +192,9 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                 </div>
               </div>
               
-              <span className="text-lg font-semibold mt-2">{currentPlayer.nickname}</span>
+              <span className="text-lg font-semibold mt-2 text-white">{currentPlayer.nickname}</span>
               <motion.span 
-                className="text-3xl font-bold text-primary"
+                className="text-3xl font-bold text-purple-300"
                 initial={{ scale: 1 }}
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
@@ -209,11 +211,11 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="flex-1 bg-card/50 rounded-2xl p-4 backdrop-blur-sm border border-border/50 mb-4"
+        className="flex-1 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/20 mb-4"
       >
         <div className="flex items-center gap-2 mb-4">
-          <Medal className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">ლიდერბორდი</h2>
+          <Medal className="w-5 h-5 text-purple-300" />
+          <h2 className="text-lg font-bold text-white">ლიდერბორდი</h2>
         </div>
         
         <div className="space-y-2 max-h-[40vh] overflow-y-auto">
@@ -230,8 +232,8 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                   transition={{ delay: 0.1 * index }}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                     isCurrentPlayer 
-                      ? 'bg-primary/20 border-2 border-primary' 
-                      : 'bg-muted/30'
+                      ? 'bg-purple-500/30 border-2 border-purple-400' 
+                      : 'bg-white/10'
                   }`}
                 >
                   {/* Rank */}
@@ -241,7 +243,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                         {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
                       </span>
                     ) : (
-                      <span className="text-lg font-bold text-muted-foreground">#{rank}</span>
+                      <span className="text-lg font-bold text-purple-300">#{rank}</span>
                     )}
                   </div>
                   
@@ -262,7 +264,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                   
                   {/* Name */}
                   <div className="flex-1">
-                    <span className={`font-semibold ${isCurrentPlayer ? 'text-primary' : ''}`}>
+                    <span className={`font-semibold ${isCurrentPlayer ? 'text-purple-300' : 'text-white'}`}>
                       {player.nickname}
                       {isCurrentPlayer && ' (შენ)'}
                       {player.isHost && (
@@ -277,7 +279,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                   </div>
                   
                   {/* Score */}
-                  <span className="font-bold text-lg">
+                  <span className="font-bold text-lg text-white">
                     {player.score.toLocaleString()}
                   </span>
                 </motion.div>
@@ -293,7 +295,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="text-center text-muted-foreground mb-4"
+          className="text-center text-purple-200 mb-4"
         >
           <motion.div
             animate={{ opacity: [0.5, 1, 0.5] }}
@@ -308,7 +310,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="text-center text-muted-foreground mb-4"
+          className="text-center text-purple-200 mb-4"
         >
           რაუნდები დასრულდა
         </motion.div>
