@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { factCheckQuestions } from "../_shared/factCheck.ts";
 
 const QUESTION_MAX_LENGTH = 70;
 const ANSWER_MAX_LENGTH = 35;
@@ -288,12 +289,59 @@ serve(async (req) => {
 
     console.log(`[run-generation-job] Parsed ${questions.length} questions`);
 
+    // Strict fact-check before saving anything
+    // NOTE: We keep this strict and will drop uncertain/incorrect items.
+    let factCheckMap: Map<number, boolean> | null = null;
+    try {
+      const { results: fcResults } = await factCheckQuestions({
+        req,
+        items: questions.map((q) => ({
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: q.incorrect_answers || [],
+        })),
+        context: {
+          language: job.language === 'ka' ? 'ka' : 'en',
+          mode: 'multiple_choice',
+          categoryHint: currentCategory.name,
+        },
+      });
+
+      factCheckMap = new Map(fcResults.map((r) => [r.index, r.pass]));
+      console.log(`[run-generation-job] Fact-check pass: ${fcResults.filter(r => r.pass).length}/${questions.length}`);
+    } catch (e) {
+      // If fact-check is down/rate-limited, do not save potentially wrong content.
+      console.error('[run-generation-job] Fact-check failed (blocking):', e);
+      const errorLog = [...(job.error_log || []), `${now.toISOString()}: Fact-check failed`];
+      await supabase
+        .from('generation_jobs')
+        .update({
+          error_log: errorLog.slice(-50),
+          error_count: (job as any).error_count + 1,
+          last_run_at: now.toISOString(),
+          next_run_at: new Date(now.getTime() + job.interval_minutes * 60 * 1000).toISOString(),
+          updated_at: now.toISOString(),
+        })
+        .eq('id', job.id);
+
+      return new Response(JSON.stringify({ error: 'Fact-check failed, will retry later' }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Process and save questions
     let savedCount = 0;
     let duplicateCount = 0;
 
-    for (const q of questions) {
+    for (let idx = 0; idx < questions.length; idx++) {
+      const q = questions[idx];
       const validation = isValidQuestion(q);
+
+      // Drop if fact-check failed
+      if (factCheckMap && !factCheckMap.get(idx)) {
+        continue;
+      }
       
       // Check for duplicates
       let isDuplicate = false;

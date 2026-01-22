@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { factCheckQuestions } from "../_shared/factCheck.ts";
 
 // App-wide character limits - strict for gameplay display
 const QUESTION_MAX_LENGTH = 70;
@@ -432,6 +433,36 @@ Return ONLY valid JSON.`;
       }
     } catch (grammarError) {
       console.error("Grammar verification failed (non-blocking):", grammarError);
+    }
+
+    // STRICT Fact-check for trivia mode only (personal mode is subjective by design)
+    if (mode === "trivia") {
+      console.log("Fact-checking trivia question...");
+      const { results: fcResults } = await factCheckQuestions({
+        req,
+        items: [
+          {
+            question_text: questionData.question_text,
+            correct_answer: questionData.correct_answer,
+            incorrect_answers: questionData.incorrect_answers || [],
+          },
+        ],
+        context: {
+          language: "ka",
+          mode: isTrueFalse ? "true_false" : "multiple_choice",
+          topicHint: subject,
+        },
+      });
+
+      if (!fcResults[0]?.pass) {
+        console.warn("Fact-check failed for trivia question", fcResults[0]);
+        return new Response(
+          JSON.stringify({
+            error: "AI-მა დააგენერა არაზუსტი კითხვა/პასუხი და გაიფილტრა. სცადეთ თავიდან.",
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     let iconSlug: string | null = null;

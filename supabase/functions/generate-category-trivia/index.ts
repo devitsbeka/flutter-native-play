@@ -1,6 +1,7 @@
 /// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { factCheckQuestions } from "../_shared/factCheck.ts";
 
 // Quality constants - must match frontend
 const QUESTION_MAX_LENGTH = 65;
@@ -470,10 +471,31 @@ ${iconKeywordMappings}
       })
     );
 
-    console.log(`Final: Generated ${rawQuestions.length} raw, ${grammarVerifiedQuestions.length} unique valid grammar-checked questions for ${category}`);
+    // Step 5: FACT CHECK (strict) - reject questions with wrong correct answers / unreliable facts
+    console.log("Step 5 - Fact-checking questions...");
+    const { results: fcResults } = await factCheckQuestions({
+      req,
+      items: grammarVerifiedQuestions.map((q: any) => ({
+        question_text: q.question,
+        correct_answer: q.correct_answer,
+        incorrect_answers: q.incorrect_answers || [],
+      })),
+      context: {
+        language: "ka",
+        mode: "multiple_choice",
+        topicHint: topic || focusArea,
+        categoryHint: category,
+      },
+    });
+
+    const fcByIndex = new Map(fcResults.map((r) => [r.index, r]));
+    const factChecked = grammarVerifiedQuestions.filter((_: any, idx: number) => fcByIndex.get(idx)?.pass);
+    console.log(`Step 5 - Fact-check: ${grammarVerifiedQuestions.length} -> ${factChecked.length} passed`);
+
+    console.log(`Final: Generated ${rawQuestions.length} raw, ${factChecked.length} passed fact-check for ${category}`);
 
     return new Response(
-      JSON.stringify({ questions: grammarVerifiedQuestions }),
+      JSON.stringify({ questions: factChecked }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
