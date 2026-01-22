@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Tv, Smartphone, QrCode } from 'lucide-react';
+import { Smartphone, QrCode } from 'lucide-react';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useTVGame } from '@/contexts/TVGameContext';
 
 /**
@@ -46,7 +47,7 @@ export const TVPairingScreenV3: React.FC = () => {
           className="mb-8"
         >
           <div className="flex items-center justify-center gap-3 mb-3">
-            <Tv className="w-12 h-12 text-purple-300" />
+            <img src={retroTvIcon} alt="TV" className="w-16 h-16 object-contain" />
           </div>
           <h1 
             className="text-4xl font-bold text-white mb-2"

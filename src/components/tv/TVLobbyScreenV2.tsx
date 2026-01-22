@@ -7,6 +7,7 @@ import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 const MAX_PLAYERS = 8;
 
@@ -250,7 +251,8 @@ export const TVLobbyScreenV2: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
               <h1 
                 className="text-3xl font-bold text-white"
                 style={{ fontFamily: 'var(--font-display, inherit)' }}
