@@ -477,6 +477,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             host_user_id: user.id,
             room_name: roomName,
             room_icon: roomIcon,
+            // Ensure lobby can render the initial selection (otherwise it appears empty)
+            category_name: challengeTrivia.title,
             game_type: "async",
             game_mode: challengeTrivia.type === "collection" ? `collection:${challengeTrivia.id}` : `trivia:${challengeTrivia.id}`,
             status: "waiting",
