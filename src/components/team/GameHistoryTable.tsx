@@ -9,6 +9,7 @@ import { enUS } from "date-fns/locale";
 import { useMemo } from "react";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { AppIcon } from "@/components/shared/AppIcon";
 
 interface GameHistoryTableProps {
   onViewAll?: () => void;
@@ -155,7 +156,10 @@ function StreakBar({ rooms }: { rooms: RecentRoom[] }) {
               : "bg-rose-100 text-rose-700"
           }`}
         >
-          {currentStreak.count}x {currentStreak.isWinStreak ? "🔥" : ""}
+          <span className="inline-flex items-center gap-1">
+            <span>{currentStreak.count}x</span>
+            {currentStreak.isWinStreak ? <AppIcon slug="flame" size={14} /> : null}
+          </span>
         </motion.div>
       )}
     </div>

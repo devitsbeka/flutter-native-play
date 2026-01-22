@@ -4,6 +4,7 @@ import { Crown, Medal, LogOut } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
 import crown2 from '@/assets/icons/crown-2.png';
+import { AppIcon } from '@/components/shared/AppIcon';
 
 interface Player {
   id: string;
@@ -85,9 +86,9 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', duration: 0.8 }}
-            className="text-6xl"
+            className="flex items-center justify-center"
           >
-            🥇
+            <AppIcon slug="medal" size={64} />
           </motion.div>
         );
       case 2:
@@ -96,9 +97,9 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', duration: 0.8, delay: 0.1 }}
-            className="text-5xl"
+            className="flex items-center justify-center"
           >
-            🥈
+            <AppIcon slug="medal" size={56} />
           </motion.div>
         );
       case 3:
@@ -107,9 +108,9 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', duration: 0.8, delay: 0.2 }}
-            className="text-5xl"
+            className="flex items-center justify-center"
           >
-            🥉
+            <AppIcon slug="medal" size={56} />
           </motion.div>
         );
       default:
@@ -239,9 +240,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                   {/* Rank */}
                   <div className="w-10 flex justify-center">
                     {rank <= 3 ? (
-                      <span className="text-2xl">
-                        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
-                      </span>
+                      <AppIcon slug="medal" size={28} />
                     ) : (
                       <span className="text-lg font-bold text-purple-300">#{rank}</span>
                     )}

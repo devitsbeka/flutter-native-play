@@ -32,6 +32,26 @@ function getNestedValue(obj: any, path: string): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+// Remove emojis from user-facing translation strings.
+// Exception: keep country-flag emojis (regional indicator symbols).
+function stripEmojisExceptFlags(input: string): string {
+  if (!input) return input;
+
+  return Array.from(input)
+    .filter((ch) => {
+      const cp = ch.codePointAt(0) ?? 0;
+      const isRegionalIndicator = cp >= 0x1f1e6 && cp <= 0x1f1ff;
+      if (isRegionalIndicator) return true;
+
+      // Unicode property escape (supported in modern browsers)
+      const isEmoji = /\p{Extended_Pictographic}/u.test(ch);
+      return !isEmoji;
+    })
+    .join("")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // Track user ID for profile sync (use Supabase directly to avoid circular deps)
   const [userId, setUserId] = useState<string | null>(null);
@@ -92,13 +112,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Replace params like {name} with actual values
-    if (params) {
-      return value.replace(/\{(\w+)\}/g, (_, paramKey) => {
-        return params[paramKey]?.toString() ?? `{${paramKey}}`;
-      });
-    }
-    
-    return value;
+    const withParams = params
+      ? value.replace(/\{(\w+)\}/g, (_, paramKey) => {
+          return params[paramKey]?.toString() ?? `{${paramKey}}`;
+        })
+      : value;
+
+    return stripEmojisExceptFlags(withParams);
   }, [currentTranslations, language]);
 
   // Set language and sync to profile
@@ -213,11 +233,11 @@ export function t(key: string, params?: Record<string, string | number>): string
   
   if (!value) return key;
   
-  if (params) {
-    return value.replace(/\{(\w+)\}/g, (_, paramKey) => {
-      return params[paramKey]?.toString() ?? `{${paramKey}}`;
-    });
-  }
-  
-  return value;
+  const withParams = params
+    ? value.replace(/\{(\w+)\}/g, (_, paramKey) => {
+        return params[paramKey]?.toString() ?? `{${paramKey}}`;
+      })
+    : value;
+
+  return stripEmojisExceptFlags(withParams);
 }

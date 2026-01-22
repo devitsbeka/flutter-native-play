@@ -12,7 +12,7 @@ export interface AchievementDefinition {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  icon_slug: string;
   requirement: {
     type: "streak" | "total_missions" | "daily_completions" | "weekly_completions";
     value: number;
@@ -28,7 +28,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "streak_3",
     title: "სტაბილური მოთამაშე",
     description: "შეასრულე ყველა დღიური მისია 3 დღე ზედიზედ",
-    icon: "🔥",
+    icon_slug: "flame",
     requirement: { type: "streak", value: 3 },
     reward_coins: 100,
     reward_gems: 2,
@@ -38,7 +38,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "streak_7",
     title: "კვირის გმირი",
     description: "შეასრულე ყველა დღიური მისია 7 დღე ზედიზედ",
-    icon: "⚡",
+    icon_slug: "lightning",
     requirement: { type: "streak", value: 7 },
     reward_coins: 300,
     reward_gems: 5,
@@ -48,7 +48,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "streak_14",
     title: "ორკვირიანი ჩემპიონი",
     description: "შეასრულე ყველა დღიური მისია 14 დღე ზედიზედ",
-    icon: "💪",
+    icon_slug: "award",
     requirement: { type: "streak", value: 14 },
     reward_coins: 500,
     reward_gems: 10,
@@ -58,7 +58,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "streak_30",
     title: "თვის ლეგენდა",
     description: "შეასრულე ყველა დღიური მისია 30 დღე ზედიზედ",
-    icon: "👑",
+    icon_slug: "crown",
     requirement: { type: "streak", value: 30 },
     reward_coins: 1000,
     reward_gems: 25,
@@ -69,7 +69,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "missions_10",
     title: "პირველი ნაბიჯები",
     description: "შეასრულე 10 მისია ჯამში",
-    icon: "🎯",
+    icon_slug: "target",
     requirement: { type: "total_missions", value: 10 },
     reward_coins: 50,
     reward_gems: 1,
@@ -79,7 +79,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "missions_50",
     title: "მისიების მოყვარული",
     description: "შეასრულე 50 მისია ჯამში",
-    icon: "🏅",
+    icon_slug: "medal",
     requirement: { type: "total_missions", value: 50 },
     reward_coins: 200,
     reward_gems: 3,
@@ -89,7 +89,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "missions_100",
     title: "მისიების ოსტატი",
     description: "შეასრულე 100 მისია ჯამში",
-    icon: "🏆",
+    icon_slug: "trophy",
     requirement: { type: "total_missions", value: 100 },
     reward_coins: 500,
     reward_gems: 8,
@@ -99,7 +99,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     id: "missions_500",
     title: "მისიების იმპერატორი",
     description: "შეასრულე 500 მისია ჯამში",
-    icon: "💎",
+    icon_slug: "diamond",
     requirement: { type: "total_missions", value: 500 },
     reward_coins: 2000,
     reward_gems: 50,
