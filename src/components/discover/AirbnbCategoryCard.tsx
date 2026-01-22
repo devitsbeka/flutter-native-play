@@ -318,59 +318,76 @@ export function AirbnbCategoryCard({
                <div className={`relative z-10 px-4 ${isFull ? 'pb-4 pt-12' : 'pb-3 pt-10'}`}>
                 {/* Progress bar with integrated count */}
                 <div 
-                   className={`relative isolate z-0 rounded-full overflow-hidden ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70`}
+                  className={`relative isolate z-0 rounded-full ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70 overflow-visible`}
                   style={{
                     background: 'rgba(255,255,255,0.5)',
                     boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), 0 3px 0 rgba(0,0,0,0.06)',
                   }}
                 >
-                  {/* Progress fill */}
-                  <motion.div 
-                     className="h-full rounded-full relative overflow-hidden z-0"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercent}%` }}
-                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                    style={{ 
-                      background: 'linear-gradient(180deg, #FFE066 0%, #FFB800 40%, #FF9500 100%)',
-                      boxShadow: progressPercent > 0 
-                        ? 'inset 0 2px 0 rgba(255,255,255,0.6), 0 0 16px rgba(255,170,0,0.5)' 
-                        : 'none',
-                    }}
-                  >
-                    {/* Shine on progress */}
-                    <div 
-                       className="absolute inset-x-0 top-0 h-1/2 rounded-t-full z-0"
-                      style={{
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)',
+                  {/* Inner clip layer so the fill stays rounded while allowing end-cap to overflow */}
+                  <div className="absolute inset-0 rounded-full overflow-hidden">
+                    {/* Progress fill */}
+                    <motion.div 
+                      className="h-full rounded-full relative overflow-hidden z-0"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                      style={{ 
+                        background: 'linear-gradient(180deg, #FFE066 0%, #FFB800 40%, #FF9500 100%)',
+                        boxShadow: progressPercent > 0 
+                          ? 'inset 0 2px 0 rgba(255,255,255,0.6), 0 0 16px rgba(255,170,0,0.5)' 
+                          : 'none',
                       }}
-                    />
-                    {progressPercent > 10 && progressParticles.map((p) => (
-                      <motion.div
-                        key={p.id}
-                         className="absolute rounded-full bg-white/80 z-0"
+                    >
+                      {/* Shine on progress */}
+                      <div 
+                        className="absolute inset-x-0 top-0 h-1/2 rounded-t-full z-0"
                         style={{
-                          width: p.size,
-                          height: p.size,
-                          top: '50%',
-                          marginTop: -p.size / 2,
-                        }}
-                        animate={{
-                          left: ['-5%', '105%'],
-                          opacity: [0, 1, 1, 0],
-                          scale: [0.5, 1, 1, 0.5],
-                        }}
-                        transition={{
-                          duration: 2.5,
-                          delay: p.delay,
-                          repeat: Infinity,
-                          ease: "easeInOut",
+                          background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)',
                         }}
                       />
-                    ))}
-                  </motion.div>
+                      {progressPercent > 10 && progressParticles.map((p) => (
+                        <motion.div
+                          key={p.id}
+                          className="absolute rounded-full bg-white/80 z-0"
+                          style={{
+                            width: p.size,
+                            height: p.size,
+                            top: '50%',
+                            marginTop: -p.size / 2,
+                          }}
+                          animate={{
+                            left: ['-5%', '105%'],
+                            opacity: [0, 1, 1, 0],
+                            scale: [0.5, 1, 1, 0.5],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            delay: p.delay,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                  </div>
                   
-                  {/* Progress count inside the bar */}
-                   <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  {/* Completed end-cap check circle (kept in front) */}
+                  {isCompleted && (
+                    <div
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(52, 211, 153, 1) 0%, rgba(16, 185, 129, 1) 100%)',
+                        boxShadow:
+                          '0 10px 20px rgba(0,0,0,0.18), inset 0 2px 0 rgba(255,255,255,0.35)',
+                      }}
+                    >
+                      <span className="text-white text-sm font-bold leading-none">✓</span>
+                    </div>
+                  )}
+                  
+                  {/* Progress count inside the bar (remove the black check when completed) */}
+                  <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                     <span 
                       className={`font-bold tracking-wide ${isFull ? 'text-sm' : 'text-xs'}`}
                       style={{
@@ -378,7 +395,7 @@ export function AirbnbCategoryCard({
                         textShadow: '0 1px 0 rgba(255,255,255,0.8)',
                       }}
                     >
-                      {isCompleted ? '✓' : `${Math.min(progress, totalLevels)}/${totalLevels}`}
+                      {`${Math.min(progress, totalLevels)}/${totalLevels}`}
                     </span>
                   </div>
                 </div>
