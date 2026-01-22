@@ -12,7 +12,8 @@ export function useMyCollections() {
 
       const { data, error } = await supabase
         .from("quiz_collections")
-        .select("*")
+        // Include rounds count (number of quizzes in the collection)
+        .select("*, rounds:user_quiz_posts(count)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
