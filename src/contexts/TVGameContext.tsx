@@ -181,6 +181,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Prevent repeated reveal updates from timer/presence sync
   const revealRequestedRef = useRef(false);
 
+  // Prevent double-click / concurrent next-round transitions from host
+  const nextRoundInFlightRef = useRef(false);
+
   const startNextRoundFromQueueIfAny = useCallback(async () => {
     if (!isHost) return false;
     if (!state.sessionId) return false;
@@ -323,6 +326,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (updateError) {
         tvLogError('startNextRoundFromQueueIfAny update session', updateError);
+        const { toast } = await import('sonner');
+        toast.error('ვერ დაიწყო შემდეგი რაუნდი');
         return false;
       }
 
@@ -386,6 +391,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return true;
     } catch (err) {
       tvLogError('startNextRoundFromQueueIfAny', err);
+      const { toast } = await import('sonner');
+      toast.error('ვერ დაიწყო შემდეგი რაუნდი');
       return false;
     }
   }, [isHost, state.sessionId]);
@@ -1278,10 +1285,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // If in results phase (shown as "completed" in UI), start the next round from queue
     if (state.phase === 'results') {
+      if (nextRoundInFlightRef.current) {
+        tvLog('startNextRound ignored: next round already in flight');
+        return;
+      }
+
+      nextRoundInFlightRef.current = true;
       tvLog('startNextRound: phase is results, calling startNextRoundFromQueueIfAny');
-      const started = await startNextRoundFromQueueIfAny();
-      if (!started) {
-        tvLog('startNextRound: no more rounds in queue');
+      try {
+        const started = await startNextRoundFromQueueIfAny();
+        if (!started) {
+          tvLog('startNextRound: no more rounds in queue');
+          const { toast } = await import('sonner');
+          toast('რაუნდები დასრულდა');
+        }
+      } finally {
+        nextRoundInFlightRef.current = false;
       }
       return;
     }
