@@ -123,7 +123,35 @@ const initialState: MultiplayerState = {
   opponentAnswers: {},
 };
 
-const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
+// NOTE: We use a non-undefined default value to avoid hard crashes (blank screen)
+// in rare cases where the tree momentarily renders without the provider (e.g. HMR/suspense edge).
+// All stub methods will throw if invoked without the real provider.
+const missingProvider = () => {
+  throw new Error("MultiplayerProviderV2 missing: attempted to use multiplayer context outside provider");
+};
+
+const MultiplayerContext = createContext<MultiplayerContextType>({
+  ...initialState,
+  participants: [],
+  isHost: false,
+  loading: false,
+  createRoom: async () => { missingProvider(); return null; },
+  enterRoom: async () => { missingProvider(); return false; },
+  startGame: async () => missingProvider(),
+  startNewRound: async () => missingProvider(),
+  startNextFromQueue: async () => missingProvider(),
+  submitAnswer: async () => missingProvider(),
+  nextQuestion: () => missingProvider(),
+  exitRoom: () => missingProvider(),
+  continueInRoom: () => missingProvider(),
+  leaveRoomPermanently: async () => missingProvider(),
+  deleteRoom: async () => missingProvider(),
+  resetMultiplayer: () => missingProvider(),
+  showCreateModal: false,
+  setShowCreateModal: () => missingProvider(),
+  showJoinModal: false,
+  setShowJoinModal: () => missingProvider(),
+});
 
 // Production domain for share links
 const PRODUCTION_DOMAIN = "https://mytrivia.io";
@@ -1436,11 +1464,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 }
 
 export function useMultiplayerV2() {
-  const context = useContext(MultiplayerContext);
-  if (!context) {
-    throw new Error("useMultiplayerV2 must be used within MultiplayerProviderV2");
-  }
-  return context;
+  return useContext(MultiplayerContext);
 }
 
 // Helper to get share link
