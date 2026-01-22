@@ -146,25 +146,15 @@ export const TVQuestionScreenV4: React.FC = () => {
         </AnimatePresence>
       </motion.div>
 
-      {/* Top info row (category + timer + room) */}
+      {/* Top info row (category + timer) */}
       <div className="flex items-center justify-between px-2 mb-3 flex-shrink-0">
-        <div className="min-w-0">
-          <div className="text-white/80 text-xs font-medium truncate">
-            {roomName || 'ოთახი'}
-          </div>
-          <div className="flex items-center gap-2 text-white font-bold text-lg">
-            <img src={retroTvIcon} alt="TV" className="w-6 h-6 object-contain" />
-            <span className="truncate">{categoryName || 'კატეგორია'}</span>
-            <span className="text-white/60 text-sm font-medium">• რაუნდი {roundNumber}/{totalRounds}</span>
-          </div>
+        <div className="flex items-center gap-2 text-white font-bold text-lg">
+          <img src={retroTvIcon} alt="TV" className="w-6 h-6 object-contain" />
+          <span className="truncate">{categoryName || 'კატეგორია'}</span>
+          <span className="text-white/60 text-sm font-medium">• რაუნდი {roundNumber}/{totalRounds}</span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-white/80 text-sm font-medium">
-            {currentQuestionIndex + 1} / {totalQuestions}
-          </div>
-          <TimerBadge seconds={timeRemaining} maxSeconds={timerMax} compact />
-        </div>
+        <TimerBadge seconds={timeRemaining} maxSeconds={timerMax} compact />
       </div>
 
       {/* Question + answers (game UI) */}
