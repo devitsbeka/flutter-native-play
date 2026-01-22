@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { factCheckQuestions } from "../_shared/factCheck.ts";
 
 // App-wide character limits
 const QUESTION_MAX_LENGTH = 65;
@@ -357,8 +358,8 @@ Return ONLY valid JSON.`;
     const uniqueQuestions = removeDuplicateQuestions(validQuestions);
     console.log(`Duplicate removal: ${validQuestions.length} valid, ${uniqueQuestions.length} unique`);
 
-    // Take only the requested number of questions
-    const finalQuestions = uniqueQuestions.slice(0, questionCount);
+    // Take a slightly larger pool, then fact-check + slice
+    const candidateQuestions = uniqueQuestions.slice(0, questionCount + 5);
 
     // Assign icons from icon_library
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -367,7 +368,7 @@ Return ONLY valid JSON.`;
 
     // Georgian Grammar Verification
     console.log("Verifying Georgian grammar...");
-    for (const q of finalQuestions) {
+    for (const q of candidateQuestions) {
       try {
         const textsToVerify = [
           q.question_text,
@@ -407,6 +408,38 @@ Return ONLY valid JSON.`;
       } catch (grammarError) {
         console.error("Grammar verification failed (non-blocking):", grammarError);
       }
+    }
+
+    // STRICT Fact-check: reject questions with wrong correct answers / unreliable facts
+    console.log("Fact-checking generated questions...");
+    const { results: fcResults } = await factCheckQuestions({
+      req,
+      items: candidateQuestions.map((q: GeneratedQuestion) => ({
+        question_text: q.question_text,
+        correct_answer: q.correct_answer,
+        incorrect_answers: q.incorrect_answers || [],
+      })),
+      context: {
+        language: "ka",
+        mode: isTrueFalse ? "true_false" : "multiple_choice",
+        topicHint: subject,
+      },
+    });
+
+    const fcByIndex = new Map(fcResults.map((r) => [r.index, r]));
+    const factCheckedQuestions = candidateQuestions.filter((_, idx) => fcByIndex.get(idx)?.pass);
+
+    const finalQuestions = factCheckedQuestions.slice(0, questionCount);
+    if (finalQuestions.length < questionCount) {
+      console.warn(
+        `Fact-check filtered too many: requested ${questionCount}, got ${finalQuestions.length}.`,
+      );
+      return new Response(
+        JSON.stringify({
+          error: "კითხვების ნაწილი არასწორი იყო და გაიფილტრა. სცადეთ თავიდან.",
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Blocked generic keywords that match random icons
