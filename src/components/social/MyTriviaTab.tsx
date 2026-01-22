@@ -184,6 +184,13 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
   const [isExpanded, setIsExpanded] = useState(false);
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
+  const roundsCount =
+    (Array.isArray(collection?.rounds) && typeof collection.rounds?.[0]?.count === "number"
+      ? collection.rounds[0].count
+      : undefined) ??
+    (typeof collection?.rounds_count === "number" ? collection.rounds_count : undefined) ??
+    0;
+
   const gradientProps = getGradientProps(collection.cover_gradient);
 
   // Tilt animation for new items - random left or right tilt
@@ -229,18 +236,18 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
             <span>კოლექცია</span>
           </div>
 
-          {/* Visibility Badge - Icon Only */}
-          <div className="absolute top-3 right-3">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
-              collection.is_public 
-                ? 'bg-green-500/90 text-white' 
-                : 'bg-muted text-muted-foreground'
-            }`}>
-              {collection.is_public ? (
-                <Globe className="w-4 h-4" />
-              ) : (
-                <Lock className="w-4 h-4" />
-              )}
+          {/* Visibility + rounds count */}
+          <div className="absolute top-3 right-3 flex items-center gap-2">
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
+                collection.is_public ? "bg-green-500/90 text-white" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {collection.is_public ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+            </div>
+
+            <div className="bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 text-xs text-white">
+              {roundsCount} რაუნდი
             </div>
           </div>
 
