@@ -294,18 +294,6 @@ export function AirbnbCategoryCard({
               </div>
             )}
 
-            {/* Completed Checkmark - Chunky style */}
-            {isCompleted && (
-              <div 
-                className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-emerald-400"
-                style={{
-                  boxShadow: '0 3px 0 0 rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.3)',
-                }}
-              >
-                <span className="text-white text-sm font-bold">✓</span>
-              </div>
-            )}
-
             {/* Progress Bar Area with gradient mask */}
              <div className={`absolute left-0 right-0 ${isFull ? 'bottom-0' : 'bottom-0'}`}>
               {/* Strong gradient mask for video fade */}
