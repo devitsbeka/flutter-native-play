@@ -76,6 +76,7 @@ export function RoomIconPickerModal({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Load recent icons from localStorage
   const loadRecentIcons = useCallback(async () => {
@@ -250,6 +251,17 @@ export function RoomIconPickerModal({
     }
   }, [isOpen, fetchRandomIcons, loadRecentIcons, fetchCategoryIcons, currentIconUrl, roomName]);
 
+  // Auto-select room name text when modal opens
+  useEffect(() => {
+    if (isOpen && nameInputRef.current) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   // Generate name for a specific icon
   const generateNameForIcon = async (iconSlug: string) => {
     setIsGeneratingName(true);
@@ -351,6 +363,7 @@ export function RoomIconPickerModal({
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="relative">
                     <Input
+                      ref={nameInputRef}
                       value={editableName}
                       onChange={(e) => setEditableName(e.target.value)}
                       maxLength={35}
