@@ -24,6 +24,14 @@ export function CategoryPickerSection({
   onReorderQueue,
 }: CategoryPickerSectionProps) {
   const hasCategory = !!categoryName;
+  const showQueuePreview = hasCategory || queue.length > 0;
+  const currentPillType: "random" | "category" | "user_trivia" | null = !hasCategory
+    ? null
+    : categoryName === "შემთხვევითი"
+      ? "random"
+      : categoryId
+        ? "category"
+        : "user_trivia";
 
   return (
     <motion.div
@@ -63,14 +71,33 @@ export function CategoryPickerSection({
       </div>
 
       {/* Queue preview with drag-to-reorder */}
-      {queue.length > 0 && (
+      {showQueuePreview && (
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="mt-4 pt-4 border-t border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-white/50 text-xs mb-2 font-medium">შემდეგი თამაშები:</p>
+          <p className="text-white/50 text-xs mb-2 font-medium">რიგი:</p>
+
+          {/* Current/initial round pill (non-removable / non-draggable) */}
+          {hasCategory && (
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0">
+                <span className="text-white/40 text-xs font-bold mr-0.5">1</span>
+                {currentPillType === "random" ? (
+                  <Shuffle className="w-[18px] h-[18px] text-purple-400" />
+                ) : currentPillType === "category" ? (
+                  <Library className="w-[18px] h-[18px] text-purple-400" />
+                ) : (
+                  <Sparkles className="w-[18px] h-[18px] text-purple-400" />
+                )}
+                <span className="text-white/80 text-xs font-medium">
+                  {categoryName}
+                </span>
+              </div>
+            </div>
+          )}
           
           {isHost && onReorderQueue ? (
             <Reorder.Group 
@@ -88,7 +115,7 @@ export function CategoryPickerSection({
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 cursor-grab active:cursor-grabbing select-none touch-none shrink-0"
                   whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
                 >
-                  <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
+                  <span className="text-white/40 text-xs font-bold mr-0.5">{hasCategory ? index + 2 : index + 1}</span>
                   <GripVertical className="w-[18px] h-[18px] text-white/40" />
                   {item.source_type === "random" ? (
                     <Shuffle className="w-[18px] h-[18px] text-purple-400" />
@@ -135,7 +162,7 @@ export function CategoryPickerSection({
                   transition={{ delay: index * 0.05 }}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20"
                 >
-                  <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
+                  <span className="text-white/40 text-xs font-bold mr-0.5">{hasCategory ? index + 2 : index + 1}</span>
                   {item.source_type === "random" ? (
                     <Shuffle className="w-[18px] h-[18px] text-purple-400" />
                   ) : item.source_type === "category" ? (
