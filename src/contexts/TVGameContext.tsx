@@ -77,7 +77,7 @@ interface TVGameContextType extends TVGameState {
   myAnswer: string | null;
 }
 
-const TVGameContext = createContext<TVGameContextType | null>(null);
+export const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = getQuestionTime();
 
