@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import triviaBuzzer from '@/assets/trivia-buzzer.png';
 
 const MAX_PLAYERS = 8;
 const MIN_PLAYERS_TO_START = 2;
@@ -332,7 +333,8 @@ export const TVLobbyScreenV2: React.FC = () => {
 
   // Determine what to show in the central category area
   const hasMultiRound = queue.length > 0;
-  const displayCategory = selectedCategory || (categoryName ? { name: categoryName, icon: categoryIcon || '🎲' } : null);
+  // No-emoji policy: never fall back to emoji icons.
+  const displayCategory = selectedCategory || (categoryName ? { name: categoryName, icon: categoryIcon || null } : null);
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-4 flex flex-col overflow-hidden relative">
@@ -428,7 +430,15 @@ export const TVLobbyScreenV2: React.FC = () => {
               }}
               disabled={!isHost}
             >
-              <span className="text-3xl">{displayCategory?.icon || categoryIcon || '🎲'}</span>
+              {displayCategory?.icon || categoryIcon ? (
+                <span className="text-3xl">{displayCategory?.icon || categoryIcon}</span>
+              ) : (
+                <img
+                  src={triviaBuzzer}
+                  alt="Trivia"
+                  className="w-8 h-8 object-contain"
+                />
+              )}
               <span className="text-xl text-white font-medium">
                 {displayCategory?.name || categoryName || 'შემთხვევითი'}
               </span>
