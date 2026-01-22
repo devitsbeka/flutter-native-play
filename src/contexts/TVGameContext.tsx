@@ -1094,6 +1094,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const multiParticipantQuestion = maxActivePlayersSeenThisQuestionRef.current >= 2;
         const blockDuringCapture = multiParticipantQuestion && captureWindowActive;
 
+        // Note: we intentionally do NOT block on presence count shrink / max-seen mismatches.
+        // Once the required ACTIVE set has fully answered, we reveal immediately for a smooth UX.
         if (
           isHostNow &&
           phaseNow === 'question' &&
@@ -1101,9 +1103,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           !revealRequestedRef.current &&
           canAutoAdvance &&
           !pairedButOnlyHostVisible &&
-          !blockDuringCapture &&
-          // Note: we intentionally do NOT block on presence count shrink / max-seen mismatches.
-          // Once the required ACTIVE set has fully answered, we reveal immediately for a smooth UX.
+          !blockDuringCapture
         ) {
           console.log('[TV Auto-Advance] Triggering reveal - all required players answered!');
           requestRevealIfEligible('all required players answered');
