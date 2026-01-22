@@ -356,12 +356,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      // Increment round number for the next round
+      // Increment round number for the next round (update DB + local state)
+      const newRoundNumber = state.roundNumber + 1;
+      await supabase
+        .from('tv_sessions')
+        .update({ round_number: newRoundNumber })
+        .eq('id', state.sessionId);
+      
       setState(prev => ({
         ...prev,
-        roundNumber: prev.roundNumber + 1,
+        roundNumber: newRoundNumber,
       }));
-      tvLog('Advanced to next round', { newRoundNumber: state.roundNumber + 1 });
+      tvLog('Advanced to next round', { newRoundNumber });
 
       revealRequestedRef.current = false;
       return true;
@@ -695,6 +701,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             category_icon: string | null;
             is_paired: boolean;
             room_name: string | null;
+            round_number?: number | null;
+            total_rounds?: number | null;
           };
           
           // Parse questions if present
@@ -749,6 +757,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               categoryIcon: newData.category_icon || prev.categoryIcon,
               isPaired: newData.is_paired ?? prev.isPaired,
               roomName: newData.room_name || prev.roomName,
+              roundNumber: newData.round_number ?? prev.roundNumber,
+              totalRounds: newData.total_rounds ?? prev.totalRounds,
             };
           });
         }
@@ -1018,7 +1028,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isUserTrivia: !!userTriviaId,
       });
 
-      // Start countdown with questions and category info
+      // Start countdown with questions and category info, persist totalRounds
       await supabase
         .from('tv_sessions')
         .update({
@@ -1027,6 +1037,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           current_question_index: 0,
           category_name: categoryName,
           category_icon: categoryIcon,
+          round_number: 1,
+          total_rounds: totalRoundsCount,
         })
         .eq('id', state.sessionId);
 

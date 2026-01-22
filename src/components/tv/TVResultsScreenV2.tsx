@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, Crown, Coins } from 'lucide-react';
+import { Check, X, Crown, Coins, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 // Calculate correct/incorrect from player's lastAnswerCorrect history
@@ -17,8 +18,13 @@ const getPlayerStats = (player: { score: number }) => {
 const XP_REWARDS = [2000, 500, 200];
 
 export const TVResultsScreenV2: React.FC = () => {
-  const { players, isHost, resetGame } = useTVGame();
+  const { players, isHost, resetGame, sessionId, startNextRound } = useTVGame();
+  const { queue } = useTVSessionQueue(sessionId);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Get next round info from queue
+  const nextRound = queue.length > 0 ? queue[0] : null;
+  const hasMoreRounds = queue.length > 0;
 
   // Sort players by score
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -204,16 +210,38 @@ export const TVResultsScreenV2: React.FC = () => {
           )}
         </div>
 
-        {/* Host hint */}
-        {isHost && (
-          <motion.p
-            className="text-white/60 text-xs mt-4"
+        {/* Next round preview or host hint */}
+        {hasMoreRounds && nextRound ? (
+          <motion.div
+            className="mt-4 flex flex-col items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+          >
+            <div className="bg-purple-500/30 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2">
+              <ArrowRight className="w-4 h-4 text-purple-300" />
+              <span className="text-white/80 text-sm">შემდეგი:</span>
+              <span className="text-white font-semibold text-sm">{nextRound.category_name}</span>
+            </div>
+            <motion.p
+              className="text-white/50 text-xs mt-2"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
+              {isHost ? 'დააჭირე კონტროლერზე გასაგრძელებლად' : 'მოლოდინი...'}
+            </motion.p>
+          </motion.div>
+        ) : (
+          <motion.div
+            className="mt-4 flex flex-col items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
           >
-            ახალი რაუნდის დასაწყებად დააჭირე ღილაკს კონტროლერზე
-          </motion.p>
+            <p className="text-white/60 text-xs">
+              {isHost ? 'ახალი რაუნდის დასაწყებად დააჭირე ღილაკს კონტროლერზე' : 'რაუნდები დასრულდა'}
+            </p>
+          </motion.div>
         )}
       </div>
 

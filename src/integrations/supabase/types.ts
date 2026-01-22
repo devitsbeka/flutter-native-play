@@ -2335,6 +2335,7 @@ export type Database = {
           room_name: string | null
           round_number: number | null
           status: string | null
+          total_rounds: number | null
           total_rounds_played: number | null
           tv_pairing_code: string | null
         }
@@ -2357,6 +2358,7 @@ export type Database = {
           room_name?: string | null
           round_number?: number | null
           status?: string | null
+          total_rounds?: number | null
           total_rounds_played?: number | null
           tv_pairing_code?: string | null
         }
@@ -2379,6 +2381,7 @@ export type Database = {
           room_name?: string | null
           round_number?: number | null
           status?: string | null
+          total_rounds?: number | null
           total_rounds_played?: number | null
           tv_pairing_code?: string | null
         }
