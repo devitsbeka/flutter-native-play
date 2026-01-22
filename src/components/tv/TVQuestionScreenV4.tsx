@@ -7,6 +7,7 @@ import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
 import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
 import { TVRoundQueueIndicator } from './TVRoundQueueIndicator';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
@@ -151,8 +152,10 @@ export const TVQuestionScreenV4: React.FC = () => {
           <div className="text-white/80 text-xs font-medium truncate">
             {roomName || 'ოთახი'}
           </div>
-          <div className="text-white font-bold text-lg truncate">
-            {categoryName || 'კატეგორია'}
+          <div className="flex items-center gap-2 text-white font-bold text-lg">
+            <img src={retroTvIcon} alt="TV" className="w-6 h-6 object-contain" />
+            <span className="truncate">{categoryName || 'კატეგორია'}</span>
+            <span className="text-white/60 text-sm font-medium">• რაუნდი {roundNumber}/{totalRounds}</span>
           </div>
         </div>
 
@@ -171,21 +174,21 @@ export const TVQuestionScreenV4: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="relative flex justify-center mb-3 flex-shrink-0 pt-10 [@media(max-height:700px)]:pt-6">
-          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
-            <img src={retroTvIcon} alt="TV" className="w-8 h-8 object-contain" />
-            <span className="text-white font-bold text-sm">
-              რაუნდი {roundNumber}/{totalRounds}
-            </span>
+        <div className="relative flex justify-center mb-3 flex-shrink-0 pt-16 [@media(max-height:700px)]:pt-12">
+          {/* Category/Question Icon - overlapping top of card */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
+            <DynamicIcon 
+              slug={currentQuestion?.icon_slug || undefined}
+              questionId={currentQuestion?.id}
+              size={96}
+              className="drop-shadow-lg"
+              hideIfEmpty={false}
+            />
           </div>
           <QuizQuestionCard
             questionText={currentQuestion.question_text}
-            questionNumber={currentQuestionIndex + 1}
-            totalQuestions={totalQuestions}
-            timerSeconds={timeRemaining}
-            timerMaxSeconds={timerMax}
             progressPercent={Math.max(0, Math.min(100, timerPercent))}
-            className="w-full"
+            className="w-full pt-8"
           />
         </div>
 
