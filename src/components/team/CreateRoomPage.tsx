@@ -385,6 +385,18 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         icon_slug: item.icon_slug || null,
       }))
     );
+
+    // Reliability: ensure the lobby sees the queue immediately after navigation/context switch.
+    // (Prevents a perceived "lost progress" if the next screen renders before the first fetch.)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data, error } = await supabase
+        .from('room_category_queue')
+        .select('id')
+        .eq('room_id', roomId)
+        .limit(1);
+      if (!error && data) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
   };
 
   // Copy to clipboard helper

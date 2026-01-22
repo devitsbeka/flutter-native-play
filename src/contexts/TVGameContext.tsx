@@ -217,6 +217,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return true;
   }, []);
 
+  const allActiveAnswered = useCallback((players: TVPlayer[]) => {
+    if (!players.length) return false;
+    return players.every((p) => p.isActive === true && p.hasAnswered);
+  }, []);
+
   const getActivePlayers = useCallback((players: TVPlayer[]) => players.filter((p) => p.isActive === true), []);
 
   // Prevent double-click / concurrent next-round transitions from host
@@ -609,7 +614,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const multiParticipantQuestion = maxActivePlayersSeenThisQuestionRef.current >= 2;
     if (multiParticipantQuestion && captureWindowActive) return;
 
-    const allAnswered = allRequiredAnswered(activePlayers);
+    // Use the simpler rule for UX: if all currently ACTIVE players have answered,
+    // reveal immediately (after capture window) instead of waiting for timer.
+    const allAnswered = allActiveAnswered(activePlayers) || allRequiredAnswered(activePlayers);
 
     if (allAnswered) {
       console.log('[TV Backup Auto-Advance] All connected players answered - triggering reveal via effect');
@@ -1067,7 +1074,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const phaseNow = stateRef.current.phase;
         // Determine whether all required players have answered.
         // If required set isn't established yet (e.g. still syncing), we do NOT auto-advance.
-        const allAnswered = allRequiredAnswered(activePlayers);
+        // Prefer the simpler "all ACTIVE answered" check. This avoids edge cases where
+        // the required set contains a stale id and would force waiting for the timer.
+        const allAnswered = allActiveAnswered(activePlayers) || allRequiredAnswered(activePlayers);
         const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= AUTO_ADVANCE_GUARD_MS;
         
         // Use isHostRef to get the latest isHost value (avoids stale closure)
