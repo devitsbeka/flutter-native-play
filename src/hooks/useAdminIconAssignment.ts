@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCategories } from './useCategories';
 import { isLatinScript, buildSearchTerms } from '@/utils/transliteration';
+import { useIconLibrarySlugSet } from './useIconLibrarySlugSet';
 
 export interface QuestionForAssignment {
   id: string;
@@ -31,26 +32,88 @@ export function useAdminIconAssignment() {
   const [showOnlyWithoutIcons, setShowOnlyWithoutIcons] = useState(false);
   
   const { categories } = useCategories();
+  const { slugSet: iconSlugSet, loading: iconSlugSetLoading } = useIconLibrarySlugSet();
+
+  const isValidIconSlug = useCallback(
+    (slug: string | null) => {
+      if (!slug) return false;
+      // While icon slugs are still loading, fall back to the legacy behavior (non-null = "has icon")
+      if (iconSlugSetLoading) return true;
+      return iconSlugSet.has(slug.toLowerCase());
+    },
+    [iconSlugSet, iconSlugSetLoading]
+  );
+
+  const isMissingIcon = useCallback(
+    (slug: string | null) => {
+      if (!slug) return true;
+      if (iconSlugSetLoading) return false;
+      return !iconSlugSet.has(slug.toLowerCase());
+    },
+    [iconSlugSet, iconSlugSetLoading]
+  );
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
-    const { count: total } = await supabase
+    const { count: total, error: totalError } = await supabase
       .from('questions')
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true);
 
-    const { count: withIcons } = await supabase
-      .from('questions')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
-      .not('icon_slug', 'is', null);
+    if (totalError) {
+      console.error('Error fetching stats total:', totalError);
+      return;
+    }
+
+    // While icon slugs are still loading, fall back to old counting.
+    if (iconSlugSetLoading) {
+      const { count: withIcons } = await supabase
+        .from('questions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .not('icon_slug', 'is', null);
+
+      setStats({
+        total: total || 0,
+        withIcons: withIcons || 0,
+        withoutIcons: (total || 0) - (withIcons || 0)
+      });
+      return;
+    }
+
+    // Count valid icon assignments by scanning icon_slug values in pages
+    const pageSize = 1000;
+    let page = 0;
+    let hasMore = true;
+    let withValidIcons = 0;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('icon_slug')
+        .eq('is_active', true)
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (error) {
+        console.error('Error fetching stats page:', error);
+        break;
+      }
+
+      const batch = data || [];
+      for (const row of batch as any[]) {
+        if (isValidIconSlug(row.icon_slug ?? null)) withValidIcons++;
+      }
+
+      hasMore = batch.length === pageSize;
+      page++;
+    }
 
     setStats({
       total: total || 0,
-      withIcons: withIcons || 0,
-      withoutIcons: (total || 0) - (withIcons || 0)
+      withIcons: withValidIcons,
+      withoutIcons: Math.max(0, (total || 0) - withValidIcons)
     });
-  }, []);
+  }, [iconSlugSetLoading, isValidIconSlug]);
 
   // Fetch questions with filters
   const fetchQuestions = useCallback(async (reset = false, currentSearchTerm?: string, currentCategoryFilter?: string | null, currentShowOnlyWithoutIcons?: boolean) => {
@@ -98,10 +161,6 @@ export function useAdminIconAssignment() {
       query = query.eq('category_id', catFilter);
     }
 
-    if (onlyWithout) {
-      query = query.is('icon_slug', null);
-    }
-
     const { data, error } = await query;
 
     if (error) {
@@ -116,21 +175,28 @@ export function useAdminIconAssignment() {
       category_name: categories.find(c => (c as any).uuid === q.category_id)?.name || 'უცნობი'
     }));
 
+    const filteredQuestions = onlyWithout
+      ? questionsWithCategories.filter(q => isMissingIcon(q.icon_slug ?? null))
+      : questionsWithCategories;
+
     if (reset) {
-      setQuestions(questionsWithCategories);
+      setQuestions(filteredQuestions);
       setPage(0);
     } else {
-      setQuestions(prev => [...prev, ...questionsWithCategories]);
+      setQuestions(prev => [...prev, ...filteredQuestions]);
     }
 
+    // Pagination is based on raw fetch size; filtering happens client-side.
     setHasMore((data?.length || 0) === PAGE_SIZE);
     setLoading(false);
-  }, [page, searchTerm, categoryFilter, showOnlyWithoutIcons, categories]);
+  }, [page, searchTerm, categoryFilter, showOnlyWithoutIcons, categories, isMissingIcon]);
 
   // Initial fetch and stats
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    if (categories.length > 0) {
+      fetchStats();
+    }
+  }, [fetchStats, categories.length]);
 
   // Fetch when filters change - pass current values to avoid stale closures
   useEffect(() => {
