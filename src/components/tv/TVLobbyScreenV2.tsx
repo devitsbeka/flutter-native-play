@@ -606,7 +606,7 @@ export const TVLobbyScreenV2: React.FC = () => {
         </div>
 
         {/* Right Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5 mt-[30px]">
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5 mt-[15px]">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
