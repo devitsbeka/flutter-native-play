@@ -233,7 +233,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-[520px] p-4 pb-28">
-              <div className="space-y-5">
+              <div className="space-y-[18px] sm:space-y-5">
                 {/* Search Section */}
                 <div>
                   <div className={`relative ${narrow}`}>
@@ -369,7 +369,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                         <motion.button
                           key={option.id}
                           onClick={() => handleShare(option.action)}
-                          className="flex flex-col items-center gap-2 shrink-0"
+                          className="flex flex-col items-center gap-2 shrink-0 scale-90 sm:scale-100"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.03 }}
