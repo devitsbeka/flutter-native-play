@@ -166,7 +166,7 @@ export const TVQuestionScreenV4: React.FC = () => {
 
       {/* Question + answers (game UI) */}
       <motion.div 
-        className="max-w-5xl mx-auto w-full flex-1 flex flex-col min-h-0"
+        className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col min-h-0"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -185,34 +185,27 @@ export const TVQuestionScreenV4: React.FC = () => {
             timerSeconds={timeRemaining}
             timerMaxSeconds={timerMax}
             progressPercent={Math.max(0, Math.min(100, timerPercent))}
-            className="max-w-4xl"
+            className="w-full"
           />
         </div>
 
-        {/* Answer Options 2x2 Grid (single-style, matches standard UI) */}
-        <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 items-stretch">
+        {/* Answer Options 2x2 Grid - clean single container buttons */}
+        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
           {currentQuestion.options.slice(0, 4).map((option, index) => (
-            <motion.div
+            <QuizAnswerButton
               key={index}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-              className="flex"
-            >
-              <QuizAnswerButton
-                state={
-                  isReveal
-                    ? option === correctAnswer
-                      ? 'correct'
-                      : 'disabled'
-                    : 'default'
-                }
-                label={GEORGIAN_LABELS[index]}
-                text={option}
-                disabled
-                className="w-full"
-              />
-            </motion.div>
+              state={
+                isReveal
+                  ? option === correctAnswer
+                    ? 'correct'
+                    : 'disabled'
+                  : 'default'
+              }
+              label={GEORGIAN_LABELS[index]}
+              text={option}
+              disabled
+              className="w-full h-full"
+            />
           ))}
         </div>
       </motion.div>
