@@ -369,7 +369,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                         <motion.button
                           key={option.id}
                           onClick={() => handleShare(option.action)}
-                          className="flex flex-col items-center gap-2 shrink-0 scale-90 sm:scale-100"
+                          className="flex flex-col items-center gap-2 shrink-0 scale-[0.85] sm:scale-100"
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.03 }}
