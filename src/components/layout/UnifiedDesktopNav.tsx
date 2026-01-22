@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { MoreMenuModal } from "@/components/home/MoreMenuModal";
 import { LanguageSelectorModal } from "@/components/layout/LanguageSelectorModal";
+import { LiveBadge } from "@/components/social/LiveBadge";
 
 interface UnifiedDesktopNavProps {
   onPlayClick?: () => void;
@@ -150,6 +151,7 @@ export function UnifiedDesktopNav({
               onClick={() => navigate("/")}
             >
               <span className="text-xl font-slackey text-foreground tracking-tight">MyTrivia</span>
+              <LiveBadge />
             </span>
             
             {/* Tablet: User Avatar instead of logo */}
