@@ -1264,9 +1264,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // If in completed phase, start the next round from queue
-    if (state.phase === 'completed') {
-      tvLog('startNextRound: phase is completed, calling startNextRoundFromQueueIfAny');
+    // If in results phase (shown as "completed" in UI), start the next round from queue
+    if (state.phase === 'results') {
+      tvLog('startNextRound: phase is results, calling startNextRoundFromQueueIfAny');
       const started = await startNextRoundFromQueueIfAny();
       if (!started) {
         tvLog('startNextRound: no more rounds in queue');
