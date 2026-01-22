@@ -378,7 +378,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Increment round number for the next round (update DB + local state)
-      const newRoundNumber = state.roundNumber + 1;
+      // IMPORTANT: use latest state from ref to avoid stale-closure bugs (this callback
+      // intentionally doesn't depend on state.roundNumber).
+      const currentRoundNumber = stateRef.current.roundNumber;
+      const newRoundNumber = currentRoundNumber + 1;
       await supabase
         .from('tv_sessions')
         .update({ round_number: newRoundNumber })
@@ -1014,14 +1017,63 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     try {
-      // Fetch queue count to calculate total rounds
+      // Fetch queue items to calculate total rounds.
+      // NOTE: tv_session_queue is frequently seeded with the *initial* room category at position 0.
+      // If we start the game with that same category, we must remove it from the queue to avoid:
+      //  - totalRounds being off-by-one (e.g., showing 4 when user selected 3)
+      //  - the first round repeating after round 2 (because the "next" item is actually the current one)
       const { data: queueItems } = await supabase
         .from('tv_session_queue')
-        .select('id')
+        .select('id, category_id, user_trivia_id, position')
         .eq('session_id', state.sessionId);
-      
-      const queueCount = queueItems?.length || 0;
-      const totalRoundsCount = 1 + queueCount; // Current round + queued rounds
+
+      let queueCount = queueItems?.length || 0;
+
+      // If the current round is already the first item in the queue, consume it now.
+      // (This keeps queue = "future rounds" after game starts.)
+      if (queueItems && queueItems.length > 0) {
+        const first = [...queueItems]
+          .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
+          .at(0) as any;
+
+        const firstMatchesCurrent = Boolean(
+          (categoryId && first?.category_id === categoryId) ||
+          (userTriviaId && first?.user_trivia_id === userTriviaId)
+        );
+
+        if (firstMatchesCurrent && first?.id) {
+          tvLog('Consuming initial queue item (it matches current round)', {
+            queueItemId: String(first.id).slice(0, 8),
+            categoryId,
+            userTriviaId,
+          });
+
+          await supabase
+            .from('tv_session_queue')
+            .delete()
+            .eq('id', first.id);
+
+          // Adjust count locally
+          queueCount = Math.max(0, queueCount - 1);
+
+          // Best-effort reorder so next pick is deterministic
+          const { data: remaining } = await supabase
+            .from('tv_session_queue')
+            .select('id')
+            .eq('session_id', state.sessionId)
+            .order('position', { ascending: true });
+          if (remaining?.length) {
+            await Promise.all(
+              remaining.map((item, index) =>
+                supabase.from('tv_session_queue').update({ position: index }).eq('id', item.id)
+              )
+            );
+          }
+        }
+      }
+
+      // Current round + (remaining) queued rounds
+      const totalRoundsCount = 1 + queueCount;
 
       let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[] }[] = [];
       let categoryName: string | null = null;
