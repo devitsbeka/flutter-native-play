@@ -760,7 +760,7 @@ export default function Index() {
             {/* Mobile only: circular action buttons + avatar + info */}
             <motion.div 
               className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-              style={{ marginTop: 10 }}
+              style={{ marginTop: -5 }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
@@ -770,7 +770,7 @@ export default function Index() {
                 {user && (
                   <div 
                     className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
-                    style={{ top: -45, width: 340 }}
+                    style={{ top: -75, width: 340 }}
                     data-walkthrough="powerups"
                   >
                     <motion.div 
