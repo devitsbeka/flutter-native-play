@@ -172,6 +172,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     stateRef.current = state;
   }, [state]);
 
+  // Keep isHost in a ref for presence callbacks to avoid stale closures
+  const isHostRef = useRef(isHost);
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
+
   // Prevent repeated reveal updates from timer/presence sync
   const revealRequestedRef = useRef(false);
 
@@ -390,14 +396,43 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Use stateRef.current to avoid stale closure issues
     const current = stateRef.current;
     
-    if (!isHost) return;
-    if (!current.sessionId) return;
-    if (current.phase !== 'question') return;
-    if (revealRequestedRef.current) return;
-    if (current.questions.length === 0) return;
-    if (current.players.length === 0) return;
+    console.log('[requestRevealIfEligible] Called with:', {
+      reason,
+      isHost,
+      sessionId: current.sessionId?.slice(0, 8),
+      phase: current.phase,
+      revealAlreadyRequested: revealRequestedRef.current,
+      questionsLength: current.questions.length,
+      playersLength: current.players.length,
+    });
+    
+    if (!isHost) {
+      console.log('[requestRevealIfEligible] Blocked: not host');
+      return;
+    }
+    if (!current.sessionId) {
+      console.log('[requestRevealIfEligible] Blocked: no sessionId');
+      return;
+    }
+    if (current.phase !== 'question') {
+      console.log('[requestRevealIfEligible] Blocked: phase is not question, it is:', current.phase);
+      return;
+    }
+    if (revealRequestedRef.current) {
+      console.log('[requestRevealIfEligible] Blocked: reveal already requested');
+      return;
+    }
+    if (current.questions.length === 0) {
+      console.log('[requestRevealIfEligible] Blocked: no questions');
+      return;
+    }
+    if (current.players.length === 0) {
+      console.log('[requestRevealIfEligible] Blocked: no players');
+      return;
+    }
 
     revealRequestedRef.current = true;
+    console.log('[requestRevealIfEligible] SUCCESS - Triggering reveal!');
     tvLogPhase('question', 'reveal', reason);
     tvLog('requestRevealIfEligible triggered', { 
       reason, 
@@ -446,6 +481,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     };
   }, [state.phase, state.timeRemaining, isHost, state.sessionId]);
+
+  // Backup auto-advance: Check if all active players answered whenever players state changes
+  useEffect(() => {
+    if (!isHost) return;
+    if (!state.sessionId) return;
+    if (state.phase !== 'question') return;
+    if (revealRequestedRef.current) return;
+    
+    const activePlayers = state.players.filter(p => p.isActive === true);
+    const allActiveAnswered = activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered);
+    
+    if (allActiveAnswered) {
+      console.log('[TV Backup Auto-Advance] All active players answered - triggering reveal via effect');
+      requestRevealIfEligible('all active players answered (backup effect)');
+    }
+  }, [state.phase, state.players, state.sessionId, isHost, requestRevealIfEligible]);
 
   // Auto-advance from reveal after a fixed duration (host only)
   useEffect(() => {
@@ -820,9 +871,25 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setState(prev => ({ ...prev, players }));
 
         // If every ACTIVE player answered, host moves game to reveal immediately
+        // Use fresh state from stateRef for most up-to-date phase
         const activePlayers = players.filter(p => p.isActive === true);
         const phaseNow = stateRef.current.phase;
-        if (isHost && phaseNow === 'question' && activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered)) {
+        const allActiveAnswered = activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered);
+        
+        // Use isHostRef to get the latest isHost value (avoids stale closure)
+        const isHostNow = isHostRef.current;
+        
+        console.log('[TV Auto-Advance Check]', {
+          isHost: isHostNow,
+          phaseNow,
+          activeCount: activePlayers.length,
+          allActiveAnswered,
+          players: activePlayers.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered, isActive: p.isActive })),
+          revealAlreadyRequested: revealRequestedRef.current,
+        });
+        
+        if (isHostNow && phaseNow === 'question' && allActiveAnswered && !revealRequestedRef.current) {
+          console.log('[TV Auto-Advance] Triggering reveal - all active players answered!');
           requestRevealIfEligible('all active players answered');
         }
         
