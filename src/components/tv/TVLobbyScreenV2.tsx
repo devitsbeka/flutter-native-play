@@ -497,7 +497,7 @@ export const TVLobbyScreenV2: React.FC = () => {
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start">
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -584,31 +584,31 @@ export const TVLobbyScreenV2: React.FC = () => {
                         </motion.div>
                       )}
 
-                      {/* Avatar */}
-                      <div className="w-10 h-10 mb-1">
+                      {/* Avatar - 40% larger */}
+                      <div className="w-14 h-14 mb-2">
                         <SmartAvatar
                           avatarUrl={(player as typeof players[0]).avatar_url}
                           fallback={(player as typeof players[0]).nickname?.slice(0, 2)}
-                          size="md"
+                          size="lg"
                         />
                       </div>
 
                       {/* Name */}
-                      <p className="text-white font-bold text-center truncate w-full text-xs">
+                      <p className="text-white font-bold text-center truncate w-full text-sm mt-1">
                         {(player as typeof players[0]).nickname}
                       </p>
                     </>
                   ) : isInvited ? (
                     <>
-                      {/* Invited Guest - Grayed out */}
-                      <div className="w-10 h-10 mb-1">
+                      {/* Invited Guest - Grayed out - 40% larger */}
+                      <div className="w-14 h-14 mb-2">
                         <SmartAvatar
                           avatarUrl={(player as InvitedGuest).avatar_url}
                           fallback={(player as InvitedGuest).nickname?.slice(0, 2)}
-                          size="md"
+                          size="lg"
                         />
                       </div>
-                      <p className="text-purple-300/70 font-medium text-center truncate w-full text-xs">
+                      <p className="text-purple-300/70 font-medium text-center truncate w-full text-sm mt-1">
                         {(player as InvitedGuest).nickname}
                       </p>
                       <div className="flex items-center gap-1 mt-0.5">
@@ -618,10 +618,10 @@ export const TVLobbyScreenV2: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-1">
-                        <Users className="w-5 h-5 text-purple-400/50" />
+                      <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                        <Users className="w-6 h-6 text-purple-400/50" />
                       </div>
-                      <p className="text-purple-400/50 text-[10px]">მოლოდინი...</p>
+                      <p className="text-purple-400/50 text-xs mt-1">მოლოდინი...</p>
                     </>
                   )}
                 </motion.div>
