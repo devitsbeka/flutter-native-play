@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
-
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -19,6 +19,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
     categoryName, 
     categoryIcon,
     roundNumber,
+    totalRounds,
   } = useTVGame();
 
   const [isReady, setIsReady] = useState(false);
@@ -36,15 +37,36 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex flex-col items-center justify-center p-6">
-      {/* Round Number Badge */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* 3D TV Icon with glow */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5, y: -30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        className="mb-4 relative"
+      >
+        <div className="absolute inset-0 bg-purple-400/30 blur-2xl rounded-full scale-150" />
+        <img src={retroTvIcon} alt="TV" className="w-20 h-20 sm:w-24 sm:h-24 object-contain relative z-10" />
+      </motion.div>
+
+      {/* Round Progress Badge */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         className="mb-4"
       >
-        <span className="px-4 py-2 rounded-full bg-purple-500/30 border border-purple-400/50 text-purple-200 font-medium">
-          რაუნდი {roundNumber}
+        <span className="px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold text-lg flex items-center gap-2">
+          <span className="text-purple-300">რაუნდი</span>
+          <span className="text-white">{roundNumber}</span>
+          <span className="text-purple-300">/</span>
+          <span className="text-white">{totalRounds}</span>
         </span>
       </motion.div>
 
@@ -52,8 +74,8 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
       <motion.h1
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-        className="text-3xl sm:text-4xl font-bold text-white mb-8 text-center"
+        transition={{ delay: 0.15 }}
+        className="text-3xl sm:text-4xl font-bold text-white mb-6 text-center"
         style={{ fontFamily: 'var(--font-display, inherit)' }}
       >
         შემდეგი რაუნდი
@@ -66,18 +88,27 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
         className="mb-10 flex flex-col items-center"
       >
-        <div 
-          className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center mb-4 border-2 border-purple-400/50"
+        <motion.div 
+          className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl flex items-center justify-center mb-4 border-2 border-white/20 relative overflow-hidden"
           style={{
-            background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
           }}
+          animate={{ 
+            boxShadow: [
+              '0 0 30px rgba(168,85,247,0.3)',
+              '0 0 50px rgba(168,85,247,0.5)',
+              '0 0 30px rgba(168,85,247,0.3)',
+            ]
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
         >
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-transparent" />
           {categoryIcon ? (
-            <span className="text-5xl sm:text-6xl">{categoryIcon}</span>
+            <span className="text-6xl sm:text-7xl relative z-10">{categoryIcon}</span>
           ) : (
-            <span className="text-5xl sm:text-6xl">🎲</span>
+            <span className="text-6xl sm:text-7xl relative z-10">🎲</span>
           )}
-        </div>
+        </motion.div>
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
           {categoryName || 'კატეგორია'}
         </h2>
