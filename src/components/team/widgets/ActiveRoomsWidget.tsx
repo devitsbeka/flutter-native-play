@@ -77,7 +77,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
               
               {/* Room Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground text-sm truncate">
+                <p className="font-display text-foreground text-sm truncate">
                   {room.room_name || room.category_name || "თამაშის ოთახი"}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
