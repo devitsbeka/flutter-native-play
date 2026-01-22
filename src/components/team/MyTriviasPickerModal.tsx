@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Play, FolderOpen, ChevronLeft, Lock, Globe, PartyPopper, Plus, Gamepad2 } from "lucide-react";
+import { Heart, Play, ChevronLeft, Lock, Globe, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import glitchIcon from "@/assets/glitch.png";
+import partyBlowerIcon from "@/assets/Party-Blower.webp";
+import triviaBuzzerIcon from "@/assets/trivia-buzzer-5.png";
+import collectionMagnetIcon from "@/assets/fridge-magnet-collection-2.png";
 
 interface Trivia {
   id: string;
@@ -36,6 +40,7 @@ interface MyTriviasPickerModalProps {
 export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTrivia }: MyTriviasPickerModalProps) {
   const { user } = useAuth();
   const [tab, setTab] = useState("trivias");
+  const [query, setQuery] = useState("");
 
   // Regular trivias (exclude personal/party ones)
   const { data: trivias = [], isLoading: loadingTrivias } = useQuery({
@@ -95,6 +100,17 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
 
   const isLoading = loadingTrivias || loadingCollections || loadingPersonal;
 
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const filteredTrivias = normalizedQuery
+    ? trivias.filter((t) => (t.title || "").toLocaleLowerCase().includes(normalizedQuery))
+    : trivias;
+  const filteredCollections = normalizedQuery
+    ? collections.filter((c) => (c.title || "").toLocaleLowerCase().includes(normalizedQuery))
+    : collections;
+  const filteredPersonalTrivias = normalizedQuery
+    ? personalTrivias.filter((t) => (t.title || "").toLocaleLowerCase().includes(normalizedQuery))
+    : personalTrivias;
+
   const handleSelect = (item: { id: string; title: string; type: "trivia" | "collection" }) => {
     onSelect(item);
     onOpenChange(false);
@@ -123,7 +139,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                 >
                   <ChevronLeft className="w-5 h-5 text-foreground" />
                 </button>
-                <h2 className="text-lg font-bold text-foreground">ჩემი ტრივიები</h2>
+                <h2 className="text-lg font-bold text-foreground">ჩემი ტრივია</h2>
               </div>
               {onCreateTrivia && (
                 <button
@@ -134,6 +150,16 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                   <span>შექმენი</span>
                 </button>
               )}
+            </div>
+
+            {/* Sticky search */}
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 pb-3">
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="ძებნა..."
+                className="h-11 rounded-2xl"
+              />
             </div>
           </div>
 
@@ -148,30 +174,30 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
               <Tabs value={tab} onValueChange={setTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="trivias" className="flex items-center gap-1.5 text-xs px-2">
-                    <Gamepad2 className="w-3.5 h-3.5" />
-                    ტრივია ({trivias.length})
+                    <img src={triviaBuzzerIcon} alt="" className="w-4 h-4 object-contain" />
+                    ტრივია ({filteredTrivias.length})
                   </TabsTrigger>
                   <TabsTrigger value="collections" className="flex items-center gap-1.5 text-xs px-2">
-                    <FolderOpen className="w-3.5 h-3.5" />
-                    კოლექციები ({collections.length})
+                    <img src={collectionMagnetIcon} alt="" className="w-4 h-4 object-contain" />
+                    კოლექციები ({filteredCollections.length})
                   </TabsTrigger>
                   <TabsTrigger value="party" className="flex items-center gap-1.5 text-xs px-2">
-                    <PartyPopper className="w-3.5 h-3.5" />
-                    Party ({personalTrivias.length})
+                    <img src={partyBlowerIcon} alt="" className="w-4 h-4 object-contain" />
+                    Party ({filteredPersonalTrivias.length})
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="trivias">
-                  {trivias.length === 0 ? (
+                  {filteredTrivias.length === 0 ? (
                     <div className="py-12 text-center text-muted-foreground">
                       <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
                         <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
                       </div>
-                      <p>ჯერ არ გაქვს ტრივიები</p>
+                      <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს ტრივიები"}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {trivias.map((trivia, index) => (
+                      {filteredTrivias.map((trivia, index) => (
                         <motion.button
                           key={trivia.id}
                           initial={{ opacity: 0, x: -10 }}
@@ -189,7 +215,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <Gamepad2 className="w-6 h-6 text-primary" />
+                              <img src={triviaBuzzerIcon} alt="" className="w-7 h-7 object-contain" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -219,16 +245,16 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                 </TabsContent>
 
                 <TabsContent value="collections">
-                  {collections.length === 0 ? (
+                  {filteredCollections.length === 0 ? (
                     <div className="py-12 text-center text-muted-foreground">
                       <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-2">
                         <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
                       </div>
-                      <p>ჯერ არ გაქვს კოლექციები</p>
+                      <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს კოლექციები"}</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      {collections.map((collection, index) => (
+                      {filteredCollections.map((collection, index) => (
                         <motion.button
                           key={collection.id}
                           initial={{ opacity: 0, scale: 0.9 }}
@@ -279,14 +305,16 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                 </TabsContent>
 
                 <TabsContent value="party">
-                  {personalTrivias.length === 0 ? (
+                  {filteredPersonalTrivias.length === 0 ? (
                     <div className="py-12 text-center text-muted-foreground">
-                      <PartyPopper className="w-12 h-12 mx-auto mb-2 text-pink-400" />
-                      <p>ჯერ არ გაქვს MyTrivia Party</p>
+                      <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-muted/50 flex items-center justify-center">
+                        <img src={partyBlowerIcon} alt="" className="w-8 h-8 object-contain" />
+                      </div>
+                      <p>{normalizedQuery ? "ვერაფერი მოიძებნა" : "ჯერ არ გაქვს MyTrivia Party"}</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {personalTrivias.map((item, index) => (
+                      {filteredPersonalTrivias.map((item, index) => (
                         <motion.button
                           key={item.id}
                           initial={{ opacity: 0, x: -10 }}
@@ -304,7 +332,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <PartyPopper className="w-6 h-6 text-white" />
+                              <img src={partyBlowerIcon} alt="" className="w-7 h-7 object-contain" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
