@@ -1185,10 +1185,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // Hard rule: no manual next during a question; transition is driven by
-    // (all answered) OR (timer elapsed) -> reveal -> auto-advance.
+    // If in completed phase, start the next round from queue
+    if (state.phase === 'completed') {
+      tvLog('startNextRound: phase is completed, calling startNextRoundFromQueueIfAny');
+      const started = await startNextRoundFromQueueIfAny();
+      if (!started) {
+        tvLog('startNextRound: no more rounds in queue');
+      }
+      return;
+    }
+
+    // For other phases, try to force reveal if eligible
     await requestRevealIfEligible('manual next blocked; forcing reveal if eligible');
-  }, [state.sessionId, state.currentQuestionIndex, state.questions.length, state.players, isHost, myPlayerId, myScore]);
+  }, [state.sessionId, state.phase, isHost, startNextRoundFromQueueIfAny]);
 
   // Update room name (host only)
   const updateRoomName = useCallback(async (name: string) => {
