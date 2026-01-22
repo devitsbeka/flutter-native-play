@@ -2,6 +2,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
 
 export type QuizCategoryIconState = "default" | "loading";
 
@@ -54,12 +55,16 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
             transition={{ delay: 0.1 }}
           />
         ) : (
-          <span 
-            className="drop-shadow-xl"
-            style={{ fontSize: size * 0.7 }}
-          >
-            {emoji || "🎯"}
-          </span>
+          // No-emoji policy: use a neutral graphic fallback instead of emoji.
+          <motion.img
+            src={triviaBuzzer}
+            alt="Trivia"
+            className="object-contain drop-shadow-xl"
+            style={{ width: size * 0.72, height: size * 0.72 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05 }}
+          />
         )}
       </motion.div>
     );

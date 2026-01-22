@@ -306,7 +306,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         nextCategoryName = nextCategoryName || triviaData.title || 'User Trivia';
-        nextCategoryIcon = nextCategoryIcon || triviaData.icon_slug || '🎯';
+        // No-emoji policy: never fall back to emoji for category icons.
+        nextCategoryIcon = nextCategoryIcon || triviaData.icon_slug || null;
 
         formattedQuestions = triviaQuestions.map((q, idx) => {
           const incorrectAnswers = Array.isArray(q.incorrect_answers)
@@ -1293,7 +1294,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         categoryName = triviaData.title || 'User Trivia';
-        categoryIcon = triviaData.icon_slug || '🎯';
+        // No-emoji policy: never fall back to emoji for category icons.
+        categoryIcon = triviaData.icon_slug || null;
 
         // Format user trivia questions
         formattedQuestions = triviaQuestions.map((q, idx) => {
