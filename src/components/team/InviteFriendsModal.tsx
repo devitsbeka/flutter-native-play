@@ -197,24 +197,34 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.75) 45%, hsl(var(--background)) 100%)",
+          }}
         >
-          {/* Video Background */}
+          {/* Purple backdrop with soft glow */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-background" />
-            <PingPongVideo src={MAP_VIDEOS.default} className="opacity-40" />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
+            <div
+              className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full blur-3xl"
+              style={{ background: "hsl(var(--primary) / 0.55)" }}
+            />
+            <div
+              className="absolute -bottom-28 -right-28 w-[520px] h-[520px] rounded-full blur-3xl"
+              style={{ background: "hsl(var(--primary) / 0.35)" }}
+            />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, hsl(var(--primary) / 0.10), transparent 55%, hsl(var(--background) / 0.30))" }} />
           </div>
 
           {/* Fixed Header */}
-          <div className="relative z-10 flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
+          <div className="relative z-10 flex-shrink-0 flex items-center gap-3 px-4 py-4 border-b border-border/20 backdrop-blur-md">
             <button
               onClick={handleClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              className="w-12 h-12 rounded-full bg-background/20 border border-border/20 flex items-center justify-center hover:bg-background/25 transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+              <ChevronLeft className="w-6 h-6 text-primary-foreground" />
             </button>
-            <h2 className="text-lg font-bold text-foreground">მეგობრების მოწვევა</h2>
+            <h2 className="text-lg font-bold text-primary-foreground">მეგობრების მოწვევა</h2>
           </div>
 
           {/* Scrollable Content */}
@@ -222,16 +232,16 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             {/* Search Section */}
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/80" />
                 <Input
                   type="text"
                   placeholder="მომხმარებლის ძებნა..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10 bg-muted/50 border-border/50 text-sm"
+                  className="pl-12 h-12 rounded-2xl bg-background/20 border-border/20 text-primary-foreground placeholder:text-primary-foreground/70"
                 />
                 {searching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/80 animate-spin" />
                 )}
               </div>
               
@@ -245,7 +255,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                     className="mt-2 max-h-[180px] overflow-y-auto space-y-1.5"
                   >
                     {searchResults.length === 0 && !searching ? (
-                      <p className="text-center py-4 text-muted-foreground text-sm">
+                      <p className="text-center py-6 text-primary-foreground/80 text-sm">
                         მომხმარებელი ვერ მოიძებნა
                       </p>
                     ) : (
@@ -256,9 +266,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="flex items-center gap-2 p-2 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-background/18 border border-border/15 hover:bg-background/22 transition-colors"
                         >
-                          <Avatar className="w-9 h-9 border border-border/30">
+                          <Avatar className="w-11 h-11 border border-border/20">
                             <AvatarImage src={result.avatar_url || undefined} />
                             <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
                               {result.nickname.charAt(0).toUpperCase()}
@@ -277,10 +287,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                           <motion.button
                             onClick={() => handleSendRequest(result.user_id)}
                             disabled={sentRequests.has(result.user_id)}
-                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors ${
                               sentRequests.has(result.user_id)
-                                ? "bg-green-500/20 text-green-600"
-                                : "bg-primary text-primary-foreground hover:opacity-90"
+                                ? "bg-background/20 text-primary-foreground"
+                                : "bg-background/25 text-primary-foreground hover:bg-background/30"
                             }`}
                             whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
                             whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
@@ -292,7 +302,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                               </>
                             ) : (
                               <>
-                                <UserPlus className="w-3 h-3" />
+                                <UserPlus className="w-4 h-4" />
                                 დამატება
                               </>
                             )}
@@ -307,56 +317,56 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             
             {/* Divider */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground font-medium">ან მოწვევა</span>
-              <div className="flex-1 h-px bg-border" />
+              <div className="flex-1 h-px bg-border/20" />
+              <span className="text-xs text-primary-foreground/80 font-semibold">ან მოწვევა</span>
+              <div className="flex-1 h-px bg-border/20" />
             </div>
             
             {/* Import & Connect Section */}
             <div className="space-y-2 mb-4">
               <motion.button
                 onClick={handleImportContacts}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-background/18 border border-border/15 hover:bg-background/22 transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <ContactsIcon />
                 <div className="text-left">
-                  <p className="font-semibold text-sm text-foreground">კონტაქტების იმპორტი</p>
-                  <p className="text-xs text-muted-foreground">მოიწვიე მეგობრები ტელეფონიდან</p>
+                  <p className="font-semibold text-base text-primary-foreground">კონტაქტების იმპორტი</p>
+                  <p className="text-sm text-primary-foreground/75">მოიწვიე მეგობრები ტელეფონიდან</p>
                 </div>
               </motion.button>
               
               <motion.button
                 onClick={handleConnectFacebook}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-background/18 border border-border/15 hover:bg-background/22 transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <FacebookIcon />
                 <div className="text-left">
-                  <p className="font-semibold text-sm text-foreground">Facebook მეგობრები</p>
-                  <p className="text-xs text-muted-foreground">იპოვე მეგობრები Facebook-ზე</p>
+                  <p className="font-semibold text-base text-primary-foreground">Facebook მეგობრები</p>
+                  <p className="text-sm text-primary-foreground/75">იპოვე მეგობრები Facebook-ზე</p>
                 </div>
               </motion.button>
             </div>
             
             {/* Divider */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground font-medium">ან გააზიარე</span>
-              <div className="flex-1 h-px bg-border" />
+              <div className="flex-1 h-px bg-border/20" />
+              <span className="text-xs text-primary-foreground/80 font-semibold">ან გააზიარე</span>
+              <div className="flex-1 h-px bg-border/20" />
             </div>
             
             {/* Share Options - Two Rows */}
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-5">
               {/* First row: SMS, Messenger, WhatsApp */}
-              <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center justify-center gap-8">
                 {shareOptions.slice(0, 3).map((option, index) => (
                   <motion.button
                     key={option.id}
                     onClick={() => handleShare(option.action)}
-                    className="flex flex-col items-center gap-1.5"
+                    className="flex flex-col items-center gap-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
@@ -365,18 +375,18 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                     disabled={isSharing}
                   >
                     <option.icon />
-                    <span className="text-xs font-semibold text-muted-foreground">{option.label}</span>
+                    <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
                   </motion.button>
                 ))}
               </div>
               
               {/* Second row: X, Email (centered) */}
-              <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center justify-center gap-8">
                 {shareOptions.slice(3).map((option, index) => (
                   <motion.button
                     key={option.id}
                     onClick={() => handleShare(option.action)}
-                    className="flex flex-col items-center gap-1.5"
+                    className="flex flex-col items-center gap-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: (index + 3) * 0.03 }}
@@ -385,7 +395,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                     disabled={isSharing}
                   >
                     <option.icon />
-                    <span className="text-xs font-semibold text-muted-foreground">{option.label}</span>
+                    <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
                   </motion.button>
                 ))}
               </div>
@@ -393,17 +403,17 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Fixed Footer */}
-          <div className="relative z-10 flex-shrink-0 p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm">
+          <div className="relative z-10 flex-shrink-0 p-4 border-t border-border/20 backdrop-blur-md">
             <motion.button
               onClick={() => {
                 navigator.clipboard.writeText(appLink);
                 toast.success("ლინკი დაკოპირდა!");
               }}
-              className="w-full py-3 rounded-xl bg-primary/10 text-primary font-semibold text-sm hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-background/22 border border-border/15 text-primary-foreground font-bold text-base hover:bg-background/28 transition-colors flex items-center justify-center gap-2"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-5 h-5" />
               ლინკის კოპირება
             </motion.button>
           </div>
