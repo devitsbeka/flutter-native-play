@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import { 
   UserPlus, 
   Import, 
@@ -196,14 +197,15 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
   const lobbyGlassRow =
     "rounded-2xl bg-white/10 backdrop-blur-md border border-white/20";
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+          // Render above any lobby layers/stacking contexts
+          className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
           style={{
             background:
               // Fully opaque purple background (no glass/see-through feel)
@@ -234,7 +236,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Scrollable Content */}
-          <div className="relative z-10 flex-1 overflow-y-auto p-4">
+          <div className="relative z-10 flex-1 overflow-y-auto p-4 pb-28">
             {/* Search Section */}
             <div className="mb-4">
               <div className="relative">
@@ -409,13 +411,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Fixed Footer */}
-          <div className="relative z-10 flex-shrink-0 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-white/10 bg-primary">
+          <div className="fixed bottom-0 left-0 right-0 z-[10000] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-white/10 bg-primary">
             <motion.button
               onClick={() => {
                 navigator.clipboard.writeText(appLink);
                 toast.success("ლინკი დაკოპირდა!");
               }}
-              className={`w-full py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base hover:bg-white/15 transition-colors flex items-center justify-center gap-2`}
+              className={`w-full py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base bg-white/15 hover:bg-white/20 transition-colors flex items-center justify-center gap-2`}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -426,5 +428,5 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  , document.body);
 }
