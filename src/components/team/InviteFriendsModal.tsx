@@ -225,18 +225,21 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Fixed Header */}
-          <div className="relative z-10 flex-shrink-0 flex items-center gap-3 px-4 py-4 border-b border-border/20 bg-primary">
-            <button
-              onClick={handleClose}
-              className="w-12 h-12 rounded-full bg-primary border border-border/20 flex items-center justify-center hover:bg-primary/90 transition-colors"
-            >
-              <ChevronLeft className="w-6 h-6 text-primary-foreground" />
-            </button>
-            <h2 className="text-lg font-bold text-primary-foreground">მეგობრების მოწვევა</h2>
+          <div className="relative z-10 flex-shrink-0 border-b border-border/20 bg-primary">
+            <div className="mx-auto w-full max-w-[680px] px-4 py-4 flex items-center gap-3">
+              <button
+                onClick={handleClose}
+                className="w-12 h-12 rounded-full bg-primary border border-border/20 flex items-center justify-center hover:bg-primary/90 transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6 text-primary-foreground" />
+              </button>
+              <h2 className="text-lg font-bold text-primary-foreground">მეგობრების მოწვევა</h2>
+            </div>
           </div>
 
           {/* Scrollable Content */}
-          <div className="relative z-10 flex-1 overflow-y-auto p-4 pb-28">
+          <div className="relative z-10 flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-[680px] p-4 pb-28">
             {/* Search Section */}
             <div className="mb-4">
               <div className="relative">
@@ -321,6 +324,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
             </div>
             
             {/* Divider */}
@@ -411,19 +415,21 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 z-[10000] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-white/10 bg-primary">
-            <motion.button
-              onClick={() => {
-                navigator.clipboard.writeText(appLink);
-                toast.success("ლინკი დაკოპირდა!");
-              }}
-              className={`w-full py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base bg-white/15 hover:bg-white/20 transition-colors flex items-center justify-center gap-2`}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <Share2 className="w-5 h-5 text-white/90" />
-              ლინკის კოპირება
-            </motion.button>
+          <div className="fixed bottom-0 left-0 right-0 z-[10000] border-t border-white/10 bg-primary">
+            <div className="mx-auto w-full max-w-[680px] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+              <motion.button
+                onClick={() => {
+                  navigator.clipboard.writeText(appLink);
+                  toast.success("ლინკი დაკოპირდა!");
+                }}
+                className={`w-full py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base bg-white/15 hover:bg-white/20 transition-colors flex items-center justify-center gap-2`}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+              >
+                <Share2 className="w-5 h-5 text-white/90" />
+                ლინკის კოპირება
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       )}
