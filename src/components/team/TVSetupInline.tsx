@@ -63,7 +63,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       if (roomIdFromUrl) {
         const { data: roomData } = await supabase
           .from('game_rooms')
-          .select('id, room_name, category_name, category_id')
+          .select('id, room_name, category_name, category_id, user_trivia_id')
           .eq('id', roomIdFromUrl)
           .maybeSingle();
         
@@ -152,7 +152,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             user_trivia_id: string | null;
           }> = [];
 
-          // Prepend initial room category first (if any)
+          // Prepend initial room category OR user trivia first (if any)
           if (roomData.category_id) {
             // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
             const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
@@ -166,6 +166,17 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
               category_name: roomData.category_name,
               icon_slug: iconSlug,
               user_trivia_id: null,
+            });
+          } else if (roomData.user_trivia_id) {
+            // Handle user trivia as initial round
+            rowsToInsert.push({
+              session_id: session.id,
+              position: 0,
+              source_type: 'user_trivia',
+              category_id: null,
+              category_name: roomData.category_name,
+              icon_slug: null,
+              user_trivia_id: roomData.user_trivia_id,
             });
           }
 
