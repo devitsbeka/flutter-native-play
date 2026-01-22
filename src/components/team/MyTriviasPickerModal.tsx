@@ -190,7 +190,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
               <Tabs value={tab} onValueChange={setTab} className="w-full">
                 <TabsList className="grid w-full mb-6 grid-cols-2 md:grid-cols-3 h-auto p-2 gap-2">
                   <TabsTrigger value="trivias" className="flex items-center gap-2 text-sm md:text-sm px-3 py-3 h-auto">
-                    <img src={triviaBuzzerIcon} alt="" className="w-[52px] h-[52px] md:w-[52px] md:h-[52px] object-contain" />
+                    <img src={triviaBuzzerIcon} alt="" className="w-[44px] h-[44px] md:w-[44px] md:h-[44px] object-contain" />
                     <span className="font-semibold">
                       ტრივია ({isDesktop ? filteredTrivias.length : mobileTotalCount})
                     </span>
@@ -198,12 +198,12 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
 
                   {/* Desktop-only: separate Collections tab */}
                   <TabsTrigger value="collections" className="hidden md:flex items-center gap-2 text-sm px-3 py-3 h-auto">
-                    <img src={collectionMagnetIcon} alt="" className="w-[52px] h-[52px] object-contain" />
+                    <img src={collectionMagnetIcon} alt="" className="w-[44px] h-[44px] object-contain" />
                     <span className="font-semibold">კოლექციები ({filteredCollections.length})</span>
                   </TabsTrigger>
 
                   <TabsTrigger value="party" className="flex items-center gap-2 text-sm md:text-sm px-3 py-3 h-auto">
-                    <img src={partyBlowerIcon} alt="" className="w-[52px] h-[52px] md:w-[52px] md:h-[52px] object-contain" />
+                    <img src={partyBlowerIcon} alt="" className="w-[44px] h-[44px] md:w-[44px] md:h-[44px] object-contain" />
                     <span className="font-semibold">Party ({filteredPersonalTrivias.length})</span>
                   </TabsTrigger>
                 </TabsList>
