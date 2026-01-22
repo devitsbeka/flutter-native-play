@@ -568,6 +568,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // from causing premature reveal.
     const now = Date.now();
 
+    // If we have (or had) more than one player during this question, never auto-advance
+    // while we're still in the presence capture window. This prevents the host from
+    // advancing early before the other controller has had a chance to sync into presence.
+    const captureWindowActive =
+      Boolean(requiredPlayersCaptureUntilRef.current) &&
+      now <= requiredPlayersCaptureUntilRef.current;
+
     // Ensure maxPlayersSeenThisQuestionRef is at least current count.
     maxPlayersSeenThisQuestionRef.current = Math.max(
       maxPlayersSeenThisQuestionRef.current,
@@ -578,6 +585,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
       for (const p of state.players) requiredPlayersRef.current.add(p.id);
     }
+
+    // If this question involves multiple participants, wait for the capture window to finish
+    // before considering auto-advance.
+    const multiParticipantQuestion = maxPlayersSeenThisQuestionRef.current >= 2;
+    if (multiParticipantQuestion && captureWindowActive) return;
+
+    // If we have seen more players earlier in this question than we've captured as required,
+    // we should NOT auto-advance yet (missing players may still be syncing).
+    if (multiParticipantQuestion && requiredPlayersRef.current.size < maxPlayersSeenThisQuestionRef.current) return;
 
     // If presence count dropped below what we've seen this question, do not auto-advance.
     // This guards against transient "only host" visibility.
@@ -1004,6 +1020,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // ===== Robust auto-advance tracking =====
         const now = Date.now();
 
+        const captureWindowActive =
+          Boolean(requiredPlayersCaptureUntilRef.current) &&
+          now <= requiredPlayersCaptureUntilRef.current;
+
         // Track the largest presence size we've seen this question.
         maxPlayersSeenThisQuestionRef.current = Math.max(
           maxPlayersSeenThisQuestionRef.current,
@@ -1047,6 +1067,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // do NOT auto-advance (prevents transient "host only" snapshots).
         const presenceShrunk = players.length < maxPlayersSeenThisQuestionRef.current;
 
+        // If this question involves multiple participants, never auto-advance while
+        // we're still in the capture window, and don't auto-advance until we've captured
+        // at least as many required players as we've seen.
+        const multiParticipantQuestion = maxPlayersSeenThisQuestionRef.current >= 2;
+        const blockDuringCapture = multiParticipantQuestion && captureWindowActive;
+        const requiredNotFullyCaptured =
+          multiParticipantQuestion &&
+          requiredPlayersRef.current.size < maxPlayersSeenThisQuestionRef.current;
+
         if (
           isHostNow &&
           phaseNow === 'question' &&
@@ -1054,7 +1083,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           !revealRequestedRef.current &&
           canAutoAdvance &&
           !pairedButOnlyHostVisible &&
-          !presenceShrunk
+          !presenceShrunk &&
+          !blockDuringCapture &&
+          !requiredNotFullyCaptured
         ) {
           console.log('[TV Auto-Advance] Triggering reveal - all required players answered!');
           requestRevealIfEligible('all required players answered');
