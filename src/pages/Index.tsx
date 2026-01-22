@@ -469,7 +469,7 @@ export default function Index() {
                   {user && (
                     <div
                       className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20 lg:hidden"
-                      style={{ top: -65, width: 340 }}
+                      style={{ top: -75, width: 340 }}
                       data-walkthrough="powerups"
                     >
                       <motion.div
