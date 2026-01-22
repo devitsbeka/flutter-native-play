@@ -4,6 +4,16 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+
+const isEmojiString = (value?: string | null) => {
+  if (!value) return false;
+  try {
+    return /\p{Extended_Pictographic}/u.test(value);
+  } catch {
+    return false;
+  }
+};
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -23,12 +33,8 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
   } = useTVGame();
 
   const [isReady, setIsReady] = useState(false);
-  
-  // Count ready players (those with isReadyForNextRound in presence)
-  const readyPlayers = players.filter(p => (p as any).isReadyForNextRound);
-  const readyCount = readyPlayers.length;
-  const totalPlayers = players.length;
-  const allReady = totalPlayers > 0 && readyCount === totalPlayers;
+  const iconSlug = categoryIcon && !isEmojiString(categoryIcon) ? categoryIcon : undefined;
+  const emoji = categoryIcon && isEmojiString(categoryIcon) ? categoryIcon : '🎲';
 
   const handleReady = () => {
     if (isReady) return;
@@ -93,68 +99,42 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
           transition={{ duration: 2, repeat: Infinity }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-transparent" />
-          {categoryIcon ? (
-            <span className="text-6xl sm:text-7xl relative z-10">{categoryIcon}</span>
-          ) : (
-            <span className="text-6xl sm:text-7xl relative z-10">🎲</span>
-          )}
+          <div className="relative z-10">
+            <QuizCategoryIcon iconSlug={iconSlug} emoji={emoji} size={128} />
+          </div>
         </motion.div>
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
           {categoryName || 'კატეგორია'}
         </h2>
       </motion.div>
 
-      {/* Players Ready Status */}
+      {/* Players list (no per-player ready gating) */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="w-full max-w-md mb-8"
       >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <span className="text-purple-200 text-lg">
-            {readyCount}/{totalPlayers} მზადაა
-          </span>
-        </div>
-
         <div className="flex flex-wrap justify-center gap-3">
-          {players.map((player) => {
-            const playerReady = (player as any).isReadyForNextRound;
-            return (
-              <motion.div
-                key={player.id}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                  playerReady
-                    ? 'bg-green-500/20 border border-green-400/50'
-                    : 'bg-white/5 border border-white/10'
-                }`}
-              >
-                <div className="relative">
-                  <div className="w-12 h-12">
-                    <SmartAvatar
-                      avatarUrl={player.avatar_url}
-                      fallback={player.nickname?.slice(0, 2)}
-                      size="md"
-                    />
-                  </div>
-                  {playerReady && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"
-                    >
-                      <Check className="w-3 h-3 text-white" />
-                    </motion.div>
-                  )}
-                </div>
-                <span className={`text-xs font-medium ${playerReady ? 'text-green-300' : 'text-purple-200'}`}>
-                  {player.nickname}
-                </span>
-              </motion.div>
-            );
-          })}
+          {players.map((player) => (
+            <motion.div
+              key={player.id}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white/5 border border-white/10"
+            >
+              <div className="w-12 h-12">
+                <SmartAvatar
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname?.slice(0, 2)}
+                  size="md"
+                />
+              </div>
+              <span className="text-xs font-medium text-purple-200">
+                {player.nickname}
+              </span>
+            </motion.div>
+          ))}
         </div>
       </motion.div>
 
@@ -194,7 +174,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
       )}
 
       {/* Waiting indicator for TV */}
-      {!isController && !allReady && (
+      {!isController && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -202,25 +182,9 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
           className="flex items-center gap-2 text-purple-200"
         >
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span>მოლოდინი მოთამაშეებზე...</span>
+          <span>მოლოდინი ჰოსტზე...</span>
         </motion.div>
       )}
-
-      {/* All Ready - Starting Soon */}
-      <AnimatePresence>
-        {allReady && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="mt-4 text-center"
-          >
-            <span className="text-green-400 text-xl font-bold">
-              ყველა მზადაა! იწყება...
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

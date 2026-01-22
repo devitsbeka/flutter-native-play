@@ -24,6 +24,15 @@ interface Category {
 }
 type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed' | 'round-intro';
 
+const isEmojiString = (value?: string | null) => {
+  if (!value) return false;
+  try {
+    return /\p{Extended_Pictographic}/u.test(value);
+  } catch {
+    return false;
+  }
+};
+
 const TVHostController: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
@@ -649,6 +658,8 @@ const TVHostController: React.FC = () => {
 
   // Round Intro phase - show ready screen between rounds
   if (localPhase === 'round-intro') {
+    const iconSlug = categoryIcon && !isEmojiString(categoryIcon) ? categoryIcon : undefined;
+    const emoji = categoryIcon && isEmojiString(categoryIcon) ? categoryIcon : '🎲';
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
         <motion.div
@@ -661,14 +672,6 @@ const TVHostController: React.FC = () => {
           </span>
         </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-2xl font-bold text-white mb-6 text-center"
-        >
-          შემდეგი რაუნდი
-        </motion.h1>
-
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -679,7 +682,7 @@ const TVHostController: React.FC = () => {
             className="w-20 h-20 rounded-2xl flex items-center justify-center mb-3 border-2 border-purple-400/50"
             style={{ background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)' }}
           >
-            <span className="text-4xl">{categoryIcon || '🎲'}</span>
+            <QuizCategoryIcon iconSlug={iconSlug} emoji={emoji} size={56} />
           </div>
           <h2 className="text-xl font-bold text-white">{categoryName || 'კატეგორია'}</h2>
         </motion.div>
