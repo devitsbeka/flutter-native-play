@@ -387,8 +387,8 @@ export const TVLobbyScreenV2: React.FC = () => {
         </div>
       </div>
 
-      {/* Central Category/Rounds Display */}
-      <div className="mb-4 pl-[240px]">
+      {/* Central Category/Rounds Display - Left aligned */}
+      <div className="mb-4 pr-[240px]">
         {hasMultiRound ? (
           // Multi-round queue display
           <div className="flex flex-wrap justify-start gap-1.5 py-3">
@@ -411,7 +411,7 @@ export const TVLobbyScreenV2: React.FC = () => {
           </div>
         ) : (
           // Single category display
-          <div className="flex justify-center">
+          <div className="flex justify-start">
             <button
               onClick={() => isHost && setShowCategoryDropdown(!showCategoryDropdown)}
               className={`flex items-center gap-3 px-6 py-3 rounded-2xl transition-colors ${
@@ -494,34 +494,9 @@ export const TVLobbyScreenV2: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Main Content - Split Layout */}
+      {/* Main Content - Split Layout (Players Left, QR Right) */}
       <div className="flex-1 flex gap-4 min-h-0">
-        {/* Left Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-3 rounded-2xl bg-white shadow-2xl"
-          >
-            <QRCodeSVG
-              value={joinUrl}
-              size={140}
-              level="M"
-              includeMargin={false}
-            />
-          </motion.div>
-
-          <div className="mt-3 text-center">
-            <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
-            <p className="text-sm font-bold text-white">mytrivia.io/join</p>
-            <div className="mt-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
-              <span className="text-xl font-mono font-bold text-white tracking-widest">{code}</span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right Side - Players Grid */}
+        {/* Left Side - Players Grid */}
         <div className="flex-1 flex flex-col min-h-0">
           <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
             <Users className="w-4 h-4" />
@@ -629,6 +604,30 @@ export const TVLobbyScreenV2: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* Right Side - QR Code */}
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-3 rounded-2xl bg-white shadow-2xl"
+          >
+            <QRCodeSVG
+              value={joinUrl}
+              size={140}
+              level="M"
+              includeMargin={false}
+            />
+          </motion.div>
+
+          <div className="mt-3 text-center">
+            <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
+            <p className="text-sm font-bold text-white">mytrivia.io/join</p>
+            <div className="mt-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
+              <span className="text-xl font-mono font-bold text-white tracking-widest">{code}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom - Start Game (Host Only) */}
@@ -712,8 +711,8 @@ export const TVLobbyScreenV2: React.FC = () => {
         </motion.p>
       )}
 
-      {/* Bottom Logo - Left aligned */}
-      <div className="absolute bottom-4 left-4 flex items-center">
+      {/* Bottom Logo - Right aligned */}
+      <div className="absolute bottom-4 right-4 flex items-center">
         <span 
           className="text-lg font-slackey text-white"
           style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
