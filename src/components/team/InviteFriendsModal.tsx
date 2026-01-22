@@ -332,14 +332,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             </div>
             
             {/* Divider */}
-            <div className={`flex items-center gap-3 mb-2 ${narrow}`}>
+            <div className={`flex items-center gap-3 mb-1 ${narrow}`}>
               <div className="flex-1 h-px bg-primary-foreground/25" />
               <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
               <div className="flex-1 h-px bg-primary-foreground/25" />
             </div>
             
             {/* Import & Connect Section */}
-            <div className={`space-y-2 mb-2 ${narrow}`}>
+            <div className={`space-y-2 mb-1 ${narrow}`}>
               <motion.button
                 onClick={handleImportContacts}
                 className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 transition-colors`}
@@ -368,7 +368,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             </div>
             
             {/* Divider */}
-            <div className={`flex items-center gap-3 mb-3 ${narrow}`}>
+            <div className={`flex items-center gap-3 mb-2 ${narrow}`}>
               <div className="flex-1 h-px bg-primary-foreground/25" />
               <span className="text-xs text-primary-foreground/90 font-semibold">ან გააზიარე</span>
               <div className="flex-1 h-px bg-primary-foreground/25" />
