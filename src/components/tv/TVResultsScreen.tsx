@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Trophy, Medal, Crown, Sparkles } from 'lucide-react';
+import { Crown, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import goldMedal from '@/assets/trophy-gold.png';
+import silverMedal from '@/assets/trophy-silver.png';
+import bronzeMedal from '@/assets/trophy-bronze.png';
 
 export const TVResultsScreen: React.FC = () => {
   const { players, code } = useTVGame();
@@ -112,16 +115,19 @@ export const TVResultsScreen: React.FC = () => {
               transition={{ delay: displayIndex * 0.2 }}
               className="flex flex-col items-center"
             >
-              {/* Crown for 1st place */}
-              {actualRank === 0 && (
-                <motion.div
-                  initial={{ scale: 0, rotate: -20 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.8, type: 'spring' }}
-                >
-                  <Crown className="w-8 h-8 text-yellow-400 mb-1" />
-                </motion.div>
-              )}
+              {/* Medal for podium places */}
+              <motion.div
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
+                className="mb-1"
+              >
+                <img 
+                  src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
+                  alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
+                  className="w-10 h-10 object-contain"
+                />
+              </motion.div>
 
               {/* Player avatar */}
               <motion.div
@@ -142,7 +148,7 @@ export const TVResultsScreen: React.FC = () => {
 
               {/* Name and score */}
               <p className="text-white font-bold text-lg mb-0.5">{player.nickname}</p>
-              <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} pts</p>
+              <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} ქულა</p>
 
               {/* Podium block - reduced heights */}
               <div className={`w-24 ${actualRank === 0 ? 'h-28' : actualRank === 1 ? 'h-20' : 'h-14'} bg-gradient-to-t ${getPodiumColor(actualRank)} rounded-t-xl flex items-center justify-center`}>
@@ -161,7 +167,7 @@ export const TVResultsScreen: React.FC = () => {
           transition={{ delay: 0.8 }}
           className="max-w-2xl mx-auto flex-shrink-0"
         >
-          <h3 className="text-purple-300 text-sm mb-2 text-center">Other Players</h3>
+          <h3 className="text-purple-300 text-sm mb-2 text-center">დანარჩენი მოთამაშეები</h3>
           <div className="grid grid-cols-2 gap-2">
             {otherPlayers.map((player, index) => (
               <div
