@@ -460,9 +460,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .select("*")
         .eq("room_id", room.id)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       
       if (existing) {
+        // If user was invited, promote their seat to joined (reserved-seat behavior)
+        if ((existing as any).status === 'invited') {
+          await supabase
+            .from('room_participants')
+            .update({ status: 'joined' })
+            .eq('room_id', room.id)
+            .eq('user_id', user.id);
+        }
+
         // Check if user has already finished their questions in this round
         const userFinished = (existing.current_question || 0) >= (room.total_questions || 5);
         
@@ -524,13 +533,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }));
         }
       } else {
+        // New participant (not invited). Don't allow late-join into a running match.
+        if (room.status === 'playing') {
+          toast.error('თამაში უკვე დაწყებულია');
+          return false;
+        }
+
         // New participant
-        const { data: participantCount } = await supabase
+        const { count } = await supabase
           .from("room_participants")
-          .select("id", { count: "exact" })
+          .select('id', { count: 'exact', head: true })
           .eq("room_id", room.id);
         
-        if ((participantCount?.length || 0) >= room.max_players) {
+        if (typeof count === 'number' && count >= room.max_players) {
           toast.error("ოთახი სავსეა");
           return false;
         }

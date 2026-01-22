@@ -199,10 +199,19 @@ export function useGameRoom() {
       // Check if already in room (for re-entry)
       const { data: existingParticipant } = await supabase
         .from("room_participants")
-        .select("id")
+        .select("id, status")
         .eq("room_id", room.id)
         .eq("user_id", user.id)
         .maybeSingle();
+
+      // If this user has a reserved invited seat, allow them to join even if the match started.
+      if (existingParticipant && (existingParticipant as any).status === 'invited') {
+        await supabase
+          .from('room_participants')
+          .update({ status: 'joined' })
+          .eq('room_id', room.id)
+          .eq('user_id', user.id);
+      }
 
       // If not already a participant and room is playing, block new joins
       if (!existingParticipant && room.status === "playing") {
