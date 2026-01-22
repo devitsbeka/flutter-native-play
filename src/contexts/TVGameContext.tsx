@@ -81,6 +81,11 @@ export const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = getQuestionTime();
 
+// Auto-advance safety guard: give presence time to sync on new questions/rounds.
+// This prevents the host from triggering reveal before other controllers have
+// synced into presence (observed on round 2/3).
+const AUTO_ADVANCE_GUARD_MS = 1500;
+
 // Quick highlight only (no separate reveal screen)
 // Keep it in the 1–2s range for readability before auto-advancing.
 const REVEAL_DURATION_MS = 1400;
@@ -510,7 +515,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (revealRequestedRef.current) return;
 
     // Guard: don't allow auto-advance immediately on question load
-    if (questionStartedAtRef.current && Date.now() - questionStartedAtRef.current < 300) return;
+    if (questionStartedAtRef.current && Date.now() - questionStartedAtRef.current < AUTO_ADVANCE_GUARD_MS) return;
+
+    // If the session is paired, but we currently only see the host in presence,
+    // do NOT auto-advance on host answer. Wait for other players to sync, or let
+    // the timer expire.
+    const nonHostCount = state.players.filter((p) => !p.isHost).length;
+    if (state.isPaired && nonHostCount === 0) return;
     
     // IMPORTANT: "All players or timer" rule
     // We advance only when every connected presence player has answered.
@@ -923,7 +934,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Use fresh state from stateRef for most up-to-date phase
         const phaseNow = stateRef.current.phase;
         const allConnectedAnswered = players.length > 0 && players.every(p => p.hasAnswered);
-        const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= 300;
+        const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= AUTO_ADVANCE_GUARD_MS;
         
         // Use isHostRef to get the latest isHost value (avoids stale closure)
         const isHostNow = isHostRef.current;
@@ -937,7 +948,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           revealAlreadyRequested: revealRequestedRef.current,
         });
         
-        if (isHostNow && phaseNow === 'question' && allConnectedAnswered && !revealRequestedRef.current && canAutoAdvance) {
+        // Same rule as backup effect: if session is paired but presence currently
+        // only shows the host, don't auto-advance.
+        const nonHostCount = players.filter((p) => !p.isHost).length;
+        const pairedButOnlyHostVisible = stateRef.current.isPaired && nonHostCount === 0;
+
+        if (isHostNow && phaseNow === 'question' && allConnectedAnswered && !revealRequestedRef.current && canAutoAdvance && !pairedButOnlyHostVisible) {
           console.log('[TV Auto-Advance] Triggering reveal - all connected players answered!');
           requestRevealIfEligible('all connected players answered');
         }
