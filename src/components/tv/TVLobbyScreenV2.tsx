@@ -542,15 +542,15 @@ export const TVLobbyScreenV2: React.FC = () => {
                     initial: { opacity: 0, scale: 0.3, x: -50, rotate: -10 },
                     animate: { 
                       opacity: 1, 
-                      scale: [0.3, 1.15, 1], 
+                      scale: 1.05, 
                       x: 0, 
                       rotate: 0,
                     },
                     transition: { 
-                      duration: 0.6, 
+                      duration: 0.5, 
                       type: 'spring' as const, 
-                      stiffness: 300, 
-                      damping: 15 
+                      stiffness: 400, 
+                      damping: 20 
                     }
                   }
                 : {
