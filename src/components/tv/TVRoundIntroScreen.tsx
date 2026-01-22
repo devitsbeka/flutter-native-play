@@ -4,16 +4,6 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
-import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
-
-const isEmojiString = (value?: string | null) => {
-  if (!value) return false;
-  try {
-    return /\p{Extended_Pictographic}/u.test(value);
-  } catch {
-    return false;
-  }
-};
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -27,14 +17,11 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
   const { 
     players, 
     categoryName, 
-    categoryIcon,
     roundNumber,
     totalRounds,
   } = useTVGame();
 
   const [isReady, setIsReady] = useState(false);
-  const iconSlug = categoryIcon && !isEmojiString(categoryIcon) ? categoryIcon : undefined;
-  const emoji = categoryIcon && isEmojiString(categoryIcon) ? categoryIcon : '🎲';
 
   const handleReady = () => {
     if (isReady) return;
@@ -84,25 +71,6 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
         className="mb-10 flex flex-col items-center"
       >
-        <motion.div 
-          className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl flex items-center justify-center mb-4 border-2 border-white/20 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
-          }}
-          animate={{ 
-            boxShadow: [
-              '0 0 30px rgba(168,85,247,0.3)',
-              '0 0 50px rgba(168,85,247,0.5)',
-              '0 0 30px rgba(168,85,247,0.3)',
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-transparent" />
-          <div className="relative z-10">
-            <QuizCategoryIcon iconSlug={iconSlug} emoji={emoji} size={128} />
-          </div>
-        </motion.div>
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
           {categoryName || 'კატეგორია'}
         </h2>

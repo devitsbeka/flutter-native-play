@@ -196,6 +196,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!isHost) return false;
     if (!state.sessionId) return false;
 
+    // Hard stop: never exceed total rounds. If we've reached the configured
+    // total, we should end the game and show final results.
+    const currentRoundNumber = stateRef.current.roundNumber;
+    const totalRoundsNow = stateRef.current.totalRounds;
+    if (totalRoundsNow > 0 && currentRoundNumber >= totalRoundsNow) {
+      tvLog('No next round: reached totalRounds', { currentRoundNumber, totalRoundsNow });
+      return false;
+    }
+
     // Prefer the explicit TV queue, but fallback to the room queue when TV queue is empty.
     const { data: queueItems } = await supabase
       .from('tv_session_queue')
@@ -385,8 +394,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Increment round number for the next round (update DB + local state)
       // IMPORTANT: use latest state from ref to avoid stale-closure bugs (this callback
       // intentionally doesn't depend on state.roundNumber).
-      const currentRoundNumber = stateRef.current.roundNumber;
-      const newRoundNumber = currentRoundNumber + 1;
+      const currentRoundNumber2 = stateRef.current.roundNumber;
+      const totalRoundsNow2 = stateRef.current.totalRounds;
+      const newRoundNumber = currentRoundNumber2 + 1;
+
+      // Defensive: don't let round_number exceed total_rounds
+      if (totalRoundsNow2 > 0 && newRoundNumber > totalRoundsNow2) {
+        tvLog('Prevented round overflow', { newRoundNumber, totalRoundsNow2 });
+        return false;
+      }
       await supabase
         .from('tv_sessions')
         .update({ round_number: newRoundNumber })
@@ -543,6 +559,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const t = setTimeout(async () => {
       const nextIndex = state.currentQuestionIndex + 1;
       if (nextIndex >= state.questions.length) {
+        // If this was the last round, end the game and show final leaderboard.
+        const currentRound = stateRef.current.roundNumber;
+        const totalRoundsNow = stateRef.current.totalRounds;
+        if (totalRoundsNow > 0 && currentRound >= totalRoundsNow) {
+          await supabase
+            .from('tv_sessions')
+            .update({ status: 'completed', reveal_start_time: null })
+            .eq('id', state.sessionId);
+          return;
+        }
+
         const startedNext = await startNextRoundFromQueueIfAny();
         if (!startedNext) {
           await supabase
