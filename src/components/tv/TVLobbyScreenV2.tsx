@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -10,6 +10,8 @@ import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 const MAX_PLAYERS = 8;
+const MIN_PLAYERS_TO_START = 2;
+const AUTO_START_DELAY = 15; // seconds
 
 interface Category {
   id: string;
@@ -36,6 +38,14 @@ export const TVLobbyScreenV2: React.FC = () => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [invitedGuests, setInvitedGuests] = useState<InvitedGuest[]>([]);
   const [roomId, setRoomId] = useState<string | null>(null);
+  
+  // Auto-start countdown state
+  const [autoStartCountdown, setAutoStartCountdown] = useState<number | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const previousPlayerCountRef = useRef<number>(0);
+  
+  // Track newly joined players for entrance animations
+  const [newlyJoinedIds, setNewlyJoinedIds] = useState<Set<string>>(new Set());
   
   // Check if we have a context-provided queue (for showcase mode)
   const isMockMode = contextQueue && contextQueue.length > 0 && sessionId === 'mock-session-id';
@@ -223,6 +233,87 @@ export const TVLobbyScreenV2: React.FC = () => {
       await startGame(randomCat.id);
     }
   };
+
+  // Track newly joined players for entrance animations
+  useEffect(() => {
+    const currentIds = new Set(players.map(p => p.id));
+    const previousIds = previousPlayerCountRef.current;
+    
+    // Find new players that weren't in the previous count
+    if (players.length > previousIds) {
+      const allCurrentIds = players.map(p => p.id);
+      // Mark the newest players (those beyond previous count)
+      const newIds = allCurrentIds.slice(previousIds);
+      if (newIds.length > 0) {
+        setNewlyJoinedIds(prev => {
+          const updated = new Set(prev);
+          newIds.forEach(id => updated.add(id));
+          return updated;
+        });
+        
+        // Clear the "new" status after animation completes
+        setTimeout(() => {
+          setNewlyJoinedIds(prev => {
+            const updated = new Set(prev);
+            newIds.forEach(id => updated.delete(id));
+            return updated;
+          });
+        }, 1000);
+      }
+    }
+    
+    previousPlayerCountRef.current = players.length;
+  }, [players]);
+
+  // Auto-start countdown when minimum players join
+  useEffect(() => {
+    // Only run for host
+    if (!isHost) return;
+    
+    // Start countdown when we reach minimum players
+    if (players.length >= MIN_PLAYERS_TO_START && autoStartCountdown === null) {
+      setAutoStartCountdown(AUTO_START_DELAY);
+    }
+    
+    // Cancel countdown if players drop below minimum
+    if (players.length < MIN_PLAYERS_TO_START && autoStartCountdown !== null) {
+      setAutoStartCountdown(null);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+    }
+  }, [players.length, isHost, autoStartCountdown]);
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (autoStartCountdown === null || !isHost) return;
+    
+    if (autoStartCountdown <= 0) {
+      // Auto-start the game
+      handleStartGame();
+      return;
+    }
+    
+    countdownIntervalRef.current = setInterval(() => {
+      setAutoStartCountdown(prev => (prev !== null && prev > 0 ? prev - 1 : null));
+    }, 1000);
+    
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [autoStartCountdown, isHost]);
+
+  // Cancel auto-start on manual interaction
+  const cancelAutoStart = useCallback(() => {
+    setAutoStartCountdown(null);
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
 
   // Combine active players with invited guests (invited shown with inactive styling)
   const activePlayerIds = new Set(players.map(p => p.id));
@@ -467,20 +558,43 @@ export const TVLobbyScreenV2: React.FC = () => {
               // Check if this is an invited guest
               const isInvited = player && 'status' in player && player.status === 'invited';
               const isActivePlayer = player && !isInvited;
+              const playerId = isActivePlayer ? (player as typeof players[0]).id : null;
+              const isNewlyJoined = playerId && newlyJoinedIds.has(playerId);
+              
+              // Enhanced entrance animation for newly joined players
+              const entranceAnimation = isNewlyJoined
+                ? {
+                    initial: { opacity: 0, scale: 0.3, x: -50, rotate: -10 },
+                    animate: { 
+                      opacity: 1, 
+                      scale: [0.3, 1.15, 1], 
+                      x: 0, 
+                      rotate: 0,
+                    },
+                    transition: { 
+                      duration: 0.6, 
+                      type: 'spring' as const, 
+                      stiffness: 300, 
+                      damping: 15 
+                    }
+                  }
+                : {
+                    initial: { opacity: 0, scale: 0.8 },
+                    animate: { opacity: 1, scale: 1 },
+                    transition: { delay: index * 0.05 }
+                  };
               
               return (
                 <motion.div
                   key={isActivePlayer ? (player as typeof players[0]).id : isInvited ? (player as InvitedGuest).id : `slot-${index}`}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
+                  {...entranceAnimation}
                   className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 ${
                     isActivePlayer 
                       ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30 border-2 border-purple-400/50' 
                       : isInvited
                         ? 'bg-white/5 border-2 border-dashed border-purple-400/30'
                         : 'bg-white/5 border-2 border-dashed border-purple-500/30'
-                  } ${isInvited ? 'opacity-50 grayscale' : ''}`}
+                  } ${isInvited ? 'opacity-50 grayscale' : ''} ${isNewlyJoined ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-transparent' : ''}`}
                 >
                   {isActivePlayer ? (
                     <>
@@ -547,10 +661,57 @@ export const TVLobbyScreenV2: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 flex justify-center flex-shrink-0"
+          className="mt-3 flex flex-col items-center gap-2 flex-shrink-0"
         >
+          {/* Auto-start countdown indicator */}
+          {autoStartCountdown !== null && autoStartCountdown > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
+            >
+              <div className="relative w-8 h-8">
+                <svg className="w-8 h-8 -rotate-90" viewBox="0 0 32 32">
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r="14"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.2)"
+                    strokeWidth="3"
+                  />
+                  <motion.circle
+                    cx="16"
+                    cy="16"
+                    r="14"
+                    fill="none"
+                    stroke="#22C55E"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={88}
+                    strokeDashoffset={88 - (88 * autoStartCountdown) / AUTO_START_DELAY}
+                    transition={{ duration: 0.3 }}
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                  {autoStartCountdown}
+                </span>
+              </div>
+              <span className="text-white text-sm">ავტო-დაწყება</span>
+              <button
+                onClick={cancelAutoStart}
+                className="ml-2 p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </motion.div>
+          )}
+          
           <motion.button
-            onClick={handleStartGame}
+            onClick={() => {
+              cancelAutoStart();
+              handleStartGame();
+            }}
             className="px-8 py-3 rounded-xl flex items-center gap-2 text-lg font-bold text-white transition-all"
             style={{
               background: 'linear-gradient(180deg, #22C55E 0%, #16A34A 100%)',
