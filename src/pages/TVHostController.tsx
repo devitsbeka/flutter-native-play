@@ -998,12 +998,14 @@ const TVHostController: React.FC = () => {
 
       {hasAnswered ? (
         // After answering - show confirmation and host controls
-        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col items-center justify-center">
-          <Check className="w-16 h-16 text-green-400 mb-4" />
-          <p className="text-white text-xl font-bold">პასუხი გაგზავნილია!</p>
-          <p className="text-purple-300 mb-6">დაველოდოთ სხვა მოთამაშეებს...</p>
+        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <Check className="w-16 h-16 text-green-400 mb-4" />
+            <p className="text-white text-xl font-bold">პასუხი გაგზავნილია!</p>
+            <p className="text-purple-300">დაველოდოთ სხვა მოთამაშეებს...</p>
+          </div>
           
-          <div className="w-full mt-4">
+          <div className="w-full mt-auto pb-4">
             <ChunkyButton
               variant="secondary"
               className="w-full"
