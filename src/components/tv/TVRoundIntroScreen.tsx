@@ -70,16 +70,6 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         </span>
       </motion.div>
 
-      {/* Title */}
-      <motion.h1
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.15 }}
-        className="text-3xl sm:text-4xl font-bold text-white mb-6 text-center"
-        style={{ fontFamily: 'var(--font-display, inherit)' }}
-      >
-        შემდეგი რაუნდი
-      </motion.h1>
 
       {/* Category Display */}
       <motion.div
