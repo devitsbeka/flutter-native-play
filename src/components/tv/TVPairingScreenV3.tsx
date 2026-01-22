@@ -39,22 +39,67 @@ export const TVPairingScreenV3: React.FC = () => {
       </div>
 
       <div className="relative z-10 text-center max-w-2xl mx-auto">
-        {/* Logo/Title */}
+        {/* MyTriviaLive Logo */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          className="mb-6"
+        >
+          <div className="flex items-center justify-center">
+            <span 
+              className="text-5xl font-slackey text-white tracking-tight"
+              style={{
+                textShadow: `
+                  0 4px 8px rgba(0,0,0,0.4),
+                  0 8px 24px rgba(0,0,0,0.3)
+                `,
+              }}
+            >
+              MyTrivia
+            </span>
+            
+            {/* LIVE Badge */}
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="ml-3"
+            >
+              <span 
+                className="relative inline-flex items-center px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-wider text-white"
+                style={{
+                  background: '#EF4444',
+                  boxShadow: '0 4px 0 #B91C1C, 0 6px 12px rgba(0,0,0,0.25)',
+                }}
+              >
+                <motion.span
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-2.5 h-2.5 rounded-full bg-white mr-2"
+                />
+                LIVE
+              </span>
+            </motion.span>
+          </div>
+        </motion.div>
+
+        {/* Title with TV Icon */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <img src={retroTvIcon} alt="TV" className="w-16 h-16 object-contain" />
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
+            <h1 
+              className="text-3xl font-bold text-white"
+              style={{ fontFamily: 'var(--font-display, inherit)' }}
+            >
+              TV რეჟიმი
+            </h1>
           </div>
-          <h1 
-            className="text-4xl font-bold text-white mb-2"
-            style={{ fontFamily: 'var(--font-display, inherit)' }}
-          >
-            TV კვიზი
-          </h1>
           <p className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</p>
         </motion.div>
 
