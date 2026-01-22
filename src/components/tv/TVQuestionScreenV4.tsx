@@ -147,13 +147,11 @@ export const TVQuestionScreenV4: React.FC = () => {
       <div className="flex items-center justify-between px-2 mb-3 flex-shrink-0">
         <div className="flex items-center gap-2 text-white font-bold text-lg">
           <img src={retroTvIcon} alt="TV" className="w-6 h-6 object-contain" />
-          <span>რაუნდი {roundNumber}/{totalRounds}</span>
           {categoryName && (
-            <>
-              <span className="text-white/60 font-medium">-</span>
-              <span className="text-white/80 font-medium">{categoryName}</span>
-            </>
+            <span>{categoryName}</span>
           )}
+          <span className="text-white/60 font-medium">-</span>
+          <span className="text-white/80 font-medium">რაუნდი {roundNumber}/{totalRounds}</span>
         </div>
 
         <TimerBadge seconds={timeRemaining} maxSeconds={timerMax} compact />
