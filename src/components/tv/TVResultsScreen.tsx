@@ -63,7 +63,7 @@ export const TVResultsScreen: React.FC = () => {
   const podiumOrder = [1, 0, 2].map(i => podiumPlayers[i]).filter(Boolean);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col -mt-10">
       {/* Background sparkles - reduced to 10 */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -120,7 +120,7 @@ export const TVResultsScreen: React.FC = () => {
                 initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
-                className="mb-1"
+                className="-mb-0.5"
               >
                 <img 
                   src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
