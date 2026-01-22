@@ -95,7 +95,7 @@ export const TVResultsScreen: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6 flex-shrink-0"
+        className="text-center mb-6 flex-shrink-0 mt-10"
       >
         <h1 className="text-4xl font-bold text-white font-display mb-1">თამაში დასრულდა</h1>
         <p className="text-purple-300 text-lg">საბოლოო შედეგები</p>
