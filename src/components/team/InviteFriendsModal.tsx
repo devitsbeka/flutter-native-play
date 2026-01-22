@@ -197,6 +197,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
   const lobbyGlassRow =
     "rounded-2xl bg-white/10 backdrop-blur-md border border-white/20";
 
+  // Keep this modal "mobile-sized" on tablet/desktop to avoid stretched UI
+  const contentWidth = "mx-auto w-full max-w-[520px]";
+
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -226,7 +229,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
           {/* Fixed Header */}
           <div className="relative z-10 flex-shrink-0 border-b border-border/20 bg-primary">
-            <div className="mx-auto w-full max-w-[680px] px-4 py-4 flex items-center gap-3">
+            <div className={`${contentWidth} px-4 py-4 flex items-center gap-3`}>
               <button
                 onClick={handleClose}
                 className="w-12 h-12 rounded-full bg-primary border border-border/20 flex items-center justify-center hover:bg-primary/90 transition-colors"
@@ -239,7 +242,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[680px] p-4 pb-28">
+            <div className={`${contentWidth} p-4 pb-28`}>
             {/* Search Section */}
             <div className="mb-4">
               <div className="relative">
@@ -416,7 +419,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
           {/* Fixed Footer */}
           <div className="fixed bottom-0 left-0 right-0 z-[10000] border-t border-white/10 bg-primary">
-            <div className="mx-auto w-full max-w-[680px] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+            <div className={`${contentWidth} p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]`}>
               <motion.button
                 onClick={() => {
                   navigator.clipboard.writeText(appLink);
