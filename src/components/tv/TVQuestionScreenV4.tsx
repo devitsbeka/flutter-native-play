@@ -6,6 +6,7 @@ import { Check, X, Clock } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
 import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
+import { TVRoundQueueIndicator } from './TVRoundQueueIndicator';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
@@ -46,7 +47,13 @@ export const TVQuestionScreenV4: React.FC = () => {
   const correctAnswer = currentQuestion.correct_answer;
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden relative">
+      {/* Mini Queue Indicator - Right side */}
+      <TVRoundQueueIndicator 
+        currentRound={roundNumber} 
+        totalRounds={totalRounds} 
+        className="absolute right-3 top-1/2 -translate-y-1/2 z-30"
+      />
       {/* Player Status Bar */}
       <motion.div 
         className="flex justify-center items-center gap-4 mb-3 flex-shrink-0"
