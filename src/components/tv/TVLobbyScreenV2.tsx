@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Pencil, Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
+import { Crown, Users, Play, Shuffle, Check, X, UserPlus } from 'lucide-react';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
@@ -333,7 +333,7 @@ export const TVLobbyScreenV2: React.FC = () => {
   const displayCategory = selectedCategory || (categoryName ? { name: categoryName, icon: categoryIcon || '🎲' } : null);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-4 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-4 flex flex-col overflow-hidden relative">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         {/* Room Name - Editable */}
@@ -374,14 +374,6 @@ export const TVLobbyScreenV2: React.FC = () => {
               >
                 {displayRoomName}
               </h1>
-              {isHost && (
-                <button
-                  onClick={() => setIsEditingName(true)}
-                  className="p-1.5 rounded-lg bg-white/10 text-purple-300 hover:bg-white/20 transition-colors"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -397,7 +389,7 @@ export const TVLobbyScreenV2: React.FC = () => {
       <div className="mb-4 pl-[240px]">
         {hasMultiRound ? (
           // Multi-round queue display
-          <div className="flex flex-wrap justify-start gap-3 py-3">
+          <div className="flex flex-wrap justify-start gap-1.5 py-3">
             {queue.map((item, index) => (
               <motion.div
                 key={item.id}
@@ -503,7 +495,7 @@ export const TVLobbyScreenV2: React.FC = () => {
       {/* Main Content - Split Layout */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start -mt-[70px]">
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start -mt-[20px]">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -525,25 +517,6 @@ export const TVLobbyScreenV2: React.FC = () => {
             </div>
           </div>
 
-          {/* MyTriviaLive Logo */}
-          <div className="mt-1 flex items-center justify-center">
-            <span 
-              className="text-lg font-slackey text-white"
-              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
-            >
-              MyTrivia
-            </span>
-            <span 
-              className="ml-1.5 relative inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold uppercase text-white"
-              style={{
-                background: '#EF4444',
-                boxShadow: '0 2px 0 #B91C1C',
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse" />
-              LIVE
-            </span>
-          </div>
         </div>
 
         {/* Right Side - Players Grid */}
@@ -553,7 +526,7 @@ export const TVLobbyScreenV2: React.FC = () => {
             მოთამაშეები
           </h2>
 
-          <div className="grid grid-cols-4 gap-2 auto-rows-min">
+          <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
             {playerSlots.map((player, index) => {
               // Check if this is an invited guest
               const isInvited = player && 'status' in player && player.status === 'invited';
@@ -736,6 +709,26 @@ export const TVLobbyScreenV2: React.FC = () => {
           მოლოდინი, ჰოსტმა დაიწყოს თამაში...
         </motion.p>
       )}
+
+      {/* Bottom Logo */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center">
+        <span 
+          className="text-lg font-slackey text-white"
+          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+        >
+          MyTrivia
+        </span>
+        <span 
+          className="ml-1.5 relative inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold uppercase text-white"
+          style={{
+            background: '#EF4444',
+            boxShadow: '0 2px 0 #B91C1C',
+          }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse" />
+          LIVE
+        </span>
+      </div>
     </div>
   );
 };
