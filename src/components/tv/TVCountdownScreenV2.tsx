@@ -63,12 +63,12 @@ export const TVCountdownScreenV2: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6 overflow-hidden">
-      {/* Category info */}
+      {/* Category info - moved up */}
       {categoryName && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 text-center"
+          className="mb-8 text-center -mt-8"
         >
           <p className="text-purple-300 text-lg">რაუნდი {roundNumber || 1}</p>
           <div className="flex items-center gap-3 text-white text-2xl font-bold">
@@ -78,7 +78,7 @@ export const TVCountdownScreenV2: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Countdown number */}
+      {/* Countdown number - moved up */}
       <AnimatePresence mode="wait">
         <motion.div
           key={count}
@@ -86,7 +86,7 @@ export const TVCountdownScreenV2: React.FC = () => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.5, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="relative"
+          className="relative -mt-4"
         >
           {/* Glow effect - only for countdown numbers */}
           {count > 0 && (
@@ -140,7 +140,7 @@ export const TVCountdownScreenV2: React.FC = () => {
         transition={{ delay: 0.5 }}
         className="mt-6 text-purple-300 text-lg"
       >
-        {count === 0 ? 'Here we go!' : 'Get ready...'}
+        {count === 0 ? 'წავედით!' : 'მოემზადეთ...'}
       </motion.p>
     </div>
   );
