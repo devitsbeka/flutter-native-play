@@ -275,140 +275,142 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="flex-1 overflow-y-auto pt-[72px] p-4 space-y-5"
+                className="flex-1 min-h-0 overflow-y-auto pt-[72px] px-4 pb-[140px]"
               >
-                {/* Cover Image Picker */}
-                <CoverImagePicker
-                  currentImage={coverImage}
-                  currentGradient={selectedGradient}
-                  onImageChange={setCoverImage}
-                  onGradientChange={setSelectedGradient}
-                  suggestPrompt={quiz?.subject}
-                  title={title}
-                  roundId={quiz?.id}
-                />
+                <div className="mx-auto w-full max-w-[720px] space-y-5">
+                  {/* Cover Image Picker */}
+                  <CoverImagePicker
+                    currentImage={coverImage}
+                    currentGradient={selectedGradient}
+                    onImageChange={setCoverImage}
+                    onGradientChange={setSelectedGradient}
+                    suggestPrompt={quiz?.subject}
+                    title={title}
+                    roundId={quiz?.id}
+                  />
 
-                {/* Title Input */}
-                <div className="flex gap-3 items-end">
-                  <div className="flex-1 space-y-2">
-                    <label className="text-sm font-medium text-foreground">სათაური</label>
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Trivia-ს სათაური"
-                      className="h-12 rounded-xl"
-                    />
-                  </div>
-                  
-                  {/* Icon Picker - only for quizzes, not collections */}
-                  {!isCollection && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">აიქონი</label>
-                      <QuestionIconPicker
-                        selectedSlug={iconSlug}
-                        onSelect={setIconSlug}
-                        questionText={title}
+                  {/* Title Input */}
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1 space-y-2">
+                      <label className="text-sm font-medium text-foreground">სათაური</label>
+                      <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Trivia-ს სათაური"
+                        className="h-12 rounded-xl"
                       />
                     </div>
-                  )}
-                </div>
-
-                {/* Questions Button - only for quiz posts with questions */}
-                {!isCollection && questions.length > 0 && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">კითხვები</label>
-                    <button
-                      onClick={() => setViewMode("questions")}
-                      className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <span className="text-lg font-bold text-primary">{questions.length}</span>
-                        </div>
-                        <span className="font-medium text-foreground">კითხვების ნახვა</span>
+                    
+                    {/* Icon Picker - only for quizzes, not collections */}
+                    {!isCollection && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-foreground">აიქონი</label>
+                        <QuestionIconPicker
+                          selectedSlug={iconSlug}
+                          onSelect={setIconSlug}
+                          questionText={title}
+                        />
                       </div>
-                      <ChevronLeft className="w-5 h-5 text-muted-foreground rotate-180" />
-                    </button>
-                  </div>
-                )}
-
-                {/* Visibility Toggle */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">ხილვადობა</label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setIsPublic(true)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
-                        isPublic
-                          ? "border-green-500 bg-green-500/10 text-green-600"
-                          : "border-border text-muted-foreground hover:border-green-500/50"
-                      }`}
-                    >
-                      <Globe className="w-4 h-4" />
-                      <span className="font-medium">საჯარო</span>
-                    </button>
-                    <button
-                      onClick={() => setIsPublic(false)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
-                        !isPublic
-                          ? "border-muted-foreground bg-muted text-foreground"
-                          : "border-border text-muted-foreground hover:border-muted-foreground/50"
-                      }`}
-                    >
-                      <Lock className="w-4 h-4" />
-                      <span className="font-medium">პირადი</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Delete Section */}
-                <div className="pt-4 border-t border-border">
-                  <AnimatePresence mode="wait">
-                    {showDeleteConfirm ? (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="space-y-3"
-                      >
-                        <p className="text-sm text-center text-destructive font-medium">
-                          დარწმუნებული ხარ რომ გსურს წაშლა?
-                        </p>
-                        <div className="flex gap-2">
-                          <ChunkyButton
-                            variant="outline"
-                            onClick={() => setShowDeleteConfirm(false)}
-                            className="flex-1"
-                          >
-                            გაუქმება
-                          </ChunkyButton>
-                          <ChunkyButton
-                            variant="danger"
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                            className="flex-1"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            წაშლა
-                          </ChunkyButton>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                      >
-                        <button
-                          onClick={() => setShowDeleteConfirm(true)}
-                          className="w-full flex items-center justify-center gap-2 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="font-medium">წაშლა</span>
-                        </button>
-                      </motion.div>
                     )}
-                  </AnimatePresence>
+                  </div>
+
+                  {/* Questions Button - only for quiz posts with questions */}
+                  {!isCollection && questions.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">კითხვები</label>
+                      <button
+                        onClick={() => setViewMode("questions")}
+                        className="w-full flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <span className="text-lg font-bold text-primary">{questions.length}</span>
+                          </div>
+                          <span className="font-medium text-foreground">კითხვების ნახვა</span>
+                        </div>
+                        <ChevronLeft className="w-5 h-5 text-muted-foreground rotate-180" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Visibility Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">ხილვადობა</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setIsPublic(true)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                          isPublic
+                            ? "border-green-500 bg-green-500/10 text-green-600"
+                            : "border-border text-muted-foreground hover:border-green-500/50"
+                        }`}
+                      >
+                        <Globe className="w-4 h-4" />
+                        <span className="font-medium">საჯარო</span>
+                      </button>
+                      <button
+                        onClick={() => setIsPublic(false)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 transition-all ${
+                          !isPublic
+                            ? "border-muted-foreground bg-muted text-foreground"
+                            : "border-border text-muted-foreground hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <Lock className="w-4 h-4" />
+                        <span className="font-medium">პირადი</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete Section */}
+                  <div className="pt-4 border-t border-border">
+                    <AnimatePresence mode="wait">
+                      {showDeleteConfirm ? (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-3"
+                        >
+                          <p className="text-sm text-center text-destructive font-medium">
+                            დარწმუნებული ხარ რომ გსურს წაშლა?
+                          </p>
+                          <div className="flex gap-2">
+                            <ChunkyButton
+                              variant="outline"
+                              onClick={() => setShowDeleteConfirm(false)}
+                              className="flex-1"
+                            >
+                              გაუქმება
+                            </ChunkyButton>
+                            <ChunkyButton
+                              variant="danger"
+                              onClick={handleDelete}
+                              disabled={isDeleting}
+                              className="flex-1"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              წაშლა
+                            </ChunkyButton>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                        >
+                          <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="w-full flex items-center justify-center gap-2 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="font-medium">წაშლა</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </motion.div>
             ) : (
