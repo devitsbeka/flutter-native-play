@@ -410,20 +410,6 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         <Pencil className="w-4 h-4 text-white" />
       </button>
 
-      {/* Visibility Badge - Icon Only */}
-      <div className="absolute top-3 right-3 z-10">
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
-          post.is_public !== false 
-            ? 'bg-green-500/90 text-white' 
-            : 'bg-muted text-muted-foreground'
-        }`}>
-          {post.is_public !== false ? (
-            <Globe className="w-4 h-4" />
-          ) : (
-            <Lock className="w-4 h-4" />
-          )}
-        </div>
-      </div>
 
       {/* Cover Image or Gradient Thumbnail */}
       <div className="h-32 relative overflow-hidden">
@@ -443,8 +429,13 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             {post.title}
           </h4>
         </div>
-        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
-          {post.question_count} კითხვა
+        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1.5">
+          {post.is_public !== false ? (
+            <Globe className="w-3.5 h-3.5" aria-hidden />
+          ) : (
+            <Lock className="w-3.5 h-3.5" aria-hidden />
+          )}
+          <span>{post.question_count} კითხვა</span>
         </div>
       </div>
 
@@ -548,20 +539,6 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         <Pencil className="w-4 h-4 text-white" />
       </button>
 
-      {/* Visibility Badge - Icon Only */}
-      <div className="absolute top-3 right-3 z-10">
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
-          post.is_public !== false 
-            ? 'bg-green-500/90 text-white' 
-            : 'bg-muted text-muted-foreground'
-        }`}>
-          {post.is_public !== false ? (
-            <Globe className="w-4 h-4" />
-          ) : (
-            <Lock className="w-4 h-4" />
-          )}
-        </div>
-      </div>
 
       {/* Cover Image or Gradient Thumbnail */}
       <div className="h-32 relative overflow-hidden">
@@ -581,8 +558,13 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             {post.title}
           </h4>
         </div>
-        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
-          {post.question_count} კითხვა
+        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1.5">
+          {post.is_public !== false ? (
+            <Globe className="w-3.5 h-3.5" aria-hidden />
+          ) : (
+            <Lock className="w-3.5 h-3.5" aria-hidden />
+          )}
+          <span>{post.question_count} კითხვა</span>
         </div>
       </div>
 
