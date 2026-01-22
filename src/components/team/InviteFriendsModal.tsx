@@ -200,7 +200,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           className="fixed inset-0 z-50 flex flex-col overflow-hidden"
           style={{
             background:
-              "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.75) 45%, hsl(var(--background)) 100%)",
+              // Fully opaque purple background (no glass/see-through feel)
+              "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 55%, hsl(var(--primary)) 100%)",
           }}
         >
           {/* Purple backdrop with soft glow */}
@@ -217,10 +218,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Fixed Header */}
-          <div className="relative z-10 flex-shrink-0 flex items-center gap-3 px-4 py-4 border-b border-border/20 backdrop-blur-md">
+          <div className="relative z-10 flex-shrink-0 flex items-center gap-3 px-4 py-4 border-b border-border/20 bg-primary">
             <button
               onClick={handleClose}
-              className="w-12 h-12 rounded-full bg-background/20 border border-border/20 flex items-center justify-center hover:bg-background/25 transition-colors"
+              className="w-12 h-12 rounded-full bg-primary border border-border/20 flex items-center justify-center hover:bg-primary/90 transition-colors"
             >
               <ChevronLeft className="w-6 h-6 text-primary-foreground" />
             </button>
@@ -232,16 +233,16 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             {/* Search Section */}
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/80" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="მომხმარებლის ძებნა..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 rounded-2xl bg-background/20 border-border/20 text-primary-foreground placeholder:text-primary-foreground/70"
+                  className="pl-12 h-12 rounded-2xl bg-background border-border/30 text-foreground placeholder:text-muted-foreground"
                 />
                 {searching && (
-                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary-foreground/80 animate-spin" />
+                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin" />
                 )}
               </div>
               
@@ -266,7 +267,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="flex items-center gap-3 p-3 rounded-2xl bg-background/18 border border-border/15 hover:bg-background/22 transition-colors"
+                          className="flex items-center gap-3 p-3 rounded-2xl bg-background border border-border/20 hover:bg-background/95 transition-colors"
                         >
                           <Avatar className="w-11 h-11 border border-border/20">
                             <AvatarImage src={result.avatar_url || undefined} />
@@ -289,8 +290,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                             disabled={sentRequests.has(result.user_id)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors ${
                               sentRequests.has(result.user_id)
-                                ? "bg-background/20 text-primary-foreground"
-                                : "bg-background/25 text-primary-foreground hover:bg-background/30"
+                                ? "bg-secondary text-secondary-foreground"
+                                : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
                             }`}
                             whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
                             whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
@@ -317,45 +318,45 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             
             {/* Divider */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-border/20" />
-              <span className="text-xs text-primary-foreground/80 font-semibold">ან მოწვევა</span>
-              <div className="flex-1 h-px bg-border/20" />
+              <div className="flex-1 h-px bg-primary-foreground/25" />
+              <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
+              <div className="flex-1 h-px bg-primary-foreground/25" />
             </div>
             
             {/* Import & Connect Section */}
             <div className="space-y-2 mb-4">
               <motion.button
                 onClick={handleImportContacts}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-background/18 border border-border/15 hover:bg-background/22 transition-colors"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-background border border-border/20 hover:bg-background/95 transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <ContactsIcon />
                 <div className="text-left">
-                  <p className="font-semibold text-base text-primary-foreground">კონტაქტების იმპორტი</p>
-                  <p className="text-sm text-primary-foreground/75">მოიწვიე მეგობრები ტელეფონიდან</p>
+                  <p className="font-semibold text-base text-foreground">კონტაქტების იმპორტი</p>
+                  <p className="text-sm text-muted-foreground">მოიწვიე მეგობრები ტელეფონიდან</p>
                 </div>
               </motion.button>
               
               <motion.button
                 onClick={handleConnectFacebook}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-background/18 border border-border/15 hover:bg-background/22 transition-colors"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-background border border-border/20 hover:bg-background/95 transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
                 <FacebookIcon />
                 <div className="text-left">
-                  <p className="font-semibold text-base text-primary-foreground">Facebook მეგობრები</p>
-                  <p className="text-sm text-primary-foreground/75">იპოვე მეგობრები Facebook-ზე</p>
+                  <p className="font-semibold text-base text-foreground">Facebook მეგობრები</p>
+                  <p className="text-sm text-muted-foreground">იპოვე მეგობრები Facebook-ზე</p>
                 </div>
               </motion.button>
             </div>
             
             {/* Divider */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-1 h-px bg-border/20" />
-              <span className="text-xs text-primary-foreground/80 font-semibold">ან გააზიარე</span>
-              <div className="flex-1 h-px bg-border/20" />
+              <div className="flex-1 h-px bg-primary-foreground/25" />
+              <span className="text-xs text-primary-foreground/90 font-semibold">ან გააზიარე</span>
+              <div className="flex-1 h-px bg-primary-foreground/25" />
             </div>
             
             {/* Share Options - Two Rows */}
@@ -403,13 +404,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           </div>
 
           {/* Fixed Footer */}
-          <div className="relative z-10 flex-shrink-0 p-4 border-t border-border/20 backdrop-blur-md">
+          <div className="relative z-10 flex-shrink-0 p-4 border-t border-border/20 bg-primary">
             <motion.button
               onClick={() => {
                 navigator.clipboard.writeText(appLink);
                 toast.success("ლინკი დაკოპირდა!");
               }}
-              className="w-full py-4 rounded-2xl bg-background/22 border border-border/15 text-primary-foreground font-bold text-base hover:bg-background/28 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-background border border-border/20 text-foreground font-bold text-base hover:bg-background/95 transition-colors flex items-center justify-center gap-2"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
