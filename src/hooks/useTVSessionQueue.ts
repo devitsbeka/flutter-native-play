@@ -18,13 +18,24 @@ export interface TVQueueItem {
  * Hook to manage TV session queue with fallback to room_category_queue
  * @param sessionId - The TV session ID
  * @param roomIdFallback - Optional room ID to fallback to room_category_queue if TV queue is empty
+ * @param mockQueue - Optional mock queue for showcase/testing purposes
  */
-export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: string | null) {
+export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: string | null, mockQueue?: TVQueueItem[]) {
   const [queue, setQueue] = useState<TVQueueItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [usingRoomFallback, setUsingRoomFallback] = useState(false);
 
+  // If mock queue is provided, use it directly (for showcase mode)
+  const isMockMode = mockQueue !== undefined;
+
   const refetch = useCallback(async () => {
+    // In mock mode, use the provided mock queue
+    if (isMockMode) {
+      setQueue(mockQueue || []);
+      setLoading(false);
+      return;
+    }
+
     if (!sessionId) {
       setQueue([]);
       return;
@@ -123,14 +134,15 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     setQueue([]);
     setUsingRoomFallback(false);
     setLoading(false);
-  }, [sessionId, roomIdFallback]);
+  }, [sessionId, roomIdFallback, isMockMode, mockQueue]);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
+  // Skip realtime subscriptions in mock mode
   useEffect(() => {
-    if (!sessionId) return;
+    if (isMockMode || !sessionId) return;
     
     // Subscribe to TV session queue changes
     const tvChannel = supabase

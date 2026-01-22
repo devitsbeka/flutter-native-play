@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -27,7 +27,7 @@ interface InvitedGuest {
 }
 
 export const TVLobbyScreenV2: React.FC = () => {
-  const { code, sessionId, players, categoryName, categoryIcon, isHost, startGame } = useTVGame();
+  const { code, sessionId, players, categoryName, categoryIcon, isHost, startGame, categoryQueue: contextQueue } = useTVGame() as any;
   const [roomName, setRoomName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -37,8 +37,31 @@ export const TVLobbyScreenV2: React.FC = () => {
   const [invitedGuests, setInvitedGuests] = useState<InvitedGuest[]>([]);
   const [roomId, setRoomId] = useState<string | null>(null);
   
-  // Use queue with room fallback
-  const { queue, addCategoryToQueue, removeFromQueue } = useTVSessionQueue(sessionId, roomId);
+  // Check if we have a context-provided queue (for showcase mode)
+  const isMockMode = contextQueue && contextQueue.length > 0 && sessionId === 'mock-session-id';
+  
+  // Convert context queue to TVQueueItem format for mock mode
+  const mockQueueItems = useMemo(() => {
+    if (!isMockMode) return undefined;
+    return contextQueue.map((item: any, index: number) => ({
+      id: item.id || `mock-${index}`,
+      session_id: sessionId || '',
+      position: index,
+      source_type: item.source_type || 'category',
+      category_id: item.category_id || null,
+      category_name: item.category_name || null,
+      icon_slug: item.icon_slug || null,
+      user_trivia_id: item.user_trivia_id || null,
+      created_at: new Date().toISOString(),
+    }));
+  }, [contextQueue, isMockMode, sessionId]);
+  
+  // Use queue with room fallback (or mock data in showcase mode)
+  const { queue, addCategoryToQueue, removeFromQueue } = useTVSessionQueue(
+    sessionId, 
+    roomId, 
+    mockQueueItems
+  );
 
   // Debug: log queue state changes
   useEffect(() => {
@@ -47,9 +70,10 @@ export const TVLobbyScreenV2: React.FC = () => {
       roomId, 
       queueLength: queue.length, 
       queue,
-      hasMultiRound: queue.length > 0
+      hasMultiRound: queue.length > 0,
+      isMockMode
     });
-  }, [sessionId, roomId, queue]);
+  }, [sessionId, roomId, queue, isMockMode]);
 
   // Hard switch: guests join via sessionId QR to avoid 4-digit collisions.
   const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : `${window.location.origin}/join`;
