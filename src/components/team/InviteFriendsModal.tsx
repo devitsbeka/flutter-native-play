@@ -197,8 +197,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
   const lobbyGlassRow =
     "rounded-2xl bg-white/10 backdrop-blur-md border border-white/20";
 
-  // Keep this modal "mobile-sized" on tablet/desktop to avoid stretched UI
-  const contentWidth = "mx-auto w-full max-w-[520px]";
 
   return createPortal(
     <AnimatePresence>
@@ -229,7 +227,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
           {/* Fixed Header */}
           <div className="relative z-10 flex-shrink-0 border-b border-border/20 bg-primary">
-            <div className={`${contentWidth} px-4 py-4 flex items-center gap-3`}>
+            <div className="mx-auto w-full max-w-[520px] px-4 py-4 flex items-center gap-3">
               <button
                 onClick={handleClose}
                 className="w-12 h-12 rounded-full bg-primary border border-border/20 flex items-center justify-center hover:bg-primary/90 transition-colors"
@@ -242,9 +240,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
-            <div className={`${contentWidth} p-4 pb-28`}>
+            <div className="mx-auto w-full max-w-[520px] p-4 pb-28">
             {/* Search Section */}
-            <div className="mb-4">
+            <div className="mb-3">
               <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
                 <Input
@@ -331,14 +329,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             </div>
             
             {/* Divider */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <div className="flex-1 h-px bg-primary-foreground/25" />
               <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
               <div className="flex-1 h-px bg-primary-foreground/25" />
             </div>
             
             {/* Import & Connect Section */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2 mb-3">
               <motion.button
                 onClick={handleImportContacts}
                 className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 transition-colors`}
@@ -367,7 +365,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
             </div>
             
             {/* Divider */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <div className="flex-1 h-px bg-primary-foreground/25" />
               <span className="text-xs text-primary-foreground/90 font-semibold">ან გააზიარე</span>
               <div className="flex-1 h-px bg-primary-foreground/25" />
@@ -419,7 +417,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
 
           {/* Fixed Footer */}
           <div className="fixed bottom-0 left-0 right-0 z-[10000] border-t border-white/10 bg-primary">
-            <div className={`${contentWidth} p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]`}>
+            <div className="mx-auto w-full max-w-[520px] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
               <motion.button
                 onClick={() => {
                   navigator.clipboard.writeText(appLink);
