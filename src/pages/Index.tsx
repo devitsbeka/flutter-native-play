@@ -460,12 +460,11 @@ export default function Index() {
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
-                style={{ marginTop: 35 }}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
               >
-                <div className="relative">
+                <div className="relative" style={{ transform: "translateY(35px)" }}>
                   {/* Tablet portrait: use the same curved circular action buttons as mobile */}
                   {user && (
                     <div
