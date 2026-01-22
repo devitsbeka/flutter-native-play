@@ -88,17 +88,25 @@ export const TVCountdownScreenV2: React.FC = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="relative"
         >
-          {/* Glow effect */}
-          <div className="absolute inset-0 blur-3xl">
-            <div className={`w-64 h-64 rounded-full ${count === 0 ? 'bg-green-500/50' : 'bg-purple-500/50'}`} />
-          </div>
+          {/* Glow effect - only for countdown numbers */}
+          {count > 0 && (
+            <div className="absolute inset-0 blur-3xl">
+              <div className="w-64 h-64 rounded-full bg-purple-500/50" />
+            </div>
+          )}
 
-          {/* Number */}
-          <div className={`relative z-10 w-64 h-64 rounded-full flex items-center justify-center ${count === 0 ? 'bg-gradient-to-br from-green-400 to-green-600' : 'bg-gradient-to-br from-purple-500 to-purple-700'} shadow-2xl`}>
-            <span className="text-white text-9xl font-bold font-display">
-              {getCountDisplay()}
+          {/* Number or Text */}
+          {count > 0 ? (
+            <div className="relative z-10 w-64 h-64 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-purple-700 shadow-2xl">
+              <span className="text-white text-9xl font-bold font-display">
+                {count}
+              </span>
+            </div>
+          ) : (
+            <span className="relative z-10 text-green-400 text-9xl font-bold font-display drop-shadow-[0_0_30px_rgba(74,222,128,0.5)]">
+              დაიწყო!
             </span>
-          </div>
+          )}
         </motion.div>
       </AnimatePresence>
 
