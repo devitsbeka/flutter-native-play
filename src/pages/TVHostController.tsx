@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Tv, Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus } from 'lucide-react';
+import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus } from 'lucide-react';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -386,7 +387,7 @@ const TVHostController: React.FC = () => {
           <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5 text-purple-200" />
           </button>
-          <Tv className="w-6 h-6 text-purple-300" />
+          <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
           <span className="font-bold text-white">აირჩიე კატეგორია</span>
         </motion.div>
 
@@ -688,7 +689,7 @@ const TVHostController: React.FC = () => {
           <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10">
             <ArrowLeft className="w-5 h-5 text-purple-200" />
           </button>
-          <Tv className="w-6 h-6 text-purple-300" />
+          <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
           <span className="font-bold text-white">TV თამაში</span>
         </motion.div>
 
@@ -823,7 +824,7 @@ const TVHostController: React.FC = () => {
           className="flex items-center justify-between mb-6"
         >
           <div className="flex items-center gap-2">
-            <Tv className="w-6 h-6 text-purple-300" />
+            <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
             <span className="font-bold text-white">მართვის პანელი</span>
           </div>
           <button 
