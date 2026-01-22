@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Tv, 
   Smartphone, 
   Wifi, 
   Check, 
@@ -14,6 +13,7 @@ import {
   Cast,
   ArrowRight,
 } from 'lucide-react';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Input } from '@/components/ui/input';
@@ -178,7 +178,7 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
                 {isCreatingSession ? (
                   <Loader2 className="w-7 h-7 text-white animate-spin" />
                 ) : (
-                  <Tv className="w-7 h-7 text-white" />
+                  <img src={retroTvIcon} alt="TV" className="w-9 h-9 object-contain" />
                 )}
               </div>
               <div className="flex-1 text-left">
@@ -204,7 +204,7 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
                     className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-purple-300 transition-all"
                   >
                     <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                      <Tv className="w-5 h-5 text-slate-600" />
+                      <img src={retroTvIcon} alt="TV" className="w-6 h-6 object-contain" />
                     </div>
                     <div className="flex-1 text-left">
                       <p className="font-medium text-slate-700">{tv.deviceName}</p>
@@ -279,7 +279,7 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
                 transition={{ delay: 0.6 }}
                 className="w-20 h-14 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg border-2 border-slate-600"
               >
-                <Tv className="w-8 h-8 text-white" />
+                <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
               </motion.div>
             </div>
 
@@ -427,7 +427,7 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-white text-xl">
               <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Tv className="w-6 h-6" />
+                <img src={retroTvIcon} alt="TV" className="w-8 h-8 object-contain" />
               </div>
               {t('tv.playOnTV')}
             </DialogTitle>

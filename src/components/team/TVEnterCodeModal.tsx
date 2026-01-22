@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tv, Loader2, Check, ChevronLeft } from 'lucide-react';
+import { Loader2, Check, ChevronLeft } from 'lucide-react';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -166,7 +167,7 @@ export const TVEnterCodeModal: React.FC<TVEnterCodeModalProps> = ({
             </button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Tv className="w-4 h-4 text-primary" />
+                <img src={retroTvIcon} alt="TV" className="w-5 h-5 object-contain" />
               </div>
               <h2 className="text-lg font-bold text-foreground">TV-სთან დაკავშირება</h2>
             </div>

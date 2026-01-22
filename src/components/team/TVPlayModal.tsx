@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Tv, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -116,7 +117,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
-                  <Tv className="w-6 h-6 text-primary-foreground" />
+                  <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-foreground">TV-ზე თამაში</h2>
@@ -186,7 +187,7 @@ export const TVPlayModal: React.FC<TVPlayModalProps> = ({
                   onClick={handlePair}
                   disabled={!isComplete || isPairing}
                   className="w-full"
-                  icon={isPairing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Tv className="w-5 h-5" />}
+                  icon={isPairing ? <Loader2 className="w-5 h-5 animate-spin" /> : <img src={retroTvIcon} alt="TV" className="w-5 h-5 object-contain" />}
                 >
                   {isPairing ? 'კავშირდება...' : 'დაკავშირება'}
                 </ChunkyButton>
