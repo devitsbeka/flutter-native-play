@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2 } from "lucide-react";
+import { Loader2, ArrowLeft, HelpCircle, UserPlus, X, Share2, RefreshCw, Play, Pencil, Gamepad2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/useFriends";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
@@ -15,6 +15,7 @@ import { TVPlayModal } from "@/components/team/TVPlayModal";
 import { InviteFriendsModal } from "@/components/team/InviteFriendsModal";
 import { HowItWorksModal } from "@/components/team/HowItWorksModal";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
+import { CategoryPickerModal } from "@/components/team/CategoryPickerModal";
 import { CreateBlindTriviaModal } from "@/components/team/CreateBlindTriviaModal";
 import { CreateCollectionModal } from "@/components/social/CreateCollectionModal";
 import { RoomIconPickerModal } from "@/components/team/RoomIconPickerModal";
@@ -71,6 +72,14 @@ interface Category {
 
 type SelectionMode = "random" | "library" | "create" | "my-trivias" | null;
 
+type PreRoomQueueItem = {
+  source_type: "category" | "random" | "user_trivia";
+  category_id?: string | null;
+  category_name?: string | null;
+  user_trivia_id?: string | null;
+  icon_slug?: string | null;
+};
+
 interface CreateRoomPageProps {
   onClose: () => void;
   challengeUserId?: string | null;
@@ -119,6 +128,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [showIconPickerModal, setShowIconPickerModal] = useState(false);
   const [showMyTriviasModal, setShowMyTriviasModal] = useState(false);
   const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(autoOpenPersonalTrivia || false);
+
+  // Pre-room queue builder (extra rounds before entering lobby)
+  const [queuedRounds, setQueuedRounds] = useState<PreRoomQueueItem[]>([]);
+  const [showQueuePicker, setShowQueuePicker] = useState(false);
   
   // Challenge mode state
   const [challengeTrivia, setChallengeTrivia] = useState<{ id: string; title: string; type: "trivia" | "collection" } | null>(null);
@@ -337,6 +350,30 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const clearSelection = () => {
     setSelectedCategory(null);
     setSelectionMode(null);
+    setQueuedRounds([]);
+  };
+
+  const handleAddPreRoomQueueItem = (item: PreRoomQueueItem) => {
+    setQueuedRounds((prev) => [...prev, item]);
+    toast({
+      title: "რიგში დაემატა",
+      description: `დამატებითი რაუნდი: ${item.category_name || "შემთხვევითი"}`,
+    });
+  };
+
+  const persistQueuedRounds = async (roomId: string) => {
+    if (!queuedRounds.length) return;
+    await supabase.from("room_category_queue").insert(
+      queuedRounds.map((item, idx) => ({
+        room_id: roomId,
+        position: idx,
+        source_type: item.source_type,
+        category_id: item.category_id || null,
+        category_name: item.category_name || null,
+        user_trivia_id: item.user_trivia_id || null,
+        icon_slug: item.icon_slug || null,
+      }))
+    );
   };
 
   // Copy to clipboard helper
@@ -438,6 +475,9 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         });
 
         room = createdRoom;
+
+        // Persist any queued rounds before navigating to lobby
+        await persistQueuedRounds(createdRoom.id);
         
         // Close modal and navigate to room after creation
         onClose();
@@ -451,9 +491,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           roomName,
           roomIcon
         );
+
+        if (room?.id) {
+          await persistQueuedRounds(room.id);
+        }
       } else if (selectedCategory) {
         // Create the room with selected category
         room = await createRoom(selectedCategory.category_id, selectedCategory.name, undefined, roomName, roomIcon);
+
+        if (room?.id) {
+          await persistQueuedRounds(room.id);
+        }
       }
       
       // Send invitations immediately after room is created
@@ -794,6 +842,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         >
                           <RefreshCw className="w-5 h-5 text-white" />
                         </button>
+                        {/* Add to queue */}
+                        <button
+                          onClick={() => setShowQueuePicker(true)}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          title="რიგში დამატება"
+                        >
+                          <Plus className="w-5 h-5 text-white" />
+                        </button>
                         {/* Clear button */}
                         <button 
                           onClick={clearSelection}
@@ -894,6 +950,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                             არჩეული კატეგორია
                           </p>
                         </div>
+                        {/* Add to queue */}
+                        <button
+                          onClick={() => setShowQueuePicker(true)}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          title="რიგში დამატება"
+                        >
+                          <Plus className="w-5 h-5 text-white" />
+                        </button>
                         {/* Clear button */}
                         <button 
                           onClick={clearSelection}
@@ -964,11 +1028,19 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                         >
                           <RefreshCw className="w-5 h-5 text-white" />
                         </button>
+                        <button
+                          onClick={() => setShowQueuePicker(true)}
+                          className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
+                          title="რიგში დამატება"
+                        >
+                          <Plus className="w-5 h-5 text-white" />
+                        </button>
                         <button 
                           onClick={() => {
                             setChallengeTrivia(null);
                             setSelectionMode(null);
                             setRoomName("");
+                            setQueuedRounds([]);
                           }}
                           className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors"
                         >
@@ -1156,6 +1228,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           setShowMyTriviasModal(false);
           setShowCreateTriviaModal(true);
         }}
+      />
+
+      {/* Queue picker (pre-room) */}
+      <CategoryPickerModal
+        isOpen={showQueuePicker}
+        onClose={() => setShowQueuePicker(false)}
+        onSelectCategory={() => setShowQueuePicker(false)}
+        onSelectRandom={() => setShowQueuePicker(false)}
+        onSelectTrivia={() => setShowQueuePicker(false)}
+        onAddToQueue={handleAddPreRoomQueueItem}
+        showQueueOption={true}
       />
 
       {/* Personal Trivia Modal - Game UI Style */}
