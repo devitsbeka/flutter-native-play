@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { HelpCircle, Wallet } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -23,15 +23,6 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
         <div className="flex items-center justify-between">
           {/* Left side: Title + Wallet */}
           <div className="flex items-center gap-4">
-            {/* Mobile only: wallet icon instead of title */}
-            <div className="md:hidden w-10 h-10 rounded-full bg-muted flex items-center justify-center"
-              style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-              aria-label={t("shop.title")}
-              title={t("shop.title")}
-            >
-              <Wallet className="w-5 h-5 text-muted-foreground" />
-            </div>
-
             {/* md+: keep title text */}
             <h1 className="hidden md:block text-xl font-display font-bold text-foreground uppercase tracking-wide">
               {t("shop.title")}
