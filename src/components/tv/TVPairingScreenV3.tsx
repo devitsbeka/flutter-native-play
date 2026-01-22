@@ -44,7 +44,7 @@ export const TVPairingScreenV3: React.FC = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-6"
+          className="mb-6 mt-8"
         >
           <div className="flex items-center justify-center">
             <span 
@@ -84,23 +84,17 @@ export const TVPairingScreenV3: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Title with TV Icon */}
+        {/* Subtitle with TV Icon */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
-            <h1 
-              className="text-3xl font-bold text-white"
-              style={{ fontFamily: 'var(--font-display, inherit)' }}
-            >
-              TV რეჟიმი
-            </h1>
+          <div className="flex items-center justify-center gap-2">
+            <img src={retroTvIcon} alt="TV" className="w-8 h-8 object-contain" />
+            <p className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</p>
           </div>
-          <p className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</p>
         </motion.div>
 
         {/* Pairing Code Display */}
