@@ -125,6 +125,8 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
     ? personalTrivias.filter((t) => (t.title || "").toLocaleLowerCase().includes(normalizedQuery))
     : personalTrivias;
 
+  const mobileTotalCount = filteredTrivias.length + filteredCollections.length;
+
   const handleSelect = (item: { id: string; title: string; type: "trivia" | "collection" }) => {
     onSelect(item);
     onOpenChange(false);
@@ -186,22 +188,22 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
               </div>
             ) : (
               <Tabs value={tab} onValueChange={setTab} className="w-full">
-                <TabsList className="grid w-full mb-4 grid-cols-2 md:grid-cols-3">
-                  <TabsTrigger value="trivias" className="flex items-center gap-2 text-sm md:text-sm px-3 py-2">
-                    <img src={triviaBuzzerIcon} alt="" className="w-16 h-16 md:w-16 md:h-16 object-contain" />
+                <TabsList className="grid w-full mb-6 grid-cols-2 md:grid-cols-3 h-auto p-2 gap-2">
+                  <TabsTrigger value="trivias" className="flex items-center gap-2 text-sm md:text-sm px-3 py-3 h-auto">
+                    <img src={triviaBuzzerIcon} alt="" className="w-[52px] h-[52px] md:w-[52px] md:h-[52px] object-contain" />
                     <span className="font-semibold">
-                      ტრივია ({filteredTrivias.length}{!isDesktop ? ` + ${filteredCollections.length}` : ""})
+                      ტრივია ({isDesktop ? filteredTrivias.length : mobileTotalCount})
                     </span>
                   </TabsTrigger>
 
                   {/* Desktop-only: separate Collections tab */}
-                  <TabsTrigger value="collections" className="hidden md:flex items-center gap-2 text-sm px-3 py-2">
-                    <img src={collectionMagnetIcon} alt="" className="w-16 h-16 object-contain" />
+                  <TabsTrigger value="collections" className="hidden md:flex items-center gap-2 text-sm px-3 py-3 h-auto">
+                    <img src={collectionMagnetIcon} alt="" className="w-[52px] h-[52px] object-contain" />
                     <span className="font-semibold">კოლექციები ({filteredCollections.length})</span>
                   </TabsTrigger>
 
-                  <TabsTrigger value="party" className="flex items-center gap-2 text-sm md:text-sm px-3 py-2">
-                    <img src={partyBlowerIcon} alt="" className="w-16 h-16 md:w-16 md:h-16 object-contain" />
+                  <TabsTrigger value="party" className="flex items-center gap-2 text-sm md:text-sm px-3 py-3 h-auto">
+                    <img src={partyBlowerIcon} alt="" className="w-[52px] h-[52px] md:w-[52px] md:h-[52px] object-contain" />
                     <span className="font-semibold">Party ({filteredPersonalTrivias.length})</span>
                   </TabsTrigger>
                 </TabsList>
