@@ -97,7 +97,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
   const gradientClass = gradientStyle ? '' : `bg-gradient-to-br ${quiz.cover_gradient || 'from-purple-500 to-pink-500'}`;
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+    <div className="flex gap-3 p-4 bg-muted/50 rounded-xl">
       {/* Round icon - shows cover image, icon, or fallback to round number */}
       <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative">
         {quiz.cover_image ? (
@@ -112,40 +112,57 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
           </div>
         )}
       </div>
-      
-      <div className="flex-1 min-w-0">
+
+      {/* 3-row layout */}
+      <div className="flex-1 min-w-0 flex flex-col gap-2">
+        {/* 1) Trivia name */}
         <p className="font-medium text-foreground text-sm truncate">{quiz.title}</p>
-        <p className="text-xs text-muted-foreground">{quiz.question_count} კითხვა</p>
-      </div>
-      
-      <div className="flex items-center gap-2 text-muted-foreground">
-        {/* Edit button */}
-        <button 
-          onClick={(e) => { e.stopPropagation(); onEdit(quiz); }}
-          className="p-2 rounded-full hover:bg-muted transition-colors"
-        >
-          <Pencil className="w-4 h-4" />
-        </button>
-        <div className="flex items-center gap-1 text-xs">
-          <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
-          <span>{quiz.likes_count || 0}</span>
+
+        {/* 2) X questions + Edit */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            {quiz.question_count} questions
+          </p>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(quiz);
+            }}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+            aria-label="Edit trivia"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
         </div>
-        <div className="flex items-center gap-1 text-xs">
-          <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
-          <span>{quiz.saves_count || 0}</span>
+
+        {/* 3) likes/saves/plays + Play button */}
+        <div className="flex items-center justify-between gap-3 text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-1">
+              <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
+              <span>{quiz.likes_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
+              <span>{quiz.saves_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
+              <span>{quiz.plays_count || 0}</span>
+            </div>
+          </div>
+
+          <div onClick={(e) => e.stopPropagation()}>
+            <ChunkyButton
+              size="sm"
+              variant="outline"
+              className="text-xs px-2 py-1 h-7"
+              onClick={() => navigate(`/trivia/${quiz.id}`)}
+            >
+              <Play className="w-3 h-3" />
+            </ChunkyButton>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-xs">
-          <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
-          <span>{quiz.plays_count || 0}</span>
-        </div>
-        <ChunkyButton 
-          size="sm" 
-          variant="outline" 
-          className="text-xs px-2 py-1 h-7"
-          onClick={() => navigate(`/trivia/${quiz.id}`)}
-        >
-          <Play className="w-3 h-3" />
-        </ChunkyButton>
       </div>
     </div>
   );
