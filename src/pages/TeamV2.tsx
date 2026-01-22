@@ -44,14 +44,18 @@ import { TabsContent } from "@/components/ui/tabs";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
-import { 
-  UnifiedFiltersBar, 
-  roomFilterOptions, 
-  roomSortOptions, 
+import {
+  UnifiedFiltersBar,
+  roomFilterOptions,
+  roomSortOptions,
   myTriviaFilterOptions,
-  RoomFilter, 
-  RoomSort, 
-  MyTriviaFilter 
+  exploreFilterOptions,
+  exploreSortOptions,
+  RoomFilter,
+  RoomSort,
+  MyTriviaFilter,
+  ExploreFilter,
+  ExploreSort,
 } from "@/components/team/UnifiedFiltersBar";
 import { QRScannerModal } from "@/components/team/QRScannerModal";
 import { ChatModal } from "@/components/team/ChatModal";
@@ -188,6 +192,9 @@ function TeamContentV2() {
   const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
   const [roomsSort, setRoomsSort] = useState<RoomSort>("recent");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
+  const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("all");
+  const [exploreSort, setExploreSort] = useState<ExploreSort>("recent");
+  const [exploreSearchQuery, setExploreSearchQuery] = useState("");
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [personalTriviaDraftId, setPersonalTriviaDraftId] = useState<string | null>(null);
   const [showTeamMenu, setShowTeamMenu] = useState(false);
@@ -562,15 +569,15 @@ function TeamContentV2() {
             )}
 
             {activeTab === "explore" && (
-              <UnifiedFiltersBar<RoomFilter, RoomSort>
-                filter={roomsFilter}
-                onFilterChange={(f) => setRoomsFilter(f)}
-                filterOptions={roomFilterOptions}
-                sort={roomsSort}
-                onSortChange={(s) => setRoomsSort(s)}
-                sortOptions={roomSortOptions}
-                searchQuery={roomsSearchQuery}
-                onSearchQueryChange={setRoomsSearchQuery}
+              <UnifiedFiltersBar<ExploreFilter, ExploreSort>
+                filter={exploreFilter}
+                onFilterChange={(f) => setExploreFilter(f)}
+                filterOptions={exploreFilterOptions}
+                sort={exploreSort}
+                onSortChange={(s) => setExploreSort(s)}
+                sortOptions={exploreSortOptions}
+                searchQuery={exploreSearchQuery}
+                onSearchQueryChange={setExploreSearchQuery}
                 onAddClick={() => setShowCreateTypeModal(true)}
                 addButtonText="შექმენი ტრივია"
               />
@@ -615,7 +622,9 @@ function TeamContentV2() {
               {/* Explore Tab */}
               {activeTab === "explore" && (
                 <ExplorePortfolioFeed
-                  searchQuery={roomsSearchQuery}
+                  searchQuery={exploreSearchQuery}
+                  filter={exploreFilter}
+                  sort={exploreSort}
                   onPlayQuiz={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
                   }}

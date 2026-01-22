@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SamplePost } from "@/data/samplePosts";
 import { Json } from "@/integrations/supabase/types";
+import { ExploreFilter, ExploreSort } from "@/components/team/UnifiedFiltersBar";
 
 export interface PlayerInfo {
   user_id: string;
@@ -36,11 +37,15 @@ export interface PlayerFeedItem {
   createdAt: string;
 }
 
-export function usePlayerFeedItems(searchQuery: string = "") {
+export function usePlayerFeedItems(
+  searchQuery: string = "",
+  filter: ExploreFilter = "all",
+  sort: ExploreSort = "recent"
+) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["player-feed-items", user?.id, searchQuery],
+    queryKey: ["player-feed-items", user?.id, searchQuery, filter, sort],
     queryFn: async (): Promise<PlayerFeedItem[]> => {
       // Fetch all public posts
       const { data: posts, error: postsError } = await supabase
@@ -209,13 +214,32 @@ export function usePlayerFeedItems(searchQuery: string = "") {
         });
       });
 
-      // Sort by created_at descending
-      feedItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      // Get friend IDs for friends filter
+      const friendIds = new Set(
+        friendships
+          .filter(f => f.status === 'accepted')
+          .map(f => f.user_id === user?.id ? f.friend_id : f.user_id)
+      );
+
+      // Apply type filter (trivias/collections/friends)
+      let filteredItems = feedItems;
+      switch (filter) {
+        case "friends":
+          filteredItems = feedItems.filter(item => friendIds.has(item.player.user_id));
+          break;
+        case "trivias":
+          filteredItems = feedItems.filter(item => item.itemType === 'trivia');
+          break;
+        case "collections":
+          filteredItems = feedItems.filter(item => item.itemType === 'collection');
+          break;
+        // "all" - no filtering needed
+      }
 
       // Apply search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        return feedItems.filter(feedItem => {
+        filteredItems = filteredItems.filter(feedItem => {
           // Search in player nickname
           if (feedItem.player.nickname.toLowerCase().includes(query)) return true;
 
@@ -235,7 +259,37 @@ export function usePlayerFeedItems(searchQuery: string = "") {
         });
       }
 
-      return feedItems;
+      // Apply sorting
+      switch (sort) {
+        case "most_played":
+          filteredItems.sort((a, b) => {
+            const aPlays = a.itemType === 'trivia'
+              ? (a.item as SamplePost).playsCount
+              : (a.item as CollectionItem).plays_count;
+            const bPlays = b.itemType === 'trivia'
+              ? (b.item as SamplePost).playsCount
+              : (b.item as CollectionItem).plays_count;
+            return bPlays - aPlays;
+          });
+          break;
+        case "most_liked":
+          filteredItems.sort((a, b) => {
+            const aLikes = a.itemType === 'trivia'
+              ? (a.item as SamplePost).likesCount
+              : (a.item as CollectionItem).likes_count;
+            const bLikes = b.itemType === 'trivia'
+              ? (b.item as SamplePost).likesCount
+              : (b.item as CollectionItem).likes_count;
+            return bLikes - aLikes;
+          });
+          break;
+        case "recent":
+        default:
+          filteredItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          break;
+      }
+
+      return filteredItems;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - content doesn't change frequently
     gcTime: 15 * 60 * 1000, // 15 minutes cache
