@@ -114,40 +114,43 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
       </div>
 
       {/* 3-row layout */}
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
+      <div className="flex-1 min-w-0 flex flex-col gap-2 relative">
         {/* 1) Trivia name */}
-        <p className="font-medium text-foreground text-sm truncate">{quiz.title}</p>
+        <p className="font-medium text-foreground text-sm truncate pr-10">{quiz.title}</p>
+
+        {/* Edit button (top-right) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(quiz);
+          }}
+          className="absolute top-0 right-0 p-2 rounded-full hover:bg-muted transition-colors"
+          aria-label="Edit trivia"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
 
         {/* 2) X questions + Edit */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 -mt-2.5">
           <p className="text-xs text-muted-foreground">
             {quiz.question_count} questions
           </p>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(quiz);
-            }}
-            className="p-2 rounded-full hover:bg-muted transition-colors"
-            aria-label="Edit trivia"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
+          <span aria-hidden className="w-9" />
         </div>
 
         {/* 3) likes/saves/plays + Play button */}
         <div className="flex items-center justify-between gap-3 text-muted-foreground">
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-4 text-[13px]">
             <div className="flex items-center gap-1">
-              <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
+              <img src={purpleHeart3d} alt="Likes" className="w-[19px] h-[19px] object-contain" />
               <span>{quiz.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-              <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
+              <img src={bookmark3d} alt="Saves" className="w-[19px] h-[19px] object-contain" />
               <span>{quiz.saves_count || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-              <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
+              <img src={pushButton3d} alt="Plays" className="w-[19px] h-[19px] object-contain" />
               <span>{quiz.plays_count || 0}</span>
             </div>
           </div>
