@@ -6,7 +6,7 @@ import { Check, X, Clock } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
 import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
-import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -19,7 +19,8 @@ export const TVQuestionScreenV4: React.FC = () => {
     categoryName,
     roomName,
     phase,
-    categoryIcon,
+    roundNumber,
+    totalRounds,
   } = useTVGame();
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -40,16 +41,9 @@ export const TVQuestionScreenV4: React.FC = () => {
     );
   }
 
-  const formatTime = (seconds: number) => {
-    return `00:${seconds.toString().padStart(2, '0')}`;
-  };
 
   const isReveal = phase === 'reveal';
   const correctAnswer = currentQuestion.correct_answer;
-
-  // Use question-specific icon if available, fallback to category icon
-  const questionIconSlug = currentQuestion.icon_slug;
-  const displayIcon = questionIconSlug || categoryIcon || '🎯';
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden">
@@ -171,12 +165,11 @@ export const TVQuestionScreenV4: React.FC = () => {
         transition={{ delay: 0.2 }}
       >
         <div className="relative flex justify-center mb-3 flex-shrink-0 pt-10 [@media(max-height:700px)]:pt-6">
-          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20">
-            <QuizCategoryIcon 
-              iconSlug={questionIconSlug || undefined}
-              emoji={!questionIconSlug ? displayIcon : undefined}
-              size={96} 
-            />
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
+            <img src={retroTvIcon} alt="TV" className="w-8 h-8 object-contain" />
+            <span className="text-white font-bold text-sm">
+              რაუნდი {roundNumber}/{totalRounds}
+            </span>
           </div>
           <QuizQuestionCard
             questionText={currentQuestion.question_text}
