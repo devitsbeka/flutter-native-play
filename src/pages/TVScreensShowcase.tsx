@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { TVMockProvider, useTVMock, MOCK_PLAYERS, MOCK_QUESTIONS } from '@/contexts/TVMockContext';
+import { TVMockProvider, useTVMock, MOCK_PLAYERS, MOCK_QUESTIONS, MOCK_CATEGORY_QUEUE } from '@/contexts/TVMockContext';
 import { TVGameContext } from '@/contexts/TVGameContext';
 
 // Import TV screen components
@@ -45,7 +45,7 @@ const createMockTVGameValue = (mockCtx: ReturnType<typeof useTVMock>) => ({
   error: null,
   isLoading: false,
   roomId: 'mock-room-id',
-  categoryQueue: [],
+  categoryQueue: mockCtx.categoryQueue, // Pass the actual queue
   questionsPerRound: 5,
   currentQuestion: mockCtx.questions[mockCtx.currentQuestionIndex] || null,
   timerMax: 15,
@@ -181,6 +181,32 @@ const ControlsBar: React.FC<{ screenId: string }> = ({ screenId }) => {
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
+      </div>
+
+      {/* Total rounds selector */}
+      <div className="flex items-center gap-2">
+        <span className="text-white/60 text-xs">Categories:</span>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map(count => (
+            <button
+              key={count}
+              onClick={() => {
+                mockCtx.setTotalRounds(count);
+                // Reset round number if it exceeds new total
+                if (mockCtx.roundNumber > count) {
+                  mockCtx.setRoundNumber(count);
+                }
+              }}
+              className={`w-6 h-6 rounded text-xs font-medium transition-colors ${
+                mockCtx.totalRounds === count
+                  ? 'bg-purple-600 text-white'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {count}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Player count */}
