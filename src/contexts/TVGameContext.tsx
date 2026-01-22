@@ -181,6 +181,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Prevent repeated reveal updates from timer/presence sync
   const revealRequestedRef = useRef(false);
 
+  // Prevent instant auto-advance at the start of a new question due to stale presence
+  const questionStartedAtRef = useRef<number>(0);
+
   // Prevent double-click / concurrent next-round transitions from host
   const nextRoundInFlightRef = useRef(false);
 
@@ -502,6 +505,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!state.sessionId) return;
     if (state.phase !== 'question') return;
     if (revealRequestedRef.current) return;
+
+    // Guard: don't allow auto-advance immediately on question load
+    if (questionStartedAtRef.current && Date.now() - questionStartedAtRef.current < 300) return;
     
     const activePlayers = state.players.filter(p => p.isActive === true);
     const allActiveAnswered = activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered);
@@ -540,6 +546,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             lastAnswerCorrect: null,
             lastAnswer: null,
             isHost: true,
+            isActive: true,
           });
         }
 
@@ -769,6 +776,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             round_number?: number | null;
             total_rounds?: number | null;
           };
+
+          // New question detection must happen BEFORE setState, and must also reset presence.
+          // Otherwise, the host sees stale `hasAnswered: true` from the previous question and
+          // immediately auto-advances through all remaining questions.
+          const prevIndex = stateRef.current.currentQuestionIndex;
+          const isNewQuestion = typeof newData.current_question_index === 'number' && newData.current_question_index !== prevIndex;
+          if (isNewQuestion) {
+            tvLog('New question (subscription)', { from: prevIndex, to: newData.current_question_index });
+            setMyAnswer(null);
+            revealRequestedRef.current = false;
+            questionStartedAtRef.current = Date.now();
+
+            // Reset my presence for the new question so host does not treat me as already answered.
+            if (presenceChannelRef.current && myPlayerId) {
+              const me = stateRef.current.players.find((p) => p.id === myPlayerId);
+              // Fire-and-forget: presence track is async, but we must not block the realtime callback.
+              void presenceChannelRef.current.track({
+                nickname: me?.nickname || 'Player',
+                avatar_url: me?.avatar_url ?? null,
+                score: typeof me?.score === 'number' ? me.score : myScore,
+                hasAnswered: false,
+                lastAnswerCorrect: null,
+                lastAnswer: null,
+                isHost: isHostRef.current,
+                isActive: true,
+              });
+            }
+          }
           
           // Parse questions if present
           let questions: TVQuestion[] = [];
@@ -804,13 +839,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               tvLogPhase(prev.phase, newPhase, 'session subscription');
             }
 
-            // Reset answer when moving to new question
-            const isNewQuestion = newData.current_question_index !== prev.currentQuestionIndex;
-            if (isNewQuestion) {
-              tvLog('New question', { index: newData.current_question_index });
-              setMyAnswer(null);
-              revealRequestedRef.current = false;
-            }
+            // Note: new-question resets are handled outside setState above to avoid stale-closure bugs
+            // and to allow presence reset.
 
             return {
               ...prev,
@@ -889,6 +919,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const activePlayers = players.filter(p => p.isActive === true);
         const phaseNow = stateRef.current.phase;
         const allActiveAnswered = activePlayers.length > 0 && activePlayers.every(p => p.hasAnswered);
+        const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= 300;
         
         // Use isHostRef to get the latest isHost value (avoids stale closure)
         const isHostNow = isHostRef.current;
@@ -902,7 +933,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           revealAlreadyRequested: revealRequestedRef.current,
         });
         
-        if (isHostNow && phaseNow === 'question' && allActiveAnswered && !revealRequestedRef.current) {
+        if (isHostNow && phaseNow === 'question' && allActiveAnswered && !revealRequestedRef.current && canAutoAdvance) {
           console.log('[TV Auto-Advance] Triggering reveal - all active players answered!');
           requestRevealIfEligible('all active players answered');
         }
