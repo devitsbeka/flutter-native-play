@@ -46,6 +46,7 @@ const TVHostController: React.FC = () => {
     joinSession,
     startGame,
     startPlaying,
+    startNextRound,
     markReady,
     isHost,
     leaveSession,
@@ -665,12 +666,17 @@ const TVHostController: React.FC = () => {
       navigate('/team');
     };
 
+    const handleContinueNextRound = async () => {
+      await startNextRound();
+    };
+
     return (
       <TVGameOverScreen
         players={allPlayers}
         currentPlayerId={user?.id}
         onExit={handleExit}
         onPlayAgain={handlePlayAgain}
+        onContinueNextRound={handleContinueNextRound}
         isHost={true}
         hasMoreRounds={queue.length > 0}
       />

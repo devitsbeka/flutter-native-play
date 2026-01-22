@@ -20,6 +20,7 @@ interface TVGameOverScreenProps {
   onExit?: () => void;
   isHost?: boolean;
   onPlayAgain?: () => void;
+  onContinueNextRound?: () => void;
   hasMoreRounds?: boolean;
 }
 
@@ -29,6 +30,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
   onExit,
   isHost = false,
   onPlayAgain,
+  onContinueNextRound,
   hasMoreRounds = false,
 }) => {
   const [showConfetti, setShowConfetti] = useState(false);
@@ -285,8 +287,8 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         </div>
       </motion.div>
 
-      {/* Waiting message */}
-      {hasMoreRounds ? (
+      {/* Status message */}
+      {!isHost && hasMoreRounds && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -300,7 +302,8 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
             შემდეგი რაუნდის მოლოდინი...
           </motion.div>
         </motion.div>
-      ) : (
+      )}
+      {!hasMoreRounds && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -318,7 +321,15 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         transition={{ delay: 0.8 }}
         className="flex gap-3"
       >
-        {isHost && onPlayAgain && (
+        {isHost && hasMoreRounds && onContinueNextRound ? (
+          <ChunkyButton
+            onClick={onContinueNextRound}
+            variant="primary"
+            className="flex-1"
+          >
+            შემდეგი რაუნდი
+          </ChunkyButton>
+        ) : isHost && onPlayAgain && !hasMoreRounds ? (
           <ChunkyButton
             onClick={onPlayAgain}
             variant="primary"
@@ -326,7 +337,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
           >
             ახალი თამაში
           </ChunkyButton>
-        )}
+        ) : null}
         {onExit && (
           <ChunkyButton
             onClick={onExit}
