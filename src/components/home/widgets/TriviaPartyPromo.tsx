@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Tv } from "lucide-react";
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 export function TriviaPartyPromo() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export function TriviaPartyPromo() {
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-            <Tv className="w-5 h-5 text-primary" />
+            <img src={retroTvIcon} alt="TV" className="w-6 h-6 object-contain" />
           </div>
           <h3 className="text-[15px] font-semibold text-foreground tracking-tight">
             ითამაშე Trivia TV

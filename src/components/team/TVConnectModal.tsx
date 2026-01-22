@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tv, Loader2, Check, ChevronLeft } from 'lucide-react';
+import { Loader2, Check, ChevronLeft } from 'lucide-react';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -141,7 +142,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                   >
                     <div className="text-center mb-8">
                       <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-                        <Tv className="w-10 h-10 text-primary" />
+                        <img src={retroTvIcon} alt="TV" className="w-12 h-12 object-contain" />
                       </div>
                       <p className="text-muted-foreground">
                         შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე
