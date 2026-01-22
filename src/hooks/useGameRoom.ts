@@ -16,6 +16,7 @@ export interface GameRoom {
   status: RoomStatus;
   category_id: string | null;
   category_name: string | null;
+  game_mode?: string | null;
   max_players: number;
   min_players: number;
   total_questions: number;

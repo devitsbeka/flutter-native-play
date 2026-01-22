@@ -626,7 +626,12 @@ export function RoomLobbyV2() {
 
         {/* Category Picker Section */}
         <CategoryPickerSection
-          categoryName={currentRoom.category_name}
+          categoryName={
+            currentRoom.category_name ??
+            (((currentRoom as any).game_mode?.startsWith('trivia:') || (currentRoom as any).game_mode?.startsWith('collection:'))
+              ? currentRoom.room_name
+              : null)
+          }
           categoryId={currentRoom.category_id}
           iconSlug={
             currentRoom.category_name === "შემთხვევითი" 
