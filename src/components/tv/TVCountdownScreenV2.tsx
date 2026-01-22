@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { tvLog, tvLogPhase } from '@/utils/tvDebug';
 
 export const TVCountdownScreenV2: React.FC = () => {
-  const { players, categoryName, categoryIcon, isHost, startPlaying } = useTVGame();
+  const { players, categoryName, categoryIcon, isHost, startPlaying, roundNumber } = useTVGame();
   const [count, setCount] = useState(3);
   const hasTriggeredPlaying = useRef(false);
 
@@ -57,7 +57,7 @@ export const TVCountdownScreenV2: React.FC = () => {
   }, [count, isHost, startPlaying]);
 
   const getCountDisplay = () => {
-    if (count === 0) return 'GO!';
+    if (count === 0) return 'დაიწყო!';
     return count.toString();
   };
 
@@ -70,7 +70,7 @@ export const TVCountdownScreenV2: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center"
         >
-          <p className="text-purple-300 text-lg">Playing</p>
+          <p className="text-purple-300 text-lg">რაუნდი {roundNumber || 1}</p>
           <div className="flex items-center gap-3 text-white text-2xl font-bold">
             {categoryIcon && <span className="text-3xl">{categoryIcon}</span>}
             <span>{categoryName}</span>
