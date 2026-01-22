@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { RoomScoreboard } from "./RoomScoreboard";
 import { TVSetupInline } from "./TVSetupInline";
 import { GradientPicker } from "./GradientPicker";
+import { InviteFriendsModal } from "./InviteFriendsModal";
 import { getGradientById } from "@/config/roomGradients";
 import { getCategoryIconSlug } from "@/data/categoryIconMap";
 import { Switch } from "@/components/ui/switch";
@@ -69,6 +70,7 @@ export function RoomLobbyV2() {
   const [showGradientPicker, setShowGradientPicker] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
@@ -697,8 +699,17 @@ export function RoomLobbyV2() {
             currentUserId={user?.id}
             showHostCrown={true}
             maxPlayers={currentRoom.max_players || 10}
+            isHost={isHost}
+            onInviteFriends={() => setShowInviteModal(true)}
           />
         </div>
+
+        {/* Invite Friends Modal */}
+        <InviteFriendsModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          inviteLink={getShareLink(currentRoom.room_code)}
+        />
       </div>
 
       {/* Fixed Bottom Button */}

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Crown, Swords, Users, Send, X } from "lucide-react";
+import { Crown, Swords, Users, Send, X, Plus } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
 import { MatchHistoryEntry } from "@/hooks/useRoomMatchHistory";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -15,6 +15,7 @@ interface RoomScoreboardProps {
   showHostCrown?: boolean;
   maxPlayers?: number;
   isHost?: boolean;
+  onInviteFriends?: () => void;
   onResendInvitation?: (userId: string) => void;
   onRemoveParticipant?: (participantId: string) => void;
 }
@@ -32,7 +33,7 @@ const getRankIcon = (rank: number) => {
   }
 };
 
-export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, onResendInvitation, onRemoveParticipant }: RoomScoreboardProps) {
+export function RoomScoreboard({ participants, matches, currentUserId, showHostCrown = true, maxPlayers, isHost = false, onInviteFriends, onResendInvitation, onRemoveParticipant }: RoomScoreboardProps) {
   // Sort by total cumulative score (primary), then by total wins (secondary)
   const sortedParticipants = [...participants].sort(
     (a, b) => {
@@ -64,12 +65,27 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <span className="font-semibold text-white text-sm">მოთამაშეები</span>
-        {maxPlayers && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-sm font-medium text-white/80">
-            <Users className="w-3.5 h-3.5" />
-            <span>{participants.length}/{maxPlayers}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {maxPlayers && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-sm font-medium text-white/80">
+              <Users className="w-3.5 h-3.5" />
+              <span>{participants.length}/{maxPlayers}</span>
+            </div>
+          )}
+
+          {isHost && onInviteFriends && (
+            <motion.button
+              type="button"
+              onClick={onInviteFriends}
+              whileTap={{ scale: 0.92 }}
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 flex items-center justify-center"
+              aria-label="მეგობრის დამატება"
+              title="მეგობრის დამატება"
+            >
+              <Plus className="w-4 h-4 text-white/80" />
+            </motion.button>
+          )}
+        </div>
       </div>
 
       {/* Scoreboard Content */}
