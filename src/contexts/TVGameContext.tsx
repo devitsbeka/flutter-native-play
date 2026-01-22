@@ -231,33 +231,40 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (nextItem.user_trivia_id) {
         tvLog('Starting next round from queue (user trivia)', { userTriviaId: nextItem.user_trivia_id });
 
-        const { data: triviaData } = await supabase
+        // Fetch user trivia with questions from JSONB column
+        const { data: triviaData, error: triviaError } = await supabase
           .from('user_quiz_posts')
-          .select('title')
+          .select('title, questions, icon_slug')
           .eq('id', nextItem.user_trivia_id)
           .maybeSingle();
 
-        const { data: triviaQuestions, error: questionsError } = await supabase
-          .from('user_quiz_post_questions' as any)
-          .select('id, question_text, correct_answer, incorrect_answers, question_order')
-          .eq('post_id', nextItem.user_trivia_id)
-          .order('question_order', { ascending: true });
-
-        if (questionsError || !triviaQuestions || triviaQuestions.length === 0) {
+        if (triviaError || !triviaData?.questions) {
           tvLogError('startNextRoundFromQueueIfAny', 'No questions found for user trivia');
           return false;
         }
 
-        nextCategoryName = nextCategoryName || triviaData?.title || 'User Trivia';
-        nextCategoryIcon = nextCategoryIcon || '🎯';
+        const triviaQuestions = triviaData.questions as Array<{
+          question_text: string;
+          correct_answer: string;
+          incorrect_answers: string[];
+          icon_slug?: string;
+        }>;
 
-        formattedQuestions = (triviaQuestions as any[]).map((q: any) => {
+        if (triviaQuestions.length === 0) {
+          tvLogError('startNextRoundFromQueueIfAny', 'User trivia has no questions');
+          return false;
+        }
+
+        nextCategoryName = nextCategoryName || triviaData.title || 'User Trivia';
+        nextCategoryIcon = nextCategoryIcon || triviaData.icon_slug || '🎯';
+
+        formattedQuestions = triviaQuestions.map((q, idx) => {
           const incorrectAnswers = Array.isArray(q.incorrect_answers)
-            ? (q.incorrect_answers as string[])
+            ? q.incorrect_answers
             : [];
           const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
           return {
-            id: q.id,
+            id: `ut-${nextItem.user_trivia_id}-${idx}`,
             question_text: q.question_text,
             correct_answer: q.correct_answer,
             options: allAnswers,
@@ -982,39 +989,44 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let categoryIcon: string | null = null;
 
       if (userTriviaId) {
-        // Fetch questions from user-created trivia
+        // Fetch questions from user-created trivia (stored as JSONB in user_quiz_posts.questions)
         tvLog('Starting game with user trivia', { userTriviaId });
 
-        const { data: triviaData } = await supabase
+        const { data: triviaData, error: triviaError } = await supabase
           .from('user_quiz_posts')
-          .select('title')
+          .select('title, questions, icon_slug')
           .eq('id', userTriviaId)
           .maybeSingle();
 
-        // Fetch user trivia questions using raw query
-        const { data: triviaQuestions, error: questionsError } = await supabase
-          .from('user_quiz_post_questions' as any)
-          .select('id, question_text, correct_answer, incorrect_answers, question_order')
-          .eq('post_id', userTriviaId)
-          .order('question_order', { ascending: true });
-
-        if (questionsError || !triviaQuestions || triviaQuestions.length === 0) {
+        if (triviaError || !triviaData?.questions) {
           tvLogError('startGame', 'No questions found for user trivia');
           return;
         }
 
-        categoryName = triviaData?.title || 'User Trivia';
-        categoryIcon = '🎯'; // Default icon for user trivias
+        const triviaQuestions = triviaData.questions as Array<{
+          question_text: string;
+          correct_answer: string;
+          incorrect_answers: string[];
+          icon_slug?: string;
+        }>;
+
+        if (triviaQuestions.length === 0) {
+          tvLogError('startGame', 'User trivia has no questions');
+          return;
+        }
+
+        categoryName = triviaData.title || 'User Trivia';
+        categoryIcon = triviaData.icon_slug || '🎯';
 
         // Format user trivia questions
-        formattedQuestions = (triviaQuestions as any[]).map((q: any) => {
+        formattedQuestions = triviaQuestions.map((q, idx) => {
           const incorrectAnswers = Array.isArray(q.incorrect_answers) 
-            ? q.incorrect_answers as string[]
+            ? q.incorrect_answers
             : [];
           const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
           
           return {
-            id: q.id,
+            id: `ut-${userTriviaId}-${idx}`,
             question_text: q.question_text,
             correct_answer: q.correct_answer,
             options: allAnswers,
