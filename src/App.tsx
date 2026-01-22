@@ -85,6 +85,7 @@ const ShopCancel = lazy(() => import("./pages/shop/Cancel"));
 const Styleguide = lazy(() => import("./pages/Styleguide"));
 const AllButtons = lazy(() => import("./pages/AllButtons"));
 const ModalsShowcase = lazy(() => import("./pages/ModalsShowcase"));
+const TVScreensShowcase = lazy(() => import("./pages/TVScreensShowcase"));
 
 const App = () => (
   <LanguageProvider>
@@ -163,6 +164,7 @@ const App = () => (
                 <Route path="/styleguide" element={<Styleguide />} />
                 <Route path="/all-buttons" element={<AllButtons />} />
                 <Route path="/modals" element={<ModalsShowcase />} />
+                <Route path="/tv-showcase" element={<TVScreensShowcase />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
