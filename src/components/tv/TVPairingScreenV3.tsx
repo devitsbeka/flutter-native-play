@@ -93,7 +93,9 @@ export const TVPairingScreenV3: React.FC = () => {
         >
           <div className="flex items-center justify-center gap-2">
             <img src={retroTvIcon} alt="TV" className="w-8 h-8 object-contain" />
-            <p className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</p>
+            <span className="text-lg font-bold text-white">TV რეჟიმი</span>
+            <span className="text-lg text-purple-200/80">-</span>
+            <span className="text-lg text-purple-200/80">მოემზადეთ სახალისო თამაშისთვის!</span>
           </div>
         </motion.div>
 
