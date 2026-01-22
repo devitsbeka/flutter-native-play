@@ -94,12 +94,8 @@ export const TVResultsScreen: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-6 flex-shrink-0"
       >
-        <div className="flex items-center justify-center gap-3 mb-1">
-          <Trophy className="w-8 h-8 text-yellow-400" />
-          <h1 className="text-4xl font-bold text-white font-display">Game Over!</h1>
-          <Trophy className="w-8 h-8 text-yellow-400" />
-        </div>
-        <p className="text-purple-300 text-lg">Final Results</p>
+        <h1 className="text-4xl font-bold text-white font-display mb-1">თამაში დასრულდა</h1>
+        <p className="text-purple-300 text-lg">საბოლოო შედეგები</p>
       </motion.div>
 
       {/* Podium */}
