@@ -293,11 +293,6 @@ export const TVLobbyScreenV2: React.FC = () => {
                 }}
               >
                 <span className="text-sm text-purple-200/80">{index + 1}.</span>
-                <QuizCategoryIcon 
-                  iconSlug={item.icon_slug || undefined}
-                  categoryId={item.category_id || undefined}
-                  size={28}
-                />
                 <span className="text-white font-medium">{item.category_name || 'რაუნდი'}</span>
                 {/* Queue is read-only in TV mode - managed in game room */}
               </motion.div>

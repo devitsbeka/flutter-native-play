@@ -784,11 +784,6 @@ const TVHostController: React.FC = () => {
                   <span className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs text-purple-200 font-bold">
                     {index + 1}
                   </span>
-                  <QuizCategoryIcon 
-                    iconSlug={item.icon_slug || undefined}
-                    categoryId={item.category_id || undefined}
-                    size={24}
-                  />
                   <span className="flex-1 text-white font-medium">{item.category_name}</span>
                   {/* Queue is read-only in TV mode */}
                 </motion.div>
