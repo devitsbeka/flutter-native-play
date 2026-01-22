@@ -364,7 +364,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                 {/* Share Options - One Row */}
                 <div className="w-full">
                   <div className="mx-auto w-full max-w-[520px]">
-                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto pb-1">
+                    <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto overflow-y-visible py-2">
                       {shareOptions.map((option, index) => (
                         <motion.button
                           key={option.id}
