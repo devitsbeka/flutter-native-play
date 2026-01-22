@@ -70,6 +70,7 @@ interface TVMockContextType {
   isHost: boolean;
   isReveal: boolean;
   setIsReveal: (reveal: boolean) => void;
+  roomName: string;
 }
 
 const TVMockContext = createContext<TVMockContextType | null>(null);
@@ -126,6 +127,7 @@ export const TVMockProvider: React.FC<TVMockProviderProps> = ({
     isHost: true,
     isReveal,
     setIsReveal,
+    roomName: 'სახალისო კვიზი',
   };
 
   return (
