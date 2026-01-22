@@ -59,7 +59,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       let categoryIcon = null;
       let roomId = null;
       
-      // If we have a room ID, fetch its data and sync to TV session
+      // If we have a room ID, fetch its data
       if (roomIdFromUrl) {
         const { data: roomData } = await supabase
           .from('game_rooms')
@@ -82,6 +82,42 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             categoryIcon = cat?.icon;
           }
 
+          // IMPORTANT: Update TV session FIRST to set host_user_id
+          // This is required for RLS policies to allow queue operations
+          const { error: updateSessionError } = await supabase
+            .from('tv_sessions')
+            .update({
+              host_user_id: user.id,
+              is_paired: true,
+              status: 'paired',
+              room_id: roomId,
+              room_name: roomName,
+              category_name: categoryName,
+              category_icon: categoryIcon,
+            })
+            .eq('id', session.id);
+
+          if (updateSessionError) {
+            console.error('[TVSetupInline] Failed to update TV session:', updateSessionError);
+            throw updateSessionError;
+          }
+
+          console.log('[TVSetupInline] TV session updated with host_user_id:', user.id);
+
+          // Also update the game room to link to this TV session
+          const { error: updateRoomError } = await supabase
+            .from('game_rooms')
+            .update({ 
+              game_mode: 'tv_show',
+              tv_session_id: session.id 
+            })
+            .eq('id', roomId);
+
+          if (updateRoomError) {
+            console.error('[TVSetupInline] Failed to update game room:', updateRoomError);
+          }
+
+          // NOW we can do queue operations (RLS will pass since user is now host)
           // Reset existing TV queue to avoid stale/duplicate items
           const { error: clearQueueError } = await supabase
             .from('tv_session_queue')
@@ -166,24 +202,20 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             console.warn('[TVSetupInline] No queue items to insert - queue will be empty on TV');
           }
         }
-      }
+      } else {
+        // No room ID - just update TV session with basic info
+        const { error: updateError } = await supabase
+          .from('tv_sessions')
+          .update({
+            host_user_id: user.id,
+            is_paired: true,
+            status: 'paired',
+          })
+          .eq('id', session.id);
 
-      // Update TV session with room data and host
-      const { error: updateError } = await supabase
-        .from('tv_sessions')
-        .update({
-          host_user_id: user.id,
-          is_paired: true,
-          status: 'paired',
-          room_id: roomId,
-          room_name: roomName,
-          category_name: categoryName,
-          category_icon: categoryIcon,
-        })
-        .eq('id', session.id);
-
-      if (updateError) {
-        throw updateError;
+        if (updateError) {
+          throw updateError;
+        }
       }
 
       setIsConnected(true);
