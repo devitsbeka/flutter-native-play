@@ -335,13 +335,14 @@ export function RoomLobbyV2() {
         })
       ));
 
-      // Update room with trivia info
+      // Update room with trivia info (including user_trivia_id for TV sync)
       await supabase
         .from("game_rooms")
         .update({ 
           category_id: null,
           category_name: trivia.title,
           total_questions: questions.length,
+          user_trivia_id: trivia.id,
         })
         .eq("id", currentRoom.id);
       

@@ -650,6 +650,7 @@ export type Database = {
           total_questions: number | null
           tv_session_id: string | null
           used_question_ids: string[] | null
+          user_trivia_id: string | null
         }
         Insert: {
           background_gradient?: string | null
@@ -679,6 +680,7 @@ export type Database = {
           total_questions?: number | null
           tv_session_id?: string | null
           used_question_ids?: string[] | null
+          user_trivia_id?: string | null
         }
         Update: {
           background_gradient?: string | null
@@ -708,6 +710,7 @@ export type Database = {
           total_questions?: number | null
           tv_session_id?: string | null
           used_question_ids?: string[] | null
+          user_trivia_id?: string | null
         }
         Relationships: [
           {
@@ -722,6 +725,13 @@ export type Database = {
             columns: ["tv_session_id"]
             isOneToOne: false
             referencedRelation: "tv_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_rooms_user_trivia_id_fkey"
+            columns: ["user_trivia_id"]
+            isOneToOne: false
+            referencedRelation: "user_quiz_posts"
             referencedColumns: ["id"]
           },
         ]
