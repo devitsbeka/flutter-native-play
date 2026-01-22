@@ -4,6 +4,7 @@ import { Trophy, Star, RotateCcw, Home, Crown } from 'lucide-react';
 import { useTVGame, TVPlayer } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
+import { AppIcon } from '@/components/shared/AppIcon';
 
 const PODIUM_HEIGHTS = [160, 200, 120]; // 2nd, 1st, 3rd place heights
 const PODIUM_COLORS = ['bg-gray-400', 'bg-yellow-500', 'bg-amber-700'];
@@ -137,7 +138,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                       />
                     ) : (
                       <span className="text-4xl font-bold text-white">
-                        {player.nickname?.[0]?.toUpperCase() || '👤'}
+                        {player.nickname?.[0]?.toUpperCase() || '?'}
                       </span>
                     )}
                   </div>
@@ -153,7 +154,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                   )}
                   {player.isHost && (
                     <div className="absolute -bottom-1 -right-1 bg-purple-600 rounded-full p-1">
-                      <span className="text-xs">👑</span>
+                      <Crown className="w-3.5 h-3.5 text-primary-foreground" />
                     </div>
                   )}
                 </div>
@@ -172,9 +173,7 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                 className={`w-40 ${podiumColor} rounded-t-2xl flex items-start justify-center pt-4 shadow-lg`}
               >
                 <div className="flex flex-col items-center">
-                  <span className="text-6xl">
-                    {actualRank === 0 ? '🥇' : actualRank === 1 ? '🥈' : '🥉'}
-                  </span>
+                  <AppIcon slug="medal" size={72} />
                   <span className="text-white font-bold text-3xl mt-1">
                     {actualRank + 1}
                   </span>
@@ -214,13 +213,17 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                     />
                   ) : (
                     <span className="text-xl font-bold text-white">
-                      {player.nickname?.[0]?.toUpperCase() || '👤'}
+                      {player.nickname?.[0]?.toUpperCase() || '?'}
                     </span>
                   )}
                 </div>
                 <span className="text-white font-medium flex-1 text-lg">
                   {player.nickname}
-                  {player.isHost && ' 👑'}
+                  {player.isHost && (
+                    <span className="ml-1 inline-flex align-middle">
+                      <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    </span>
+                  )}
                 </span>
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />

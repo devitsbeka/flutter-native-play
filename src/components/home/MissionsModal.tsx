@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, Trophy, Clock, Sparkles, Gift, Check, Flame, Award, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Target, Trophy, Clock, Sparkles, Gift, Check, Flame, Award, Calendar, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
@@ -17,6 +17,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/com
 import confetti from "canvas-confetti";
 import { useFlyingCurrency } from "@/components/shared/FlyingCurrency";
 import { toast } from "@/hooks/use-toast";
+import { AppIcon } from "@/components/shared/AppIcon";
 
 // Power-up icons
 import power5050 from "@/assets/powers/5050.png";
@@ -73,19 +74,19 @@ const celebrateClaim = () => {
   }, 150);
 };
 
-const getMissionIcon = (missionId: string) => {
+const getMissionIconSlug = (missionId: string) => {
   const icons: Record<string, string> = {
-    win_games: "🏆",
-    answer_correct: "✅",
-    play_categories: "🎯",
-    play_games: "🎮",
-    perfect_round: "⭐",
-    weekly_wins: "👑",
-    weekly_answers: "🧠",
-    weekly_categories: "🌍",
-    weekly_perfect: "💎",
+    win_games: "trophy",
+    answer_correct: "check",
+    play_categories: "target",
+    play_games: "game-controller",
+    perfect_round: "star",
+    weekly_wins: "crown",
+    weekly_answers: "brain",
+    weekly_categories: "globe",
+    weekly_perfect: "diamond",
   };
-  return icons[missionId] || "🎲";
+  return icons[missionId] || "dice";
 };
 
 const getTimeUntilMidnight = (): string => {
@@ -198,9 +199,9 @@ function MissionCarouselCard({
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                className="text-6xl mb-4"
+                className="mb-4"
               >
-                🎉
+                <AppIcon slug="sparkles" size={64} />
               </motion.div>
               <motion.h3
                 initial={{ opacity: 0, y: 20 }}
@@ -302,7 +303,11 @@ function MissionCarouselCard({
             }`}
             style={{ boxShadow: isClaimed ? "none" : "0 3px 0 rgba(0,0,0,0.2)" }}
           >
-            {isClaimed ? <Check className="w-7 h-7" /> : getMissionIcon(mission.mission_id)}
+            {isClaimed ? (
+              <Check className="w-7 h-7" />
+            ) : (
+              <AppIcon slug={getMissionIconSlug(mission.mission_id)} size={32} />
+            )}
           </div>
 
           {/* Title */}
@@ -543,8 +548,13 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
           const newAchievements = await checkAndUnlockAchievements(streakResult.newStreak, totalCompletions + 1);
           for (const achievement of newAchievements) {
             toast({
-              title: `🏅 ${t("missions.achievementUnlocked")}`,
-              description: `${achievement.icon} ${achievement.title}`,
+              title: t("missions.achievementUnlocked"),
+              description: (
+                <span className="inline-flex items-center gap-2">
+                  <AppIcon slug={achievement.icon_slug} size={18} />
+                  <span>{achievement.title}</span>
+                </span>
+              ),
             });
           }
         }
@@ -562,7 +572,7 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
       if (result.coins > 0) triggerFlyingCurrency("coins", Math.min(result.coins / 10, 10));
       if (result.gems > 0) triggerFlyingCurrency("gems", result.gems);
       toast({
-        title: `🔥 ${t("missions.streakBonus")}`,
+        title: t("missions.streakBonus"),
         description: `${result.coins} ${t("dailyRewards.coins")} • ${result.gems} ${t("dailyRewards.gems")} • ${result.xp} XP`,
       });
     }
@@ -767,7 +777,11 @@ export function MissionsModal({ isOpen, onClose }: MissionsModalProps) {
                         ? `bg-gradient-to-br ${rarityStyle.gradient}` 
                         : "bg-muted"
                     }`}>
-                      {unlocked ? achievement.icon : "🔒"}
+                      {unlocked ? (
+                        <AppIcon slug={achievement.icon_slug} size={26} />
+                      ) : (
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className={`font-bold text-sm ${unlocked ? rarityStyle.text : "text-muted-foreground"}`}>
