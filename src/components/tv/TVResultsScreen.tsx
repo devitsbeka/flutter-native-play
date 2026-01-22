@@ -120,7 +120,7 @@ export const TVResultsScreen: React.FC = () => {
                 initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }}
-                className="-mb-0.5"
+                className="mb-1"
               >
                 <img 
                   src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
