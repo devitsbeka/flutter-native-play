@@ -65,7 +65,7 @@ export const TVQuestionScreenV4: React.FC = () => {
         <AnimatePresence>
           {correctPlayers.length > 0 && (
             <motion.div 
-              className="flex -space-x-3"
+              className="flex gap-2"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
             >
@@ -93,7 +93,7 @@ export const TVQuestionScreenV4: React.FC = () => {
         </AnimatePresence>
 
         {/* Waiting Players (Yellow/Cyan - thinking) */}
-        <div className="flex -space-x-2">
+        <div className="flex gap-2">
           {waitingPlayers.map((player) => (
             <motion.div 
               key={player.id}
@@ -118,7 +118,7 @@ export const TVQuestionScreenV4: React.FC = () => {
         <AnimatePresence>
           {wrongPlayers.length > 0 && (
             <motion.div 
-              className="flex -space-x-3"
+              className="flex gap-2"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
             >
