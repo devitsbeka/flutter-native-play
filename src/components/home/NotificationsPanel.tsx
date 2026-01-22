@@ -7,6 +7,7 @@ import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
 import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { ka, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -127,11 +128,39 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     switch (notification.type) {
       case 'game_started':
       case 'room_invite':
-        if (data?.room_code) {
-          navigate(`/team?join=${data.room_code}`);
-        } else {
-          navigate('/team');
-        }
+        (async () => {
+          try {
+            const roomId = (data?.room_id as string | undefined) ?? undefined;
+            const roomCode = (data?.room_code as string | undefined) ?? undefined;
+
+            if (roomId || roomCode) {
+              const q = supabase.from('game_rooms').select('tv_session_id, room_code');
+              const { data: room } = roomId
+                ? await q.eq('id', roomId).maybeSingle()
+                : await q.eq('room_code', String(roomCode).toUpperCase()).maybeSingle();
+
+              const tvSessionId = (room as any)?.tv_session_id as string | null | undefined;
+              if (tvSessionId) {
+                navigate(`/join/session/${tvSessionId}`);
+                return;
+              }
+
+              if ((room as any)?.room_code) {
+                navigate(`/team?join=${(room as any).room_code}`);
+                return;
+              }
+            }
+
+            if (roomCode) {
+              navigate(`/team?join=${roomCode}`);
+            } else {
+              navigate('/team');
+            }
+          } catch {
+            toast.error('ვერ მოხერხდა თამაშზე გადასვლა');
+            navigate('/team');
+          }
+        })();
         break;
       case 'friend_request':
       case 'friend_accepted':
