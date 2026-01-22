@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Library, Shuffle, Sparkles, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type PreRoomQueuePreviewItem = {
   tmpId: string;
@@ -20,19 +21,19 @@ export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePr
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 p-4"
+      className="rounded-2xl bg-muted/50 border border-border/50 p-4"
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-white/60 text-xs font-medium">შემდეგი რაუნდები (ლობის წინ)</p>
-          <p className="text-white text-sm font-semibold">{items.length} დამატებულია</p>
+          <p className="text-muted-foreground text-xs font-medium">შემდეგი რაუნდები (ლობის წინ)</p>
+          <p className="text-foreground text-sm font-semibold">{items.length} დამატებულია</p>
         </div>
 
         {onClear && (
           <button
             type="button"
             onClick={onClear}
-            className="text-white/60 text-xs hover:text-white/80 transition-colors"
+            className="text-muted-foreground text-xs hover:text-foreground transition-colors"
           >
             გასუფთავება
           </button>
@@ -46,29 +47,29 @@ export function PreRoomQueuePreview({ items, onRemove, onClear }: PreRoomQueuePr
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.03 }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-background/60 border border-border/50 shrink-0"
           >
-            <span className="text-white/40 text-xs font-bold mr-0.5">{index + 1}</span>
+            <span className="text-muted-foreground text-xs font-bold mr-0.5">{index + 1}</span>
 
             {item.source_type === "random" ? (
-              <Shuffle className="w-[18px] h-[18px] text-purple-400" />
+              <Shuffle className="w-[18px] h-[18px] text-primary" />
             ) : item.source_type === "category" ? (
-              <Library className="w-[18px] h-[18px] text-purple-400" />
+              <Library className="w-[18px] h-[18px] text-primary" />
             ) : (
-              <Sparkles className="w-[18px] h-[18px] text-purple-400" />
+              <Sparkles className="w-[18px] h-[18px] text-primary" />
             )}
 
-            <span className="text-white/80 text-xs font-medium">
+            <span className="text-foreground text-xs font-medium">
               {item.source_type === "random" ? "შემთხვევითი" : item.category_name || "ტრივია"}
             </span>
 
             <button
               type="button"
               onClick={() => onRemove(item.tmpId)}
-              className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"
+              className="ml-0.5 p-1 rounded-full hover:bg-muted transition-colors"
               aria-label="რაუნდის წაშლა"
             >
-              <X className="w-[18px] h-[18px] text-white/50 hover:text-white/80" />
+              <X className={cn("w-[18px] h-[18px]", "text-muted-foreground hover:text-foreground")} />
             </button>
           </motion.div>
         ))}
