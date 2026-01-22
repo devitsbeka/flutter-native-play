@@ -55,95 +55,92 @@ export const TVQuestionScreenV4: React.FC = () => {
         totalRounds={totalRounds} 
         className="absolute right-3 top-1/2 -translate-y-1/2 z-30"
       />
-      {/* Player Status Bar */}
+      {/* Player Status Bar - Three Zone Layout */}
       <motion.div 
-        className="flex justify-center items-center gap-4 mb-3 flex-shrink-0"
+        className="flex justify-between items-center w-full mb-3 flex-shrink-0 px-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Correct Players (Green) */}
-        <AnimatePresence>
-          {correctPlayers.length > 0 && (
-            <motion.div 
-              className="flex gap-2"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              {correctPlayers.map((player) => (
-                <motion.div 
-                  key={player.id}
-                  className="relative"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.5 }}
-                >
-                  <Avatar className="w-10 h-10 ring-3 ring-green-400 border-2 border-white">
-                    <AvatarImage src={player.avatar_url || undefined} />
-                    <AvatarFallback className="bg-green-500 text-white font-bold text-sm">
-                      {player.nickname.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Waiting Players (Yellow/Cyan - thinking) */}
-        <div className="flex gap-2">
-          {waitingPlayers.map((player) => (
-            <motion.div 
-              key={player.id}
-              className="relative"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <Avatar className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white">
-                <AvatarImage src={player.avatar_url || undefined} />
-                <AvatarFallback className="bg-yellow-500 text-white font-bold text-sm">
-                  {player.nickname.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
-                <Clock className="w-3 h-3 text-white" />
-              </div>
-            </motion.div>
-          ))}
+        {/* Wrong Players (Red) - LEFT EDGE */}
+        <div className="flex gap-2 min-w-[60px] justify-start">
+          <AnimatePresence>
+            {wrongPlayers.map((player) => (
+              <motion.div 
+                key={player.id}
+                className="relative"
+                initial={{ scale: 0, x: 50 }}
+                animate={{ scale: 1, x: 0 }}
+                exit={{ scale: 0 }}
+                transition={{ type: "spring", bounce: 0.5 }}
+                layout
+              >
+                <Avatar className="w-10 h-10 ring-3 ring-red-400 border-2 border-white">
+                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarFallback className="bg-red-500 text-white font-bold text-sm">
+                    {player.nickname.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
+                  <X className="w-3 h-3 text-white" />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
-        {/* Wrong Players (Red) */}
-        <AnimatePresence>
-          {wrongPlayers.length > 0 && (
-            <motion.div 
-              className="flex gap-2"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
-              {wrongPlayers.map((player) => (
-                <motion.div 
-                  key={player.id}
-                  className="relative"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", bounce: 0.5 }}
-                >
-                  <Avatar className="w-10 h-10 ring-3 ring-red-400 border-2 border-white">
-                    <AvatarImage src={player.avatar_url || undefined} />
-                    <AvatarFallback className="bg-red-500 text-white font-bold text-sm">
-                      {player.nickname.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <X className="w-3 h-3 text-white" />
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Waiting Players (Yellow) - CENTER */}
+        <div className="flex gap-2 justify-center flex-1">
+          <AnimatePresence>
+            {waitingPlayers.map((player) => (
+              <motion.div 
+                key={player.id}
+                className="relative"
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                layout
+              >
+                <Avatar className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white">
+                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarFallback className="bg-yellow-500 text-white font-bold text-sm">
+                    {player.nickname.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
+                  <Clock className="w-3 h-3 text-white" />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Correct Players (Green) - RIGHT EDGE */}
+        <div className="flex gap-2 min-w-[60px] justify-end">
+          <AnimatePresence>
+            {correctPlayers.map((player) => (
+              <motion.div 
+                key={player.id}
+                className="relative"
+                initial={{ scale: 0, x: -50 }}
+                animate={{ scale: 1, x: 0 }}
+                exit={{ scale: 0 }}
+                transition={{ type: "spring", bounce: 0.5 }}
+                layout
+              >
+                <Avatar className="w-10 h-10 ring-3 ring-green-400 border-2 border-white">
+                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarFallback className="bg-green-500 text-white font-bold text-sm">
+                    {player.nickname.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       </motion.div>
 
       {/* Top info row (category + timer) */}
