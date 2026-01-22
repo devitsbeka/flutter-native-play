@@ -49,6 +49,37 @@ export const TVQuestionScreenV4: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden relative">
+      {/* Question Progress Indicator - Left side */}
+      {totalQuestions > 1 && (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1.5"
+        >
+          <motion.div
+            className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-white/30 border-2 border-white shadow-lg"
+            animate={{
+              scale: [1, 1.06, 1],
+              boxShadow: [
+                '0 0 10px rgba(255,255,255,0.25)',
+                '0 0 20px rgba(255,255,255,0.45)',
+                '0 0 10px rgba(255,255,255,0.25)',
+              ],
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <span className="text-white font-bold text-xs">
+              {currentQuestionIndex + 1}/{totalQuestions}
+            </span>
+          </motion.div>
+
+          <span className="text-white/60 text-[10px] font-medium mt-1 writing-vertical">
+            კითხვა
+          </span>
+        </motion.div>
+      )}
+
       {/* Mini Queue Indicator - Right side */}
       <TVRoundQueueIndicator 
         currentRound={roundNumber} 
