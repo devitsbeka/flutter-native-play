@@ -244,9 +244,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-[520px] p-4 pb-28">
-            {/* Search Section */}
-            <div className="mb-2">
-              <div className={`relative ${narrow}`}>
+              <div className="space-y-5">
+                {/* Search Section */}
+                <div>
+                  <div className={`relative ${narrow}`}>
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
                 <Input
                   type="text"
@@ -258,88 +259,85 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                 {searching && (
                     <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70 animate-spin" />
                 )}
-              </div>
-              
-              {/* Search Results */}
-              <AnimatePresence mode="popLayout">
-                {searchQuery.length >= 2 && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 ${narrow}`}
-                  >
-                    {searchResults.length === 0 && !searching ? (
-                      <p className="text-center py-6 text-primary-foreground/80 text-sm">
-                        მომხმარებელი ვერ მოიძებნა
-                      </p>
-                    ) : (
-                      searchResults.map((result) => (
-                        <motion.div
-                          key={result.user_id}
-                          layout
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                            className={`flex items-center gap-3 p-3 ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
-                        >
-                            <Avatar className="w-11 h-11 border border-white/20">
-                            <AvatarImage src={result.avatar_url || undefined} />
-                            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
-                              {result.nickname.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                  </div>
 
-                          <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm text-white truncate">{result.nickname}</p>
-                            {result.country_code && (
-                                <p className="text-xs text-white/70">
-                                {getCountryFlag(result.country_code)}
-                              </p>
-                            )}
-                          </div>
+                  {/* Search Results */}
+                  <AnimatePresence mode="popLayout">
+                    {searchQuery.length >= 2 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 ${narrow}`}
+                      >
+                        {searchResults.length === 0 && !searching ? (
+                          <p className="text-center py-6 text-primary-foreground/80 text-sm">
+                            მომხმარებელი ვერ მოიძებნა
+                          </p>
+                        ) : (
+                          searchResults.map((result) => (
+                            <motion.div
+                              key={result.user_id}
+                              layout
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className={`flex items-center gap-3 p-3 ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
+                            >
+                              <Avatar className="w-11 h-11 border border-white/20">
+                                <AvatarImage src={result.avatar_url || undefined} />
+                                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
+                                  {result.nickname.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
 
-                          <motion.button
-                            onClick={() => handleSendRequest(result.user_id)}
-                            disabled={sentRequests.has(result.user_id)}
-                              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
-                              sentRequests.has(result.user_id)
-                                  ? "bg-white/15 border-white/20 text-white/90"
-                                  : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
-                            }`}
-                            whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
-                            whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
-                          >
-                            {sentRequests.has(result.user_id) ? (
-                              <>
-                                <Check className="w-3 h-3" />
-                                გაგზავნილი
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="w-4 h-4" />
-                                დამატება
-                              </>
-                            )}
-                          </motion.button>
-                        </motion.div>
-                      ))
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm text-white truncate">{result.nickname}</p>
+                                {result.country_code && (
+                                  <p className="text-xs text-white/70">{getCountryFlag(result.country_code)}</p>
+                                )}
+                              </div>
+
+                              <motion.button
+                                onClick={() => handleSendRequest(result.user_id)}
+                                disabled={sentRequests.has(result.user_id)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
+                                  sentRequests.has(result.user_id)
+                                    ? "bg-white/15 border-white/20 text-white/90"
+                                    : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
+                                }`}
+                                whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
+                                whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
+                              >
+                                {sentRequests.has(result.user_id) ? (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    გაგზავნილი
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserPlus className="w-4 h-4" />
+                                    დამატება
+                                  </>
+                                )}
+                              </motion.button>
+                            </motion.div>
+                          ))
+                        )}
+                      </motion.div>
                     )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            </div>
-            
-            {/* Divider */}
-            <div className={`flex items-center gap-3 mb-1 ${narrow}`}>
-              <div className="flex-1 h-px bg-primary-foreground/25" />
-              <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
-              <div className="flex-1 h-px bg-primary-foreground/25" />
-            </div>
-            
-            {/* Import & Connect Section */}
-            <div className={`space-y-2 mb-1 ${narrow}`}>
+                  </AnimatePresence>
+                </div>
+
+                {/* Divider */}
+                <div className={`flex items-center gap-3 ${narrow}`}>
+                  <div className="flex-1 h-px bg-primary-foreground/25" />
+                  <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
+                  <div className="flex-1 h-px bg-primary-foreground/25" />
+                </div>
+
+                {/* Import & Connect Section */}
+                <div className={`space-y-2 ${narrow}`}>
               <motion.button
                 onClick={handleImportContacts}
                 className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 transition-colors`}
@@ -365,17 +363,17 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                   <p className="text-sm text-white/70">იპოვე მეგობრები Facebook-ზე</p>
                 </div>
               </motion.button>
-            </div>
-            
-            {/* Divider */}
-            <div className={`flex items-center gap-3 mb-2 ${narrow}`}>
-              <div className="flex-1 h-px bg-primary-foreground/25" />
-              <span className="text-xs text-primary-foreground/90 font-semibold">ან გააზიარე</span>
-              <div className="flex-1 h-px bg-primary-foreground/25" />
-            </div>
-            
-            {/* Share Options - Two Rows */}
-            <div className="flex flex-col items-center gap-5">
+                </div>
+
+                {/* Divider */}
+                <div className={`flex items-center gap-3 ${narrow}`}>
+                  <div className="flex-1 h-px bg-primary-foreground/25" />
+                  <span className="text-xs text-primary-foreground/90 font-semibold">ან გააზიარე</span>
+                  <div className="flex-1 h-px bg-primary-foreground/25" />
+                </div>
+
+                {/* Share Options - Two Rows */}
+                <div className="flex flex-col items-center gap-5">
               {/* First row: SMS, Messenger, WhatsApp */}
               <div className="flex items-center justify-center gap-8">
                 {shareOptions.slice(0, 3).map((option, index) => (
@@ -414,6 +412,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                     <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
                   </motion.button>
                 ))}
+              </div>
+                </div>
               </div>
             </div>
           </div>
