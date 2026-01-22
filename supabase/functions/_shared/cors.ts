@@ -10,6 +10,8 @@ const ALLOWED_ORIGINS = [
   'https://flutter-native-play.lovable.app',
   // Preview
   'https://id-preview--f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovable.app',
+  // Lovable internal preview domain (varies per project/session)
+  'https://f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovableproject.com',
   // Capacitor iOS
   'capacitor://localhost',
   // Capacitor Android / Local development
@@ -27,9 +29,12 @@ export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') || '';
   
   // Check if origin is in allowed list (also allow no origin for same-origin requests)
-  const isAllowed = !origin || ALLOWED_ORIGINS.some(allowed => 
-    origin === allowed || origin.startsWith(allowed)
-  );
+  // Additionally allow Lovable's preview domains under *.lovableproject.com.
+  const isLovableProjectPreview = origin.endsWith('.lovableproject.com');
+  const isAllowed =
+    !origin ||
+    isLovableProjectPreview ||
+    ALLOWED_ORIGINS.some((allowed) => origin === allowed || origin.startsWith(allowed));
   
   return {
     'Access-Control-Allow-Origin': isAllowed ? (origin || '*') : ALLOWED_ORIGINS[0],
