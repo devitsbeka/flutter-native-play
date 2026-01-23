@@ -21,6 +21,7 @@ import { useSocialFeed } from "@/hooks/useSocialFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { createNotification } from "@/hooks/useNotifications";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface Question {
   question: string;
@@ -34,9 +35,12 @@ interface QuizPlayModalProps {
   onOpenChange: (open: boolean) => void;
   post: SamplePost | null;
   collectionPosts?: SamplePost[];
+  returnTo?: string;
 }
 
-export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: QuizPlayModalProps) {
+export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, returnTo }: QuizPlayModalProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { addCoins } = useCurrency();
   const { profile, updateProfile } = useAuth();
   const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
@@ -249,6 +253,12 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
 
   const handleClose = () => {
     resetGame();
+    const dest = returnTo || (location.state as any)?.returnTo;
+    if (dest) {
+      onOpenChange(false);
+      navigate(dest, { replace: true });
+      return;
+    }
     onOpenChange(false);
   };
 
