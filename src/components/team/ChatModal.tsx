@@ -118,10 +118,7 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
               <motion.button
                 onClick={onClose}
                 className="p-2 rounded-xl transition-colors"
-                style={{
-                  background: "#F3F4F6",
-                  boxShadow: "0 2px 0 #D1D5DB",
-                }}
+                style={{}}
                 whileTap={{ scale: 0.95, y: 2 }}
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -158,10 +155,7 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
               <motion.button
                 onClick={() => setShowUserMenu(true)}
                 className="p-2 rounded-xl transition-colors"
-                style={{
-                  background: "#F3F4F6",
-                  boxShadow: "0 2px 0 #D1D5DB",
-                }}
+                style={{}}
                 whileTap={{ scale: 0.95, y: 2 }}
               >
                 <MoreVertical className="w-5 h-5 text-gray-600" />
@@ -170,10 +164,7 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
               <motion.button
                 onClick={onClose}
                 className="p-2 rounded-xl transition-colors"
-                style={{
-                  background: "#F3F4F6",
-                  boxShadow: "0 2px 0 #D1D5DB",
-                }}
+                style={{}}
                 whileTap={{ scale: 0.95, y: 2 }}
               >
                 <X className="w-5 h-5 text-gray-600" />

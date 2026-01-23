@@ -391,7 +391,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                       </div>
                       <button
                         onClick={onClose}
-                        className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                        className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors"
                       >
                         <X className="w-4 h-4 text-foreground" />
                       </button>
