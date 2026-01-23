@@ -52,7 +52,13 @@ export default function CollectionLobby() {
       playsCount: r.plays_count || 0,
       savesCount: r.saves_count || 0,
       commentsCount: 0,
-      questions: (r.questions as any[]) || [],
+      // Convert DB shape (question_text) to UI shape (question)
+      questions: ((r.questions as any[]) || []).map((q: any) => ({
+        question: q.question_text || q.question || "",
+        correct_answer: q.correct_answer || "",
+        incorrect_answers: q.incorrect_answers || [],
+        icon_slug: q.icon_slug || null,
+      })),
       isPublic: r.is_public,
       roundNumber: r.round_number || undefined,
     }));
