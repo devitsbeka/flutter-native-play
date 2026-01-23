@@ -312,22 +312,22 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
             <button
               onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
               disabled={isPosting}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
+              className={`flex-1 h-10 flex items-center justify-center gap-2 px-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${
                 collection.is_public === false
                   ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                   : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
               }`}
             >
               {isPosting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : collection.is_public === false ? (
                 <>
-                  <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                  <Globe className="w-4 h-4 text-emerald-500" />
                   <span>გამოაქვეყნე</span>
                 </>
               ) : (
                 <>
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-4 h-4" />
                   <span>გამოქვეყნებულია</span>
                 </>
               )}
@@ -530,14 +530,14 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           <ChunkyButton
             size="sm"
             variant="primary"
-            className="flex-1 text-xs"
+            className="flex-1 h-10 text-sm"
             onClick={handlePlayOnTV}
             disabled={isStartingTV}
             icon={
               isStartingTV ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Play className="w-3.5 h-3.5 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
               )
             }
           >
@@ -645,22 +645,22 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           <button
             onClick={() => onPost?.(post)}
             disabled={isPosting}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
+            className={`flex-1 h-10 flex items-center justify-center gap-2 px-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${
               post.is_public === false
                 ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                 : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
             }`}
           >
             {isPosting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : post.is_public === false ? (
               <>
-                <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                <Globe className="w-4 h-4 text-emerald-500" />
                 <span>გამოაქვეყნე</span>
               </>
             ) : (
               <>
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" />
                 <span>გამოქვეყნებულია</span>
               </>
             )}
@@ -668,10 +668,10 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           <ChunkyButton 
             size="sm" 
             variant="outline" 
-            className="flex-1 text-xs"
+            className="flex-1 h-10 text-sm"
             onClick={() => navigate(`/trivia/${post.id}`)}
           >
-            <Play className="w-3.5 h-3.5" />
+            <Play className="w-4 h-4" />
             <span>ითამაშე</span>
           </ChunkyButton>
         </div>
