@@ -950,9 +950,12 @@ export default function CategoryQuizPage() {
     );
   }
   return (
-    <div className="w-full h-screen flex flex-col bg-[#7E7ADB] overflow-hidden max-w-[700px] md:max-w-[520px] mx-auto">
-      {/* Safe area padding for notched phones */}
-      <div className="pt-[env(safe-area-inset-top)]" />
+    // Full-width purple background on desktop/tablet (prevents white gutters)
+    <div className="w-full h-screen bg-[#7E7ADB] overflow-hidden">
+      {/* Content wrapper with max-width for desktop/tablet, centered */}
+      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
+        {/* Safe area padding for notched phones */}
+        <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Solo mode with category name and timer */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0">
@@ -1144,6 +1147,7 @@ export default function CategoryQuizPage() {
 
       {/* Screen-wide power-up effects */}
       <PowerUpScreenEffect type={activeScreenEffect} isActive={activeScreenEffect !== null || timerFrozen} />
+      </div>
     </div>
   );
 }
