@@ -12,6 +12,7 @@ import { QuestionIconPicker } from "@/components/social/QuestionIconPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import useEmblaCarousel from "embla-carousel-react";
+import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -221,6 +222,7 @@ export function GameStylePersonalTrivia({
   onDraftResumed,
 }: GameStylePersonalTriviaProps) {
   const { toast } = useToast();
+  const { saveDraft, loadDraft } = useTriviaDrafts();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingField, setEditingField] = useState<"question" | string | null>(null);
@@ -270,22 +272,17 @@ export function GameStylePersonalTrivia({
   // Track current draft ID for updates
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
 
+  // Debounced auto-save so a "stuck" session still appears in Drafts.
+  const autosaveTimerRef = useRef<number | null>(null);
+  const lastAutosavedPayloadRef = useRef<string>("");
+
   // Load draft when resumeDraftId is provided
   useEffect(() => {
     if (!resumeDraftId || !user || !isOpen) return;
     
-    const loadDraft = async () => {
-      const { data, error } = await supabase
-        .from("trivia_drafts")
-        .select("*")
-        .eq("id", resumeDraftId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (error || !data) {
-        sonnerToast.error("დრაფტის ჩატვირთვა ვერ მოხერხდა");
-        return;
-      }
+    const loadDraftData = async () => {
+      const data = await loadDraft(resumeDraftId);
+      if (!data) return;
       
       // Convert stored format to component format
       const loadedQuestions: PersonalQuestion[] = (data.questions as any[]).map((q: any, idx: number) => ({
@@ -309,8 +306,68 @@ export function GameStylePersonalTrivia({
       sonnerToast.success("დრაფტი ჩაიტვირთა");
     };
     
-    loadDraft();
-  }, [resumeDraftId, user, isOpen, onDraftResumed]);
+    loadDraftData();
+  }, [resumeDraftId, user, isOpen, onDraftResumed, loadDraft]);
+
+  // Auto-save personal trivia drafts (debounced). This ensures the draft shows up in DraftsList
+  // even if the user closes the modal or the UI freezes before manual save.
+  useEffect(() => {
+    if (!isOpen || !user) return;
+
+    // Only auto-save if there's *some* content.
+    const hasAnyContent =
+      (title && title.trim().length > 0) ||
+      questions.some((q) =>
+        (q.question || "").trim().length > 0 ||
+        q.answers.some((a) => (a.text || "").trim().length > 0)
+      );
+
+    if (!hasAnyContent) return;
+
+    const questionsData = questions.map((q) => ({
+      question: q.question,
+      answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
+      iconSlug: q.iconSlug,
+      backgroundImageUrl: q.backgroundImageUrl,
+    }));
+
+    // Skip if payload hasn't changed (prevents redundant writes).
+    const payloadKey = JSON.stringify({
+      title: title?.trim() || null,
+      questions: questionsData,
+    });
+    if (payloadKey === lastAutosavedPayloadRef.current) return;
+
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = window.setTimeout(async () => {
+      try {
+        const saved = await saveDraft({
+          draftId: currentDraftId || undefined,
+          title: title?.trim() || null,
+          questions: questionsData,
+          draft_type: "personal",
+        });
+
+        if (saved?.id) {
+          setCurrentDraftId(saved.id);
+        }
+
+        lastAutosavedPayloadRef.current = payloadKey;
+      } catch {
+        // Silent autosave failure (user can still try manual save)
+      }
+    }, 1200);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [isOpen, user, title, questions, currentDraftId, saveDraft]);
 
   // Character limits
   const QUESTION_MAX = 65;
@@ -1189,29 +1246,16 @@ export function GameStylePersonalTrivia({
                                 iconSlug: q.iconSlug,
                                 backgroundImageUrl: q.backgroundImageUrl
                               }));
-                              
-                              if (currentDraftId) {
-                                // Update existing draft
-                                const { error } = await supabase.from("trivia_drafts")
-                                  .update({
-                                    title: draftName.trim(),
-                                    questions: questionsData,
-                                    draft_type: 'personal',
-                                    updated_at: new Date().toISOString()
-                                  })
-                                  .eq("id", currentDraftId);
-                                
-                                if (error) throw error;
-                              } else {
-                                // Insert new draft
-                                const { error } = await supabase.from("trivia_drafts").insert({
-                                  user_id: user.id,
-                                  title: draftName.trim(),
-                                  questions: questionsData,
-                                  draft_type: 'personal'
-                                });
-                                
-                                if (error) throw error;
+
+                              const saved = await saveDraft({
+                                draftId: currentDraftId || undefined,
+                                title: draftName.trim(),
+                                questions: questionsData,
+                                draft_type: "personal",
+                              });
+
+                              if (saved?.id) {
+                                setCurrentDraftId(saved.id);
                               }
                               
                               sonnerToast.success("დრაფტი შეინახა!");
