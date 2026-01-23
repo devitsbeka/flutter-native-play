@@ -154,41 +154,34 @@ export default function CollectionLobby() {
       </div>
 
       {/* Content */}
-      <div className="px-4 space-y-4 -mt-2">
+      <div className="px-4 space-y-4 -mt-6 relative z-10">
         {/* Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="grid grid-cols-4 gap-2 bg-card rounded-2xl border border-border p-3"
+          className="grid grid-cols-3 gap-2 bg-card rounded-2xl border border-border p-3"
         >
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <Layers className="w-3.5 h-3.5" />
-            </div>
-            <p className="text-lg font-bold text-foreground">{posts.length}</p>
-            <p className="text-[10px] text-muted-foreground">რაუნდი</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <HelpCircle className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{totals.totalQuestions}</p>
-            <p className="text-[10px] text-muted-foreground">კითხვა</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>კითხვა</span>
+            </div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <Users className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{totals.totalPlays}</p>
-            <p className="text-[10px] text-muted-foreground">ნათამაშები</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              <span>ნათამაშები</span>
+            </div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <Heart className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{totals.totalLikes}</p>
-            <p className="text-[10px] text-muted-foreground">მოწონება</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <Heart className="w-3.5 h-3.5" />
+              <span>მოწონება</span>
+            </div>
           </div>
         </motion.div>
 
