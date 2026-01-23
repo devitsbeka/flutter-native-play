@@ -188,7 +188,7 @@ export function FriendChatSheet({ isOpen, onClose, friendId, friendProfile }: Fr
           <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors"
             >
               <ChevronLeft className="w-5 h-5 text-muted-foreground" />
             </button>
