@@ -128,10 +128,24 @@ export function useAdminIconAssignment() {
     let query = supabase
       .from('questions')
       .select('id, question_text, correct_answer, icon_slug, category_id')
-      .eq('is_active', true)
-      .order('icon_slug', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
+      .eq('is_active', true);
+
+    // IMPORTANT:
+    // The "Only without icons" toggle is applied client-side (it can include invalid slugs,
+    // not only NULLs). If we keep ordering by icon_slug DESC, NULL icon slugs drift to the end
+    // and the first page may contain only "has icon" questions, producing an empty list.
+    // To make the first pages contain the most likely "missing" candidates, push NULLs first.
+    if (onlyWithout) {
+      query = query
+        .order('icon_slug', { ascending: true, nullsFirst: true })
+        .order('created_at', { ascending: false });
+    } else {
+      query = query
+        .order('icon_slug', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false });
+    }
+
+    query = query.range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
 
     if (search) {
       const searchTerms = buildSearchTerms(search);
