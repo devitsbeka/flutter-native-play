@@ -1296,6 +1296,8 @@ export function GameStylePersonalTrivia({
           handleIconChange(slug, iconPickerIndex);
           setIconPickerIndex(null);
         }}
+        // We're creating trivia here, so allow searching/selecting icons that match the answer.
+        creatorMode
         questionText={questions[iconPickerIndex]?.question}
         correctAnswer={questions[iconPickerIndex]?.answers.find(a => a.isCorrect)?.text}
         incorrectAnswers={questions[iconPickerIndex]?.answers.filter(a => !a.isCorrect).map(a => a.text)}

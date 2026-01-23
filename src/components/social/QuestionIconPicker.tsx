@@ -22,12 +22,17 @@ interface QuestionIconPickerProps {
   correctAnswer?: string;
   incorrectAnswers?: string[];
   large?: boolean;
+  /**
+   * When true, disables anti-spoiler filtering/validation.
+   * Use this when the user is CREATING trivia (so searching "shark" can return shark icons).
+   */
+  creatorMode?: boolean;
   /** When true, renders only the modal (no trigger button) and controls open state externally */
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers, large = false, isOpen: externalOpen, onClose }: QuestionIconPickerProps) {
+export function QuestionIconPicker({ selectedSlug, onSelect, questionText, correctAnswer, incorrectAnswers, large = false, creatorMode = false, isOpen: externalOpen, onClose }: QuestionIconPickerProps) {
   // Use external open state if provided, otherwise use internal state
   const isControlled = externalOpen !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
@@ -62,6 +67,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
 
   // Check if an icon is safe (doesn't reveal the answer)
   const isIconSafe = (iconSlug: string): boolean => {
+    if (creatorMode) return true;
     if (!correctAnswer) return true;
     const validation = validateIconKeyword(iconSlug, correctAnswer, incorrectAnswers);
     return validation.isValid;
@@ -103,16 +109,19 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
         body: { 
           query: questionText, 
           limit: 20,
-          correctAnswer: correctAnswer,
+          // When creating trivia, do NOT filter by the correct answer.
+          correctAnswer: creatorMode ? undefined : correctAnswer,
           seed: isRefresh ? Date.now() : suggestionSeed,
           shuffle: isRefresh
         }
       });
       
       if (!error && data?.icons) {
-        // Filter out icons that reveal the answer
-        const safeIcons = data.icons.filter((icon: IconItem) => isIconSafe(icon.slug));
-        setSuggestedIcons(safeIcons.slice(0, 8));
+        const next = creatorMode
+          ? (data.icons as IconItem[])
+          : (data.icons as IconItem[]).filter((icon) => isIconSafe(icon.slug));
+
+        setSuggestedIcons(next.slice(0, 8));
       }
     } catch (err) {
       console.error("Error loading suggestions:", err);
@@ -188,7 +197,12 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
       try {
         // Always use smart search for both Georgian AND English queries
         const { data, error } = await supabase.functions.invoke('smart-icon-search', {
-          body: { query: query, limit: 50 }
+          body: {
+            query,
+            limit: 50,
+            // When creating trivia, do NOT filter by the correct answer.
+            correctAnswer: creatorMode ? undefined : correctAnswer,
+          }
         });
         
         if (error) throw error;
@@ -216,7 +230,7 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
   };
 
   // Check if currently selected icon is unsafe
-  const selectedIconUnsafe = selectedSlug && !isIconSafe(selectedSlug);
+  const selectedIconUnsafe = !creatorMode && selectedSlug && !isIconSafe(selectedSlug);
 
   return (
     <>
