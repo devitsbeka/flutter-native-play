@@ -140,7 +140,8 @@ export default function ContentManager() {
     setPage, 
     addQuestion, 
     updateQuestion, 
-    deleteQuestion 
+    deleteQuestion,
+    refetch: refetchQuestions,
   } = useAdminQuestions(selectedCategoryId, questionSearch);
   
   // Dialogs
@@ -303,9 +304,11 @@ export default function ContentManager() {
         icon_slug: questionForm.icon_slug || null,
       };
       if (editingQuestion) {
-        await updateQuestion(editingQuestion.id, data);
+        const ok = await updateQuestion(editingQuestion.id, data);
+        if (ok) await refetchQuestions();
       } else {
-        await addQuestion(data);
+        const created = await addQuestion(data);
+        if (created) await refetchQuestions();
       }
       setIsQuestionDialogOpen(false);
     } finally {
@@ -919,11 +922,13 @@ export default function ContentManager() {
 
       {/* Question Dialog */}
       <Dialog open={isQuestionDialogOpen} onOpenChange={setIsQuestionDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingQuestion ? 'კითხვის რედაქტირება' : 'ახალი კითხვა'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
+        <DialogContent className="max-w-lg p-0">
+          <div className="flex max-h-[90vh] flex-col">
+            <DialogHeader className="px-6 py-4 border-b">
+              <DialogTitle>{editingQuestion ? 'კითხვის რედაქტირება' : 'ახალი კითხვა'}</DialogTitle>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs">კატეგორია</Label>
               <Select value={questionForm.category_id} onValueChange={(v) => setQuestionForm({ ...questionForm, category_id: v })}>
@@ -1010,14 +1015,16 @@ export default function ContentManager() {
                 />
               </div>
             </div>
+            </div>
+
+            <DialogFooter className="px-6 py-4 border-t">
+              <Button variant="outline" size="sm" onClick={() => setIsQuestionDialogOpen(false)}>გაუქმება</Button>
+              <Button size="sm" onClick={handleSaveQuestion} disabled={saving || !questionForm.category_id || !questionForm.question_text || !questionForm.correct_answer}>
+                {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                {editingQuestion ? 'შენახვა' : 'დამატება'}
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setIsQuestionDialogOpen(false)}>გაუქმება</Button>
-            <Button size="sm" onClick={handleSaveQuestion} disabled={saving || !questionForm.category_id || !questionForm.question_text || !questionForm.correct_answer}>
-              {saving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-              {editingQuestion ? 'შენახვა' : 'დამატება'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
