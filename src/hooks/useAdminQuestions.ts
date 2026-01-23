@@ -20,7 +20,7 @@ export interface AdminQuestion {
 
 const PAGE_SIZE = 50;
 
-export const useAdminQuestions = (categoryId?: string | null) => {
+export const useAdminQuestions = (categoryId?: string | null, searchTerm?: string) => {
   const [questions, setQuestions] = useState<AdminQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -29,6 +29,8 @@ export const useAdminQuestions = (categoryId?: string | null) => {
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
     try {
+      const normalizedSearch = searchTerm?.trim();
+
       // Build base query for count
       let countQuery = supabase
         .from('questions')
@@ -36,6 +38,10 @@ export const useAdminQuestions = (categoryId?: string | null) => {
       
       if (categoryId) {
         countQuery = countQuery.eq('category_id', categoryId);
+      }
+
+      if (normalizedSearch) {
+        countQuery = countQuery.ilike('question_text', `%${normalizedSearch}%`);
       }
       
       const { count, error: countError } = await countQuery;
@@ -59,6 +65,10 @@ export const useAdminQuestions = (categoryId?: string | null) => {
       
       if (categoryId) {
         dataQuery = dataQuery.eq('category_id', categoryId);
+      }
+
+      if (normalizedSearch) {
+        dataQuery = dataQuery.ilike('question_text', `%${normalizedSearch}%`);
       }
       
       const { data, error } = await dataQuery;
@@ -94,19 +104,22 @@ export const useAdminQuestions = (categoryId?: string | null) => {
     } finally {
       setLoading(false);
     }
-  }, [categoryId, page]);
+  }, [categoryId, page, searchTerm]);
 
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
 
-  // Reset page when category changes
+  // Reset page when category/search changes
   useEffect(() => {
     setPage(0);
-  }, [categoryId]);
+  }, [categoryId, searchTerm]);
 
   // Real-time subscription with local updates (no full refetch)
   useEffect(() => {
+    // Keep things simple: when searching, skip realtime updates so results remain consistent.
+    if (searchTerm?.trim()) return;
+
     const channel = supabase
       .channel('admin-questions-changes')
       .on(
@@ -170,7 +183,7 @@ export const useAdminQuestions = (categoryId?: string | null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [categoryId]);
+  }, [categoryId, searchTerm]);
 
   const addQuestion = async (question: Omit<AdminQuestion, 'id' | 'created_at' | 'updated_at'>) => {
     // Validate question before saving

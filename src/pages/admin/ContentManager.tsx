@@ -91,6 +91,10 @@ export default function ContentManager() {
   // Selection state
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+
+  // Search
+  const [categorySearch, setCategorySearch] = useState('');
+  const [questionSearch, setQuestionSearch] = useState('');
   
   // Category question counts (fetched separately)
   const [questionCounts, setQuestionCounts] = useState<Record<string, { total: number; production: number }>>({});
@@ -137,11 +141,7 @@ export default function ContentManager() {
     addQuestion, 
     updateQuestion, 
     deleteQuestion 
-  } = useAdminQuestions(selectedCategoryId);
-  
-  // Search
-  const [categorySearch, setCategorySearch] = useState('');
-  const [questionSearch, setQuestionSearch] = useState('');
+  } = useAdminQuestions(selectedCategoryId, questionSearch);
   
   // Dialogs
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -191,13 +191,8 @@ export default function ContentManager() {
     [categories, categorySearch]
   );
 
-  // Client-side search filter on current page of questions
-  const filteredQuestions = useMemo(() => {
-    if (!questionSearch) return questions;
-    return questions.filter(q => 
-      q.question_text.toLowerCase().includes(questionSearch.toLowerCase())
-    );
-  }, [questions, questionSearch]);
+  // Server-side search: questions are already filtered in the hook
+  const filteredQuestions = questions;
 
   const selectedQuestion = useMemo(() =>
     questions.find(q => q.id === selectedQuestionId),
@@ -208,6 +203,11 @@ export default function ContentManager() {
   const totalPages = Math.ceil(totalCount / pageSize);
   const showingFrom = totalCount > 0 ? page * pageSize + 1 : 0;
   const showingTo = Math.min((page + 1) * pageSize, totalCount);
+
+  // Reset pagination when question search changes
+  useEffect(() => {
+    setPage(0);
+  }, [questionSearch, setPage]);
 
 
   // Category handlers
@@ -471,7 +471,7 @@ export default function ContentManager() {
                 </>
               )}
               {!selectedCategory && (
-                <span className="text-xs font-semibold text-muted-foreground">ყველა კითხვა ({questions.length.toLocaleString()})</span>
+                 <span className="text-xs font-semibold text-muted-foreground">ყველა კითხვა ({totalCount.toLocaleString()})</span>
               )}
             </div>
             <Button 
