@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, Tv } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
 import glitchIcon from "@/assets/glitch.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -529,22 +529,19 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
           <ChunkyButton
             size="sm"
-            variant="secondary"
+            variant="primary"
             className="flex-1 text-xs"
             onClick={handlePlayOnTV}
             disabled={isStartingTV}
-            icon={isStartingTV ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Tv className="w-3.5 h-3.5" />}
+            icon={
+              isStartingTV ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Play className="w-3.5 h-3.5 fill-current" />
+              )
+            }
           >
-            Play on TV
-          </ChunkyButton>
-          <ChunkyButton 
-            size="sm" 
-            variant="outline" 
-            className="flex-1 text-xs"
-            onClick={() => navigate(`/trivia/${post.id}`)}
-          >
-            <Play className="w-3.5 h-3.5" />
-            <span>ითამაშე</span>
+            ითამაშე მეგობრებთან
           </ChunkyButton>
         </div>
       </div>
