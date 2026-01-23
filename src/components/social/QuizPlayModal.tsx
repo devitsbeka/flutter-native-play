@@ -600,26 +600,25 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts }: Qui
                   exit={{ opacity: 0, x: -20 }}
                   className="flex-1 flex flex-col"
                 >
-                  {/* Question Icon */}
-                  {currentQuestion?.icon_slug && (
-                    <div className="flex justify-center mb-4" style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.25))' }}>
-                      <DynamicIcon 
-                        slug={currentQuestion.icon_slug}
-                        size={84}
-                        hideIfEmpty={true}
-                      />
-                    </div>
-                  )}
+                  {/* Question (icon overlaps card 50/50 like other quiz screens) */}
+                  <div className="mt-10 mb-2 relative">
+                    {currentQuestion?.icon_slug && (
+                      <div
+                        className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20"
+                        style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.25))" }}
+                      >
+                        <DynamicIcon slug={currentQuestion.icon_slug} size={84} hideIfEmpty={true} />
+                      </div>
+                    )}
 
-                  {/* Question Card */}
-                  <QuizQuestionCard
-                    questionText={currentQuestion?.question || ""}
-                    timerSeconds={timeLeft}
-                    timerMaxSeconds={15}
-                    progressPercent={((currentIndex) / questions.length) * 100}
-                    state="default"
-                    className="mb-4"
-                  />
+                    <QuizQuestionCard
+                      questionText={currentQuestion?.question || ""}
+                      timerSeconds={timeLeft}
+                      timerMaxSeconds={15}
+                      progressPercent={(currentIndex / Math.max(1, questions.length)) * 100}
+                      state="default"
+                    />
+                  </div>
 
                   {/* Progress Dots */}
                   <QuizProgressDots
