@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, X, Smile, AlertTriangle, ChevronLeft, RefreshCw, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +64,46 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
 
   // Check if text contains Georgian characters
   const isGeorgian = (text: string) => /[\u10A0-\u10FF]/.test(text);
+
+  /**
+   * Fallback search that queries the public icon library directly.
+   * This avoids cases where the backend function call fails on some devices/environments.
+   */
+  const searchIconsDirect = useCallback(async (query: string, limit = 50) => {
+    const q = query.trim();
+    if (!q) return [] as IconItem[];
+
+    // Basic OR matching (slug/title) + tags contains. Keep it simple & robust.
+    const safe = q.replace(/[,(){}[\]'"\\]/g, "").trim();
+    if (!safe) return [] as IconItem[];
+
+    const { data, error } = await supabase
+      .from("icon_library")
+      .select("id, slug, title, icon_url, tags")
+      .or(`title.ilike.%${safe}%,slug.ilike.%${safe}%,tags.cs.{${safe}}`)
+      .limit(limit);
+
+    if (error) throw error;
+
+    const qLower = safe.toLowerCase();
+    const scored = (data || []).map((icon: any) => {
+      const slug = String(icon.slug || "").toLowerCase();
+      const title = String(icon.title || "").toLowerCase();
+      const tags = Array.isArray(icon.tags) ? icon.tags.map((t: any) => String(t).toLowerCase()) : [];
+      let score = 0;
+      if (slug === qLower) score += 100;
+      else if (slug.startsWith(qLower)) score += 80;
+      else if (slug.includes(qLower)) score += 60;
+      if (title === qLower) score += 70;
+      else if (title.includes(qLower)) score += 40;
+      if (tags.some((t) => t === qLower)) score += 55;
+      else if (tags.some((t) => t.includes(qLower))) score += 25;
+      return { icon: icon as IconItem, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.map((x) => x.icon);
+  }, []);
 
   // Check if an icon is safe (doesn't reveal the answer)
   const isIconSafe = (iconSlug: string): boolean => {
@@ -208,7 +248,15 @@ export function QuestionIconPicker({ selectedSlug, onSelect, questionText, corre
         if (error) throw error;
         setIcons(data?.icons || []);
       } catch (error) {
-        console.error("Error searching icons:", error);
+        // Published builds on some mobile browsers can intermittently fail function calls
+        // (network/CORS/auth/token). Fall back to a direct DB search so the UI still works.
+        console.error("Error searching icons (smart search). Falling back to direct search:", error);
+        try {
+          const direct = await searchIconsDirect(query, 50);
+          setIcons(direct);
+        } catch (fallbackErr) {
+          console.error("Error searching icons (direct fallback):", fallbackErr);
+        }
       } finally {
         setIsLoading(false);
       }
