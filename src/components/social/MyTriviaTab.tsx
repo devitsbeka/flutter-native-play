@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, Tv } from "lucide-react";
 import glitchIcon from "@/assets/glitch.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -10,6 +10,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections, useCollectionQuizzes } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
@@ -391,8 +392,50 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
 // Personal trivia card with distinct styling
 function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
   const navigate = useNavigate();
+  const { createRoom } = useMultiplayerV2();
+  const [isStartingTV, setIsStartingTV] = useState(false);
   const gradientProps = getGradientProps(post.cover_gradient);
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
+
+  const handlePlayOnTV = async () => {
+    if (isStartingTV) return;
+    setIsStartingTV(true);
+    try {
+      const { data, error } = await supabase
+        .from("user_quiz_posts")
+        .select("questions, title, cover_image")
+        .eq("id", post.id)
+        .single();
+
+      if (error || !data?.questions) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      const customQuestions = (data.questions as any[]) || [];
+      if (!customQuestions.length) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      const room = await createRoom(
+        "custom",
+        data.title || post.title || "MyTrivia Party",
+        customQuestions,
+        data.title || post.title || null,
+        (data.cover_image as string | null) || null
+      );
+
+      if (room?.room_code) {
+        navigate(`/team?join=${room.room_code}&tv=1`);
+      }
+    } catch (e) {
+      console.error("Play on TV error:", e);
+      toast.error("ვერ მოხერხდა TV-ზე დაწყება");
+    } finally {
+      setIsStartingTV(false);
+    }
+  };
 
   return (
     <motion.div
@@ -484,29 +527,16 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         
         {/* Buttons Row */}
         <div className="flex items-center gap-3 mt-3" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => onPost?.(post)}
-            disabled={isPosting}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-50 ${
-              post.is_public === false
-                ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
-                : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
-            }`}
+          <ChunkyButton
+            size="sm"
+            variant="secondary"
+            className="flex-1 text-xs"
+            onClick={handlePlayOnTV}
+            disabled={isStartingTV}
+            icon={isStartingTV ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Tv className="w-3.5 h-3.5" />}
           >
-            {isPosting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : post.is_public === false ? (
-              <>
-                <Globe className="w-3.5 h-3.5 text-emerald-500" />
-                <span>გამოაქვეყნე</span>
-              </>
-            ) : (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>გამოქვეყნებულია</span>
-              </>
-            )}
-          </button>
+            Play on TV
+          </ChunkyButton>
           <ChunkyButton 
             size="sm" 
             variant="outline" 
