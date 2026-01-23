@@ -386,9 +386,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   <div className="px-4 pt-4 pb-3 border-b border-border">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                          <MessageCircle className="w-4 h-4 text-primary" />
-                        </div>
+                        <MessageCircle className="w-5 h-5 text-primary" />
                         <h2 className="font-bold text-base text-foreground">შეტყობინებები</h2>
                       </div>
                       <button
