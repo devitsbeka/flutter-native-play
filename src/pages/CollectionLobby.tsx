@@ -1,0 +1,255 @@
+import { useMemo, useState, lazy, Suspense } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowLeft, Layers, Play, Users, HelpCircle, Heart } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
+import { SamplePost } from "@/data/samplePosts";
+import { useCollectionLobby } from "@/hooks/useCollectionLobby";
+
+const QuizPlayModal = lazy(() =>
+  import("@/components/social/QuizPlayModal").then((m) => ({ default: m.QuizPlayModal }))
+);
+
+function getGradientProps(gradient: string) {
+  if (gradient?.includes("gradient") || gradient?.includes("#") || gradient?.includes("rgb")) {
+    return { style: { background: gradient }, className: "" };
+  }
+  return { style: undefined, className: `bg-gradient-to-br ${gradient}` };
+}
+
+export default function CollectionLobby() {
+  const { collectionId } = useParams<{ collectionId: string }>();
+  const navigate = useNavigate();
+  const { openProfile } = usePlayerProfile();
+  const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+
+  const { data, isLoading } = useCollectionLobby(collectionId);
+  const collection = data?.collection;
+  const creator = data?.creator;
+  const rounds = data?.rounds || [];
+
+  const posts: SamplePost[] = useMemo(() => {
+    if (!collection || rounds.length === 0) return [];
+    return rounds.map((r) => ({
+      id: r.id,
+      username: creator?.nickname || "user",
+      displayName: creator?.nickname || "მომხმარებელი",
+      avatarUrl: creator?.avatar_url || "",
+      verified: false,
+      createdAt: r.created_at || new Date().toISOString(),
+      title: r.title,
+      description: r.description || "",
+      subject: r.subject,
+      hashtags: r.hashtags || [],
+      coverGradient: r.cover_gradient,
+      coverImage: r.cover_image || undefined,
+      questionCount: r.question_count,
+      answerFormat: r.answer_format as any,
+      likesCount: r.likes_count || 0,
+      playsCount: r.plays_count || 0,
+      savesCount: r.saves_count || 0,
+      commentsCount: 0,
+      questions: (r.questions as any[]) || [],
+      isPublic: r.is_public,
+      roundNumber: r.round_number || undefined,
+    }));
+  }, [collection, rounds, creator?.nickname, creator?.avatar_url]);
+
+  const totals = useMemo(() => {
+    const totalQuestions = posts.reduce((sum, p) => sum + (p.questionCount || 0), 0);
+    const totalPlays = posts.reduce((sum, p) => sum + (p.playsCount || 0), 0);
+    const totalLikes = posts.reduce((sum, p) => sum + (p.likesCount || 0), 0);
+    return { totalQuestions, totalPlays, totalLikes };
+  }, [posts]);
+
+  const handleBack = () => navigate(-1);
+  const handlePlay = () => setIsPlayModalOpen(true);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="h-56 relative">
+          <Skeleton className="absolute inset-0" />
+        </div>
+        <div className="p-4 space-y-4">
+          <Skeleton className="h-20 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!collection || posts.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">კოლექცია ვერ მოიძებნა</p>
+          <button onClick={handleBack} className="text-primary mt-2 underline">
+            უკან დაბრუნება
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const heroGradientProps = getGradientProps(collection.cover_gradient);
+
+  return (
+    <div className="min-h-screen bg-background pb-32">
+      {/* Hero */}
+      <div className="h-56 relative overflow-hidden">
+        {collection.cover_image ? (
+          <>
+            <img
+              src={collection.cover_image}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-background" />
+          </>
+        ) : (
+          <>
+            <div
+              className={`absolute inset-0 ${heroGradientProps.className}`}
+              style={heroGradientProps.style}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background" />
+          </>
+        )}
+
+        {/* Back */}
+        <button
+          onClick={handleBack}
+          className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Creator avatar */}
+        {creator && (
+          <button onClick={() => openProfile(creator.user_id)} className="absolute top-4 right-4 z-10">
+            <Avatar className="w-9 h-9 border-2 border-white/40 shadow-lg">
+              <AvatarImage src={creator.avatar_url || undefined} />
+              <AvatarFallback className="text-sm bg-white/20 text-white">
+                {creator.nickname?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        )}
+
+        {/* Title */}
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-2xl font-bold text-white drop-shadow-lg text-center"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+          >
+            {collection.title}
+          </motion.h1>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 space-y-4 -mt-2">
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="grid grid-cols-4 gap-2 bg-card rounded-2xl border border-border p-3"
+        >
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-lg font-bold text-foreground">{posts.length}</p>
+            <p className="text-[10px] text-muted-foreground">რაუნდი</p>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <HelpCircle className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-lg font-bold text-foreground">{totals.totalQuestions}</p>
+            <p className="text-[10px] text-muted-foreground">კითხვა</p>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Users className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-lg font-bold text-foreground">{totals.totalPlays}</p>
+            <p className="text-[10px] text-muted-foreground">ნათამაშები</p>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+              <Heart className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-lg font-bold text-foreground">{totals.totalLikes}</p>
+            <p className="text-[10px] text-muted-foreground">მოწონება</p>
+          </div>
+        </motion.div>
+
+        {/* Rounds */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-card rounded-2xl border border-border overflow-hidden"
+        >
+          <div className="flex items-center gap-2 p-4 border-b border-border">
+            <Layers className="w-5 h-5 text-primary" />
+            <h2 className="font-bold text-foreground">რაუნდები</h2>
+            <span className="text-xs text-muted-foreground ml-auto">{posts.length}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {posts.map((p, idx) => (
+              <div key={p.id} className="flex items-center gap-3 p-3">
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                  {p.coverImage ? (
+                    <img src={p.coverImage} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full" style={{ background: p.coverGradient }} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm truncate">
+                    {idx + 1}. {p.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{p.questionCount} კითხვა</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Fixed Play */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+        >
+          <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
+            <Play className="w-5 h-5 fill-current" />
+            ითამაშე
+          </ChunkyButton>
+        </motion.div>
+      </div>
+
+      {isPlayModalOpen && (
+        <Suspense fallback={null}>
+          <QuizPlayModal
+            open={isPlayModalOpen}
+            onOpenChange={setIsPlayModalOpen}
+            post={posts[0]}
+            collectionPosts={posts}
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+}
