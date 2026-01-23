@@ -226,9 +226,17 @@ function TeamContentV2() {
   useEffect(() => {
     const joinCode = searchParams.get("join");
     if (joinCode && user && phase === "idle") {
-      enterRoom(joinCode);
+      // Important: clear URL params after consuming them.
+      // Otherwise the browser back button can return to /team?join=... and re-trigger auto-join.
+      (async () => {
+        await enterRoom(joinCode);
+        const next = new URLSearchParams(searchParams);
+        next.delete("join");
+        next.delete("tv");
+        setSearchParams(next, { replace: true });
+      })();
     }
-  }, [searchParams, user, phase, enterRoom]);
+  }, [searchParams, user, phase, enterRoom, setSearchParams]);
 
   // Handle challenge context from URL
   useEffect(() => {

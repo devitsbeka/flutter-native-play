@@ -162,7 +162,8 @@ export function RoomLobbyV2() {
 
   const handleExitRoom = () => {
     exitRoom();
-    navigate("/team");
+    // Use replace to avoid going back to a /team?join=... history entry that can auto-rejoin.
+    navigate("/team", { replace: true });
   };
 
   const handleLeaveConfirm = () => {
