@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Lock, Play, LogIn, Trophy, Map, Clock } from "lucide-react";
+import { ArrowLeft, Star, Lock, Play, LogIn, Clock } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
-import { CategoryLeaderboard } from "@/components/category/CategoryLeaderboard";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { CATEGORY_VIDEOS, MAP_VIDEOS } from "@/config/videoConfig";
 import { toast } from "sonner";
@@ -43,8 +42,6 @@ const getPastelColors = (id: string) => {
   return PASTEL_PALETTES[index];
 };
 
-type TabType = "leaderboard" | "map";
-
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
@@ -54,7 +51,6 @@ export default function CategoryPage() {
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { clearNewLevelBadge } = useNewLevels();
 
-  const [activeTab, setActiveTab] = useState<TabType>("leaderboard");
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
 
@@ -265,36 +261,16 @@ export default function CategoryPage() {
               }}
             >
               <button
-                onClick={() => setActiveTab("leaderboard")}
+                onClick={handlePlayFromLeaderboard}
                 className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
                 style={{
-                  background: activeTab === "leaderboard" 
-                    ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
-                    : 'transparent',
-                  boxShadow: activeTab === "leaderboard"
-                    ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
-                    : 'none',
-                  color: activeTab === "leaderboard" ? '#1E293B' : '#94A3B8',
+                  background: 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)',
+                  boxShadow: '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)',
+                  color: '#1E293B',
                 }}
               >
-                <Trophy className="h-4 w-4" />
-                {t('category.leaderboard')}
-              </button>
-              <button
-                onClick={() => setActiveTab("map")}
-                className="flex-1 relative flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm transition-all"
-                style={{
-                  background: activeTab === "map" 
-                    ? 'linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%)'
-                    : 'transparent',
-                  boxShadow: activeTab === "map"
-                    ? '0 2px 8px -2px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04), inset 0 1px 0 0 rgba(255,255,255,1)'
-                    : 'none',
-                  color: activeTab === "map" ? '#1E293B' : '#94A3B8',
-                }}
-              >
-                <Map className="h-4 w-4" />
-                {t('category.map')}
+                <Play className="h-4 w-4 fill-current" />
+                {t('common.play')}
               </button>
             </div>
           </div>
@@ -305,15 +281,7 @@ export default function CategoryPage() {
           <div className="max-w-3xl mx-auto">
             {/* Mobile: Tab-based content */}
             <div className="md:hidden">
-              {activeTab === "leaderboard" ? (
-                <CategoryLeaderboard
-                  categoryId={categoryId || ""}
-                  categoryName={category.name}
-                  lightMode
-                />
-              ) : (
-                <MapGridContent />
-              )}
+              <MapGridContent />
             </div>
             
             {/* Desktop/Tablet: Show map directly */}
