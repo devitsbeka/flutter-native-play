@@ -178,6 +178,13 @@ function TeamContentV2() {
     }
     setActiveTab(tab);
   };
+
+  // Mobile Safari can sometimes require a "second tap" when relying on click-only.
+  // Using pointer events makes the interaction feel immediate on touch devices.
+  const handleTabPress = (tab: string) => {
+    if (tab === activeTab) return;
+    handleTabChange(tab);
+  };
   const [showCreateQuizModal, setShowCreateQuizModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
@@ -534,8 +541,14 @@ function TeamContentV2() {
                     ].map((tab) => (
                         <button
                           key={tab.id}
-                          onClick={() => handleTabChange(tab.id)}
-                          className={`relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-colors ${
+                          onPointerDown={(e) => {
+                            if (e.pointerType === "touch") {
+                              e.preventDefault();
+                              handleTabPress(tab.id);
+                            }
+                          }}
+                          onClick={() => handleTabPress(tab.id)}
+                          className={`touch-manipulation relative flex-1 min-w-0 flex items-center justify-center gap-2 rounded-xl px-2 py-2 sm:px-4 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-colors ${
                           activeTab === tab.id
                             ? "text-foreground"
                             : "text-muted-foreground hover:text-foreground"
