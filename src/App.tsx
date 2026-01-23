@@ -36,6 +36,7 @@ const CategoryQuizPage = lazy(() => import("./pages/CategoryQuizPage"));
 const WorldHome = lazy(() => import("./pages/WorldHome"));
 const Game = lazy(() => import("./pages/Game"));
 const TriviaLobby = lazy(() => import("./pages/TriviaLobby"));
+const CollectionLobby = lazy(() => import("./pages/CollectionLobby"));
 const RoomRedirect = lazy(() => import("./pages/RoomRedirect"));
 const TVDisplay = lazy(() => import("./pages/TVDisplay"));
 const TVHostController = lazy(() => import("./pages/TVHostController"));
@@ -119,6 +120,7 @@ const App = () => (
                 <Route path="/game" element={<Game />} />
                 <Route path="/team" element={<TeamV2 />} />
                 <Route path="/trivia/:triviaId" element={<TriviaLobby />} />
+                <Route path="/collection/:collectionId" element={<CollectionLobby />} />
                 <Route path="/room/:code" element={<RoomRedirect />} />
                 <Route path="/tv" element={<TVLobby />} />
                 <Route path="/tv/host/:sessionId" element={<TVGameProvider><TVHostController /></TVGameProvider>} />
