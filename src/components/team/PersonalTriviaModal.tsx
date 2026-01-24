@@ -597,11 +597,9 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
               <ChevronLeft className="w-5 h-5 text-muted-foreground" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                <PartyPopper className="w-4 h-4 text-white" />
-              </div>
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500" aria-hidden />
               <div>
-                <h2 className="text-lg font-bold text-foreground">MyTrivia Party</h2>
+                <h2 className="text-lg font-bold text-foreground">My Trivia Party</h2>
               </div>
             </div>
           </div>
