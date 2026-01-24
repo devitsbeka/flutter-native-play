@@ -421,7 +421,23 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         (data.cover_image as string | null) || null
       );
 
-      if (room?.room_code) {
+      if (room?.id && room?.room_code) {
+        // Add the trivia to the room_category_queue so the lobby shows it
+        await supabase.from("room_category_queue").insert({
+          room_id: room.id,
+          position: 0,
+          source_type: "user_trivia",
+          category_name: data.title || post.title || "My Trivia Party",
+          user_trivia_id: post.id,
+          icon_slug: null,
+        });
+
+        // Also update the game_rooms table with user_trivia_id for reference
+        await supabase
+          .from("game_rooms")
+          .update({ user_trivia_id: post.id })
+          .eq("id", room.id);
+
         navigate(`/team?join=${room.room_code}&tv=1`);
       }
     } catch (e) {
