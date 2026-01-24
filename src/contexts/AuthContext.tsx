@@ -44,8 +44,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Track local updates to prevent duplicate realtime updates
   const lastLocalUpdateRef = useRef<number>(0);
+  // Track if profile fetch is in progress to prevent duplicate fetches
+  const profileFetchInProgressRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    // Prevent duplicate fetches for the same user
+    if (profileFetchInProgressRef.current === userId) {
+      console.log('[AuthContext] Profile fetch already in progress for:', userId);
+      return null;
+    }
+    
+    profileFetchInProgressRef.current = userId;
+    console.log('[AuthContext] Starting profile fetch for:', userId);
+    
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -53,7 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (!error && data) {
+      console.log('[AuthContext] Profile fetch result:', { data: data?.nickname, error: error?.message });
+
+      if (error) {
+        console.error('[AuthContext] Profile fetch error:', error);
+        profileFetchInProgressRef.current = null;
+        return null;
+      }
+      
+      if (data) {
+        console.log('[AuthContext] Setting profile:', data.nickname);
         setProfile(data as Profile);
         
         // Auto-detect and set country code if not already set
@@ -73,11 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           });
         }
+        profileFetchInProgressRef.current = null;
         return data as Profile;
       }
+      
+      console.log('[AuthContext] No profile found for user');
+      profileFetchInProgressRef.current = null;
       return null;
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      console.error('[AuthContext] Error fetching profile:', err);
+      profileFetchInProgressRef.current = null;
       return null;
     }
   }, []);
@@ -111,15 +136,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Separate effect to fetch profile when user changes - avoids deadlock
+  // Separate effect to fetch profile when user ID changes - avoids deadlock
+  const userIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (user) {
-      console.log('Fetching profile for user:', user.id);
-      fetchProfile(user.id).finally(() => {
+    const userId = user?.id ?? null;
+    
+    // Only fetch if user ID actually changed
+    if (userId && userId !== userIdRef.current) {
+      userIdRef.current = userId;
+      console.log('[AuthContext] User ID changed, fetching profile for:', userId);
+      fetchProfile(userId).finally(() => {
+        console.log('[AuthContext] Profile fetch complete, setting loading false');
         setLoading(false);
       });
+    } else if (!userId && userIdRef.current) {
+      userIdRef.current = null;
+      setProfile(null);
+      setLoading(false);
     }
-  }, [user, fetchProfile]);
+  }, [user?.id, fetchProfile]);
 
   // Realtime subscription for profile updates (e.g., avatar changes)
   useEffect(() => {
