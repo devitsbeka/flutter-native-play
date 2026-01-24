@@ -447,7 +447,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       style={{ border: "2px solid rgba(236, 72, 153, 0.5)" }}
     >
       {/* Party Badge */}
-      <div className="absolute top-3 left-14 z-10 flex items-center gap-1.5 bg-pink-500/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+      <div className="absolute top-3 left-14 z-10 flex h-8 items-center bg-pink-500/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
         <span>My Trivia Party</span>
       </div>
 
@@ -478,7 +478,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             {post.title}
           </h4>
         </div>
-        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1.5">
+        <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
           {post.is_public !== false ? (
             <Globe className="w-3.5 h-3.5" aria-hidden />
           ) : (
