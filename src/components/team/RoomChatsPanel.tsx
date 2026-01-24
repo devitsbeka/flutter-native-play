@@ -75,6 +75,8 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
     );
   }
 
+  const isUnread = conversation.unreadCount > 0;
+
   return (
     <div className="relative overflow-hidden mx-2 my-2 rounded-2xl">
       {/* Delete background indicator */}
@@ -109,7 +111,10 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
           pointerDownXRef.current = null;
           didMoveRef.current = false;
         }}
-        className="relative z-10 flex items-center gap-3 w-full px-4 py-3 text-left transition-colors bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl active:bg-foreground/5"
+        className={cn(
+          "relative z-10 flex items-center gap-3 w-full px-4 py-3 text-left transition-colors backdrop-blur-sm border border-border/40 rounded-2xl active:bg-foreground/5",
+          isUnread ? "bg-primary/10" : "bg-card/80"
+        )}
       >
         {/* Avatar - no badges */}
         <div className="relative flex-shrink-0">
@@ -465,12 +470,9 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           </p>
                         </div>
                       ) : (
-                        <div className="divide-y divide-border/30">
+                        <div className="divide-y divide-border/20">
                           {(activeFilter === "all" || activeFilter === "rooms") && (
                             <div>
-                              <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
-                                ოთახები
-                              </div>
                               {filteredRooms.map((conversation, index) => (
                                 <motion.div
                                   key={conversation.id}
@@ -493,9 +495,6 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
                           {(activeFilter === "all" || activeFilter === "friends") && (
                             <div>
-                              <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
-                                მეგობრები
-                              </div>
                               {filteredFriends.map((conversation, index) => (
                                 <motion.div
                                   key={conversation.id}
