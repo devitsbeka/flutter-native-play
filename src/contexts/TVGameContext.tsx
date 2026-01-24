@@ -241,6 +241,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // DATABASE-BASED ANSWER CHECK: Query player_answers table for actual answer count
   // This is the authoritative source for determining if all players have answered.
   // Unlike presence (which is eventually consistent), DB inserts are immediate and reliable.
+  // CRITICAL: Also reads active_player_count from DB as the authoritative source.
   const checkAllAnsweredFromDB = useCallback(async () => {
     // Only the host should trigger reveal
     if (!isHostRef.current) return;
@@ -261,13 +262,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
     
-    // Get expected player count
-    const expectedCount = expectedPlayerCountRef.current;
-    const isPaired = stateRef.current.isPaired;
-    const minimumRequired = isPaired ? Math.max(expectedCount, 2) : expectedCount;
+    // CRITICAL: Read active_player_count from DATABASE (not local ref) as authoritative source
+    const { data: session, error: sessionError } = await supabase
+      .from('tv_sessions')
+      .select('active_player_count, is_paired')
+      .eq('id', sessionId)
+      .single();
+    
+    if (sessionError || !session) {
+      console.error('[DB Answer Check] Error fetching session:', sessionError);
+      return;
+    }
+    
+    const dbPlayerCount = session.active_player_count || 0;
+    const isPaired = session.is_paired ?? stateRef.current.isPaired;
+    const minimumRequired = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
     
     if (minimumRequired <= 0) {
-      console.log('[DB Answer Check] No expected count set, skipping');
+      console.log('[DB Answer Check] No expected count in DB, skipping');
       return;
     }
     
@@ -286,7 +298,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const answerCount = count || 0;
     console.log('[DB Answer Check] Answer count from DB:', {
       answerCount,
-      expectedCount,
+      dbPlayerCount,
       minimumRequired,
       questionIndex: currentQuestionIndex,
     });
@@ -907,6 +919,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         questionCount: questions.length 
       });
       
+      // Read active_player_count from DB if available
+      const dbPlayerCount = (session as any).active_player_count as number | undefined;
+      if (dbPlayerCount && dbPlayerCount > 0) {
+        expectedPlayerCountRef.current = dbPlayerCount;
+        console.log('[joinSession] Read active_player_count from DB:', dbPlayerCount);
+      }
+      
       setState(prev => ({
         ...prev,
         code: session.tv_pairing_code || prev.code,
@@ -919,7 +938,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }));
 
       setMyPlayerId(playerId);
-      setIsHost(isHostPlayer);
+      // CRITICAL: TV_DISPLAY is NEVER the host - only phone controllers can be hosts
+      // This prevents the TV from triggering startPlaying when it shouldn't
+      setIsHost(isTVDisplay ? false : isHostPlayer);
 
       // Setup subscriptions
       setupSessionSubscription(session.id);
@@ -1375,13 +1396,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
+      // CRITICAL: Lock player count BEFORE countdown starts
+      // This is the authoritative source of truth for how many players need to answer
+      const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
+      expectedPlayerCountRef.current = playerCount;
+      
       tvLog('Starting game', { 
         questionCount: formattedQuestions.length, 
         categoryName,
         isUserTrivia: !!userTriviaId,
+        lockedPlayerCount: playerCount,
       });
 
-      // Start countdown with questions and category info, persist totalRounds
+      // Start countdown with questions, category info, persist totalRounds, AND lock player count
       await supabase
         .from('tv_sessions')
         .update({
@@ -1392,6 +1419,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           category_icon: categoryIcon,
           round_number: 1,
           total_rounds: totalRoundsCount,
+          active_player_count: playerCount, // Lock it here BEFORE countdown!
         })
         .eq('id', state.sessionId);
 
@@ -1403,37 +1431,69 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }));
 
       tvLogPhase('lobby', 'countdown', 'startGame');
-      tvLog('Round tracking initialized', { roundNumber: 1, totalRounds: totalRoundsCount });
+      tvLog('Round tracking initialized', { roundNumber: 1, totalRounds: totalRoundsCount, lockedPlayerCount: playerCount });
 
     } catch (error) {
       tvLogError('startGame', error);
       console.error('Error starting game:', error);
     }
-  }, [state.sessionId, isHost]);
+  }, [state.sessionId, isHost, state.players.length, state.isPaired]);
+
+  // Mutex to prevent multiple concurrent startPlaying calls
+  const startPlayingMutexRef = useRef(false);
 
   // Start playing phase (called after countdown ends)
+  // CRITICAL: Reads active_player_count from DB (locked in startGame), does NOT set it
   const startPlaying = useCallback(async () => {
     if (!state.sessionId) return;
+    
+    // Prevent concurrent calls
+    if (startPlayingMutexRef.current) {
+      tvLog('startPlaying blocked: already in progress');
+      return;
+    }
+    startPlayingMutexRef.current = true;
 
-    tvLog('Starting playing phase');
-    
-    // CRITICAL: Lock in the expected player count at game start
-    // This ensures we wait for ALL players who were present at countdown
-    // For paired sessions, require minimum 2 to prevent host-only advance
-    const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
-    expectedPlayerCountRef.current = playerCount;
-    questionStartedAtRef.current = Date.now();
-    revealRequestedRef.current = false;
-    console.log('[startPlaying] Locked in expected player count:', expectedPlayerCountRef.current, 'isPaired:', state.isPaired);
-    
     try {
-      // Store active_player_count in database for reliable cross-client sync
+      // Check if another device already transitioned to playing
+      const { data: session } = await supabase
+        .from('tv_sessions')
+        .select('status, active_player_count')
+        .eq('id', state.sessionId)
+        .single();
+      
+      if (session?.status === 'playing') {
+        tvLog('startPlaying skipped: already playing (another device beat us)');
+        // Still read the locked player count from DB
+        expectedPlayerCountRef.current = session.active_player_count || 2;
+        questionStartedAtRef.current = Date.now();
+        revealRequestedRef.current = false;
+        startPlayingMutexRef.current = false;
+        return;
+      }
+
+      // Read the active_player_count that was locked in startGame
+      const dbPlayerCount = session?.active_player_count || 0;
+      if (dbPlayerCount > 0) {
+        expectedPlayerCountRef.current = dbPlayerCount;
+        tvLog('startPlaying: Using DB player count', { dbPlayerCount });
+      } else {
+        // Fallback: set it now if somehow not set (shouldn't happen)
+        const fallbackCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
+        expectedPlayerCountRef.current = fallbackCount;
+        tvLog('startPlaying: DB player count not set, using fallback', { fallbackCount });
+      }
+      
+      questionStartedAtRef.current = Date.now();
+      revealRequestedRef.current = false;
+      console.log('[startPlaying] Expected player count from DB:', expectedPlayerCountRef.current);
+      
+      // Transition to playing - do NOT update active_player_count (already locked in startGame)
       await supabase
         .from('tv_sessions')
         .update({
           status: 'playing',
           question_start_time: new Date().toISOString(),
-          active_player_count: playerCount,
         })
         .eq('id', state.sessionId);
 
@@ -1441,6 +1501,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       tvLogTimer('start', QUESTION_TIME);
     } catch (error) {
       tvLogError('startPlaying', error);
+    } finally {
+      startPlayingMutexRef.current = false;
     }
   }, [state.sessionId, state.players.length, state.isPaired]);
 

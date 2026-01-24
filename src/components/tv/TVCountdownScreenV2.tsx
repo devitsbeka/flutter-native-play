@@ -23,36 +23,19 @@ export const TVCountdownScreenV2: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // When countdown ends and user is host, trigger startPlaying
-  // Also add a fallback: if no host triggered after 2 seconds, TV triggers it
+  // When countdown ends, ONLY the host triggers startPlaying
+  // NO FALLBACK - this prevents race conditions where both TV and Phone trigger
   useEffect(() => {
-    if (count === 0 && !hasTriggeredPlaying.current) {
-      if (isHost) {
-        // TV is the host, trigger immediately
-        hasTriggeredPlaying.current = true;
-        tvLog('Countdown ended, TV host triggering startPlaying');
-        
-        const transitionTimer = setTimeout(() => {
-          startPlaying();
-          tvLogPhase('countdown', 'playing', 'countdown ended');
-        }, 500);
+    if (count === 0 && !hasTriggeredPlaying.current && isHost) {
+      hasTriggeredPlaying.current = true;
+      tvLog('Countdown ended, host triggering startPlaying');
+      
+      const transitionTimer = setTimeout(() => {
+        startPlaying();
+        tvLogPhase('countdown', 'playing', 'countdown ended');
+      }, 500);
 
-        return () => clearTimeout(transitionTimer);
-      } else {
-        // TV is not host, but add fallback in case phone host fails
-        tvLog('Countdown ended, waiting for phone host to trigger startPlaying...');
-        
-        const fallbackTimer = setTimeout(() => {
-          if (!hasTriggeredPlaying.current) {
-            hasTriggeredPlaying.current = true;
-            tvLog('Fallback: TV triggering startPlaying after phone host timeout');
-            startPlaying();
-            tvLogPhase('countdown', 'playing', 'fallback trigger');
-          }
-        }, 2000);
-
-        return () => clearTimeout(fallbackTimer);
-      }
+      return () => clearTimeout(transitionTimer);
     }
   }, [count, isHost, startPlaying]);
 
