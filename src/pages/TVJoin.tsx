@@ -8,6 +8,7 @@ import { ControllerQuestion } from '@/components/controller/ControllerQuestion';
 import { ControllerReveal } from '@/components/controller/ControllerReveal';
 import { ControllerResults } from '@/components/controller/ControllerResults';
 import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerRoundIntroWaiting';
+import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -21,8 +22,11 @@ const TVJoinContent: React.FC = () => {
   // Hard switch: QR should pass sessionId; manual entry uses 4-digit TV code.
   const initialCode = urlSessionId || querySessionId || urlCode || queryCode || '';
   
-  const { phase, sessionId, questions, leaveSession } = useTVGame();
+const { phase, sessionId, questions, leaveSession, myPlayerId, players } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);
+
+  // Find current player from players array
+  const myPlayer = players.find(p => p.id === myPlayerId);
 
   // If we have a session, we're joined
   useEffect(() => {
@@ -68,6 +72,17 @@ const TVJoinContent: React.FC = () => {
     case 'waiting':
     case 'lobby':
       return <ControllerLobby />;
+    case 'poll-suggest':
+    case 'poll-voting':
+      return (
+        <ControllerPollScreen
+          sessionId={sessionId || ''}
+          userId={myPlayerId || ''}
+          nickname={myPlayer?.nickname || 'Player'}
+          avatarUrl={myPlayer?.avatar_url}
+          isHost={false}
+        />
+      );
     case 'round-intro':
       return <ControllerRoundIntroWaiting />;
     case 'countdown':
