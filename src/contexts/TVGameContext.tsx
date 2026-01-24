@@ -569,11 +569,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Guard: don't allow auto-advance immediately on question load
     if (questionStartedAtRef.current && Date.now() - questionStartedAtRef.current < AUTO_ADVANCE_GUARD_MS) return;
 
-    // If the session is paired, but we currently only see the host in presence,
+    // If the session is paired, but we currently only see the host as ACTIVE,
     // do NOT auto-advance on host answer. Wait for other players to sync, or let
-    // the timer expire.
-    const nonHostCount = state.players.filter((p) => !p.isHost).length;
-    if (state.isPaired && nonHostCount === 0) return;
+    // the timer expire. We must check ACTIVE players only to prevent host-only
+    // reveals when other players haven't synced their isActive status yet.
+    const activePlayersEarly = getActivePlayers(state.players);
+    const nonHostActiveCount = activePlayersEarly.filter((p) => !p.isHost).length;
+    if (state.isPaired && nonHostActiveCount === 0) {
+      console.log('[TV Auto-Advance] Blocked: session is paired but no non-host ACTIVE players visible');
+      return;
+    }
     
     // Robust rule: during the first few seconds of each question, capture the set of
     // players we see in presence. From then on, auto-advance ONLY when that captured
@@ -609,10 +614,30 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       );
     }
 
-    // If this question involves multiple participants, wait for the capture window to finish
-    // before considering auto-advance.
+    // If this question involves multiple participants OR the session is paired,
+    // wait for the capture window to finish before considering auto-advance.
+    // This is critical: even if we only see the host right now, other players
+    // may still be syncing their presence.
     const multiParticipantQuestion = maxActivePlayersSeenThisQuestionRef.current >= 2;
-    if (multiParticipantQuestion && captureWindowActive) return;
+    const shouldBlockDuringCapture = (multiParticipantQuestion || state.isPaired) && captureWindowActive;
+    if (shouldBlockDuringCapture) {
+      console.log('[TV Auto-Advance] Blocked: still in capture window', { 
+        multiParticipantQuestion, 
+        isPaired: state.isPaired, 
+        captureWindowActive 
+      });
+      return;
+    }
+
+    // Additional safety: if session is paired, require at least one non-host answer
+    // before triggering reveal. This prevents host-only reveals in multi-player games.
+    if (state.isPaired) {
+      const nonHostAnswered = activePlayers.some((p) => !p.isHost && p.hasAnswered);
+      if (!nonHostAnswered) {
+        console.log('[TV Auto-Advance] Blocked: paired session requires at least one non-host answer');
+        return;
+      }
+    }
 
     // Use the simpler rule for UX: if all currently ACTIVE players have answered,
     // reveal immediately (after capture window) instead of waiting for timer.
@@ -622,7 +647,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log('[TV Backup Auto-Advance] All connected players answered - triggering reveal via effect');
       requestRevealIfEligible('all required players answered (backup effect)');
     }
-  }, [state.phase, state.players, state.sessionId, isHost, requestRevealIfEligible]);
+  }, [state.phase, state.players, state.sessionId, isHost, state.isPaired, requestRevealIfEligible]);
 
   // Auto-advance from reveal after a fixed duration (host only)
   useEffect(() => {
@@ -1097,11 +1122,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const nonHostActiveCount = activePlayers.filter((p) => !p.isHost).length;
         const pairedButOnlyHostVisible = stateRef.current.isPaired && nonHostActiveCount === 0;
 
-        // If this question involves multiple participants, never auto-advance while
-        // we're still in the capture window, and don't auto-advance until we've captured
-        // at least as many required players as we've seen.
+        // If this question involves multiple participants OR the session is paired,
+        // never auto-advance while we're still in the capture window.
+        // This is critical: even if we only see the host right now, other players
+        // may still be syncing their presence.
         const multiParticipantQuestion = maxActivePlayersSeenThisQuestionRef.current >= 2;
-        const blockDuringCapture = multiParticipantQuestion && captureWindowActive;
+        const shouldBlockDuringCapture = (multiParticipantQuestion || stateRef.current.isPaired) && captureWindowActive;
+
+        // Additional safety: if session is paired, require at least one non-host answer
+        // before triggering reveal. This prevents host-only reveals in multi-player games.
+        const nonHostAnswered = activePlayers.some((p) => !p.isHost && p.hasAnswered);
+        const pairedButNoNonHostAnswer = stateRef.current.isPaired && !nonHostAnswered;
 
         // Note: we intentionally do NOT block on presence count shrink / max-seen mismatches.
         // Once the required ACTIVE set has fully answered, we reveal immediately for a smooth UX.
@@ -1112,7 +1143,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           !revealRequestedRef.current &&
           canAutoAdvance &&
           !pairedButOnlyHostVisible &&
-          !blockDuringCapture
+          !shouldBlockDuringCapture &&
+          !pairedButNoNonHostAnswer
         ) {
           console.log('[TV Auto-Advance] Triggering reveal - all required players answered!');
           requestRevealIfEligible('all required players answered');
