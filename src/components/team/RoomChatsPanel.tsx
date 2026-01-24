@@ -394,12 +394,25 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                     {/* Search */}
                     <div className="relative mb-3">
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <button
+                        type="button"
+                        aria-label="ძებნა"
+                        onClick={() => {
+                          // make the search action feel explicit + focus input
+                          const el = document.getElementById("room-chats-search") as HTMLInputElement | null;
+                          el?.focus();
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors"
+                      >
+                        <Search className="w-4 h-4 text-muted-foreground" />
+                      </button>
                       <input
+                        id="room-chats-search"
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="ძებნა..."
-                        className="w-full h-10 pl-11 pr-4 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full h-10 pl-11 pr-12 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                     </div>
 
