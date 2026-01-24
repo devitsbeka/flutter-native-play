@@ -188,10 +188,43 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Prevent instant auto-advance at the start of a new question due to stale presence
   const questionStartedAtRef = useRef<number>(0);
 
-  // Simple helper: check if ALL players in the session have answered
+  // CRITICAL: Lock in the player count at question start.
+  // This prevents premature auto-advance when presence sync only shows a partial list.
+  const expectedPlayerCountRef = useRef<number>(0);
+
+  // Helper: check if ALL expected players have answered
+  // Returns true ONLY when:
+  // 1. We have an expected player count set (> 0)
+  // 2. Current players array has at least that many players
+  // 3. Every player in the current array has answered
   const allPlayersAnswered = useCallback((players: TVPlayer[]): boolean => {
-    if (players.length === 0) return false;
-    return players.every(p => p.hasAnswered === true);
+    const expectedCount = expectedPlayerCountRef.current;
+    
+    // No expected count set = can't determine if all answered
+    if (expectedCount <= 0) {
+      console.log('[allPlayersAnswered] No expected count set, returning false');
+      return false;
+    }
+    
+    // Not enough players synced yet
+    if (players.length < expectedCount) {
+      console.log('[allPlayersAnswered] Not enough players synced', { 
+        current: players.length, 
+        expected: expectedCount 
+      });
+      return false;
+    }
+    
+    // Check if all current players have answered
+    const allAnswered = players.every(p => p.hasAnswered === true);
+    console.log('[allPlayersAnswered] Check result:', { 
+      playerCount: players.length, 
+      expectedCount, 
+      allAnswered,
+      players: players.map(p => ({ n: p.nickname, a: p.hasAnswered }))
+    });
+    
+    return allAnswered;
   }, []);
 
   // Prevent double-click / concurrent next-round transitions from host
@@ -541,10 +574,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
     if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) return;
 
-    // THE SIMPLE RULE: All players in the session must have answered
+    // THE SIMPLE RULE: All expected players must have answered
     if (allPlayersAnswered(state.players)) {
       console.log('[TV Auto-Advance] ALL players answered - advancing!', {
         playerCount: state.players.length,
+        expectedCount: expectedPlayerCountRef.current,
         players: state.players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered })),
       });
       requestRevealIfEligible('all players answered');
@@ -831,7 +865,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setMyAnswer(null);
             revealRequestedRef.current = false;
             questionStartedAtRef.current = Date.now();
-            console.log('[New Question] Started at', new Date().toISOString());
+            
+            // CRITICAL: Lock in the expected player count from current presence state
+            // This is the number of players we MUST wait for before auto-advancing
+            expectedPlayerCountRef.current = stateRef.current.players.length;
+            console.log('[New Question] Started at', new Date().toISOString(), 'Expected players:', expectedPlayerCountRef.current);
 
             // Reset my presence for the new question so host does not treat me as already answered.
             if (presenceChannelRef.current && myPlayerId) {
@@ -975,10 +1013,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
         if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) return;
 
-        // THE SIMPLE RULE: All players must have answered
+        // THE SIMPLE RULE: All expected players must have answered
         if (allPlayersAnswered(players)) {
           console.log('[TV Auto-Advance (presence)] ALL players answered - advancing!', {
             playerCount: players.length,
+            expectedCount: expectedPlayerCountRef.current,
             players: players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered })),
           });
           requestRevealIfEligible('all players answered (presence sync)');
@@ -1278,6 +1317,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     tvLog('Starting playing phase');
     
+    // CRITICAL: Lock in the expected player count at game start
+    // This ensures we wait for ALL players who were present at countdown
+    expectedPlayerCountRef.current = state.players.length;
+    questionStartedAtRef.current = Date.now();
+    revealRequestedRef.current = false;
+    console.log('[startPlaying] Locked in expected player count:', expectedPlayerCountRef.current);
+    
     try {
       await supabase
         .from('tv_sessions')
@@ -1292,7 +1338,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       tvLogError('startPlaying', error);
     }
-  }, [state.sessionId]);
+  }, [state.sessionId, state.players.length]);
 
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {
