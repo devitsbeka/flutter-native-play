@@ -24,6 +24,9 @@ export const TVQuestionScreenV4: React.FC = () => {
     phase,
     roundNumber,
     totalRounds,
+    currentRoundSuggesterId,
+    currentRoundSuggesterNickname,
+    currentRoundSuggesterAvatarUrl,
   } = useTVGame();
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -31,10 +34,13 @@ export const TVQuestionScreenV4: React.FC = () => {
   const timerMax = 15;
   const timerPercent = (timeRemaining / timerMax) * 100;
 
+  // Filter out the suggester from active players - they skip this round
+  const activePlayers = players.filter(p => p.id !== currentRoundSuggesterId);
+
   // Group players by their answer status for current question
-  const correctPlayers = players.filter(p => p.hasAnswered && p.lastAnswerCorrect === true);
-  const wrongPlayers = players.filter(p => p.hasAnswered && p.lastAnswerCorrect === false);
-  const waitingPlayers = players.filter(p => !p.hasAnswered);
+  const correctPlayers = activePlayers.filter(p => p.hasAnswered && p.lastAnswerCorrect === true);
+  const wrongPlayers = activePlayers.filter(p => p.hasAnswered && p.lastAnswerCorrect === false);
+  const waitingPlayers = activePlayers.filter(p => !p.hasAnswered);
 
   if (!currentQuestion) {
     return (
@@ -205,6 +211,25 @@ export const TVQuestionScreenV4: React.FC = () => {
         transition={{ delay: 0.2 }}
       >
         <div className="relative flex justify-center mb-3 flex-shrink-0 pt-16 [@media(max-height:700px)]:pt-12">
+          {/* Suggester Avatar - top left corner */}
+          {currentRoundSuggesterId && (
+            <motion.div 
+              className="absolute left-0 top-12 z-30 flex items-center gap-2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Avatar className="w-10 h-10 ring-2 ring-purple-300 border-2 border-white shadow-lg">
+                <AvatarImage src={currentRoundSuggesterAvatarUrl || undefined} />
+                <AvatarFallback className="bg-purple-500 text-white font-bold text-xs">
+                  {(currentRoundSuggesterNickname || '?').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-white/80 text-xs font-medium bg-black/30 px-2 py-1 rounded-lg">
+                {currentRoundSuggesterNickname}
+              </span>
+            </motion.div>
+          )}
           {/* Category/Question Icon - overlapping top of card */}
           <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
             <DynamicIcon 

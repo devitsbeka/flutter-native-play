@@ -52,6 +52,10 @@ interface TVGameState {
   totalRoundsPlayed: number;
   accumulatedScores: Record<string, number>;
   isPaired: boolean;
+  // Suggester info - the player who suggested the current round category
+  currentRoundSuggesterId: string | null;
+  currentRoundSuggesterNickname: string | null;
+  currentRoundSuggesterAvatarUrl: string | null;
 }
 
 interface TVGameContextType extends TVGameState {
@@ -159,6 +163,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     totalRoundsPlayed: 0,
     accumulatedScores: {},
     isPaired: false,
+    currentRoundSuggesterId: null,
+    currentRoundSuggesterNickname: null,
+    currentRoundSuggesterAvatarUrl: null,
   });
 
   const [isHost, setIsHost] = useState(false);
@@ -274,7 +281,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Get expected count from DB (authoritative source)
       const { data: session, error: sessionError } = await supabase
         .from('tv_sessions')
-        .select('active_player_count, is_paired')
+        .select('active_player_count, is_paired, current_round_suggester_id')
         .eq('id', current.sessionId)
         .single();
 
@@ -285,7 +292,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       const dbPlayerCount = session.active_player_count || 0;
       const isPaired = session.is_paired ?? current.isPaired;
-      const expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
+      const suggesterId = (session as any).current_round_suggester_id as string | null;
+      
+      // If there's a suggester, they skip this round - reduce expected count by 1
+      let expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
+      if (suggesterId) {
+        expectedCount = Math.max(0, expectedCount - 1);
+        console.log('[checkAndAdvanceIfAllAnswered] Suggester skips round, adjusted count:', expectedCount);
+      }
 
       if (expectedCount <= 0) {
         console.log('[checkAndAdvanceIfAllAnswered] No expected count, skipping');
@@ -492,6 +506,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (formattedQuestions.length === 0) return false;
 
       // Go to round-intro phase instead of countdown - wait for all players to be ready
+      // Extract suggester info from queue item
+      const suggesterUserId = (nextItem as any).suggester_user_id as string | null;
+      const suggesterNickname = (nextItem as any).suggester_nickname as string | null;
+      const suggesterAvatarUrl = (nextItem as any).suggester_avatar_url as string | null;
+
       const { error: updateError } = await supabase
         .from('tv_sessions')
         .update({
@@ -502,6 +521,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           reveal_start_time: null,
           category_name: nextCategoryName,
           category_icon: nextCategoryIcon,
+          // Store suggester info in session for quick access
+          current_round_suggester_id: suggesterUserId,
+          current_round_suggester_nickname: suggesterNickname,
+          current_round_suggester_avatar_url: suggesterAvatarUrl,
         })
         .eq('id', state.sessionId);
 
@@ -1029,6 +1052,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               totalRounds: newData.total_rounds ?? prev.totalRounds,
               roomId: newData.room_id || prev.roomId, // Sync roomId for FK constraints
               players: updatedPlayers,
+              // Sync suggester info for the current round
+              currentRoundSuggesterId: (newData as any).current_round_suggester_id ?? prev.currentRoundSuggesterId,
+              currentRoundSuggesterNickname: (newData as any).current_round_suggester_nickname ?? prev.currentRoundSuggesterNickname,
+              currentRoundSuggesterAvatarUrl: (newData as any).current_round_suggester_avatar_url ?? prev.currentRoundSuggesterAvatarUrl,
             };
           });
         }
@@ -1806,6 +1833,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       totalRoundsPlayed: 0,
       accumulatedScores: {},
       isPaired: false,
+      currentRoundSuggesterId: null,
+      currentRoundSuggesterNickname: null,
+      currentRoundSuggesterAvatarUrl: null,
     });
     setIsHost(false);
     setMyPlayerId(null);

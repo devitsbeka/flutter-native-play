@@ -2386,6 +2386,9 @@ export type Database = {
           position: number
           session_id: string
           source_type: string
+          suggester_avatar_url: string | null
+          suggester_nickname: string | null
+          suggester_user_id: string | null
           user_trivia_id: string | null
         }
         Insert: {
@@ -2397,6 +2400,9 @@ export type Database = {
           position: number
           session_id: string
           source_type?: string
+          suggester_avatar_url?: string | null
+          suggester_nickname?: string | null
+          suggester_user_id?: string | null
           user_trivia_id?: string | null
         }
         Update: {
@@ -2408,6 +2414,9 @@ export type Database = {
           position?: number
           session_id?: string
           source_type?: string
+          suggester_avatar_url?: string | null
+          suggester_nickname?: string | null
+          suggester_user_id?: string | null
           user_trivia_id?: string | null
         }
         Relationships: [
@@ -2428,6 +2437,9 @@ export type Database = {
           category_name: string | null
           created_at: string | null
           current_question_index: number | null
+          current_round_suggester_avatar_url: string | null
+          current_round_suggester_id: string | null
+          current_round_suggester_nickname: string | null
           expires_at: string | null
           game_name: string | null
           host_user_id: string | null
@@ -2454,6 +2466,9 @@ export type Database = {
           category_name?: string | null
           created_at?: string | null
           current_question_index?: number | null
+          current_round_suggester_avatar_url?: string | null
+          current_round_suggester_id?: string | null
+          current_round_suggester_nickname?: string | null
           expires_at?: string | null
           game_name?: string | null
           host_user_id?: string | null
@@ -2480,6 +2495,9 @@ export type Database = {
           category_name?: string | null
           created_at?: string | null
           current_question_index?: number | null
+          current_round_suggester_avatar_url?: string | null
+          current_round_suggester_id?: string | null
+          current_round_suggester_nickname?: string | null
           expires_at?: string | null
           game_name?: string | null
           host_user_id?: string | null
