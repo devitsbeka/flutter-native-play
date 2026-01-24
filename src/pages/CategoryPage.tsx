@@ -243,7 +243,7 @@ export default function CategoryPage() {
                 variant="mint"
                 icon={<Play className="h-4 w-4 fill-current" />}
               >
-                {t('common.play')}
+                ითამაშე
               </ChunkyButton>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function CategoryPage() {
                 }}
               >
                 <Play className="h-4 w-4 fill-current" />
-                {t('common.play')}
+                ითამაშე
               </button>
             </div>
           </div>
@@ -301,14 +301,6 @@ export default function CategoryPage() {
           <h2 className="text-lg font-bold text-slate-800">
             {t('category.chooseLevel')}
           </h2>
-          <ChunkyButton
-            onClick={handlePlayFromLeaderboard}
-            size="sm"
-            variant="mint"
-            icon={<Play className="h-4 w-4 fill-current" />}
-          >
-            {t('common.play')}
-          </ChunkyButton>
         </div>
 
         {/* All levels completed message */}
