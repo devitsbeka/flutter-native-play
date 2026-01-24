@@ -13,6 +13,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
+async function getSuggestedIconSlug(questionText: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("analyze-question-icon", {
+      body: {
+        question: questionText,
+        category: "personal",
+      },
+    });
+    if (error) throw error;
+
+    const slug = (data?.slugs?.[0] as string | undefined) || null;
+    return slug;
+  } catch {
+    return null;
+  }
+}
+
 // Color palette for question headers - cycling through for visibility
 const QUESTION_HEADER_COLORS = [
   'rgba(249, 115, 22, 0.15)',  // orange
@@ -517,19 +534,38 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     q.answers.every(a => a.trim())
   );
 
+  const assignIconForQuestion = useCallback(async (questionId: string, questionText: string) => {
+    const suggested = await getSuggestedIconSlug(questionText);
+    if (!suggested) return;
+    // Update only if question still matches (avoid racing while user edits)
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === questionId && q.question === questionText
+          ? { ...q, iconSlug: suggested }
+          : q
+      )
+    );
+  }, []);
+
   const useExampleQuestion = (example: string) => {
     if (questions.length === 1 && !questions[0].question) {
-      updateQuestion(questions[0].id, "question", example.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, ''));
+      const clean = example.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, '');
+      const id = questions[0].id;
+      updateQuestion(id, "question", clean);
+      void assignIconForQuestion(id, clean);
     } else {
+      const clean = example.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, '');
+      const id = Date.now().toString();
       setQuestions(prev => [
         ...prev,
         { 
-          id: Date.now().toString(), 
-          question: example.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, ''), 
+          id,
+          question: clean,
           answers: ["", "", "", ""], 
           correctIndex: 0 
         }
       ]);
+      void assignIconForQuestion(id, clean);
     }
   };
 
@@ -538,7 +574,8 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
     // Remove emoji from the idea
     const cleanIdea = randomIdea.replace(/\s*[\u{1F300}-\u{1FAFF}]/gu, '');
     updateQuestion(questionId, "question", cleanIdea);
-  }, [updateQuestion]);
+    void assignIconForQuestion(questionId, cleanIdea);
+  }, [updateQuestion, assignIconForQuestion]);
 
   if (!isOpen) return null;
 

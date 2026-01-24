@@ -811,7 +811,15 @@ export function GameStyleQuestionEditor({
                       )}
                     </button>
                   </div>
-                  <Lightbulb className="w-10 h-10 text-white/40 mb-2" />
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateAI(index)}
+                    disabled={isGeneratingAI}
+                    className="mb-2 inline-flex items-center justify-center rounded-full active:scale-95 disabled:opacity-60"
+                    aria-label="იდეა"
+                  >
+                    <Lightbulb className="w-10 h-10 text-white/40" />
+                  </button>
                   <p className="text-white/60 text-sm mb-3">დააჭირე AI იდეას</p>
                   <button
                     onClick={() => handleGenerateAI(index)}
