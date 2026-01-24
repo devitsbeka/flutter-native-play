@@ -56,13 +56,14 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 }) => {
   const {
     suggestions,
-    mySuggestion,
+    mySuggestions,
+    canAddMoreSuggestions,
     myVotes,
     pollPhase,
     pollStartTime,
     pollDuration,
     submitSuggestion,
-    removeMySuggestion,
+    removeSuggestion,
     toggleVote,
     startVoting,
   } = useTVPoll({
@@ -70,6 +71,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     userId,
     nickname,
     avatarUrl,
+    isHost,
   });
 
   const [timeRemaining, setTimeRemaining] = useState(pollDuration);
@@ -181,10 +183,12 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     }
   };
 
-  const handleRemoveSuggestion = async () => {
-    const success = await removeMySuggestion();
+  const handleRemoveSuggestion = async (suggestionId: string) => {
+    const success = await removeSuggestion(suggestionId);
     if (success) {
       toast.success('შემოთავაზება წაიშალა');
+    } else {
+      toast.error('წაშლა ვერ მოხერხდა');
     }
   };
 
@@ -295,35 +299,46 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           <h1 className="text-xl font-bold text-white">შემოგთავაზე კატეგორია</h1>
         </div>
 
-        {/* My suggestion */}
+        {/* My suggestions */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
-          <p className="text-purple-300 text-sm mb-3">შენი შემოთავაზება:</p>
+          <p className="text-purple-300 text-sm mb-3">
+            შენი შემოთავაზებ{isHost ? 'ები' : 'ა'}:
+            {isHost && <span className="ml-1">({mySuggestions.length}/2)</span>}
+          </p>
           
-          {mySuggestion ? (
-            <div className="flex items-center gap-3">
-              {mySuggestion.cover_image ? (
-                <img src={mySuggestion.cover_image} alt="" className="w-12 h-12 rounded-xl object-cover" />
-              ) : mySuggestion.icon_slug ? (
-                <QuizCategoryIcon iconSlug={mySuggestion.icon_slug} className="w-12 h-12" />
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-purple-500/30 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-purple-300" />
+          {/* Show existing suggestions */}
+          {mySuggestions.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {mySuggestions.map((suggestion) => (
+                <div key={suggestion.id} className="flex items-center gap-3">
+                  {suggestion.cover_image ? (
+                    <img src={suggestion.cover_image} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                  ) : suggestion.icon_slug ? (
+                    <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-12 h-12" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/30 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-purple-300" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="font-bold text-white">{suggestion.category_name}</p>
+                    <p className="text-xs text-purple-300">
+                      {suggestion.source_type === 'category' ? 'ბიბლიოთეკიდან' : 'შენი ტრივია'}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => handleRemoveSuggestion(suggestion.id)}
+                    className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30 active:scale-95 transition-transform"
+                  >
+                    <X className="w-5 h-5 text-red-400" />
+                  </button>
                 </div>
-              )}
-              <div className="flex-1">
-                <p className="font-bold text-white">{mySuggestion.category_name}</p>
-                <p className="text-xs text-purple-300">
-                  {mySuggestion.source_type === 'category' ? 'ბიბლიოთეკიდან' : 'შენი ტრივია'}
-                </p>
-              </div>
-              <button 
-                onClick={handleRemoveSuggestion}
-                className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30"
-              >
-                <X className="w-5 h-5 text-red-400" />
-              </button>
+              ))}
             </div>
-          ) : (
+          )}
+
+          {/* Add suggestion buttons - show if can add more */}
+          {canAddMoreSuggestions && (
             <div className="space-y-2">
               <ChunkyButton
                 variant="secondary"
@@ -342,6 +357,13 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                 ჩემი ტრივიებიდან
               </ChunkyButton>
             </div>
+          )}
+
+          {/* Show message when at limit */}
+          {!canAddMoreSuggestions && mySuggestions.length > 0 && !isHost && (
+            <p className="text-xs text-purple-400 text-center mt-2">
+              შეგიძლია წაშალო და სხვა აირჩიო
+            </p>
           )}
         </div>
 

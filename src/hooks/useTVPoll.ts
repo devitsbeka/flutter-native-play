@@ -31,9 +31,10 @@ interface UseTVPollOptions {
   userId: string | null;
   nickname: string;
   avatarUrl?: string | null;
+  isHost?: boolean;
 }
 
-export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollOptions) {
+export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = false }: UseTVPollOptions) {
   const [suggestions, setSuggestions] = useState<PollSuggestion[]>([]);
   const [myVotes, setMyVotes] = useState<string[]>([]); // suggestion IDs I voted for
   const [loading, setLoading] = useState(true);
@@ -200,11 +201,20 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     };
   }, [sessionId, userId]);
 
-  // My suggestion (if any)
-  const mySuggestion = useMemo(() => {
-    if (!userId) return null;
-    return suggestions.find(s => s.user_id === userId) || null;
+  // My suggestions (hosts can have up to 2, others only 1)
+  const mySuggestions = useMemo(() => {
+    if (!userId) return [];
+    return suggestions.filter(s => s.user_id === userId);
   }, [suggestions, userId]);
+
+  // For backwards compatibility - get first suggestion
+  const mySuggestion = useMemo(() => {
+    return mySuggestions.length > 0 ? mySuggestions[0] : null;
+  }, [mySuggestions]);
+
+  // Max suggestions allowed (hosts get 2, others get 1)
+  const maxSuggestions = isHost ? 2 : 1;
+  const canAddMoreSuggestions = mySuggestions.length < maxSuggestions;
 
   // Submit a suggestion
   const submitSuggestion = useCallback(async (params: {
@@ -247,14 +257,17 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     return true;
   }, [sessionId, userId, nickname, avatarUrl]);
 
-  // Remove my suggestion
-  const removeMySuggestion = useCallback(async () => {
-    if (!mySuggestion) return false;
+  // Remove a specific suggestion by ID
+  const removeSuggestion = useCallback(async (suggestionId: string) => {
+    if (!suggestionId || !userId) return false;
+
+    tvLog('[useTVPoll] Removing suggestion', { suggestionId, userId });
 
     const { error } = await supabase
       .from('tv_poll_suggestions')
       .delete()
-      .eq('id', mySuggestion.id);
+      .eq('id', suggestionId)
+      .eq('user_id', userId);
 
     if (error) {
       tvLogError('[useTVPoll] Error removing suggestion', error);
@@ -262,7 +275,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     }
 
     return true;
-  }, [mySuggestion]);
+  }, [userId]);
+
+  // Remove my suggestion (backwards compatible - removes first)
+  const removeMySuggestion = useCallback(async () => {
+    if (!mySuggestion) return false;
+    return removeSuggestion(mySuggestion.id);
+  }, [mySuggestion, removeSuggestion]);
 
   // Vote for a suggestion (toggle)
   const toggleVote = useCallback(async (suggestionId: string) => {
@@ -427,6 +446,9 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
   return {
     suggestions: sortedSuggestions,
     mySuggestion,
+    mySuggestions,
+    canAddMoreSuggestions,
+    maxSuggestions,
     myVotes,
     loading,
     pollPhase,
@@ -434,6 +456,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     pollDuration,
     submitSuggestion,
     removeMySuggestion,
+    removeSuggestion,
     toggleVote,
     startVoting,
     initiatePoll,
