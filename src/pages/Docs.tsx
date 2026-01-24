@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, Database, Code, Layers, Settings, Cpu, GitBranch, Search } from "lucide-react";
+import { ChevronLeft, Database, Code, Layers, Settings, Cpu, GitBranch, Search, Wrench, Workflow } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { ARCHITECTURE_SECTIONS } from "@/data/documentation/architecture";
@@ -13,8 +13,14 @@ import { ALL_COMPONENTS, COMPONENT_CATEGORIES } from "@/data/documentation/compo
 import { ALL_SERVICES, SERVICE_CATEGORIES } from "@/data/documentation/services";
 import { ALL_CONTEXTS, CONTEXT_CATEGORIES } from "@/data/documentation/contexts";
 import { ALL_CONFIGS, CONFIG_CATEGORIES } from "@/data/documentation/config";
+import { UTILITIES, CONSTANTS, TYPE_DEFINITIONS } from "@/data/documentation/utilities";
+import { API_FLOWS, DATABASE_RELATIONSHIPS, RLS_POLICY_PATTERNS } from "@/data/documentation/apiFlows";
+import { 
+  COMPONENTS_GAME, COMPONENTS_HOME, COMPONENTS_TEAM, COMPONENTS_SHOP, 
+  COMPONENTS_SOCIAL, COMPONENTS_SHARED, COMPONENTS_TV, COMPONENTS_ADMIN 
+} from "@/data/documentation/componentsComplete";
 
-type DocSection = "architecture" | "tables" | "functions" | "hooks" | "components" | "services" | "contexts" | "config";
+type DocSection = "architecture" | "tables" | "functions" | "hooks" | "components" | "services" | "contexts" | "config" | "utilities" | "apiFlows";
 
 const SECTIONS = [
   { id: "architecture" as const, name: "Architecture", nameKa: "არქიტექტურა", icon: GitBranch },
@@ -25,6 +31,8 @@ const SECTIONS = [
   { id: "services" as const, name: "Services", nameKa: "სერვისები", icon: Settings },
   { id: "contexts" as const, name: "Contexts", nameKa: "კონტექსტები", icon: GitBranch },
   { id: "config" as const, name: "Configuration", nameKa: "კონფიგურაცია", icon: Settings },
+  { id: "utilities" as const, name: "Utilities", nameKa: "ხელსაწყოები", icon: Wrench },
+  { id: "apiFlows" as const, name: "API Flows", nameKa: "API ნაკადები", icon: Workflow },
 ];
 
 export default function Docs() {
@@ -147,25 +155,53 @@ export default function Docs() {
   };
 
   const renderComponents = () => {
-    const filtered = ALL_COMPONENTS.filter(c => 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Combine original components with complete components
+    const allComponentGroups = [
+      { name: "Game", nameKa: "თამაში", items: COMPONENTS_GAME },
+      { name: "Home", nameKa: "მთავარი", items: COMPONENTS_HOME },
+      { name: "Team", nameKa: "გუნდი", items: COMPONENTS_TEAM },
+      { name: "Shop", nameKa: "მაღაზია", items: COMPONENTS_SHOP },
+      { name: "Social", nameKa: "სოციალური", items: COMPONENTS_SOCIAL },
+      { name: "Shared", nameKa: "საერთო", items: COMPONENTS_SHARED },
+      { name: "TV", nameKa: "TV", items: COMPONENTS_TV },
+      { name: "Admin", nameKa: "ადმინი", items: COMPONENTS_ADMIN },
+    ];
+
     return (
-      <div className="space-y-4">
-        {COMPONENT_CATEGORIES.map(cat => {
-          const comps = filtered.filter(c => c.category === cat.name);
-          if (comps.length === 0) return null;
+      <div className="space-y-6">
+        <div className="bg-primary/10 rounded-xl p-4 mb-4">
+          <p className="text-sm text-primary font-medium">
+            📊 Total Components: {allComponentGroups.reduce((sum, g) => sum + g.items.length, 0)}
+          </p>
+        </div>
+        {allComponentGroups.map(group => {
+          const filtered = group.items.filter(c => 
+            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.description.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          if (filtered.length === 0) return null;
           return (
-            <div key={cat.id}>
-              <h3 className="text-lg font-bold mb-2 text-primary">{language === "ka" ? cat.nameKa : cat.name}</h3>
-              {comps.map(comp => (
-                <div key={comp.name} className="bg-card/50 rounded-lg p-4 mb-3 border border-border/30">
-                  <h4 className="font-mono font-bold text-foreground">{comp.name}</h4>
-                  <p className="text-sm text-muted-foreground">{language === "ka" ? comp.descriptionKa : comp.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{comp.filePath}</p>
-                </div>
-              ))}
+            <div key={group.name}>
+              <h3 className="text-lg font-bold mb-3 text-primary flex items-center gap-2">
+                {language === "ka" ? group.nameKa : group.name}
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{filtered.length}</span>
+              </h3>
+              <div className="grid gap-3">
+                {filtered.map(comp => (
+                  <div key={comp.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
+                    <h4 className="font-mono font-bold text-foreground">{comp.name}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{comp.description}</p>
+                    <p className="text-xs text-muted-foreground mt-2 font-mono">{comp.path}</p>
+                    {comp.props && comp.props.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {comp.props.map((prop: string) => (
+                          <span key={prop} className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{prop}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })}
@@ -216,6 +252,150 @@ export default function Docs() {
     </div>
   );
 
+  const renderUtilities = () => (
+    <div className="space-y-8">
+      {/* Utility Functions */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          🔧 Utility Functions
+          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{UTILITIES.length}</span>
+        </h2>
+        <div className="grid gap-3">
+          {UTILITIES.filter(u => 
+            u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.description.toLowerCase().includes(searchQuery.toLowerCase())
+          ).map(util => (
+            <div key={util.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
+              <h4 className="font-mono font-bold text-foreground">{util.name}</h4>
+              <p className="text-sm text-muted-foreground">{util.description}</p>
+              <pre className="mt-2 text-xs bg-background/60 p-2 rounded overflow-x-auto">{util.usage}</pre>
+              <p className="text-xs text-muted-foreground mt-2">{util.path}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Constants */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          📌 Constants
+          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{CONSTANTS.length}</span>
+        </h2>
+        <div className="grid gap-3">
+          {CONSTANTS.map(constant => (
+            <div key={constant.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
+              <h4 className="font-mono font-bold text-foreground">{constant.name}</h4>
+              <p className="text-sm text-muted-foreground">{constant.description}</p>
+              <pre className="mt-2 text-xs bg-background/60 p-2 rounded overflow-x-auto">
+                {JSON.stringify(constant.values, null, 2)}
+              </pre>
+              <p className="text-xs text-muted-foreground mt-2">{constant.path}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Type Definitions */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          📝 Type Definitions
+          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{TYPE_DEFINITIONS.length}</span>
+        </h2>
+        <div className="grid gap-3">
+          {TYPE_DEFINITIONS.map(typeDef => (
+            <div key={typeDef.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
+              <h4 className="font-mono font-bold text-foreground">{typeDef.name}</h4>
+              <p className="text-sm text-muted-foreground">{typeDef.description}</p>
+              <div className="mt-2 space-y-1">
+                {typeDef.properties.map((prop: string) => (
+                  <div key={prop} className="text-xs font-mono text-primary bg-background/60 px-2 py-1 rounded">
+                    {prop}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">{typeDef.path}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderApiFlows = () => (
+    <div className="space-y-8">
+      {/* API Flow Diagrams */}
+      <div>
+        <h2 className="text-xl font-bold mb-4">🔄 API Flow Diagrams</h2>
+        <div className="space-y-6">
+          {API_FLOWS.filter(flow => 
+            flow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            flow.description.toLowerCase().includes(searchQuery.toLowerCase())
+          ).map(flow => (
+            <div key={flow.name} className="bg-card/50 rounded-xl p-6 border border-border/30">
+              <h3 className="text-lg font-bold text-foreground mb-2">{flow.name}</h3>
+              <p className="text-sm text-muted-foreground mb-4">{flow.description}</p>
+              
+              {/* Mermaid diagram placeholder */}
+              <div className="bg-background/80 rounded-lg p-4 mb-4 overflow-x-auto">
+                <pre className="text-xs font-mono text-muted-foreground whitespace-pre">{flow.diagram}</pre>
+              </div>
+              
+              {/* Steps */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Steps:</h4>
+                {flow.steps.map((step, i) => (
+                  <div key={i} className="text-sm text-muted-foreground pl-4 border-l-2 border-primary/30">
+                    {step}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Database Relationships */}
+      <div>
+        <h2 className="text-xl font-bold mb-4">🔗 Database Relationships</h2>
+        <div className="bg-card/50 rounded-xl p-6 border border-border/30">
+          <p className="text-sm text-muted-foreground mb-4">{DATABASE_RELATIONSHIPS.description}</p>
+          <div className="bg-background/80 rounded-lg p-4 mb-4 overflow-x-auto">
+            <pre className="text-xs font-mono text-muted-foreground whitespace-pre">{DATABASE_RELATIONSHIPS.diagram}</pre>
+          </div>
+          <div className="space-y-3 mt-4">
+            {DATABASE_RELATIONSHIPS.relationships.map((rel, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm">
+                <span className="font-mono text-primary">{rel.from}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="font-mono text-primary">{rel.to}</span>
+                <span className="text-xs bg-muted px-2 py-0.5 rounded">{rel.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* RLS Policy Patterns */}
+      <div>
+        <h2 className="text-xl font-bold mb-4">🔒 RLS Policy Patterns</h2>
+        <div className="space-y-4">
+          {RLS_POLICY_PATTERNS.map((pattern, i) => (
+            <div key={i} className="bg-card/50 rounded-xl p-6 border border-border/30">
+              <h3 className="font-bold text-foreground mb-2">{pattern.pattern}</h3>
+              <p className="text-sm text-muted-foreground mb-3">{pattern.description}</p>
+              <pre className="bg-background/80 rounded-lg p-3 text-xs font-mono overflow-x-auto">{pattern.example}</pre>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {pattern.tables.map(table => (
+                  <span key={table} className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">{table}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case "architecture": return renderArchitecture();
@@ -226,6 +406,8 @@ export default function Docs() {
       case "services": return renderServices();
       case "contexts": return renderContexts();
       case "config": return renderConfig();
+      case "utilities": return renderUtilities();
+      case "apiFlows": return renderApiFlows();
     }
   };
 
