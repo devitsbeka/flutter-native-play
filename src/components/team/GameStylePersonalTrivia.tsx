@@ -799,11 +799,19 @@ export function GameStylePersonalTrivia({
 
   // Handle back button click
   const handleBackClick = () => {
+    // If this session is already tied to an existing draft, we don't need to prompt
+    // to “save as draft” again — autosave/update will keep it.
+    if (currentDraftId) {
+      onClose();
+      return;
+    }
+
     if (hasProgress()) {
       setShowExitConfirm(true);
-    } else {
-      onClose();
+      return;
     }
+
+    onClose();
   };
 
   if (!isOpen) return null;
