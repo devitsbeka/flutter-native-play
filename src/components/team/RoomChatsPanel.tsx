@@ -393,7 +393,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
                     {/* Search */}
                     <div className="relative mb-3">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
                       <button
                         type="button"
                         aria-label="ძებნა"
@@ -402,7 +402,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           const el = document.getElementById("room-chats-search") as HTMLInputElement | null;
                           el?.focus();
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors z-10"
                       >
                         <Search className="w-4 h-4 text-muted-foreground" />
                       </button>
