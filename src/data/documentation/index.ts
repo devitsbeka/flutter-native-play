@@ -1,20 +1,22 @@
-// Documentation Data Index
-// This module exports all documentation data for the /docs page
+// Documentation Data Index - COMPLETE
+// Exports all documentation data for the /docs page
 
-// Core exports (avoid conflicts by not using star exports for overlapping files)
+// Core documentation
 export { ARCHITECTURE_SECTIONS } from './architecture';
-export { ALL_TABLES, TABLE_CATEGORIES_NAV, type TableDoc, type TableColumn, type TableRelation } from './tables';
-export { ALL_EDGE_FUNCTIONS, EDGE_FUNCTION_CATEGORIES, type EdgeFunctionDoc, type EdgeFunctionParam } from './edgeFunctions';
-export { ALL_HOOKS, HOOK_CATEGORIES, type HookDoc, type HookParam, type HookReturn } from './hooks';
-export { ALL_COMPONENTS, COMPONENT_CATEGORIES, type ComponentDoc } from './components';
-export { ALL_SERVICES, SERVICE_CATEGORIES, type ServiceDoc, type ServiceMethod } from './services';
-export { ALL_CONTEXTS, CONTEXT_CATEGORIES, type ContextDoc, type ContextValue } from './contexts';
-export { ALL_CONFIGS, CONFIG_CATEGORIES, type ConfigDoc, type ConfigValue } from './config';
+export { ALL_TABLES, TABLE_CATEGORIES_NAV } from './tables';
+export { ALL_EDGE_FUNCTIONS, EDGE_FUNCTION_CATEGORIES } from './edgeFunctions';
+export { ALL_HOOKS, HOOK_CATEGORIES } from './hooks';
+export { ALL_COMPONENTS, COMPONENT_CATEGORIES } from './components';
+export { ALL_SERVICES } from './services';
+export { ALL_CONTEXTS } from './contexts';
+export { ALL_CONFIGS } from './config';
 
-// Extended documentation (for Docs page - includes ALL items)
-export * from './tablesComplete';
-export * from './edgeFunctionsComplete';
-export * from './hooksComplete';
-export * from './componentsComplete';
-export * from './utilities';
-export * from './apiFlows';
+// Complete documentation (full coverage)
+export { ALL_PAGES, PAGE_CATEGORIES, PAGES_MAIN, PAGES_TEAM, PAGES_TV, PAGES_ADMIN } from './pagesComplete';
+export { ALL_HOOKS_FULL, HOOK_CATEGORY_COUNTS } from './hooksFullList';
+export { ALL_CONTEXTS_FULL, CONTEXT_HIERARCHY } from './contextsComplete';
+export { ALL_EDGE_FUNCTIONS_FULL } from './edgeFunctionsFull';
+export { UTILS_FILES, LIB_FILES, CONFIG_FILES_FULL, CONSTANTS_FILES } from './utilsComplete';
+export { COMPONENTS_GAME, COMPONENTS_HOME, COMPONENTS_TEAM, COMPONENTS_SHOP, COMPONENTS_SOCIAL, COMPONENTS_SHARED, COMPONENTS_TV, COMPONENTS_ADMIN } from './componentsComplete';
+export { UTILITIES, CONSTANTS, TYPE_DEFINITIONS } from './utilities';
+export { API_FLOWS, DATABASE_RELATIONSHIPS, RLS_POLICY_PATTERNS } from './apiFlows';
