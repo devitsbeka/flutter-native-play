@@ -742,7 +742,7 @@ export default function IconAssignment() {
       </div>
 
       {/* Questions Tab Content */}
-      <TabsContent value="questions" className="flex-1 mt-0 overflow-hidden flex flex-col">
+      <TabsContent value="questions" className="flex-1 mt-0 overflow-x-hidden flex flex-col">
       {/* Header with Stats and Batch Controls - HIDDEN FOR NOW */}
       {/* 
       <div className="border-b border-border/50 bg-card/30 p-4">
@@ -751,7 +751,7 @@ export default function IconAssignment() {
       */}
 
       {/* Main Content - Two Panel Layout */}
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-0 overflow-hidden">
+       <div className="grid min-h-0 flex-1 grid-cols-2 gap-0 overflow-x-hidden">
         {/* Left Panel - Questions */}
         <div className="flex min-h-0 flex-col border-r border-border/50">
           {/* Question Filters */}
@@ -944,8 +944,8 @@ export default function IconAssignment() {
           </ScrollArea>
         </div>
 
-        {/* Right Panel - Icon Picker */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/20">
+        {/* Right Panel - Icon Picker (sticky for easy editing while scrolling the question list) */}
+        <div className="sticky top-4 flex h-[calc(100vh-8rem)] min-h-0 flex-1 flex-col overflow-hidden bg-muted/20">
           {/* Bulk Selection Preview */}
           {selectedQuestionIds.size > 0 && (
             <div className="shrink-0 border-b border-border/30 p-4 bg-primary/5">
