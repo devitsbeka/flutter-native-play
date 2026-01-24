@@ -8,6 +8,7 @@ import { TimerBadge } from '@/components/game/TimerBadge';
 import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
 import { TVRoundQueueIndicator } from './TVRoundQueueIndicator';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
@@ -49,6 +50,8 @@ export const TVQuestionScreenV4: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden relative">
+      {/* Debug Overlay - only shows in development */}
+      <TVDebugOverlay />
       {/* Question Progress Indicator - Left side */}
       {totalQuestions > 1 && (
         <motion.div
