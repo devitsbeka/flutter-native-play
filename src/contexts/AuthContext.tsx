@@ -31,7 +31,7 @@ interface AuthContextType {
   signInWithApple: () => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ data?: any; error: any }>;
-  fetchProfile: (userId: string) => Promise<void>;
+  fetchProfile: (userId: string) => Promise<Profile | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,48 +45,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Track local updates to prevent duplicate realtime updates
   const lastLocalUpdateRef = useRef<number>(0);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (!error && data) {
-      setProfile(data as Profile);
-      
-      // Auto-detect and set country code if not already set
-      if (!data.country_code) {
-        getCountryCodeFromIP().then(async (detectedCountry) => {
-          if (detectedCountry) {
-            const { data: updatedProfile } = await supabase
-              .from("profiles")
-              .update({ country_code: detectedCountry })
-              .eq("user_id", userId)
-              .select()
-              .single();
-            
-            if (updatedProfile) {
-              setProfile(updatedProfile as Profile);
+      if (!error && data) {
+        setProfile(data as Profile);
+        
+        // Auto-detect and set country code if not already set
+        if (!data.country_code) {
+          getCountryCodeFromIP().then(async (detectedCountry) => {
+            if (detectedCountry) {
+              const { data: updatedProfile } = await supabase
+                .from("profiles")
+                .update({ country_code: detectedCountry })
+                .eq("user_id", userId)
+                .select()
+                .single();
+              
+              if (updatedProfile) {
+                setProfile(updatedProfile as Profile);
+              }
             }
-          }
-        });
+          });
+        }
+        return data as Profile;
       }
+      return null;
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      return null;
     }
   }, []);
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        console.log('Auth state change:', event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Defer profile fetch to avoid deadlock
+        // Fetch profile SYNCHRONOUSLY before setting loading to false
         if (currentSession?.user) {
-          setTimeout(() => {
-            fetchProfile(currentSession.user.id);
-          }, 0);
+          await fetchProfile(currentSession.user.id);
         } else {
           setProfile(null);
         }
@@ -96,11 +102,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+      console.log('Initial session check:', existingSession?.user?.id);
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       if (existingSession?.user) {
-        fetchProfile(existingSession.user.id);
+        await fetchProfile(existingSession.user.id);
       }
       setLoading(false);
     });
