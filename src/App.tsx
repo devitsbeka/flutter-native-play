@@ -79,6 +79,7 @@ const AdminFlow = lazy(() => import("./pages/admin/Flow"));
 const AdminDesign = lazy(() => import("./pages/admin/Design"));
 const AdminEconomy = lazy(() => import("./pages/admin/Economy"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
+const AdminGuestShowcase = lazy(() => import("./pages/AdminGuestShowcase"));
 
 // Shop pages
 const ShopSuccess = lazy(() => import("./pages/shop/Success"));
@@ -158,6 +159,7 @@ const App = () => (
                   <Route path="push" element={<PushNotifications />} />
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="design" element={<AdminDesign />} />
+                  <Route path="guest" element={<AdminGuestShowcase />} />
                   <Route path="economy" element={<AdminEconomy />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>

@@ -21,7 +21,8 @@ import {
   Flag,
   Palette,
   Coins,
-  Settings
+  Settings,
+  Smartphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,6 +67,11 @@ const mainNavItems: NavItem[] = [
     to: '/admin/design', 
     icon: Palette, 
     label: 'დიზაინი' 
+  },
+  { 
+    to: '/admin/guest', 
+    icon: Smartphone, 
+    label: 'Guest Preview' 
   },
   { 
     to: '/admin/economy', 
