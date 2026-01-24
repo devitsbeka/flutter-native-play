@@ -945,7 +945,7 @@ export default function IconAssignment() {
         </div>
 
         {/* Right Panel - Icon Picker (sticky for easy editing while scrolling the question list) */}
-        <div className="sticky top-4 self-start flex max-h-[calc(100vh-8rem)] min-h-0 flex-1 flex-col overflow-hidden bg-muted/20">
+        <div className="sticky top-4 self-start flex h-[calc(100vh-8rem)] min-h-0 flex-1 flex-col overflow-hidden bg-muted/20">
           {/* Bulk Selection Preview */}
           {selectedQuestionIds.size > 0 && (
             <div className="shrink-0 border-b border-border/30 p-4 bg-primary/5">
