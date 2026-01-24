@@ -38,6 +38,7 @@ export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question'
 interface TVGameState {
   code: string | null;
   sessionId: string | null;
+  roomId: string | null; // The actual game_rooms ID for FK constraints
   phase: TVPhase;
   players: TVPlayer[];
   questions: TVQuestion[];
@@ -142,6 +143,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [state, setState] = useState<TVGameState>({
     code: null,
     sessionId: null,
+    roomId: null,
     phase: 'pairing',
     players: [],
     questions: [],
@@ -873,6 +875,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ...prev,
         code: session.tv_pairing_code || prev.code,
         sessionId: session.id,
+        roomId: session.room_id || null, // Store the actual room_id for FK constraints
         phase: mapDbStatusToPhase(session.status),  // Use proper mapping!
         questions,
         currentQuestionIndex: session.current_question_index || 0,
@@ -1466,10 +1469,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
       }
 
-      // Record answer in database
+      // Record answer in database - use actual roomId for FK constraint
       const { error } = await supabase.from('player_answers').insert({
         tv_session_id: state.sessionId,
-        room_id: state.sessionId, // Using session ID as room ID for simplicity
+        room_id: state.roomId!, // Use the actual game_rooms ID
         user_id: myPlayerId,
         question_index: state.currentQuestionIndex,
         answer,
@@ -1496,7 +1499,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Still return result even if DB fails - presence update is more important
       return { correct: isCorrect, points };
     }
-  }, [state.sessionId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost]);
+  }, [state.sessionId, state.roomId, state.questions, state.currentQuestionIndex, state.timeRemaining, state.players, myPlayerId, myAnswer, myScore, isHost]);
 
   // Mark ready for next round (host-only trigger)
   const markReady = useCallback(async () => {
@@ -1755,6 +1758,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setState({
       code: null,
       sessionId: null,
+      roomId: null,
       phase: 'pairing',
       players: [],
       questions: [],
