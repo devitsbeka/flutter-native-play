@@ -296,7 +296,7 @@ export default function Notifications() {
             {/* Generation Notifications */}
             {generationNotifications.length > 0 && (
               <>
-                <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40">
+                <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
                   AI გენერაცია
                 </div>
                 {generationNotifications.map((notification) => (
@@ -312,8 +312,11 @@ export default function Notifications() {
             {/* Regular Notifications */}
             <AnimatePresence mode="popLayout">
               {sectionedNotifications.map((section) => (
-                <div key={section.title}>
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40">
+                <div
+                  key={section.title}
+                  className="border-t border-border/30 first:border-t-0"
+                >
+                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
                     {section.title}
                   </div>
                   {section.items.map((notification) => (

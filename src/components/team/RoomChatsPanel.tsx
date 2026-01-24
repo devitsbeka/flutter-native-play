@@ -468,8 +468,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         <div className="divide-y divide-border/30">
                           {(activeFilter === "all" || activeFilter === "rooms") && (
                             <div>
-                              <div className="px-4 py-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground bg-background/40">
-                                <Users className="w-4 h-4" />
+                              <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
                                 ოთახები
                               </div>
                               {filteredRooms.map((conversation, index) => (
@@ -494,8 +493,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
                           {(activeFilter === "all" || activeFilter === "friends") && (
                             <div>
-                              <div className="px-4 py-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground bg-background/40">
-                                <MessageCircle className="w-4 h-4" />
+                              <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
                                 მეგობრები
                               </div>
                               {filteredFriends.map((conversation, index) => (
