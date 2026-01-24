@@ -9,6 +9,7 @@ export interface PageDoc {
   features: string[];
   hooks: string[];
   components: string[];
+  category?: string;
 }
 
 export const PAGES_MAIN: PageDoc[] = [
@@ -431,12 +432,12 @@ export const PAGES_SHOWCASE: PageDoc[] = [
   }
 ];
 
-export const ALL_PAGES = [
-  ...PAGES_MAIN,
-  ...PAGES_TEAM,
-  ...PAGES_TV,
-  ...PAGES_ADMIN,
-  ...PAGES_SHOWCASE
+export const ALL_PAGES: PageDoc[] = [
+  ...PAGES_MAIN.map(p => ({ ...p, category: "main" })),
+  ...PAGES_TEAM.map(p => ({ ...p, category: "team" })),
+  ...PAGES_TV.map(p => ({ ...p, category: "tv" })),
+  ...PAGES_ADMIN.map(p => ({ ...p, category: "admin" })),
+  ...PAGES_SHOWCASE.map(p => ({ ...p, category: "showcase" })),
 ];
 
 export const PAGE_CATEGORIES = [
