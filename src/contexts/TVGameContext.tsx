@@ -661,15 +661,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setState(prev => {
           if (prev.timeRemaining <= 1) {
             tvLogTimer('expired');
-            // Time's up - enter reveal (host drives DB state)
-            if (isHost && prev.phase === 'question' && prev.sessionId) {
-              // Mark reveal requested (avoids double updates from sync)
-              revealRequestedRef.current = true;
-              supabase
-                .from('tv_sessions')
-                .update({ status: 'reveal', reveal_start_time: new Date().toISOString() })
-                .eq('id', prev.sessionId)
-                .then(() => tvLogPhase('question', 'reveal', 'timer expired'));
+            // Host triggers reveal through the single gateway function
+            // This ensures all guards apply and prevents duplicate updates
+            if (isHost && prev.phase === 'question') {
+              requestRevealIfEligible('timer expired');
             }
             return { ...prev, timeRemaining: 0 };
           }
@@ -684,7 +679,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         timerRef.current = null;
       }
     };
-  }, [state.phase, state.timeRemaining, isHost, state.sessionId]);
+  }, [state.phase, state.timeRemaining, isHost, state.sessionId, requestRevealIfEligible]);
 
   // NOTE: Presence-based auto-advance has been DISABLED.
   // Auto-advance logic is now handled by database-based answer counting via:
