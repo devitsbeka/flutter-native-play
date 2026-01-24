@@ -57,6 +57,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     const isFrozen = state === "frozen" && freezeTimeLeft > 0;
     const questionStyles = getQuestionStyles(questionText);
     const isLowTime = timerSeconds !== undefined && timerSeconds <= 5 && !isFrozen;
+    const hasTopBadges = timerSeconds !== undefined || !!difficultyLabel;
 
     return (
       <motion.div
@@ -159,9 +160,10 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         {/* Question Text */}
         <div className={cn(
           "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
-          // Reserve extra headroom for top badges (timer/difficulty) or an external overlapping icon
-          (timerSeconds !== undefined || difficultyLabel) && "pt-16 [@media(max-height:700px)]:pt-14",
-          reserveTopSpace && !(timerSeconds !== undefined || difficultyLabel) && "pt-12 [@media(max-height:700px)]:pt-10"
+          // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon
+          hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14",
+          hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16",
+          !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10"
         )}>
           {isLoading ? (
             <div className="space-y-2 w-full">
