@@ -297,6 +297,7 @@ export function MultiplayerGameScreenV2() {
           state="default"
           timerSeconds={Math.ceil(timeRemaining)}
           timerMaxSeconds={timePerQuestion}
+           reserveTopSpace
         />
       </div>
 

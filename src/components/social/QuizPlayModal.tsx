@@ -627,6 +627,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
                       timerMaxSeconds={15}
                       progressPercent={(currentIndex / Math.max(1, questions.length)) * 100}
                       state="default"
+                      reserveTopSpace
                     />
                   </div>
 

@@ -210,6 +210,7 @@ export const TVQuestionScreenV4: React.FC = () => {
             questionText={currentQuestion.question_text}
             progressPercent={Math.max(0, Math.min(100, timerPercent))}
             className="w-full pt-8"
+            reserveTopSpace
           />
         </div>
 
