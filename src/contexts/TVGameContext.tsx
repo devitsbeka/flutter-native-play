@@ -929,6 +929,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             room_name: string | null;
             round_number?: number | null;
             total_rounds?: number | null;
+            room_id?: string | null;
           };
 
           // New question detection must happen BEFORE setState, and must also reset presence.
@@ -1014,6 +1015,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               roomName: newData.room_name || prev.roomName,
               roundNumber: newData.round_number ?? prev.roundNumber,
               totalRounds: newData.total_rounds ?? prev.totalRounds,
+              roomId: newData.room_id || prev.roomId, // Sync roomId for FK constraints
             };
           });
         }
@@ -1470,9 +1472,28 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Record answer in database - use actual roomId for FK constraint
+      // If roomId is not available, fetch it from the session
+      let roomIdToUse = state.roomId;
+      if (!roomIdToUse && state.sessionId) {
+        console.log('[submitAnswer] roomId not in state, fetching from DB...');
+        const { data: sessionData } = await supabase
+          .from('tv_sessions')
+          .select('room_id')
+          .eq('id', state.sessionId)
+          .maybeSingle();
+        roomIdToUse = sessionData?.room_id || null;
+        console.log('[submitAnswer] Fetched roomId:', roomIdToUse);
+      }
+
+      if (!roomIdToUse) {
+        console.error('[submitAnswer] No roomId available - cannot insert answer');
+        tvLogError('submitAnswer', 'No roomId available');
+        return { correct: isCorrect, points };
+      }
+
       const { error } = await supabase.from('player_answers').insert({
         tv_session_id: state.sessionId,
-        room_id: state.roomId!, // Use the actual game_rooms ID
+        room_id: roomIdToUse,
         user_id: myPlayerId,
         question_index: state.currentQuestionIndex,
         answer,
