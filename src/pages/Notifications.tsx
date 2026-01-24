@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellOff, ChevronDown, Trash2, X } from 'lucide-react';
@@ -53,6 +53,49 @@ export default function Notifications() {
   const displayedNotifications = notifications.slice(0, displayLimit);
   const hasMore = notifications.length > displayLimit;
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
+
+  const sectionedNotifications = useMemo(() => {
+    const groups: Record<string, Notification[]> = {};
+    const getSectionTitle = (type: Notification['type']) => {
+      switch (type) {
+        case 'friend_request':
+        case 'friend_accepted':
+          return 'მეგობრები';
+        case 'room_invite':
+        case 'game_started':
+        case 'challenge':
+        case 'game_result':
+          return 'თამაშები';
+        case 'trivia_liked':
+        case 'trivia_saved':
+        case 'trivia_played':
+          return 'ტრივია';
+        case 'reward':
+        case 'daily_reward':
+        case 'streak':
+        case 'level_up':
+        case 'achievement':
+          return 'პროგრესი';
+        case 'billing':
+        case 'subscription':
+          return 'გადახდები';
+        default:
+          return 'სხვა';
+      }
+    };
+
+    for (const n of displayedNotifications) {
+      const title = getSectionTitle(n.type);
+      if (!groups[title]) groups[title] = [];
+      groups[title].push(n);
+    }
+
+    // stable ordering
+    const order = ['მეგობრები', 'თამაშები', 'ტრივია', 'პროგრესი', 'გადახდები', 'სხვა'];
+    return order
+      .filter((k) => (groups[k]?.length ?? 0) > 0)
+      .map((k) => ({ title: k, items: groups[k] }));
+  }, [displayedNotifications]);
 
   const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
     setActionLoading(notificationId);
@@ -253,6 +296,9 @@ export default function Notifications() {
             {/* Generation Notifications */}
             {generationNotifications.length > 0 && (
               <>
+                <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40">
+                  AI გენერაცია
+                </div>
                 {generationNotifications.map((notification) => (
                   <CompactGenerationCard
                     key={notification.id}
@@ -265,23 +311,30 @@ export default function Notifications() {
 
             {/* Regular Notifications */}
             <AnimatePresence mode="popLayout">
-              {displayedNotifications.map((notification) => (
-                <CompactNotificationCard
-                  key={notification.id}
-                  notification={notification}
-                  onMarkRead={markAsRead}
-                  onNavigate={handleNavigate}
-                  onAcceptFriend={handleAcceptFriend}
-                  onDeclineFriend={handleDeclineFriend}
-                  onAcceptInvite={handleAcceptInvite}
-                  onDeclineInvite={handleDeclineInvite}
-                  onDismiss={deleteNotification}
-                  actionLoading={actionLoading}
-                  timeAgo={formatDistanceToNow(new Date(notification.created_at), { 
-                    addSuffix: false,
-                    locale: dateLocale 
-                  })}
-                />
+              {sectionedNotifications.map((section) => (
+                <div key={section.title}>
+                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40">
+                    {section.title}
+                  </div>
+                  {section.items.map((notification) => (
+                    <CompactNotificationCard
+                      key={notification.id}
+                      notification={notification}
+                      onMarkRead={markAsRead}
+                      onNavigate={handleNavigate}
+                      onAcceptFriend={handleAcceptFriend}
+                      onDeclineFriend={handleDeclineFriend}
+                      onAcceptInvite={handleAcceptInvite}
+                      onDeclineInvite={handleDeclineInvite}
+                      onDismiss={deleteNotification}
+                      actionLoading={actionLoading}
+                      timeAgo={formatDistanceToNow(new Date(notification.created_at), {
+                        addSuffix: false,
+                        locale: dateLocale,
+                      })}
+                    />
+                  ))}
+                </div>
               ))}
             </AnimatePresence>
           </div>
