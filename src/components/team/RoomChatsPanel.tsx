@@ -24,14 +24,18 @@ interface RoomChatsPanelProps {
   onClose: () => void;
 }
 
-type FilterType = "all" | "unread" | "rooms" | "friends";
+type FilterType = "all" | "rooms" | "friends";
 
 const filters: { id: FilterType; label: string }[] = [
   { id: "all", label: "ყველა" },
-  { id: "unread", label: "ახალი" },
   { id: "rooms", label: "ოთახები" },
   { id: "friends", label: "მეგობრები" },
 ];
+
+const truncateTitle = (text: string) => {
+  // If title > 22 chars, show 3 dots after 20 chars
+  return text.length > 22 ? `${text.slice(0, 20)}...` : text;
+};
 
 const SWIPE_THRESHOLD = 100;
 const TAP_MOVE_THRESHOLD = 8;
@@ -134,23 +138,16 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm truncate">
-                <span className="font-bold text-foreground">
-                  {conversation.name}
-                </span>
-                {conversation.lastMessage && (
-                  <span className="text-muted-foreground ml-1 truncate">
-                    {conversation.lastMessage}
-                  </span>
-                )}
-                {!conversation.lastMessage && (
-                  <span className="text-muted-foreground/60 ml-1">
-                    {conversation.type === "room" 
-                      ? `${conversation.roomParticipantCount} მონაწილე`
-                      : "დაიწყე საუბარი..."
-                    }
-                  </span>
-                )}
+              {/* Title row */}
+              <p className="text-base font-bold text-foreground truncate">
+                {truncateTitle(conversation.name)}
+              </p>
+
+              {/* Subtitle row */}
+              <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">
+                {conversation.type === "room"
+                  ? `${conversation.roomParticipantCount} მონაწილე`
+                  : (conversation.lastMessage || "დაიწყე საუბარი...")}
               </p>
             </div>
 
@@ -223,9 +220,6 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
     // Apply type filter
     switch (activeFilter) {
-      case "unread":
-        result = result.filter(c => c.unreadCount > 0);
-        break;
       case "rooms":
         result = result.filter(c => c.type === "room");
         break;
@@ -445,9 +439,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           <p className="text-muted-foreground text-center">
                             {searchQuery 
                               ? "ვერ მოიძებნა" 
-                              : activeFilter === "unread"
-                                ? "ახალი შეტყობინებები არ არის"
-                                : "საუბრები არ არის"
+                              : "საუბრები არ არის"
                             }
                           </p>
                         </div>
