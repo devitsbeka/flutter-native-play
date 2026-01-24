@@ -29,9 +29,11 @@ export function BottomNavigation() {
             return (
               <button
                 key={item.path}
+                type="button"
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "flex flex-col items-center justify-center py-2 px-4 min-w-[64px] transition-all",
+                  // Larger tap targets for mobile (aiming for ~44px+)
+                  "flex flex-col items-center justify-center min-w-[72px] min-h-[52px] px-5 py-3 transition-all touch-manipulation rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
