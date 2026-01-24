@@ -92,6 +92,14 @@ const TVHostController: React.FC = () => {
   // Poll voting ended state - for transitioning from voting to results
   const [votingEnded, setVotingEnded] = useState(false);
   
+  // Poll hook - must be called unconditionally at top level to avoid React error #310
+  const pollHook = useTVPoll({
+    sessionId: sessionId || null,
+    userId: user?.id || null,
+    nickname,
+    avatarUrl,
+  });
+  
   // Derive hasAnswered from context
   const hasAnswered = myAnswer !== null;
   
@@ -722,13 +730,7 @@ const TVHostController: React.FC = () => {
       isHost: p.isHost,
     }));
 
-    // Use the poll hook for New Game functionality
-    const pollHook = useTVPoll({
-      sessionId: sessionId || null,
-      userId: user?.id || null,
-      nickname,
-      avatarUrl,
-    });
+    // pollHook is now called at the top level of the component
 
     const handlePlayAgain = async () => {
       try {
