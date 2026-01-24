@@ -14,6 +14,9 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
+import { ControllerPollResults } from '@/components/controller/ControllerPollResults';
+import { useTVPoll } from '@/hooks/useTVPoll';
 
 interface Category {
   id: string;
@@ -22,7 +25,7 @@ interface Category {
   icon: string;
   color: string;
 }
-type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed' | 'round-intro';
+type LocalPhase = 'category-select' | 'waiting' | 'lobby' | 'countdown' | 'playing' | 'reveal' | 'completed' | 'round-intro' | 'poll-suggest' | 'poll-voting' | 'poll-results';
 
 const isEmojiString = (value?: string | null) => {
   if (!value) return false;
@@ -100,6 +103,8 @@ const TVHostController: React.FC = () => {
       'reveal': 'reveal',
       'results': 'completed',
       'round-intro': 'round-intro',
+      'poll-suggest': 'poll-suggest',
+      'poll-voting': 'poll-voting',
     };
     return mapping[phase] || 'category-select';
   };
@@ -707,17 +712,22 @@ const TVHostController: React.FC = () => {
       isHost: p.isHost,
     }));
 
+    // Use the poll hook for New Game functionality
+    const pollHook = useTVPoll({
+      sessionId: sessionId || null,
+      userId: user?.id || null,
+      nickname,
+      avatarUrl,
+    });
+
     const handlePlayAgain = async () => {
       try {
-        // Use context's resetGame which handles DB, presence scores, and local state
-        await resetGame();
-        
-        // Reset local UI state
-        setLastResult(null);
-        setSelectedCategory(null);
+        // Instead of resetting the same game, initiate the category poll
+        await pollHook.initiatePoll();
+        toast.success('კატეგორიის არჩევა დაწყებულია!');
       } catch (error) {
-        console.error('Error resetting game:', error);
-        window.location.reload();
+        console.error('Error initiating poll:', error);
+        toast.error('ვერ მოხერხდა');
       }
     };
 
@@ -738,7 +748,36 @@ const TVHostController: React.FC = () => {
         onPlayAgain={handlePlayAgain}
         onContinueNextRound={handleContinueNextRound}
         isHost={true}
-          hasMoreRounds={roundNumber < totalRounds}
+        hasMoreRounds={roundNumber < totalRounds}
+      />
+    );
+  }
+
+  // Poll suggestion phase - host can suggest and start voting
+  if (localPhase === 'poll-suggest' || localPhase === 'poll-voting') {
+    return (
+      <ControllerPollScreen
+        sessionId={sessionId || ''}
+        userId={user?.id || ''}
+        nickname={nickname}
+        avatarUrl={avatarUrl}
+        isHost={true}
+      />
+    );
+  }
+
+  // Poll results phase - host selects how many rounds
+  if (localPhase === 'poll-results') {
+    return (
+      <ControllerPollResults
+        sessionId={sessionId || ''}
+        userId={user?.id || ''}
+        nickname={nickname}
+        avatarUrl={avatarUrl}
+        onGameStart={() => {
+          // After game is started, navigation will be handled by phase change
+          tvLog('Game started from poll results');
+        }}
       />
     );
   }

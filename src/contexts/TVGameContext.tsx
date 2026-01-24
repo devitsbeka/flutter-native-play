@@ -33,7 +33,7 @@ export interface TVQuestion {
   icon_slug?: string | null; // Per-question icon for display
 }
 
-export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle' | 'round-intro';
+export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle' | 'round-intro' | 'poll-suggest' | 'poll-voting';
 
 interface TVGameState {
   code: string | null;
@@ -101,6 +101,8 @@ export const mapDbStatusToPhase = (status: string): TVPhase => {
     'idle': 'idle',
     'pairing': 'pairing',
     'round-intro': 'round-intro',
+    'poll-suggest': 'poll-suggest',
+    'poll-voting': 'poll-voting',
   };
   return mapping[status] || (status as TVPhase);
 };

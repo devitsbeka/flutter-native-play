@@ -8,12 +8,8 @@ import { Avatar } from '@/components/shared/Avatar';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import confetti from 'canvas-confetti';
 
-interface TVPollScreenProps {
-  sessionId: string;
-}
-
-export const TVPollScreen: React.FC<TVPollScreenProps> = ({ sessionId }) => {
-  const { players, code } = useTVGame();
+export const TVPollScreen: React.FC = () => {
+  const { players, code, sessionId } = useTVGame();
   const {
     suggestions,
     pollPhase,

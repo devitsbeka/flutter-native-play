@@ -7,6 +7,7 @@ import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
 import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
 import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
 import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
+import { TVPollScreen } from '@/components/tv/TVPollScreen';
 import { TVErrorBoundary } from '@/components/tv/TVErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
@@ -147,6 +148,9 @@ const TVDisplayContent: React.FC = () => {
       return <TVQuestionScreenV4 />;
     case 'round-intro':
       return <TVRoundIntroScreen isController={false} />;
+    case 'poll-suggest':
+    case 'poll-voting':
+      return <TVPollScreen />;
     case 'results':
     case 'completed':
       return <TVResultsScreen />;

@@ -216,7 +216,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     coverImage?: string | null;
   }) => {
     if (!sessionId || !userId) {
-      tvLogError('[useTVPoll] Cannot submit: no session or user');
+      tvLogError('[useTVPoll] Cannot submit', 'no session or user');
       return false;
     }
 
@@ -238,15 +238,6 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     const { error } = await supabase
       .from('tv_poll_suggestions')
       .insert(insertData as any);
-        nickname,
-        avatar_url: avatarUrl || null,
-        source_type: params.sourceType,
-        category_id: params.categoryId || null,
-        user_trivia_id: params.userTriviaId || null,
-        category_name: params.categoryName,
-        icon_slug: params.iconSlug || null,
-        cover_image: params.coverImage || null,
-      });
 
     if (error) {
       tvLogError('[useTVPoll] Error submitting suggestion', error);
@@ -382,7 +373,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl }: UseTVPollO
     const topSuggestions = suggestions.slice(0, topN);
 
     if (topSuggestions.length === 0) {
-      tvLogError('[useTVPoll] No suggestions to start game with');
+      tvLogError('[useTVPoll] Finalize poll failed', 'No suggestions to start game with');
       return false;
     }
 
