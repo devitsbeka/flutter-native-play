@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, Database, Code, Layers, Settings, Cpu, GitBranch, Search, Wrench, Workflow } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -10,9 +9,9 @@ import { ALL_TABLES, TABLE_CATEGORIES_NAV } from "@/data/documentation/tables";
 import { ALL_EDGE_FUNCTIONS, EDGE_FUNCTION_CATEGORIES } from "@/data/documentation/edgeFunctions";
 import { ALL_HOOKS, HOOK_CATEGORIES } from "@/data/documentation/hooks";
 import { ALL_COMPONENTS, COMPONENT_CATEGORIES } from "@/data/documentation/components";
-import { ALL_SERVICES, SERVICE_CATEGORIES } from "@/data/documentation/services";
-import { ALL_CONTEXTS, CONTEXT_CATEGORIES } from "@/data/documentation/contexts";
-import { ALL_CONFIGS, CONFIG_CATEGORIES } from "@/data/documentation/config";
+import { ALL_SERVICES } from "@/data/documentation/services";
+import { ALL_CONTEXTS } from "@/data/documentation/contexts";
+import { ALL_CONFIGS } from "@/data/documentation/config";
 import { UTILITIES, CONSTANTS, TYPE_DEFINITIONS } from "@/data/documentation/utilities";
 import { API_FLOWS, DATABASE_RELATIONSHIPS, RLS_POLICY_PATTERNS } from "@/data/documentation/apiFlows";
 import { 
@@ -23,20 +22,19 @@ import {
 type DocSection = "architecture" | "tables" | "functions" | "hooks" | "components" | "services" | "contexts" | "config" | "utilities" | "apiFlows";
 
 const SECTIONS = [
-  { id: "architecture" as const, name: "Architecture", nameKa: "არქიტექტურა", icon: GitBranch },
-  { id: "tables" as const, name: "Database Tables", nameKa: "მონაცემთა ბაზის ცხრილები", icon: Database },
-  { id: "functions" as const, name: "Edge Functions", nameKa: "Edge ფუნქციები", icon: Cpu },
-  { id: "hooks" as const, name: "Hooks", nameKa: "Hooks", icon: Code },
-  { id: "components" as const, name: "Components", nameKa: "კომპონენტები", icon: Layers },
-  { id: "services" as const, name: "Services", nameKa: "სერვისები", icon: Settings },
-  { id: "contexts" as const, name: "Contexts", nameKa: "კონტექსტები", icon: GitBranch },
-  { id: "config" as const, name: "Configuration", nameKa: "კონფიგურაცია", icon: Settings },
-  { id: "utilities" as const, name: "Utilities", nameKa: "ხელსაწყოები", icon: Wrench },
-  { id: "apiFlows" as const, name: "API Flows", nameKa: "API ნაკადები", icon: Workflow },
+  { id: "architecture" as const, name: "Architecture", icon: GitBranch },
+  { id: "tables" as const, name: "Database Tables", icon: Database },
+  { id: "functions" as const, name: "Edge Functions", icon: Cpu },
+  { id: "hooks" as const, name: "Hooks", icon: Code },
+  { id: "components" as const, name: "Components", icon: Layers },
+  { id: "services" as const, name: "Services", icon: Settings },
+  { id: "contexts" as const, name: "Contexts", icon: GitBranch },
+  { id: "config" as const, name: "Configuration", icon: Settings },
+  { id: "utilities" as const, name: "Utilities", icon: Wrench },
+  { id: "apiFlows" as const, name: "API Flows", icon: Workflow },
 ];
 
 export default function Docs() {
-  const { language } = useLanguage();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<DocSection>("architecture");
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,14 +43,14 @@ export default function Docs() {
     <div className="space-y-8">
       {ARCHITECTURE_SECTIONS.map((section) => (
         <div key={section.id} className="bg-card/50 rounded-xl p-6 border border-border/30">
-          <h2 className="text-xl font-bold mb-2">{language === "ka" ? section.titleKa : section.title}</h2>
+          <h2 className="text-xl font-bold mb-2">{section.title}</h2>
           <pre className="text-sm text-muted-foreground whitespace-pre-wrap mb-4">
-            {language === "ka" ? section.descriptionKa : section.description}
+            {section.description}
           </pre>
           {section.subsections?.map((sub, i) => (
             <div key={i} className="mt-4 pl-4 border-l-2 border-primary/30">
-              <h3 className="font-semibold">{language === "ka" ? sub.titleKa : sub.title}</h3>
-              <pre className="text-sm text-muted-foreground whitespace-pre-wrap">{language === "ka" ? sub.contentKa : sub.content}</pre>
+              <h3 className="font-semibold">{sub.title}</h3>
+              <pre className="text-sm text-muted-foreground whitespace-pre-wrap">{sub.content}</pre>
               {sub.codeExample && (
                 <pre className="mt-2 p-3 bg-background/80 rounded-lg text-xs overflow-x-auto">{sub.codeExample}</pre>
               )}
@@ -75,11 +73,11 @@ export default function Docs() {
           if (tables.length === 0) return null;
           return (
             <div key={cat.id}>
-              <h3 className="text-lg font-bold mb-2 text-primary">{language === "ka" ? cat.nameKa : cat.name}</h3>
+              <h3 className="text-lg font-bold mb-2 text-primary">{cat.name}</h3>
               {tables.map(table => (
                 <div key={table.name} className="bg-card/50 rounded-lg p-4 mb-3 border border-border/30">
                   <h4 className="font-mono font-bold text-foreground">{table.name}</h4>
-                  <p className="text-sm text-muted-foreground">{language === "ka" ? table.descriptionKa : table.description}</p>
+                  <p className="text-sm text-muted-foreground">{table.description}</p>
                   <div className="mt-2 text-xs text-muted-foreground">
                     <span className="font-semibold">Columns:</span> {table.columns.length} | 
                     {table.realtimeEnabled && <span className="ml-2 text-green-400">● Realtime</span>}
@@ -105,14 +103,14 @@ export default function Docs() {
           if (funcs.length === 0) return null;
           return (
             <div key={cat.id}>
-              <h3 className="text-lg font-bold mb-2 text-primary">{language === "ka" ? cat.nameKa : cat.name}</h3>
+              <h3 className="text-lg font-bold mb-2 text-primary">{cat.name}</h3>
               {funcs.map(func => (
                 <div key={func.name} className="bg-card/50 rounded-lg p-4 mb-3 border border-border/30">
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 bg-primary/20 rounded text-xs font-mono">{func.method}</span>
                     <h4 className="font-mono font-bold">{func.name}</h4>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{language === "ka" ? func.descriptionKa : func.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{func.description}</p>
                   <div className="mt-2 text-xs">
                     <span className="text-muted-foreground">Returns:</span> <code className="text-primary">{func.returns}</code>
                   </div>
@@ -137,11 +135,11 @@ export default function Docs() {
           if (hooks.length === 0) return null;
           return (
             <div key={cat.id}>
-              <h3 className="text-lg font-bold mb-2 text-primary">{language === "ka" ? cat.nameKa : cat.name}</h3>
+              <h3 className="text-lg font-bold mb-2 text-primary">{cat.name}</h3>
               {hooks.map(hook => (
                 <div key={hook.name} className="bg-card/50 rounded-lg p-4 mb-3 border border-border/30">
                   <h4 className="font-mono font-bold text-foreground">{hook.name}</h4>
-                  <p className="text-sm text-muted-foreground">{language === "ka" ? hook.descriptionKa : hook.description}</p>
+                  <p className="text-sm text-muted-foreground">{hook.description}</p>
                   <div className="mt-2 text-xs text-muted-foreground">
                     <span className="font-semibold">Returns:</span> {hook.returns.length} values
                   </div>
@@ -155,16 +153,15 @@ export default function Docs() {
   };
 
   const renderComponents = () => {
-    // Combine original components with complete components
     const allComponentGroups = [
-      { name: "Game", nameKa: "თამაში", items: COMPONENTS_GAME },
-      { name: "Home", nameKa: "მთავარი", items: COMPONENTS_HOME },
-      { name: "Team", nameKa: "გუნდი", items: COMPONENTS_TEAM },
-      { name: "Shop", nameKa: "მაღაზია", items: COMPONENTS_SHOP },
-      { name: "Social", nameKa: "სოციალური", items: COMPONENTS_SOCIAL },
-      { name: "Shared", nameKa: "საერთო", items: COMPONENTS_SHARED },
-      { name: "TV", nameKa: "TV", items: COMPONENTS_TV },
-      { name: "Admin", nameKa: "ადმინი", items: COMPONENTS_ADMIN },
+      { name: "Game", items: COMPONENTS_GAME },
+      { name: "Home", items: COMPONENTS_HOME },
+      { name: "Team", items: COMPONENTS_TEAM },
+      { name: "Shop", items: COMPONENTS_SHOP },
+      { name: "Social", items: COMPONENTS_SOCIAL },
+      { name: "Shared", items: COMPONENTS_SHARED },
+      { name: "TV", items: COMPONENTS_TV },
+      { name: "Admin", items: COMPONENTS_ADMIN },
     ];
 
     return (
@@ -183,7 +180,7 @@ export default function Docs() {
           return (
             <div key={group.name}>
               <h3 className="text-lg font-bold mb-3 text-primary flex items-center gap-2">
-                {language === "ka" ? group.nameKa : group.name}
+                {group.name}
                 <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{filtered.length}</span>
               </h3>
               <div className="grid gap-3">
@@ -214,7 +211,7 @@ export default function Docs() {
       {ALL_SERVICES.map(service => (
         <div key={service.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
           <h4 className="font-mono font-bold text-foreground">{service.name}</h4>
-          <p className="text-sm text-muted-foreground">{language === "ka" ? service.descriptionKa : service.description}</p>
+          <p className="text-sm text-muted-foreground">{service.description}</p>
           <div className="mt-3 space-y-2">
             {service.methods.map(m => (
               <div key={m.name} className="pl-3 border-l border-primary/30 text-sm">
@@ -233,7 +230,7 @@ export default function Docs() {
       {ALL_CONTEXTS.map(ctx => (
         <div key={ctx.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
           <h4 className="font-mono font-bold text-foreground">{ctx.name}</h4>
-          <p className="text-sm text-muted-foreground">{language === "ka" ? ctx.descriptionKa : ctx.description}</p>
+          <p className="text-sm text-muted-foreground">{ctx.description}</p>
           <p className="text-xs text-primary mt-1">Hook: {ctx.hook}</p>
         </div>
       ))}
@@ -245,7 +242,7 @@ export default function Docs() {
       {ALL_CONFIGS.map(cfg => (
         <div key={cfg.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
           <h4 className="font-mono font-bold text-foreground">{cfg.name}</h4>
-          <p className="text-sm text-muted-foreground">{language === "ka" ? cfg.descriptionKa : cfg.description}</p>
+          <p className="text-sm text-muted-foreground">{cfg.description}</p>
           <p className="text-xs text-muted-foreground mt-1">{cfg.filePath}</p>
         </div>
       ))}
@@ -254,7 +251,6 @@ export default function Docs() {
 
   const renderUtilities = () => (
     <div className="space-y-8">
-      {/* Utility Functions */}
       <div>
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           🔧 Utility Functions
@@ -275,7 +271,6 @@ export default function Docs() {
         </div>
       </div>
 
-      {/* Constants */}
       <div>
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           📌 Constants
@@ -295,7 +290,6 @@ export default function Docs() {
         </div>
       </div>
 
-      {/* Type Definitions */}
       <div>
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           📝 Type Definitions
@@ -323,7 +317,6 @@ export default function Docs() {
 
   const renderApiFlows = () => (
     <div className="space-y-8">
-      {/* API Flow Diagrams */}
       <div>
         <h2 className="text-xl font-bold mb-4">🔄 API Flow Diagrams</h2>
         <div className="space-y-6">
@@ -334,13 +327,9 @@ export default function Docs() {
             <div key={flow.name} className="bg-card/50 rounded-xl p-6 border border-border/30">
               <h3 className="text-lg font-bold text-foreground mb-2">{flow.name}</h3>
               <p className="text-sm text-muted-foreground mb-4">{flow.description}</p>
-              
-              {/* Mermaid diagram placeholder */}
               <div className="bg-background/80 rounded-lg p-4 mb-4 overflow-x-auto">
                 <pre className="text-xs font-mono text-muted-foreground whitespace-pre">{flow.diagram}</pre>
               </div>
-              
-              {/* Steps */}
               <div className="space-y-2">
                 <h4 className="font-semibold text-sm">Steps:</h4>
                 {flow.steps.map((step, i) => (
@@ -354,7 +343,6 @@ export default function Docs() {
         </div>
       </div>
 
-      {/* Database Relationships */}
       <div>
         <h2 className="text-xl font-bold mb-4">🔗 Database Relationships</h2>
         <div className="bg-card/50 rounded-xl p-6 border border-border/30">
@@ -375,7 +363,6 @@ export default function Docs() {
         </div>
       </div>
 
-      {/* RLS Policy Patterns */}
       <div>
         <h2 className="text-xl font-bold mb-4">🔒 RLS Policy Patterns</h2>
         <div className="space-y-4">
@@ -432,7 +419,7 @@ export default function Docs() {
               }`}
             >
               <section.icon className="w-4 h-4" />
-              {language === "ka" ? section.nameKa : section.name}
+              {section.name}
             </button>
           ))}
         </nav>
