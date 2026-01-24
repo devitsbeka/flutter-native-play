@@ -2231,6 +2231,101 @@ export type Database = {
           },
         ]
       }
+      tv_poll_suggestions: {
+        Row: {
+          avatar_url: string | null
+          category_id: string | null
+          category_name: string
+          cover_image: string | null
+          created_at: string | null
+          icon_slug: string | null
+          id: string
+          nickname: string
+          session_id: string
+          source_type: string
+          user_id: string
+          user_trivia_id: string | null
+          vote_count: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          category_id?: string | null
+          category_name: string
+          cover_image?: string | null
+          created_at?: string | null
+          icon_slug?: string | null
+          id?: string
+          nickname: string
+          session_id: string
+          source_type: string
+          user_id: string
+          user_trivia_id?: string | null
+          vote_count?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          category_id?: string | null
+          category_name?: string
+          cover_image?: string | null
+          created_at?: string | null
+          icon_slug?: string | null
+          id?: string
+          nickname?: string
+          session_id?: string
+          source_type?: string
+          user_id?: string
+          user_trivia_id?: string | null
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_poll_suggestions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          session_id: string
+          suggestion_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          session_id: string
+          suggestion_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          suggestion_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_poll_votes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tv_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_poll_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "tv_poll_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_round_history: {
         Row: {
           category_icon: string | null
@@ -2339,6 +2434,8 @@ export type Database = {
           id: string
           is_paired: boolean | null
           pairing_code: string | null
+          poll_duration: number | null
+          poll_start_time: string | null
           question_start_time: string | null
           questions: Json | null
           reveal_start_time: string | null
@@ -2363,6 +2460,8 @@ export type Database = {
           id?: string
           is_paired?: boolean | null
           pairing_code?: string | null
+          poll_duration?: number | null
+          poll_start_time?: string | null
           question_start_time?: string | null
           questions?: Json | null
           reveal_start_time?: string | null
@@ -2387,6 +2486,8 @@ export type Database = {
           id?: string
           is_paired?: boolean | null
           pairing_code?: string | null
+          poll_duration?: number | null
+          poll_start_time?: string | null
           question_start_time?: string | null
           questions?: Json | null
           reveal_start_time?: string | null
