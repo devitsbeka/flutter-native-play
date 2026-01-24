@@ -3499,6 +3499,10 @@ export type Database = {
         Returns: boolean
       }
       increment_quiz_plays: { Args: { post_id: string }; Returns: undefined }
+      is_tv_session_participant: {
+        Args: { p_player_identifier: string; p_session_id: string }
+        Returns: boolean
+      }
       update_user_currency: {
         Args: {
           p_coins_delta?: number
