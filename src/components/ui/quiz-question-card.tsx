@@ -17,6 +17,12 @@ interface QuizQuestionCardProps {
   timerSeconds?: number;
   timerMaxSeconds?: number;
   freezeTimeLeft?: number;
+  /**
+   * When a large icon is rendered overlapping the top-center of the card
+   * (outside this component), enable this to reserve extra whitespace so the
+   * icon never covers the question text.
+   */
+  reserveTopSpace?: boolean;
 }
 
 // Dynamic font sizing based on question length
@@ -43,6 +49,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       timerSeconds,
       timerMaxSeconds = 20,
       freezeTimeLeft = 0,
+      reserveTopSpace = false,
     },
     ref
   ) => {
@@ -152,7 +159,9 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         {/* Question Text */}
         <div className={cn(
           "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
-          (timerSeconds !== undefined || difficultyLabel) && "pt-16 [@media(max-height:700px)]:pt-14"
+          // Reserve extra headroom for top badges (timer/difficulty) or an external overlapping icon
+          (timerSeconds !== undefined || difficultyLabel) && "pt-16 [@media(max-height:700px)]:pt-14",
+          reserveTopSpace && !(timerSeconds !== undefined || difficultyLabel) && "pt-12 [@media(max-height:700px)]:pt-10"
         )}>
           {isLoading ? (
             <div className="space-y-2 w-full">

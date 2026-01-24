@@ -997,6 +997,7 @@ export default function CategoryQuizPage() {
           difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
+          reserveTopSpace
         />
       </div>
 
