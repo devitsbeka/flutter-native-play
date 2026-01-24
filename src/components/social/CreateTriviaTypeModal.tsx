@@ -64,8 +64,9 @@ export function CreateTriviaTypeModal({
             </div>
           </div>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 safe-bottom max-w-2xl mx-auto w-full">
+          {/* Content (no page scroll; drafts scroll internally if needed) */}
+          <div className="flex-1 overflow-hidden px-4 py-6 safe-bottom max-w-2xl mx-auto w-full">
+            <div className="flex h-full flex-col space-y-3">
             {/* Single Trivia Card */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -224,13 +225,16 @@ export function CreateTriviaTypeModal({
               </motion.button>
             )}
 
-            {/* Drafts List */}
-            <div className="h-[50px]" aria-hidden />
-            <DraftsList 
-              onResumeDraft={handleResumeDraft}
-              onClose={handleClose}
-            />
+              {/* Drafts List */}
+              <div className="h-[50px]" aria-hidden />
+              <div className="flex-1 min-h-0">
+                <DraftsList 
+                  onResumeDraft={handleResumeDraft}
+                  onClose={handleClose}
+                />
+              </div>
 
+            </div>
           </div>
         </motion.div>
       )}
