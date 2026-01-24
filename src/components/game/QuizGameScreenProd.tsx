@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGame, PowerUpType } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,10 +18,6 @@ import { useAIIcon } from "@/hooks/useAIIcon";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
 import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { EditQuestionDialog } from "@/components/social/EditQuestionDialog";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 // Bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -44,7 +40,6 @@ export function QuizGameScreenProd() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { t } = useLanguage();
-  const { isAdmin } = useAdminRole();
   const {
     phase,
     questions,
@@ -76,47 +71,16 @@ export function QuizGameScreenProd() {
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [opponentAvatarIndex] = useState(() => Math.floor(Math.random() * botAvatars.length));
   const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [localEdits, setLocalEdits] = useState<
-    Record<
-      string,
-      {
-        questionText: string;
-        correctAnswer: string;
-        incorrectAnswers: string[];
-        iconSlug: string | null;
-      }
-    >
-  >({});
 
-  const baseQuestion = questions[currentQuestionIndex];
-  const editOverride = baseQuestion?.id ? localEdits[baseQuestion.id] : undefined;
-  const currentQuestion = useMemo(() => {
-    if (!baseQuestion) return baseQuestion;
-    if (!editOverride) return baseQuestion;
-
-    const allAnswers = [
-      editOverride.correctAnswer,
-      ...editOverride.incorrectAnswers,
-    ].filter((a) => !!a && a.trim().length > 0);
-
-    return {
-      ...baseQuestion,
-      question: editOverride.questionText,
-      correctAnswer: editOverride.correctAnswer,
-      allAnswers,
-      questionIconSlug: editOverride.iconSlug,
-    };
-  }, [baseQuestion, editOverride]);
+  const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
-  // Detect true/false questions (based on currently displayed answers)
+  // Detect true/false questions
   const isTrueFalseQuestion = useMemo(() => {
     if (!currentQuestion?.allAnswers) return false;
     if (currentQuestion.allAnswers.length !== 2) return false;
-
-    const answers = currentQuestion.allAnswers.map((a) => a.toLowerCase());
+    
+    const answers = currentQuestion.allAnswers.map(a => a.toLowerCase());
     return (
       (answers.includes("მართალია") && answers.includes("მცდარია")) ||
       (answers.includes("true") && answers.includes("false"))
@@ -141,70 +105,6 @@ export function QuizGameScreenProd() {
     category: currentQuestion?.categoryId,
     enabled: !!currentQuestion && !currentQuestion.questionIconSlug,
   });
-
-  const handleSaveEdit = useCallback(
-    async (updated: {
-      question_text: string;
-      correct_answer: string;
-      incorrect_answers?: string[];
-      icon_slug?: string | null;
-    }) => {
-      if (!baseQuestion?.id) return;
-
-      const incorrectAnswers = (updated.incorrect_answers || [])
-        .map((a) => a?.trim?.() ?? "")
-        .filter((a) => a.length > 0);
-
-      // For 4-answer questions we expect 3 incorrect answers.
-      if (!isTrueFalseQuestion && incorrectAnswers.length < 3) {
-        toast.error("შეავსეთ 3 არასწორი პასუხი");
-        return;
-      }
-
-      setIsSavingEdit(true);
-      try {
-        const { error } = await supabase
-          .from("questions")
-          .update({
-            question_text: updated.question_text.trim(),
-            correct_answer: updated.correct_answer.trim(),
-            incorrect_answers: incorrectAnswers,
-            icon_slug: updated.icon_slug ?? null,
-          })
-          .eq("id", baseQuestion.id);
-
-        if (error) throw error;
-
-        // Reflect immediately in UI even if game questions are preloaded.
-        setLocalEdits((prev) => ({
-          ...prev,
-          [baseQuestion.id]: {
-            questionText: updated.question_text.trim(),
-            correctAnswer: updated.correct_answer.trim(),
-            incorrectAnswers: isTrueFalseQuestion
-              ? // Keep the other option as the only incorrect answer
-                [
-                  ...new Set(
-                    baseQuestion.allAnswers
-                      .filter((a) => a !== updated.correct_answer)
-                      .concat(incorrectAnswers)
-                  ),
-                ].slice(0, 1)
-              : incorrectAnswers.slice(0, 3),
-            iconSlug: updated.icon_slug ?? null,
-          },
-        }));
-
-        toast.success("კითხვა განახლდა");
-      } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : "Error";
-        toast.error("ვერ შევინახე ცვლილება", { description: message });
-      } finally {
-        setIsSavingEdit(false);
-      }
-    },
-    [baseQuestion, isTrueFalseQuestion]
-  );
 
   // Reset state when question changes
   useEffect(() => {
@@ -399,19 +299,6 @@ export function QuizGameScreenProd() {
     );
   }
 
-  const dialogQuestion = (() => {
-    const incorrect = isTrueFalseQuestion
-      ? baseQuestion.allAnswers.filter((a) => a !== baseQuestion.correctAnswer).slice(0, 1)
-      : baseQuestion.allAnswers.filter((a) => a !== baseQuestion.correctAnswer).slice(0, 3);
-
-    return {
-      question_text: currentQuestion.question,
-      correct_answer: currentQuestion.correctAnswer,
-      incorrect_answers: isTrueFalseQuestion ? incorrect : incorrect,
-      icon_slug: currentQuestion.questionIconSlug ?? null,
-    };
-  })();
-
   return (
     <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
       {/* Content wrapper with max-width for desktop/tablet, centered */}
@@ -485,18 +372,6 @@ export function QuizGameScreenProd() {
           />
         </div>
 
-        {/* Admin actions */}
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => setIsEditOpen(true)}
-            className="absolute right-6 top-4 z-30 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-2"
-          >
-            <Pencil className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-semibold">Edit</span>
-          </button>
-        )}
-
         <QuizQuestionCard
           questionText={currentQuestion.question}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
@@ -508,27 +383,6 @@ export function QuizGameScreenProd() {
           freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
           reserveTopSpace
         />
-
-        {/* Admin: show answers inline */}
-        {isAdmin && (
-          <div className="mt-2 rounded-2xl bg-white/10 border border-white/10 px-4 py-3">
-            <div className="text-white/70 text-xs font-bold mb-2">ANSWERS</div>
-            <div className="space-y-1">
-              <div className="flex items-start gap-2">
-                <span className="text-emerald-200 text-xs font-bold">✓</span>
-                <span className="text-white text-sm font-medium break-words">{currentQuestion.correctAnswer}</span>
-              </div>
-              {currentQuestion.allAnswers
-                .filter((a) => a !== currentQuestion.correctAnswer)
-                .map((a, idx) => (
-                  <div key={idx} className="flex items-start gap-2">
-                    <span className="text-red-200 text-xs font-bold">✗</span>
-                    <span className="text-white/90 text-sm break-words">{a}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Progress Dots */}
@@ -645,21 +499,6 @@ export function QuizGameScreenProd() {
 
       {/* Screen-wide freeze effect */}
       <PowerUpScreenEffect type="freeze" isActive={playerTimerFrozen} />
-
-      {/* Admin edit dialog */}
-      {isAdmin && (
-        <EditQuestionDialog
-          open={isEditOpen}
-          onOpenChange={(open) => {
-            // prevent closing while saving
-            if (!open && isSavingEdit) return;
-            setIsEditOpen(open);
-          }}
-          question={dialogQuestion}
-          answerFormat={isTrueFalseQuestion ? "true_false" : "4_answers"}
-          onSave={handleSaveEdit}
-        />
-      )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown, BarChart3, ArrowRightLeft, Wrench } from 'lucide-react';
+import { Search, Image, Check, X, Loader2, Wand2, Play, StopCircle, Sparkles, AlertTriangle, CheckCircle, Clock, History, Trash2, CheckSquare, Square, CheckCheck, Upload, RefreshCw, Zap, ChevronDown, BarChart3, ArrowRightLeft, Wrench, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +30,7 @@ import { useIconLibrary } from '@/hooks/useIconLibrary';
 import { useIconVerification } from '@/hooks/useIconVerification';
 import { supabase } from '@/integrations/supabase/client';
 import { isLatinScript, transliterateLatin, getGeorgianEquivalents } from '@/utils/transliteration';
+import { EditQuestionDialog } from '@/components/social/EditQuestionDialog';
 
 interface IconItem {
   slug: string;
@@ -71,6 +72,15 @@ export default function IconAssignment() {
   } = useIconVerification();
 
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionForAssignment | null>(null);
+  const [selectedQuestionDetails, setSelectedQuestionDetails] = useState<{
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+    icon_slug: string | null;
+  } | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<Set<string>>(new Set());
   const [bulkAssigning, setBulkAssigning] = useState(false);
   const [iconSearchTerm, setIconSearchTerm] = useState('');
@@ -78,6 +88,95 @@ export default function IconAssignment() {
   const [iconsLoading, setIconsLoading] = useState(true);
   const [iconsLoadProgress, setIconsLoadProgress] = useState(0);
   const [autoAdvance, setAutoAdvance] = useState(true);
+
+  const fetchSelectedQuestionDetails = useCallback(async (questionId: string) => {
+    setDetailsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .select('question_text, correct_answer, incorrect_answers, icon_slug')
+        .eq('id', questionId)
+        .single();
+
+      if (error) throw error;
+
+      setSelectedQuestionDetails({
+        question_text: data.question_text,
+        correct_answer: data.correct_answer,
+        incorrect_answers: Array.isArray(data.incorrect_answers) ? (data.incorrect_answers as any[]) : [],
+        icon_slug: (data.icon_slug ?? null) as string | null,
+      });
+    } catch (e: unknown) {
+      console.error('Failed to fetch question details:', e);
+      setSelectedQuestionDetails(null);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedQuestion?.id) {
+      setSelectedQuestionDetails(null);
+      return;
+    }
+    fetchSelectedQuestionDetails(selectedQuestion.id);
+  }, [selectedQuestion?.id, fetchSelectedQuestionDetails]);
+
+  const isTrueFalseQuestion = useMemo(() => {
+    const answers = [
+      selectedQuestionDetails?.correct_answer,
+      ...(selectedQuestionDetails?.incorrect_answers || [])
+    ].filter(Boolean) as string[];
+
+    if (answers.length !== 2) return false;
+    const lower = answers.map(a => a.toLowerCase());
+    return (
+      (lower.includes('მართალია') && lower.includes('მცდარია')) ||
+      (lower.includes('true') && lower.includes('false'))
+    );
+  }, [selectedQuestionDetails]);
+
+  const handleSaveQuestionEdits = useCallback(async (updated: {
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers?: string[];
+    icon_slug?: string | null;
+  }) => {
+    if (!selectedQuestion?.id) return;
+
+    const incorrectAnswers = (updated.incorrect_answers || [])
+      .map(a => (a ?? '').toString().trim())
+      .filter(a => a.length > 0);
+
+    if (!isTrueFalseQuestion && incorrectAnswers.length < 3) {
+      toast.error('შეავსეთ 3 არასწორი პასუხი');
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({
+          question_text: updated.question_text.trim(),
+          correct_answer: updated.correct_answer.trim(),
+          incorrect_answers: isTrueFalseQuestion ? incorrectAnswers.slice(0, 1) : incorrectAnswers.slice(0, 3),
+          icon_slug: updated.icon_slug ?? null,
+        })
+        .eq('id', selectedQuestion.id);
+
+      if (error) throw error;
+
+      toast.success('კითხვა განახლდა');
+      await refetch();
+      await fetchSelectedQuestionDetails(selectedQuestion.id);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error';
+      toast.error('ვერ შევინახე ცვლილება', { description: message });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  }, [selectedQuestion?.id, refetch, fetchSelectedQuestionDetails, isTrueFalseQuestion, selectedQuestion]);
   
   // Use server-side broken icons instead of client-side tracking
   const brokenIconSlugs = useMemo(() => new Set(serverBrokenIcons.map(i => i.slug)), [serverBrokenIcons]);
@@ -898,6 +997,16 @@ export default function IconAssignment() {
                   <p className="text-sm font-medium line-clamp-2">{selectedQuestion.question_text}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge variant="outline" className="text-xs">{selectedQuestion.category_name}</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => setIsEditOpen(true)}
+                      disabled={detailsLoading}
+                    >
+                      <Pencil className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
                     {selectedQuestion.icon_slug && (
                       <Button
                         variant="ghost"
@@ -908,6 +1017,30 @@ export default function IconAssignment() {
                         <X className="h-3 w-3 mr-1" />
                         წაშლა
                       </Button>
+                    )}
+                  </div>
+
+                  {/* Answers preview */}
+                  <div className="mt-3 rounded-lg border border-border/40 bg-background/40 p-3">
+                    {detailsLoading || !selectedQuestionDetails ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        იტვირთება პასუხები...
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-semibold text-muted-foreground">ANSWERS</div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-xs font-bold text-emerald-600">✓</span>
+                          <span className="text-xs leading-relaxed break-words">{selectedQuestionDetails.correct_answer}</span>
+                        </div>
+                        {selectedQuestionDetails.incorrect_answers.map((a, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <span className="text-xs font-bold text-red-600">✗</span>
+                            <span className="text-xs leading-relaxed break-words">{a}</span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -922,6 +1055,25 @@ export default function IconAssignment() {
                 <Label htmlFor="auto-advance" className="text-xs">ავტო-გადასვლა შემდეგ კითხვაზე</Label>
               </div>
             </div>
+          )}
+
+          {/* Edit question modal */}
+          {selectedQuestion && selectedQuestionIds.size === 0 && selectedQuestionDetails && (
+            <EditQuestionDialog
+              open={isEditOpen}
+              onOpenChange={(open) => {
+                if (!open && isSavingEdit) return;
+                setIsEditOpen(open);
+              }}
+              answerFormat={isTrueFalseQuestion ? 'true_false' : '4_answers'}
+              question={{
+                question_text: selectedQuestionDetails.question_text,
+                correct_answer: selectedQuestionDetails.correct_answer,
+                incorrect_answers: selectedQuestionDetails.incorrect_answers,
+                icon_slug: selectedQuestionDetails.icon_slug,
+              }}
+              onSave={handleSaveQuestionEdits}
+            />
           )}
 
           {/* Icon Suggestions Panel - shows keywords and suggested icons */}
