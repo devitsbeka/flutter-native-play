@@ -237,6 +237,15 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
     return result;
   }, [conversations, activeFilter, searchQuery]);
 
+  const filteredRooms = useMemo(
+    () => filteredConversations.filter((c) => c.type === "room"),
+    [filteredConversations]
+  );
+  const filteredFriends = useMemo(
+    () => filteredConversations.filter((c) => c.type === "friend"),
+    [filteredConversations]
+  );
+
   // Get current messages based on conversation type
   const currentMessages = selectedConversation?.type === "room" 
     ? filterBlockedUsers(roomMessages) 
@@ -393,7 +402,6 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
 
                     {/* Search */}
                     <div className="relative mb-3">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
                       <button
                         type="button"
                         aria-label="ძებნა"
@@ -402,7 +410,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           const el = document.getElementById("room-chats-search") as HTMLInputElement | null;
                           el?.focus();
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors z-10"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full flex items-center justify-center bg-card/80 backdrop-blur-sm border border-border/50 hover:bg-card transition-colors z-10"
                       >
                         <Search className="w-4 h-4 text-muted-foreground" />
                       </button>
@@ -412,7 +420,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="ძებნა..."
-                        className="w-full h-10 pl-11 pr-12 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        className="w-full h-10 pl-4 pr-12 rounded-full bg-card/80 backdrop-blur-sm border border-border/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                       />
                     </div>
 
@@ -457,20 +465,59 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           </p>
                         </div>
                       ) : (
-                        filteredConversations.map((conversation, index) => (
-                          <motion.div
-                            key={conversation.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: Math.min(index * 0.03, 0.3) }}
-                          >
-                            <ConversationCard
-                              conversation={conversation}
-                              onClick={() => handleConversationClick(conversation)}
-                              onDelete={handleDeleteConversation}
-                            />
-                          </motion.div>
-                        ))
+                        <div className="divide-y divide-border/30">
+                          {(activeFilter === "all" || activeFilter === "rooms") && (
+                            <div>
+                              <div className="px-4 py-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground bg-background/40">
+                                <Users className="w-4 h-4" />
+                                ოთახები
+                              </div>
+                              {filteredRooms.map((conversation, index) => (
+                                <motion.div
+                                  key={conversation.id}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                                >
+                                  <ConversationCard
+                                    conversation={conversation}
+                                    onClick={() => handleConversationClick(conversation)}
+                                    onDelete={handleDeleteConversation}
+                                  />
+                                </motion.div>
+                              ))}
+                              {filteredRooms.length === 0 && (
+                                <div className="px-4 py-4 text-sm text-muted-foreground">ოთახები არ არის</div>
+                              )}
+                            </div>
+                          )}
+
+                          {(activeFilter === "all" || activeFilter === "friends") && (
+                            <div>
+                              <div className="px-4 py-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground bg-background/40">
+                                <MessageCircle className="w-4 h-4" />
+                                მეგობრები
+                              </div>
+                              {filteredFriends.map((conversation, index) => (
+                                <motion.div
+                                  key={conversation.id}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                                >
+                                  <ConversationCard
+                                    conversation={conversation}
+                                    onClick={() => handleConversationClick(conversation)}
+                                    onDelete={handleDeleteConversation}
+                                  />
+                                </motion.div>
+                              ))}
+                              {filteredFriends.length === 0 && (
+                                <div className="px-4 py-4 text-sm text-muted-foreground">მეგობრების ჩატები არ არის</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="h-8" />
