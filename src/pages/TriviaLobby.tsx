@@ -187,7 +187,7 @@ export default function TriviaLobby() {
       </div>
 
       {/* Content */}
-      <div className="px-4 space-y-4 -mt-2">
+      <div className="px-4 space-y-4 -mt-6 relative z-10">
         {/* Stats Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -196,32 +196,32 @@ export default function TriviaLobby() {
           className="grid grid-cols-4 gap-2 bg-card rounded-2xl border border-border p-3"
         >
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <Users className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{stats.uniquePlayers}</p>
-            <p className="text-[10px] text-muted-foreground">მოთამაშე</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              <span>მოთამაშე</span>
+            </div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <BarChart3 className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{stats.avgScore}/{trivia.question_count}</p>
-            <p className="text-[10px] text-muted-foreground">საშუალო</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>საშუალო</span>
+            </div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <HelpCircle className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{trivia.question_count}</p>
-            <p className="text-[10px] text-muted-foreground">კითხვა</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>კითხვა</span>
+            </div>
           </div>
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-              <Heart className="w-3.5 h-3.5" />
-            </div>
             <p className="text-lg font-bold text-foreground">{trivia.likes_count || 0}</p>
-            <p className="text-[10px] text-muted-foreground">მოწონება</p>
+            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+              <Heart className="w-3.5 h-3.5" />
+              <span>მოწონება</span>
+            </div>
           </div>
         </motion.div>
 
