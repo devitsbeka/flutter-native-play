@@ -169,6 +169,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const answersChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Keep latest state available to realtime callbacks (avoid stale-closure bugs)
   const stateRef = useRef<TVGameState>(state);
@@ -236,6 +237,106 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     return allAnswered;
   }, []);
+
+  // DATABASE-BASED ANSWER CHECK: Query player_answers table for actual answer count
+  // This is the authoritative source for determining if all players have answered.
+  // Unlike presence (which is eventually consistent), DB inserts are immediate and reliable.
+  const checkAllAnsweredFromDB = useCallback(async () => {
+    // Only the host should trigger reveal
+    if (!isHostRef.current) return;
+    
+    const sessionId = stateRef.current.sessionId;
+    const currentQuestionIndex = stateRef.current.currentQuestionIndex;
+    const phase = stateRef.current.phase;
+    
+    // Basic guards
+    if (!sessionId) return;
+    if (phase !== 'question') return;
+    if (revealRequestedRef.current) return;
+    
+    // Small safety guard: don't auto-advance in first 500ms
+    const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
+    if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) {
+      console.log('[DB Answer Check] Too soon after question start, skipping');
+      return;
+    }
+    
+    // Get expected player count
+    const expectedCount = expectedPlayerCountRef.current;
+    const isPaired = stateRef.current.isPaired;
+    const minimumRequired = isPaired ? Math.max(expectedCount, 2) : expectedCount;
+    
+    if (minimumRequired <= 0) {
+      console.log('[DB Answer Check] No expected count set, skipping');
+      return;
+    }
+    
+    // Query the database for actual answer count for this question
+    const { count, error } = await supabase
+      .from('player_answers')
+      .select('*', { count: 'exact', head: true })
+      .eq('tv_session_id', sessionId)
+      .eq('question_index', currentQuestionIndex);
+    
+    if (error) {
+      console.error('[DB Answer Check] Error querying answers:', error);
+      return;
+    }
+    
+    const answerCount = count || 0;
+    console.log('[DB Answer Check] Answer count from DB:', {
+      answerCount,
+      expectedCount,
+      minimumRequired,
+      questionIndex: currentQuestionIndex,
+    });
+    
+    // All expected players have answered (verified from database)
+    if (answerCount >= minimumRequired) {
+      console.log('[DB Answer Check] ALL players answered - advancing!', {
+        answerCount,
+        minimumRequired,
+      });
+      requestRevealIfEligible('all players answered (DB verified)');
+    }
+  }, []);
+
+  // Setup subscription to player_answers table for real-time answer tracking
+  const setupAnswersSubscription = useCallback((sessionId: string) => {
+    if (answersChannelRef.current) {
+      supabase.removeChannel(answersChannelRef.current);
+    }
+    
+    console.log('[Answers Subscription] Setting up for session:', sessionId);
+    
+    const channel = supabase
+      .channel(`tv-answers-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'player_answers',
+          filter: `tv_session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          console.log('[Answers Subscription] New answer inserted:', payload.new);
+          
+          // Only the host checks if all players answered
+          if (isHostRef.current) {
+            // Small delay to ensure DB is consistent
+            setTimeout(() => {
+              checkAllAnsweredFromDB();
+            }, 100);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[Answers Subscription] Status:', status);
+      });
+    
+    answersChannelRef.current = channel;
+  }, [checkAllAnsweredFromDB]);
 
   // Prevent double-click / concurrent next-round transitions from host
   const nextRoundInFlightRef = useRef(false);
@@ -479,6 +580,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (timerRef.current) clearInterval(timerRef.current);
       if (channelRef.current) supabase.removeChannel(channelRef.current);
       if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
+      if (answersChannelRef.current) supabase.removeChannel(answersChannelRef.current);
     };
   }, []);
 
@@ -572,28 +674,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [state.phase, state.timeRemaining, isHost, state.sessionId]);
 
-  // SIMPLIFIED Auto-advance: Check if ALL players answered whenever players state changes
-  // Rule: Advance when ALL players have answered OR timer runs out (timer handled separately)
-  useEffect(() => {
-    if (!isHost) return;
-    if (!state.sessionId) return;
-    if (state.phase !== 'question') return;
-    if (revealRequestedRef.current) return;
-
-    // Small safety guard: don't auto-advance in first 500ms after question starts
-    const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-    if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) return;
-
-    // THE SIMPLE RULE: All expected players must have answered
-    if (allPlayersAnswered(state.players)) {
-      console.log('[TV Auto-Advance] ALL players answered - advancing!', {
-        playerCount: state.players.length,
-        expectedCount: expectedPlayerCountRef.current,
-        players: state.players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered })),
-      });
-      requestRevealIfEligible('all players answered');
-    }
-  }, [state.phase, state.players, state.sessionId, isHost, allPlayersAnswered, requestRevealIfEligible]);
+  // NOTE: Presence-based auto-advance has been DISABLED.
+  // Auto-advance logic is now handled by database-based answer counting via:
+  // - setupAnswersSubscription() - subscribes to player_answers INSERT events
+  // - checkAllAnsweredFromDB() - queries actual answer count from database
+  // 
+  // This prevents race conditions where presence sync is incomplete
+  // and the host's answer causes immediate advancement.
 
   // Auto-advance from reveal after a fixed duration (host only)
   useEffect(() => {
@@ -836,6 +923,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Setup subscriptions
       setupSessionSubscription(session.id);
       setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, isTVDisplay);
+      setupAnswersSubscription(session.id);
 
       return true;
     } catch (error) {
@@ -1027,31 +1115,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setState(prev => ({ ...prev, players }));
 
-        // SIMPLIFIED: Check if ALL players answered (presence sync path)
-        // Use fresh state from stateRef for most up-to-date phase
-        const phaseNow = stateRef.current.phase;
-        
-        // Use isHostRef to get the latest isHost value (avoids stale closure)
-        const isHostNow = isHostRef.current;
-        
-        // Basic guards
-        if (!isHostNow) return;
-        if (phaseNow !== 'question') return;
-        if (revealRequestedRef.current) return;
-        
-        // Small safety guard: don't auto-advance in first 500ms
-        const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-        if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) return;
-
-        // THE SIMPLE RULE: All expected players must have answered
-        if (allPlayersAnswered(players)) {
-          console.log('[TV Auto-Advance (presence)] ALL players answered - advancing!', {
-            playerCount: players.length,
-            expectedCount: expectedPlayerCountRef.current,
-            players: players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered })),
-          });
-          requestRevealIfEligible('all players answered (presence sync)');
-        }
+        // NOTE: Auto-advance logic has been moved to database-based answer counting.
+        // Presence sync is now ONLY used for UI updates (showing player states).
+        // This prevents race conditions where presence shows incomplete data and
+        // the host's answer causes immediate advancement.
+        // 
+        // See: player_answers table subscription + checkAllAnsweredFromDB() for auto-advance logic.
         
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
       })
@@ -1425,6 +1494,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (error) {
         tvLogError('submitAnswer DB insert', error);
+      } else {
+        // Belt-and-suspenders: trigger DB-based check after successful insert
+        // The realtime subscription will also trigger this, but this is faster
+        if (isHostRef.current) {
+          setTimeout(() => {
+            checkAllAnsweredFromDB();
+          }, 150);
+        }
       }
 
       return { correct: isCorrect, points };
@@ -1678,6 +1755,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (presenceChannelRef.current) {
       supabase.removeChannel(presenceChannelRef.current);
       presenceChannelRef.current = null;
+    }
+    if (answersChannelRef.current) {
+      supabase.removeChannel(answersChannelRef.current);
+      answersChannelRef.current = null;
     }
     if (timerRef.current) {
       clearInterval(timerRef.current);
