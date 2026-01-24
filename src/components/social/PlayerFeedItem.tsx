@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, UserCheck, Clock, Users, Play, Layers } from "lucide-react";
+import { UserPlus, UserCheck, Clock, Play, Layers } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PlayerInfo, CollectionItem } from "@/hooks/usePlayerFeedItems";
@@ -11,6 +11,9 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmark3dIcon from "@/assets/icons/bookmark-3d.png";
+import { formatDistanceToNow } from "date-fns";
+import { ka, enUS } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PlayerFeedItemProps {
   player: PlayerInfo;
@@ -31,13 +34,6 @@ function getCountryFlag(countryCode: string | null): string {
     .split('')
     .map(char => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
-}
-
-// Format large numbers
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
 }
 
 // Helper to get gradient style
@@ -61,6 +57,7 @@ export function PlayerFeedItem({
   const navigate = useNavigate();
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
+  const { language } = useLanguage();
   const [friendshipStatus, setFriendshipStatus] = useState(player.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -184,6 +181,15 @@ export function PlayerFeedItem({
   const savesCount = isTrivia ? triviaItem!.savesCount : collectionItem!.saves_count;
   const questionCount = isTrivia ? triviaItem!.questionCount : 0;
 
+  const rawCreatedAt = isTrivia
+    ? (triviaItem as any)?.createdAt
+    : (collectionItem as any)?.created_at;
+
+  const dateLocale = language === "ka" ? ka : enUS;
+  const timeAgo = rawCreatedAt
+    ? formatDistanceToNow(new Date(rawCreatedAt), { addSuffix: false, locale: dateLocale })
+    : "";
+
   const gradientProps = getGradientProps(coverGradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
 
   return (
@@ -216,12 +222,20 @@ export function PlayerFeedItem({
               <span className="text-base">{getCountryFlag(player.country_code)}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {player.trivia_count} ტრივია
+              <span className="inline-flex items-center gap-1">
+                {isTrivia ? (
+                  <Play className="w-3 h-3" />
+                ) : (
+                  <Layers className="w-3 h-3" />
+                )}
+                <span>{isTrivia ? "ტრივია" : "კოლექცია"}</span>
               </span>
-              <span>•</span>
-              <span>{formatNumber(player.total_plays)} თამაში</span>
+              {timeAgo ? (
+                <>
+                  <span>•</span>
+                  <span>{timeAgo}</span>
+                </>
+              ) : null}
             </div>
           </div>
         </div>

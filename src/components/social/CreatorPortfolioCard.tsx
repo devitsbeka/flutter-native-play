@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, UserCheck, Clock, Eye, Users } from "lucide-react";
+import { UserPlus, UserCheck, Clock, Eye, Play } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { TriviaPortfolioCard } from "./TriviaPortfolioCard";
@@ -8,6 +8,9 @@ import { Creator } from "@/hooks/useExploreCreators";
 import { SamplePost } from "@/data/samplePosts";
 import { useFriends } from "@/hooks/useFriends";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
+import { formatDistanceToNow } from "date-fns";
+import { ka, enUS } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Carousel, 
   CarouselContent, 
@@ -37,18 +40,18 @@ function getCountryFlag(countryCode: string | null): string {
   return String.fromCodePoint(...codePoints);
 }
 
-// Format large numbers
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
-}
-
 export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [] }: CreatorPortfolioCardProps) {
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
+  const { language } = useLanguage();
   const [friendshipStatus, setFriendshipStatus] = useState(creator.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
+
+  const newestTriviaCreatedAt = creator.trivias?.[0]?.createdAt;
+  const dateLocale = language === "ka" ? ka : enUS;
+  const timeAgo = newestTriviaCreatedAt
+    ? formatDistanceToNow(new Date(newestTriviaCreatedAt), { addSuffix: false, locale: dateLocale })
+    : "";
 
   const handleAddFriend = async () => {
     if (isLoading) return;
@@ -162,13 +165,17 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
               <h3 className="font-semibold text-foreground">{creator.nickname}</h3>
               <span className="text-lg">{getCountryFlag(creator.country_code)}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" />
-                {creator.trivia_count} ტრივია
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Play className="w-3.5 h-3.5" />
+                <span>ტრივია</span>
               </span>
-              <span>•</span>
-              <span>{formatNumber(creator.total_plays)} თამაში</span>
+              {timeAgo ? (
+                <>
+                  <span>•</span>
+                  <span>{timeAgo}</span>
+                </>
+              ) : null}
             </div>
           </div>
         </div>
