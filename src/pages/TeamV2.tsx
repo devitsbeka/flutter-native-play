@@ -168,7 +168,12 @@ function TeamContentV2() {
   const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
-  const [activeTab, setActiveTab] = useState("rooms");
+  const [activeTab, setActiveTab] = useState(() => {
+    const tabFromUrl = searchParams.get("tab");
+    return tabFromUrl === "explore" || tabFromUrl === "my-content" || tabFromUrl === "rooms"
+      ? tabFromUrl
+      : "rooms";
+  });
   
   // Scroll to top when changing tabs to prevent layout jump
   const handleTabChange = (tab: string) => {
@@ -177,7 +182,34 @@ function TeamContentV2() {
       mainContent.scrollTop = 0;
     }
     setActiveTab(tab);
+
+    // Persist tab in URL so navigation away/back (e.g. /trivia/:id) returns to the same tab
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
   };
+
+  // Keep state in sync with browser navigation (back/forward) when ?tab changes
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      if (tabFromUrl === "explore" || tabFromUrl === "my-content" || tabFromUrl === "rooms") {
+        setActiveTab(tabFromUrl);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Ensure URL stays in sync even when tabs are changed via direct setActiveTab(...) calls
+  useEffect(() => {
+    const current = searchParams.get("tab");
+    if (current !== activeTab) {
+      const next = new URLSearchParams(searchParams);
+      next.set("tab", activeTab);
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // Mobile Safari can sometimes require a "second tap" when relying on click-only.
   // Using pointer events makes the interaction feel immediate on touch devices.
