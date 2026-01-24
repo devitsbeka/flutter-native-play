@@ -45,10 +45,12 @@ export default function Notifications() {
 
   // Mark all as read when page loads
   useEffect(() => {
-    if (unreadCount > 0) {
+    // unreadCount can be 0 on first mount while notifications are still loading.
+    // Re-run when unreadCount changes so unread badge doesn't get stuck.
+    if (unreadCount > 0 && !loading) {
       markAllAsRead();
     }
-  }, []);
+  }, [unreadCount, loading, markAllAsRead]);
 
   const displayedNotifications = notifications.slice(0, displayLimit);
   const hasMore = notifications.length > displayLimit;

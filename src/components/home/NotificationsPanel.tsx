@@ -35,10 +35,12 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
 
   // Mark all as read when panel opens
   useEffect(() => {
-    if (isOpen && unreadCount > 0) {
+    // NOTE: unreadCount may be 0 on first open while notifications are still loading.
+    // Re-run when unreadCount updates so the badge doesn't get stuck.
+    if (isOpen && unreadCount > 0 && !loading) {
       markAllAsRead();
     }
-  }, [isOpen]);
+  }, [isOpen, unreadCount, loading, markAllAsRead]);
 
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
 
