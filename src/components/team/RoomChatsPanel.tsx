@@ -197,6 +197,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
   const [userMenuTarget, setUserMenuTarget] = useState<{ userId: string; nickname: string } | null>(null);
+  const sendingRef = useRef(false); // Use ref to prevent double-sends
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -285,21 +286,31 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   }, [selectedConversation, isOpen]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || sending || !selectedConversation) return;
+    const messageToSend = inputValue.trim();
+    if (!messageToSend || sendingRef.current || !selectedConversation) return;
     
+    // Immediately clear input and set sending state
+    sendingRef.current = true;
     setSending(true);
+    setInputValue("");
+    
     if (selectedConversation.type === "room") {
       setIsTyping(false);
     }
 
-    const success = selectedConversation.type === "room"
-      ? await sendRoomMessage(inputValue)
-      : await sendFriendMessage(inputValue);
+    try {
+      const success = selectedConversation.type === "room"
+        ? await sendRoomMessage(messageToSend)
+        : await sendFriendMessage(messageToSend);
 
-    if (success) {
-      setInputValue("");
+      if (!success) {
+        // Restore message if send failed
+        setInputValue(messageToSend);
+      }
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
     }
-    setSending(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
