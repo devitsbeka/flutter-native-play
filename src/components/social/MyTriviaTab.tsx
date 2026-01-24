@@ -248,7 +248,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
           </div>
 
           {/* Title */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center translate-y-5">
             <h4 className={`${
               collection.title.length > 60 ? 'text-xs' :
               collection.title.length > 45 ? 'text-sm' :
@@ -468,7 +468,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <div className="absolute inset-0 bg-black/20" />
           </>
         )}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center translate-y-5">
           <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
             {post.title}
           </h4>
@@ -581,7 +581,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             <div className="absolute inset-0 bg-black/20" />
           </>
         )}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center translate-y-5">
           <h4 className="text-xl font-bold text-white text-center px-4 drop-shadow-lg">
             {post.title}
           </h4>
