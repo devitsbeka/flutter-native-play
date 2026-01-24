@@ -35,20 +35,29 @@ export function CreateTriviaTypeModal({
 
   const handleClose = () => onOpenChange(false);
 
-  if (!open) return null;
-
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
-          }}
-        >
+        <>
+          {/* Solid backdrop - appears instantly to prevent background bleed-through on mobile */}
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[49]"
+            style={{ background: "#4C1D95" }}
+          />
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed inset-0 z-50 flex flex-col overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)",
+            }}
+          >
           {/* Fixed Header */}
           <div className="flex-shrink-0 safe-top">
             <div className="max-w-2xl mx-auto w-full flex items-center justify-between px-4 py-4">
@@ -237,6 +246,7 @@ export function CreateTriviaTypeModal({
             </div>
           </div>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
