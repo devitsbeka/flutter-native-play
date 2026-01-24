@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChevronRight } from "lucide-react";
@@ -84,10 +84,60 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   const [direction, setDirection] = useState(0);
   const { t } = useLanguage();
 
+  // Touch swipe refs
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const isSwiping = useRef(false);
 
-  const goTo = (index: number) => {
+  const goTo = useCallback((index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
+  }, [currentIndex]);
+
+  const goNext = useCallback(() => {
+    if (currentIndex < HERO_SLIDES.length - 1) {
+      setDirection(1);
+      setCurrentIndex(prev => prev + 1);
+    }
+  }, [currentIndex]);
+
+  const goPrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setDirection(-1);
+      setCurrentIndex(prev => prev - 1);
+    }
+  }, [currentIndex]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+    isSwiping.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+    // Mark as swiping if moved more than 10px
+    if (Math.abs(touchStartX.current - touchEndX.current) > 10) {
+      isSwiping.current = true;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50;
+    
+    if (diff > threshold) {
+      goNext();
+    } else if (diff < -threshold) {
+      goPrev();
+    }
+  };
+
+  const handleClick = (sectionId: string) => {
+    // Only trigger click if not swiping
+    if (!isSwiping.current) {
+      onSlideClick?.(sectionId);
+    }
   };
 
   const slide = HERO_SLIDES[currentIndex];
@@ -110,8 +160,11 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
   return (
     <div className="relative px-[15px] mb-6 pt-3">
       <div 
-        className="relative overflow-hidden rounded-3xl" 
+        className="relative overflow-hidden rounded-3xl touch-pan-y" 
         style={{ height: 340 }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
@@ -123,7 +176,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
             exit="exit"
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="absolute inset-0 cursor-pointer"
-            onClick={() => onSlideClick?.(slide.sectionId)}
+            onClick={() => handleClick(slide.sectionId)}
           >
             {/* Video Background */}
             <video
