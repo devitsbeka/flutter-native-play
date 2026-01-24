@@ -1,12 +1,21 @@
 import { motion } from "framer-motion";
 import { Trash2, FileText, Clock, Layers } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ka } from "date-fns/locale";
 import { useDrafts } from "@/hooks/useDrafts";
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
+
+function formatTimeAgo(date: Date) {
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 60) return `${diffMins} წუთის წინ`;
+  if (diffHours < 24) return `${diffHours} საათის წინ`;
+  return `${diffDays} დღის წინ`;
+}
 
 interface DraftsListProps {
   onResumeDraft: (draftId: string, type: "collection" | "trivia" | "personal") => void;
@@ -83,10 +92,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Clock className="w-3 h-3 shrink-0" />
                     <span className="truncate">
-                      {formatDistanceToNow(new Date(draft.updated_at), {
-                        addSuffix: true,
-                        locale: ka,
-                      })}
+                      {formatTimeAgo(new Date(draft.updated_at))}
                     </span>
                   </div>
                 </div>
@@ -165,10 +171,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Clock className="w-3 h-3 shrink-0" />
                     <span className="truncate">
-                      {formatDistanceToNow(new Date(draft.updated_at), {
-                        addSuffix: true,
-                        locale: ka,
-                      })}
+                      {formatTimeAgo(new Date(draft.updated_at))}
                     </span>
                   </div>
                 </div>
