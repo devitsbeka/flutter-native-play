@@ -63,7 +63,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3 min-h-[76px] sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+              className="flex items-center gap-3 p-3.5 min-h-[84px] sm:p-3 sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
             >
               {/* Draft Preview - Different icon for personal vs trivia */}
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -84,7 +84,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   {displayTitle}
                 </p>
                 {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
-                <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
+                <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <span className="shrink-0">{questionCount} კითხვა</span>
                   </div>
@@ -137,7 +137,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
               key={draft.id}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-3 min-h-[76px] sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
+              className="flex items-center gap-3 p-3.5 min-h-[84px] sm:p-3 sm:min-h-0 bg-white/10 rounded-xl hover:bg-white/15 transition-colors group"
             >
               {/* Draft Preview - Collection icon or cover */}
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-600/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -162,7 +162,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                   {displayTitle}
                 </p>
                 {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
-                <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
+                <div className="mt-[3px] flex flex-col gap-[6px] text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <Layers className="w-3 h-3 shrink-0" />
                     <span className="shrink-0">{roundCount} რაუნდი</span>
