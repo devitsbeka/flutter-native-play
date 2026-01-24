@@ -361,7 +361,7 @@ export function QuizGameScreenProd() {
       {/* Question Card with Overlapping Icon */}
       <div className="px-4 flex-shrink-0 mt-5 mb-2 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
         {/* Category Icon - overlaps card by 50% */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
             categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
