@@ -132,9 +132,9 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm">
+              <p className="text-sm truncate">
                 <span className="font-bold text-foreground">
                   {conversation.name}
                 </span>
@@ -152,19 +152,19 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
                   </span>
                 )}
               </p>
-              {conversation.lastMessageTime && (
-                <p className="text-xs text-muted-foreground/60 mt-0.5">
-                  {conversation.lastMessageTime}
-                </p>
-              )}
             </div>
 
-            {/* Unread indicator */}
-            {conversation.unreadCount > 0 && (
-              <div className="flex-shrink-0 mt-1">
+            {/* Right side: date + unread dot */}
+            <div className="flex-shrink-0 flex flex-col items-end gap-1 pt-0.5">
+              {conversation.lastMessageTime && (
+                <span className="text-xs text-muted-foreground/60 whitespace-nowrap">
+                  {conversation.lastMessageTime}
+                </span>
+              )}
+              {conversation.unreadCount > 0 && (
                 <div className="w-2 h-2 rounded-full bg-primary" />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </motion.button>
