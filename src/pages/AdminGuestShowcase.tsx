@@ -199,6 +199,7 @@ export default function AdminGuestShowcase() {
                     onClose={() => {}}
                     onJoinAsGuest={() => Promise.resolve()}
                     code="1234"
+                    inline
                   />
                 </ModalPreviewFrame>
               </div>
