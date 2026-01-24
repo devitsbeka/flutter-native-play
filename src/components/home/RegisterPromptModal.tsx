@@ -9,10 +9,11 @@ interface RegisterPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRegister: () => void;
+  inline?: boolean;
 }
 
 export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterPromptModalProps>(
-  function RegisterPromptModal({ isOpen, onClose, onRegister }, ref) {
+  function RegisterPromptModal({ isOpen, onClose, onRegister, inline }, ref) {
     const { t } = useLanguage();
     const guestProgress = getGuestProgress();
     
@@ -36,6 +37,8 @@ export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterProm
           subtitle={t("modals.dontLoseAchievements")}
           showSparkles
           showStars
+          inline={inline}
+          fullScreen={false}
         >
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3 mb-4">

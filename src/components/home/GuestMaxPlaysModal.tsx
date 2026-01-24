@@ -9,10 +9,11 @@ interface GuestMaxPlaysModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRegister: () => void;
+  inline?: boolean;
 }
 
 export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlaysModalProps>(
-  function GuestMaxPlaysModal({ isOpen, onClose, onRegister }, ref) {
+  function GuestMaxPlaysModal({ isOpen, onClose, onRegister, inline }, ref) {
     const { t } = useLanguage();
     const guestProgress = getGuestProgress();
     
@@ -36,6 +37,8 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           subtitle={t("modals.createAccountToContinue")}
           showSparkles
           showStars
+          inline={inline}
+          fullScreen={false}
         >
           {/* Progress earned */}
           {(totalLevels > 0 || totalStars > 0) && (

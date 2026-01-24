@@ -88,6 +88,8 @@ interface GameModalProps {
   disableBackdropClick?: boolean;
   fullScreen?: boolean;
   headerActions?: React.ReactNode;
+  // Preview/inline mode - renders without fixed positioning (for admin showcase)
+  inline?: boolean;
   // Quick footer props (alternative to custom footer)
   primaryLabel?: string;
   primaryIcon?: React.ReactNode;
@@ -117,6 +119,7 @@ export function GameModal({
   disableBackdropClick = false,
   fullScreen = true,
   headerActions,
+  inline = false,
   primaryLabel,
   primaryIcon,
   onPrimaryClick,
@@ -281,6 +284,88 @@ export function GameModal({
           </motion.div>
         )}
       </AnimatePresence>
+    );
+  }
+
+  // Inline mode - renders card without fixed positioning/backdrop (for admin previews)
+  if (inline && isOpen) {
+    return (
+      <div className={cn("relative w-full max-w-sm", className)}>
+        {/* Main content container - Whitish 3D chunky style */}
+        <div 
+          className="relative rounded-3xl overflow-hidden"
+          style={{
+            background: "linear-gradient(180deg, #FFFFFF 0%, #F8F6FB 100%)",
+            boxShadow: "0 8px 0 #E8E4EC, 0 12px 32px rgba(0, 0, 0, 0.18)",
+            border: "3px solid rgba(255, 255, 255, 0.95)",
+          }}
+        >
+          {/* Background sparkles */}
+          {showSparkles && (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {sparkles.map((i) => (
+                <ModalSparkle key={i} index={i} />
+              ))}
+            </div>
+          )}
+          
+          {/* Floating stars */}
+          {showStars && (
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {stars.map((i) => (
+                <FloatingStar key={i} index={i} />
+              ))}
+            </div>
+          )}
+          
+          {/* Close button - 3D chunky style */}
+          {!hideCloseButton && onClose && (
+            <button
+              onClick={handleClose}
+              className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              style={{
+                boxShadow: "0 3px 0 #D1D5DB",
+              }}
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+          )}
+          
+          {/* Header with icon badge */}
+          <div className="relative pt-8 pb-4 px-6 text-center">
+            {(icon || iconEmoji) && (
+              <div className="relative mx-auto mb-3 flex items-center justify-center">
+                {iconEmoji ? (
+                  <div 
+                    className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                      boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+                    }}
+                  >
+                    <span className="text-4xl">{iconEmoji}</span>
+                  </div>
+                ) : (
+                  icon
+                )}
+              </div>
+            )}
+            
+            <h2 className="font-display text-2xl font-bold text-gray-900">{title}</h2>
+            {subtitle && (
+              <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+            )}
+          </div>
+          
+          {/* Content */}
+          <div className="px-5 pb-5">
+            {children}
+          </div>
+          
+          {/* Footer */}
+          {effectiveFooter}
+        </div>
+      </div>
     );
   }
 
