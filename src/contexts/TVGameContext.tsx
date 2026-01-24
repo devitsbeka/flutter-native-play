@@ -81,10 +81,6 @@ export const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = getQuestionTime();
 
-// Simple safety guard: prevent immediate auto-advance in first 500ms after question starts.
-// This gives presence a moment to sync, but we don't wait the full time if all answered.
-const AUTO_ADVANCE_GUARD_MS = 500;
-
 // Quick highlight only (no separate reveal screen)
 // Keep it in the 1–2s range for readability before auto-advancing.
 const REVEAL_DURATION_MS = 1400;
@@ -183,154 +179,150 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     isHostRef.current = isHost;
   }, [isHost]);
 
-  // Prevent repeated reveal updates from timer/presence sync
-  const revealRequestedRef = useRef(false);
+  // ============================================================================
+  // CLEAN REWRITE: Question Advancement Logic
+  // ============================================================================
+  // Two triggers only:
+  // 1. Timer expires (15 seconds) → advance to reveal
+  // 2. All players answered (verified from DB) → advance to reveal
+  // ============================================================================
 
-  // Prevent instant auto-advance at the start of a new question due to stale presence
+  // Flag to prevent double-advance per question (reset on each new question)
+  const hasAdvancedRef = useRef(false);
+
+  // Track when the current question started (for safety guard)
   const questionStartedAtRef = useRef<number>(0);
 
-  // CRITICAL: Lock in the player count at question start.
-  // This prevents premature auto-advance when presence sync only shows a partial list.
-  const expectedPlayerCountRef = useRef<number>(0);
-
-  // Ref to hold the latest requestRevealIfEligible function
-  // This allows checkAllAnsweredFromDB (defined before requestRevealIfEligible) to always call the latest version
-  const requestRevealIfEligibleRef = useRef<((reason: string) => Promise<void>) | null>(null);
-
-  // Helper: check if ALL expected players have answered
-  // Returns true ONLY when:
-  // 1. We have an expected player count set (> 0)
-  // 2. Current players array has at least that many players
-  // 3. For paired sessions, require minimum 2 players
-  // 4. Every player in the current array has answered
-  const allPlayersAnswered = useCallback((players: TVPlayer[]): boolean => {
-    const expectedCount = expectedPlayerCountRef.current;
-    const isPaired = stateRef.current.isPaired;
-    
-    // For paired sessions (room-to-TV flow), require minimum 2 players
-    // This prevents auto-advance when only the host has answered
-    const minimumRequired = isPaired ? Math.max(expectedCount, 2) : expectedCount;
-    
-    // No expected count set = can't determine if all answered
-    if (minimumRequired <= 0) {
-      console.log('[allPlayersAnswered] No expected count set, returning false');
-      return false;
+  // ============================================================================
+  // CORE FUNCTION: Advance to reveal phase
+  // ============================================================================
+  // This is the ONLY function that triggers the reveal transition.
+  // It's idempotent - calling it multiple times per question has no effect.
+  // ============================================================================
+  const advanceToReveal = useCallback(async (reason: string) => {
+    // Idempotent: only advance once per question
+    if (hasAdvancedRef.current) {
+      console.log('[advanceToReveal] Blocked: already advanced this question');
+      return;
     }
     
-    // Not enough players synced yet
-    if (players.length < minimumRequired) {
-      console.log('[allPlayersAnswered] Not enough players synced', { 
-        current: players.length, 
-        expected: expectedCount,
-        minimumRequired,
-        isPaired
-      });
-      return false;
+    const current = stateRef.current;
+    
+    // Guard: must be in question phase
+    if (current.phase !== 'question') {
+      console.log('[advanceToReveal] Blocked: not in question phase, current:', current.phase);
+      return;
     }
     
-    // Check if all current players have answered
-    const allAnswered = players.every(p => p.hasAnswered === true);
-    console.log('[allPlayersAnswered] Check result:', { 
-      playerCount: players.length, 
-      expectedCount, 
-      minimumRequired,
-      isPaired,
-      allAnswered,
-      players: players.map(p => ({ n: p.nickname, a: p.hasAnswered }))
-    });
+    // Guard: must have session
+    if (!current.sessionId) {
+      console.log('[advanceToReveal] Blocked: no sessionId');
+      return;
+    }
     
-    return allAnswered;
+    // Guard: only host can advance
+    if (!isHostRef.current) {
+      console.log('[advanceToReveal] Blocked: not host');
+      return;
+    }
+
+    // Mark as advanced BEFORE the async call to prevent race conditions
+    hasAdvancedRef.current = true;
+    
+    console.log('[advanceToReveal] ✅ ADVANCING TO REVEAL!', { reason });
+    tvLogPhase('question', 'reveal', reason);
+
+    await supabase
+      .from('tv_sessions')
+      .update({
+        status: 'reveal',
+        reveal_start_time: new Date().toISOString(),
+      })
+      .eq('id', current.sessionId);
   }, []);
 
-  // DATABASE-BASED ANSWER CHECK: Query player_answers table for actual answer count
-  // This is the authoritative source for determining if all players have answered.
-  // Unlike presence (which is eventually consistent), DB inserts are immediate and reliable.
-  // CRITICAL: Also reads active_player_count from DB as the authoritative source.
-  const checkAllAnsweredFromDB = useCallback(async () => {
-    // Only the host should trigger reveal
+  // ============================================================================
+  // TRIGGER 2: Check if all players answered (from DB)
+  // ============================================================================
+  const checkAndAdvanceIfAllAnswered = useCallback(async () => {
+    // Guard: only host checks
     if (!isHostRef.current) return;
     
-    const sessionId = stateRef.current.sessionId;
-    const currentQuestionIndex = stateRef.current.currentQuestionIndex;
-    const phase = stateRef.current.phase;
+    const current = stateRef.current;
     
-    // Basic guards
-    if (!sessionId) return;
-    if (phase !== 'question') return;
-    if (revealRequestedRef.current) return;
+    // Guard: must be in question phase
+    if (current.phase !== 'question') return;
     
-    // Small safety guard: don't auto-advance in first 500ms
+    // Guard: already advanced
+    if (hasAdvancedRef.current) return;
+    
+    // Guard: need session
+    if (!current.sessionId) return;
+    
+    // Safety guard: don't check in first 300ms after question start
     const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-    if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) {
-      console.log('[DB Answer Check] Too soon after question start, skipping');
+    if (timeSinceStart < 300) {
+      console.log('[checkAndAdvanceIfAllAnswered] Too soon, skipping');
       return;
     }
-    
-    // CRITICAL: Read active_player_count from DATABASE (not local ref) as authoritative source
-    const { data: session, error: sessionError } = await supabase
-      .from('tv_sessions')
-      .select('active_player_count, is_paired')
-      .eq('id', sessionId)
-      .single();
-    
-    if (sessionError || !session) {
-      console.error('[DB Answer Check] Error fetching session:', sessionError);
-      return;
-    }
-    
-    const dbPlayerCount = session.active_player_count || 0;
-    const isPaired = session.is_paired ?? stateRef.current.isPaired;
-    const minimumRequired = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
-    
-    if (minimumRequired <= 0) {
-      console.log('[DB Answer Check] No expected count in DB, skipping');
-      return;
-    }
-    
-    // Query the database for actual answer count for this question
-    const { count, error } = await supabase
-      .from('player_answers')
-      .select('*', { count: 'exact', head: true })
-      .eq('tv_session_id', sessionId)
-      .eq('question_index', currentQuestionIndex);
-    
-    if (error) {
-      console.error('[DB Answer Check] Error querying answers:', error);
-      return;
-    }
-    
-    const answerCount = count || 0;
-    console.log('[DB Answer Check] Answer count from DB:', {
-      answerCount,
-      dbPlayerCount,
-      minimumRequired,
-      questionIndex: currentQuestionIndex,
-    });
-    
-    // All expected players have answered (verified from database)
-    if (answerCount >= minimumRequired) {
-      console.log('[DB Answer Check] ALL players answered - advancing!', {
-        answerCount,
-        minimumRequired,
-      });
-      // Use the ref to call the latest version of requestRevealIfEligible
-      // This avoids stale closure issues since checkAllAnsweredFromDB is defined before requestRevealIfEligible
-      if (requestRevealIfEligibleRef.current) {
-        requestRevealIfEligibleRef.current('all players answered (DB verified)');
-      } else {
-        console.error('[DB Answer Check] requestRevealIfEligibleRef is not set!');
-      }
-    }
-  }, []);
 
-  // Setup subscription to player_answers table for real-time answer tracking
+    try {
+      // Get expected count from DB (authoritative source)
+      const { data: session, error: sessionError } = await supabase
+        .from('tv_sessions')
+        .select('active_player_count, is_paired')
+        .eq('id', current.sessionId)
+        .single();
+
+      if (sessionError || !session) {
+        console.error('[checkAndAdvanceIfAllAnswered] Error fetching session:', sessionError);
+        return;
+      }
+
+      const dbPlayerCount = session.active_player_count || 0;
+      const isPaired = session.is_paired ?? current.isPaired;
+      const expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
+
+      if (expectedCount <= 0) {
+        console.log('[checkAndAdvanceIfAllAnswered] No expected count, skipping');
+        return;
+      }
+
+      // Count actual answers from DB
+      const { count: answerCount, error: countError } = await supabase
+        .from('player_answers')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', current.sessionId)
+        .eq('question_index', current.currentQuestionIndex);
+
+      if (countError) {
+        console.error('[checkAndAdvanceIfAllAnswered] Error counting answers:', countError);
+        return;
+      }
+
+      const actualCount = answerCount || 0;
+      console.log('[checkAndAdvanceIfAllAnswered] DB check:', { actualCount, expectedCount });
+
+      // All answered? Advance!
+      if (actualCount >= expectedCount) {
+        console.log('[checkAndAdvanceIfAllAnswered] ✅ All players answered!');
+        advanceToReveal('all players answered');
+      }
+    } catch (err) {
+      console.error('[checkAndAdvanceIfAllAnswered] Exception:', err);
+    }
+  }, [advanceToReveal]);
+
+  // ============================================================================
+  // REALTIME: Subscribe to player_answers for instant all-answered detection
+  // ============================================================================
   const setupAnswersSubscription = useCallback((sessionId: string) => {
     if (answersChannelRef.current) {
       supabase.removeChannel(answersChannelRef.current);
     }
-    
+
     console.log('[Answers Subscription] Setting up for session:', sessionId);
-    
+
     const channel = supabase
       .channel(`tv-answers-${sessionId}`)
       .on(
@@ -342,23 +334,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           filter: `tv_session_id=eq.${sessionId}`,
         },
         (payload) => {
-          console.log('[Answers Subscription] New answer inserted:', payload.new);
-          
-          // Only the host checks if all players answered
+          console.log('[Answers Subscription] New answer:', payload.new);
+          // Trigger check on every new answer
           if (isHostRef.current) {
-            // Small delay to ensure DB is consistent
-            setTimeout(() => {
-              checkAllAnsweredFromDB();
-            }, 100);
+            checkAndAdvanceIfAllAnswered();
           }
         }
       )
       .subscribe((status) => {
         console.log('[Answers Subscription] Status:', status);
       });
-    
+
     answersChannelRef.current = channel;
-  }, [checkAllAnsweredFromDB]);
+  }, [checkAndAdvanceIfAllAnswered]);
 
   // Prevent double-click / concurrent next-round transitions from host
   const nextRoundInFlightRef = useRef(false);
@@ -586,7 +574,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }));
       tvLog('Advanced to next round', { newRoundNumber });
 
-      revealRequestedRef.current = false;
+      hasAdvancedRef.current = false;
       return true;
     } catch (err) {
       tvLogError('startNextRoundFromQueueIfAny', err);
@@ -606,88 +594,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
-  const requestRevealIfEligible = useCallback(async (reason: string) => {
-    // Use stateRef.current to avoid stale closure issues
-    const current = stateRef.current;
-    
-    console.log('[requestRevealIfEligible] Called with:', {
-      reason,
-      isHost,
-      sessionId: current.sessionId?.slice(0, 8),
-      phase: current.phase,
-      revealAlreadyRequested: revealRequestedRef.current,
-      questionsLength: current.questions.length,
-      playersLength: current.players.length,
-    });
-    
-    if (!isHost) {
-      console.log('[requestRevealIfEligible] Blocked: not host');
-      return;
-    }
-    if (!current.sessionId) {
-      console.log('[requestRevealIfEligible] Blocked: no sessionId');
-      return;
-    }
-    if (current.phase !== 'question') {
-      console.log('[requestRevealIfEligible] Blocked: phase is not question, it is:', current.phase);
-      return;
-    }
-    if (revealRequestedRef.current) {
-      console.log('[requestRevealIfEligible] Blocked: reveal already requested');
-      return;
-    }
-    if (current.questions.length === 0) {
-      console.log('[requestRevealIfEligible] Blocked: no questions');
-      return;
-    }
-    if (current.players.length === 0) {
-      console.log('[requestRevealIfEligible] Blocked: no players');
-      return;
-    }
-
-    revealRequestedRef.current = true;
-    console.log('[requestRevealIfEligible] SUCCESS - Triggering reveal!');
-    tvLogPhase('question', 'reveal', reason);
-    tvLog('requestRevealIfEligible triggered', { 
-      reason, 
-      playerCount: current.players.length,
-      allAnswered: current.players.every(p => p.hasAnswered)
-    });
-
-    await supabase
-      .from('tv_sessions')
-      .update({
-        status: 'reveal',
-        reveal_start_time: new Date().toISOString(),
-      })
-      .eq('id', current.sessionId);
-  }, [isHost]);
-
-  // Keep the ref updated with the latest requestRevealIfEligible function
-  // This allows checkAllAnsweredFromDB to always call the current version
+  // ============================================================================
+  // TRIGGER 1: Timer countdown (15 seconds)
+  // ============================================================================
+  // Simple timer: counts down from QUESTION_TIME, advances when hits 0
+  // Only runs during question phase, only host triggers advancement
+  // ============================================================================
   useEffect(() => {
-    requestRevealIfEligibleRef.current = requestRevealIfEligible;
-  }, [requestRevealIfEligible]);
-
-  // Timer effect for question phase
-  useEffect(() => {
-    if (state.phase === 'question' && state.timeRemaining > 0) {
-      tvLogTimer('start', state.timeRemaining);
-      timerRef.current = setInterval(() => {
-        setState(prev => {
-          if (prev.timeRemaining <= 1) {
-            tvLogTimer('expired');
-            // Host triggers reveal through the single gateway function
-            // This ensures all guards apply and prevents duplicate updates
-            if (isHost && prev.phase === 'question') {
-              requestRevealIfEligible('timer expired');
-            }
-            return { ...prev, timeRemaining: 0 };
+    // Only run during question phase
+    if (state.phase !== 'question') return;
+    if (!state.sessionId) return;
+    
+    // Start the timer countdown
+    tvLogTimer('start', state.timeRemaining);
+    
+    timerRef.current = setInterval(() => {
+      setState(prev => {
+        // Timer already at 0 or less = stop
+        if (prev.timeRemaining <= 1) {
+          tvLogTimer('expired');
+          // Host triggers reveal when timer hits 0
+          if (isHostRef.current && prev.phase === 'question') {
+            advanceToReveal('timer expired');
           }
-          return { ...prev, timeRemaining: prev.timeRemaining - 1 };
-        });
-      }, 1000);
-    }
+          return { ...prev, timeRemaining: 0 };
+        }
+        return { ...prev, timeRemaining: prev.timeRemaining - 1 };
+      });
+    }, 1000);
 
     return () => {
       if (timerRef.current) {
@@ -695,7 +629,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         timerRef.current = null;
       }
     };
-  }, [state.phase, state.timeRemaining, isHost, state.sessionId, requestRevealIfEligible]);
+  }, [state.phase, state.sessionId, advanceToReveal]);
 
   // NOTE: Presence-based auto-advance has been DISABLED.
   // Auto-advance logic is now handled by database-based answer counting via:
@@ -748,14 +682,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
 
-        revealRequestedRef.current = false;
+        hasAdvancedRef.current = false;
+        questionStartedAtRef.current = Date.now();
         
         // Update active_player_count for the new question (in case players joined/left)
         const currentPlayerCount = stateRef.current.isPaired 
           ? Math.max(stateRef.current.players.length, 2) 
           : stateRef.current.players.length;
-        expectedPlayerCountRef.current = currentPlayerCount;
-        questionStartedAtRef.current = Date.now();
         console.log('[Next Question] Updated expected player count:', currentPlayerCount);
         
         await supabase
@@ -930,10 +863,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         questionCount: questions.length 
       });
       
-      // Read active_player_count from DB if available
+      // Note: active_player_count is read from DB when needed, no local ref required
       const dbPlayerCount = (session as any).active_player_count as number | undefined;
       if (dbPlayerCount && dbPlayerCount > 0) {
-        expectedPlayerCountRef.current = dbPlayerCount;
         console.log('[joinSession] Read active_player_count from DB:', dbPlayerCount);
       }
       
@@ -1004,23 +936,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (isNewQuestion) {
             tvLog('New question (subscription)', { from: prevIndex, to: newData.current_question_index });
             setMyAnswer(null);
-            revealRequestedRef.current = false;
+            hasAdvancedRef.current = false;  // Reset for new question
             questionStartedAtRef.current = Date.now();
             
-            // CRITICAL: Use database-backed active_player_count if available (authoritative source)
-            // Fall back to presence count only if not set, with minimum 2 for paired sessions
+            // Log the player count from DB for debugging
             const dbPlayerCount = (newData as any).active_player_count as number | undefined;
             const isPaired = newData.is_paired ?? stateRef.current.isPaired;
-            if (dbPlayerCount && dbPlayerCount > 0) {
-              expectedPlayerCountRef.current = dbPlayerCount;
-              console.log('[New Question] Using DB player count:', dbPlayerCount);
-            } else {
-              // Fallback: use presence-based count with paired session minimum
-              const presenceCount = stateRef.current.players.length;
-              expectedPlayerCountRef.current = isPaired ? Math.max(presenceCount, 2) : presenceCount;
-              console.log('[New Question] Using presence count:', expectedPlayerCountRef.current, 'isPaired:', isPaired);
-            }
-            console.log('[New Question] Started at', new Date().toISOString(), 'Expected players:', expectedPlayerCountRef.current);
+            console.log('[New Question] Started at', new Date().toISOString(), 
+              'DB player count:', dbPlayerCount, 'isPaired:', isPaired);
 
             // Reset my presence for the new question so host does not treat me as already answered.
             if (presenceChannelRef.current && myPlayerId) {
@@ -1408,9 +1331,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // CRITICAL: Lock player count BEFORE countdown starts
-      // This is the authoritative source of truth for how many players need to answer
+      // This is stored in DB and read when checking if all answered
       const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
-      expectedPlayerCountRef.current = playerCount;
       
       tvLog('Starting game', { 
         questionCount: formattedQuestions.length, 
@@ -1475,29 +1397,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       if (session?.status === 'playing') {
         tvLog('startPlaying skipped: already playing (another device beat us)');
-        // Still read the locked player count from DB
-        expectedPlayerCountRef.current = session.active_player_count || 2;
         questionStartedAtRef.current = Date.now();
-        revealRequestedRef.current = false;
+        hasAdvancedRef.current = false;
         startPlayingMutexRef.current = false;
         return;
       }
 
       // Read the active_player_count that was locked in startGame
       const dbPlayerCount = session?.active_player_count || 0;
-      if (dbPlayerCount > 0) {
-        expectedPlayerCountRef.current = dbPlayerCount;
-        tvLog('startPlaying: Using DB player count', { dbPlayerCount });
-      } else {
-        // Fallback: set it now if somehow not set (shouldn't happen)
-        const fallbackCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
-        expectedPlayerCountRef.current = fallbackCount;
-        tvLog('startPlaying: DB player count not set, using fallback', { fallbackCount });
-      }
+      tvLog('startPlaying: Using DB player count', { dbPlayerCount });
       
       questionStartedAtRef.current = Date.now();
-      revealRequestedRef.current = false;
-      console.log('[startPlaying] Expected player count from DB:', expectedPlayerCountRef.current);
+      hasAdvancedRef.current = false;
+      console.log('[startPlaying] Expected player count from DB:', dbPlayerCount);
       
       // Transition to playing - do NOT update active_player_count (already locked in startGame)
       await supabase
@@ -1573,8 +1485,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // The realtime subscription will also trigger this, but this is faster
         if (isHostRef.current) {
           setTimeout(() => {
-            checkAllAnsweredFromDB();
-          }, 150);
+            checkAndAdvanceIfAllAnswered();
+          }, 100);
         }
       }
 
@@ -1608,7 +1520,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
 
       setMyAnswer(null);
-      revealRequestedRef.current = false;
+      hasAdvancedRef.current = false;
 
       await supabase
         .from('tv_sessions')
@@ -1676,8 +1588,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     // For other phases, try to force reveal if eligible
-    await requestRevealIfEligible('manual next blocked; forcing reveal if eligible');
-  }, [state.sessionId, state.phase, isHost, startNextRoundFromQueueIfAny]);
+    tvLog('startNextRound: attempting to force advance from phase', { phase: state.phase });
+    await advanceToReveal('manual next');
+  }, [state.sessionId, state.phase, isHost, startNextRoundFromQueueIfAny, advanceToReveal]);
 
   // Update room name (host only)
   const updateRoomName = useCallback(async (name: string) => {

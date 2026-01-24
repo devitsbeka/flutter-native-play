@@ -88,7 +88,7 @@ export const TVDebugOverlay: React.FC = () => {
       {isExpanded && (
         <div className="bg-black/90 backdrop-blur-sm text-white p-4 rounded-xl shadow-2xl border border-white/20 font-mono text-xs space-y-2 min-w-[280px]">
           <div className="text-purple-400 font-bold text-sm mb-3 border-b border-white/20 pb-2">
-            🔍 TV Debug Overlay
+            🔍 TV Debug (Clean Logic v2)
           </div>
           
           {/* Main comparison */}
@@ -107,6 +107,13 @@ export const TVDebugOverlay: React.FC = () => {
                 <div className="text-[10px] text-gray-400">Expected (DB)</div>
               </div>
             </div>
+          </div>
+
+          {/* Triggers Info */}
+          <div className="bg-blue-500/20 border border-blue-400/50 p-2 rounded-lg text-[10px]">
+            <div className="text-blue-300 font-bold mb-1">Advance Triggers:</div>
+            <div className="text-blue-200">1. Timer expires (15s)</div>
+            <div className="text-blue-200">2. All players answered</div>
           </div>
 
           {/* Details */}
