@@ -402,7 +402,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       .delete()
       .eq('session_id', sessionId);
 
-    // Insert winning categories as queue items
+    // Insert winning categories as queue items with suggester info
     for (let i = 0; i < topSuggestions.length; i++) {
       const suggestion = topSuggestions[i];
       const queueItem = {
@@ -413,6 +413,10 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         category_name: suggestion.category_name,
         icon_slug: suggestion.icon_slug,
         user_trivia_id: suggestion.user_trivia_id,
+        // Store suggester info - they will skip this round
+        suggester_user_id: suggestion.user_id,
+        suggester_nickname: suggestion.nickname,
+        suggester_avatar_url: suggestion.avatar_url,
       };
       await supabase.from('tv_session_queue').insert(queueItem as any);
     }
