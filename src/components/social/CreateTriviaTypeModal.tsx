@@ -27,9 +27,9 @@ export function CreateTriviaTypeModal({
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
 
   const hints = [
-    "💡 ტრივია — სწრაფი ერთი რაუნდი, იდეალურია დასაწყებად",
-    "💡 კოლექცია — თემატური ტურნირი მრავალი რაუნდით",
-    "💡 MyTrivia Party — პერსონალური კითხვები მეგობრებისთვის"
+    "ტრივია — სწრაფი ერთი რაუნდი, იდეალურია დასაწყებად",
+    "კოლექცია — თემატური ტურნირი მრავალი რაუნდით",
+    "MyTrivia Party — პერსონალური კითხვები მეგობრებისთვის"
   ];
 
   useEffect(() => {
