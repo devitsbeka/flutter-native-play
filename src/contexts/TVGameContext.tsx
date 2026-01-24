@@ -196,21 +196,29 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Returns true ONLY when:
   // 1. We have an expected player count set (> 0)
   // 2. Current players array has at least that many players
-  // 3. Every player in the current array has answered
+  // 3. For paired sessions, require minimum 2 players
+  // 4. Every player in the current array has answered
   const allPlayersAnswered = useCallback((players: TVPlayer[]): boolean => {
     const expectedCount = expectedPlayerCountRef.current;
+    const isPaired = stateRef.current.isPaired;
+    
+    // For paired sessions (room-to-TV flow), require minimum 2 players
+    // This prevents auto-advance when only the host has answered
+    const minimumRequired = isPaired ? Math.max(expectedCount, 2) : expectedCount;
     
     // No expected count set = can't determine if all answered
-    if (expectedCount <= 0) {
+    if (minimumRequired <= 0) {
       console.log('[allPlayersAnswered] No expected count set, returning false');
       return false;
     }
     
     // Not enough players synced yet
-    if (players.length < expectedCount) {
+    if (players.length < minimumRequired) {
       console.log('[allPlayersAnswered] Not enough players synced', { 
         current: players.length, 
-        expected: expectedCount 
+        expected: expectedCount,
+        minimumRequired,
+        isPaired
       });
       return false;
     }
@@ -220,6 +228,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.log('[allPlayersAnswered] Check result:', { 
       playerCount: players.length, 
       expectedCount, 
+      minimumRequired,
+      isPaired,
       allAnswered,
       players: players.map(p => ({ n: p.nickname, a: p.hasAnswered }))
     });
@@ -629,6 +639,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         revealRequestedRef.current = false;
+        
+        // Update active_player_count for the new question (in case players joined/left)
+        const currentPlayerCount = stateRef.current.isPaired 
+          ? Math.max(stateRef.current.players.length, 2) 
+          : stateRef.current.players.length;
+        expectedPlayerCountRef.current = currentPlayerCount;
+        questionStartedAtRef.current = Date.now();
+        console.log('[Next Question] Updated expected player count:', currentPlayerCount);
+        
         await supabase
           .from('tv_sessions')
           .update({
@@ -636,6 +655,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             current_question_index: nextIndex,
             question_start_time: new Date().toISOString(),
             reveal_start_time: null,
+            active_player_count: currentPlayerCount,
           })
           .eq('id', state.sessionId);
       }
@@ -866,9 +886,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             revealRequestedRef.current = false;
             questionStartedAtRef.current = Date.now();
             
-            // CRITICAL: Lock in the expected player count from current presence state
-            // This is the number of players we MUST wait for before auto-advancing
-            expectedPlayerCountRef.current = stateRef.current.players.length;
+            // CRITICAL: Use database-backed active_player_count if available (authoritative source)
+            // Fall back to presence count only if not set, with minimum 2 for paired sessions
+            const dbPlayerCount = (newData as any).active_player_count as number | undefined;
+            const isPaired = newData.is_paired ?? stateRef.current.isPaired;
+            if (dbPlayerCount && dbPlayerCount > 0) {
+              expectedPlayerCountRef.current = dbPlayerCount;
+              console.log('[New Question] Using DB player count:', dbPlayerCount);
+            } else {
+              // Fallback: use presence-based count with paired session minimum
+              const presenceCount = stateRef.current.players.length;
+              expectedPlayerCountRef.current = isPaired ? Math.max(presenceCount, 2) : presenceCount;
+              console.log('[New Question] Using presence count:', expectedPlayerCountRef.current, 'isPaired:', isPaired);
+            }
             console.log('[New Question] Started at', new Date().toISOString(), 'Expected players:', expectedPlayerCountRef.current);
 
             // Reset my presence for the new question so host does not treat me as already answered.
@@ -1319,17 +1349,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     // CRITICAL: Lock in the expected player count at game start
     // This ensures we wait for ALL players who were present at countdown
-    expectedPlayerCountRef.current = state.players.length;
+    // For paired sessions, require minimum 2 to prevent host-only advance
+    const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
+    expectedPlayerCountRef.current = playerCount;
     questionStartedAtRef.current = Date.now();
     revealRequestedRef.current = false;
-    console.log('[startPlaying] Locked in expected player count:', expectedPlayerCountRef.current);
+    console.log('[startPlaying] Locked in expected player count:', expectedPlayerCountRef.current, 'isPaired:', state.isPaired);
     
     try {
+      // Store active_player_count in database for reliable cross-client sync
       await supabase
         .from('tv_sessions')
         .update({
           status: 'playing',
           question_start_time: new Date().toISOString(),
+          active_player_count: playerCount,
         })
         .eq('id', state.sessionId);
 
@@ -1338,7 +1372,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       tvLogError('startPlaying', error);
     }
-  }, [state.sessionId, state.players.length]);
+  }, [state.sessionId, state.players.length, state.isPaired]);
 
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {

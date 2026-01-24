@@ -2328,6 +2328,7 @@ export type Database = {
       tv_sessions: {
         Row: {
           accumulated_scores: Json | null
+          active_player_count: number | null
           category_icon: string | null
           category_name: string | null
           created_at: string | null
@@ -2351,6 +2352,7 @@ export type Database = {
         }
         Insert: {
           accumulated_scores?: Json | null
+          active_player_count?: number | null
           category_icon?: string | null
           category_name?: string | null
           created_at?: string | null
@@ -2374,6 +2376,7 @@ export type Database = {
         }
         Update: {
           accumulated_scores?: Json | null
+          active_player_count?: number | null
           category_icon?: string | null
           category_name?: string | null
           created_at?: string | null
