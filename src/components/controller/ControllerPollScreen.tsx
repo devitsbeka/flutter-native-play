@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Vote, 
@@ -10,7 +10,8 @@ import {
   User, 
   Play,
   ChevronRight,
-  Crown
+  Crown,
+  Loader2
 } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { useTVGame } from '@/contexts/TVGameContext';
@@ -42,6 +43,7 @@ interface ControllerPollScreenProps {
   nickname: string;
   avatarUrl?: string;
   isHost: boolean;
+  onVotingEnded?: () => void; // Callback when voting timer expires (host only)
 }
 
 export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
@@ -50,6 +52,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   nickname,
   avatarUrl,
   isHost,
+  onVotingEnded,
 }) => {
   const {
     suggestions,
@@ -75,6 +78,9 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [userTrivias, setUserTrivias] = useState<UserTrivia[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Track if voting has ended (for auto-transition)
+  const hasEndedRef = useRef(false);
 
   // Calculate time remaining for voting phase
   useEffect(() => {
@@ -93,6 +99,21 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     const interval = setInterval(updateTime, 100);
     return () => clearInterval(interval);
   }, [pollPhase, pollStartTime, pollDuration]);
+
+  // Auto-trigger voting end callback when timer expires (host only)
+  useEffect(() => {
+    if (pollPhase === 'voting' && timeRemaining === 0 && isHost && !hasEndedRef.current) {
+      hasEndedRef.current = true;
+      onVotingEnded?.();
+    }
+  }, [pollPhase, timeRemaining, isHost, onVotingEnded]);
+
+  // Reset ref when phase changes
+  useEffect(() => {
+    if (pollPhase !== 'voting') {
+      hasEndedRef.current = false;
+    }
+  }, [pollPhase]);
 
   // Load categories when picker opens
   useEffect(() => {
@@ -390,6 +411,27 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 
   // Voting phase
   if (pollPhase === 'voting') {
+    const votingEnded = timeRemaining === 0;
+
+    // If voting ended and NOT host, show waiting state
+    if (votingEnded && !isHost) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <div className="w-16 h-16 rounded-full bg-purple-500/30 flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="w-8 h-8 text-purple-300 animate-spin" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">ხმის მიცემა დასრულდა!</h2>
+            <p className="text-purple-300">ველოდებით ჰოსტს თამაშის დასაწყებად...</p>
+          </motion.div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
         {/* Header with timer */}

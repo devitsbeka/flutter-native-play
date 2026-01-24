@@ -178,7 +178,9 @@ export const TVPollScreen: React.FC = () => {
         <p className="text-purple-400 text-lg">
           {pollPhase === 'suggest' 
             ? '⏳ ველოდებით ჰოსტს ხმის მიცემის დასაწყებად...'
-            : '🗳️ ხმის მიცემა მიმდინარეობს!'}
+            : timeRemaining === 0 
+              ? '✅ ხმის მიცემა დასრულდა! ჰოსტი ირჩევს რაუნდებს...'
+              : '🗳️ ხმის მიცემა მიმდინარეობს!'}
         </p>
       </motion.div>
     </div>
