@@ -36,7 +36,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
   }
 
   return (
-    <div className="border-t border-white/20 pt-4 mt-7">
+    <div className="pt-4 mt-[50px]">
       <div className="flex items-center gap-2 mb-3 px-1">
         <FileText className="w-4 h-4 text-white/60" />
         <span className="text-xs font-medium text-white/60">შენახული დრაფტები</span>
