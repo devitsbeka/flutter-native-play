@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check } from "lucide-react";
+import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
 import glitchIcon from "@/assets/glitch.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
@@ -448,7 +448,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
     >
       {/* Party Badge */}
       <div className="absolute top-3 left-14 z-10 flex items-center gap-1.5 bg-pink-500/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
-        <span>🎉</span>
+        <PartyPopper className="w-3.5 h-3.5" aria-hidden />
         <span>MyTrivia Party</span>
       </div>
 

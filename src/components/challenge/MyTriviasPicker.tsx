@@ -276,7 +276,7 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
                     </p>
                     <Lock className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
                   </div>
-                  <p className="text-xs text-pink-400">🎉 პირადი ტრივია</p>
+                  <p className="text-xs text-pink-400">პირადი ტრივია</p>
                 </div>
               </motion.button>
             ))}
