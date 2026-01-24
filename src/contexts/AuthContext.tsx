@@ -83,37 +83,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener FIRST - keep it synchronous!
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         console.log('Auth state change:', event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Fetch profile SYNCHRONOUSLY before setting loading to false
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        } else {
+        // Don't set loading false here - let the profile effect handle it
+        if (!currentSession?.user) {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       console.log('Initial session check:', existingSession?.user?.id);
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
-      if (existingSession?.user) {
-        await fetchProfile(existingSession.user.id);
+      if (!existingSession?.user) {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+  }, []);
+
+  // Separate effect to fetch profile when user changes - avoids deadlock
+  useEffect(() => {
+    if (user) {
+      console.log('Fetching profile for user:', user.id);
+      fetchProfile(user.id).finally(() => {
+        setLoading(false);
+      });
+    }
+  }, [user, fetchProfile]);
 
   // Realtime subscription for profile updates (e.g., avatar changes)
   useEffect(() => {
