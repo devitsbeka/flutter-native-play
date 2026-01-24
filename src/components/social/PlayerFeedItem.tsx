@@ -270,13 +270,7 @@ export function PlayerFeedItem({
             </h4>
           </div>
           
-          {/* Type Badge - top left */}
-          {!isTrivia && (
-            <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1">
-              <Layers className="w-3 h-3" />
-              კოლექცია
-            </div>
-          )}
+           {/* Type badge removed: type is shown under avatar/name in header */}
           
           {/* Question Count Badge - top right (for trivia only) */}
           {isTrivia && questionCount > 0 && (
