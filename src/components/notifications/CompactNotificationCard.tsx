@@ -140,7 +140,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         className={cn(
-          "relative flex items-start gap-3 px-4 py-3 transition-colors bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl",
+          "relative flex items-start gap-3 px-4 py-3 transition-colors backdrop-blur-sm border border-border/40 rounded-2xl",
+          isUnread ? "bg-primary/10" : "bg-card/80",
           !hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
         )}
         onClick={handleClick}
