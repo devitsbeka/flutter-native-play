@@ -29,7 +29,7 @@ const navItemsConfig = [
 
 export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, loading } = useAuth();
   const { t } = useLanguage();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
@@ -37,6 +37,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
+
+  // Debug logging
+  console.log('[SideMenuDrawer] user:', user?.id, 'profile:', profile?.nickname, 'loading:', loading);
 
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
