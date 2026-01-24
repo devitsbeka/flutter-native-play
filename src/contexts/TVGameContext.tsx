@@ -780,6 +780,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Subscribe to session changes
       setupSessionSubscription(data.id);
       setupPresenceChannel(data.id, 'TV_DISPLAY', null, false, true); // isTVDisplay = true
+      setupAnswersSubscription(data.id); // Subscribe to player answers for auto-advance
 
       return fourDigitCode;
     } catch (error) {
