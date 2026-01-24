@@ -122,26 +122,32 @@ export const TVQuestionScreenV4: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Waiting Players (Yellow) - CENTER */}
+        {/* Waiting Players (Yellow) - CENTER - only show players who haven't answered */}
         <div className="flex gap-2 justify-center flex-1">
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {waitingPlayers.map((player) => (
               <motion.div 
                 key={player.id}
                 className="relative"
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.05, 1] }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
                 layout
               >
-                <Avatar className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white">
+                {/* Subtle outer glow */}
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    boxShadow: '0 0 12px 3px rgba(250, 204, 21, 0.4)',
+                  }}
+                />
+                <Avatar className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white relative z-10">
                   <AvatarImage src={player.avatar_url || undefined} />
                   <AvatarFallback className="bg-yellow-500 text-white font-bold text-sm">
                     {player.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white z-20">
                   <Clock className="w-3 h-3 text-white" />
                 </div>
               </motion.div>
