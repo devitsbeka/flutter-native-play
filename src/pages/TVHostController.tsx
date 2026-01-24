@@ -89,6 +89,9 @@ const TVHostController: React.FC = () => {
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const hasTriggeredPlayingRef = useRef(false);
   
+  // Poll voting ended state - for transitioning from voting to results
+  const [votingEnded, setVotingEnded] = useState(false);
+  
   // Derive hasAnswered from context
   const hasAnswered = myAnswer !== null;
   
@@ -325,6 +328,13 @@ const TVHostController: React.FC = () => {
       return () => clearTimeout(transitionTimer);
     }
   }, [countdownValue, isHost, startPlaying]);
+
+  // Reset votingEnded when phase changes away from poll-voting
+  useEffect(() => {
+    if (contextPhase !== 'poll-voting') {
+      setVotingEnded(false);
+    }
+  }, [contextPhase]);
 
   // P0-1, P0-2: Removed duplicate question fetching - only store category selection
   // Questions are now fetched ONLY in startGame (TVGameContext)
@@ -754,7 +764,7 @@ const TVHostController: React.FC = () => {
   }
 
   // Poll suggestion phase - host can suggest and start voting
-  if (localPhase === 'poll-suggest' || localPhase === 'poll-voting') {
+  if (localPhase === 'poll-suggest') {
     return (
       <ControllerPollScreen
         sessionId={sessionId || ''}
@@ -766,7 +776,38 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Poll results phase - host selects how many rounds
+  // Poll voting phase - with auto-transition to results when timer ends
+  if (localPhase === 'poll-voting') {
+    // If voting ended, show results screen
+    if (votingEnded) {
+      return (
+        <ControllerPollResults
+          sessionId={sessionId || ''}
+          userId={user?.id || ''}
+          nickname={nickname}
+          avatarUrl={avatarUrl}
+          onGameStart={() => {
+            tvLog('Game started from poll results');
+            setVotingEnded(false);
+          }}
+        />
+      );
+    }
+    
+    // Otherwise show voting screen with callback
+    return (
+      <ControllerPollScreen
+        sessionId={sessionId || ''}
+        userId={user?.id || ''}
+        nickname={nickname}
+        avatarUrl={avatarUrl}
+        isHost={true}
+        onVotingEnded={() => setVotingEnded(true)}
+      />
+    );
+  }
+
+  // Poll results phase - host selects how many rounds (fallback for any edge cases)
   if (localPhase === 'poll-results') {
     return (
       <ControllerPollResults
