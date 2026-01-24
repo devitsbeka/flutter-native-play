@@ -1000,8 +1000,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               tvLogPhase(prev.phase, newPhase, 'session subscription');
             }
 
-            // Note: new-question resets are handled outside setState above to avoid stale-closure bugs
-            // and to allow presence reset.
+            // Reset all players to waiting state when new question starts
+            // This ensures immediate visual feedback without waiting for individual presence updates
+            let updatedPlayers = prev.players;
+            if (isNewQuestion) {
+              updatedPlayers = prev.players.map(p => ({
+                ...p,
+                hasAnswered: false,
+                lastAnswerCorrect: null,
+                lastAnswer: null,
+              }));
+              console.log('[New Question] Reset all players to waiting state');
+            }
 
             return {
               ...prev,
@@ -1016,6 +1026,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               roundNumber: newData.round_number ?? prev.roundNumber,
               totalRounds: newData.total_rounds ?? prev.totalRounds,
               roomId: newData.room_id || prev.roomId, // Sync roomId for FK constraints
+              players: updatedPlayers,
             };
           });
         }
