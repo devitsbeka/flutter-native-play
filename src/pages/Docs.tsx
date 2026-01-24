@@ -1,36 +1,37 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, Database, Code, Layers, Settings, Cpu, GitBranch, Search, Wrench, Workflow } from "lucide-react";
+import { ChevronLeft, Database, Code, Layers, Settings, Cpu, GitBranch, Search, Wrench, Workflow, FileText, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { ARCHITECTURE_SECTIONS } from "@/data/documentation/architecture";
 import { ALL_TABLES, TABLE_CATEGORIES_NAV } from "@/data/documentation/tables";
-import { ALL_EDGE_FUNCTIONS, EDGE_FUNCTION_CATEGORIES } from "@/data/documentation/edgeFunctions";
-import { ALL_HOOKS, HOOK_CATEGORIES } from "@/data/documentation/hooks";
-import { ALL_COMPONENTS, COMPONENT_CATEGORIES } from "@/data/documentation/components";
 import { ALL_SERVICES } from "@/data/documentation/services";
-import { ALL_CONTEXTS } from "@/data/documentation/contexts";
 import { ALL_CONFIGS } from "@/data/documentation/config";
-import { UTILITIES, CONSTANTS, TYPE_DEFINITIONS } from "@/data/documentation/utilities";
 import { API_FLOWS, DATABASE_RELATIONSHIPS, RLS_POLICY_PATTERNS } from "@/data/documentation/apiFlows";
 import { 
   COMPONENTS_GAME, COMPONENTS_HOME, COMPONENTS_TEAM, COMPONENTS_SHOP, 
   COMPONENTS_SOCIAL, COMPONENTS_SHARED, COMPONENTS_TV, COMPONENTS_ADMIN 
 } from "@/data/documentation/componentsComplete";
+import { ALL_PAGES, PAGE_CATEGORIES } from "@/data/documentation/pagesComplete";
+import { ALL_HOOKS_FULL, HOOK_CATEGORY_COUNTS } from "@/data/documentation/hooksFullList";
+import { ALL_CONTEXTS_FULL, CONTEXT_HIERARCHY } from "@/data/documentation/contextsComplete";
+import { ALL_EDGE_FUNCTIONS_FULL } from "@/data/documentation/edgeFunctionsFull";
+import { UTILS_FILES, LIB_FILES, CONFIG_FILES_FULL, CONSTANTS_FILES } from "@/data/documentation/utilsComplete";
 
-type DocSection = "architecture" | "tables" | "functions" | "hooks" | "components" | "services" | "contexts" | "config" | "utilities" | "apiFlows";
+type DocSection = "architecture" | "tables" | "functions" | "hooks" | "components" | "services" | "contexts" | "config" | "utilities" | "apiFlows" | "pages";
 
 const SECTIONS = [
   { id: "architecture" as const, name: "Architecture", icon: GitBranch },
-  { id: "tables" as const, name: "Database Tables", icon: Database },
-  { id: "functions" as const, name: "Edge Functions", icon: Cpu },
-  { id: "hooks" as const, name: "Hooks", icon: Code },
-  { id: "components" as const, name: "Components", icon: Layers },
+  { id: "pages" as const, name: "Pages (42)", icon: FileText },
+  { id: "tables" as const, name: "Database (79)", icon: Database },
+  { id: "functions" as const, name: "Edge Functions (49)", icon: Cpu },
+  { id: "hooks" as const, name: "Hooks (104)", icon: Code },
+  { id: "components" as const, name: "Components (100+)", icon: Layers },
+  { id: "contexts" as const, name: "Contexts (12)", icon: Globe },
   { id: "services" as const, name: "Services", icon: Settings },
-  { id: "contexts" as const, name: "Contexts", icon: GitBranch },
+  { id: "utilities" as const, name: "Utilities (40+)", icon: Wrench },
   { id: "config" as const, name: "Configuration", icon: Settings },
-  { id: "utilities" as const, name: "Utilities", icon: Wrench },
   { id: "apiFlows" as const, name: "API Flows", icon: Workflow },
 ];
 
@@ -61,6 +62,67 @@ export default function Docs() {
     </div>
   );
 
+  const renderPages = () => {
+    const filtered = ALL_PAGES.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.route.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return (
+      <div className="space-y-6">
+        <div className="bg-primary/10 rounded-xl p-4 mb-4">
+          <p className="text-sm text-primary font-medium">
+            📄 Total Pages: {ALL_PAGES.length} across {PAGE_CATEGORIES.length} categories
+          </p>
+        </div>
+        {PAGE_CATEGORIES.map(cat => {
+          const pages = filtered.filter(p => p.category === cat.id);
+          if (pages.length === 0) return null;
+          return (
+            <div key={cat.id}>
+              <h3 className="text-lg font-bold mb-3 text-primary flex items-center gap-2">
+                {cat.name}
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{pages.length}</span>
+              </h3>
+              <div className="grid gap-3">
+                {pages.map(page => (
+                  <div key={page.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-bold text-foreground">{page.name}</h4>
+                      <code className="text-xs bg-muted px-2 py-0.5 rounded">{page.route}</code>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{page.description}</p>
+                    <p className="text-xs text-muted-foreground mt-2 font-mono">{page.path}</p>
+                    {page.features.length > 0 && (
+                      <div className="mt-3">
+                        <span className="text-xs font-semibold text-muted-foreground">Features:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {page.features.map((f: string) => (
+                            <span key={f} className="text-xs bg-muted px-1.5 py-0.5 rounded">{f}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {page.hooks.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-xs font-semibold text-muted-foreground">Hooks:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {page.hooks.map((h: string) => (
+                            <span key={h} className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">{h}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderTables = () => {
     const filtered = ALL_TABLES.filter(t => 
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,6 +130,11 @@ export default function Docs() {
     );
     return (
       <div className="space-y-4">
+        <div className="bg-primary/10 rounded-xl p-4 mb-4">
+          <p className="text-sm text-primary font-medium">
+            🗄️ Total Tables: {ALL_TABLES.length} across {TABLE_CATEGORIES_NAV.length} categories
+          </p>
+        </div>
         {TABLE_CATEGORIES_NAV.map(cat => {
           const tables = filtered.filter(t => t.category.toLowerCase().replace(/ /g, '-') === cat.id || t.category === cat.name);
           if (tables.length === 0) return null;
@@ -92,25 +159,54 @@ export default function Docs() {
   };
 
   const renderFunctions = () => {
-    const filtered = ALL_EDGE_FUNCTIONS.filter(f => 
+    const filtered = ALL_EDGE_FUNCTIONS_FULL.filter(f => 
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    const categories = [...new Set(ALL_EDGE_FUNCTIONS_FULL.map(f => f.category))];
     return (
       <div className="space-y-4">
-        {EDGE_FUNCTION_CATEGORIES.map(cat => {
-          const funcs = filtered.filter(f => f.category === cat.name);
+        <div className="bg-primary/10 rounded-xl p-4 mb-4">
+          <p className="text-sm text-primary font-medium">
+            ⚡ Total Edge Functions: {ALL_EDGE_FUNCTIONS_FULL.length} across {categories.length} categories
+          </p>
+        </div>
+        {categories.map(cat => {
+          const funcs = filtered.filter(f => f.category === cat);
           if (funcs.length === 0) return null;
           return (
-            <div key={cat.id}>
-              <h3 className="text-lg font-bold mb-2 text-primary">{cat.name}</h3>
+            <div key={cat}>
+              <h3 className="text-lg font-bold mb-2 text-primary flex items-center gap-2">
+                {cat}
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{funcs.length}</span>
+              </h3>
               {funcs.map(func => (
                 <div key={func.name} className="bg-card/50 rounded-lg p-4 mb-3 border border-border/30">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-0.5 bg-primary/20 rounded text-xs font-mono">{func.method}</span>
                     <h4 className="font-mono font-bold">{func.name}</h4>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      func.auth === 'required' ? 'bg-yellow-500/20 text-yellow-400' :
+                      func.auth === 'admin' ? 'bg-red-500/20 text-red-400' :
+                      'bg-green-500/20 text-green-400'
+                    }`}>
+                      {func.auth}
+                    </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{func.description}</p>
+                  <p className="text-sm text-muted-foreground">{func.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">{func.path}</p>
+                  {func.params && func.params.length > 0 && (
+                    <div className="mt-2">
+                      <span className="text-xs font-semibold text-muted-foreground">Params:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {func.params.map(p => (
+                          <span key={p.name} className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                            {p.name}: {p.type}{p.required ? '' : '?'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-2 text-xs">
                     <span className="text-muted-foreground">Returns:</span> <code className="text-primary">{func.returns}</code>
                   </div>
@@ -124,24 +220,56 @@ export default function Docs() {
   };
 
   const renderHooks = () => {
-    const filtered = ALL_HOOKS.filter(h => 
+    const filtered = ALL_HOOKS_FULL.filter(h => 
       h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
+    const categories = [...new Set(ALL_HOOKS_FULL.map(h => h.category))];
     return (
       <div className="space-y-4">
-        {HOOK_CATEGORIES.map(cat => {
-          const hooks = filtered.filter(h => h.category === cat.name);
+        <div className="bg-primary/10 rounded-xl p-4 mb-4">
+          <p className="text-sm text-primary font-medium">
+            🪝 Total Hooks: {ALL_HOOKS_FULL.length} | Categories: {categories.length}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {HOOK_CATEGORY_COUNTS.map(c => (
+              <span key={c.category} className="text-xs bg-muted px-2 py-1 rounded">
+                {c.category}: {c.count}
+              </span>
+            ))}
+          </div>
+        </div>
+        {categories.map(cat => {
+          const hooks = filtered.filter(h => h.category === cat);
           if (hooks.length === 0) return null;
           return (
-            <div key={cat.id}>
-              <h3 className="text-lg font-bold mb-2 text-primary">{cat.name}</h3>
+            <div key={cat}>
+              <h3 className="text-lg font-bold mb-2 text-primary flex items-center gap-2">
+                {cat}
+                <span className="text-xs bg-primary/20 px-2 py-0.5 rounded">{hooks.length}</span>
+              </h3>
               {hooks.map(hook => (
                 <div key={hook.name} className="bg-card/50 rounded-lg p-4 mb-3 border border-border/30">
                   <h4 className="font-mono font-bold text-foreground">{hook.name}</h4>
                   <p className="text-sm text-muted-foreground">{hook.description}</p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    <span className="font-semibold">Returns:</span> {hook.returns.length} values
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">{hook.path}</p>
+                  {hook.params && hook.params.length > 0 && (
+                    <div className="mt-2">
+                      <span className="text-xs font-semibold text-muted-foreground">Params:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {hook.params.map(p => (
+                          <span key={p} className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{p}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <span className="text-xs font-semibold text-muted-foreground">Returns:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {hook.returns.map(r => (
+                        <span key={r} className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">{r}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -226,12 +354,45 @@ export default function Docs() {
   );
 
   const renderContexts = () => (
-    <div className="space-y-4">
-      {ALL_CONTEXTS.map(ctx => (
+    <div className="space-y-6">
+      <div className="bg-primary/10 rounded-xl p-4 mb-4">
+        <p className="text-sm text-primary font-medium mb-2">
+          🌐 Total Context Providers: {ALL_CONTEXTS_FULL.length}
+        </p>
+        <pre className="text-xs text-muted-foreground whitespace-pre-wrap">{CONTEXT_HIERARCHY}</pre>
+      </div>
+      {ALL_CONTEXTS_FULL.map(ctx => (
         <div key={ctx.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
-          <h4 className="font-mono font-bold text-foreground">{ctx.name}</h4>
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="font-mono font-bold text-foreground">{ctx.name}</h4>
+            <code className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">{ctx.hook}</code>
+          </div>
           <p className="text-sm text-muted-foreground">{ctx.description}</p>
-          <p className="text-xs text-primary mt-1">Hook: {ctx.hook}</p>
+          <p className="text-xs text-muted-foreground mt-1 font-mono">{ctx.path}</p>
+          <div className="mt-3">
+            <span className="text-xs font-semibold text-muted-foreground">Provided Values:</span>
+            <div className="mt-2 space-y-1">
+              {ctx.providedValues.slice(0, 5).map(v => (
+                <div key={v.name} className="text-xs flex items-center gap-2">
+                  <code className="text-primary font-mono">{v.name}</code>
+                  <span className="text-muted-foreground">: {v.type}</span>
+                </div>
+              ))}
+              {ctx.providedValues.length > 5 && (
+                <span className="text-xs text-muted-foreground">+{ctx.providedValues.length - 5} more...</span>
+              )}
+            </div>
+          </div>
+          {ctx.dependencies.length > 0 && (
+            <div className="mt-2">
+              <span className="text-xs font-semibold text-muted-foreground">Dependencies:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {ctx.dependencies.map(d => (
+                  <span key={d} className="text-xs bg-muted px-1.5 py-0.5 rounded">{d}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -251,21 +412,55 @@ export default function Docs() {
 
   const renderUtilities = () => (
     <div className="space-y-8">
+      <div className="bg-primary/10 rounded-xl p-4 mb-4">
+        <p className="text-sm text-primary font-medium">
+          🔧 Utilities: {UTILS_FILES.length} | Libraries: {LIB_FILES.length} | Configs: {CONFIG_FILES_FULL.length} | Constants: {CONSTANTS_FILES.length}
+        </p>
+      </div>
+
       <div>
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          🔧 Utility Functions
-          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{UTILITIES.length}</span>
+          📁 Utils Files
+          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{UTILS_FILES.length}</span>
         </h2>
         <div className="grid gap-3">
-          {UTILITIES.filter(u => 
+          {UTILS_FILES.filter(u => 
             u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.description.toLowerCase().includes(searchQuery.toLowerCase())
           ).map(util => (
             <div key={util.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
               <h4 className="font-mono font-bold text-foreground">{util.name}</h4>
               <p className="text-sm text-muted-foreground">{util.description}</p>
-              <pre className="mt-2 text-xs bg-background/60 p-2 rounded overflow-x-auto">{util.usage}</pre>
-              <p className="text-xs text-muted-foreground mt-2">{util.path}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">{util.path}</p>
+              {util.functions && util.functions.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {util.functions.slice(0, 3).map(fn => (
+                    <div key={fn.name} className="text-xs pl-2 border-l border-primary/30">
+                      <code className="text-primary">{fn.name}</code>
+                      <span className="text-muted-foreground ml-1">- {fn.description}</span>
+                    </div>
+                  ))}
+                  {util.functions.length > 3 && (
+                    <span className="text-xs text-muted-foreground pl-2">+{util.functions.length - 3} more functions</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          📚 Library Files
+          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{LIB_FILES.length}</span>
+        </h2>
+        <div className="grid gap-3">
+          {LIB_FILES.map(lib => (
+            <div key={lib.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
+              <h4 className="font-mono font-bold text-foreground">{lib.name}</h4>
+              <p className="text-sm text-muted-foreground">{lib.description}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">{lib.path}</p>
             </div>
           ))}
         </div>
@@ -274,40 +469,24 @@ export default function Docs() {
       <div>
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           📌 Constants
-          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{CONSTANTS.length}</span>
+          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{CONSTANTS_FILES.length}</span>
         </h2>
         <div className="grid gap-3">
-          {CONSTANTS.map(constant => (
+          {CONSTANTS_FILES.map(constant => (
             <div key={constant.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
               <h4 className="font-mono font-bold text-foreground">{constant.name}</h4>
               <p className="text-sm text-muted-foreground">{constant.description}</p>
-              <pre className="mt-2 text-xs bg-background/60 p-2 rounded overflow-x-auto">
-                {JSON.stringify(constant.values, null, 2)}
-              </pre>
-              <p className="text-xs text-muted-foreground mt-2">{constant.path}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          📝 Type Definitions
-          <span className="text-sm bg-primary/20 px-2 py-0.5 rounded">{TYPE_DEFINITIONS.length}</span>
-        </h2>
-        <div className="grid gap-3">
-          {TYPE_DEFINITIONS.map(typeDef => (
-            <div key={typeDef.name} className="bg-card/50 rounded-lg p-4 border border-border/30">
-              <h4 className="font-mono font-bold text-foreground">{typeDef.name}</h4>
-              <p className="text-sm text-muted-foreground">{typeDef.description}</p>
-              <div className="mt-2 space-y-1">
-                {typeDef.properties.map((prop: string) => (
-                  <div key={prop} className="text-xs font-mono text-primary bg-background/60 px-2 py-1 rounded">
-                    {prop}
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">{typeDef.path}</p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">{constant.path}</p>
+              {constant.constants && constant.constants.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {constant.constants.map(c => (
+                    <div key={c.name} className="text-xs flex items-center gap-2">
+                      <code className="text-primary font-mono">{c.name}</code>
+                      <span className="text-muted-foreground">= {String(c.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -386,6 +565,7 @@ export default function Docs() {
   const renderContent = () => {
     switch (activeSection) {
       case "architecture": return renderArchitecture();
+      case "pages": return renderPages();
       case "tables": return renderTables();
       case "functions": return renderFunctions();
       case "hooks": return renderHooks();
@@ -401,12 +581,13 @@ export default function Docs() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <div className="w-64 border-r border-border/30 bg-card/30 p-4 flex flex-col">
+      <div className="w-72 border-r border-border/30 bg-card/30 p-4 flex flex-col">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
           <ChevronLeft className="w-4 h-4" />
           Back
         </button>
-        <h1 className="text-xl font-bold mb-4">📚 Documentation</h1>
+        <h1 className="text-xl font-bold mb-2">📚 Documentation</h1>
+        <p className="text-xs text-muted-foreground mb-4">Complete technical reference</p>
         <nav className="space-y-1">
           {SECTIONS.map(section => (
             <button
