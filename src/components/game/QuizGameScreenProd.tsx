@@ -359,9 +359,9 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card with Overlapping Icon */}
-      <div className="px-4 flex-shrink-0 mt-10 mb-2 [@media(max-height:700px)]:mt-8 [@media(max-height:700px)]:mb-1 relative">
+      <div className="px-4 flex-shrink-0 mt-5 mb-2 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
         {/* Category Icon - overlaps card by 50% */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-16 z-20">
           <DynamicIcon 
             slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
             categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
@@ -380,11 +380,12 @@ export function QuizGameScreenProd() {
           timerSeconds={!opponent ? timeRemaining : undefined}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}
           freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
+          reserveTopSpace
         />
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-4 [@media(max-height:700px)]:py-2 flex-shrink-0">
+      <div className="flex justify-center py-3 [@media(max-height:700px)]:py-1 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -394,7 +395,7 @@ export function QuizGameScreenProd() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="w-full px-4 pt-4 flex gap-2">
+        <div className="w-full px-4 -mt-5 flex gap-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -421,7 +422,7 @@ export function QuizGameScreenProd() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
+        <div className="flex-1 px-4 -mt-5 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isHidden = hiddenAnswers.includes(answer);
