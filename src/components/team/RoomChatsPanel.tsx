@@ -478,9 +478,21 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           <p className="text-muted-foreground text-center">
                             {searchQuery 
                               ? "ვერ მოიძებნა" 
-                              : "საუბრები არ არის"
+                              : activeFilter === "rooms"
+                                ? "ოთახები არ გაქვს"
+                                : activeFilter === "friends"
+                                  ? "მეგობრების ჩატები არ არის"
+                                  : "საუბრები არ არის"
                             }
                           </p>
+                          {(activeFilter === "rooms" || activeFilter === "friends") && conversations.length > 0 && (
+                            <button
+                              onClick={() => setActiveFilter("all")}
+                              className="mt-3 text-sm text-primary font-medium"
+                            >
+                              ყველას ნახვა
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <div className="divide-y divide-border/20">
