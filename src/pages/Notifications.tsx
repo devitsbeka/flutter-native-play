@@ -292,7 +292,7 @@ export default function Notifications() {
             </p>
           </div>
         ) : (
-          <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden">
+          <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden pb-2">
             {/* Generation Notifications */}
             {generationNotifications.length > 0 && (
               <>

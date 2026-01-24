@@ -76,7 +76,7 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden mx-2 my-2 rounded-2xl">
       {/* Delete background indicator */}
       <motion.div 
         className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 pointer-events-none"
@@ -109,7 +109,7 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
           pointerDownXRef.current = null;
           didMoveRef.current = false;
         }}
-        className="relative z-10 flex items-center gap-3 w-full px-4 py-3 active:bg-foreground/5 transition-colors text-left border-b border-border/30 last:border-b-0 bg-background"
+        className="relative z-10 flex items-center gap-3 w-full px-4 py-3 text-left transition-colors bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl active:bg-foreground/5"
       >
         {/* Avatar - no badges */}
         <div className="relative flex-shrink-0">
