@@ -846,7 +846,6 @@ export function GameStylePersonalTrivia({
                 onClick={() => setIsEditingTitle(true)}
                 className="flex items-center gap-2 text-white"
               >
-                <PartyPopper className="w-5 h-5" />
                 <span className="font-bold truncate max-w-[150px]">
                   {title || "თამაშის სახელი..."}
                 </span>

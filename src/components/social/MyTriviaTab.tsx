@@ -420,7 +420,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
 
       const room = await createRoom(
         "custom",
-        data.title || post.title || "MyTrivia Party",
+         data.title || post.title || "My Trivia Party",
         customQuestions,
         data.title || post.title || null,
         (data.cover_image as string | null) || null
@@ -448,8 +448,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
     >
       {/* Party Badge */}
       <div className="absolute top-3 left-14 z-10 flex items-center gap-1.5 bg-pink-500/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
-        <PartyPopper className="w-3.5 h-3.5" aria-hidden />
-        <span>MyTrivia Party</span>
+        <span>My Trivia Party</span>
       </div>
 
       {/* Edit Button */}

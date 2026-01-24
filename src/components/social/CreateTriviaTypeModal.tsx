@@ -178,7 +178,7 @@ export function CreateTriviaTypeModal({
                   
                   {/* Text */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-base">MyTrivia Party</h3>
+                    <h3 className="font-bold text-white text-base">My Trivia Party</h3>
                     <p className="text-white/60 text-xs">შენი კითხვები, შენი პასუხები - მეგობრებთან ერთად სათამაშოდ</p>
                   </div>
                 </motion.button>
