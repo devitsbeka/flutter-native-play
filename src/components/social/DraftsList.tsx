@@ -42,7 +42,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
         <span className="text-xs font-medium text-white/60">შენახული დრაფტები</span>
       </div>
       
-      <div className="space-y-2 max-h-[40vh] sm:max-h-48 overflow-y-auto">
+      <div className="space-y-2">
         {/* Trivia Drafts (both trivia and personal) */}
         {triviaDrafts?.slice(0, 5).map((draft) => {
           const questionCount = Array.isArray(draft.questions) ? draft.questions.length : 0;
