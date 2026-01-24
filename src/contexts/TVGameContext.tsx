@@ -81,15 +81,9 @@ export const TVGameContext = createContext<TVGameContextType | null>(null);
 
 const QUESTION_TIME = getQuestionTime();
 
-// Auto-advance safety guard: give presence time to sync on new questions/rounds.
-// This prevents the host from triggering reveal before other controllers have
-// synced into presence (observed on round 2/3).
-const AUTO_ADVANCE_GUARD_MS = 1500;
-
-// Presence may briefly "flicker" during gameplay (e.g., only host visible for a moment).
-// To prevent premature auto-advance, we capture the set of players seen during the
-// first few seconds of each question and require THAT set to answer before revealing.
-const PRESENCE_CAPTURE_WINDOW_MS = 3000;
+// Simple safety guard: prevent immediate auto-advance in first 500ms after question starts.
+// This gives presence a moment to sync, but we don't wait the full time if all answered.
+const AUTO_ADVANCE_GUARD_MS = 500;
 
 // Quick highlight only (no separate reveal screen)
 // Keep it in the 1–2s range for readability before auto-advancing.
@@ -194,65 +188,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Prevent instant auto-advance at the start of a new question due to stale presence
   const questionStartedAtRef = useRef<number>(0);
 
-  // Robust auto-advance tracking for current question
-  const requiredPlayersRef = useRef<Set<string>>(new Set());
-  const requiredPlayersCaptureUntilRef = useRef<number>(0);
-  // IMPORTANT: track ONLY active players for auto-advance logic.
-  // Presence payloads may include entries that don't explicitly set isActive;
-  // we must not let those "ghost" entries affect max/required/shrink guards.
-  const maxActivePlayersSeenThisQuestionRef = useRef<number>(0);
-  
-  // STRICT: Track the expected number of players at the START of each question.
-  // We MUST have this many answers before auto-advancing. This is the key to
-  // preventing premature advances when players are temporarily invisible in presence.
-  const expectedPlayerCountAtQuestionStartRef = useRef<number>(0);
-
-  const allRequiredAnswered = useCallback((players: TVPlayer[]) => {
-    const required = requiredPlayersRef.current;
-    if (!required || required.size === 0) return false;
-
-    const byId = new Map(players.map(p => [p.id, p]));
-    for (const id of required) {
-      const p = byId.get(id);
-      // Required set is intended to contain ONLY active players. However, to protect
-      // against stale IDs (disconnect/reconnect), if the player is missing we treat
-      // it as "not answered" and do not auto-advance.
-      if (!p || p.isActive !== true || !p.hasAnswered) return false;
-    }
-    return true;
-  }, []);
-
-  const allActiveAnswered = useCallback((players: TVPlayer[]) => {
-    if (!players.length) return false;
-    return players.every((p) => p.isActive === true && p.hasAnswered);
-  }, []);
-
-  const getActivePlayers = useCallback((players: TVPlayer[]) => players.filter((p) => p.isActive === true), []);
-
-  // STRICT check: Ensure we have enough answers to auto-advance.
-  // We must have AT LEAST the number of answers as expected at question start,
-  // AND at least as many as the max we've seen during this question.
-  const hasEnoughAnswersForAutoAdvance = useCallback((players: TVPlayer[]): boolean => {
-    const activePlayers = players.filter(p => p.isActive === true);
-    const answeredCount = activePlayers.filter(p => p.hasAnswered).length;
-    const maxSeen = maxActivePlayersSeenThisQuestionRef.current;
-    const expectedAtStart = expectedPlayerCountAtQuestionStartRef.current;
-    
-    // Must meet BOTH thresholds
-    const requiredCount = Math.max(maxSeen, expectedAtStart);
-    
-    if (answeredCount < requiredCount) {
-      console.log('[hasEnoughAnswersForAutoAdvance] NOT enough answers', {
-        answeredCount,
-        maxSeen,
-        expectedAtStart,
-        requiredCount,
-      });
-      return false;
-    }
-    
-    // Also ensure all currently active players have answered
-    return activePlayers.every(p => p.hasAnswered);
+  // Simple helper: check if ALL players in the session have answered
+  const allPlayersAnswered = useCallback((players: TVPlayer[]): boolean => {
+    if (players.length === 0) return false;
+    return players.every(p => p.hasAnswered === true);
   }, []);
 
   // Prevent double-click / concurrent next-round transitions from host
@@ -590,105 +529,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [state.phase, state.timeRemaining, isHost, state.sessionId]);
 
-  // Backup auto-advance: Check if all CONNECTED players answered whenever players state changes
+  // SIMPLIFIED Auto-advance: Check if ALL players answered whenever players state changes
+  // Rule: Advance when ALL players have answered OR timer runs out (timer handled separately)
   useEffect(() => {
     if (!isHost) return;
     if (!state.sessionId) return;
     if (state.phase !== 'question') return;
     if (revealRequestedRef.current) return;
 
-    // Guard: don't allow auto-advance immediately on question load
-    if (questionStartedAtRef.current && Date.now() - questionStartedAtRef.current < AUTO_ADVANCE_GUARD_MS) return;
+    // Small safety guard: don't auto-advance in first 500ms after question starts
+    const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
+    if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) return;
 
-    const now = Date.now();
-    const captureWindowActive =
-      Boolean(requiredPlayersCaptureUntilRef.current) &&
-      now <= requiredPlayersCaptureUntilRef.current;
-
-    const activePlayers = getActivePlayers(state.players);
-
-    // Update max players seen this question
-    maxActivePlayersSeenThisQuestionRef.current = Math.max(
-      maxActivePlayersSeenThisQuestionRef.current,
-      activePlayers.length
-    );
-
-    // During capture window, keep expanding requiredPlayers
-    if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
-      for (const p of activePlayers) requiredPlayersRef.current.add(p.id);
-    }
-
-    // After capture ends, prune required set to only currently active players
-    if (requiredPlayersCaptureUntilRef.current && now > requiredPlayersCaptureUntilRef.current) {
-      const activeIds = new Set(activePlayers.map(p => p.id));
-      requiredPlayersRef.current = new Set(
-        Array.from(requiredPlayersRef.current).filter((id) => activeIds.has(id))
-      );
-    }
-
-    // ========== STRICT GUARDS FOR PAIRED SESSIONS ==========
-    
-    // GUARD 1: For paired sessions, wait for capture window UNLESS all tracked players answered.
-    // Fast-path: If ALL tracked/active players have answered, skip the capture window wait.
-    if (state.isPaired && captureWindowActive) {
-      const allTrackedAnswered = requiredPlayersRef.current.size > 0 && 
-        Array.from(requiredPlayersRef.current).every(playerId => 
-          activePlayers.find(p => p.id === playerId)?.hasAnswered === true
-        );
-      
-      // Also check: all currently active players answered AND we have at least 2 players
-      const allCurrentActiveAnswered = activePlayers.length >= 2 && 
-        activePlayers.every(p => p.hasAnswered);
-      
-      if (!allTrackedAnswered && !allCurrentActiveAnswered) {
-        console.log('[TV Auto-Advance] BLOCKED: paired session must complete capture window first');
-        return;
-      }
-      console.log('[TV Auto-Advance] Fast-path: all players answered during capture window, advancing immediately');
-    }
-
-    // GUARD 2: For paired sessions, we must see at least one non-host active player.
-    // If we can't see any non-host players, they may still be syncing.
-    const nonHostActivePlayers = activePlayers.filter((p) => !p.isHost);
-    if (state.isPaired && nonHostActivePlayers.length === 0) {
-      console.log('[TV Auto-Advance] BLOCKED: paired session but no non-host active players visible');
-      return;
-    }
-
-    // GUARD 3: For paired sessions, require BOTH host AND at least one non-host to have answered.
-    // This is the KEY guard that prevents host-only reveals.
-    if (state.isPaired) {
-      const hostAnswered = activePlayers.some((p) => p.isHost && p.hasAnswered);
-      const nonHostAnswered = activePlayers.some((p) => !p.isHost && p.hasAnswered);
-      
-      if (!hostAnswered || !nonHostAnswered) {
-        console.log('[TV Auto-Advance] BLOCKED: paired session requires BOTH host AND non-host answers', {
-          hostAnswered,
-          nonHostAnswered,
-          activePlayers: activePlayers.map(p => ({ id: p.id.slice(0, 8), isHost: p.isHost, hasAnswered: p.hasAnswered })),
-        });
-        return;
-      }
-    }
-
-    // GUARD 4: Use strict answer count check - must have enough answers
-    if (!hasEnoughAnswersForAutoAdvance(state.players)) {
-      console.log('[TV Auto-Advance] BLOCKED: not enough answers for auto-advance');
-      return;
-    }
-
-    // All guards passed - check if everyone has answered
-    const allAnswered = allActiveAnswered(activePlayers) || allRequiredAnswered(activePlayers);
-
-    if (allAnswered) {
-      console.log('[TV Backup Auto-Advance] All connected players answered - triggering reveal via effect', {
-        activeCount: activePlayers.length,
-        expectedAtStart: expectedPlayerCountAtQuestionStartRef.current,
-        maxSeen: maxActivePlayersSeenThisQuestionRef.current,
+    // THE SIMPLE RULE: All players in the session must have answered
+    if (allPlayersAnswered(state.players)) {
+      console.log('[TV Auto-Advance] ALL players answered - advancing!', {
+        playerCount: state.players.length,
+        players: state.players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered })),
       });
-      requestRevealIfEligible('all required players answered (backup effect)');
+      requestRevealIfEligible('all players answered');
     }
-  }, [state.phase, state.players, state.sessionId, isHost, state.isPaired, requestRevealIfEligible]);
+  }, [state.phase, state.players, state.sessionId, isHost, allPlayersAnswered, requestRevealIfEligible]);
 
   // Auto-advance from reveal after a fixed duration (host only)
   useEffect(() => {
@@ -970,17 +831,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setMyAnswer(null);
             revealRequestedRef.current = false;
             questionStartedAtRef.current = Date.now();
-
-            // Reset robust auto-advance tracking for this question.
-            requiredPlayersRef.current = new Set();
-            requiredPlayersCaptureUntilRef.current = Date.now() + PRESENCE_CAPTURE_WINDOW_MS;
-            maxActivePlayersSeenThisQuestionRef.current = 0;
-            
-            // STRICT: Capture the expected player count at question start.
-            // This is the MINIMUM number of answers we need before auto-advancing.
-            const currentActivePlayers = stateRef.current.players.filter(p => p.isActive === true);
-            expectedPlayerCountAtQuestionStartRef.current = currentActivePlayers.length;
-            console.log('[New Question] Expected player count at start:', expectedPlayerCountAtQuestionStartRef.current);
+            console.log('[New Question] Started at', new Date().toISOString());
 
             // Reset my presence for the new question so host does not treat me as already answered.
             if (presenceChannelRef.current && myPlayerId) {
@@ -1106,45 +957,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return b.score - a.score;
         });
 
-        // ===== Robust auto-advance tracking =====
-        const now = Date.now();
-
-        const captureWindowActive =
-          Boolean(requiredPlayersCaptureUntilRef.current) &&
-          now <= requiredPlayersCaptureUntilRef.current;
-
-        const activePlayers = players.filter((p) => p.isActive === true);
-
-        // Track the largest ACTIVE presence size we've seen this question.
-        maxActivePlayersSeenThisQuestionRef.current = Math.max(
-          maxActivePlayersSeenThisQuestionRef.current,
-          activePlayers.length
-        );
-
-        // During the capture window, build the required player set.
-        // IMPORTANT: only include ACTIVE players, so invited/offline/ghost entries
-        // never block auto-advance.
-        if (requiredPlayersCaptureUntilRef.current && now <= requiredPlayersCaptureUntilRef.current) {
-          for (const p of activePlayers) requiredPlayersRef.current.add(p.id);
-        }
-
-        // After the capture window ends, keep the required set in sync with the
-        // currently active presence snapshot. This fixes cases where a player
-        // disconnects/reconnects (new id) and the old id would otherwise block
-        // auto-advance until timer expiry.
-        if (requiredPlayersCaptureUntilRef.current && now > requiredPlayersCaptureUntilRef.current) {
-          const activeIds = new Set(activePlayers.map(p => p.id));
-          requiredPlayersRef.current = new Set(
-            Array.from(requiredPlayersRef.current).filter((id) => activeIds.has(id))
-          );
-        }
-
         setState(prev => ({ ...prev, players }));
 
-        // If every CONNECTED player answered, host moves game to reveal immediately
+        // SIMPLIFIED: Check if ALL players answered (presence sync path)
         // Use fresh state from stateRef for most up-to-date phase
         const phaseNow = stateRef.current.phase;
-        const isPairedNow = stateRef.current.isPaired;
         
         // Use isHostRef to get the latest isHost value (avoids stale closure)
         const isHostNow = isHostRef.current;
@@ -1154,75 +971,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (phaseNow !== 'question') return;
         if (revealRequestedRef.current) return;
         
-        const canAutoAdvance = !questionStartedAtRef.current || Date.now() - questionStartedAtRef.current >= AUTO_ADVANCE_GUARD_MS;
-        if (!canAutoAdvance) return;
+        // Small safety guard: don't auto-advance in first 500ms
+        const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
+        if (timeSinceStart < AUTO_ADVANCE_GUARD_MS) return;
 
-        console.log('[TV Auto-Advance Check (presence sync)]', {
-          isHost: isHostNow,
-          phaseNow,
-          isPairedNow,
-          connectedCount: activePlayers.length,
-          captureWindowActive,
-          players: activePlayers.map(p => ({ nickname: p.nickname, isHost: p.isHost, hasAnswered: p.hasAnswered })),
-        });
-
-        // ========== STRICT GUARDS FOR PAIRED SESSIONS ==========
-        
-        // GUARD 1: For paired sessions, wait for capture window UNLESS all tracked players answered.
-        // Fast-path: If ALL tracked/active players have answered, skip the capture window wait.
-        if (isPairedNow && captureWindowActive) {
-          const allTrackedAnswered = requiredPlayersRef.current.size > 0 && 
-            Array.from(requiredPlayersRef.current).every(playerId => 
-              activePlayers.find(p => p.id === playerId)?.hasAnswered === true
-            );
-          
-          const allCurrentActiveAnswered = activePlayers.length >= 2 && 
-            activePlayers.every(p => p.hasAnswered);
-          
-          if (!allTrackedAnswered && !allCurrentActiveAnswered) {
-            console.log('[TV Auto-Advance (presence)] BLOCKED: paired session must complete capture window');
-            return;
-          }
-          console.log('[TV Auto-Advance (presence)] Fast-path: all players answered during capture window');
-        }
-
-        // GUARD 2: For paired sessions, we must see at least one non-host active player.
-        const nonHostActivePlayers = activePlayers.filter((p) => !p.isHost);
-        if (isPairedNow && nonHostActivePlayers.length === 0) {
-          console.log('[TV Auto-Advance (presence)] BLOCKED: paired session but no non-host active players');
-          return;
-        }
-
-        // GUARD 3: For paired sessions, require BOTH host AND non-host to have answered.
-        if (isPairedNow) {
-          const hostAnswered = activePlayers.some((p) => p.isHost && p.hasAnswered);
-          const nonHostAnswered = activePlayers.some((p) => !p.isHost && p.hasAnswered);
-          
-          if (!hostAnswered || !nonHostAnswered) {
-            console.log('[TV Auto-Advance (presence)] BLOCKED: requires BOTH host AND non-host answers', {
-              hostAnswered,
-              nonHostAnswered,
-            });
-            return;
-          }
-        }
-
-        // GUARD 4: Use strict answer count check
-        if (!hasEnoughAnswersForAutoAdvance(players)) {
-          console.log('[TV Auto-Advance (presence)] BLOCKED: not enough answers');
-          return;
-        }
-
-        // All guards passed - check if everyone has answered
-        const allAnswered = allActiveAnswered(activePlayers) || allRequiredAnswered(activePlayers);
-
-        if (allAnswered) {
-          console.log('[TV Auto-Advance (presence)] Triggering reveal - all guards passed!', {
-            activeCount: activePlayers.length,
-            expectedAtStart: expectedPlayerCountAtQuestionStartRef.current,
-            maxSeen: maxActivePlayersSeenThisQuestionRef.current,
+        // THE SIMPLE RULE: All players must have answered
+        if (allPlayersAnswered(players)) {
+          console.log('[TV Auto-Advance (presence)] ALL players answered - advancing!', {
+            playerCount: players.length,
+            players: players.map(p => ({ nickname: p.nickname, hasAnswered: p.hasAnswered })),
           });
-          requestRevealIfEligible('all required players answered');
+          requestRevealIfEligible('all players answered (presence sync)');
         }
         
         tvLogPresence('sync', players.length, players.map(p => p.nickname));
@@ -1232,10 +991,6 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         tvLogPlayer('leave', key);
-
-        // If someone leaves, ensure they no longer block auto-advance for the
-        // current question.
-        requiredPlayersRef.current.delete(key);
 
         // Log player disconnect for debugging
         if (leftPresences && leftPresences.length > 0) {
