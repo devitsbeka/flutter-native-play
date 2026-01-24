@@ -119,7 +119,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden mx-2 my-2 rounded-2xl">
       {/* Delete background indicator */}
       <motion.div 
         className="absolute inset-0 bg-destructive flex items-center justify-end pr-6"
@@ -140,7 +140,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         className={cn(
-          "relative flex items-start gap-3 px-4 py-3 border-b border-border/30 last:border-b-0 transition-colors bg-background",
+          "relative flex items-start gap-3 px-4 py-3 transition-colors bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl",
           !hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
         )}
         onClick={handleClick}

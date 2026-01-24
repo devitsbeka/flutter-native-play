@@ -57,7 +57,7 @@ export const CompactGenerationCard = memo(function CompactGenerationCard({
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -10 }}
-      className="flex items-center gap-3 px-4 py-3 border-b border-border/30 last:border-b-0"
+      className="flex items-center gap-3 px-4 py-3 mx-2 my-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/40"
     >
       {/* Thumbnail */}
       <div className="relative flex-shrink-0">
