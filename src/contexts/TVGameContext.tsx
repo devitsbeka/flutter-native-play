@@ -628,11 +628,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // ========== STRICT GUARDS FOR PAIRED SESSIONS ==========
     
-    // GUARD 1: For paired sessions, ALWAYS wait for capture window to complete.
-    // This is NON-NEGOTIABLE. We need time for all players to sync their presence.
+    // GUARD 1: For paired sessions, wait for capture window UNLESS all tracked players answered.
+    // Fast-path: If ALL tracked/active players have answered, skip the capture window wait.
     if (state.isPaired && captureWindowActive) {
-      console.log('[TV Auto-Advance] BLOCKED: paired session must complete capture window first');
-      return;
+      const allTrackedAnswered = requiredPlayersRef.current.size > 0 && 
+        Array.from(requiredPlayersRef.current).every(playerId => 
+          activePlayers.find(p => p.id === playerId)?.hasAnswered === true
+        );
+      
+      // Also check: all currently active players answered AND we have at least 2 players
+      const allCurrentActiveAnswered = activePlayers.length >= 2 && 
+        activePlayers.every(p => p.hasAnswered);
+      
+      if (!allTrackedAnswered && !allCurrentActiveAnswered) {
+        console.log('[TV Auto-Advance] BLOCKED: paired session must complete capture window first');
+        return;
+      }
+      console.log('[TV Auto-Advance] Fast-path: all players answered during capture window, advancing immediately');
     }
 
     // GUARD 2: For paired sessions, we must see at least one non-host active player.
@@ -1156,10 +1168,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // ========== STRICT GUARDS FOR PAIRED SESSIONS ==========
         
-        // GUARD 1: For paired sessions, ALWAYS wait for capture window to complete.
+        // GUARD 1: For paired sessions, wait for capture window UNLESS all tracked players answered.
+        // Fast-path: If ALL tracked/active players have answered, skip the capture window wait.
         if (isPairedNow && captureWindowActive) {
-          console.log('[TV Auto-Advance (presence)] BLOCKED: paired session must complete capture window');
-          return;
+          const allTrackedAnswered = requiredPlayersRef.current.size > 0 && 
+            Array.from(requiredPlayersRef.current).every(playerId => 
+              activePlayers.find(p => p.id === playerId)?.hasAnswered === true
+            );
+          
+          const allCurrentActiveAnswered = activePlayers.length >= 2 && 
+            activePlayers.every(p => p.hasAnswered);
+          
+          if (!allTrackedAnswered && !allCurrentActiveAnswered) {
+            console.log('[TV Auto-Advance (presence)] BLOCKED: paired session must complete capture window');
+            return;
+          }
+          console.log('[TV Auto-Advance (presence)] Fast-path: all players answered during capture window');
         }
 
         // GUARD 2: For paired sessions, we must see at least one non-host active player.
