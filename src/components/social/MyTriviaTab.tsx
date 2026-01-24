@@ -232,24 +232,19 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
           </button>
           
           {/* Collection Badge */}
-          <div className="absolute top-3 left-14 flex items-center gap-1.5 bg-purple-600/90 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-md">
+          <div className="absolute top-3 left-14 flex h-8 items-center gap-1.5 bg-purple-600/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
             <Layers className="w-3.5 h-3.5" />
             <span>კოლექცია</span>
           </div>
 
-          {/* Visibility + rounds count */}
-          <div className="absolute top-3 right-3 flex items-center gap-2">
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center shadow-md ${
-                collection.is_public ? "bg-green-500/90 text-white" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {collection.is_public ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-            </div>
-
-            <div className="bg-black/40 backdrop-blur-sm rounded-full px-2 py-1 text-xs text-white">
-              {roundsCount} რაუნდი
-            </div>
+          {/* Visibility + rounds count (single pill like trivia cards) */}
+          <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
+            {collection.is_public ? (
+              <Globe className="w-3.5 h-3.5" aria-hidden />
+            ) : (
+              <Lock className="w-3.5 h-3.5" aria-hidden />
+            )}
+            <span>{roundsCount} რაუნდი</span>
           </div>
 
           {/* Title */}
@@ -591,7 +586,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             {post.title}
           </h4>
         </div>
-        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1.5">
+        <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
           {post.is_public !== false ? (
             <Globe className="w-3.5 h-3.5" aria-hidden />
           ) : (
@@ -822,11 +817,13 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
     : myCollections;
 
   // Apply type filter first - "trivias" shows only standalone, "collections" shows only collections, "personal" shows MyTrivia Party
-  let standalonePosts = sortFilter === "collections" 
-    ? [] 
+  let standalonePosts = sortFilter === "collections"
+    ? []
     : sortFilter === "personal"
       ? searchFilteredPosts.filter(p => p.subject === "personal")
-      : [...searchFilteredPosts];
+      : sortFilter === "trivias"
+        ? searchFilteredPosts.filter(p => p.subject !== "personal")
+        : [...searchFilteredPosts];
   let filteredCollections = sortFilter === "trivias" || sortFilter === "personal" ? [] : [...(searchFilteredCollections || [])];
   
   // Apply visibility filter
