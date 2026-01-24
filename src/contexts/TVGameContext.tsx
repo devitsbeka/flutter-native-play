@@ -193,6 +193,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // This prevents premature auto-advance when presence sync only shows a partial list.
   const expectedPlayerCountRef = useRef<number>(0);
 
+  // Ref to hold the latest requestRevealIfEligible function
+  // This allows checkAllAnsweredFromDB (defined before requestRevealIfEligible) to always call the latest version
+  const requestRevealIfEligibleRef = useRef<((reason: string) => Promise<void>) | null>(null);
+
   // Helper: check if ALL expected players have answered
   // Returns true ONLY when:
   // 1. We have an expected player count set (> 0)
@@ -309,7 +313,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         answerCount,
         minimumRequired,
       });
-      requestRevealIfEligible('all players answered (DB verified)');
+      // Use the ref to call the latest version of requestRevealIfEligible
+      // This avoids stale closure issues since checkAllAnsweredFromDB is defined before requestRevealIfEligible
+      if (requestRevealIfEligibleRef.current) {
+        requestRevealIfEligibleRef.current('all players answered (DB verified)');
+      } else {
+        console.error('[DB Answer Check] requestRevealIfEligibleRef is not set!');
+      }
     }
   }, []);
 
@@ -652,6 +662,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       })
       .eq('id', current.sessionId);
   }, [isHost]);
+
+  // Keep the ref updated with the latest requestRevealIfEligible function
+  // This allows checkAllAnsweredFromDB to always call the current version
+  useEffect(() => {
+    requestRevealIfEligibleRef.current = requestRevealIfEligible;
+  }, [requestRevealIfEligible]);
 
   // Timer effect for question phase
   useEffect(() => {
