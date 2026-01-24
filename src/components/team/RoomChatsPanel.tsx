@@ -179,7 +179,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
   const { rooms, loading: roomsLoading } = useMyRooms();
   const { friends, loading: friendsLoading } = useFriends();
   const { unreadCounts: roomUnreadCounts, markRoomAsRead } = useUnreadRoomMessages();
-  const friendUnreadCounts = useUnreadMessages();
+  const { unreadCounts: friendUnreadCounts, clearUnreadForFriend } = useUnreadMessages();
   const { filterBlockedUsers } = useUserModeration();
   
   const { conversations, loading: previewsLoading } = useConversationPreviews(
@@ -267,8 +267,10 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
       markRoomAsRead(selectedConversation.id);
     } else {
       markFriendAsRead();
+      // Also immediately clear local unread count for this friend
+      clearUnreadForFriend(selectedConversation.id);
     }
-  }, [selectedConversation, isOpen, markRoomAsRead, markFriendAsRead]);
+  }, [selectedConversation, isOpen, markRoomAsRead, markFriendAsRead, clearUnreadForFriend]);
 
   // Scroll to bottom when messages change
   useEffect(() => {

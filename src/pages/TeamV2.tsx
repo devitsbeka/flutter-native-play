@@ -254,7 +254,7 @@ function TeamContentV2() {
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
-  const unreadFriendCounts = useUnreadMessages();
+  const { unreadCounts: unreadFriendCounts } = useUnreadMessages();
   const unreadFriendMessagesCount = Object.values(unreadFriendCounts).reduce(
     (sum, n) => sum + n,
     0
