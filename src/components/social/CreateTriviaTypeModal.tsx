@@ -225,10 +225,12 @@ export function CreateTriviaTypeModal({
             )}
 
             {/* Drafts List */}
-            <DraftsList 
-              onResumeDraft={handleResumeDraft}
-              onClose={handleClose}
-            />
+            <div className="mt-[50px]">
+              <DraftsList 
+                onResumeDraft={handleResumeDraft}
+                onClose={handleClose}
+              />
+            </div>
 
           </div>
         </motion.div>
