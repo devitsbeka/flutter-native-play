@@ -74,16 +74,21 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <p className="text-sm font-medium text-white truncate">
                   {displayTitle}
                 </p>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-white/60 whitespace-nowrap">
-                  <span className="shrink-0">{questionCount} კითხვა</span>
-                  <span className="shrink-0">•</span>
-                  <Clock className="w-3 h-3 shrink-0" />
-                  <span className="truncate">
-                    {formatDistanceToNow(new Date(draft.updated_at), { 
-                      addSuffix: true, 
-                      locale: ka 
-                    })}
-                  </span>
+                {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
+                <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="shrink-0">{questionCount} კითხვა</span>
+                  </div>
+                  <div className="hidden sm:block shrink-0">•</div>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span className="truncate">
+                      {formatDistanceToNow(new Date(draft.updated_at), {
+                        addSuffix: true,
+                        locale: ka,
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
               
@@ -95,7 +100,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                     deleteTriviaDraft(draft.id);
                   }}
                   disabled={isDeletingDraft}
-                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -150,17 +155,22 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                 <p className="text-sm font-medium text-white truncate">
                   {displayTitle}
                 </p>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-white/60 whitespace-nowrap">
-                  <Layers className="w-3 h-3 shrink-0" />
-                  <span className="shrink-0">{roundCount} რაუნდი</span>
-                  <span className="shrink-0">•</span>
-                  <Clock className="w-3 h-3 shrink-0" />
-                  <span className="truncate">
-                    {formatDistanceToNow(new Date(draft.updated_at), { 
-                      addSuffix: true, 
-                      locale: ka 
-                    })}
-                  </span>
+                {/* Mobile: 3 rows (title / count / date). Desktop: single meta row. */}
+                <div className="mt-0.5 flex flex-col gap-0.5 text-xs text-white/60 sm:mt-0 sm:flex-row sm:items-center sm:gap-2 sm:whitespace-nowrap">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <Layers className="w-3 h-3 shrink-0" />
+                    <span className="shrink-0">{roundCount} რაუნდი</span>
+                  </div>
+                  <div className="hidden sm:block shrink-0">•</div>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    <span className="truncate">
+                      {formatDistanceToNow(new Date(draft.updated_at), {
+                        addSuffix: true,
+                        locale: ka,
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
               
@@ -172,7 +182,7 @@ export function DraftsList({ onResumeDraft, onClose }: DraftsListProps) {
                     deleteCollectionDraft(draft.id);
                   }}
                   disabled={isDeletingDraft}
-                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
