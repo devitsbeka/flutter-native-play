@@ -413,26 +413,18 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
         return;
       }
 
+      // Create room with "My Trivia Party" as default room name, trivia title as category
       const room = await createRoom(
         "custom",
-         data.title || post.title || "My Trivia Party",
+        data.title || post.title || "My Trivia Party", // category_name (what's being played)
         customQuestions,
-        data.title || post.title || null,
+        "My Trivia Party", // room_name (always "My Trivia Party")
         (data.cover_image as string | null) || null
       );
 
       if (room?.id && room?.room_code) {
-        // Add the trivia to the room_category_queue so the lobby shows it
-        await supabase.from("room_category_queue").insert({
-          room_id: room.id,
-          position: 0,
-          source_type: "user_trivia",
-          category_name: data.title || post.title || "My Trivia Party",
-          user_trivia_id: post.id,
-          icon_slug: null,
-        });
-
-        // Also update the game_rooms table with user_trivia_id for reference
+        // Update the game_rooms table with user_trivia_id for reference
+        // No need to add to room_category_queue - the room's category_name serves as round 1
         await supabase
           .from("game_rooms")
           .update({ user_trivia_id: post.id })
