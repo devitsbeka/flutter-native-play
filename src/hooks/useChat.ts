@@ -218,5 +218,14 @@ export function useUnreadMessages() {
     };
   }, [user]);
 
-  return unreadCounts;
+  // Clear unread count for a specific friend (call after marking as read)
+  const clearUnreadForFriend = (friendId: string) => {
+    setUnreadCounts((prev) => {
+      const newCounts = { ...prev };
+      delete newCounts[friendId];
+      return newCounts;
+    });
+  };
+
+  return { unreadCounts, clearUnreadForFriend };
 }
