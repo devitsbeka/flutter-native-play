@@ -705,7 +705,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ type: "spring", damping: 20, stiffness: 300, delay: 0.1 }}
-                    className="relative z-10 px-4 py-3 border-t border-border bg-background"
+                    className="relative z-10 px-4 py-5 border-t border-border bg-background"
                   >
                     <div className="flex items-center gap-3">
                       <input
