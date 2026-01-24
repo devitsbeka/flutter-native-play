@@ -61,7 +61,11 @@ export function useRoomChat(roomId: string | null) {
         },
         (payload) => {
           const newMessage = payload.new as RoomChatMessage;
-          setMessages((prev) => [...prev, newMessage]);
+          setMessages((prev) => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
         }
       )
       .subscribe();

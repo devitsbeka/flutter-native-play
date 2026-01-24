@@ -91,35 +91,60 @@ export function useChat(friendId: string | null) {
 
     fetchMessages();
 
-    // Subscribe to new messages
-    const channel = supabase
-      .channel(`chat-${user.id}-${friendId}`)
+    // Subscribe to new messages - listen to messages TO current user FROM friend
+    const channelIncoming = supabase
+      .channel(`chat-incoming-${user.id}-${friendId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: `receiver_id=eq.${user.id}`,
         },
         (payload) => {
           const newMessage = payload.new as ChatMessage;
-          // Only add if it's relevant to this conversation
-          if (
-            (newMessage.sender_id === user.id && newMessage.receiver_id === friendId) ||
-            (newMessage.sender_id === friendId && newMessage.receiver_id === user.id)
-          ) {
-            setMessages((prev) => [...prev, newMessage]);
-            // Mark as read if we received it
-            if (newMessage.sender_id === friendId) {
-              markAsRead();
-            }
+          // Only add if it's from this friend
+          if (newMessage.sender_id === friendId) {
+            setMessages((prev) => {
+              // Avoid duplicates
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
+            markAsRead();
+          }
+        }
+      )
+      .subscribe();
+
+    // Subscribe to messages FROM current user TO friend (to show sent messages immediately)
+    const channelOutgoing = supabase
+      .channel(`chat-outgoing-${user.id}-${friendId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as ChatMessage;
+          // Only add if it's to this friend
+          if (newMessage.receiver_id === friendId) {
+            setMessages((prev) => {
+              // Avoid duplicates
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
           }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelIncoming);
+      supabase.removeChannel(channelOutgoing);
     };
   }, [user, friendId, fetchMessages, markAsRead]);
 
