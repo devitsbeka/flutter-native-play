@@ -181,9 +181,16 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         (payload) => {
           const session = payload.new as { status: string; poll_start_time: string | null; poll_duration: number };
           
+          console.log('[useTVPoll] Realtime session update received:', { 
+            status: session.status, 
+            poll_start_time: session.poll_start_time,
+            isHost 
+          });
+          
           if (session.status === 'poll-suggest') {
             setPollPhase('suggest');
           } else if (session.status === 'poll-voting') {
+            console.log('[useTVPoll] Setting pollPhase to voting');
             setPollPhase('voting');
             if (session.poll_start_time) {
               setPollStartTime(new Date(session.poll_start_time));
@@ -192,6 +199,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
               setPollDuration(session.poll_duration);
             }
           } else if (session.status === 'poll-results') {
+            console.log('[useTVPoll] Setting pollPhase to results');
             setPollPhase('results');
           } else {
             setPollPhase(null);

@@ -217,6 +217,15 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     await toggleVote(suggestionId);
   };
 
+  // Debug logging
+  console.log('[ControllerPollScreen] Render state:', { 
+    pollPhase, 
+    isHost, 
+    suggestionsCount: suggestions.length,
+    myVotesCount: myVotes.length,
+    timeRemaining 
+  });
+
   // If poll phase is results, don't render this component - let parent handle redirect
   // This handles the case where pollPhase updates before contextPhase
   if (pollPhase === 'results') {
