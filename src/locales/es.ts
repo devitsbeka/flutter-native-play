@@ -706,6 +706,8 @@ export const es: KaTranslations = {
   modals: {
     notEnoughCoins: "Monedas insuficientes",
     coinsRequired: "Necesitas {amount} monedas para jugar",
+    notEnoughGems: "Gemas insuficientes",
+    gemsRequired: "Necesitas {amount} gemas",
     yourBalance: "Tu balance:",
     youNeed: "Necesitas:",
     watchAd: "Ver anuncio",
