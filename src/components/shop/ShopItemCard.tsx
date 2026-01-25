@@ -121,6 +121,7 @@ export function ShopItemCard({
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
           "p-3 sm:p-4 md:p-5",
+          "aspect-[1/1.16] sm:aspect-[1/1.45]",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -136,7 +137,6 @@ export function ShopItemCard({
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
-          aspectRatio: "1 / 1.45",
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
