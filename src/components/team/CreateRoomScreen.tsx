@@ -133,6 +133,7 @@ export function CreateRoomScreen({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-8 safe-bottom">
+        <div className="max-w-xl mx-auto">
         {/* Section Title */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -259,6 +260,7 @@ export function CreateRoomScreen({
         >
           💡 მეგობრების მოწვევას შეძლებ ოთახის შექმნის შემდეგ
         </motion.p>
+        </div>
       </div>
 
       {/* Bottom CTA */}
@@ -268,15 +270,17 @@ export function CreateRoomScreen({
         transition={{ delay: 0.4 }}
         className="flex-shrink-0 px-4 pb-6 safe-bottom"
       >
-        <ChunkyButton
-          variant="secondary"
-          size="lg"
-          onClick={handleCreate}
-          disabled={!selectedType}
-          className="w-full"
-        >
-          შექმენი ოთახი
-        </ChunkyButton>
+        <div className="max-w-xl mx-auto">
+          <ChunkyButton
+            variant="secondary"
+            size="lg"
+            onClick={handleCreate}
+            disabled={!selectedType}
+            className="w-full"
+          >
+            შექმენი ოთახი
+          </ChunkyButton>
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -187,7 +187,7 @@ export default function TriviaLobby() {
       </div>
 
       {/* Content */}
-      <div className="px-4 space-y-4 -mt-6 relative z-10">
+      <div className="px-4 space-y-4 -mt-6 relative z-10 max-w-xl mx-auto">
         {/* Stats Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -314,16 +314,18 @@ export default function TriviaLobby() {
 
       {/* Fixed Play Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-        >
-          <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
-            <Play className="w-5 h-5 fill-current" />
-            ითამაშე
-          </ChunkyButton>
-        </motion.div>
+        <div className="max-w-xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+          >
+            <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
+              <Play className="w-5 h-5 fill-current" />
+              ითამაშე
+            </ChunkyButton>
+          </motion.div>
+        </div>
       </div>
 
       {/* Quiz Play Modal - Lazy loaded */}
