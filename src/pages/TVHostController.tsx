@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus } from 'lucide-react';
+import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw } from 'lucide-react';
+import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -72,7 +73,7 @@ const TVHostController: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(null);
 
   // Multi-round queue support - now with room fallback
-  const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId || null, roomId);
+  const { queue, addCategoryToQueue, addToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId || null, roomId);
 
   // UI-only local state (not game logic)
   const [loading, setLoading] = useState(true);
@@ -90,6 +91,10 @@ const TVHostController: React.FC = () => {
   // Countdown state for triggering startPlaying
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const hasTriggeredPlayingRef = useRef(false);
+  
+  // Category picker modal state
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [replacingItemId, setReplacingItemId] = useState<string | null>(null);
   
   // Poll voting ended state - for transitioning from voting to results
   const [votingEnded, setVotingEnded] = useState(false);
@@ -427,7 +432,41 @@ const TVHostController: React.FC = () => {
     }
   };
 
-  // Add category to queue
+  // Replace queue item handler
+  const handleReplaceQueueItem = (itemId: string) => {
+    setReplacingItemId(itemId);
+    setShowCategoryPicker(true);
+  };
+
+  // Add to queue from picker modal
+  const handlePickerAddToQueue = async (item: {
+    source_type: "category" | "random" | "user_trivia";
+    category_id?: string | null;
+    category_name?: string | null;
+    user_trivia_id?: string | null;
+    icon_slug?: string | null;
+  }) => {
+    // If replacing, remove old item first
+    if (replacingItemId) {
+      await removeFromQueue(replacingItemId);
+      setReplacingItemId(null);
+    }
+    
+    // Add to queue using the generic addToQueue
+    await addToQueue(item);
+    
+    if (item.source_type === "category") {
+      toast.success(`${item.category_name} დაემატა რიგში`);
+    } else if (item.source_type === "random") {
+      toast.success('შემთხვევითი რაუნდი დაემატა');
+    } else if (item.source_type === "user_trivia") {
+      toast.success(`${item.category_name || 'ტრივია'} დაემატა რიგში`);
+    }
+    
+    setShowCategoryPicker(false);
+  };
+
+  // Add category to queue (legacy)
   const handleAddToQueue = async (category: Category) => {
     await addCategoryToQueue({ id: category.id, name: category.name });
     toast.success(`${category.name} დაემატა რიგში`);
@@ -772,11 +811,25 @@ const TVHostController: React.FC = () => {
               <Sparkles className="w-5 h-5 text-purple-300" />
               რაუნდების რიგი ({queue.length})
             </h3>
-            {/* Queue is managed in game room, not here */}
+            {/* Add round button */}
+            <button
+              onClick={() => setShowCategoryPicker(true)}
+              className="w-8 h-8 rounded-lg bg-purple-500/30 border border-purple-400/40 flex items-center justify-center hover:bg-purple-500/50 transition-colors"
+            >
+              <Plus className="w-5 h-5 text-purple-200" />
+            </button>
           </div>
 
           {queue.length === 0 ? (
-            <p className="text-purple-300 text-sm">რიგი ცარიელია - აირჩიე კატეგორიები</p>
+            <button
+              onClick={() => setShowCategoryPicker(true)}
+              className="w-full p-4 border-2 border-dashed border-purple-400/40 rounded-xl hover:border-purple-400/60 hover:bg-purple-500/10 transition-all"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Plus className="w-8 h-8 text-purple-300" />
+                <p className="text-purple-300 text-sm">აირჩიე კატეგორიები</p>
+              </div>
+            </button>
           ) : (
             <div className="space-y-2">
               {queue.map((item, index) => (
@@ -791,7 +844,24 @@ const TVHostController: React.FC = () => {
                     {index + 1}
                   </span>
                   <span className="flex-1 text-white font-medium">{item.category_name}</span>
-                  {/* Queue is read-only in TV mode */}
+                  
+                  {/* Replace button */}
+                  <button
+                    onClick={() => handleReplaceQueueItem(item.id)}
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                    title="ჩანაცვლება"
+                  >
+                    <RefreshCw className="w-4 h-4 text-purple-300" />
+                  </button>
+                  
+                  {/* Remove button */}
+                  <button
+                    onClick={() => removeFromQueue(item.id)}
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/30 transition-colors"
+                    title="წაშლა"
+                  >
+                    <X className="w-4 h-4 text-white/60 hover:text-red-300" />
+                  </button>
                 </motion.div>
               ))}
             </div>
@@ -814,6 +884,38 @@ const TVHostController: React.FC = () => {
                 : `დაწყება (${queue.length} რაუნდი)`}
           </ChunkyButton>
         </div>
+
+        {/* Category Picker Modal */}
+        <CategoryPickerModal
+          isOpen={showCategoryPicker}
+          onClose={() => {
+            setShowCategoryPicker(false);
+            setReplacingItemId(null);
+          }}
+          onSelectCategory={(cat) => {
+            handlePickerAddToQueue({
+              source_type: "category",
+              category_id: cat.id,
+              category_name: cat.name,
+              icon_slug: cat.iconSlug,
+            });
+          }}
+          onSelectRandom={() => {
+            handlePickerAddToQueue({
+              source_type: "random",
+              category_name: "შემთხვევითი",
+            });
+          }}
+          onSelectTrivia={(trivia) => {
+            handlePickerAddToQueue({
+              source_type: "user_trivia",
+              category_name: trivia.title,
+              user_trivia_id: trivia.id,
+            });
+          }}
+          onAddToQueue={handlePickerAddToQueue}
+          showQueueOption={true}
+        />
       </div>
     );
   }
