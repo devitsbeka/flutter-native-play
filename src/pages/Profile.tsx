@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -43,22 +43,16 @@ export default function Profile() {
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
+  // Redirect guests directly to auth page
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Show nothing while redirecting or if no profile yet
   if (!user || !profile) {
-    return (
-      <MainLayout showPlayButton={false}>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">{t("profile.signInToView")}</p>
-            <button
-              onClick={() => navigate("/auth")}
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-semibold"
-            >
-              {t("profile.signIn")}
-            </button>
-          </div>
-        </div>
-      </MainLayout>
-    );
+    return null;
   }
 
   return (
