@@ -136,7 +136,7 @@ export const ka = {
     },
     timeDrain: {
       name: "დრო",
-      description: "ამატებს 10 წამს",
+      description: "ამატებს 5 წამს",
       hint: "კარგია ბოლო წამებში!",
     },
     addPower: {
@@ -667,9 +667,9 @@ export const ka = {
     vipBenefitsWeek: "2xp / ულიმიტო თამაში",
     vipBenefitsMonth: "ყველა VIP ბენეფიტი 30 დღე",
     deletesWrongAnswers: "წაშლის 2 არასწორ პასუხს",
-    freezesTime: "დრო გაიყინება 10 წამით",
+    freezesTime: "დრო გაიყინება 5 წამით",
     replacesQuestion: "შეცვლის კითხვას ახლით",
-    addsTime: "ამატებს 10 წამს",
+    addsTime: "ამატებს 5 წამს",
     exchangedCoins: "გადაცვალე {coins} მონეტა → {gems} 💎",
     exchangedGems: "გადაცვალე {gems} ალმასი → {coins} 🪙",
     // Additional shop translations
