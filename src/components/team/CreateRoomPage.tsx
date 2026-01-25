@@ -514,6 +514,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             category_name: challengeTrivia.title,
             game_type: "async",
             game_mode: challengeTrivia.type === "collection" ? `collection:${challengeTrivia.id}` : `trivia:${challengeTrivia.id}`,
+            // CRITICAL: Set user_trivia_id for trivia type so TVSetupInline can find it
+            user_trivia_id: challengeTrivia.type === "trivia" ? challengeTrivia.id : null,
             status: "waiting",
           })
           .select()
