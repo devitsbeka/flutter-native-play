@@ -119,7 +119,8 @@ export function ShopItemCard({
         onClick={onClick}
         disabled={isPurchased || isLoading}
         className={cn(
-          "w-full p-4 rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
+          "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
+          "p-3 sm:p-4 md:p-5",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -135,14 +136,14 @@ export function ShopItemCard({
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
-          aspectRatio: "1 / 1.25",
+          aspectRatio: "1 / 1.4",
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
       >
         {/* Icon - Top */}
         <motion.div
-          className="w-14 h-14 flex items-center justify-center mb-3"
+          className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-2 sm:mb-3"
           whileHover={{ scale: 1.05 }}
         >
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
@@ -151,15 +152,15 @@ export function ShopItemCard({
         </motion.div>
 
         {/* Name */}
-        <h3 className="text-gray-900 font-bold text-sm leading-tight mb-1">{name}</h3>
+        <h3 className="text-gray-900 font-bold text-xs sm:text-sm leading-tight mb-1">{name}</h3>
         
         {/* Description */}
         {showDescription && description && (
-          <p className="text-gray-500 text-xs line-clamp-3 mb-3 flex-1">{description}</p>
+          <p className="text-gray-500 text-[10px] sm:text-xs line-clamp-2 mb-2 sm:mb-3 flex-1">{description}</p>
         )}
 
         {/* Price / Status - Bottom */}
-        <div className="mt-auto">
+        <div className="mt-auto w-full flex flex-col items-center gap-1.5 sm:gap-2">
           {isPurchased ? (
             <div className="flex items-center justify-center gap-1 text-success font-bold text-xs px-3 py-1.5 rounded-full bg-success/10">
               <Check className="w-4 h-4" />
@@ -168,24 +169,42 @@ export function ShopItemCard({
           ) : isLoading ? (
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : isLari ? (
-            <motion.div
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full"
-              style={{
-                background: "linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1))",
-              }}
-            >
-              <span className="font-bold text-sm text-green-600 dark:text-green-400">₾{price}</span>
-            </motion.div>
+            <>
+              {/* Price Display */}
+              <span className="font-bold text-base sm:text-lg text-green-600 dark:text-green-400">₾{price}</span>
+              {/* Buy Button */}
+              <motion.div
+                className="px-4 py-1.5 rounded-full font-bold text-[10px] sm:text-xs text-white"
+                style={{
+                  background: "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)",
+                  boxShadow: "0 3px 0 #2E7D32",
+                }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97, y: 2 }}
+              >
+                {t('shop.buy')}
+              </motion.div>
+            </>
           ) : (
-            <motion.div
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full"
-              style={{
-                background: "linear-gradient(135deg, rgba(147, 89, 221, 0.15), rgba(147, 89, 221, 0.08))",
-              }}
-            >
-              <img src={currencyIcon!} alt="" className="w-4 h-4" />
-              <span className="font-bold text-sm text-[#9359DD]">{price} {t('shop.buy')}</span>
-            </motion.div>
+            <>
+              {/* Price Display */}
+              <div className="flex items-center justify-center gap-1">
+                <img src={currencyIcon!} alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="font-bold text-sm sm:text-base text-gray-800">{price}</span>
+              </div>
+              {/* Buy Button */}
+              <motion.div
+                className="px-4 py-1.5 rounded-full font-bold text-[10px] sm:text-xs text-white"
+                style={{
+                  background: "linear-gradient(180deg, #9359DD 0%, #7B3FC7 100%)",
+                  boxShadow: "0 3px 0 #5D2DA3",
+                }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97, y: 2 }}
+              >
+                {t('shop.buy')}
+              </motion.div>
+            </>
           )}
         </div>
       </motion.button>
