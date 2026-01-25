@@ -9,6 +9,7 @@ import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import triviaBuzzer from '@/assets/trivia-buzzer.png';
+import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 const MAX_PLAYERS = 8;
 const MIN_PLAYERS_TO_START = 2;
@@ -338,6 +339,9 @@ export const TVLobbyScreenV2: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-4 flex flex-col overflow-hidden relative">
+      {/* Branding Overlay */}
+      <TVBrandingOverlay showLogo showCode />
+
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         {/* Room Name - Editable */}

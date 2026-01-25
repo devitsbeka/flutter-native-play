@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { tvLog, tvLogPhase } from '@/utils/tvDebug';
+import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 export const TVCountdownScreenV2: React.FC = () => {
   const { players, categoryName, categoryIcon, isHost, startPlaying, roundNumber } = useTVGame();
@@ -45,7 +46,10 @@ export const TVCountdownScreenV2: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6 overflow-hidden relative">
+      {/* Branding Overlay */}
+      <TVBrandingOverlay showLogo showCode />
+
       {/* Category info - moved up */}
       {categoryName && (
         <motion.div
