@@ -281,10 +281,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     try {
-      // Get expected count from DB (authoritative source)
+      // Get session info for suggester check
       const { data: session, error: sessionError } = await supabase
         .from('tv_sessions')
-        .select('active_player_count, is_paired, current_round_suggester_id')
+        .select('is_paired, current_round_suggester_id')
         .eq('id', current.sessionId)
         .single();
 
@@ -293,12 +293,31 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      const dbPlayerCount = session.active_player_count || 0;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
       
-      // If there's a suggester, they skip this round - reduce expected count by 1
-      let expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
+      // NEW: Count only ACTIVE non-host players from tv_players table
+      // This allows the game to advance without waiting for players whose screens are locked
+      const { count: activePlayerCount, error: playerError } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', current.sessionId)
+        .eq('is_active', true)
+        .eq('is_host', false);
+
+      if (playerError) {
+        console.error('[checkAndAdvanceIfAllAnswered] Error counting active players:', playerError);
+        return;
+      }
+
+      let expectedCount = activePlayerCount || 0;
+      
+      // For paired sessions, ensure minimum of 1 (host is also answering)
+      if (isPaired && expectedCount === 0) {
+        expectedCount = 1;
+      }
+      
+      // If there's a suggester and they're an active player, reduce expected count by 1
       if (suggesterId) {
         expectedCount = Math.max(0, expectedCount - 1);
         console.log('[checkAndAdvanceIfAllAnswered] Suggester skips round, adjusted count:', expectedCount);
@@ -322,12 +341,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       const actualCount = answerCount || 0;
-      console.log('[checkAndAdvanceIfAllAnswered] DB check:', { actualCount, expectedCount });
+      console.log('[checkAndAdvanceIfAllAnswered] DB check:', { actualCount, expectedCount, activePlayerCount });
 
       // All answered? Advance!
       if (actualCount >= expectedCount) {
-        console.log('[checkAndAdvanceIfAllAnswered] ✅ All players answered!');
-        advanceToReveal('all players answered');
+        console.log('[checkAndAdvanceIfAllAnswered] ✅ All active players answered!');
+        advanceToReveal('all active players answered');
       }
     } catch (err) {
       console.error('[checkAndAdvanceIfAllAnswered] Exception:', err);
@@ -359,6 +378,30 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // Trigger check on every new answer
           if (isHostRef.current) {
             checkAndAdvanceIfAllAnswered();
+          }
+        }
+      )
+      // NEW: Also subscribe to player activity changes
+      // When a player goes inactive, recheck if we can advance
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tv_players',
+          filter: `tv_session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const newData = payload.new as { is_active?: boolean; player_id?: string };
+          const oldData = payload.old as { is_active?: boolean; player_id?: string };
+          
+          // Only trigger check if a player went from active to inactive
+          if (oldData?.is_active === true && newData?.is_active === false) {
+            console.log('[Answers Subscription] Player went inactive:', newData.player_id);
+            if (isHostRef.current) {
+              // Player went inactive - recheck if all ACTIVE players have answered
+              checkAndAdvanceIfAllAnswered();
+            }
           }
         }
       )
