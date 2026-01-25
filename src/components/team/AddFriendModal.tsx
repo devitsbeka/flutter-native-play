@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, UserPlus, X, Loader2, Check } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
@@ -25,10 +25,13 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const { searchUsers, sendFriendRequest, friends } = useFriends();
 
-  // Get friend IDs for filtering
-  const friendIds = new Set(friends.map(f => f.friendId));
+  // Memoize friend IDs to prevent infinite re-renders
+  const friendIds = useMemo(
+    () => new Set(friends.map(f => f.friendId)),
+    [friends]
+  );
 
-  // Debounced search
+  // Debounced search - don't include friendIds in deps to avoid re-render loop
   const performSearch = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -38,12 +41,11 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
     setSearching(true);
     try {
       const results = await searchUsers(query);
-      // Filter out existing friends
-      setSearchResults(results.filter(r => !friendIds.has(r.user_id)));
+      setSearchResults(results);
     } finally {
       setSearching(false);
     }
-  }, [searchUsers, friendIds]);
+  }, [searchUsers]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -103,23 +105,28 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
               >
                 მინიმუმ 2 სიმბოლო შეიყვანე
               </motion.div>
-            ) : searchResults.length === 0 && !searching ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-8 text-muted-foreground text-sm"
-              >
-                მომხმარებელი ვერ მოიძებნა
-              </motion.div>
             ) : (
-              searchResults.map((result) => (
-                <SearchResultCard
-                  key={result.user_id}
-                  result={result}
-                  onSendRequest={() => handleSendRequest(result.user_id)}
-                  isSent={sentRequests.has(result.user_id)}
-                />
-              ))
+              (() => {
+                const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
+                return filteredResults.length === 0 && !searching ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-8 text-muted-foreground text-sm"
+                  >
+                    მომხმარებელი ვერ მოიძებნა
+                  </motion.div>
+                ) : (
+                  filteredResults.map((result) => (
+                    <SearchResultCard
+                      key={result.user_id}
+                      result={result}
+                      onSendRequest={() => handleSendRequest(result.user_id)}
+                      isSent={sentRequests.has(result.user_id)}
+                    />
+                  ))
+                );
+              })()
             )}
           </AnimatePresence>
         </div>
