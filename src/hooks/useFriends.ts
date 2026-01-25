@@ -245,7 +245,7 @@ export function useFriends() {
     );
   }, [onlineUsers]);
 
-  const searchUsers = useCallback(async (query: string) => {
+  const searchUsers = async (query: string) => {
     if (!user || query.length < 2) return [];
 
     try {
@@ -262,7 +262,7 @@ export function useFriends() {
       console.error("Error searching users:", error);
       return [];
     }
-  }, [user]);
+  };
 
   const sendFriendRequest = async (friendId: string) => {
     if (!user) return false;
