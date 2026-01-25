@@ -118,6 +118,8 @@ const TVHostController: React.FC = () => {
       'round-intro': 'round-intro',
       'poll-suggest': 'poll-suggest',
       'poll-voting': 'poll-voting',
+      'poll-results': 'poll-results',
+      'category-select': 'category-select',
     };
     return mapping[phase] || 'category-select';
   };
@@ -625,25 +627,8 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // Poll voting phase - with auto-transition to results when timer ends
+  // Poll voting phase - database handles transition to poll-results
   if (localPhase === 'poll-voting') {
-    // If voting ended, show results screen
-    if (votingEnded) {
-      return (
-        <ControllerPollResults
-          sessionId={sessionId || ''}
-          userId={user?.id || ''}
-          nickname={nickname}
-          avatarUrl={avatarUrl}
-          onGameStart={() => {
-            tvLog('Game started from poll results');
-            setVotingEnded(false);
-          }}
-        />
-      );
-    }
-    
-    // Otherwise show voting screen with callback
     return (
       <ControllerPollScreen
         sessionId={sessionId || ''}
@@ -651,7 +636,11 @@ const TVHostController: React.FC = () => {
         nickname={nickname}
         avatarUrl={avatarUrl}
         isHost={true}
-        onVotingEnded={() => setVotingEnded(true)}
+        onVotingEnded={() => {
+          // Database status is updated by ControllerPollScreen, 
+          // which triggers realtime update for all clients
+          tvLog('Voting ended, transitioning to poll-results');
+        }}
       />
     );
   }

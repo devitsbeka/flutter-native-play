@@ -99,6 +99,8 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         if (session.poll_duration) {
           setPollDuration(session.poll_duration);
         }
+      } else if (session.status === 'poll-results') {
+        setPollPhase('results');
       } else {
         setPollPhase(null);
       }
@@ -189,6 +191,8 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
             if (session.poll_duration) {
               setPollDuration(session.poll_duration);
             }
+          } else if (session.status === 'poll-results') {
+            setPollPhase('results');
           } else {
             setPollPhase(null);
           }
@@ -341,6 +345,27 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     return true;
   }, [sessionId]);
 
+  // End voting and transition to results phase (host only)
+  const endVoting = useCallback(async () => {
+    if (!sessionId) return false;
+
+    tvLog('[useTVPoll] Ending voting, transitioning to poll-results', { sessionId });
+
+    const { error } = await supabase
+      .from('tv_sessions')
+      .update({
+        status: 'poll-results',
+      })
+      .eq('id', sessionId);
+
+    if (error) {
+      tvLogError('[useTVPoll] Error ending voting', error);
+      return false;
+    }
+
+    return true;
+  }, [sessionId]);
+
   // Initiate poll phase (host only) - called when "New Game" is clicked
   const initiatePoll = useCallback(async () => {
     if (!sessionId) return false;
@@ -456,6 +481,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     removeSuggestion,
     toggleVote,
     startVoting,
+    endVoting,
     initiatePoll,
     finalizePollAndStartGame,
     refetch: fetchPollData,

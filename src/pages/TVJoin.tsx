@@ -9,6 +9,7 @@ import { ControllerReveal } from '@/components/controller/ControllerReveal';
 import { ControllerResults } from '@/components/controller/ControllerResults';
 import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerRoundIntroWaiting';
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
+import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -81,6 +82,12 @@ const { phase, sessionId, questions, leaveSession, myPlayerId, players } = useTV
           nickname={myPlayer?.nickname || 'Player'}
           avatarUrl={myPlayer?.avatar_url}
           isHost={false}
+        />
+      );
+    case 'poll-results':
+      return (
+        <ControllerPollResultsGuest
+          sessionId={sessionId || ''}
         />
       );
     case 'round-intro':
