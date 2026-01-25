@@ -100,6 +100,7 @@ const TVJoinContent: React.FC = () => {
           nickname={myPlayer?.nickname || 'Player'}
           avatarUrl={myPlayer?.avatar_url}
           isHost={false}
+          contextPhase={effectivePhase}
         />
       );
     case 'poll-results':

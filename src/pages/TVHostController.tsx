@@ -636,6 +636,7 @@ const TVHostController: React.FC = () => {
         nickname={nickname}
         avatarUrl={avatarUrl}
         isHost={true}
+        contextPhase={`poll-${localPhase.replace('poll-', '')}`}
       />
     );
   }
@@ -649,6 +650,7 @@ const TVHostController: React.FC = () => {
         nickname={nickname}
         avatarUrl={avatarUrl}
         isHost={true}
+        contextPhase="poll-voting"
         onVotingEnded={() => {
           // Database status is updated by ControllerPollScreen, 
           // which triggers realtime update for all clients
