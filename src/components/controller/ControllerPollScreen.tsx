@@ -66,6 +66,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     removeSuggestion,
     toggleVote,
     startVoting,
+    endVoting,
   } = useTVPoll({
     sessionId,
     userId,
@@ -102,13 +103,16 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     return () => clearInterval(interval);
   }, [pollPhase, pollStartTime, pollDuration]);
 
-  // Auto-trigger voting end callback when timer expires (host only)
+  // Auto-trigger voting end when timer expires (host only)
+  // This updates the database so all clients see the transition
   useEffect(() => {
     if (pollPhase === 'voting' && timeRemaining === 0 && isHost && !hasEndedRef.current) {
       hasEndedRef.current = true;
+      // Update database status to poll-results - this triggers realtime for all clients
+      endVoting();
       onVotingEnded?.();
     }
-  }, [pollPhase, timeRemaining, isHost, onVotingEnded]);
+  }, [pollPhase, timeRemaining, isHost, onVotingEnded, endVoting]);
 
   // Reset ref when phase changes
   useEffect(() => {
