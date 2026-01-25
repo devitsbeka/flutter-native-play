@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Vote, 
@@ -44,6 +44,7 @@ interface ControllerPollScreenProps {
   avatarUrl?: string;
   isHost: boolean;
   onVotingEnded?: () => void; // Callback when voting timer expires (host only)
+  contextPhase?: string; // Phase from parent context - used as primary source of truth
 }
 
 const MAX_VOTES = 3;
@@ -55,6 +56,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   avatarUrl,
   isHost,
   onVotingEnded,
+  contextPhase,
 }) => {
   const {
     suggestions,
@@ -88,6 +90,19 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   
   // Track if voting has ended (for auto-transition)
   const hasEndedRef = useRef(false);
+
+  // Derive effective poll phase from context phase OR hook phase
+  // Context phase is more reliable for guests as it comes from TVGameContext
+  const effectivePollPhase = useMemo(() => {
+    // If context tells us we're in voting, trust it
+    if (contextPhase === 'poll-voting') return 'voting';
+    if (contextPhase === 'poll-suggest') return 'suggest';
+    if (contextPhase === 'poll-results') return 'results';
+    // Otherwise fall back to hook's pollPhase
+    return pollPhase;
+  }, [contextPhase, pollPhase]);
+
+  console.log('[ControllerPollScreen] Phase debug:', { contextPhase, pollPhase, effectivePollPhase });
 
   // Calculate time remaining for voting phase
   useEffect(() => {
@@ -294,8 +309,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   });
 
   // If poll phase is results, don't render this component - let parent handle redirect
-  // This handles the case where pollPhase updates before contextPhase
-  if (pollPhase === 'results') {
+  // This handles the case where effectivePollPhase updates before contextPhase
+  if (effectivePollPhase === 'results') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
         <Loader2 className="w-8 h-8 text-purple-300 animate-spin mb-4" />
@@ -305,7 +320,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   }
 
   // Suggestion phase
-  if (pollPhase === 'suggest') {
+  if (effectivePollPhase === 'suggest') {
     // Category picker modal
     if (showCategoryPicker) {
       return (
@@ -556,7 +571,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   }
 
   // Voting phase
-  if (pollPhase === 'voting') {
+  if (effectivePollPhase === 'voting') {
     const votingEnded = timeRemaining === 0;
 
     // If voting ended, show brief transition state while waiting for database update
