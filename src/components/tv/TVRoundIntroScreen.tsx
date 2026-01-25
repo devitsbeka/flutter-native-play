@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
-import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 interface TVRoundIntroScreenProps {
@@ -40,17 +39,6 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
       </div>
-
-      {/* 3D TV Icon with glow */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.5, y: -30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-        className="mb-4 relative"
-      >
-        <div className="absolute inset-0 bg-purple-400/30 blur-2xl rounded-full scale-150" />
-        <img src={retroTvIcon} alt="TV" className="w-20 h-20 sm:w-24 sm:h-24 object-contain relative z-10" />
-      </motion.div>
 
       {/* Round Progress Badge */}
       <motion.div
