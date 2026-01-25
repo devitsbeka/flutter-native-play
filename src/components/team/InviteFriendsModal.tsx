@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { 
@@ -117,7 +117,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedLink = encodeURIComponent(appLink);
 
-  // Stable search function - don't include friendIds in deps
+  // Ref to hold stable searchUsers function
+  const searchUsersRef = useRef(searchUsers);
+  searchUsersRef.current = searchUsers;
+
+  // Stable search function
   const performSearch = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -126,13 +130,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
     setSearching(true);
     try {
-      const results = await searchUsers(query);
+      const results = await searchUsersRef.current(query);
       setSearchResults(results);
     } finally {
       setSearching(false);
     }
-  }, [searchUsers]);
+  }, []);
 
+  // Effect only depends on searchQuery, not performSearch
   useEffect(() => {
     const timer = setTimeout(() => {
       performSearch(searchQuery);
