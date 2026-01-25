@@ -136,7 +136,7 @@ export function ShopItemCard({
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
-          aspectRatio: "1 / 1.3",
+          aspectRatio: "1 / 1.45",
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
