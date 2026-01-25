@@ -295,7 +295,7 @@ export function useShopData() {
     const GEMS_ITEMS: ShopItem[] = [
       {
         id: "gems_100",
-        name: `100 ${t("common.gems")}`,
+        name: "100",
         description: t("shop.smallPackage"),
         price: 2,
         currency: "lari",
@@ -305,7 +305,7 @@ export function useShopData() {
       },
       {
         id: "gems_500",
-        name: `500 ${t("common.gems")}`,
+        name: "500",
         description: t("shop.mediumPackage"),
         price: 8,
         currency: "lari",
@@ -315,7 +315,7 @@ export function useShopData() {
       },
       {
         id: "gems_1500",
-        name: `1500 ${t("common.gems")}`,
+        name: "1500",
         description: `${t("shop.largePackage")} +20%`,
         price: 20,
         currency: "lari",
@@ -328,7 +328,7 @@ export function useShopData() {
       },
       {
         id: "gems_5000",
-        name: `5000 ${t("common.gems")}`,
+        name: "5000",
         description: `${t("shop.megaPackage")} +40%`,
         price: 60,
         currency: "lari",
