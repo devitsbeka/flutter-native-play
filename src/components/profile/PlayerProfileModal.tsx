@@ -58,15 +58,15 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const [chatOpen, setChatOpen] = useState(false);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
 
-  // Navigate to team page with trivia/collection ID to play
+  // Navigate to trivia/collection lobby pages
   const handlePlayTrivia = (triviaId: string) => {
     onClose();
-    navigate(`/team?playTrivia=${triviaId}`);
+    navigate(`/trivia/${triviaId}`);
   };
 
   const handlePlayCollection = (collectionId: string) => {
     onClose();
-    navigate(`/team?playCollection=${collectionId}`);
+    navigate(`/collection/${collectionId}`);
   };
 
   const getFlagEmoji = (countryCode: string) => {
