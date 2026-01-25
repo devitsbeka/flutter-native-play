@@ -29,6 +29,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signInWithUsername: (username: string, password: string) => Promise<{ data: any; error: any }>;
   signInWithApple: () => Promise<{ data: any; error: any }>;
+  signInWithGoogle: () => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ data?: any; error: any }>;
   fetchProfile: (userId: string) => Promise<Profile | null>;
@@ -284,6 +285,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://mytrivia.io/',
+        },
+      });
+      
+      return { data, error };
+    } catch (error: any) {
+      console.error('Google Sign In error:', error);
+      return { data: null, error };
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (!error) {
@@ -326,6 +343,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signInWithUsername,
         signInWithApple,
+        signInWithGoogle,
         signOut,
         updateProfile,
         fetchProfile,
