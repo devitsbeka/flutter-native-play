@@ -669,9 +669,9 @@ export const en: KaTranslations = {
     vipBenefitsWeek: "2xp / unlimited play",
     vipBenefitsMonth: "All VIP benefits for 30 days",
     deletesWrongAnswers: "Removes 2 wrong answers",
-    freezesTime: "Time freezes for 10 seconds",
+    freezesTime: "Time freezes for 5 seconds",
     replacesQuestion: "Replaces question with a new one",
-    addsTime: "Adds 10 seconds",
+    addsTime: "Adds 5 seconds",
     exchangedCoins: "Exchanged {coins} coins → {gems} 💎",
     exchangedGems: "Exchanged {gems} gems → {coins} 🪙",
     // Additional shop translations

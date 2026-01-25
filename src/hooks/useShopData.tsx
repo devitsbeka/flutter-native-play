@@ -110,7 +110,7 @@ export function useShopData() {
       },
       {
         id: "mega_power_bundle",
-        name: t("shop.megaPowers"),
+        name: t("shop.mediumPackage"),
         description: `5x ${t("shop.allPowers")}`,
         price: 10,
         currency: "gems",

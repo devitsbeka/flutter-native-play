@@ -48,7 +48,7 @@ const POWER_UP_INFO: PowerUpInfo[] = [
   {
     type: "time-drain",
     name: "დრო",
-    description: "ამატებს 10 წამს",
+    description: "ამატებს 5 წამს",
   },
 ];
 
