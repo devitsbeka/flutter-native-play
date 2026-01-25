@@ -58,6 +58,9 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const [chatOpen, setChatOpen] = useState(false);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
 
+  // Non-friends can only see avatar, name, add friend button, and public content
+  const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
+
   // Navigate to trivia/collection lobby pages
   const handlePlayTrivia = (triviaId: string) => {
     onClose();
@@ -167,46 +170,51 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                     {data.profile.nickname}
                   </h3>
                   
-                  <div className="mt-1">
-                    <span className="text-sm text-muted-foreground">
-                      {data.stats.totalPoints.toLocaleString()} ქულა
-                    </span>
-                  </div>
+                  {/* Points - only visible to friends/self */}
+                  {canSeePrivateInfo && (
+                    <div className="mt-1">
+                      <span className="text-sm text-muted-foreground">
+                        {data.stats.totalPoints.toLocaleString()} ქულა
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Stats Row */}
-                  <div className="flex items-center gap-4 mt-4 p-3 rounded-xl bg-card/50">
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1">
-                        <Gamepad2 className="w-4 h-4 text-primary" />
-                        <span className="font-bold text-foreground">{data.stats.gamesPlayed}</span>
+                  {/* Stats Row - only visible to friends/self */}
+                  {canSeePrivateInfo && (
+                    <div className="flex items-center gap-4 mt-4 p-3 rounded-xl bg-card/50">
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-1">
+                          <Gamepad2 className="w-4 h-4 text-primary" />
+                          <span className="font-bold text-foreground">{data.stats.gamesPlayed}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">თამაშები</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">თამაშები</span>
-                    </div>
-                    <div className="w-px h-8 bg-border" />
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1">
-                        <Trophy className="w-4 h-4 text-primary" />
-                        <span className="font-bold text-foreground">{data.stats.gamesWon}</span>
+                      <div className="w-px h-8 bg-border" />
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-1">
+                          <Trophy className="w-4 h-4 text-primary" />
+                          <span className="font-bold text-foreground">{data.stats.gamesWon}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">მოგებული</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">მოგებული</span>
-                    </div>
-                    <div className="w-px h-8 bg-border" />
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1">
-                        <Target className="w-4 h-4 text-primary" />
-                        <span className="font-bold text-foreground">{data.stats.winRate}%</span>
+                      <div className="w-px h-8 bg-border" />
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-1">
+                          <Target className="w-4 h-4 text-primary" />
+                          <span className="font-bold text-foreground">{data.stats.winRate}%</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">მოგება</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">მოგება</span>
-                    </div>
-                    <div className="w-px h-8 bg-border" />
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1">
-                        <Flame className="w-4 h-4 text-primary" />
-                        <span className="font-bold text-foreground">{data.stats.bestStreak}</span>
+                      <div className="w-px h-8 bg-border" />
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-1">
+                          <Flame className="w-4 h-4 text-primary" />
+                          <span className="font-bold text-foreground">{data.stats.bestStreak}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">სტრიქი</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">სტრიქი</span>
                     </div>
-                  </div>
+                  )}
 
                   {/* Action Buttons */}
                   {!data.isCurrentUser && (
@@ -229,31 +237,41 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           გაგზავნილია
                         </ChunkyButton>
                       )}
-                      {data.friendshipStatus === 'accepted' && (
-                        <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
-                          <img src={iconChatBubble} alt="" className="w-6 h-6 mr-1" />
-                          შეტყობინება
+                      {data.friendshipStatus === 'pending' && (
+                        <ChunkyButton variant="primary" size="sm" className="flex-1">
+                          <Check className="w-4 h-4 mr-1" />
+                          მიღება
                         </ChunkyButton>
                       )}
-                      <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
-                        <Swords className="w-4 h-4 mr-1" />
-                        გამოწვევა
-                      </ChunkyButton>
+                      {data.friendshipStatus === 'accepted' && (
+                        <>
+                          <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
+                            <img src={iconChatBubble} alt="" className="w-6 h-6 mr-1" />
+                            შეტყობინება
+                          </ChunkyButton>
+                          <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
+                            <Swords className="w-4 h-4 mr-1" />
+                            გამოწვევა
+                          </ChunkyButton>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Tabs - Trivias, Collections, Trophies */}
+                {/* Tabs - Trivias, Collections, Trophies (trophies only for friends) */}
                 <Tabs defaultValue="trivias" className="px-4 pb-4">
-                  <TabsList className="grid w-full grid-cols-2 mb-4 h-auto py-2">
+                  <TabsList className={`grid w-full mb-4 h-auto py-2 ${canSeePrivateInfo ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrivia} alt="" className="w-9 h-9" />
                       <span className="text-xs">ტრივიები</span>
                     </TabsTrigger>
-                    <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
-                      <img src={iconTrophy} alt="" className="w-9 h-9" />
-                      <span className="text-xs">ჯილდოები</span>
-                    </TabsTrigger>
+                    {canSeePrivateInfo && (
+                      <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
+                        <img src={iconTrophy} alt="" className="w-9 h-9" />
+                        <span className="text-xs">ჯილდოები</span>
+                      </TabsTrigger>
+                    )}
                   </TabsList>
 
                   <TabsContent value="trophies">
@@ -354,8 +372,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   </TabsContent>
                 </Tabs>
 
-                {/* Recent Interactions */}
-                {!data.isCurrentUser && data.interactions.length > 0 && (
+                {/* Recent Interactions - only for friends */}
+                {canSeePrivateInfo && !data.isCurrentUser && data.interactions.length > 0 && (
                   <div className="px-4 pb-6">
                     <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
