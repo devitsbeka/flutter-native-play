@@ -60,6 +60,36 @@ serve(async (req) => {
       );
     }
 
+    // Product configuration with proper SKU and descriptions
+    const productConfigs: Record<string, { name: string; description: string; sku: string }> = {
+      gems_100: {
+        name: "100 ალმასი - პატარა პაკეტი",
+        description: "100 ალმასის შეძენა MyTrivia-ში. გამოიყენეთ სუპერ ძალების გასააქტიურებლად!",
+        sku: "GEMS_100_GEL",
+      },
+      gems_500: {
+        name: "500 ალმასი - საშუალო პაკეტი", 
+        description: "500 ალმასის შეძენა MyTrivia-ში. იდეალური მოთამაშეებისთვის!",
+        sku: "GEMS_500_GEL",
+      },
+      gems_1500: {
+        name: "1500 ალმასი - დიდი პაკეტი (+20% ბონუსი)",
+        description: "1500 ალმასის შეძენა MyTrivia-ში. პოპულარული არჩევანი 20% ბონუსით!",
+        sku: "GEMS_1500_GEL",
+      },
+      gems_5000: {
+        name: "5000 ალმასი - მეგა პაკეტი (+40% ბონუსი)",
+        description: "5000 ალმასის შეძენა MyTrivia-ში. საუკეთესო ფასი 40% ბონუსით!",
+        sku: "GEMS_5000_GEL",
+      },
+    };
+
+    const productConfig = productConfigs[productId] || {
+      name: productName || `${gems} ალმასი`,
+      description: `${gems} ალმასის შეძენა MyTrivia-ში`,
+      sku: `GEMS_${gems}_GEL`,
+    };
+
     // Get or create Stripe customer
     const { data: profile } = await supabase
       .from("profiles")
@@ -107,7 +137,7 @@ serve(async (req) => {
     // Get origin for success/cancel URLs
     const origin = req.headers.get("origin") || "https://flutter-native-play.lovable.app";
 
-    // Create Stripe Checkout session
+    // Create Stripe Checkout session with enhanced product details
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -116,8 +146,13 @@ serve(async (req) => {
           price_data: {
             currency: "gel",
             product_data: {
-              name: productName || `${gems} ალმასი`,
-              description: `${gems} ალმასის შეძენა`,
+              name: productConfig.name,
+              description: productConfig.description,
+              metadata: {
+                sku: productConfig.sku,
+                gems: gems.toString(),
+                product_id: productId,
+              },
             },
             unit_amount: Math.round(priceGel * 100), // Convert to tetri
           },
@@ -127,11 +162,22 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop/cancel`,
+      locale: "ka", // Georgian locale
       metadata: {
         user_id: userData.user.id,
         product_id: productId,
         gems: gems.toString(),
         purchase_id: purchaseRecord.id,
+        sku: productConfig.sku,
+      },
+      payment_intent_data: {
+        description: productConfig.name,
+        metadata: {
+          user_id: userData.user.id,
+          product_id: productId,
+          gems: gems.toString(),
+          sku: productConfig.sku,
+        },
       },
     });
 
