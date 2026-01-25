@@ -67,6 +67,7 @@ interface TVGameContextType extends TVGameState {
   startGame: (categoryId?: string, userTriviaId?: string) => Promise<void>;
   startPlaying: () => Promise<void>; // Trigger playing phase after countdown
   startNextRound: () => Promise<void>;
+  startDirectSelection: () => Promise<void>; // NEW: Start direct category selection phase
   updateRoomName: (name: string) => Promise<void>;
   updateCategory: (categoryId: string, categoryName: string) => Promise<void>;
   saveRoundHistory: () => Promise<void>;
@@ -1797,6 +1798,63 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [state.sessionId, state.players, isHost, myPlayerId]);
 
+  // Start direct category selection phase (no poll, host picks directly)
+  const startDirectSelection = useCallback(async () => {
+    if (!state.sessionId) return;
+
+    tvLog('Starting direct category selection', { sessionId: state.sessionId });
+
+    try {
+      // Clear old queue
+      await supabase
+        .from('tv_session_queue')
+        .delete()
+        .eq('session_id', state.sessionId);
+
+      // Broadcast reset to all players
+      if (presenceChannelRef.current) {
+        await presenceChannelRef.current.send({
+          type: 'broadcast',
+          event: 'RESET_SCORES',
+          payload: {},
+        });
+        tvLog('Broadcasted RESET_SCORES for new game');
+      }
+
+      // Reset local score
+      setMyScore(0);
+      setMyAnswer(null);
+
+      // Update session to category-select phase
+      await supabase
+        .from('tv_sessions')
+        .update({
+          status: 'category-select',
+          current_question_index: 0,
+          questions: null,
+          question_start_time: null,
+          round_number: 1,
+          total_rounds: 1,
+        })
+        .eq('id', state.sessionId);
+
+      // Update local state
+      setState(prev => ({
+        ...prev,
+        phase: 'idle', // Will map to category-select in controller
+        questions: [],
+        currentQuestionIndex: 0,
+        roundNumber: 1,
+        totalRounds: 1,
+        timeRemaining: QUESTION_TIME,
+      }));
+
+      tvLog('Direct selection phase started');
+    } catch (error) {
+      tvLogError('startDirectSelection', error);
+    }
+  }, [state.sessionId]);
+
   // Leave session
   const leaveSession = useCallback(() => {
     if (channelRef.current) {
@@ -1852,6 +1910,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         startGame,
         startPlaying,
         startNextRound,
+        startDirectSelection,
         updateRoomName,
         updateCategory,
         saveRoundHistory,
