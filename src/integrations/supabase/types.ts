@@ -2174,7 +2174,6 @@ export type Database = {
           avatar_url: string | null
           current_round_score: number | null
           id: string
-          is_active: boolean | null
           is_authenticated: boolean | null
           is_host: boolean | null
           is_ready: boolean | null
@@ -2192,7 +2191,6 @@ export type Database = {
           avatar_url?: string | null
           current_round_score?: number | null
           id?: string
-          is_active?: boolean | null
           is_authenticated?: boolean | null
           is_host?: boolean | null
           is_ready?: boolean | null
@@ -2210,7 +2208,6 @@ export type Database = {
           avatar_url?: string | null
           current_round_score?: number | null
           id?: string
-          is_active?: boolean | null
           is_authenticated?: boolean | null
           is_host?: boolean | null
           is_ready?: boolean | null

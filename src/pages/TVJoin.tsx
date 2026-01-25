@@ -11,9 +11,9 @@ import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerR
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
 import { useTVPoll } from '@/hooks/useTVPoll';
-import { useTVPlayerActivity } from '@/hooks/useTVPlayerActivity';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
+
 const TVJoinContent: React.FC = () => {
   const { code: urlCode, sessionId: urlSessionId } = useParams<{ code?: string; sessionId?: string }>();
   const [searchParams] = useSearchParams();
@@ -37,13 +37,6 @@ const TVJoinContent: React.FC = () => {
     nickname: myPlayer?.nickname || 'Player',
     avatarUrl: myPlayer?.avatar_url,
     isHost: false,
-  });
-
-  // Track player activity (screen lock/unlock) for auto-advance optimization
-  useTVPlayerActivity({
-    sessionId: sessionId || null,
-    playerId: myPlayerId || null,
-    enabled: isJoined && !!sessionId && !!myPlayerId,
   });
 
   // If we have a session, we're joined
