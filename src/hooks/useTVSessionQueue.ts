@@ -213,6 +213,30 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     [sessionId, queue.length]
   );
 
+  const addToQueue = useCallback(
+    async (item: {
+      source_type: "category" | "random" | "user_trivia";
+      category_id?: string | null;
+      category_name?: string | null;
+      icon_slug?: string | null;
+      user_trivia_id?: string | null;
+    }) => {
+      if (!sessionId) return;
+      const nextPos = queue.length;
+      await supabase.from("tv_session_queue").insert({
+        session_id: sessionId,
+        position: nextPos,
+        source_type: item.source_type,
+        category_id: item.category_id || null,
+        category_name: item.category_name || null,
+        icon_slug: item.icon_slug || null,
+        user_trivia_id: item.user_trivia_id || null,
+      });
+      // realtime will refetch
+    },
+    [sessionId, queue.length]
+  );
+
   const removeFromQueue = useCallback(
     async (itemId: string) => {
       if (!sessionId) return;
@@ -243,6 +267,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     usingRoomFallback,
     refetch,
     addCategoryToQueue,
+    addToQueue,
     removeFromQueue,
   };
 }
