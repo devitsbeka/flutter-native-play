@@ -258,6 +258,23 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     [sessionId]
   );
 
+  const reorderQueue = useCallback(
+    async (newOrder: TVQueueItem[]) => {
+      if (!sessionId) return;
+      
+      // Optimistic update
+      setQueue(newOrder);
+      
+      // Sync positions to database
+      await Promise.all(
+        newOrder.map((item, index) =>
+          supabase.from("tv_session_queue").update({ position: index }).eq("id", item.id)
+        )
+      );
+    },
+    [sessionId]
+  );
+
   const hasQueue = useMemo(() => queue.length > 0, [queue.length]);
 
   return {
@@ -269,5 +286,6 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     addCategoryToQueue,
     addToQueue,
     removeFromQueue,
+    reorderQueue,
   };
 }

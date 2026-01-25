@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Smartphone, QrCode } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 /**
  * TV Pairing Screen V3 - Shows a 4-digit code for phone pairing
@@ -13,7 +14,10 @@ export const TVPairingScreenV3: React.FC = () => {
   const fourDigitCode = (code || '').padStart(4, '0');
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center p-6 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center p-6 overflow-hidden relative">
+      {/* Code overlay in top-right (logo is already centered in main content) */}
+      <TVBrandingOverlay showLogo={false} showCode />
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(20)].map((_, i) => (

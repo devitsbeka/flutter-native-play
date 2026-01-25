@@ -5,6 +5,7 @@ import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Check, X, Crown, Coins, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 // Calculate correct/incorrect from player's lastAnswerCorrect history
 // For now, we'll use the score as a proxy since we don't track per-question history
@@ -78,7 +79,10 @@ export const TVResultsScreenV2: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex gap-4 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex gap-4 overflow-hidden relative">
+      {/* Branding Overlay */}
+      <TVBrandingOverlay showLogo showCode />
+
       {/* Left Side - Podium */}
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         {/* Title */}

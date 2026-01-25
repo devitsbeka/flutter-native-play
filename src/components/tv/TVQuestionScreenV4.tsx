@@ -10,6 +10,7 @@ import { TVRoundQueueIndicator } from './TVRoundQueueIndicator';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -56,6 +57,9 @@ export const TVQuestionScreenV4: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden relative">
+      {/* Code only overlay (no logo during gameplay) */}
+      <TVBrandingOverlay showLogo={false} showCode compact />
+
       {/* Debug Overlay - only shows in development */}
       <TVDebugOverlay />
       {/* Question Progress Indicator - Left side */}

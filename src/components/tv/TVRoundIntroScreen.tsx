@@ -4,6 +4,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import { TVBrandingOverlay } from './TVBrandingOverlay';
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -31,6 +32,9 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Branding Overlay */}
+      <TVBrandingOverlay showLogo showCode />
+
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />

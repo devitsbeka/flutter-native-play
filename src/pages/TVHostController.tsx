@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw } from 'lucide-react';
+import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw, GripVertical } from 'lucide-react';
 import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -73,7 +73,7 @@ const TVHostController: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(null);
 
   // Multi-round queue support - now with room fallback
-  const { queue, addCategoryToQueue, addToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId || null, roomId);
+  const { queue, addCategoryToQueue, addToQueue, removeFromQueue, reorderQueue, hasQueue } = useTVSessionQueue(sessionId || null, roomId);
 
   // UI-only local state (not game logic)
   const [loading, setLoading] = useState(true);
@@ -831,40 +831,52 @@ const TVHostController: React.FC = () => {
               </div>
             </button>
           ) : (
-            <div className="space-y-2">
+            <Reorder.Group 
+              axis="y" 
+              values={queue} 
+              onReorder={reorderQueue}
+              className="space-y-2"
+            >
               {queue.map((item, index) => (
-                <motion.div
+                <Reorder.Item
                   key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/10"
+                  value={item}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/10 cursor-grab active:cursor-grabbing"
+                  whileDrag={{ scale: 1.02, boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
                 >
+                  {/* Drag handle */}
+                  <GripVertical className="w-5 h-5 text-purple-400 shrink-0" />
+                  
                   <span className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs text-purple-200 font-bold">
                     {index + 1}
                   </span>
                   <span className="flex-1 text-white font-medium">{item.category_name}</span>
                   
-                  {/* Replace button */}
-                  <button
-                    onClick={() => handleReplaceQueueItem(item.id)}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                    title="ჩანაცვლება"
+                  {/* Replace button - stop drag propagation */}
+                  <div 
+                    onPointerDown={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1"
                   >
-                    <RefreshCw className="w-4 h-4 text-purple-300" />
-                  </button>
-                  
-                  {/* Remove button */}
-                  <button
-                    onClick={() => removeFromQueue(item.id)}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/30 transition-colors"
-                    title="წაშლა"
-                  >
-                    <X className="w-4 h-4 text-white/60 hover:text-red-300" />
-                  </button>
-                </motion.div>
+                    <button
+                      onClick={() => handleReplaceQueueItem(item.id)}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                      title="ჩანაცვლება"
+                    >
+                      <RefreshCw className="w-4 h-4 text-purple-300" />
+                    </button>
+                    
+                    {/* Remove button */}
+                    <button
+                      onClick={() => removeFromQueue(item.id)}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-red-500/30 transition-colors"
+                      title="წაშლა"
+                    >
+                      <X className="w-4 h-4 text-white/60 hover:text-red-300" />
+                    </button>
+                  </div>
+                </Reorder.Item>
               ))}
-            </div>
+            </Reorder.Group>
           )}
         </motion.div>
 
