@@ -219,7 +219,7 @@ export function CategoryPickerModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className={`flex-1 overflow-y-auto p-4 ${selectedItem ? 'pb-32' : ''}`}>
           {view === "main" && (
             <div className="space-y-3 max-w-md mx-auto">
               {/* Random option */}
