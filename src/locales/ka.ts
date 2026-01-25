@@ -135,8 +135,8 @@ export const ka = {
       hint: "თუ კითხვა ძალიან რთულია, სცადე ახალი",
     },
     timeDrain: {
-      name: "დრო+",
-      description: "ამატებს 5 წამს",
+      name: "დრო",
+      description: "ამატებს 10 წამს",
       hint: "კარგია ბოლო წამებში!",
     },
     addPower: {
@@ -618,7 +618,7 @@ export const ka = {
   // ==========================================
   shop: {
     title: "მაღაზია",
-    starterPack: "სტარტერ პაკეტი",
+    starterPack: "საწყისი",
     forBeginners: "დამწყებთათვის",
     megaPowers: "მეგა ძალები",
     winMoreGames: "მოიგე მეტი თამაში",
@@ -631,9 +631,9 @@ export const ka = {
     coins: "მონეტები",
     gems: "ალმასები",
     withBonuses: "ბონუსებით",
-    smallPackage: "მცირე პაკეტი",
-    mediumPackage: "საშუალო პაკეტი",
-    largePackage: "დიდი პაკეტი",
+    smallPackage: "მცირე",
+    mediumPackage: "საშუალო",
+    largePackage: "დიდი",
     megaPackage: "მეგა პაკეტი",
     hugePackage: "უზარმაზარი",
     allPowers: "ყველა ძალა",
@@ -1058,7 +1058,7 @@ export const ka = {
   // Featured Carousel / მთავარი კარუსელი
   // ==========================================
   featured: {
-    starterPack: "სტარტერ პაკეტი",
+    starterPack: "საწყისი",
     starterPackDesc: "2x ყველა ძალა • 200 მონეტა • იდეალური დამწყებთათვის",
     megaPowers: "მეგა ძალები",
     megaPowersDesc: "5x ყველა ძალა • საუკეთესო მოთამაშეებისთვის",
