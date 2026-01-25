@@ -18,28 +18,19 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get Stripe keys from app_settings
-    const { data: stripeKeyData } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "stripe_secret_key")
-      .single();
+    // Get Stripe keys from environment
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
-    const { data: webhookSecretData } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "stripe_webhook_secret")
-      .single();
-
-    if (!stripeKeyData?.value) {
-      console.error("Stripe key not configured");
+    if (!stripeSecretKey) {
+      console.error("Stripe key not configured in environment");
       return new Response(
         JSON.stringify({ error: "Stripe not configured" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const stripe = new Stripe(stripeKeyData.value, {
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
 
@@ -49,12 +40,12 @@ serve(async (req) => {
     let event: Stripe.Event;
 
     // Verify webhook signature if secret is configured
-    if (webhookSecretData?.value && signature) {
+    if (webhookSecret && signature) {
       try {
         event = stripe.webhooks.constructEvent(
           body,
           signature,
-          webhookSecretData.value
+          webhookSecret
         );
       } catch (err) {
         console.error("Webhook signature verification failed:", err);

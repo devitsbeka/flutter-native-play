@@ -15,15 +15,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get Stripe key from app_settings
-    const { data: settingData, error: settingError } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "stripe_secret_key")
-      .single();
-
-    if (settingError || !settingData?.value) {
-      console.error("Stripe key not configured:", settingError);
+    // Get Stripe key from environment
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      console.error("Stripe key not configured in environment");
       return new Response(
         JSON.stringify({ error: "STRIPE_NOT_CONFIGURED" }),
         { 
@@ -33,7 +28,7 @@ serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(settingData.value, {
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
 
