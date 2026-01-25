@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Sparkles, Zap, Gift, Image, Ban, Star } from "lucide-react";
+import { Sparkles, Zap, Gift, Image, Ban, Star, Loader2 } from "lucide-react";
 import crown3d from "@/assets/icons/crown-3d.png";
-import { useNavigate } from "react-router-dom";
 import { VIP_BENEFITS } from "@/hooks/useVipStatus";
+import { useProPurchase } from "@/hooks/useProPurchase";
 
 const BENEFIT_ICONS: Record<string, React.ReactNode> = {
   "⭐": <Star className="w-5 h-5 text-amber-500" />,
@@ -14,7 +14,11 @@ const BENEFIT_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function ShopProSidebar() {
-  const navigate = useNavigate();
+  const { initiateProCheckout, isProcessing } = useProPurchase();
+
+  const handleActivatePro = async () => {
+    await initiateProCheckout("pro");
+  };
 
   return (
     <div 
@@ -115,14 +119,15 @@ export function ShopProSidebar() {
 
       {/* CTA Button */}
       <motion.button 
-        className="w-full py-3.5 rounded-xl font-bold text-white relative overflow-hidden"
+        className="w-full py-3.5 rounded-xl font-bold text-white relative overflow-hidden disabled:opacity-70"
         style={{ 
           background: 'linear-gradient(135deg, #9333EA 0%, #D97706 50%, #FBBF24 100%)',
           boxShadow: '0 4px 20px rgba(147,51,234,0.4), 0 2px 8px rgba(251,191,36,0.3)'
         }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => navigate('/vip')}
+        whileHover={{ scale: isProcessing ? 1 : 1.02 }}
+        whileTap={{ scale: isProcessing ? 1 : 0.98 }}
+        onClick={handleActivatePro}
+        disabled={isProcessing}
       >
         {/* Button shimmer */}
         <motion.div 
@@ -153,8 +158,17 @@ export function ShopProSidebar() {
         />
         
         <span className="relative z-10 flex items-center justify-center gap-2">
-          <img src={crown3d} alt="Crown" className="w-6 h-6 object-contain" />
-          PRO-ს გააქტიურება
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              მუშავდება...
+            </>
+          ) : (
+            <>
+              <img src={crown3d} alt="Crown" className="w-6 h-6 object-contain" />
+              PRO-ს გააქტიურება
+            </>
+          )}
         </span>
       </motion.button>
 

@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Star, Crown, Zap, Palette, Gift, Shield, Sparkles, RotateCcw } from "lucide-react";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+import { Crown, Zap, Palette, Gift, Shield, Sparkles, RotateCcw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { useInAppPurchases } from "@/hooks/useInAppPurchases";
 import { useVipStatus } from "@/hooks/useVipStatus";
 
 const vipBenefits = [
@@ -51,7 +50,7 @@ const vipBenefits = [
 export default function VIP() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { purchase, restorePurchases, purchasing } = useInAppPurchases();
+  const { restorePurchases } = useInAppPurchases();
   const { isVip, getDaysRemaining } = useVipStatus();
   const [restoring, setRestoring] = useState(false);
 

@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Sparkles, Users, ChevronRight, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Crown, Sparkles, Users, ChevronRight, Check, Loader2 } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useMemo, useState } from "react";
 import shopBgVideo from "@/assets/shopbg.mp4";
+import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 
 // White particle component for sidebar
 function SidebarParticle({ delay, left }: { delay: number; left: number }) {
@@ -63,14 +63,21 @@ const SIMPLIFIED_TIERS = [
 
 type SimplifiedTier = typeof SIMPLIFIED_TIERS[number]["id"];
 
+// Map sidebar tier IDs to Stripe tier IDs
+const SIDEBAR_TO_STRIPE_TIER: Record<SimplifiedTier, ProTierId> = {
+  solo: "pro",
+  family: "pro_plus",
+};
+
 export function ShopRightSidebar() {
-  const navigate = useNavigate();
   const { subscription } = useVipStatus();
+  const { initiateProCheckout, isProcessing } = useProPurchase();
   const currentTier = subscription?.vip_tier as SimplifiedTier | undefined;
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
 
-  const handleUpgrade = (tierId: SimplifiedTier) => {
-    navigate('/vip', { state: { selectedTier: tierId } });
+  const handleUpgrade = async (tierId: SimplifiedTier) => {
+    const stripeTierId = SIDEBAR_TO_STRIPE_TIER[tierId];
+    await initiateProCheckout(stripeTierId);
   };
 
   // Generate particles
@@ -146,8 +153,10 @@ export function ShopRightSidebar() {
                 style={{
                   background: tier.gradient,
                   boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 20px rgba(0,0,0,0.4)`,
+                  opacity: isProcessing ? 0.7 : 1,
+                  pointerEvents: isProcessing ? 'none' : 'auto',
                 }}
-                onClick={() => !isCurrentTier && handleUpgrade(tier.id)}
+                onClick={() => !isCurrentTier && !isProcessing && handleUpgrade(tier.id)}
               >
                 {/* Popular Badge */}
                 {tier.popular && !isCurrentTier && (
@@ -240,6 +249,11 @@ export function ShopRightSidebar() {
                               <>
                                 <Check className="w-4 h-4" />
                                 აქტიურია
+                              </>
+                            ) : isProcessing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                მუშავდება...
                               </>
                             ) : (
                               <>

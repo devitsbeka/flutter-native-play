@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { Crown, Users, Sparkles, Zap, Shield, Gift, Star, Loader2, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProInviteFriendsModal } from "./ProInviteFriendsModal";
-import { useInAppPurchases, IAP_PRODUCTS } from "@/hooks/useInAppPurchases";
+import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { format } from "date-fns";
 import { FriendInvitesTracker } from "./FriendInvitesTracker";
-
+import { useSearchParams } from "react-router-dom";
 export type ProTier = 'pro' | 'pro_plus' | 'pro_master' | 'standard';
 
 interface TierConfig {
@@ -83,34 +83,42 @@ interface ProPlansSectionProps {
   subscriptionExpiryDate?: string;
 }
 
-const TIER_PRODUCT_IDS: Record<ProTier, string> = {
-  'pro': IAP_PRODUCTS.VIP_MONTHLY,
-  'pro_plus': IAP_PRODUCTS.VIP_ANNUAL,
-  'pro_master': IAP_PRODUCTS.VIP_ANNUAL,
-  'standard': IAP_PRODUCTS.VIP_MONTHLY,
-};
-
 export function ProPlansSection({ 
   currentTier, 
   friendInvitesRemaining = 0,
   subscriptionStartDate,
   subscriptionExpiryDate
 }: ProPlansSectionProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [purchasedTierName, setPurchasedTierName] = useState("");
-  const { purchase, purchasing } = useInAppPurchases();
+  const { initiateProCheckout, isProcessing: purchasing } = useProPurchase();
+
+  // Handle success callback from Stripe
+  useEffect(() => {
+    const subscriptionStatus = searchParams.get("subscription");
+    if (subscriptionStatus === "success") {
+      setPurchasedTierName("PRO");
+      setShowSuccessModal(true);
+      // Clean up URL params
+      searchParams.delete("subscription");
+      searchParams.delete("session_id");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleUpgrade = async (tier: ProTier) => {
     const tierConfig = PRO_TIERS.find(t => t.id === tier);
     if (!tierConfig) return;
     
-    const productId = TIER_PRODUCT_IDS[tier];
-    const result = await purchase(productId);
+    // Map tier to ProTierId (handle 'standard' as 'pro')
+    const proTierId: ProTierId = tier === "standard" ? "pro" : (tier === "pro_master" ? "pro_plus" : tier as ProTierId);
+    const result = await initiateProCheckout(proTierId);
     
     if (result.success) {
       setPurchasedTierName(tierConfig.nameKa);
-      setShowSuccessModal(true);
+      // Don't show modal here for web - it will show after redirect
     }
   };
 
