@@ -179,7 +179,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20 hover:border-purple-400 transition-all"
               >
                 {category.icon_slug ? (
-                  <QuizCategoryIcon iconSlug={category.icon_slug} className="w-10 h-10" />
+                  <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
                 ) : (
                   <span className="text-2xl">{category.icon}</span>
                 )}
@@ -225,7 +225,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                   {trivia.cover_image ? (
                     <img src={trivia.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
                   ) : trivia.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={trivia.icon_slug} className="w-10 h-10" />
+                    <QuizCategoryIcon iconSlug={trivia.icon_slug} size={40} className="w-10 h-10" />
                   ) : (
                     <Sparkles className="w-10 h-10 text-purple-300" />
                   )}
@@ -274,8 +274,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                   <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
                     {index + 1}
                   </div>
-                  {item.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={item.icon_slug} className="w-10 h-10" />
+                {item.icon_slug ? (
+                  <QuizCategoryIcon iconSlug={item.icon_slug} size={40} className="w-10 h-10" />
                   ) : (
                     <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
                       <Sparkles className="w-5 h-5 text-purple-300" />
