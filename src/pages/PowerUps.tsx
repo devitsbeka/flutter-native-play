@@ -25,6 +25,7 @@ import { PurchaseSuccessModal } from "@/components/shop/PurchaseSuccessModal";
 import { CurrencyExchangeModal } from "@/components/shop/CurrencyExchangeModal";
 import { CurrencyActionModal, CurrencyType } from "@/components/shop/CurrencyActionModal";
 import { BuyCurrencyModal } from "@/components/shop/BuyCurrencyModal";
+import { NotEnoughGemsModal } from "@/components/home/NotEnoughGemsModal";
 
 export default function PowerUps() {
   const navigate = useNavigate();
@@ -61,6 +62,8 @@ export default function PowerUps() {
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>("coins");
   const [successItem, setSuccessItem] = useState({ name: "", quantity: 1 });
+  const [showNotEnoughGemsModal, setShowNotEnoughGemsModal] = useState(false);
+  const [requiredGems, setRequiredGems] = useState(0);
 
   const handleCurrencyPlusClick = (currencyType: CurrencyType) => {
     setSelectedCurrency(currencyType);
@@ -96,7 +99,8 @@ export default function PowerUps() {
     }
 
     if (gems < item.price) {
-      notify.error(t("shop.notEnoughGems"), { icon: "💎" });
+      setRequiredGems(item.price);
+      setShowNotEnoughGemsModal(true);
       playSound("wrong-answer");
       return;
     }
@@ -307,6 +311,13 @@ export default function PowerUps() {
         isOpen={showBuyModal}
         onClose={() => setShowBuyModal(false)}
         currencyType={selectedCurrency}
+      />
+
+      <NotEnoughGemsModal
+        isOpen={showNotEnoughGemsModal}
+        onClose={() => setShowNotEnoughGemsModal(false)}
+        currentGems={gems}
+        requiredGems={requiredGems}
       />
     </MainLayout>
   );

@@ -831,6 +831,8 @@ export const ka = {
   modals: {
     notEnoughCoins: "არასაკმარისი მონეტა",
     coinsRequired: "თამაშისთვის საჭიროა {amount} მონეტა",
+    notEnoughGems: "არასაკმარისი ალმასი",
+    gemsRequired: "საჭიროა {amount} ალმასი",
     yourBalance: "შენი ბალანსი:",
     youNeed: "გაკლია:",
     watchAd: "რეკლამის ყურება",
