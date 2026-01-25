@@ -16,7 +16,7 @@ import {
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
-import { Avatar } from '@/components/shared/Avatar';
+
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -292,121 +292,88 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     }
 
     // Main suggestion phase UI
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
-        <div className="flex items-center gap-3 mb-6">
-          <Vote className="w-7 h-7 text-purple-300" />
-          <h1 className="text-xl font-bold text-white">შემოგთავაზე კატეგორია</h1>
-        </div>
+    // HOST VIEW: Can add up to 8 suggestions
+    if (isHost) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
+          <div className="flex items-center gap-3 mb-6">
+            <Crown className="w-7 h-7 text-yellow-400" />
+            <h1 className="text-xl font-bold text-white">დაამატე კატეგორიები</h1>
+          </div>
 
-        {/* My suggestions */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
-          <p className="text-purple-300 text-sm mb-3">
-            შენი შემოთავაზებ{isHost ? 'ები' : 'ა'}:
-            {isHost && <span className="ml-1">({mySuggestions.length}/2)</span>}
-          </p>
-          
-          {/* Show existing suggestions */}
-          {mySuggestions.length > 0 && (
-            <div className="space-y-2 mb-3">
-              {mySuggestions.map((suggestion) => (
-                <div key={suggestion.id} className="flex items-center gap-3">
-                  {suggestion.cover_image ? (
-                    <img src={suggestion.cover_image} alt="" className="w-12 h-12 rounded-xl object-cover" />
-                  ) : suggestion.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-12 h-12" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-xl bg-purple-500/30 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-purple-300" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <p className="font-bold text-white">{suggestion.category_name}</p>
-                    <p className="text-xs text-purple-300">
-                      {suggestion.source_type === 'category' ? 'ბიბლიოთეკიდან' : 'შენი ტრივია'}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => handleRemoveSuggestion(suggestion.id)}
-                    className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30 active:scale-95 transition-transform"
-                  >
-                    <X className="w-5 h-5 text-red-400" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add suggestion buttons - show if can add more */}
-          {canAddMoreSuggestions && (
-            <div className="space-y-2">
-              <ChunkyButton
-                variant="secondary"
-                className="w-full"
-                onClick={() => setShowCategoryPicker(true)}
-              >
-                <Library className="w-5 h-5 mr-2" />
-                ბიბლიოთეკიდან
-              </ChunkyButton>
-              <ChunkyButton
-                variant="secondary"
-                className="w-full"
-                onClick={() => setShowTriviaPicker(true)}
-              >
-                <User className="w-5 h-5 mr-2" />
-                ჩემი ტრივიებიდან
-              </ChunkyButton>
-            </div>
-          )}
-
-          {/* Show message when at limit */}
-          {!canAddMoreSuggestions && mySuggestions.length > 0 && !isHost && (
-            <p className="text-xs text-purple-400 text-center mt-2">
-              შეგიძლია წაშალო და სხვა აირჩიო
+          {/* Host's suggestions */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
+            <p className="text-purple-300 text-sm mb-3">
+              შენი არჩევანი: <span className="font-bold text-white">{mySuggestions.length}/8</span>
             </p>
-          )}
-        </div>
-
-        {/* Current suggestions */}
-        <div className="flex-1 mb-4">
-          <p className="text-purple-300 text-sm mb-3">შემოთავაზებები ({suggestions.length}):</p>
-          
-          {suggestions.length === 0 ? (
-            <div className="text-center py-8">
-              <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-3 animate-pulse" />
-              <p className="text-purple-300">ველოდებით შემოთავაზებებს...</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[40vh] overflow-y-auto">
-              {suggestions.map((suggestion) => (
-                <div
-                  key={suggestion.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl border ${
-                    suggestion.user_id === userId 
-                      ? 'bg-purple-500/20 border-purple-400' 
-                      : 'bg-white/10 border-white/20'
-                  }`}
-                >
-                  <Avatar 
-                    imageUrl={suggestion.avatar_url || undefined} 
-                    emoji={suggestion.nickname[0]} 
-                    size="sm" 
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium text-white text-sm">{suggestion.category_name}</p>
-                    <p className="text-xs text-purple-300">{suggestion.nickname}</p>
+            
+            {/* Show existing suggestions */}
+            {mySuggestions.length > 0 && (
+              <div className="space-y-2 mb-3 max-h-[35vh] overflow-y-auto">
+                {mySuggestions.map((suggestion, index) => (
+                  <div key={suggestion.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/5">
+                    <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
+                      {index + 1}
+                    </div>
+                    {suggestion.cover_image ? (
+                      <img src={suggestion.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    ) : suggestion.icon_slug ? (
+                      <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-10 h-10" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-purple-300" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white text-sm truncate">{suggestion.category_name}</p>
+                      <p className="text-xs text-purple-300">
+                        {suggestion.source_type === 'category' ? 'კატეგორია' : (
+                          <span className="text-yellow-400">⚠️ შენი ტრივია - გამოტოვებ</span>
+                        )}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveSuggestion(suggestion.id)}
+                      className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30 active:scale-95 transition-transform shrink-0"
+                    >
+                      <X className="w-4 h-4 text-red-400" />
+                    </button>
                   </div>
-                  {suggestion.user_id === userId && (
-                    <span className="text-xs bg-purple-500/30 text-purple-200 px-2 py-1 rounded">შენი</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
 
-        {/* Host controls */}
-        {isHost && (
+            {/* Add suggestion buttons */}
+            {canAddMoreSuggestions && (
+              <div className="space-y-2">
+                <ChunkyButton
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setShowCategoryPicker(true)}
+                >
+                  <Library className="w-5 h-5 mr-2" />
+                  ბიბლიოთეკიდან
+                </ChunkyButton>
+                <ChunkyButton
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setShowTriviaPicker(true)}
+                >
+                  <User className="w-5 h-5 mr-2" />
+                  ჩემი ტრივიებიდან
+                </ChunkyButton>
+              </div>
+            )}
+
+            {/* At limit message */}
+            {!canAddMoreSuggestions && mySuggestions.length >= 8 && (
+              <p className="text-xs text-purple-400 text-center mt-2">
+                მაქსიმალური რაოდენობა მიღწეულია
+              </p>
+            )}
+          </div>
+
+          {/* Start voting button */}
           <div className="mt-auto">
             <ChunkyButton
               variant="primary"
@@ -416,17 +383,78 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
             >
               <Vote className="w-5 h-5 mr-2" />
               {suggestions.length < 2 
-                ? 'საჭიროა მინ. 2 შემოთავაზება' 
-                : 'ხმის მიცემის დაწყება'}
+                ? 'საჭიროა მინ. 2 კატეგორია' 
+                : `ხმის მიცემის დაწყება (${suggestions.length} ვარიანტი)`}
             </ChunkyButton>
           </div>
-        )}
+        </div>
+      );
+    }
 
-        {!isHost && (
-          <div className="mt-auto text-center">
-            <p className="text-purple-300">⏳ ველოდებით ჰოსტს...</p>
-          </div>
-        )}
+    // GUEST VIEW: Read-only, waiting for host to add options
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
+        <div className="flex items-center gap-3 mb-6">
+          <Vote className="w-7 h-7 text-purple-300" />
+          <h1 className="text-xl font-bold text-white">კატეგორიების არჩევა</h1>
+        </div>
+
+        {/* Current suggestions from host */}
+        <div className="flex-1 mb-4">
+          {suggestions.length === 0 ? (
+            <div className="text-center py-12">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin" />
+              </motion.div>
+              <p className="text-purple-300 font-medium">ჰოსტი ამატებს კატეგორიებს...</p>
+              <p className="text-purple-400 text-sm mt-2">მალე დაიწყება ხმის მიცემა</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-purple-300 text-sm mb-3">
+                ჰოსტის არჩევანი ({suggestions.length}):
+              </p>
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                {suggestions.map((suggestion, index) => (
+                  <motion.div
+                    key={suggestion.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
+                      {index + 1}
+                    </div>
+                    {suggestion.cover_image ? (
+                      <img src={suggestion.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    ) : suggestion.icon_slug ? (
+                      <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-10 h-10" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-purple-300" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="font-medium text-white text-sm">{suggestion.category_name}</p>
+                      <p className="text-xs text-purple-300">
+                        {suggestion.source_type === 'category' ? 'კატეგორია' : 'ჰოსტის ტრივია'}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Waiting message */}
+        <div className="mt-auto text-center py-4">
+          <p className="text-purple-300">⏳ ველოდებით ხმის მიცემის დაწყებას...</p>
+        </div>
       </div>
     );
   }
@@ -473,15 +501,15 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
         </div>
 
         <p className="text-purple-300 text-sm mb-4">
-          აირჩიე კატეგორიები რომლებშიც გინდა ითამაშო (შენი შემოთავაზება გამორიცხულია)
+          აირჩიე კატეგორიები რომლებშიც გინდა ითამაშო
         </p>
 
         {/* Voting list */}
         <div className="flex-1 space-y-3 overflow-y-auto">
           <AnimatePresence>
             {suggestions.map((suggestion, index) => {
-              const isOwn = suggestion.user_id === userId;
               const hasVoted = myVotes.includes(suggestion.id);
+              const isHostTrivia = suggestion.source_type === 'trivia';
 
               return (
                 <motion.button
@@ -490,14 +518,11 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  onClick={() => !isOwn && handleVote(suggestion.id)}
-                  disabled={isOwn}
+                  onClick={() => handleVote(suggestion.id)}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
-                    isOwn 
-                      ? 'bg-gray-500/20 border-gray-500/30 opacity-50 cursor-not-allowed' 
-                      : hasVoted
-                        ? 'bg-purple-500/30 border-purple-400'
-                        : 'bg-white/10 border-white/20 hover:border-purple-400'
+                    hasVoted
+                      ? 'bg-purple-500/30 border-purple-400'
+                      : 'bg-white/10 border-white/20 hover:border-purple-400'
                   }`}
                 >
                   {/* Rank */}
@@ -521,11 +546,13 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     </div>
                   )}
 
-                  {/* Name and suggester */}
+                  {/* Name and type indicator */}
                   <div className="flex-1 text-left">
                     <p className="font-medium text-white">{suggestion.category_name}</p>
                     <p className="text-xs text-purple-300">
-                      {isOwn ? '(შენი შემოთავაზება)' : `შემოთავაზა: ${suggestion.nickname}`}
+                      {isHostTrivia ? (
+                        <span className="text-yellow-400">ჰოსტის ტრივია</span>
+                      ) : 'კატეგორია'}
                     </p>
                   </div>
 

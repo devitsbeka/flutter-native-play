@@ -212,9 +212,9 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     return mySuggestions.length > 0 ? mySuggestions[0] : null;
   }, [mySuggestions]);
 
-  // Max suggestions allowed (hosts get 2, others get 1)
-  const maxSuggestions = isHost ? 2 : 1;
-  const canAddMoreSuggestions = mySuggestions.length < maxSuggestions;
+  // Max suggestions allowed (hosts get 8, guests get 0 - only host can suggest)
+  const maxSuggestions = isHost ? 8 : 0;
+  const canAddMoreSuggestions = isHost && mySuggestions.length < maxSuggestions;
 
   // Submit a suggestion
   const submitSuggestion = useCallback(async (params: {
@@ -286,13 +286,6 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
   // Vote for a suggestion (toggle)
   const toggleVote = useCallback(async (suggestionId: string) => {
     if (!sessionId || !userId) return false;
-
-    // Can't vote for own suggestion
-    const suggestion = suggestions.find(s => s.id === suggestionId);
-    if (suggestion?.user_id === userId) {
-      tvLog('[useTVPoll] Cannot vote for own suggestion');
-      return false;
-    }
 
     const hasVoted = myVotes.includes(suggestionId);
 
