@@ -47,6 +47,7 @@ export const ControllerLobby: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col">
+      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-6">
         <h1 className="text-2xl font-bold text-white mb-2">
           {isHost ? "You're the Host!" : "Waiting for Host"}
@@ -173,6 +174,7 @@ export const ControllerLobby: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
