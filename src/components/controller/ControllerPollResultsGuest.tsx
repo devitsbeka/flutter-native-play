@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Crown, Sparkles, Loader2 } from 'lucide-react';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
+import { useTVGame } from '@/contexts/TVGameContext';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 
 interface ControllerPollResultsGuestProps {
@@ -11,13 +12,25 @@ interface ControllerPollResultsGuestProps {
 export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProps> = ({
   sessionId,
 }) => {
-  const { suggestions, loading } = useTVPoll({
+  const { myPlayerId, players } = useTVGame();
+  const myPlayer = players.find(p => p.id === myPlayerId);
+  
+  const { suggestions, loading, pollPhase } = useTVPoll({
     sessionId,
-    userId: null,
-    nickname: 'Guest',
-    avatarUrl: null,
+    userId: myPlayerId || null,
+    nickname: myPlayer?.nickname || 'Guest',
+    avatarUrl: myPlayer?.avatar_url,
     isHost: false,
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[ControllerPollResultsGuest] State:', { 
+      loading, 
+      pollPhase, 
+      suggestionsCount: suggestions.length 
+    });
+  }, [loading, pollPhase, suggestions.length]);
 
   if (loading) {
     return (
@@ -26,6 +39,9 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
       </div>
     );
   }
+
+  // Sort suggestions by vote count for display
+  const sortedSuggestions = [...suggestions].sort((a, b) => b.vote_count - a.vote_count);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
@@ -37,7 +53,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
 
       {/* Results list */}
       <div className="flex-1 space-y-3 mb-6 overflow-y-auto">
-        {suggestions.map((suggestion, index) => (
+        {sortedSuggestions.map((suggestion, index) => (
           <motion.div
             key={suggestion.id}
             initial={{ opacity: 0, x: -20 }}

@@ -10,6 +10,7 @@ import { ControllerResults } from '@/components/controller/ControllerResults';
 import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerRoundIntroWaiting';
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
+import { useTVPoll } from '@/hooks/useTVPoll';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -23,11 +24,20 @@ const TVJoinContent: React.FC = () => {
   // Hard switch: QR should pass sessionId; manual entry uses 4-digit TV code.
   const initialCode = urlSessionId || querySessionId || urlCode || queryCode || '';
   
-const { phase, sessionId, questions, leaveSession, myPlayerId, players } = useTVGame();
+  const { phase, sessionId, questions, leaveSession, myPlayerId, players } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);
 
   // Find current player from players array
   const myPlayer = players.find(p => p.id === myPlayerId);
+
+  // Poll hook for detecting poll phase changes faster than context
+  const pollHook = useTVPoll({
+    sessionId: sessionId || null,
+    userId: myPlayerId || null,
+    nickname: myPlayer?.nickname || 'Player',
+    avatarUrl: myPlayer?.avatar_url,
+    isHost: false,
+  });
 
   // If we have a session, we're joined
   useEffect(() => {
@@ -66,9 +76,18 @@ const { phase, sessionId, questions, leaveSession, myPlayerId, players } = useTV
     );
   }
 
+  // Determine effective phase - prioritize poll hook for poll phases
+  let effectivePhase = phase;
+  if (pollHook.pollPhase === 'results' && (phase === 'poll-voting' || phase === 'poll-suggest')) {
+    effectivePhase = 'poll-results';
+  }
+
+  // Debug logging
+  console.log('[TVJoin] Phase debug:', { contextPhase: phase, pollHookPhase: pollHook.pollPhase, effectivePhase });
+
   // Show appropriate screen based on phase
   // Handle both TVPhase values and database status values
-  switch (phase) {
+  switch (effectivePhase) {
     case 'pairing':
     case 'waiting':
     case 'lobby':

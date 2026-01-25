@@ -346,7 +346,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
   }, [sessionId]);
 
   // End voting and transition to results phase (host only)
-  const endVoting = useCallback(async () => {
+  const endVoting = useCallback(async (): Promise<boolean> => {
     if (!sessionId) {
       console.error('[useTVPoll] endVoting: No sessionId');
       return false;
@@ -354,34 +354,64 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     // Check auth state
     const { data: { user } } = await supabase.auth.getUser();
-    console.log('[useTVPoll] endVoting auth check:', { 
+    console.log('[useTVPoll] endVoting starting:', { 
       sessionId, 
       authUserId: user?.id || 'NOT_AUTHENTICATED',
       hookUserId: userId 
     });
 
-    const { data, error } = await supabase
+    if (!user?.id) {
+      console.error('[useTVPoll] endVoting: User not authenticated');
+      return false;
+    }
+
+    // First verify we're the host
+    const { data: sessionCheck } = await supabase
       .from('tv_sessions')
-      .update({
-        status: 'poll-results',
-      })
+      .select('host_user_id, status')
       .eq('id', sessionId)
+      .single();
+
+    console.log('[useTVPoll] Session check:', {
+      hostUserId: sessionCheck?.host_user_id,
+      currentStatus: sessionCheck?.status,
+      isHostMatch: sessionCheck?.host_user_id === user.id
+    });
+
+    if (sessionCheck?.host_user_id !== user.id) {
+      console.error('[useTVPoll] endVoting: Not the host');
+      return false;
+    }
+
+    // Perform the update with explicit host check
+    const { data, error, count } = await supabase
+      .from('tv_sessions')
+      .update({ status: 'poll-results' })
+      .eq('id', sessionId)
+      .eq('host_user_id', user.id) // Explicit RLS-friendly filter
       .select();
 
-    console.log('[useTVPoll] endVoting result:', { data, error, rowsAffected: data?.length || 0 });
+    console.log('[useTVPoll] endVoting result:', { 
+      data, 
+      error, 
+      count,
+      rowsAffected: data?.length || 0,
+      newStatus: data?.[0]?.status
+    });
 
     if (error) {
-      console.error('[useTVPoll] Error ending voting', error);
+      console.error('[useTVPoll] Error ending voting:', error);
       tvLogError('[useTVPoll] Error ending voting', error);
       return false;
     }
     
     if (!data || data.length === 0) {
-      console.error('[useTVPoll] endVoting: No rows updated - RLS policy may be blocking');
+      console.error('[useTVPoll] endVoting: No rows updated - check RLS or session state');
       return false;
     }
 
-    // Force immediate state update
+    // Force immediate local state update
+    console.log('[useTVPoll] Successfully updated to poll-results, updating local state');
     setPollPhase('results');
     return true;
   }, [sessionId, userId]);
