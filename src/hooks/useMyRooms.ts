@@ -232,15 +232,19 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       );
     }
 
-    // Sort: LIVE/playing rooms first, then waiting, then by activity
+    // Sort: LIVE/playing rooms first, then waiting, then rooms with unread activity, then by activity
     result = [...result].sort((a, b) => {
       // Playing rooms first
       if (a.status === "playing" && b.status !== "playing") return -1;
       if (b.status === "playing" && a.status !== "playing") return 1;
       
-      // Then waiting rooms
+      // Then waiting/active rooms
       if (a.status === "waiting" && b.status === "completed") return -1;
       if (b.status === "waiting" && a.status === "completed") return 1;
+      
+      // Then rooms with unread activity
+      if (a.has_unread_activity && !b.has_unread_activity) return -1;
+      if (b.has_unread_activity && !a.has_unread_activity) return 1;
       
       // Then by last activity (most recent first)
       const aTime = new Date(a.last_activity_at || a.created_at).getTime();

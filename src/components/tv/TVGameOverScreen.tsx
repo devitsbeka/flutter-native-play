@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Medal, LogOut } from 'lucide-react';
+import { Crown, Medal, LogOut, Library, Vote } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
 import crown2 from '@/assets/icons/crown-2.png';
@@ -23,6 +23,8 @@ interface TVGameOverScreenProps {
   onPlayAgain?: () => void;
   onContinueNextRound?: () => void;
   hasMoreRounds?: boolean;
+  onDirectSelection?: () => void;  // NEW: Direct category pick
+  onStartPoll?: () => void;        // NEW: Start poll mode
 }
 
 export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
@@ -33,6 +35,8 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
   onPlayAgain,
   onContinueNextRound,
   hasMoreRounds = false,
+  onDirectSelection,
+  onStartPoll,
 }) => {
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -320,30 +324,46 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="flex gap-3"
+        className="flex flex-col gap-3"
       >
         {isHost && hasMoreRounds && onContinueNextRound ? (
           <ChunkyButton
             onClick={onContinueNextRound}
             variant="primary"
-            className="flex-1"
+            className="w-full"
           >
             შემდეგი რაუნდი
           </ChunkyButton>
-        ) : isHost && onPlayAgain && !hasMoreRounds ? (
-          <ChunkyButton
-            onClick={onPlayAgain}
-            variant="primary"
-            className="flex-1"
-          >
-            ახალი თამაში
-          </ChunkyButton>
+        ) : isHost && !hasMoreRounds ? (
+          // Two-option new game flow: Direct Selection or Poll
+          <div className="space-y-2">
+            {onDirectSelection && (
+              <ChunkyButton
+                onClick={onDirectSelection}
+                variant="primary"
+                className="w-full"
+              >
+                <Library className="w-5 h-5 mr-2" />
+                კატეგორიის არჩევა
+              </ChunkyButton>
+            )}
+            {onStartPoll && (
+              <ChunkyButton
+                onClick={onStartPoll}
+                variant="secondary"
+                className="w-full"
+              >
+                <Vote className="w-5 h-5 mr-2" />
+                ხმის მიცემა
+              </ChunkyButton>
+            )}
+          </div>
         ) : null}
         {onExit && (
           <ChunkyButton
             onClick={onExit}
-            variant="secondary"
-            className={isHost ? '' : 'flex-1'}
+            variant="outline"
+            className="w-full"
           >
             <LogOut className="w-5 h-5 mr-2" />
             გასვლა

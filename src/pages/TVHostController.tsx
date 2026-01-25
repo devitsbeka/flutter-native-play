@@ -16,6 +16,7 @@ import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResults } from '@/components/controller/ControllerPollResults';
+import { ControllerDirectSelection } from '@/components/controller/ControllerDirectSelection';
 import { useTVPoll } from '@/hooks/useTVPoll';
 
 interface Category {
@@ -60,6 +61,7 @@ const TVHostController: React.FC = () => {
     startGame,
     startPlaying,
     startNextRound,
+    startDirectSelection,
     markReady,
     isHost,
     leaveSession,
@@ -473,182 +475,17 @@ const TVHostController: React.FC = () => {
 
   const displayCode = gameCode || '';
 
-  // Category selection phase
+  // Category selection phase - Direct selection (from game over screen)
   if (localPhase === 'category-select') {
+    // Use ControllerDirectSelection for cleaner UI
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-6"
-        >
-          <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10">
-            <ArrowLeft className="w-5 h-5 text-purple-200" />
-          </button>
-          <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
-          <span className="font-bold text-white">აირჩიე კატეგორია</span>
-        </motion.div>
-
-        {/* QR Code section */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <QrCode className="w-5 h-5 text-purple-300" />
-            <h2 className="font-bold text-white">მოთამაშეებმა დაასკანერონ</h2>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="bg-white p-3 rounded-xl">
-              <QRCodeSVG value={joinUrl} size={100} level="H" />
-            </div>
-            <div className="flex-1 flex flex-col justify-center">
-              <p className="text-sm text-purple-200 mb-1">კოდი:</p>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-mono font-bold text-white tracking-wider">
-                  {displayCode}
-                </span>
-                <button
-                  onClick={handleCopyCode}
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-purple-300" />}
-                </button>
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <Users className="w-4 h-4 text-purple-300" />
-                <span className="text-sm text-purple-200">{players.length} მოთამაშე</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Connected players */}
-        <AnimatePresence>
-          {players.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4"
-            >
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {players.map((player, index) => (
-                  <motion.div
-                    key={player.id}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`flex flex-col items-center gap-1 min-w-[60px] ${player.isHost ? 'ring-2 ring-yellow-500 rounded-xl p-1' : ''}`}
-                  >
-                    <Avatar imageUrl={player.avatar_url || undefined} emoji={player.nickname?.[0] || '👤'} size="sm" />
-                    <span className="text-xs text-purple-200 truncate max-w-[60px]">{player.nickname}</span>
-                    {player.isHost && <span className="text-xs text-yellow-500">HOST</span>}
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Queue Display */}
-        {queue.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mb-4 bg-white/5 rounded-xl p-3 border border-white/10"
-          >
-            <p className="text-sm text-purple-200 mb-2">რაუნდების რიგი:</p>
-            <div className="flex flex-wrap gap-2">
-              {queue.map((item) => (
-                <div
-                  key={item.id}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-400/30"
-                >
-                  <span className="text-xs text-purple-200">{item.position + 1}.</span>
-                  <span className="text-sm text-white">{item.category_name}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromQueue(item.id);
-                    }}
-                    className="text-purple-300 hover:text-white"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Categories grid */}
-        <div className="space-y-2 mb-24">
-          {categories.map((category, index) => (
-            <motion.div
-              key={category.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${
-                selectedCategory?.id === category.id
-                  ? 'bg-purple-500/30 border-purple-400'
-                  : 'bg-white/10 border-white/20'
-              }`}
-            >
-              <button
-                onClick={() => handleSelectCategory(category)}
-                className="flex-1 flex items-center gap-3"
-              >
-                <span className="text-2xl">{category.icon}</span>
-                <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-                {selectedCategory?.id === category.id && (
-                  <Check className="w-5 h-5 text-green-400" />
-                )}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToQueue(category);
-                }}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                title="დაამატე რიგში"
-              >
-                <Plus className="w-4 h-4 text-purple-300" />
-              </button>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Start Game Button - shows when category is selected OR queue has items */}
-        <AnimatePresence>
-          {(selectedCategory || hasQueue) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 to-transparent"
-            >
-              <ChunkyButton
-                variant="primary"
-                size="lg"
-                onClick={handleStartGame}
-                disabled={players.length === 0}
-                icon={<Play className="w-5 h-5" />}
-                className="w-full"
-              >
-                {players.length === 0 
-                  ? 'მოთამაშეები უნდა შემოუერთდნენ' 
-                  : hasQueue 
-                    ? `დაწყება (${queue.length} რაუნდი რიგში)`
-                    : `თამაშის დაწყება (${players.length} მოთამაშე)`}
-              </ChunkyButton>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <ControllerDirectSelection
+        sessionId={sessionId || ''}
+        userId={user?.id || ''}
+        roomId={roomId}
+        onStartGame={handleStartGame}
+        onBack={() => navigate('/team')}
+      />
     );
   }
 
@@ -730,13 +567,22 @@ const TVHostController: React.FC = () => {
       isHost: p.isHost,
     }));
 
-    // pollHook is now called at the top level of the component
-
-    const handlePlayAgain = async () => {
+    const handleDirectSelection = async () => {
       try {
-        // Instead of resetting the same game, initiate the category poll
+        // Start direct category selection (no poll)
+        await startDirectSelection();
+        toast.success('აირჩიე კატეგორიები!');
+      } catch (error) {
+        console.error('Error starting direct selection:', error);
+        toast.error('ვერ მოხერხდა');
+      }
+    };
+
+    const handleStartPoll = async () => {
+      try {
+        // Initiate the category poll for voting
         await pollHook.initiatePoll();
-        toast.success('კატეგორიის არჩევა დაწყებულია!');
+        toast.success('ხმის მიცემა დაწყებულია!');
       } catch (error) {
         console.error('Error initiating poll:', error);
         toast.error('ვერ მოხერხდა');
@@ -757,7 +603,8 @@ const TVHostController: React.FC = () => {
         players={allPlayers}
         currentPlayerId={user?.id}
         onExit={handleExit}
-        onPlayAgain={handlePlayAgain}
+        onDirectSelection={handleDirectSelection}
+        onStartPoll={handleStartPoll}
         onContinueNextRound={handleContinueNextRound}
         isHost={true}
         hasMoreRounds={roundNumber < totalRounds}
