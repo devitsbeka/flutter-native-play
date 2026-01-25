@@ -102,7 +102,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [invitingUser, setInvitingUser] = useState<string | null>(null);
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
-  const friendIds = new Set(friends.map(f => f.friendId));
+  
+  // Memoize friendIds to prevent infinite re-renders
+  const friendIds = useMemo(
+    () => new Set(friends.map(f => f.friendId)),
+    [friends]
+  );
   
   // Determine if we're in room invite mode
   const isRoomInviteMode = Boolean(roomId);
@@ -112,6 +117,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedLink = encodeURIComponent(appLink);
 
+  // Stable search function - don't include friendIds in deps
   const performSearch = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -121,11 +127,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     setSearching(true);
     try {
       const results = await searchUsers(query);
-      setSearchResults(results.filter(r => !friendIds.has(r.user_id)));
+      setSearchResults(results);
     } finally {
       setSearching(false);
     }
-  }, [searchUsers, friendIds]);
+  }, [searchUsers]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -324,12 +330,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                         exit={{ opacity: 0, height: 0 }}
                         className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 ${narrow}`}
                       >
-                        {searchResults.length === 0 && !searching ? (
-                          <p className="text-center py-6 text-primary-foreground/80 text-sm">
-                            მომხმარებელი ვერ მოიძებნა
-                          </p>
-                        ) : (
-                          searchResults.map((result) => (
+                        {(() => {
+                          const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
+                          return filteredResults.length === 0 && !searching ? (
+                            <p className="text-center py-6 text-primary-foreground/80 text-sm">
+                              მომხმარებელი ვერ მოიძებნა
+                            </p>
+                          ) : (
+                            filteredResults.map((result) => (
                             <motion.div
                               key={result.user_id}
                               layout
@@ -382,7 +390,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               </motion.button>
                             </motion.div>
                           ))
-                        )}
+                        );
+                        })()}
                       </motion.div>
                     )}
                   </AnimatePresence>
