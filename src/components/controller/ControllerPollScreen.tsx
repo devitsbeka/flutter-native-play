@@ -108,9 +108,14 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   useEffect(() => {
     if (pollPhase === 'voting' && timeRemaining === 0 && isHost && !hasEndedRef.current) {
       hasEndedRef.current = true;
+      console.log('[ControllerPollScreen] Timer expired, calling endVoting');
       // Update database status to poll-results - this triggers realtime for all clients
-      endVoting();
-      onVotingEnded?.();
+      endVoting().then((success) => {
+        console.log('[ControllerPollScreen] endVoting returned:', success);
+        if (success) {
+          onVotingEnded?.();
+        }
+      });
     }
   }, [pollPhase, timeRemaining, isHost, onVotingEnded, endVoting]);
 
@@ -211,6 +216,17 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   const handleVote = async (suggestionId: string) => {
     await toggleVote(suggestionId);
   };
+
+  // If poll phase is results, don't render this component - let parent handle redirect
+  // This handles the case where pollPhase updates before contextPhase
+  if (pollPhase === 'results') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 text-purple-300 animate-spin mb-4" />
+        <p className="text-white font-medium">იტვირთება შედეგები...</p>
+      </div>
+    );
+  }
 
   // Suggestion phase
   if (pollPhase === 'suggest') {
@@ -467,8 +483,10 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   if (pollPhase === 'voting') {
     const votingEnded = timeRemaining === 0;
 
-    // If voting ended and NOT host, show waiting state
-    if (votingEnded && !isHost) {
+    // If voting ended, show brief transition state while waiting for database update
+    // The database status should change to 'poll-results' which will trigger TVJoin/TVHostController
+    // to render ControllerPollResultsGuest or ControllerPollResults respectively
+    if (votingEnded) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
           <motion.div
@@ -480,7 +498,9 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
               <Loader2 className="w-8 h-8 text-purple-300 animate-spin" />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">ხმის მიცემა დასრულდა!</h2>
-            <p className="text-purple-300">ველოდებით ჰოსტს თამაშის დასაწყებად...</p>
+            <p className="text-purple-300">
+              {isHost ? 'იტვირთება შედეგები...' : 'ველოდებით ჰოსტს თამაშის დასაწყებად...'}
+            </p>
           </motion.div>
         </div>
       );

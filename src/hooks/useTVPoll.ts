@@ -347,24 +347,44 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
   // End voting and transition to results phase (host only)
   const endVoting = useCallback(async () => {
-    if (!sessionId) return false;
+    if (!sessionId) {
+      console.error('[useTVPoll] endVoting: No sessionId');
+      return false;
+    }
 
-    tvLog('[useTVPoll] Ending voting, transitioning to poll-results', { sessionId });
+    // Check auth state
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log('[useTVPoll] endVoting auth check:', { 
+      sessionId, 
+      authUserId: user?.id || 'NOT_AUTHENTICATED',
+      hookUserId: userId 
+    });
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('tv_sessions')
       .update({
         status: 'poll-results',
       })
-      .eq('id', sessionId);
+      .eq('id', sessionId)
+      .select();
+
+    console.log('[useTVPoll] endVoting result:', { data, error, rowsAffected: data?.length || 0 });
 
     if (error) {
+      console.error('[useTVPoll] Error ending voting', error);
       tvLogError('[useTVPoll] Error ending voting', error);
       return false;
     }
+    
+    if (!data || data.length === 0) {
+      console.error('[useTVPoll] endVoting: No rows updated - RLS policy may be blocking');
+      return false;
+    }
 
+    // Force immediate state update
+    setPollPhase('results');
     return true;
-  }, [sessionId]);
+  }, [sessionId, userId]);
 
   // Initiate poll phase (host only) - called when "New Game" is clicked
   const initiatePoll = useCallback(async () => {
