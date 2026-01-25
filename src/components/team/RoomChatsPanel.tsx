@@ -406,10 +406,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                   {/* Header */}
                   <div className="px-4 pt-4 pb-3 border-b border-border">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-5 h-5 text-primary" />
-                        <h2 className="font-bold text-base text-foreground">შეტყობინებები</h2>
-                      </div>
+                      <h2 className="font-bold text-base text-foreground">შეტყობინებები</h2>
                       <button
                         onClick={onClose}
                         className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted/40 transition-colors"

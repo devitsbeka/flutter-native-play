@@ -200,30 +200,36 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 </>
               ) : (
                 <>
-                  <p className="text-sm">
-                    <span
-                      className={cn(
-                        "font-bold",
-                        isUnread ? "text-foreground" : "text-muted-foreground"
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">
+                        <span
+                          className={cn(
+                            "font-bold",
+                            isUnread ? "text-foreground" : "text-muted-foreground"
+                          )}
+                        >
+                          {translateNotificationTitle(
+                            notification.type,
+                            notification.title,
+                            notification.data as Record<string, unknown>
+                          )}
+                        </span>
+                      </p>
+                      {notification.message && (
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          {translateNotificationMessage(
+                            notification.type,
+                            notification.message,
+                            notification.data as Record<string, unknown>
+                          )}
+                        </p>
                       )}
-                    >
-                      {translateNotificationTitle(
-                        notification.type,
-                        notification.title,
-                        notification.data as Record<string, unknown>
-                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground/60 whitespace-nowrap pt-0.5">
+                      {timeAgo}
                     </span>
-                    {notification.message && (
-                      <span className="text-muted-foreground ml-1">
-                        {translateNotificationMessage(
-                          notification.type,
-                          notification.message,
-                          notification.data as Record<string, unknown>
-                        )}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 mt-0.5">{timeAgo}</p>
+                  </div>
                 </>
               )}
             </div>

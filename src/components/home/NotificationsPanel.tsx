@@ -8,14 +8,28 @@ import { useFriends } from '@/hooks/useFriends';
 import { useGameInvitations } from '@/hooks/useGameInvitations';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDistanceToNow } from 'date-fns';
-import { ka, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { CompactNotificationCard } from '@/components/notifications/CompactNotificationCard';
 import { CompactGenerationCard } from '@/components/notifications/CompactGenerationCard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PingPongVideo } from '@/components/shared/PingPongVideo';
 import { MAP_VIDEOS } from '@/config/videoConfig';
+
+// Custom time formatter for Georgian (no "დაახლოებით" prefix)
+const formatTimeAgo = (date: Date) => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return "ახლა";
+  if (diffMins < 60) return `${diffMins} წუთის წინ`;
+  if (diffHours < 24) return `${diffHours} საათის წინ`;
+  if (diffDays < 7) return `${diffDays} დღის წინ`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} კვირის წინ`;
+  return `${Math.floor(diffDays / 30)} თვის წინ`;
+};
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -30,8 +44,6 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  const dateLocale = language === 'ka' ? ka : enUS;
 
   // Mark all as read when panel opens
   useEffect(() => {
@@ -230,12 +242,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
             {/* Header */}
             <div className="px-4 pt-4 pb-3 border-b border-border">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Bell className="w-4 h-4 text-primary" />
-                  </div>
-                  <h2 className="font-bold text-base text-foreground">აქტივობა</h2>
-                </div>
+                <h2 className="font-bold text-base text-foreground">აქტივობა</h2>
                 <button
                   onClick={onClose}
                   className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
@@ -270,7 +277,6 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                           key={notification.id}
                           notification={notification}
                           onUseImage={handleUseGeneratedImage}
-                          dateLocale={dateLocale}
                         />
                       ))}
                     </>
@@ -290,10 +296,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                         onDeclineInvite={handleDeclineInvite}
                         onDismiss={deleteNotification}
                         actionLoading={actionLoading}
-                        timeAgo={formatDistanceToNow(new Date(notification.created_at), { 
-                          addSuffix: false,
-                          locale: dateLocale 
-                        })}
+                        timeAgo={formatTimeAgo(new Date(notification.created_at))}
                       />
                     ))}
                   </AnimatePresence>
