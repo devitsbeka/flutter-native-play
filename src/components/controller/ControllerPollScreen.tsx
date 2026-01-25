@@ -46,6 +46,8 @@ interface ControllerPollScreenProps {
   onVotingEnded?: () => void; // Callback when voting timer expires (host only)
 }
 
+const MAX_VOTES = 3;
+
 export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   sessionId,
   userId,
@@ -81,6 +83,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [userTrivias, setUserTrivias] = useState<UserTrivia[]>([]);
   const [loading, setLoading] = useState(false);
+  const [voters, setVoters] = useState<{ id: string; nickname: string; avatar_url: string | null }[]>([]);
+  const [players, setPlayers] = useState<{ player_id: string; nickname: string; avatar_url: string | null }[]>([]);
   
   // Track if voting has ended (for auto-transition)
   const hasEndedRef = useRef(false);
@@ -126,7 +130,61 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     }
   }, [pollPhase]);
 
-  // Load categories when picker opens
+  // Fetch players and voters during voting phase
+  useEffect(() => {
+    if (pollPhase !== 'voting' || !sessionId) return;
+
+    // Fetch all players in session
+    const fetchPlayers = async () => {
+      const { data } = await supabase
+        .from('tv_players')
+        .select('player_id, nickname, avatar_url')
+        .eq('tv_session_id', sessionId);
+      if (data) setPlayers(data);
+    };
+
+    // Fetch unique voters (users who have voted)
+    const fetchVoters = async () => {
+      const { data } = await supabase
+        .from('tv_poll_votes')
+        .select('user_id')
+        .eq('session_id', sessionId);
+      
+      if (data) {
+        // Get unique user IDs who voted
+        const uniqueVoterIds = [...new Set(data.map(v => v.user_id))];
+        
+        // Map to player info
+        const voterPlayers = players.filter(p => uniqueVoterIds.includes(p.player_id));
+        setVoters(voterPlayers.map(p => ({ id: p.player_id, nickname: p.nickname, avatar_url: p.avatar_url })));
+      }
+    };
+
+    fetchPlayers();
+    fetchVoters();
+
+    // Subscribe to vote changes
+    const channel = supabase
+      .channel(`poll-voters-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tv_poll_votes',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          fetchVoters();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [pollPhase, sessionId, players]);
+
   useEffect(() => {
     if (showCategoryPicker && categories.length === 0) {
       supabase
@@ -214,6 +272,15 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   };
 
   const handleVote = async (suggestionId: string) => {
+    // Check if already voted for this one (toggle off is always allowed)
+    const isAlreadyVoted = myVotes.includes(suggestionId);
+    
+    // If not already voted and at max, show warning
+    if (!isAlreadyVoted && myVotes.length >= MAX_VOTES) {
+      toast.error(`მაქსიმუმ ${MAX_VOTES} ხმის მიცემა შეგიძლია`);
+      return;
+    }
+    
     await toggleVote(suggestionId);
   };
 
@@ -532,9 +599,53 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           </div>
         </div>
 
-        <p className="text-purple-300 text-sm mb-4">
-          აირჩიე კატეგორიები რომლებშიც გინდა ითამაშო
-        </p>
+        {/* Vote limit indicator */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-purple-300 text-sm">
+            აირჩიე მაქსიმუმ {MAX_VOTES} კატეგორია
+          </p>
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            myVotes.length >= MAX_VOTES 
+              ? 'bg-green-500/30 text-green-300' 
+              : 'bg-white/10 text-white'
+          }`}>
+            {myVotes.length}/{MAX_VOTES}
+          </div>
+        </div>
+
+        {/* Players who voted indicator */}
+        {players.length > 0 && (
+          <div className="mb-4 p-3 bg-white/5 rounded-xl">
+            <p className="text-xs text-purple-300 mb-2">ხმა მისცა:</p>
+            <div className="flex flex-wrap gap-2">
+              {players.map((player) => {
+                const hasPlayerVoted = voters.some(v => v.id === player.player_id);
+                return (
+                  <div 
+                    key={player.player_id}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all ${
+                      hasPlayerVoted 
+                        ? 'bg-green-500/20 ring-2 ring-green-400/50' 
+                        : 'bg-white/10 opacity-40'
+                    }`}
+                  >
+                    {player.avatar_url ? (
+                      <img src={player.avatar_url} alt="" className="w-5 h-5 rounded-full" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-purple-500/50 flex items-center justify-center">
+                        <User className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                    <span className={`text-xs ${hasPlayerVoted ? 'text-green-300' : 'text-white/60'}`}>
+                      {player.nickname}
+                    </span>
+                    {hasPlayerVoted && <Check className="w-3 h-3 text-green-400" />}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Voting list - interactive for guests */}
         <div className="flex-1 space-y-3 overflow-y-auto">
@@ -599,11 +710,25 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* My votes count */}
-        <div className="mt-4 text-center">
-          <p className="text-purple-300">
-            შენი ხმები: <span className="font-bold text-white">{myVotes.length}</span>
-          </p>
+        {/* My votes count - enhanced */}
+        <div className="mt-4 py-3 px-4 bg-white/5 rounded-xl">
+          <div className="flex items-center justify-between">
+            <p className="text-purple-300 text-sm">
+              შენი ხმები
+            </p>
+            <div className="flex items-center gap-2">
+              {[...Array(MAX_VOTES)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    i < myVotes.length 
+                      ? 'bg-green-400 scale-110' 
+                      : 'bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
