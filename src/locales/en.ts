@@ -137,8 +137,8 @@ export const en: KaTranslations = {
       hint: "If the question is too hard, try a new one",
     },
     timeDrain: {
-      name: "Time Drain",
-      description: "Steal 3 seconds from your opponent's timer",
+      name: "Time",
+      description: "Adds 10 seconds to your timer",
       hint: "Great in the final seconds!",
     },
     addPower: {
@@ -620,7 +620,7 @@ export const en: KaTranslations = {
   // ==========================================
   shop: {
     title: "Shop",
-    starterPack: "Starter Pack",
+    starterPack: "Starter",
     forBeginners: "For Beginners",
     megaPowers: "Mega Powers",
     winMoreGames: "Win More Games",
@@ -633,9 +633,9 @@ export const en: KaTranslations = {
     coins: "Coins",
     gems: "Gems",
     withBonuses: "With Bonuses",
-    smallPackage: "Small Package",
-    mediumPackage: "Medium Package",
-    largePackage: "Large Package",
+    smallPackage: "Small",
+    mediumPackage: "Medium",
+    largePackage: "Large",
     megaPackage: "Mega Package",
     hugePackage: "Huge Package",
     allPowers: "All Powers",
@@ -1060,7 +1060,7 @@ export const en: KaTranslations = {
   // Featured Carousel
   // ==========================================
   featured: {
-    starterPack: "Starter Pack",
+    starterPack: "Starter",
     starterPackDesc: "2x All Powers • 200 Coins • Perfect for beginners",
     megaPowers: "Mega Powers",
     megaPowersDesc: "5x All Powers • For top players",
