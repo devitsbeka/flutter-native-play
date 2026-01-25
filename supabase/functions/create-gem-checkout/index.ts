@@ -162,7 +162,7 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop/cancel`,
-      locale: "ka", // Georgian locale
+      locale: "auto", // Auto-detect user's locale (Georgian not supported by Stripe)
       metadata: {
         user_id: userData.user.id,
         product_id: productId,
