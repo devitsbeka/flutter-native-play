@@ -1,3 +1,4 @@
+// AuthContext - manages authentication state and methods
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
