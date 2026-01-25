@@ -192,6 +192,39 @@ export function RoomLobbyV2() {
     setIsStarting(false);
   };
 
+  // Handler for removing a participant (invited players)
+  const handleRemoveParticipant = async (participantId: string) => {
+    if (!currentRoom || !isHost) return;
+    try {
+      await supabase
+        .from("room_participants")
+        .delete()
+        .eq("id", participantId);
+      toast.success("მოთამაშე წაიშალა");
+    } catch (error) {
+      console.error("Remove participant error:", error);
+      toast.error("წაშლა ვერ მოხერხდა");
+    }
+  };
+
+  // Handler for resending invitation
+  const handleResendInvitation = async (userId: string) => {
+    if (!currentRoom) return;
+    try {
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "room_invite",
+        title: "მოგიწვიეს თამაშზე!",
+        message: "შემოგვიერთდი ტრივიას ოთახში!",
+        data: { room_id: currentRoom.id, room_code: currentRoom.room_code },
+      });
+      toast.success("მოწვევა თავიდან გაიგზავნა!");
+    } catch (error) {
+      console.error("Resend invitation error:", error);
+      toast.error("მოწვევის გაგზავნა ვერ მოხერხდა");
+    }
+  };
+
   // handleStartTVMode removed - now using toggle with handleTVModeToggle
 
   const handleUpdateRoomIconAndName = async (iconUrl: string, newName: string) => {
@@ -702,6 +735,8 @@ export function RoomLobbyV2() {
             maxPlayers={currentRoom.max_players || 10}
             isHost={isHost}
             onInviteFriends={() => setShowInviteModal(true)}
+            onRemoveParticipant={handleRemoveParticipant}
+            onResendInvitation={handleResendInvitation}
           />
         </div>
 
@@ -710,6 +745,8 @@ export function RoomLobbyV2() {
           isOpen={showInviteModal}
           onClose={() => setShowInviteModal(false)}
           inviteLink={getShareLink(currentRoom.room_code)}
+          roomId={currentRoom.id}
+          roomCode={currentRoom.room_code}
         />
       </div>
 

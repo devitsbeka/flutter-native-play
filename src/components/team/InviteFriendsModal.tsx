@@ -23,6 +23,8 @@ interface InviteFriendsModalProps {
   isOpen: boolean;
   onClose: () => void;
   inviteLink?: string;
+  roomId?: string;
+  roomCode?: string;
 }
 
 interface SearchResult {
@@ -91,15 +93,19 @@ function getCountryFlag(countryCode: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
-export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriendsModalProps) {
+export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode }: InviteFriendsModalProps) {
   const [isSharing, setIsSharing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const [invitingUser, setInvitingUser] = useState<string | null>(null);
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
   const friendIds = new Set(friends.map(f => f.friendId));
+  
+  // Determine if we're in room invite mode
+  const isRoomInviteMode = Boolean(roomId);
   
   const appLink = inviteLink || `${window.location.origin}/team`;
   const shareMessage = "მოგიწვიე MyTrivia-ში თამაშზე! 🎮🧠 შემოგვიერთდი და გავერთოთ ერთად!";
@@ -133,6 +139,65 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
     const success = await sendFriendRequest(userId);
     if (success) {
       setSentRequests(prev => new Set([...prev, userId]));
+    }
+  };
+
+  // Room invitation handler
+  const handleInviteToRoom = async (userId: string) => {
+    if (!roomId) return;
+    
+    setInvitingUser(userId);
+    try {
+      // Import supabase
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      // Check if already invited/in room
+      const { data: existing } = await supabase
+        .from("room_participants")
+        .select("id")
+        .eq("room_id", roomId)
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (existing) {
+        toast.info("მომხმარებელი უკვე ოთახშია");
+        return;
+      }
+      
+      // Get the user's profile for nickname
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nickname, avatar_url, country_code")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      // Add as invited participant
+      await supabase.from("room_participants").insert({
+        room_id: roomId,
+        user_id: userId,
+        status: "invited",
+        nickname: profile?.nickname || "Player",
+        avatar_url: profile?.avatar_url,
+        country_code: profile?.country_code || "GE",
+        is_host: false,
+      });
+      
+      // Send notification
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "room_invite",
+        title: "მოგიწვიეს თამაშზე!",
+        message: "შემოგვიერთდი ტრივიას ოთახში!",
+        data: { room_id: roomId, room_code: roomCode },
+      });
+      
+      setSentRequests(prev => new Set([...prev, userId]));
+      toast.success("მოწვევა გაიგზავნა!");
+    } catch (error) {
+      console.error("Invite error:", error);
+      toast.error("მოწვევა ვერ მოხერხდა");
+    } finally {
+      setInvitingUser(null);
     }
   };
 
@@ -288,8 +353,11 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                               </div>
 
                               <motion.button
-                                onClick={() => handleSendRequest(result.user_id)}
-                                disabled={sentRequests.has(result.user_id)}
+                                onClick={() => isRoomInviteMode 
+                                  ? handleInviteToRoom(result.user_id) 
+                                  : handleSendRequest(result.user_id)
+                                }
+                                disabled={sentRequests.has(result.user_id) || invitingUser === result.user_id}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
                                   sentRequests.has(result.user_id)
                                     ? "bg-white/15 border-white/20 text-white/90"
@@ -298,7 +366,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                                 whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
                                 whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
                               >
-                                {sentRequests.has(result.user_id) ? (
+                                {invitingUser === result.user_id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : sentRequests.has(result.user_id) ? (
                                   <>
                                     <Check className="w-3 h-3" />
                                     გაგზავნილი
@@ -306,7 +376,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                                 ) : (
                                   <>
                                     <UserPlus className="w-4 h-4" />
-                                    დამატება
+                                    {isRoomInviteMode ? "მოწვევა" : "დამატება"}
                                   </>
                                 )}
                               </motion.button>
@@ -365,22 +435,25 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink }: InviteFriend
                 <div className="w-full">
                   <div className="mx-auto w-full max-w-[520px]">
                     <div className="flex items-center justify-center gap-8 flex-nowrap overflow-x-auto overflow-y-visible py-2">
-                      {shareOptions.map((option, index) => (
-                        <motion.button
-                          key={option.id}
-                          onClick={() => handleShare(option.action)}
-                          className="flex flex-col items-center gap-2 shrink-0 scale-[0.85] sm:scale-100"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          whileHover={{ scale: 1.08, y: -2 }}
-                          whileTap={{ scale: 0.95, y: 0 }}
-                          disabled={isSharing}
-                        >
-                          <option.icon />
-                          <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
-                        </motion.button>
-                      ))}
+                      {shareOptions.map((option, index) => {
+                        const IconComponent = option.icon;
+                        return (
+                          <motion.button
+                            key={option.id}
+                            onClick={() => handleShare(option.action)}
+                            className="flex flex-col items-center gap-2 shrink-0 scale-[0.85] sm:scale-100"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.03 }}
+                            whileHover={{ scale: 1.08, y: -2 }}
+                            whileTap={{ scale: 0.95, y: 0 }}
+                            disabled={isSharing}
+                          >
+                            <span><IconComponent /></span>
+                            <span className="text-sm font-semibold text-primary-foreground/80">{option.label}</span>
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
