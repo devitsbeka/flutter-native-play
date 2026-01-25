@@ -39,8 +39,8 @@ export function ShopProductGrid({
       </div>
 
       {/* Products Grid */}
-      <div className="px-[15px]">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      <div className="px-3 sm:px-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
           {items.map((item, index) => {
             const canAfford = gems >= item.price;
             const isPurchased = purchasedItems.has(item.id);
