@@ -124,14 +124,27 @@ const TVHostController: React.FC = () => {
     return mapping[phase] || 'category-select';
   };
   
-  // Determine actual phase - if we have a queue, show lobby instead of category-select
+  // Determine actual phase - prioritize poll hook's state for poll phases
+  // This handles the race condition where pollHook updates before contextPhase
   const rawLocalPhase = mapContextPhaseToLocal(contextPhase);
-  const localPhase: LocalPhase = (rawLocalPhase === 'category-select' && hasQueue) ? 'lobby' : rawLocalPhase;
+  let localPhase: LocalPhase = (rawLocalPhase === 'category-select' && hasQueue) ? 'lobby' : rawLocalPhase;
+  
+  // Override with poll hook state if we're in poll phases
+  // The poll hook subscribes to the same DB but updates its local state immediately after endVoting()
+  if (pollHook.pollPhase === 'results' && (rawLocalPhase === 'poll-voting' || rawLocalPhase === 'poll-suggest')) {
+    localPhase = 'poll-results';
+  } else if (pollHook.pollPhase === 'voting' && rawLocalPhase !== 'poll-voting' && rawLocalPhase !== 'poll-results') {
+    // If poll is in voting phase but context hasn't caught up, show voting
+    if (contextPhase.includes('poll')) {
+      localPhase = 'poll-voting';
+    }
+  }
   
   // Debug logging for phase issues
   console.log('[TVHostController] Phase debug:', { 
     contextPhase, 
-    localPhase, 
+    localPhase,
+    pollHookPhase: pollHook.pollPhase,
     questionsLength: questions.length,
     currentQuestionIndex,
     playersCount: players.length 
