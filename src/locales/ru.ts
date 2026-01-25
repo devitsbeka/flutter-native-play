@@ -723,6 +723,8 @@ export const ru: KaTranslations = {
   modals: {
     notEnoughCoins: "Недостаточно монет",
     coinsRequired: "Нужно {amount} монет для игры",
+    notEnoughGems: "Недостаточно кристаллов",
+    gemsRequired: "Нужно {amount} кристаллов",
     yourBalance: "Ваш баланс:",
     youNeed: "Нужно:",
     watchAd: "Смотреть рекламу",
