@@ -136,7 +136,7 @@ export function ShopItemCard({
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
           opacity: !canAfford && !isPurchased ? 0.6 : 1,
-          aspectRatio: "1 / 1.4",
+          aspectRatio: "1 / 1.25",
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
@@ -152,29 +152,29 @@ export function ShopItemCard({
         </motion.div>
 
         {/* Name */}
-        <h3 className="text-gray-900 font-bold text-xs sm:text-sm leading-tight mb-1">{name}</h3>
+        <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-tight mb-1">{name}</h3>
         
         {/* Description */}
         {showDescription && description && (
-          <p className="text-gray-500 text-[10px] sm:text-xs line-clamp-2 mb-2 sm:mb-3 flex-1">{description}</p>
+          <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-2 flex-1">{description}</p>
         )}
 
         {/* Price / Status - Bottom */}
-        <div className="mt-auto w-full flex flex-col items-center gap-1.5 sm:gap-2">
+        <div className="mt-auto w-full flex flex-col items-center gap-1 sm:gap-1.5">
           {isPurchased ? (
-            <div className="flex items-center justify-center gap-1 text-success font-bold text-xs px-3 py-1.5 rounded-full bg-success/10">
-              <Check className="w-4 h-4" />
+            <div className="flex items-center justify-center gap-1 text-success font-bold text-sm px-4 py-2 rounded-full bg-success/10">
+              <Check className="w-5 h-5" />
               <span>{t("common.owned") || "შეძენილი"}</span>
             </div>
           ) : isLoading ? (
-            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           ) : isLari ? (
             <>
               {/* Price Display */}
-              <span className="font-bold text-base sm:text-lg text-green-600 dark:text-green-400">₾{price}</span>
+              <span className="font-bold text-lg sm:text-xl text-green-600 dark:text-green-400">₾{price}</span>
               {/* Buy Button */}
               <motion.div
-                className="px-4 py-1.5 rounded-full font-bold text-[10px] sm:text-xs text-white"
+                className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
                 style={{
                   background: "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)",
                   boxShadow: "0 3px 0 #2E7D32",
@@ -189,12 +189,12 @@ export function ShopItemCard({
             <>
               {/* Price Display */}
               <div className="flex items-center justify-center gap-1">
-                <img src={currencyIcon!} alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="font-bold text-sm sm:text-base text-gray-800">{price}</span>
+                <img src={currencyIcon!} alt="" className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="font-bold text-base sm:text-lg text-gray-800">{price}</span>
               </div>
               {/* Buy Button */}
               <motion.div
-                className="px-4 py-1.5 rounded-full font-bold text-[10px] sm:text-xs text-white"
+                className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
                 style={{
                   background: "linear-gradient(180deg, #9359DD 0%, #7B3FC7 100%)",
                   boxShadow: "0 3px 0 #5D2DA3",
