@@ -164,7 +164,7 @@ export const TVPairingScreenV3: React.FC = () => {
             
             <div className="flex flex-col items-center gap-1.5">
               <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <span className="text-lg font-bold">1234</span>
+                <span className="text-lg font-bold">#</span>
               </div>
               <span className="text-xs">შეიყვანეთ კოდი</span>
             </div>
