@@ -338,7 +338,7 @@ export default function Auth() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Sign in with Google
+            {isSignUp ? "Sign up with Google" : "Sign in with Google"}
           </ChunkyButton>
 
           {/* Sign in with Apple - iOS only */}
@@ -352,7 +352,7 @@ export default function Auth() {
               disabled={loading}
             >
               <Apple className="w-5 h-5 mr-2" />
-              Sign in with Apple
+              {isSignUp ? "Sign up with Apple" : "Sign in with Apple"}
             </ChunkyButton>
           )}
         </motion.form>
@@ -379,21 +379,6 @@ export default function Auth() {
           </p>
         </motion.div>
 
-        {/* Guest option */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-4"
-        >
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="text-sm text-foreground/60 hover:text-foreground transition-colors"
-          >
-            {t("modals.continueAsGuest")} →
-          </button>
-        </motion.div>
       </div>
     </div>
   );
