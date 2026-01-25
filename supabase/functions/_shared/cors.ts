@@ -6,7 +6,10 @@
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
-  // Production
+  // Production - Custom domain
+  'https://mytrivia.io',
+  'https://www.mytrivia.io',
+  // Production - Lovable domain
   'https://flutter-native-play.lovable.app',
   // Preview
   'https://id-preview--f54c9281-c7aa-40a4-8ea7-4b75d0ffa3d4.lovable.app',
