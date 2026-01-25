@@ -30,8 +30,41 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
 
   // If mock queue is provided, use it directly (for showcase mode)
   const isMockMode = mockQueue !== undefined;
+  
+  // Use refs to avoid stale closures in refetch
+  const sessionIdRef = useRef(sessionId);
+  const roomIdFallbackRef = useRef(roomIdFallback);
+  const isMockModeRef = useRef(isMockMode);
+  const mockQueueRef = useRef(mockQueue);
+  
+  // Keep refs in sync
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+    roomIdFallbackRef.current = roomIdFallback;
+    isMockModeRef.current = isMockMode;
+    mockQueueRef.current = mockQueue;
+  }, [sessionId, roomIdFallback, isMockMode, mockQueue]);
 
   const refetch = useCallback(async () => {
+    const currentSessionId = sessionIdRef.current;
+    const currentRoomIdFallback = roomIdFallbackRef.current;
+    const currentIsMockMode = isMockModeRef.current;
+    const currentMockQueue = mockQueueRef.current;
+    
+    // In mock mode, use the provided mock queue
+    if (currentIsMockMode) {
+      setQueue(currentMockQueue || []);
+      setLoading(false);
+      return;
+    }
+
+    if (!currentSessionId) {
+      setQueue([]);
+      return;
+    }
+    setLoading(true);
+
+    console.log('[useTVSessionQueue] Fetching queue for sessionId:', currentSessionId, 'roomIdFallback:', currentRoomIdFallback);
     // In mock mode, use the provided mock queue
     if (isMockMode) {
       setQueue(mockQueue || []);
@@ -51,7 +84,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     const { data: tvData, error: tvError } = await supabase
       .from("tv_session_queue")
       .select("*")
-      .eq("session_id", sessionId)
+      .eq("session_id", currentSessionId)
       .order("position", { ascending: true });
 
     console.log('[useTVSessionQueue] tv_session_queue result:', { tvData, tvError, count: tvData?.length });
@@ -66,14 +99,14 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     }
     
     // If linked to a room, build full queue: initial category + room queue items
-    if (roomIdFallback) {
-      console.log('[useTVSessionQueue] Attempting room fallback for roomId:', roomIdFallback);
+    if (currentRoomIdFallback) {
+      console.log('[useTVSessionQueue] Attempting room fallback for roomId:', currentRoomIdFallback);
       
       // Get room's initial category (set during room creation)
       const { data: roomInfo } = await supabase
         .from("game_rooms")
         .select("category_id, category_name")
-        .eq("id", roomIdFallback)
+        .eq("id", currentRoomIdFallback)
         .maybeSingle();
       
       console.log('[useTVSessionQueue] Room info:', roomInfo);
@@ -82,7 +115,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       const { data: roomData, error: roomError } = await supabase
         .from("room_category_queue")
         .select("*")
-        .eq("room_id", roomIdFallback)
+        .eq("room_id", currentRoomIdFallback)
         .order("position", { ascending: true });
       
       console.log('[useTVSessionQueue] room_category_queue result:', { roomData, roomError });
@@ -95,8 +128,8 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         const iconSlug = CATEGORY_ID_TO_ICON[roomInfo.category_id] || null;
         
         fullQueue.push({
-          id: `initial-${roomIdFallback}`,
-          session_id: sessionId,
+          id: `initial-${currentRoomIdFallback}`,
+          session_id: currentSessionId,
           position: 0,
           source_type: "category",
           category_id: roomInfo.category_id,
@@ -140,11 +173,12 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     nextPositionRef.current = 0; // Reset position ref
     setUsingRoomFallback(false);
     setLoading(false);
-  }, [sessionId, roomIdFallback, isMockMode, mockQueue]);
+  }, []); // Empty deps - uses refs instead
 
+  // Initial fetch and refetch when dependencies change
   useEffect(() => {
     refetch();
-  }, [refetch]);
+  }, [sessionId, roomIdFallback, refetch]);
 
   // Sync state when mockQueue changes
   useEffect(() => {
