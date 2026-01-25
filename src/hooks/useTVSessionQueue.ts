@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORY_ID_TO_ICON } from "@/data/categoryIconMap";
 
@@ -24,6 +24,9 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
   const [queue, setQueue] = useState<TVQueueItem[]>(mockQueue || []);
   const [loading, setLoading] = useState(!mockQueue);
   const [usingRoomFallback, setUsingRoomFallback] = useState(false);
+  
+  // Track next position to avoid race conditions during rapid additions
+  const nextPositionRef = useRef(0);
 
   // If mock queue is provided, use it directly (for showcase mode)
   const isMockMode = mockQueue !== undefined;
@@ -56,6 +59,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     if (!tvError && tvData && tvData.length > 0) {
       console.log('[useTVSessionQueue] Using tv_session_queue directly:', tvData);
       setQueue(tvData as TVQueueItem[]);
+      nextPositionRef.current = tvData.length; // Sync position ref
       setUsingRoomFallback(false);
       setLoading(false);
       return;
@@ -124,6 +128,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       
       if (fullQueue.length > 0) {
         setQueue(fullQueue);
+        nextPositionRef.current = fullQueue.length; // Sync position ref
         setUsingRoomFallback(true);
         setLoading(false);
         return;
@@ -132,6 +137,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     
     console.log('[useTVSessionQueue] No queue found, setting empty');
     setQueue([]);
+    nextPositionRef.current = 0; // Reset position ref
     setUsingRoomFallback(false);
     setLoading(false);
   }, [sessionId, roomIdFallback, isMockMode, mockQueue]);
@@ -199,8 +205,29 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
   const addCategoryToQueue = useCallback(
     async (category: { id: string; name: string; icon_slug?: string | null }) => {
       if (!sessionId) return;
-      const nextPos = queue.length;
-      await supabase.from("tv_session_queue").insert({
+      
+      // Get position and increment ref immediately to prevent race conditions
+      const nextPos = nextPositionRef.current;
+      nextPositionRef.current += 1;
+      
+      // Create optimistic item
+      const tempId = `temp-${Date.now()}-${Math.random()}`;
+      const optimisticItem: TVQueueItem = {
+        id: tempId,
+        session_id: sessionId,
+        position: nextPos,
+        source_type: "category",
+        category_id: category.id,
+        category_name: category.name,
+        icon_slug: category.icon_slug || null,
+        user_trivia_id: null,
+        created_at: new Date().toISOString(),
+      };
+      
+      // Optimistic update
+      setQueue(prev => [...prev, optimisticItem]);
+      
+      const { error } = await supabase.from("tv_session_queue").insert({
         session_id: sessionId,
         position: nextPos,
         source_type: "category",
@@ -208,9 +235,18 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         category_name: category.name,
         icon_slug: category.icon_slug || null,
       });
-      // realtime will refetch
+      
+      if (error) {
+        console.error('[useTVSessionQueue] addCategoryToQueue failed:', error);
+        // Revert optimistic update
+        setQueue(prev => prev.filter(q => q.id !== tempId));
+        nextPositionRef.current -= 1;
+      } else {
+        // Refetch to get real IDs
+        refetch();
+      }
     },
-    [sessionId, queue.length]
+    [sessionId, refetch]
   );
 
   const addToQueue = useCallback(
@@ -222,8 +258,29 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       user_trivia_id?: string | null;
     }) => {
       if (!sessionId) return;
-      const nextPos = queue.length;
-      await supabase.from("tv_session_queue").insert({
+      
+      // Get position and increment ref immediately to prevent race conditions
+      const nextPos = nextPositionRef.current;
+      nextPositionRef.current += 1;
+      
+      // Create optimistic item
+      const tempId = `temp-${Date.now()}-${Math.random()}`;
+      const optimisticItem: TVQueueItem = {
+        id: tempId,
+        session_id: sessionId,
+        position: nextPos,
+        source_type: item.source_type,
+        category_id: item.category_id || null,
+        category_name: item.category_name || null,
+        icon_slug: item.icon_slug || null,
+        user_trivia_id: item.user_trivia_id || null,
+        created_at: new Date().toISOString(),
+      };
+      
+      // Optimistic update
+      setQueue(prev => [...prev, optimisticItem]);
+      
+      const { error } = await supabase.from("tv_session_queue").insert({
         session_id: sessionId,
         position: nextPos,
         source_type: item.source_type,
@@ -232,9 +289,18 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         icon_slug: item.icon_slug || null,
         user_trivia_id: item.user_trivia_id || null,
       });
-      // realtime will refetch
+      
+      if (error) {
+        console.error('[useTVSessionQueue] addToQueue failed:', error);
+        // Revert optimistic update
+        setQueue(prev => prev.filter(q => q.id !== tempId));
+        nextPositionRef.current -= 1;
+      } else {
+        // Refetch to get real IDs
+        refetch();
+      }
     },
-    [sessionId, queue.length]
+    [sessionId, refetch]
   );
 
   const removeFromQueue = useCallback(
