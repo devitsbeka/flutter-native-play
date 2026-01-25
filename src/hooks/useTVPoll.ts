@@ -326,21 +326,43 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
   // Start the voting phase (host only)
   const startVoting = useCallback(async () => {
-    if (!sessionId) return false;
+    if (!sessionId) {
+      console.error('[useTVPoll] startVoting: No sessionId');
+      return false;
+    }
 
-    const { error } = await supabase
+    console.log('[useTVPoll] startVoting called for session:', sessionId);
+    
+    const startTime = new Date().toISOString();
+
+    const { data, error } = await supabase
       .from('tv_sessions')
       .update({
         status: 'poll-voting',
-        poll_start_time: new Date().toISOString(),
+        poll_start_time: startTime,
         poll_duration: 30,
       })
-      .eq('id', sessionId);
+      .eq('id', sessionId)
+      .select();
+
+    console.log('[useTVPoll] startVoting result:', { data, error, rowsAffected: data?.length });
 
     if (error) {
+      console.error('[useTVPoll] Error starting voting:', error);
       tvLogError('[useTVPoll] Error starting voting', error);
       return false;
     }
+
+    if (!data || data.length === 0) {
+      console.error('[useTVPoll] startVoting: No rows updated - check RLS');
+      return false;
+    }
+
+    // Immediately update local state for instant UI response
+    console.log('[useTVPoll] Successfully started voting, updating local state');
+    setPollPhase('voting');
+    setPollStartTime(new Date(startTime));
+    setPollDuration(30);
 
     return true;
   }, [sessionId]);
