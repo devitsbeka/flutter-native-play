@@ -493,8 +493,6 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     const votingEnded = timeRemaining === 0;
 
     // If voting ended, show brief transition state while waiting for database update
-    // The database status should change to 'poll-results' which will trigger TVJoin/TVHostController
-    // to render ControllerPollResultsGuest or ControllerPollResults respectively
     if (votingEnded) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
@@ -515,6 +513,102 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
       );
     }
 
+    // HOST VIEW: Read-only live results, cannot vote
+    if (isHost) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
+          {/* Header with timer */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Crown className="w-7 h-7 text-yellow-400" />
+              <h1 className="text-xl font-bold text-white">ხმის მიცემა</h1>
+            </div>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+              timeRemaining <= 10 ? 'bg-red-500/30' : 'bg-white/10'
+            }`}>
+              <Timer className={`w-5 h-5 ${timeRemaining <= 10 ? 'text-red-400' : 'text-purple-300'}`} />
+              <span className={`font-bold text-xl ${timeRemaining <= 10 ? 'text-red-400' : 'text-white'}`}>
+                {timeRemaining}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-purple-300 text-sm mb-4">
+            მოთამაშეები აძლევენ ხმებს...
+          </p>
+
+          {/* Live results list - read-only for host */}
+          <div className="flex-1 space-y-3 overflow-y-auto">
+            <AnimatePresence>
+              {suggestions.map((suggestion, index) => {
+                const isHostTrivia = suggestion.source_type === 'trivia';
+
+                return (
+                  <motion.div
+                    key={suggestion.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="w-full flex items-center gap-3 p-4 rounded-xl border-2 bg-white/10 border-white/20"
+                  >
+                    {/* Rank with medal colors */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      index === 0 ? 'bg-yellow-500 text-yellow-900' :
+                      index === 1 ? 'bg-gray-300 text-gray-700' :
+                      index === 2 ? 'bg-orange-400 text-orange-900' :
+                      'bg-purple-500/30 text-purple-200'
+                    }`}>
+                      {index + 1}
+                    </div>
+
+                    {/* Icon */}
+                    {suggestion.cover_image ? (
+                      <img src={suggestion.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    ) : suggestion.icon_slug ? (
+                      <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-10 h-10" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-purple-300" />
+                      </div>
+                    )}
+
+                    {/* Name and type */}
+                    <div className="flex-1 text-left">
+                      <p className="font-medium text-white">{suggestion.category_name}</p>
+                      <p className="text-xs text-purple-300">
+                        {isHostTrivia ? (
+                          <span className="text-yellow-400">შენი ტრივია</span>
+                        ) : 'კატეგორია'}
+                      </p>
+                    </div>
+
+                    {/* Vote count - animated */}
+                    <motion.div 
+                      className="flex items-center gap-2 bg-purple-500/30 px-3 py-1 rounded-full"
+                      key={suggestion.vote_count}
+                      initial={{ scale: 1.2 }}
+                      animate={{ scale: 1 }}
+                    >
+                      <Vote className="w-4 h-4 text-purple-300" />
+                      <span className="text-xl font-bold text-white">{suggestion.vote_count}</span>
+                    </motion.div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+
+          {/* Host footer info */}
+          <div className="mt-4 text-center">
+            <p className="text-purple-300 text-sm">
+              ⏳ ელოდე ხმის მიცემის დასრულებას
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // GUEST VIEW: Interactive voting
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
         {/* Header with timer */}
@@ -537,7 +631,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           აირჩიე კატეგორიები რომლებშიც გინდა ითამაშო
         </p>
 
-        {/* Voting list */}
+        {/* Voting list - interactive for guests */}
         <div className="flex-1 space-y-3 overflow-y-auto">
           <AnimatePresence>
             {suggestions.map((suggestion, index) => {
@@ -552,7 +646,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   onClick={() => handleVote(suggestion.id)}
-                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all active:scale-98 ${
                     hasVoted
                       ? 'bg-purple-500/30 border-purple-400'
                       : 'bg-white/10 border-white/20 hover:border-purple-400'
@@ -589,7 +683,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     </p>
                   </div>
 
-                  {/* Vote count */}
+                  {/* Vote count + check */}
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-bold text-white">{suggestion.vote_count}</span>
                     {hasVoted && <Check className="w-5 h-5 text-green-400" />}

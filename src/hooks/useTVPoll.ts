@@ -313,6 +313,8 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         tvLogError('[useTVPoll] Error removing vote', error);
         return false;
       }
+      // Optimistically update local state
+      setMyVotes(prev => prev.filter(id => id !== suggestionId));
     } else {
       // Add vote
       const { error } = await supabase
@@ -324,13 +326,29 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         });
 
       if (error) {
+        // Handle 409 conflict (duplicate) - vote already exists, try to remove instead
+        if (error.code === '23505') {
+          tvLog('[useTVPoll] Vote exists, attempting to remove instead');
+          const { error: deleteError } = await supabase
+            .from('tv_poll_votes')
+            .delete()
+            .eq('suggestion_id', suggestionId)
+            .eq('user_id', userId);
+          
+          if (!deleteError) {
+            setMyVotes(prev => prev.filter(id => id !== suggestionId));
+            return true;
+          }
+        }
         tvLogError('[useTVPoll] Error adding vote', error);
         return false;
       }
+      // Optimistically update local state
+      setMyVotes(prev => [...prev, suggestionId]);
     }
 
     return true;
-  }, [sessionId, userId, suggestions, myVotes]);
+  }, [sessionId, userId, myVotes]);
 
   // Start the voting phase (host only)
   const startVoting = useCallback(async () => {
