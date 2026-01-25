@@ -724,7 +724,7 @@ const TVHostController: React.FC = () => {
   // Lobby phase - shows queue and ready to start
   if (localPhase === 'lobby') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-28 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -804,7 +804,7 @@ const TVHostController: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 bg-purple-500/10 rounded-xl p-4 border border-purple-400/30"
+          className="mb-28 bg-purple-500/10 rounded-xl p-4 border border-purple-400/30"
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-bold flex items-center gap-2">
@@ -869,10 +869,10 @@ const TVHostController: React.FC = () => {
         </motion.div>
 
         {/* Start Game Button */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-40 pointer-events-none">
           <ChunkyButton
             variant="primary"
-            className="w-full"
+            className="w-full pointer-events-auto"
             onClick={handleStartGame}
             disabled={players.length < 1 || queue.length === 0}
           >
