@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { Crown, Swords, Users, Send, X, Plus } from "lucide-react";
 import { RoomParticipant } from "@/hooks/useGameRoom";
@@ -62,30 +61,27 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
       animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl overflow-hidden bg-white/10 backdrop-blur-md border border-white/20"
     >
-      {/* Header */}
+      {/* Header - Combined label with count */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-        <span className="font-semibold text-white text-sm">მოთამაშეები</span>
         <div className="flex items-center gap-2">
-          {maxPlayers && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-sm font-medium text-white/80">
-              <Users className="w-3.5 h-3.5" />
-              <span>{participants.length}/{maxPlayers}</span>
-            </div>
-          )}
-
-          {isHost && onInviteFriends && (
-            <motion.button
-              type="button"
-              onClick={onInviteFriends}
-              whileTap={{ scale: 0.92 }}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 flex items-center justify-center"
-              aria-label="მეგობრის დამატება"
-              title="მეგობრის დამატება"
-            >
-              <Plus className="w-4 h-4 text-white/80" />
-            </motion.button>
-          )}
+          <Users className="w-4 h-4 text-white/60" />
+          <span className="font-semibold text-white text-sm">
+            მოთამაშეები {maxPlayers && <span className="text-white/60">({participants.length}/{maxPlayers})</span>}
+          </span>
         </div>
+
+        {isHost && onInviteFriends && (
+          <motion.button
+            type="button"
+            onClick={onInviteFriends}
+            whileTap={{ scale: 0.92 }}
+            className="w-9 h-9 rounded-full border-2 border-dashed border-white/30 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+            aria-label="მეგობრის დამატება"
+            title="მეგობრის დამატება"
+          >
+            <Plus className="w-4 h-4 text-white/50" />
+          </motion.button>
+        )}
       </div>
 
       {/* Scoreboard Content */}
@@ -93,12 +89,13 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
         {/* VS Display for 2 players */}
         {sortedParticipants.length === 2 ? (
           <div className="flex items-center justify-center gap-4 mb-4">
-            {sortedParticipants.map((player, idx) => {
+            {/* Player 1 */}
+            {(() => {
+              const player = sortedParticipants[0];
               const isInvited = (player.status as string) === 'invited';
               return (
-                <React.Fragment key={player.id}>
-                  {/* Player */}
-                  <div className={`flex-1 text-center ${isInvited ? 'opacity-60' : ''}`}>
+                <div className="flex-1 flex justify-end">
+                  <div className={`text-center max-w-[120px] ${isInvited ? 'opacity-60' : ''}`}>
                     <div className={`relative inline-block mb-2 ${isInvited ? 'grayscale' : ''}`}>
                       {showHostCrown && player.is_host && !isInvited && (
                         <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
@@ -111,12 +108,22 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                         {getFlagEmoji(player.country_code || "GE")}
                       </div>
+                      {/* Delete button on avatar for host + invited */}
+                      {isHost && isInvited && (
+                        <motion.button
+                          onClick={() => onRemoveParticipant?.(player.id)}
+                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-background z-20"
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </motion.button>
+                      )}
                     </div>
-                    <p className={`font-medium text-sm truncate max-w-[100px] mx-auto ${isInvited ? 'text-white/50' : 'text-white'}`}>
+                    <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
                       {player.user_id === currentUserId ? "შენ" : player.nickname}
                     </p>
                     {isInvited ? (
-                      <div className="mt-2">
+                      <div className="mt-2 flex flex-col items-center">
                         <motion.p 
                           animate={{ opacity: [0.5, 1, 0.5] }}
                           transition={{ duration: 2, repeat: Infinity }}
@@ -125,24 +132,14 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                           მოწვეული...
                         </motion.p>
                         {isHost && (
-                          <div className="flex items-center justify-center gap-2 mt-2">
-                            <motion.button
-                              onClick={() => onResendInvitation?.(player.user_id)}
-                              className="px-2.5 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 flex items-center gap-1 text-xs text-primary"
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <Send className="w-3 h-3" />
-                              თავიდან
-                            </motion.button>
-                            <motion.button
-                              onClick={() => onRemoveParticipant?.(player.id)}
-                              className="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 flex items-center gap-1 text-xs text-red-400"
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <X className="w-3 h-3" />
-                              წაშლა
-                            </motion.button>
-                          </div>
+                          <motion.button
+                            onClick={() => onResendInvitation?.(player.user_id)}
+                            className="mt-2 px-3 py-1 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center gap-1.5 text-xs text-primary"
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Send className="w-3 h-3" />
+                            თავიდან
+                          </motion.button>
                         )}
                       </div>
                     ) : (
@@ -156,26 +153,92 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       </div>
                     )}
                   </div>
-
-                  {/* VS icon between players */}
-                  {idx === 0 && (
-                    <div className="flex flex-col items-center">
-                      <motion.div
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center"
-                        style={{ boxShadow: "0 4px 16px rgba(239,68,68,0.4)" }}
-                      >
-                        <Swords className="w-6 h-6 text-white" />
-                      </motion.div>
-                      <span className="text-xs text-white/60 mt-1">
-                        {sortedParticipants[0].total_rounds_played || 0} რაუნდი
-                      </span>
-                    </div>
-                  )}
-                </React.Fragment>
+                </div>
               );
-            })}
+            })()}
+
+            {/* VS Icon - centered */}
+            <div className="flex-shrink-0 flex flex-col items-center">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center"
+                style={{ boxShadow: "0 4px 16px rgba(239,68,68,0.4)" }}
+              >
+                <Swords className="w-6 h-6 text-white" />
+              </motion.div>
+              <span className="text-xs text-white/60 mt-1">
+                {sortedParticipants[0].total_rounds_played || 0} რაუნდი
+              </span>
+            </div>
+
+            {/* Player 2 */}
+            {(() => {
+              const player = sortedParticipants[1];
+              const isInvited = (player.status as string) === 'invited';
+              return (
+                <div className="flex-1 flex justify-start">
+                  <div className={`text-center max-w-[120px] ${isInvited ? 'opacity-60' : ''}`}>
+                    <div className={`relative inline-block mb-2 ${isInvited ? 'grayscale' : ''}`}>
+                      {showHostCrown && player.is_host && !isInvited && (
+                        <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-amber-500 fill-amber-400 z-10" />
+                      )}
+                      <SmartAvatar
+                        avatarUrl={player.avatar_url}
+                        fallback={player.nickname}
+                        size="xl"
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
+                        {getFlagEmoji(player.country_code || "GE")}
+                      </div>
+                      {/* Delete button on avatar for host + invited */}
+                      {isHost && isInvited && (
+                        <motion.button
+                          onClick={() => onRemoveParticipant?.(player.id)}
+                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-background z-20"
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <X className="w-3 h-3 text-white" />
+                        </motion.button>
+                      )}
+                    </div>
+                    <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
+                      {player.user_id === currentUserId ? "შენ" : player.nickname}
+                    </p>
+                    {isInvited ? (
+                      <div className="mt-2 flex flex-col items-center">
+                        <motion.p 
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="text-xs text-white/40 italic"
+                        >
+                          მოწვეული...
+                        </motion.p>
+                        {isHost && (
+                          <motion.button
+                            onClick={() => onResendInvitation?.(player.user_id)}
+                            className="mt-2 px-3 py-1 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center gap-1.5 text-xs text-primary"
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Send className="w-3 h-3" />
+                            თავიდან
+                          </motion.button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center mt-2">
+                        <span className="text-2xl font-display font-bold text-white">
+                          {(player as any).total_score || 0}
+                        </span>
+                        <p className="text-xs text-white/60">
+                          {player.total_rounds_played || 0} რაუნდი • {player.total_wins || 0} მოგ.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ) : (
           /* Multi-player list */
