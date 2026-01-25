@@ -76,14 +76,13 @@ const TVJoinContent: React.FC = () => {
     );
   }
 
-  // Determine effective phase - prioritize poll hook for poll phases
-  let effectivePhase = phase;
-  if (pollHook.pollPhase === 'results' && (phase === 'poll-voting' || phase === 'poll-suggest')) {
-    effectivePhase = 'poll-results';
-  }
+  // Use context phase as the source of truth - don't override with pollHook
+  // This ensures guests stay in voting phase until the context updates from the database
+  // The pollHook phase was causing premature transitions to results
+  const effectivePhase = phase;
 
   // Debug logging
-  console.log('[TVJoin] Phase debug:', { contextPhase: phase, pollHookPhase: pollHook.pollPhase, effectivePhase });
+  console.log('[TVJoin] Phase debug:', { contextPhase: phase, effectivePhase });
 
   // Show appropriate screen based on phase
   // Handle both TVPhase values and database status values
