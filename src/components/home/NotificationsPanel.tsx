@@ -130,57 +130,60 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     }
   };
 
-  const handleNavigate = (notification: Notification) => {
+  const handleNavigate = async (notification: Notification) => {
     const data = notification.data as Record<string, unknown>;
     
     if (!notification.read_at) {
       markAsRead(notification.id);
     }
     
-    onClose();
-    
     switch (notification.type) {
       case 'game_started':
-      case 'room_invite':
-        (async () => {
-          try {
-            const roomId = (data?.room_id as string | undefined) ?? undefined;
-            const roomCode = (data?.room_code as string | undefined) ?? undefined;
+      case 'room_invite': {
+        try {
+          const roomId = (data?.room_id as string | undefined) ?? undefined;
+          const roomCode = (data?.room_code as string | undefined) ?? undefined;
 
-            if (roomId || roomCode) {
-              const q = supabase.from('game_rooms').select('tv_session_id, room_code');
-              const { data: room } = roomId
-                ? await q.eq('id', roomId).maybeSingle()
-                : await q.eq('room_code', String(roomCode).toUpperCase()).maybeSingle();
+          if (roomId || roomCode) {
+            const q = supabase.from('game_rooms').select('tv_session_id, room_code, status');
+            const { data: room } = roomId
+              ? await q.eq('id', roomId).maybeSingle()
+              : await q.eq('room_code', String(roomCode).toUpperCase()).maybeSingle();
 
-              const tvSessionId = (room as any)?.tv_session_id as string | null | undefined;
-              if (tvSessionId) {
-                navigate(`/join/session/${tvSessionId}`);
-                return;
+            // Check if room exists and is not cancelled
+            if (room && room.status !== 'cancelled') {
+              onClose();
+              if (room.tv_session_id) {
+                navigate(`/join/session/${room.tv_session_id}`);
+              } else {
+                navigate(`/team?join=${room.room_code}`);
               }
-
-              if ((room as any)?.room_code) {
-                navigate(`/team?join=${(room as any).room_code}`);
-                return;
-              }
+              return;
             }
-
-            if (roomCode) {
-              navigate(`/team?join=${roomCode}`);
-            } else {
-              navigate('/team');
-            }
-          } catch {
-            toast.error('ვერ მოხერხდა თამაშზე გადასვლა');
-            navigate('/team');
           }
-        })();
+
+          // Fallback: use room_code from notification data
+          if (roomCode) {
+            onClose();
+            navigate(`/team?join=${roomCode}`);
+            return;
+          }
+
+          // No valid room data - show error
+          toast.error('ოთახი ვეღარ მოიძებნა');
+        } catch (error) {
+          console.error('Navigation error:', error);
+          toast.error('ვერ მოხერხდა თამაშზე გადასვლა');
+        }
         break;
+      }
       case 'friend_request':
       case 'friend_accepted':
+        onClose();
         navigate('/team');
         break;
       case 'challenge':
+        onClose();
         if (data?.room_code) {
           navigate(`/team?join=${data.room_code}`);
         } else {
@@ -188,6 +191,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
         }
         break;
       case 'game_result':
+        onClose();
         if (data?.room_code) {
           navigate(`/team?join=${data.room_code}`);
         } else {
@@ -197,6 +201,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
       case 'trivia_liked':
       case 'trivia_saved':
       case 'trivia_played':
+        onClose();
         if (data?.post_id) {
           navigate(`/team?playTrivia=${data.post_id}`);
         } else {
@@ -204,9 +209,11 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
         }
         break;
       case 'reward':
+        onClose();
         navigate('/');
         break;
       case 'achievement':
+        onClose();
         navigate('/profile');
         break;
       default:
