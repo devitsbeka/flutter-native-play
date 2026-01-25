@@ -63,7 +63,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
       if (roomIdFromUrl) {
         const { data: roomData } = await supabase
           .from('game_rooms')
-          .select('id, room_name, category_name, category_id, user_trivia_id')
+          .select('id, room_name, category_name, category_id, user_trivia_id, game_mode')
           .eq('id', roomIdFromUrl)
           .maybeSingle();
         
@@ -71,6 +71,23 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
           roomId = roomData.id;
           roomName = roomData.room_name;
           categoryName = roomData.category_name;
+          
+          // Extract user_trivia_id from game_mode as fallback if not set directly
+          let userTriviaId = roomData.user_trivia_id;
+          let collectionId: string | null = null;
+          
+          if (!userTriviaId && roomData.game_mode) {
+            const triviaMatch = roomData.game_mode.match(/^trivia:(.+)$/);
+            if (triviaMatch) {
+              userTriviaId = triviaMatch[1];
+              console.log('[TVSetupInline] Extracted user_trivia_id from game_mode:', userTriviaId);
+            }
+            const collectionMatch = roomData.game_mode.match(/^collection:(.+)$/);
+            if (collectionMatch) {
+              collectionId = collectionMatch[1];
+              console.log('[TVSetupInline] Extracted collection_id from game_mode:', collectionId);
+            }
+          }
           
           // Fetch category icon
           if (roomData.category_id) {
@@ -157,17 +174,41 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
             (item: any) => 
               item.position === 0 && 
               ((roomData.category_id && item.category_id === roomData.category_id) || 
-               (roomData.user_trivia_id && item.user_trivia_id === roomData.user_trivia_id))
+               (userTriviaId && item.user_trivia_id === userTriviaId))
           );
 
           console.log('[TVSetupInline] Initial already in queue check:', { 
             initialAlreadyInQueue, 
             categoryId: roomData.category_id, 
-            userTriviaId: roomData.user_trivia_id 
+            userTriviaId,
+            collectionId,
           });
 
-          // Only prepend initial category/trivia if NOT already in queue
-          if (!initialAlreadyInQueue) {
+          // Handle collection: fetch all rounds and add them to queue
+          if (collectionId) {
+            const { data: collectionRounds } = await supabase
+              .from('user_quiz_posts')
+              .select('id, title, round_number')
+              .eq('collection_id', collectionId)
+              .order('round_number', { ascending: true });
+            
+            if (collectionRounds && collectionRounds.length > 0) {
+              console.log('[TVSetupInline] Found collection rounds:', collectionRounds);
+              collectionRounds.forEach((round, idx) => {
+                rowsToInsert.push({
+                  session_id: session.id,
+                  position: idx,
+                  source_type: 'user_trivia',
+                  category_id: null,
+                  category_name: round.title,
+                  icon_slug: null,
+                  user_trivia_id: round.id,
+                });
+              });
+            }
+          }
+          // Only prepend initial category/trivia if NOT already in queue and NOT a collection
+          else if (!initialAlreadyInQueue) {
             if (roomData.category_id) {
               // Use CATEGORY_ID_TO_ICON to get proper icon slug instead of emoji
               const { CATEGORY_ID_TO_ICON } = await import('@/data/categoryIconMap');
@@ -182,8 +223,8 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                 icon_slug: iconSlug,
                 user_trivia_id: null,
               });
-            } else if (roomData.user_trivia_id) {
-              // Handle user trivia as initial round
+            } else if (userTriviaId) {
+              // Handle user trivia as initial round (use extracted ID)
               rowsToInsert.push({
                 session_id: session.id,
                 position: 0,
@@ -191,7 +232,7 @@ export const TVSetupInline: React.FC<TVSetupInlineProps> = ({
                 category_id: null,
                 category_name: roomData.category_name,
                 icon_slug: null,
-                user_trivia_id: roomData.user_trivia_id,
+                user_trivia_id: userTriviaId,
               });
             }
           }

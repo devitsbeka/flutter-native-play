@@ -479,7 +479,13 @@ const TVHostController: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-red-400 text-xl mb-4">{error}</p>
+          <AlertCircle className="w-16 h-16 text-orange-400 mx-auto mb-4" />
+          <p className="text-orange-300 text-xl font-bold mb-2">{error}</p>
+          <p className="text-purple-300/70 text-sm mb-6">
+            {error === 'No session ID' 
+              ? 'TV სესიის ID ვერ მოიძებნა. გთხოვთ სცადოთ თავიდან.' 
+              : 'გთხოვთ სცადოთ თავიდან.'}
+          </p>
           <ChunkyButton onClick={() => navigate('/team')}>
             უკან
           </ChunkyButton>
