@@ -1592,13 +1592,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const rawPresence = presences[0] as Record<string, unknown> | undefined;
           
           // Filter out TV_DISPLAY and TV_MIRROR - they are not players
-          // Check both key AND nickname since they might differ
+          // Check key, nickname, AND explicit flags for comprehensive filtering
           const systemDeviceKeys = ['TV_DISPLAY', 'TV_MIRROR'];
           const isSystemDeviceByKey = systemDeviceKeys.includes(key);
           const nickname = rawPresence?.nickname as string | undefined;
           const isSystemDeviceByNickname = nickname && systemDeviceKeys.includes(nickname);
+          const isSystemDeviceByFlag = rawPresence?.isTVDisplay === true || rawPresence?.isSystemDevice === true;
           
-          if (rawPresence && !isSystemDeviceByKey && !isSystemDeviceByNickname && 'nickname' in rawPresence) {
+          if (rawPresence && !isSystemDeviceByKey && !isSystemDeviceByNickname && !isSystemDeviceByFlag && 'nickname' in rawPresence) {
             // Check if the answer is for the CURRENT question to prevent stale state display
             const answeredQuestionIndex = rawPresence.answeredQuestionIndex as number | undefined;
             const isCurrentQuestionAnswer = answeredQuestionIndex === currentQIndex;
@@ -1667,7 +1668,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const activePhases = ['countdown', 'question', 'playing', 'reveal', 'poll-suggest', 'poll-voting', 'poll-results'];
         const currentPhase = stateRef.current.phase;
         
-        const isSystemDevice = key === 'TV_DISPLAY' || key === 'TV_MIRROR';
+        // Check if this is a system device by key or by presence data
+        const leftPresenceData = leftPresences?.[0] as Record<string, unknown> | undefined;
+        const isSystemDeviceByKey = key === 'TV_DISPLAY' || key === 'TV_MIRROR';
+        const isSystemDeviceByFlag = leftPresenceData?.isTVDisplay === true || leftPresenceData?.isSystemDevice === true;
+        const isSystemDevice = isSystemDeviceByKey || isSystemDeviceByFlag;
+        
         if (!isSystemDevice && !activePhases.includes(currentPhase)) {
           const currentSessionId = stateRef.current.sessionId;
           if (currentSessionId) {
@@ -1678,6 +1684,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               .eq('player_id', key);
             tvLog('Marked player as inactive', { playerId: key.slice(0, 8), phase: currentPhase });
           }
+        } else if (isSystemDevice) {
+          tvLog('Ignored system device presence leave', { key });
         } else if (activePhases.includes(currentPhase)) {
           tvLog('Ignored presence leave during active gameplay', { playerId: key.slice(0, 8), phase: currentPhase });
         }
@@ -1704,18 +1712,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       })
       .subscribe(async (status, err) => {
         if (status === 'SUBSCRIBED') {
-          // Only track if not TV display, or track as TV_DISPLAY for awareness
+          // Track presence - but system devices (TV_DISPLAY, TV_MIRROR) are marked as NOT active players
+          // This prevents them from being counted in player lists or affecting gameplay
           await channel.track({
             nickname,
             avatar_url: avatarUrl,
             score: 0,
             hasAnswered: false,
             lastAnswerCorrect: null,
-            isHost: isHostPlayer,
+            isHost: isTVDisplay ? false : isHostPlayer, // System devices are never hosts
             isTVDisplay,
-            isActive: true, // Mark as active on join
+            isActive: !isTVDisplay, // System devices are NOT active players
+            isSystemDevice: isTVDisplay, // Explicit flag for filtering
           });
-          tvLog('Presence tracked', { nickname, isTV: isTVDisplay });
+          tvLog('Presence tracked', { nickname, isTV: isTVDisplay, isActive: !isTVDisplay });
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           // Handle connection errors - attempt to reconnect after delay
           tvLogError('Presence channel error, will reconnect', { status, err });
