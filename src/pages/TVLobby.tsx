@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TVGameProvider, useTVGame } from '@/contexts/TVGameContext';
 import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
@@ -13,10 +14,12 @@ import { Loader2 } from 'lucide-react';
 const CODE_REFRESH_INTERVAL = 5 * 60 * 1000; // Refresh code every 5 minutes if no players
 
 const TVLobbyContent: React.FC = () => {
+  const navigate = useNavigate();
   const { phase, code, createSession, players, sessionId, isPaired } = useTVGame();
   const lastRefreshRef = useRef<number>(Date.now());
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedRef = useRef(false);
+  const hasRedirectedRef = useRef(false);
 
   // Initialize session once
   const initSession = useCallback(async () => {
@@ -29,6 +32,16 @@ const TVLobbyContent: React.FC = () => {
   useEffect(() => {
     initSession();
   }, [initSession]);
+
+  // Redirect to persistent URL once session is created
+  // This ensures refreshing the TV page doesn't create a new session
+  useEffect(() => {
+    if (sessionId && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
+      // Replace current URL with session-specific one for persistence
+      navigate(`/tv/${sessionId}`, { replace: true });
+    }
+  }, [sessionId, navigate]);
 
   // Auto-refresh code if no players have joined after interval
   useEffect(() => {
