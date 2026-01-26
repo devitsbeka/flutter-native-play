@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Send, Loader2, Users, User, Search } from 'lucide-react';
 
@@ -314,12 +314,11 @@ export default function PushNotifications() {
                             checked={selectedUsers.includes(user.user_id)}
                             onCheckedChange={() => toggleUserSelection(user.user_id)}
                           />
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {user.nickname.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          <SafeAvatar
+                            avatarUrl={user.avatar_url}
+                            fallback={user.nickname}
+                            className="h-8 w-8"
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{user.nickname}</p>
                           </div>
