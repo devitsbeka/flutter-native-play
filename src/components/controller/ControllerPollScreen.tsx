@@ -676,7 +676,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           )}
 
           {/* Voting list - interactive for guests */}
-          <div className="flex-1 space-y-3 overflow-y-auto">
+          <div className="flex-1 space-y-3 overflow-y-auto pb-4">
             <AnimatePresence>
               {suggestions.map((suggestion, index) => {
                 const hasVoted = myVotes.includes(suggestion.id);
