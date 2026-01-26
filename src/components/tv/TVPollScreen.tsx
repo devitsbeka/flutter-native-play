@@ -78,15 +78,15 @@ export const TVPollScreen: React.FC = () => {
       >
         <div className="flex items-center gap-4">
           <Vote className="w-10 h-10 text-purple-300" />
-          <div>
+        <div>
             <h1 className="text-3xl font-bold text-white">
-              {pollPhase === 'suggest' ? 'შემოგთავაზეთ კატეგორიები!' : 'ხმა მიეცით!'}
+              {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
             </h1>
-            <p className="text-purple-300">
-              {pollPhase === 'suggest' 
-                ? 'შემოგთავაზეთ საყვარელი კატეგორიები შემდეგი თამაშისთვის'
-                : 'აირჩიეთ რომელი კატეგორიები გსურთ ითამაშოთ'}
-            </p>
+            {pollPhase === 'voting' && (
+              <p className="text-purple-300">
+                აირჩიეთ რომელი კატეგორიები გსურთ ითამაშოთ
+              </p>
+            )}
           </div>
         </div>
 
@@ -128,7 +128,7 @@ export const TVPollScreen: React.FC = () => {
                 ველოდებით შემოთავაზებებს...
               </h2>
               <p className="text-purple-300 text-lg">
-                მოთამაშეები ირჩევენ კატეგორიებს
+                აირჩიეთ მაქსიმუმ 3 შემოთავაზებული ვარიანტებიდან
               </p>
             </motion.div>
           ) : (
