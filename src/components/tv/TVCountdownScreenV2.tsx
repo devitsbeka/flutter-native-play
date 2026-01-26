@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { tvLog, tvLogPhase } from '@/utils/tvDebug';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
-import { resolveAvatarUrl } from '@/utils/avatarUtils';
+
 
 export const TVCountdownScreenV2: React.FC = () => {
   const { players, categoryName, categoryIcon, isHost, startPlaying, roundNumber } = useTVGame();
@@ -112,12 +112,12 @@ export const TVCountdownScreenV2: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index }}
           >
-            <Avatar className="w-12 h-12 ring-2 ring-white/30">
-              <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
-              <AvatarFallback className="bg-purple-600 text-white text-sm">
-                {player.nickname.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <SafeAvatar 
+              avatarUrl={player.avatar_url}
+              fallback={player.nickname}
+              className="w-12 h-12 ring-2 ring-white/30"
+              fallbackClassName="bg-purple-600 text-white text-sm"
+            />
           </motion.div>
         ))}
       </motion.div>

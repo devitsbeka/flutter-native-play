@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Crown, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import goldMedal from '@/assets/trophy-gold.png';
 import silverMedal from '@/assets/trophy-silver.png';
 import bronzeMedal from '@/assets/trophy-bronze.png';
-import { resolveAvatarUrl } from '@/utils/avatarUtils';
+
 
 export const TVResultsScreen: React.FC = () => {
   const { players, code } = useTVGame();
@@ -135,16 +135,16 @@ export const TVResultsScreen: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 className={`relative mb-2 ${actualRank === 0 ? 'scale-110' : ''}`}
               >
-                <Avatar className={`${actualRank === 0 ? 'w-16 h-16' : 'w-14 h-14'} ring-4 ${
-                  actualRank === 0 ? 'ring-yellow-400' :
-                  actualRank === 1 ? 'ring-gray-400' :
-                  'ring-orange-400'
-                }`}>
-                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
-                  <AvatarFallback className="bg-purple-600 text-white text-lg">
-                    {player.nickname.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname}
+                  className={`${actualRank === 0 ? 'w-16 h-16' : 'w-14 h-14'} ring-4 ${
+                    actualRank === 0 ? 'ring-yellow-400' :
+                    actualRank === 1 ? 'ring-gray-400' :
+                    'ring-orange-400'
+                  }`}
+                  fallbackClassName="bg-purple-600 text-white text-lg"
+                />
               </motion.div>
 
               {/* Name and score */}
@@ -176,12 +176,12 @@ export const TVResultsScreen: React.FC = () => {
                 className="bg-white/10 backdrop-blur rounded-lg p-2 flex items-center gap-2"
               >
                 <span className="text-purple-400 font-bold w-5 text-sm">{index + 4}</span>
-                <Avatar className="w-6 h-6">
-                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
-                  <AvatarFallback className="bg-purple-600 text-white text-xs">
-                    {player.nickname.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname}
+                  className="w-6 h-6"
+                  fallbackClassName="bg-purple-600 text-white text-xs"
+                />
                 <span className="text-white flex-1 truncate text-sm">{player.nickname}</span>
                 <span className="text-purple-300 text-sm">{player.score}</span>
               </div>
