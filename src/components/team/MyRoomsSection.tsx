@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, RoomSort } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -238,6 +238,12 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   const displayName = room.room_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
+  const hasTVSession = isActiveTVSession(room.tv_status);
+  
+  // For display: use TV active players if there's an active TV session, otherwise participants
+  const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
+    ? room.tv_active_players 
+    : room.participants.length;
   
   // Always use the placeholder image
   const coverImage = roomCoverPlaceholder;
@@ -376,7 +382,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {isPlaying ? (
+                  {(isPlaying || hasTVSession) ? (
                     <LiveBadge />
                   ) : isCompleted ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
@@ -440,7 +446,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-white/80" />
-                  <span className="text-sm font-bold text-white">{room.participants.length} მოთამაშე</span>
+                  <span className="text-sm font-bold text-white">{displayPlayerCount}</span>
                 </div>
                 <p className="text-xs text-white/60">
                   {formatDistanceToNow(new Date(room.created_at), { 
