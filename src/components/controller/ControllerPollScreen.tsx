@@ -415,12 +415,12 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     // HOST VIEW: Can add up to 8 suggestions
     if (isHost) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
-          <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-6">
+        <div className="h-[100dvh] bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
+          <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <div className="flex items-center gap-3">
                 <Crown className="w-7 h-7 text-yellow-400" />
-                <h1 className="text-xl font-bold text-white">დაამატე კატეგორიები</h1>
+                <h1 className="text-xl font-bold text-white">დაამატე ვარიანტები</h1>
               </div>
               {code && (
                 <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
@@ -430,14 +430,14 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
             </div>
 
             {/* Host's suggestions */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
-              <p className="text-purple-300 text-sm mb-3">
-                შენი არჩევანი: <span className="font-bold text-white">{mySuggestions.length}/8</span>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1 min-h-0 flex flex-col overflow-hidden">
+              <p className="text-purple-300 text-sm mb-3 shrink-0">
+                შენი შეთავაზებული: <span className="font-bold text-white">{mySuggestions.length}/8</span>
               </p>
               
               {/* Show existing suggestions */}
               {mySuggestions.length > 0 && (
-                <div className="space-y-2 mb-3 max-h-[55vh] overflow-y-auto">
+                <div className="space-y-2 mb-3 overflow-y-auto flex-1 min-h-0">
                   {mySuggestions.map((suggestion, index) => (
                     <div key={suggestion.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/5">
                       <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
@@ -473,7 +473,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 
               {/* Add suggestion buttons */}
               {canAddMoreSuggestions && (
-                <div className="space-y-2">
+                <div className="space-y-2 shrink-0">
                   <ChunkyButton
                     variant="secondary"
                     className="w-full"
@@ -495,14 +495,14 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
 
               {/* At limit message */}
               {!canAddMoreSuggestions && mySuggestions.length >= 8 && (
-                <p className="text-xs text-purple-400 text-center mt-2">
+                <p className="text-xs text-purple-400 text-center mt-2 shrink-0">
                   მაქსიმალური რაოდენობა მიღწეულია
                 </p>
               )}
             </div>
 
-            {/* Start voting button */}
-            <div className="mt-auto">
+            {/* Start voting button - always visible */}
+            <div className="shrink-0 pb-safe">
               <ChunkyButton
                 variant="primary"
                 className="w-full"
