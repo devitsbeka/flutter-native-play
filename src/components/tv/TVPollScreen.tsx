@@ -260,7 +260,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
             className="w-20 h-20 rounded-xl object-cover"
           />
         ) : suggestion.icon_slug ? (
-          <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-20 h-20" />
+          <QuizCategoryIcon iconSlug={suggestion.icon_slug} size={80} className="w-20 h-20" />
         ) : (
           <div className="w-20 h-20 rounded-xl bg-purple-500/30 flex items-center justify-center">
             <Sparkles className="w-10 h-10 text-purple-300" />
