@@ -404,24 +404,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.log('[prepareForPlaying] ✅ Cleaned', count, 'stale answers');
       }
 
-      // Wait for DB consistency
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // FIX P0: Wait 300ms (was 100ms) for DB consistency + replication
+      // This prevents checkAndAdvanceIfAllAnswered from seeing empty table as "all answered"
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
-    // Step 2: Verify and lock active player count
+    // Step 2: Verify and lock active player count (WITH suggester adjustment)
     let expectedCount = 0;
+    let suggesterId: string | null = null;
+    
     if (!options?.skipPlayerCountVerify) {
       console.log('[prepareForPlaying] 🔒 Verifying player count...');
       expectedCount = await confirmActivePlayers(sessionId);
 
-      // Check for suggester and adjust count
+      // Check for suggester and adjust count ONCE (single source of truth)
       const { data: session } = await supabase
         .from('tv_sessions')
         .select('current_round_suggester_id')
         .eq('id', sessionId)
         .single();
 
-      const suggesterId = (session as any)?.current_round_suggester_id as string | null;
+      suggesterId = (session as any)?.current_round_suggester_id as string | null;
       if (suggesterId) {
         // Check if suggester is actually active
         const { data: suggesterData } = await supabase
@@ -435,7 +438,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           expectedCount = Math.max(1, expectedCount - 1);
           console.log('[prepareForPlaying] 👤 Adjusted for active suggester:', { suggesterId: suggesterId.slice(0, 8), adjusted: expectedCount });
 
-          // Persist the adjusted count
+          // Persist the adjusted count - this is THE authoritative count
           await supabase
             .from('tv_sessions')
             .update({ active_player_count: expectedCount })
@@ -443,7 +446,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
     } else {
-      // Fallback: read from session
+      // Fallback: read from session (already adjusted)
       const { data: session } = await supabase
         .from('tv_sessions')
         .select('active_player_count')
@@ -452,14 +455,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       expectedCount = session?.active_player_count ?? 0;
     }
 
-    // Step 3: Reset timing refs (always done, critical for auto-advance)
+    // Step 3: Reset hasAdvanced flag (timing ref set by caller AFTER DB transition)
+    // FIX P0: Do NOT set questionStartedAtRef here - caller sets it after DB update
     hasAdvancedRef.current = false;
-    questionStartedAtRef.current = Date.now();
 
     console.log('[prepareForPlaying] ✅ UNIFIED initialization complete:', {
       expectedCount,
-      questionStartedAt: questionStartedAtRef.current,
       hasAdvanced: hasAdvancedRef.current,
+      note: 'questionStartedAtRef will be set by caller after DB transition',
     });
 
     return { expectedCount, ready: true };
@@ -637,29 +640,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
       
-      let expectedCount = liveActiveCount ?? 0;
-      
-      // Subtract suggester if they're active (they can't answer)
-      if (suggesterId) {
-        const { data: suggesterData } = await supabase
-          .from('tv_players')
-          .select('is_active')
-          .eq('tv_session_id', current.sessionId)
-          .eq('player_id', suggesterId)
-          .single();
-        
-        if (suggesterData?.is_active) {
-          expectedCount = Math.max(0, expectedCount - 1);
-          console.log('[AutoAdvance] 🎯 Adjusted for active suggester:', { original: liveActiveCount, adjusted: expectedCount });
-        }
-      }
+      // FIX P0: Trust the locked active_player_count from session (already adjusted for suggester)
+      // Do NOT re-adjust for suggester here - prepareForPlaying already did this
+      // This prevents double-subtraction bugs
+      const expectedCount = session.active_player_count ?? liveActiveCount ?? 0;
 
-      console.log('[AutoAdvance] 🎯 Live verified player count:', {
+      console.log('[AutoAdvance] 🎯 Using locked player count from session:', {
+        lockedCount: session.active_player_count,
         liveActiveCount,
         expectedCount,
         isPaired,
         suggesterId: suggesterId ? suggesterId.substring(0, 8) + '...' : null,
-        sessionLockedCount: session.active_player_count, // For debugging comparison
       });
 
       // SAFETY: Never advance if expected count is unreliable
@@ -1213,7 +1204,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           })
           .eq('id', state.sessionId);
         
-        console.log('[Next Question] ⏱️ Timing refs already set by prepareForPlaying');
+        // FIX P0: Set timing ref AFTER DB transition (not in prepareForPlaying)
+        // This ensures the 2500ms safety window starts after all devices sync
+        questionStartedAtRef.current = Date.now();
+        console.log('[Next Question] ⏱️ Timing ref set AFTER DB transition:', questionStartedAtRef.current);
       }
     }, REVEAL_DURATION_MS);
 

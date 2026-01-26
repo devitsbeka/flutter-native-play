@@ -1,15 +1,46 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Check, X, AlertCircle, Loader2 } from 'lucide-react';
+import { Check, X, Loader2 } from 'lucide-react';
 
 export const ControllerReveal: React.FC = () => {
   const navigate = useNavigate();
-  const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId, leaveSession } = useTVGame();
+  const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId, leaveSession, phase } = useTVGame();
+  
+  // FIX: Capture the answer state when we first enter reveal
+  // This prevents showing wrong data when myAnswer is cleared during transition
+  const capturedAnswerRef = useRef<{ answer: string | null; questionIndex: number; isCorrect: boolean | null } | null>(null);
+  
   const currentQuestion = questions[currentQuestionIndex];
-  const myPlayer = players.find(p => p.id === myPlayerId);
+  
+  // Capture the answer state on first render or when question changes
+  useEffect(() => {
+    if (phase === 'reveal' && currentQuestion) {
+      // Only capture if we have an answer or if this is a new question
+      if (myAnswer !== null || !capturedAnswerRef.current || capturedAnswerRef.current.questionIndex !== currentQuestionIndex) {
+        const isCorrect = myAnswer !== null ? myAnswer === currentQuestion.correct_answer : null;
+        capturedAnswerRef.current = {
+          answer: myAnswer,
+          questionIndex: currentQuestionIndex,
+          isCorrect,
+        };
+        console.log('[ControllerReveal] Captured answer state:', {
+          answer: myAnswer?.slice(0, 20),
+          questionIndex: currentQuestionIndex,
+          isCorrect,
+        });
+      }
+    }
+  }, [phase, currentQuestion, myAnswer, currentQuestionIndex]);
+  
+  // Reset capture when leaving reveal phase
+  useEffect(() => {
+    if (phase !== 'reveal') {
+      capturedAnswerRef.current = null;
+    }
+  }, [phase]);
 
   // Handle missing question gracefully
   if (!currentQuestion || questions.length === 0) {
@@ -38,7 +69,28 @@ export const ControllerReveal: React.FC = () => {
     );
   }
 
-  const isCorrect = myAnswer === currentQuestion.correct_answer;
+  // FIX: Use captured state if available and valid for current question
+  // This prevents the UI from flickering when myAnswer is cleared during transition
+  const captured = capturedAnswerRef.current;
+  const isCorrect = captured?.questionIndex === currentQuestionIndex && captured?.isCorrect !== null
+    ? captured.isCorrect
+    : myAnswer === currentQuestion.correct_answer;
+  
+  // If we have no answer data at all (transitioning state), show loading
+  if (myAnswer === null && (!captured || captured.questionIndex !== currentQuestionIndex)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
+          <p className="text-white text-lg font-semibold mb-2">მოწმდება...</p>
+          <div className="bg-white/10 rounded-xl px-6 py-3 mt-4">
+            <span className="text-purple-300">შენი ქულა: </span>
+            <span className="text-white text-2xl font-bold">{myScore}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
