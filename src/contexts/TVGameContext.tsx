@@ -1241,7 +1241,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             tvLog('New question (subscription)', { from: prevIndex, to: newData.current_question_index });
             setMyAnswer(null);
             hasAdvancedRef.current = false;  // Reset for new question
-            questionStartedAtRef.current = Date.now();
+            
+            // CRITICAL FIX: Only set questionStartedAtRef when status is 'playing'
+            // During 'countdown', keep it at 0 to disable auto-advance checks
+            // This prevents premature auto-advance when host answers first after a poll
+            if (newData.status === 'playing') {
+              questionStartedAtRef.current = Date.now();
+              console.log('[New Question] Timing ref set (status=playing)');
+            } else {
+              // Reset to 0 during countdown to ensure auto-advance is disabled
+              questionStartedAtRef.current = 0;
+              console.log('[New Question] Timing ref disabled (status=' + newData.status + ')');
+            }
             
             // Log the player count from DB for debugging
             const dbPlayerCount = (newData as any).active_player_count as number | undefined;
@@ -1299,6 +1310,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const newPhase = mapDbStatusToPhase(newData.status);
             if (prev.phase !== newPhase) {
               tvLogPhase(prev.phase, newPhase, 'session subscription');
+              
+              // CRITICAL: When transitioning to 'playing', enable auto-advance timing
+              // This catches cases where subscription didn't see question change during countdown
+              if (newData.status === 'playing' && questionStartedAtRef.current === 0) {
+                questionStartedAtRef.current = Date.now();
+                console.log('[Subscription] Enabled auto-advance timing on status->playing transition');
+              }
+              
+              // When transitioning to 'countdown', disable auto-advance timing
+              if (newData.status === 'countdown') {
+                questionStartedAtRef.current = 0;
+                console.log('[Subscription] Disabled auto-advance timing on countdown');
+              }
             }
 
             // Reset all players to waiting state when new question starts
