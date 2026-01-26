@@ -16,6 +16,8 @@ import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
+const MAX_QUESTIONS = 20;
+
 interface Answer {
   id: string;
   text: string;
@@ -309,6 +311,26 @@ export function GameStylePersonalTrivia({
     loadDraftData();
   }, [resumeDraftId, user, isOpen, onDraftResumed, loadDraft]);
 
+  // Reset to fresh state when opening without a draft or initial data
+  useEffect(() => {
+    if (isOpen && !resumeDraftId && !initialData) {
+      setQuestions([{
+        id: "1",
+        question: "",
+        answers: [
+          { id: "a-1-0", text: "", isCorrect: true },
+          { id: "a-1-1", text: "", isCorrect: false },
+          { id: "a-1-2", text: "", isCorrect: false },
+          { id: "a-1-3", text: "", isCorrect: false },
+        ],
+      }]);
+      setTitle("");
+      setCurrentDraftId(null);
+      setCurrentIndex(0);
+      lastAutosavedPayloadRef.current = "";
+    }
+  }, [isOpen, resumeDraftId, initialData]);
+
   // Auto-save personal trivia drafts (debounced). This ensures the draft shows up in DraftsList
   // even if the user closes the modal or the UI freezes before manual save.
   useEffect(() => {
@@ -412,6 +434,15 @@ export function GameStylePersonalTrivia({
   const currentQuestion = questions[currentIndex];
 
   const handleAddQuestion = () => {
+    if (questions.length >= MAX_QUESTIONS) {
+      toast({
+        title: "მაქსიმუმ 20 კითხვა",
+        description: "წაშალე ზედმეტი კითხვები ახლის დასამატებლად",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newQuestion: PersonalQuestion = {
       id: `new-${Date.now()}`,
       question: "",
@@ -436,6 +467,15 @@ export function GameStylePersonalTrivia({
   };
 
   const handleDuplicate = () => {
+    if (questions.length >= MAX_QUESTIONS) {
+      toast({
+        title: "მაქსიმუმ 20 კითხვა",
+        description: "წაშალე ზედმეტი კითხვები დუბლირებისთვის",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const duplicated: PersonalQuestion = {
       ...currentQuestion,
       id: `dup-${Date.now()}`,
@@ -950,7 +990,7 @@ export function GameStylePersonalTrivia({
                     )}>
                       {/* Question Counter */}
                       <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
-                        {index + 1}/{questions.length}
+                        {index + 1}/{MAX_QUESTIONS}
                       </div>
 
                       {/* AI Generate Button - top right, positioned left of X button when bg exists */}
