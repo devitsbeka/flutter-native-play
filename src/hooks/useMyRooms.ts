@@ -25,6 +25,12 @@ export interface MyRoom {
   tv_session_id: string | null;
   tv_status: string | null;
   tv_active_players: number;
+  // TV players data for accurate avatar display
+  tv_players: {
+    user_id: string | null;
+    nickname: string;
+    avatar_url: string | null;
+  }[];
   participants: {
     user_id: string;
     nickname: string;
@@ -34,6 +40,7 @@ export interface MyRoom {
 }
 
 // Active TV session statuses that indicate a "LIVE" game
+// Active TV session statuses that indicate a "LIVE" game - paired means TV is connected and waiting for host
 const ACTIVE_TV_STATUSES = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'];
 
 export function isActiveTVSession(tvStatus: string | null): boolean {
@@ -131,7 +138,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
         .map((r) => r.tv_session_id)
         .filter((id): id is string => id !== null);
 
-      let tvSessionMap = new Map<string, { status: string | null; active_players: number }>();
+      let tvSessionMap = new Map<string, { status: string | null; active_players: number; players?: { nickname: string; avatar_url: string | null; user_id: string | null }[] }>();
       
       if (tvSessionIds.length > 0) {
         const { data: tvSessions } = await supabase
@@ -139,24 +146,27 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           .select("id, status")
           .in("id", tvSessionIds);
 
-        // Get active player counts for each TV session
+        // Get active player counts and their avatars for each TV session
         const { data: tvPlayers } = await supabase
           .from("tv_players")
-          .select("tv_session_id")
+          .select("tv_session_id, nickname, avatar_url, user_id")
           .in("tv_session_id", tvSessionIds)
           .eq("is_active", true);
 
-        // Count players per session
-        const playerCountMap = new Map<string, number>();
+        // Group players per session with their data
+        const playerDataMap = new Map<string, { nickname: string; avatar_url: string | null; user_id: string | null }[]>();
         tvPlayers?.forEach((p) => {
-          const current = playerCountMap.get(p.tv_session_id) || 0;
-          playerCountMap.set(p.tv_session_id, current + 1);
+          const existing = playerDataMap.get(p.tv_session_id) || [];
+          existing.push({ nickname: p.nickname, avatar_url: p.avatar_url, user_id: p.user_id });
+          playerDataMap.set(p.tv_session_id, existing);
         });
 
         tvSessions?.forEach((session) => {
+          const players = playerDataMap.get(session.id) || [];
           tvSessionMap.set(session.id, {
             status: session.status,
-            active_players: playerCountMap.get(session.id) || 0,
+            active_players: players.length,
+            players: players,
           });
         });
       }
@@ -191,6 +201,11 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           tv_session_id: room.tv_session_id || null,
           tv_status: tvData?.status || null,
           tv_active_players: tvData?.active_players || 0,
+          tv_players: (tvData?.players || []).map((p) => ({
+            user_id: p.user_id,
+            nickname: p.nickname,
+            avatar_url: p.avatar_url,
+          })),
           participants: participants.map((p) => ({
             user_id: p.user_id,
             nickname: p.nickname,
