@@ -145,7 +145,16 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
                 .sort((a, b) => b.vote_count - a.vote_count)
             );
           } else if (payload.eventType === 'DELETE') {
-            setSuggestions(prev => prev.filter(s => s.id !== payload.old.id));
+            // Use payload.old.id - with REPLICA IDENTITY FULL this should work
+            const deletedId = payload.old?.id;
+            tvLog('[useTVPoll] DELETE event received', { deletedId, payload_old: payload.old });
+            if (deletedId) {
+              setSuggestions(prev => prev.filter(s => s.id !== deletedId));
+            } else {
+              // Fallback: refetch all data if we can't get the deleted ID
+              tvLog('[useTVPoll] DELETE without old.id, refetching all');
+              fetchPollData();
+            }
           }
         }
       )
@@ -165,9 +174,12 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
               if (prev.includes(payload.new.suggestion_id)) return prev;
               return [...prev, payload.new.suggestion_id];
             });
-          } else if (payload.eventType === 'DELETE' && payload.old.user_id === userId) {
+          } else if (payload.eventType === 'DELETE' && payload.old?.user_id === userId) {
             setMyVotes(prev => prev.filter(id => id !== payload.old.suggestion_id));
           }
+          
+          // Also refetch suggestions to get updated vote counts
+          fetchPollData();
         }
       )
       .on(
@@ -206,12 +218,18 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        tvLog('[useTVPoll] Realtime subscription status', { status, sessionId });
+        // Refetch data when subscription is established to ensure we have latest state
+        if (status === 'SUBSCRIBED') {
+          fetchPollData();
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId, userId]);
+  }, [sessionId, userId, fetchPollData]);
 
   // My suggestions (hosts can have up to 2, others only 1)
   const mySuggestions = useMemo(() => {
