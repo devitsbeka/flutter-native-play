@@ -265,6 +265,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .eq('id', current.sessionId);
   }, []);
 
+  //
   // ============================================================================
   // CENTRALIZED UTILITY: Confirm active players with robust verification
   // ============================================================================
@@ -369,6 +370,104 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.log('[confirmActivePlayers] ✅ Locked player count:', finalCount, '(quitters excluded, mid-game joiners included if connected)');
     return finalCount;
   }, []);
+
+  // ============================================================================
+  // CENTRALIZED UTILITY: Prepare for Playing Phase (SINGLE SOURCE OF TRUTH)
+  // ============================================================================
+  // ALL code paths that transition to 'playing' MUST use this function.
+  // This ensures consistent behavior for:
+  // - First round (startGame → countdown → startPlaying)
+  // - Poll → Game (finalizePoll → countdown → startPlaying)  
+  // - Queue rounds (startNextRoundFromQueue → round-intro → markReady → startPlaying)
+  // - Next question (reveal → playing in useEffect)
+  // - Subscription catch-up (client receives status='playing')
+  // ============================================================================
+  const prepareForPlaying = useCallback(async (
+    sessionId: string, 
+    questionIndex: number,
+    options?: { skipAnswerCleanup?: boolean; skipPlayerCountVerify?: boolean }
+  ): Promise<{ expectedCount: number; ready: boolean }> => {
+    console.log('[prepareForPlaying] 🎯 UNIFIED initialization starting...', { sessionId: sessionId.slice(0, 8), questionIndex });
+
+    // Step 1: Clear ALL answers for this session to prevent stale answer pollution
+    // This is idempotent - running multiple times is safe
+    if (!options?.skipAnswerCleanup) {
+      console.log('[prepareForPlaying] 🗑️ Cleaning ALL session answers...');
+      const { error: cleanupError, count } = await supabase
+        .from('player_answers')
+        .delete()
+        .eq('tv_session_id', sessionId);
+
+      if (cleanupError) {
+        console.warn('[prepareForPlaying] ⚠️ Answer cleanup error:', cleanupError);
+      } else {
+        console.log('[prepareForPlaying] ✅ Cleaned', count, 'stale answers');
+      }
+
+      // Wait for DB consistency
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Step 2: Verify and lock active player count
+    let expectedCount = 0;
+    if (!options?.skipPlayerCountVerify) {
+      console.log('[prepareForPlaying] 🔒 Verifying player count...');
+      expectedCount = await confirmActivePlayers(sessionId);
+
+      // Check for suggester and adjust count
+      const { data: session } = await supabase
+        .from('tv_sessions')
+        .select('current_round_suggester_id')
+        .eq('id', sessionId)
+        .single();
+
+      const suggesterId = (session as any)?.current_round_suggester_id as string | null;
+      if (suggesterId) {
+        // Check if suggester is actually active
+        const { data: suggesterData } = await supabase
+          .from('tv_players')
+          .select('is_active')
+          .eq('tv_session_id', sessionId)
+          .eq('player_id', suggesterId)
+          .single();
+
+        if (suggesterData?.is_active) {
+          expectedCount = Math.max(1, expectedCount - 1);
+          console.log('[prepareForPlaying] 👤 Adjusted for active suggester:', { suggesterId: suggesterId.slice(0, 8), adjusted: expectedCount });
+
+          // Persist the adjusted count
+          await supabase
+            .from('tv_sessions')
+            .update({ active_player_count: expectedCount })
+            .eq('id', sessionId);
+        }
+      }
+    } else {
+      // Fallback: read from session
+      const { data: session } = await supabase
+        .from('tv_sessions')
+        .select('active_player_count')
+        .eq('id', sessionId)
+        .single();
+      expectedCount = session?.active_player_count ?? 0;
+    }
+
+    // Step 3: Reset timing refs (always done, critical for auto-advance)
+    hasAdvancedRef.current = false;
+    questionStartedAtRef.current = Date.now();
+
+    console.log('[prepareForPlaying] ✅ UNIFIED initialization complete:', {
+      expectedCount,
+      questionStartedAt: questionStartedAtRef.current,
+      hasAdvanced: hasAdvancedRef.current,
+    });
+
+    return { expectedCount, ready: true };
+  }, [confirmActivePlayers]);
+
+  // Store ref for use in subscription handler (avoids stale closure)
+  const prepareForPlayingRef = useRef(prepareForPlaying);
+  prepareForPlayingRef.current = prepareForPlaying;
 
   // ============================================================================
   // CRITICAL: Session Refetch Function for Recovering Missed Realtime Updates
@@ -1096,28 +1195,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
 
-        // CRITICAL FIX: Delete stale answers for the PREVIOUS question BEFORE transitioning
-        // This prevents race conditions where old answers are counted for new question
-        console.log('[Next Question] 🗑️ Clearing answers for previous question index:', state.currentQuestionIndex);
-        const { error: deleteError } = await supabase
-          .from('player_answers')
-          .delete()
-          .eq('tv_session_id', state.sessionId)
-          .eq('question_index', state.currentQuestionIndex);
-        
-        if (deleteError) {
-          console.warn('[Next Question] ⚠️ Failed to delete old answers:', deleteError);
-        } else {
-          console.log('[Next Question] ✅ Cleared old answers for question', state.currentQuestionIndex);
-        }
-        
-        // Wait for delete to propagate before continuing
-        await new Promise(resolve => setTimeout(resolve, 150));
-
-        // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
-        console.log('[Next Question] 🔒 Using confirmActivePlayers for next question...');
-        const currentPlayerCount = await confirmActivePlayers(state.sessionId);
-        console.log('[Next Question] ✅ Verified player count for next question:', currentPlayerCount);
+        // UNIFIED: Use prepareForPlaying for consistent initialization
+        // This clears ALL answers (not just current question) and verifies player count
+        console.log('[Next Question] 🎯 Using UNIFIED prepareForPlaying...');
+        const { expectedCount } = await prepareForPlaying(state.sessionId, nextIndex);
+        console.log('[Next Question] ✅ UNIFIED preparation complete, expectedCount:', expectedCount);
         
         // Transition to playing with verified count
         await supabase
@@ -1127,23 +1209,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             current_question_index: nextIndex,
             question_start_time: new Date().toISOString(),
             reveal_start_time: null,
-            active_player_count: currentPlayerCount,
+            active_player_count: expectedCount,
           })
           .eq('id', state.sessionId);
         
-        // CRITICAL: Longer delay before setting timing refs - ensures React state has caught up
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Reset timing protection refs AFTER the DB transition
-        // questionStartedAtRef = Date.now() ENABLES auto-advance checks
-        hasAdvancedRef.current = false;
-        questionStartedAtRef.current = Date.now();
-        console.log('[Next Question] ⏱️ Timing refs ENABLED after transition');
+        console.log('[Next Question] ⏱️ Timing refs already set by prepareForPlaying');
       }
     }, REVEAL_DURATION_MS);
 
     return () => clearTimeout(t);
-  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny, confirmActivePlayers]);
+  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny, prepareForPlaying]);
 
   // Create TV session (called by TV display)
   const createSession = useCallback(async (): Promise<string | null> => {
@@ -2207,57 +2282,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     startPlayingMutexRef.current = true;
 
     try {
-      // FIX: Clean ALL answers for this session BEFORE transitioning to playing
-      // This ensures no stale answers from previous rounds can cause premature auto-advance
-      console.log('[startPlaying] 🧹 Cleaning session answers before playing...');
-      const { error: playingCleanup } = await supabase
-        .from('player_answers')
-        .delete()
-        .eq('tv_session_id', state.sessionId);
-
-      if (playingCleanup) {
-        console.warn('[startPlaying] ⚠️ Could not clean answers:', playingCleanup);
-      } else {
-        console.log('[startPlaying] 🧹 Answers cleared successfully for clean round start');
-      }
-      
-      // FIX: Small delay for DB consistency after delete before checking answers
-      await new Promise(resolve => setTimeout(resolve, 50));
-
       // Check if another device already transitioned to playing
       const { data: session } = await supabase
         .from('tv_sessions')
-        .select('status, active_player_count, current_round_suggester_id')
+        .select('status')
         .eq('id', state.sessionId)
         .single();
       
       if (session?.status === 'playing') {
         tvLog('startPlaying skipped: already playing (another device beat us)');
-        // Still set timing refs even if we didn't transition - someone else did
+        // Still ensure timing refs are correct - someone else did the transition
         hasAdvancedRef.current = false;
         questionStartedAtRef.current = Date.now();
         startPlayingMutexRef.current = false;
         return;
       }
 
-      // CRITICAL: Use centralized confirmActivePlayers utility for robust count locking
-      console.log('[startPlaying] 🔒 Using confirmActivePlayers for robust verification...');
-      let expectedCount = await confirmActivePlayers(state.sessionId);
+      // UNIFIED: Use prepareForPlaying for consistent initialization
+      console.log('[startPlaying] 🎯 Using UNIFIED prepareForPlaying...');
+      const { expectedCount } = await prepareForPlaying(state.sessionId, state.currentQuestionIndex);
 
-      // Adjust for suggester skip rule
-      const suggesterId = (session as any)?.current_round_suggester_id as string | null;
-      if (suggesterId) {
-        expectedCount = Math.max(1, expectedCount - 1); // Suggester doesn't answer, but at least 1 must
-        console.log('[startPlaying] 👤 Adjusted for suggester:', { suggesterId: suggesterId.slice(0, 8) + '...', adjustedCount: expectedCount });
-        
-        // Update session with adjusted count
-        await supabase
-          .from('tv_sessions')
-          .update({ active_player_count: expectedCount })
-          .eq('id', state.sessionId);
-      }
-
-      console.log('[startPlaying] ✅ Verified player count:', expectedCount);
+      console.log('[startPlaying] ✅ UNIFIED preparation complete, expectedCount:', expectedCount);
       tvLog('startPlaying: Locked player count', { expectedCount });
       
       // Transition to playing
@@ -2286,7 +2331,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       startPlayingMutexRef.current = false;
     }
-  }, [state.sessionId, state.players.length, state.isPaired, confirmActivePlayers]);
+  }, [state.sessionId, state.currentQuestionIndex, prepareForPlaying]);
 
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {
