@@ -1,167 +1,200 @@
 
-# Fix Plan: Poll Screen UI Issues and Game Start Flow
+# Comprehensive Fix: TV Mode Poll to Game Flow
+
+## Executive Summary
+
+Multiple interconnected bugs are breaking the TV mode experience after polls. This plan addresses all identified issues systematically.
+
+---
 
 ## Issues Identified
 
-### Issue 1: Remove Confetti from Screen 1 (TVPollScreen)
-**Location:** `src/components/tv/TVPollScreen.tsx` (lines 45-60)
-**Problem:** When voting is active and the leading category changes, confetti is triggered.
-**Solution:** Remove the confetti celebration effect that fires when the leader changes during voting.
+### Issue 1: Only Host Votes Are Being Recorded
+**Root Cause:** The player `Ydydyd` has `is_active: false` in `tv_players` table, which affects how they're treated during the poll phase.
 
----
+Looking at the data:
+- Player `Ydydyd` has `is_active: false` and `user_id: NULL`
+- The presence `leave` handler (lines 1452-1479 in TVGameContext) marks players as inactive when they leave presence
+- During poll phases (`poll-suggest`, `poll-voting`, `poll-results`), which are NOT in the `activePhases` list, presence flickering marks players inactive
 
-### Issue 2: Make Selected Category Green on Screen #3 (Voting Screen)
-**Location:** `src/components/controller/ControllerPollScreen.tsx` (lines 686-735)
-**Problem:** When a player clicks on a category to vote, the selected state shows with purple background and border (`bg-purple-500/30 border-purple-400`), but user wants it to be green.
-**Solution:** Change the voted/selected state styling to green (`bg-green-500/30 border-green-400`) to clearly indicate selection.
-
----
-
-### Issue 3: Extra Empty Category Fields Below Suggestions (Screen #3)
-**Location:** `src/components/tv/TVPollScreen.tsx` and related components
-**Problem:** The user sees items 5, 6, 7 with just "კატეგორია" placeholder text appearing below the actual suggestions.
-**Root Cause Analysis:** This appears to be a UI rendering issue. Looking at the TVPollScreen, it only renders actual suggestions from the database. The ghost entries could be:
-1. Stale suggestions that weren't properly cleaned up
-2. UI artifacts from the suggestion grid layout
-3. Categories being rendered twice from different sources
-
-After reviewing the code, the most likely cause is the `SuggestionCard` component rendering suggestions that don't have proper category names (defaulting to "კატეგორია"). The suggestions grid at line 135-148 renders all suggestions, but some might have null/empty category names.
-
-**Solution:** Add validation to filter out suggestions without valid category names before rendering.
-
----
-
-### Issue 4: Double-Click Required on "დაწყება" Button (Screens #4, #5)
-**Location:** `src/components/controller/ControllerPollResults.tsx` (lines 49-65)
-**Problem:** Clicking "დაწყება" on the poll results screen requires two clicks.
-**Root Cause:** The `finalizePollAndStartGame` function in `useTVPoll.ts` sets session status to `'paired'` (line 591), which maps to `'lobby'` phase. The host is then expected to see the lobby and click "Start Game" again to actually begin gameplay.
-
-**Flow Analysis:**
-1. User on poll-results screen (Screen #4)
-2. Clicks "დაწყება (2 რაუნდი)" 
-3. `finalizePollAndStartGame` is called which:
-   - Creates queue items from winning suggestions
-   - Updates session to `status: 'paired'` 
-4. This triggers phase change to `lobby` (Screen #5)
-5. User must click "დაწყება" again to start the actual game
-
-**Solution:** After `finalizePollAndStartGame` succeeds, automatically call `startGame()` to bypass the lobby phase and go directly to countdown. This means the poll results "დაწყება" button should start the game in one click.
-
----
-
-### Issue 5: Host-First-Answer Bug Verification
-**Location:** `src/contexts/TVGameContext.tsx`
-**Previous Fix Applied:** The last diff shows timing ref fixes were added to prevent premature auto-advance.
-**Verification Needed:** The fix disables `questionStartedAtRef` during countdown and only enables it when status is `'playing'`. This should prevent the race condition where the host's answer triggers premature advancement.
-
-**Additional Safeguard:** Ensure that after poll→game transition, the timing logic is properly gated so the 2500ms safety window starts from when the question is actually playable.
-
----
-
-## Technical Implementation
-
-### File 1: `src/components/tv/TVPollScreen.tsx`
-**Remove confetti on leader change:**
-- Delete the useEffect block (lines 45-60) that tracks `previousLeader` and fires confetti
-- Remove `previousLeader` state and `confetti` import
-- Keep the rest of the UI intact
-
-### File 2: `src/components/controller/ControllerPollScreen.tsx`
-**Change voted state to green:**
+**Key Finding:** The `activePhases` list excludes poll phases:
 ```typescript
-// Line 693-697: Change from:
-hasVoted
-  ? 'bg-purple-500/30 border-purple-400'
-  : 'bg-white/10 border-white/20 hover:border-purple-400'
-
-// To:
-hasVoted
-  ? 'bg-green-500/30 border-green-400'
-  : 'bg-white/10 border-white/20 hover:border-purple-400'
+const activePhases = ['countdown', 'question', 'playing', 'reveal'];
 ```
 
-### File 3: `src/components/tv/TVPollScreen.tsx`
-**Filter empty suggestions:**
-```typescript
-// Line 135: Add filter before mapping
-{suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
-```
+This means during polls, presence flickering marks players as `is_active: false`, and they're not counted.
 
-### File 4: `src/components/controller/ControllerPollResults.tsx`
-**Auto-start game after poll finalization:**
+### Issue 2: Players Can't Answer If Host Answers First
+**Root Cause:** The `active_player_count` is `1` (only the host), so when the host answers, the system thinks all players have answered.
 
-The current flow calls `finalizePollAndStartGame` which sets status to `'paired'` (lobby). To make it one-click:
+Database shows:
+- `active_player_count: 1`
+- But there are 2 players in `tv_players`
 
-Option A (Recommended): Modify `finalizePollAndStartGame` in `useTVPoll.ts` to also start the game (set status to `'countdown'` and fetch questions for the first category).
+The `confirmActivePlayers` function counts only `is_active: true` players, and the guest is marked inactive.
 
-Option B: Have `ControllerPollResults.handleStartGame` call the context's `startGame` after `finalizePollAndStartGame` succeeds.
+### Issue 3: Host Needs Two Clicks to Start Game
+**Root Cause:** In `ControllerPollResults.tsx`, after `finalizePollAndStartGame` returns success, it just calls `onGameStart()` which logs but doesn't actually do anything meaningful. The `finalizePollAndStartGame` now sets status to `'countdown'` directly, but both the TV and host controller are potentially both triggering `startPlaying()`.
 
-**Implementation (Option B - safer, less invasive):**
-```typescript
-// In ControllerPollResults.tsx, after finalizePollAndStartGame succeeds:
-const handleStartGame = async () => {
-  if (winningCategories.length === 0) {
-    toast.error('არ არის გამარჯვებული კატეგორიები');
-    return;
-  }
+Looking at `TVCountdownScreenV2.tsx` (line 30): `if (count === 0 && !hasTriggeredPlaying.current && isHost)`
+The TV display checks `isHost` but TV should never be host - it should be false.
 
-  setIsStarting(true);
-  const success = await finalizePollAndStartGame(selectedRoundCount);
-  
-  if (success) {
-    toast.success('თამაში იწყება!');
-    // The session is now in 'paired' state with queue populated
-    // Parent (TVHostController) will detect this and trigger startGame
-    onGameStart();
-  } else {
-    toast.error('თამაშის დაწყება ვერ მოხერხდა');
-    setIsStarting(false);
-  }
-};
-```
+Actually, the fix from last round set `finalizePollAndStartGame` to go directly to countdown. Let me verify if it's working...
 
-The issue is that `onGameStart` just logs but doesn't actually start the game. We need `TVHostController` to auto-start after poll finalization.
-
-**Better Fix in TVHostController.tsx:**
-Add an effect that detects when we transition from `poll-results` to `lobby` with a populated queue, and auto-starts the game:
-
-```typescript
-// Detect post-poll lobby transition and auto-start
-useEffect(() => {
-  if (localPhase === 'lobby' && hasQueue && queue.length > 0) {
-    // Check if we just came from poll-results (queue was just populated from poll)
-    const firstItem = queue[0];
-    if (firstItem.suggester_user_id) {
-      // This queue was populated from poll (has suggester info)
-      // Auto-start the game
-      handleStartGame();
-    }
-  }
-}, [localPhase, hasQueue, queue]);
-```
-
-However, this could cause unintended auto-starts. A cleaner approach:
-
-**Cleanest Fix:** Add a flag to track poll-to-game transition in session data, or modify `finalizePollAndStartGame` to directly trigger `startGame` instead of going to lobby.
-
-### File 5: `src/hooks/useTVPoll.ts`
-**Modify finalizePollAndStartGame to start the game directly:**
-
-Instead of setting status to `'paired'`, we should:
-1. Set up the queue (already done)
-2. Call the same logic as `startGame` to fetch questions and start countdown
-
-This is the most robust fix but requires coordinating with `TVGameContext.startGame`.
+The issue might be that **both TV and Host Controller are racing to call `startPlaying`**, or the session state update isn't propagating properly.
 
 ---
 
-## Recommended Implementation Order
+## Technical Root Cause Analysis
 
-1. **Remove confetti** (TVPollScreen) - Simple, no side effects
-2. **Green selection styling** (ControllerPollScreen) - Simple CSS change
-3. **Filter empty suggestions** (TVPollScreen) - Defensive fix
-4. **Fix double-click issue** - Most complex, needs careful implementation
-5. **Verify host-first-answer fix** - Already applied in last diff, needs testing
+### The Core Problem: Poll Phases Break Player Activity Tracking
+
+1. During poll phases, players' presence flickers (reconnects, page refreshes)
+2. The `leave` handler marks them `is_active: false` because poll phases aren't in `activePhases`
+3. When `finalizePollAndStartGame` calls `confirmActivePlayers`, it finds only the host is active
+4. The game starts with `active_player_count: 1`
+5. When host answers first, system thinks "all 1 players answered" and advances
+
+### Secondary Issue: Guest Player's user_id is NULL
+
+The guest player has:
+- `player_id: c05d1a36-5314-495d-a1ea-71e48ca5f7cf` (which IS an auth user ID)
+- `user_id: NULL`
+
+This might affect RLS policies for votes if they check `user_id = auth.uid()`.
+
+---
+
+## Solution Plan
+
+### Fix 1: Include Poll Phases in Active Phases (Prevents Premature Inactive Marking)
+
+**File:** `src/contexts/TVGameContext.tsx` (line ~1464)
+
+```typescript
+// Before:
+const activePhases = ['countdown', 'question', 'playing', 'reveal'];
+
+// After:
+const activePhases = ['countdown', 'question', 'playing', 'reveal', 'poll-suggest', 'poll-voting', 'poll-results'];
+```
+
+This ensures players don't get marked inactive during poll phases when their presence flickers.
+
+---
+
+### Fix 2: Reset ALL Players to Active in finalizePollAndStartGame
+
+**File:** `src/hooks/useTVPoll.ts` (around line 515-525)
+
+The current code already does this, but we need to add explicit `user_id` update for authenticated guests:
+
+```typescript
+// Add after the is_active reset (line 521):
+// Also set user_id for any player that has auth but null user_id
+const { data: { user: currentUser } } = await supabase.auth.getUser();
+if (currentUser) {
+  // Update any player matching this auth user's ID as player_id but missing user_id
+  await supabase
+    .from('tv_players')
+    .update({ user_id: currentUser.id, is_active: true })
+    .eq('tv_session_id', sessionId)
+    .eq('player_id', currentUser.id)
+    .is('user_id', null);
+}
+```
+
+---
+
+### Fix 3: Fix confirmActivePlayers to Actually Wait for Updates
+
+**File:** `src/contexts/TVGameContext.tsx` (confirmActivePlayers function, ~line 270-318)
+
+The verification loop should also ensure it's actually finding the expected players. Add better logging and increase timeout:
+
+```typescript
+// After the reset (line 275-280):
+// Wait longer for DB propagation after bulk reset
+await new Promise(resolve => setTimeout(resolve, 300)); // Increase from 200ms
+```
+
+---
+
+### Fix 4: Ensure startPlaying is Only Called Once After Poll
+
+**File:** `src/components/tv/TVCountdownScreenV2.tsx`
+
+The TV countdown checks `isHost`, but TV display should NEVER be host. Verify this is working correctly.
+
+**File:** `src/pages/TVHostController.tsx` (lines 349-360)
+
+The host controller also triggers `startPlaying` when countdown reaches 0. This creates a race condition where both might try to call it.
+
+Add a mutex or check to ensure only one device triggers:
+
+```typescript
+// In TVCountdownScreenV2.tsx and TVHostController.tsx:
+// Add check: if session.status is already 'playing', don't call startPlaying
+```
+
+Actually, looking at `startPlaying` (line 1820-1910 in TVGameContext), it already has:
+- A mutex (`startPlayingMutexRef`)
+- A check if already playing (line 1855)
+
+So this should be working. The double-click issue might be different.
+
+---
+
+### Fix 5: Verify finalizePollAndStartGame Sets Correct Status
+
+**File:** `src/hooks/useTVPoll.ts` (line 661-676)
+
+Current code sets `status: 'countdown'` which is correct. But verify it's not failing silently.
+
+Add better error logging:
+
+```typescript
+if (error) {
+  tvLogError('[useTVPoll] Error finalizing poll', error);
+  console.error('[finalizePollAndStartGame] DB update failed:', error);
+  return false;
+}
+
+console.log('[finalizePollAndStartGame] ✅ Successfully set status to countdown');
+```
+
+---
+
+### Fix 6: Fix Guest Player's user_id Registration
+
+**File:** `src/contexts/TVGameContext.tsx` (joinSession, ~line 1097-1140)
+
+The current code sets `user_id: authUid` (line 1098), but if `authUid` is null for some reason, it doesn't update existing records properly.
+
+```typescript
+// In the existing player update path (line 1109-1118):
+if (existingPlayer) {
+  await supabase
+    .from('tv_players')
+    .update({ 
+      is_active: true,
+      nickname,
+      avatar_url: avatarUrl || null,
+      user_id: authUserId || existingPlayer.user_id, // Preserve or set user_id
+    })
+    .eq('id', existingPlayer.id);
+}
+```
+
+---
+
+## Implementation Order
+
+1. **Fix 1**: Add poll phases to `activePhases` (prevents root cause)
+2. **Fix 6**: Ensure `user_id` is set for authenticated players
+3. **Fix 2**: Reset players in finalizePollAndStartGame with user_id fix
+4. **Fix 3**: Increase wait time in confirmActivePlayers
+5. **Fix 5**: Add logging to finalizePollAndStartGame
 
 ---
 
@@ -169,17 +202,28 @@ This is the most robust fix but requires coordinating with `TVGameContext.startG
 
 | File | Changes |
 |------|---------|
-| `src/components/tv/TVPollScreen.tsx` | Remove confetti, filter empty suggestions |
-| `src/components/controller/ControllerPollScreen.tsx` | Green selection styling |
-| `src/hooks/useTVPoll.ts` | Modify `finalizePollAndStartGame` to set status to `'countdown'` and fetch questions |
-| `src/contexts/TVGameContext.tsx` | No changes needed (timing fix already applied) |
+| `src/contexts/TVGameContext.tsx` | Add poll phases to activePhases, fix user_id in joinSession |
+| `src/hooks/useTVPoll.ts` | Add user_id update in finalizePollAndStartGame, add logging |
 
 ---
 
 ## Expected Behavior After Fix
 
-1. **No confetti** during poll voting phase
-2. **Green highlight** when player clicks/votes for a category
-3. **No phantom categories** appearing below real suggestions
-4. **Single click "დაწყება"** starts the game immediately from poll results
-5. **All players can answer** even if host answers first after poll
+1. **Poll phases don't break player tracking** - Players stay active during suggest/vote/results
+2. **All player votes are recorded** - user_id is properly set for all authenticated players
+3. **Game starts with correct player count** - confirmActivePlayers finds all active players
+4. **All players can answer** - Even if host answers first, system waits for everyone
+5. **Single click starts game** - finalizePollAndStartGame directly transitions to countdown
+
+---
+
+## Testing Verification
+
+After implementing:
+1. Start a new TV session with 2+ players
+2. Complete first round normally
+3. Enter poll phase (suggest categories)
+4. Start voting - verify ALL players' votes appear
+5. Finalize poll - verify single click starts game
+6. During gameplay - verify host answering first doesn't block other players
+7. Check `tv_players` table - all players should have `is_active: true` and proper `user_id`
