@@ -431,22 +431,20 @@ Return ONLY valid JSON.`;
 
     const finalQuestions = factCheckedQuestions.slice(0, questionCount);
     
-    // Be lenient: accept if we got at least 50% of requested questions
-    // Only fail if we got less than half
-    const minimumRequired = Math.max(1, Math.floor(questionCount * 0.5));
-    if (finalQuestions.length < minimumRequired) {
+    // Only fail if we got ZERO questions - be very lenient for collections
+    if (finalQuestions.length === 0) {
       console.warn(
-        `Fact-check filtered too many: requested ${questionCount}, got ${finalQuestions.length}, minimum ${minimumRequired}.`,
+        `Fact-check filtered ALL questions: requested ${questionCount}, got 0.`,
       );
       return new Response(
         JSON.stringify({
-          error: "კითხვების ნაწილი არასწორი იყო და გაიფილტრა. სცადეთ თავიდან.",
+          error: "კითხვები ვერ დაგენერირდა. სცადეთ სხვა თემა.",
         }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
     
-    // Log if we're returning fewer than requested (but still above threshold)
+    // Log if we're returning fewer than requested (but still have some)
     if (finalQuestions.length < questionCount) {
       console.log(`Returning ${finalQuestions.length}/${questionCount} questions after fact-check filtering.`);
     }
