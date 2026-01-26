@@ -21,12 +21,23 @@ export interface MyRoom {
   background_gradient: string | null;
   host_user_id: string;
   last_activity_at: string | null;
+  // TV session data
+  tv_session_id: string | null;
+  tv_status: string | null;
+  tv_active_players: number;
   participants: {
     user_id: string;
     nickname: string;
     avatar_url: string | null;
     is_host: boolean;
   }[];
+}
+
+// Active TV session statuses that indicate a "LIVE" game
+const ACTIVE_TV_STATUSES = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'];
+
+export function isActiveTVSession(tvStatus: string | null): boolean {
+  return tvStatus !== null && ACTIVE_TV_STATUSES.includes(tvStatus);
 }
 
 interface UseMyRoomsOptions {
@@ -115,6 +126,41 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
       if (allPartError) throw allPartError;
 
+      // Fetch TV session data for rooms that have tv_session_id
+      const tvSessionIds = (roomsData || [])
+        .map((r) => r.tv_session_id)
+        .filter((id): id is string => id !== null);
+
+      let tvSessionMap = new Map<string, { status: string | null; active_players: number }>();
+      
+      if (tvSessionIds.length > 0) {
+        const { data: tvSessions } = await supabase
+          .from("tv_sessions")
+          .select("id, status")
+          .in("id", tvSessionIds);
+
+        // Get active player counts for each TV session
+        const { data: tvPlayers } = await supabase
+          .from("tv_players")
+          .select("tv_session_id")
+          .in("tv_session_id", tvSessionIds)
+          .eq("is_active", true);
+
+        // Count players per session
+        const playerCountMap = new Map<string, number>();
+        tvPlayers?.forEach((p) => {
+          const current = playerCountMap.get(p.tv_session_id) || 0;
+          playerCountMap.set(p.tv_session_id, current + 1);
+        });
+
+        tvSessions?.forEach((session) => {
+          tvSessionMap.set(session.id, {
+            status: session.status,
+            active_players: playerCountMap.get(session.id) || 0,
+          });
+        });
+      }
+
       const participantsByRoom = new Map<string, typeof allParticipants>();
       allParticipants?.forEach((p) => {
         const existing = participantsByRoom.get(p.room_id) || [];
@@ -124,6 +170,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
       const myRooms: MyRoom[] = (roomsData || []).map((room: any) => {
         const participants = participantsByRoom.get(room.id) || [];
+        const tvData = room.tv_session_id ? tvSessionMap.get(room.tv_session_id) : null;
 
         return {
           id: room.id,
@@ -141,6 +188,9 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           background_gradient: room.background_gradient || null,
           host_user_id: room.host_user_id,
           last_activity_at: room.last_activity_at,
+          tv_session_id: room.tv_session_id || null,
+          tv_status: tvData?.status || null,
+          tv_active_players: tvData?.active_players || 0,
           participants: participants.map((p) => ({
             user_id: p.user_id,
             nickname: p.nickname,
@@ -190,6 +240,28 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           fetchMyRooms();
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tv_sessions",
+        },
+        () => {
+          fetchMyRooms();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tv_players",
+        },
+        () => {
+          fetchMyRooms();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -232,9 +304,15 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       );
     }
 
-    // Sort: LIVE/playing rooms first, then waiting, then rooms with unread activity, then by activity
+    // Sort: Active TV sessions first (LIVE), then playing, then waiting, then unread, then by activity
     result = [...result].sort((a, b) => {
-      // Playing rooms first
+      // Active TV sessions first (LIVE badge)
+      const aHasActiveTv = isActiveTVSession(a.tv_status);
+      const bHasActiveTv = isActiveTVSession(b.tv_status);
+      if (aHasActiveTv && !bHasActiveTv) return -1;
+      if (bHasActiveTv && !aHasActiveTv) return 1;
+      
+      // Playing rooms next
       if (a.status === "playing" && b.status !== "playing") return -1;
       if (b.status === "playing" && a.status !== "playing") return 1;
       
