@@ -400,9 +400,9 @@ const TVHostController: React.FC = () => {
       if (hasQueue && queue.length > 0) {
         const firstQueued = queue[0];
         
-        // Handle based on source_type
-        if (firstQueued.source_type === 'user_trivia' && firstQueued.user_trivia_id) {
-          // Start with user trivia questions
+        // Handle based on available IDs (more resilient than source_type string matching)
+        if (firstQueued.user_trivia_id) {
+          // Start with user trivia questions (handles both 'trivia' and 'user_trivia' source types)
           await startGame(undefined, firstQueued.user_trivia_id);
         } else if (firstQueued.category_id) {
           // Start with category questions
