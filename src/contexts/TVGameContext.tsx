@@ -1574,7 +1574,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const startPlayingMutexRef = useRef(false);
 
   // Start playing phase (called after countdown ends)
-  // CRITICAL: Reads active_player_count from DB (locked in startGame), does NOT set it
+  // CRITICAL: Reads active_player_count from DB (locked in startGame/markReady)
   const startPlaying = useCallback(async () => {
     if (!state.sessionId) return;
     
@@ -1586,10 +1586,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     startPlayingMutexRef.current = true;
 
     try {
+      // FIX: Clean ALL answers for this session BEFORE transitioning to playing
+      // This ensures no stale answers from previous rounds can cause premature auto-advance
+      console.log('[startPlaying] 🧹 Cleaning session answers before playing...');
+      const { error: playingCleanup } = await supabase
+        .from('player_answers')
+        .delete()
+        .eq('tv_session_id', state.sessionId);
+
+      if (playingCleanup) {
+        console.warn('[startPlaying] ⚠️ Could not clean answers:', playingCleanup);
+      } else {
+        console.log('[startPlaying] 🧹 Answers cleared successfully for clean round start');
+      }
+
       // Check if another device already transitioned to playing
       const { data: session } = await supabase
         .from('tv_sessions')
-        .select('status, active_player_count')
+        .select('status, active_player_count, current_round_suggester_id')
         .eq('id', state.sessionId)
         .single();
       
@@ -1601,15 +1615,42 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // Read the active_player_count that was locked in startGame
-      const dbPlayerCount = session?.active_player_count || 0;
+      // Read the active_player_count that was locked in startGame/markReady
+      let dbPlayerCount = session?.active_player_count || 0;
+      
+      // FIX: Verify player count is correct (in case players joined/left during countdown)
+      const currentStatePlayerCount = state.isPaired 
+        ? Math.max(state.players.length, 2) 
+        : state.players.length;
+      
+      const suggesterId = (session as any)?.current_round_suggester_id as string | null;
+      let expectedCount = currentStatePlayerCount;
+      if (suggesterId) {
+        expectedCount = Math.max(0, currentStatePlayerCount - 1);
+      }
+
+      // If DB count is stale, fix it NOW before playing starts
+      if (dbPlayerCount !== expectedCount) {
+        console.log('[startPlaying] ⚠️ Fixing stale player count:', { 
+          old: dbPlayerCount, 
+          new: expectedCount,
+          hasSuggester: !!suggesterId,
+        });
+        await supabase
+          .from('tv_sessions')
+          .update({ active_player_count: expectedCount })
+          .eq('id', state.sessionId);
+        dbPlayerCount = expectedCount;
+      }
+
       tvLog('startPlaying: Using DB player count', { dbPlayerCount });
       
+      // CRITICAL: Reset timing refs for the new question
       questionStartedAtRef.current = Date.now();
       hasAdvancedRef.current = false;
-      console.log('[startPlaying] Expected player count from DB:', dbPlayerCount);
+      console.log('[startPlaying] ⏱️ Question timing reset, expected players:', dbPlayerCount);
       
-      // Transition to playing - do NOT update active_player_count (already locked in startGame)
+      // Transition to playing
       await supabase
         .from('tv_sessions')
         .update({
@@ -1756,9 +1797,47 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setMyAnswer(null);
       hasAdvancedRef.current = false;
 
+      // FIX: For rounds 2+, we MUST lock the player count and reset timing protection
+      // This was missing, causing host's first answer to trigger premature auto-advance
+      const currentPlayerCount = state.isPaired 
+        ? Math.max(state.players.length, 2) 
+        : state.players.length;
+
+      // Check for suggester to potentially subtract from count
+      const { data: sessionData } = await supabase
+        .from('tv_sessions')
+        .select('current_round_suggester_id')
+        .eq('id', state.sessionId)
+        .single();
+
+      let expectedPlayerCount = currentPlayerCount;
+      const suggesterId = (sessionData as any)?.current_round_suggester_id as string | null;
+      if (suggesterId) {
+        expectedPlayerCount = Math.max(0, currentPlayerCount - 1);
+        console.log('[markReady] 👤 Suggester detected, adjusting count:', {
+          suggesterId: suggesterId.substring(0, 8) + '...',
+          originalCount: currentPlayerCount,
+          adjustedCount: expectedPlayerCount,
+        });
+      }
+
+      // CRITICAL: Reset timing protection ref BEFORE countdown starts
+      // This ensures the 300ms safety window is active for each new round
+      questionStartedAtRef.current = Date.now();
+      
+      console.log('[markReady] 🔒 Locking player count for round 2+:', {
+        currentPlayerCount,
+        expectedPlayerCount,
+        hasSuggester: !!suggesterId,
+        roundNumber: stateRef.current.roundNumber,
+      });
+
       await supabase
         .from('tv_sessions')
-        .update({ status: 'countdown' })
+        .update({ 
+          status: 'countdown',
+          active_player_count: expectedPlayerCount, // LOCK IT HERE FOR ROUND 2+
+        })
         .eq('id', state.sessionId);
 
       tvLogPhase('round-intro', 'countdown', 'host ready');
@@ -1779,7 +1858,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       isReadyForNextRound: true,
     });
     tvLog('Player marked ready for next round', { playerId: myPlayerId.slice(0, 8) });
-  }, [state.players, state.sessionId, state.phase, myPlayerId, myScore, isHost]);
+  }, [state.players, state.sessionId, state.phase, myPlayerId, myScore, isHost, state.isPaired]);
 
   // NOTE: Previously we auto-advanced from round-intro when ALL players pressed ready.
   // That stalled because regular controllers don't have a ready button.
