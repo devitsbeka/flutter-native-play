@@ -4,6 +4,7 @@ import { Smartphone, QrCode } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
+import { TVMirrorButton } from './TVMirrorButton';
 
 /**
  * TV Pairing Screen V3 - Shows a 4-digit code for phone pairing
@@ -15,6 +16,9 @@ export const TVPairingScreenV3: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center p-6 overflow-hidden relative">
+      {/* Mirror button - top right */}
+      <TVMirrorButton />
+      
       {/* Code overlay in top-right (logo is already centered in main content) */}
       <TVBrandingOverlay showLogo={false} showCode />
 
