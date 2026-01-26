@@ -946,7 +946,7 @@ function TeamContentV2() {
               hashtags,
               cover_gradient: randomGradient,
               question_count: questions.length,
-              answer_format: questions[0]?.incorrect_answers?.length === 1 ? 'true_false' : 'multiple',
+              answer_format: questions[0]?.incorrect_answers?.length === 1 ? 'true_false' : '4_answers',
               questions: questionsToSave,
               icon_slug: questions[0]?.icon_slug || null,
               is_public: false,
