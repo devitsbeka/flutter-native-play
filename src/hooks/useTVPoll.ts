@@ -524,22 +524,28 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       console.warn('[finalizePollAndStartGame] ⚠️ Failed to reset player activity:', resetError);
     }
 
-    // CRITICAL FIX: Also sync user_id for any authenticated player whose user_id is NULL
+    // CRITICAL FIX: Sync user_id for ALL players whose player_id matches an auth user
     // This fixes RLS policy issues where guests can't vote because user_id is missing
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (currentUser) {
-      const { error: userIdError } = await supabase
-        .from('tv_players')
-        .update({ user_id: currentUser.id, is_active: true })
-        .eq('tv_session_id', sessionId)
-        .eq('player_id', currentUser.id)
-        .is('user_id', null);
-      
-      if (userIdError) {
-        console.warn('[finalizePollAndStartGame] ⚠️ Failed to sync user_id:', userIdError);
-      } else {
-        console.log('[finalizePollAndStartGame] ✅ Synced user_id for current player');
+    const { data: playersWithNullUserId } = await supabase
+      .from('tv_players')
+      .select('id, player_id')
+      .eq('tv_session_id', sessionId)
+      .is('user_id', null);
+
+    if (playersWithNullUserId && playersWithNullUserId.length > 0) {
+      console.log('[finalizePollAndStartGame] 🔄 Syncing user_id for', playersWithNullUserId.length, 'players...');
+      for (const player of playersWithNullUserId) {
+        // player_id IS the auth user id for authenticated players
+        const { error: userIdError } = await supabase
+          .from('tv_players')
+          .update({ user_id: player.player_id, is_active: true })
+          .eq('id', player.id);
+        
+        if (userIdError) {
+          console.warn('[finalizePollAndStartGame] ⚠️ Failed to sync user_id for player:', player.id, userIdError);
+        }
       }
+      console.log('[finalizePollAndStartGame] ✅ Synced user_id for all players with null user_id');
     }
 
     // CRITICAL: Extended delay for DB consistency (300ms, critical after poll/transitions)
