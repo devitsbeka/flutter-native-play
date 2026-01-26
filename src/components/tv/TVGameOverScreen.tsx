@@ -157,59 +157,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
         </div>
       </motion.div>
 
-      {/* Your Result */}
-      {currentPlayer && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-col items-center mb-6"
-        >
-          <div className={`bg-gradient-to-r ${getRankColor(currentPlayerRank)} p-1 rounded-2xl mb-3`}>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl px-8 py-4 flex flex-col items-center">
-              {getMedalIcon(currentPlayerRank)}
-              <span className="text-lg font-bold mt-2 text-white">{getRankText(currentPlayerRank)}</span>
-              
-              {/* Avatar */}
-              <div className="relative mt-3">
-                {currentPlayerRank === 1 && (
-                  <motion.div
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: -35, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="absolute left-1/2 -translate-x-1/2"
-                  >
-                    <Crown className="w-8 h-8 text-yellow-500" />
-                  </motion.div>
-                )}
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center overflow-hidden border-4 border-primary/30">
-                  {currentPlayer.avatar_url ? (
-                    <img 
-                      src={currentPlayer.avatar_url} 
-                      alt={currentPlayer.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl font-bold text-primary-foreground">
-                      {currentPlayer.nickname.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              <span className="text-lg font-semibold mt-2 text-white">{currentPlayer.nickname}</span>
-              <motion.span 
-                className="text-3xl font-bold text-purple-300"
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-              >
-                {currentPlayer.score.toLocaleString()} pts
-              </motion.span>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {/* Your Result - minimal display */}
 
       {/* Leaderboard */}
       <motion.div

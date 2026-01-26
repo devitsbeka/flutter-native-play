@@ -313,7 +313,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      const dbPlayerCount = session.active_player_count || 0;
+      // IMPROVEMENT: Get actual active player count from tv_players table
+      // This is more accurate than the locked count, especially after refreshes
+      const { count: activePlayersCount } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', current.sessionId)
+        .eq('is_active', true);
+
+      const dbPlayerCount = activePlayersCount ?? session.active_player_count ?? 0;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
       
@@ -961,6 +969,56 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .eq('id', session.id);
       }
 
+      // CRITICAL: Register/update player in tv_players table for smooth rejoin after refresh
+      // This ensures:
+      // 1. RLS policies work for guests (poll suggestions, answers)
+      // 2. Player count is accurate for auto-advance
+      // 3. Rejoining players restore their is_active status
+      if (!isTVDisplay) {
+        const authUid = authUserId || null;
+        
+        // Check if player already exists in this session
+        const { data: existingPlayer } = await supabase
+          .from('tv_players')
+          .select('id, is_active')
+          .eq('tv_session_id', session.id)
+          .eq('player_id', playerId)
+          .maybeSingle();
+
+        if (existingPlayer) {
+          // Player exists - update their is_active status to true (they're back!)
+          await supabase
+            .from('tv_players')
+            .update({ 
+              is_active: true,
+              nickname,
+              avatar_url: avatarUrl || null,
+            })
+            .eq('id', existingPlayer.id);
+          tvLog('Updated existing tv_player as active', { playerId: playerId.slice(0, 8) });
+        } else {
+          // New player - insert them
+          const { error: insertError } = await supabase
+            .from('tv_players')
+            .insert({
+              tv_session_id: session.id,
+              user_id: authUid,
+              player_id: playerId,
+              nickname,
+              avatar_url: avatarUrl || null,
+              is_host: isHostPlayer,
+              is_active: true,
+            });
+
+          if (insertError) {
+            // Log but don't fail - presence will still work
+            console.warn('[joinSession] Failed to insert tv_player:', insertError);
+          } else {
+            tvLog('Registered new tv_player', { playerId: playerId.slice(0, 8), isHost: isHostPlayer });
+          }
+        }
+      }
+
       // Parse existing questions if any
       let questions: TVQuestion[] = [];
       if (session.questions) {
@@ -1247,13 +1305,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         tvLogPlayer('join', key, newPresences);
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'leave' }, async ({ key, leftPresences }) => {
         tvLogPlayer('leave', key);
 
         // Log player disconnect for debugging
         if (leftPresences && leftPresences.length > 0) {
           const leftPlayer = leftPresences[0] as { nickname?: string };
           tvLog('Player disconnected', { nickname: leftPlayer.nickname || key });
+        }
+        
+        // Mark player as inactive in tv_players table
+        // This ensures accurate player count for auto-advance after disconnect
+        if (key !== 'TV_DISPLAY') {
+          const currentSessionId = stateRef.current.sessionId;
+          if (currentSessionId) {
+            await supabase
+              .from('tv_players')
+              .update({ is_active: false })
+              .eq('tv_session_id', currentSessionId)
+              .eq('player_id', key);
+            tvLog('Marked player as inactive', { playerId: key.slice(0, 8) });
+          }
         }
       })
       .on('broadcast', { event: 'RESET_SCORES' }, () => {

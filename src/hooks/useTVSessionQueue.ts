@@ -339,13 +339,26 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
 
   const removeFromQueue = useCallback(
     async (itemId: string) => {
-      if (!sessionId) return;
+      const currentSessionId = sessionIdRef.current;
+      if (!currentSessionId) return;
+      
+      // Handle synthetic IDs that don't exist in database
+      // These are optimistic items or fallback items with temp-/initial- prefixes
+      if (itemId.startsWith('temp-') || itemId.startsWith('initial-')) {
+        console.log('[useTVSessionQueue] Removing synthetic item from local state:', itemId);
+        setQueue(prev => prev.filter(q => q.id !== itemId));
+        nextPositionRef.current = Math.max(0, nextPositionRef.current - 1);
+        return;
+      }
+      
+      // Delete from database
       await supabase.from("tv_session_queue").delete().eq("id", itemId);
+      
       // Reorder remaining
       const { data: remaining } = await supabase
         .from("tv_session_queue")
         .select("id")
-        .eq("session_id", sessionId)
+        .eq("session_id", currentSessionId)
         .order("position", { ascending: true });
       if (remaining?.length) {
         await Promise.all(
@@ -354,8 +367,11 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
           )
         );
       }
+      
+      // Refetch to sync state
+      refetch();
     },
-    [sessionId]
+    [refetch]
   );
 
   const reorderQueue = useCallback(
