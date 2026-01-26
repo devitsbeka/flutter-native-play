@@ -1591,8 +1591,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         Object.entries(presenceState).forEach(([key, presences]) => {
           const rawPresence = presences[0] as Record<string, unknown> | undefined;
           
-          // Filter out TV_DISPLAY - it's not a player
-          if (rawPresence && key !== 'TV_DISPLAY' && 'nickname' in rawPresence) {
+          // Filter out TV_DISPLAY and TV_MIRROR - they are not players
+          const isSystemDevice = key === 'TV_DISPLAY' || key === 'TV_MIRROR';
+          if (rawPresence && !isSystemDevice && 'nickname' in rawPresence) {
             // Check if the answer is for the CURRENT question to prevent stale state display
             const answeredQuestionIndex = rawPresence.answeredQuestionIndex as number | undefined;
             const isCurrentQuestionAnswer = answeredQuestionIndex === currentQIndex;
@@ -1661,7 +1662,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const activePhases = ['countdown', 'question', 'playing', 'reveal', 'poll-suggest', 'poll-voting', 'poll-results'];
         const currentPhase = stateRef.current.phase;
         
-        if (key !== 'TV_DISPLAY' && !activePhases.includes(currentPhase)) {
+        const isSystemDevice = key === 'TV_DISPLAY' || key === 'TV_MIRROR';
+        if (!isSystemDevice && !activePhases.includes(currentPhase)) {
           const currentSessionId = stateRef.current.sessionId;
           if (currentSessionId) {
             await supabase
