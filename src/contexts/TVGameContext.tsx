@@ -1378,6 +1378,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
+      // Clean up stale answers from previous sessions for this room
+      // This prevents duplicate key conflicts and ensures accurate answer counts
+      if (state.roomId) {
+        const { error: cleanupError } = await supabase
+          .from('player_answers')
+          .delete()
+          .eq('room_id', state.roomId)
+          .neq('tv_session_id', state.sessionId);
+        
+        if (cleanupError) {
+          tvLog('Warning: Could not clean stale answers', cleanupError);
+        } else {
+          tvLog('Cleared stale answers from previous sessions for room', state.roomId);
+        }
+      }
+
       // CRITICAL: Lock player count BEFORE countdown starts
       // This is stored in DB and read when checking if all answered
       const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
