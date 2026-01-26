@@ -281,7 +281,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     
     // Step 2: Extended delay for DB consistency (critical after poll/transitions)
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // INCREASED to 300ms for more reliable propagation after poll phase
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     // Step 3: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
     let verifiedCount = 0;
@@ -1100,22 +1101,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Check if player already exists in this session
         const { data: existingPlayer } = await supabase
           .from('tv_players')
-          .select('id, is_active')
+          .select('id, is_active, user_id')
           .eq('tv_session_id', session.id)
           .eq('player_id', playerId)
           .maybeSingle();
 
         if (existingPlayer) {
           // Player exists - update their is_active status to true (they're back!)
+          // CRITICAL FIX: Also preserve/set user_id for authenticated players
           await supabase
             .from('tv_players')
             .update({ 
               is_active: true,
               nickname,
               avatar_url: avatarUrl || null,
+              user_id: authUid || (existingPlayer as any).user_id, // Preserve or set user_id
             })
             .eq('id', existingPlayer.id);
-          tvLog('Updated existing tv_player as active', { playerId: playerId.slice(0, 8) });
+          tvLog('Updated existing tv_player as active', { playerId: playerId.slice(0, 8), userId: authUid?.slice(0, 8) });
         } else {
           // New player - insert them
           const { error: insertError } = await supabase
@@ -1461,7 +1464,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // FIX: Only mark player as inactive when NOT in active gameplay phases
         // During active gameplay, presence flickers should NOT affect player count
         // The player count is locked at round start and auto-advance uses that locked count
-        const activePhases = ['countdown', 'question', 'playing', 'reveal'];
+        const activePhases = ['countdown', 'question', 'playing', 'reveal', 'poll-suggest', 'poll-voting', 'poll-results'];
         const currentPhase = stateRef.current.phase;
         
         if (key !== 'TV_DISPLAY' && !activePhases.includes(currentPhase)) {
