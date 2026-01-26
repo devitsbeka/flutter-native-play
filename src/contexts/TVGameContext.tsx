@@ -1592,8 +1592,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const rawPresence = presences[0] as Record<string, unknown> | undefined;
           
           // Filter out TV_DISPLAY and TV_MIRROR - they are not players
-          const isSystemDevice = key === 'TV_DISPLAY' || key === 'TV_MIRROR';
-          if (rawPresence && !isSystemDevice && 'nickname' in rawPresence) {
+          // Check both key AND nickname since they might differ
+          const systemDeviceKeys = ['TV_DISPLAY', 'TV_MIRROR'];
+          const isSystemDeviceByKey = systemDeviceKeys.includes(key);
+          const nickname = rawPresence?.nickname as string | undefined;
+          const isSystemDeviceByNickname = nickname && systemDeviceKeys.includes(nickname);
+          
+          if (rawPresence && !isSystemDeviceByKey && !isSystemDeviceByNickname && 'nickname' in rawPresence) {
             // Check if the answer is for the CURRENT question to prevent stale state display
             const answeredQuestionIndex = rawPresence.answeredQuestionIndex as number | undefined;
             const isCurrentQuestionAnswer = answeredQuestionIndex === currentQIndex;
