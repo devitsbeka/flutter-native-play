@@ -69,7 +69,7 @@ export const TVPollScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-8 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-8 pb-4 flex flex-col">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -132,7 +132,7 @@ export const TVPollScreen: React.FC = () => {
               </p>
             </motion.div>
           ) : (
-            <div className={`grid ${getGridCols(suggestions.length)} gap-4 h-full`}>
+            <div className={`grid ${getGridCols(suggestions.length)} gap-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
               <AnimatePresence mode="popLayout">
                 {suggestions.map((suggestion, index) => (
                   <SuggestionCard
