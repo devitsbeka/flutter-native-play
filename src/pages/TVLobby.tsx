@@ -76,8 +76,9 @@ const TVLobbyContent: React.FC = () => {
   switch (phase) {
     case 'pairing':
     case 'waiting':
-      return showLobby ? <TVPollScreen /> : <TVPairingScreenV3 />;
+      return showLobby ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
     case 'lobby':
+      return <TVLobbyScreenV2 />;
     case 'poll-suggest':
     case 'poll-voting':
       return <TVPollScreen />;
@@ -96,7 +97,7 @@ const TVLobbyContent: React.FC = () => {
     case 'idle':
       return <TVIdleScreen />;
     default:
-      return showLobby ? <TVPollScreen /> : <TVPairingScreenV3 />;
+      return showLobby ? <TVLobbyScreenV2 /> : <TVPairingScreenV3 />;
   }
 };
 
