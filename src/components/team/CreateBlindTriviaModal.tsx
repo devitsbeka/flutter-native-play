@@ -80,7 +80,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   const [step, setStep] = useState(1);
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
-  const [answerFormat] = useState<"4_answers" | "true_false">("4_answers");
+  const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("mixed");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -397,6 +397,37 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
               ))}
             </div>
 
+            {/* Answer Format */}
+            <div className="grid grid-cols-2 gap-3">
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setAnswerFormat("4_answers")}
+                className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
+                  answerFormat === "4_answers"
+                    ? "border-white bg-white/20"
+                    : "border-white/30 bg-white/10"
+                }`}
+              >
+                <span className="text-2xl">🎯</span>
+                <span className="text-white font-medium text-sm">4 ვარიანტი</span>
+              </motion.button>
+              
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setAnswerFormat("true_false")}
+                className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
+                  answerFormat === "true_false"
+                    ? "border-white bg-white/20"
+                    : "border-white/30 bg-white/10"
+                }`}
+              >
+                <span className="text-2xl">✅</span>
+                <span className="text-white font-medium text-sm">მართალი/მცდარი</span>
+              </motion.button>
+            </div>
+
             {isGenerating && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -463,7 +494,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                დაგენერირება
+                შექმენი
               </>
             )}
           </ChunkyButton>
