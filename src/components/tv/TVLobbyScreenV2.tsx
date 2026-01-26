@@ -397,10 +397,11 @@ export const TVLobbyScreenV2: React.FC = () => {
           )}
         </div>
 
-        {/* Player Count */}
-        <div className="flex items-center gap-2 text-purple-200">
+        {/* Player Count + TV Icon */}
+        <div className="flex items-center gap-3 text-purple-200">
           <Users className="w-5 h-5" />
           <span className="text-xl font-bold">{players.length}/{MAX_PLAYERS}</span>
+          <img src={retroTvIcon} alt="TV რეჟიმი" className="w-12 h-12 object-contain" />
         </div>
       </div>
 
@@ -635,17 +636,8 @@ export const TVLobbyScreenV2: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side - TV Icon + QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-2 mt-[15px]">
-          {/* TV Icon - 20% larger (10 → 12) and centered above QR */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-3"
-          >
-            <img src={retroTvIcon} alt="TV რეჟიმი" className="w-12 h-12 object-contain" />
-          </motion.div>
-          
+        {/* Right Side - QR Code */}
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5 mt-[15px]">
           {/* QR Code */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
