@@ -342,9 +342,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         finalExpected: expectedCount,
       });
 
+      // SAFETY CHECKS: Never advance if expected count is unreliable
       if (expectedCount <= 0) {
         console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0');
         return;
+      }
+
+      // CRITICAL: In paired mode with no suggester, refuse to advance if only 1 expected
+      // This catches race conditions where count was locked before all players registered
+      if (isPaired && expectedCount === 1 && !suggesterId) {
+        console.log('[AutoAdvance] ⚠️ Refusing to advance: paired mode but only 1 expected (likely stale data)', {
+          expectedCount,
+          isPaired,
+          suggesterId,
+        });
+        return; // Wait for timer instead - this prevents premature advancement
       }
 
       // Count actual answers from DB
@@ -591,6 +603,40 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const suggesterNickname = (nextItem as any).suggester_nickname as string | null;
       const suggesterAvatarUrl = (nextItem as any).suggester_avatar_url as string | null;
 
+      // CRITICAL FIX: Reset ALL players to is_active = true BEFORE locking count
+      // This ensures presence flickers from the previous round don't affect the new round's count
+      await supabase
+        .from('tv_players')
+        .update({ is_active: true })
+        .eq('tv_session_id', state.sessionId);
+
+      // Query LIVE active player count after reset
+      const { count: livePlayerCount } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', state.sessionId)
+        .eq('is_active', true);
+
+      // Calculate expected count - minimum 2 for paired mode
+      let expectedCount = stateRef.current.isPaired 
+        ? Math.max(livePlayerCount ?? 2, 2) 
+        : (livePlayerCount ?? 2);
+
+      // Adjust for suggester skip rule
+      if (suggesterUserId) {
+        expectedCount = Math.max(1, expectedCount - 1);
+        tvLog('startNextRoundFromQueueIfAny: Adjusted count for suggester', { 
+          suggesterId: suggesterUserId.slice(0, 8), 
+          adjustedCount: expectedCount 
+        });
+      }
+
+      tvLog('startNextRoundFromQueueIfAny: Locking player count', { 
+        livePlayerCount, 
+        expectedCount,
+        hasSuggester: !!suggesterUserId,
+      });
+
       const { error: updateError } = await supabase
         .from('tv_sessions')
         .update({
@@ -605,6 +651,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           current_round_suggester_id: suggesterUserId,
           current_round_suggester_nickname: suggesterNickname,
           current_round_suggester_avatar_url: suggesterAvatarUrl,
+          // CRITICAL: Lock the player count at round initialization
+          active_player_count: expectedCount,
         })
         .eq('id', state.sessionId);
 
