@@ -721,6 +721,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             hasAnswered: false,
             lastAnswerCorrect: null,
             lastAnswer: null,
+            answeredQuestionIndex: undefined, // Clear stale question reference for new question
             isHost: true,
             isActive: true,
           });
@@ -1002,6 +1003,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 hasAnswered: false,
                 lastAnswerCorrect: null,
                 lastAnswer: null,
+                answeredQuestionIndex: undefined, // Clear stale question reference
                 isHost: isHostRef.current,
                 isActive: true,
               });
@@ -1103,23 +1105,30 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const presenceState = channel.presenceState();
         const players: TVPlayer[] = [];
 
+        const currentQIndex = stateRef.current.currentQuestionIndex;
+
         Object.entries(presenceState).forEach(([key, presences]) => {
           const rawPresence = presences[0] as Record<string, unknown> | undefined;
           
           // Filter out TV_DISPLAY - it's not a player
           if (rawPresence && key !== 'TV_DISPLAY' && 'nickname' in rawPresence) {
+            // Check if the answer is for the CURRENT question to prevent stale state display
+            const answeredQuestionIndex = rawPresence.answeredQuestionIndex as number | undefined;
+            const isCurrentQuestionAnswer = answeredQuestionIndex === currentQIndex;
+            
             players.push({
               id: key,
               nickname: (rawPresence.nickname as string) || 'Player',
               avatar_url: rawPresence.avatar_url as string | null,
               score: (rawPresence.score as number) || 0,
-              hasAnswered: (rawPresence.hasAnswered as boolean) || false,
-              lastAnswerCorrect: rawPresence.lastAnswerCorrect as boolean | null,
-              lastAnswer: rawPresence.lastAnswer as string | null,
+              // Only show answered state if it's for the CURRENT question
+              hasAnswered: isCurrentQuestionAnswer ? (rawPresence.hasAnswered as boolean) || false : false,
+              lastAnswerCorrect: isCurrentQuestionAnswer ? rawPresence.lastAnswerCorrect as boolean | null : null,
+              lastAnswer: isCurrentQuestionAnswer ? rawPresence.lastAnswer as string | null : null,
               isHost: (rawPresence.isHost as boolean) || false,
-                // Treat players as active ONLY when explicitly tracked as active.
-                // This prevents invited/offline players from blocking auto-advance.
-                isActive: rawPresence.isActive === true,
+              // Treat players as active ONLY when explicitly tracked as active.
+              // This prevents invited/offline players from blocking auto-advance.
+              isActive: rawPresence.isActive === true,
               isReadyForNextRound: (rawPresence.isReadyForNextRound as boolean) || false,
             });
           }
@@ -1539,6 +1548,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           hasAnswered: true,
           lastAnswerCorrect: isCorrect,
           lastAnswer: answer,
+          answeredQuestionIndex: state.currentQuestionIndex, // Track which question this answer is for
           isHost,
           isActive: true,
         });
