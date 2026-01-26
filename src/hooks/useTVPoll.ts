@@ -277,6 +277,9 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     tvLog('[useTVPoll] Removing suggestion', { suggestionId, userId, isHost });
 
+    // Optimistically remove from local state IMMEDIATELY for instant UI feedback
+    setSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+
     let query = supabase
       .from('tv_poll_suggestions')
       .delete()
@@ -292,11 +295,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     if (error) {
       tvLogError('[useTVPoll] Error removing suggestion', error);
+      // Restore on error - refetch data
+      fetchPollData();
       return false;
     }
 
     return true;
-  }, [userId, isHost]);
+  }, [userId, isHost, fetchPollData]);
 
   // Remove my suggestion (backwards compatible - removes first)
   const removeMySuggestion = useCallback(async () => {
