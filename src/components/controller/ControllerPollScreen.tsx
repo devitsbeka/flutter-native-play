@@ -427,7 +427,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
               
               {/* Show existing suggestions */}
               {mySuggestions.length > 0 && (
-                <div className="space-y-2 mb-3 max-h-[35vh] overflow-y-auto">
+                <div className="space-y-2 mb-3 max-h-[55vh] overflow-y-auto">
                   {mySuggestions.map((suggestion, index) => (
                     <div key={suggestion.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/5">
                       <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
@@ -502,7 +502,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                 <Vote className="w-5 h-5 mr-2" />
                 {suggestions.length < 2 
                   ? 'საჭიროა მინ. 2 კატეგორია' 
-                  : `ხმის მიცემის დაწყება (${suggestions.length} ვარიანტი)`}
+                  : 'ხმის მიცემის დაწყება'}
               </ChunkyButton>
             </div>
           </div>
@@ -537,7 +537,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                 <p className="text-purple-300 text-sm mb-3">
                   ჰოსტის არჩევანი ({suggestions.length}):
                 </p>
-                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                   {suggestions.map((suggestion, index) => (
                     <motion.div
                       key={suggestion.id}
