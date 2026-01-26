@@ -270,16 +270,25 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
   }, [sessionId, userId, nickname, avatarUrl]);
 
   // Remove a specific suggestion by ID
+  // For hosts (isHost=true), we allow removing any suggestion
+  // For non-hosts, we only allow removing your own suggestions
   const removeSuggestion = useCallback(async (suggestionId: string) => {
-    if (!suggestionId || !userId) return false;
+    if (!suggestionId) return false;
 
-    tvLog('[useTVPoll] Removing suggestion', { suggestionId, userId });
+    tvLog('[useTVPoll] Removing suggestion', { suggestionId, userId, isHost });
 
-    const { error } = await supabase
+    let query = supabase
       .from('tv_poll_suggestions')
       .delete()
-      .eq('id', suggestionId)
-      .eq('user_id', userId);
+      .eq('id', suggestionId);
+
+    // Only filter by user_id for non-hosts
+    // Hosts can remove any suggestion they see in their list
+    if (!isHost && userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { error } = await query;
 
     if (error) {
       tvLogError('[useTVPoll] Error removing suggestion', error);
@@ -287,7 +296,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     }
 
     return true;
-  }, [userId]);
+  }, [userId, isHost]);
 
   // Remove my suggestion (backwards compatible - removes first)
   const removeMySuggestion = useCallback(async () => {
