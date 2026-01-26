@@ -268,8 +268,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // ============================================================================
   // CENTRALIZED UTILITY: Confirm active players with robust verification
   // ============================================================================
-  // This utility performs a bulk reset + multi-attempt verification loop
-  // to ensure we always have an accurate player count before game transitions
+  // This utility uses presence channel to determine who is ACTUALLY connected
+  // It activates connected players and leaves quitters inactive
   // ============================================================================
   const confirmActivePlayers = useCallback(async (sessionId: string): Promise<number> => {
     console.log('[confirmActivePlayers] 🔒 Starting robust player verification...');
@@ -277,25 +277,57 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // CRITICAL: System devices that should NEVER be counted as players
     const systemDeviceIdentifiers = ['TV_DISPLAY', 'TV_MIRROR'];
     
-    // Step 1: Bulk reset ALL real players to is_active = true (exclude system devices)
-    // This also activates players who joined mid-game and were initially marked inactive
-    const { error: resetError } = await supabase
-      .from('tv_players')
-      .update({ is_active: true })
-      .eq('tv_session_id', sessionId)
-      .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
-      .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
+    // Step 1: Get player_ids from presence (these are ACTUALLY connected players)
+    // Use the presence channel to get real-time connected users
+    const presenceState = presenceChannelRef.current?.presenceState() || {};
+    const connectedPlayerIds: string[] = [];
+    
+    Object.entries(presenceState).forEach(([key, presences]) => {
+      const rawPresence = presences[0] as Record<string, unknown> | undefined;
+      // Filter out system devices
+      if (rawPresence && !systemDeviceIdentifiers.includes(key)) {
+        const nickname = rawPresence.nickname as string | undefined;
+        if (nickname && !systemDeviceIdentifiers.includes(nickname)) {
+          connectedPlayerIds.push(key);
+        }
+      }
+    });
+    
+    console.log('[confirmActivePlayers] 📡 Connected players from presence:', connectedPlayerIds.length, connectedPlayerIds.map((id: string) => id.slice(0, 8)));
+    
+    // Step 2: Activate ONLY players who are in presence channel (not quitters!)
+    // This handles both: mid-game joiners who are connected AND players who temporarily disconnected
+    if (connectedPlayerIds.length > 0) {
+      const { error: activateError } = await supabase
+        .from('tv_players')
+        .update({ is_active: true })
+        .eq('tv_session_id', sessionId)
+        .in('player_id', connectedPlayerIds);
 
-    if (resetError) {
-      console.warn('[confirmActivePlayers] ⚠️ Reset error:', resetError);
-    } else {
-      console.log('[confirmActivePlayers] 🔄 Reset all players to active (including mid-game joiners)');
+      if (activateError) {
+        console.warn('[confirmActivePlayers] ⚠️ Activate error:', activateError);
+      } else {
+        console.log('[confirmActivePlayers] 🔄 Activated', connectedPlayerIds.length, 'connected players (quitters stay inactive)');
+      }
     }
     
-    // Step 2: Extended delay for DB consistency (critical after poll/transitions)
+    // Step 3: Deactivate players NOT in presence (they quit or disconnected)
+    const { error: deactivateError } = await supabase
+      .from('tv_players')
+      .update({ is_active: false })
+      .eq('tv_session_id', sessionId)
+      .not('player_id', 'in', connectedPlayerIds.length > 0 ? `(${connectedPlayerIds.join(',')})` : '(NULL)')
+      .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
+      .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
+    
+    if (deactivateError) {
+      console.warn('[confirmActivePlayers] ⚠️ Deactivate error:', deactivateError);
+    }
+    
+    // Step 4: Extended delay for DB consistency
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Step 3: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
+    // Step 5: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
     let verifiedCount = 0;
     const isPaired = stateRef.current.isPaired;
     const minExpected = isPaired ? 2 : 1;
@@ -320,7 +352,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
     
-    // Step 4: Lock the verified count in session (with minimum for paired mode)
+    // Step 6: Lock the verified count in session (with minimum for paired mode)
     const finalCount = isPaired ? Math.max(verifiedCount, 2) : verifiedCount;
     
     await supabase
@@ -328,7 +360,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .update({ active_player_count: finalCount })
       .eq('id', sessionId);
     
-    console.log('[confirmActivePlayers] ✅ Locked player count:', finalCount, '(system devices excluded)');
+    console.log('[confirmActivePlayers] ✅ Locked player count:', finalCount, '(quitters excluded, mid-game joiners included if connected)');
     return finalCount;
   }, []);
 
