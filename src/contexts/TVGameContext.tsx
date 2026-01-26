@@ -301,12 +301,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
       
-      // Safety guard: don't check in first 1500ms after question start
-      // Increased to 1.5s to account for network latency, DB propagation, and player sync
+      // Safety guard: don't check in first 2000ms after question start
+      // Increased to 2s to account for network latency, DB propagation, and player sync
       // This is especially important after polls where there may be additional latency
-      const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-      if (timeSinceStart < 1500) {
-        console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart });
+      // The questionStartedAtRef is set AFTER the DB transition in startPlaying
+      const questionStartTime = questionStartedAtRef.current;
+      
+      // CRITICAL: If questionStartedAtRef is 0, it means startPlaying hasn't set it yet
+      // This can happen during race conditions - skip and wait for proper initialization
+      if (!questionStartTime || questionStartTime === 0) {
+        console.log('[AutoAdvance] ⏭️ Skip: questionStartedAtRef not yet initialized');
+        return;
+      }
+      
+      const timeSinceStart = Date.now() - questionStartTime;
+      if (timeSinceStart < 2000) {
+        console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart, questionStartTime });
         return;
       }
 
@@ -915,11 +925,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
 
-        // CRITICAL FIX: Reset timing protection refs BEFORE the next question
-        hasAdvancedRef.current = false;
-        questionStartedAtRef.current = Date.now();
-        console.log('[Next Question] ⏱️ Reset timing protection refs');
+        // CRITICAL FIX: Reset ALL players to is_active = true before transitioning
+        await supabase
+          .from('tv_players')
+          .update({ is_active: true })
+          .eq('tv_session_id', state.sessionId);
         
+        // Small delay for DB consistency
+        await new Promise(resolve => setTimeout(resolve, 150));
+
         // CRITICAL FIX: Query LIVE active player count instead of using stale state
         // stateRef.current.players.length can be stale during rapid question transitions
         const { count: liveNextCount } = await supabase
@@ -928,11 +942,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .eq('tv_session_id', state.sessionId)
           .eq('is_active', true);
 
+        // CRITICAL: Verification loop to ensure we have correct count
+        let verifiedCount = liveNextCount ?? 0;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (stateRef.current.isPaired && verifiedCount >= 2) break;
+          if (!stateRef.current.isPaired && verifiedCount >= 1) break;
+          
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const { count: retryCount } = await supabase
+            .from('tv_players')
+            .select('*', { count: 'exact', head: true })
+            .eq('tv_session_id', state.sessionId)
+            .eq('is_active', true);
+          verifiedCount = retryCount ?? verifiedCount;
+        }
+
         const currentPlayerCount = stateRef.current.isPaired 
-          ? Math.max(liveNextCount ?? 2, 2) 
-          : (liveNextCount ?? stateRef.current.players.length);
-        console.log('[Next Question] 🎯 LIVE player count for next question:', { liveNextCount, currentPlayerCount });
+          ? Math.max(verifiedCount, 2) 
+          : verifiedCount;
+        console.log('[Next Question] 🎯 VERIFIED player count for next question:', { liveNextCount, verifiedCount, currentPlayerCount });
         
+        // Transition to playing FIRST
         await supabase
           .from('tv_sessions')
           .update({
@@ -943,6 +973,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             active_player_count: currentPlayerCount,
           })
           .eq('id', state.sessionId);
+        
+        // CRITICAL: Small delay before setting timing refs - ensures React state has caught up
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Reset timing protection refs AFTER the DB transition
+        hasAdvancedRef.current = false;
+        questionStartedAtRef.current = Date.now();
+        console.log('[Next Question] ⏱️ Timing refs reset AFTER transition');
       }
     }, REVEAL_DURATION_MS);
 
@@ -1505,6 +1543,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       tvLogError('startGame', 'No category ID or user trivia ID provided');
       return;
     }
+    
+    // CRITICAL: Reset timing refs to 0 immediately when starting a new game
+    // This prevents stale values from a previous game from causing issues
+    // The proper values will be set in startPlaying AFTER the transition to 'playing'
+    questionStartedAtRef.current = 0;
+    hasAdvancedRef.current = false;
+    console.log('[startGame] ⏱️ Reset timing refs to 0 for new game');
 
     try {
       // Fetch queue items to calculate total rounds.
@@ -1907,12 +1952,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       tvLog('startPlaying: Locked player count', { expectedCount });
       
-      // CRITICAL: Reset timing refs for the new question
-      questionStartedAtRef.current = Date.now();
-      hasAdvancedRef.current = false;
-      console.log('[startPlaying] ⏱️ Question timing reset, expected players:', expectedCount);
-      
-      // Transition to playing
+      // Transition to playing FIRST
       await supabase
         .from('tv_sessions')
         .update({
@@ -1922,6 +1962,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('id', state.sessionId);
 
       tvLogPhase('countdown', 'playing', 'startPlaying');
+      
+      // CRITICAL: Small delay to ensure React state propagates before setting timing refs
+      // This ensures the fallback interval and other checks don't fire prematurely
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // CRITICAL: Reset timing refs for the new question AFTER the DB transition
+      // This ensures the 1500ms safety window starts AFTER the game is actually playing
+      hasAdvancedRef.current = false;
+      questionStartedAtRef.current = Date.now();
+      console.log('[startPlaying] ⏱️ Question timing reset AFTER transition, expected players:', expectedCount);
       tvLogTimer('start', QUESTION_TIME);
     } catch (error) {
       tvLogError('startPlaying', error);
