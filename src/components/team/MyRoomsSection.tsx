@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus } from "lucide-react";
+import { useState, useRef } from "react";
+import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, RoomSort } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,6 +15,24 @@ import { ka } from "date-fns/locale";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import glitchIcon from "@/assets/glitch.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MyRoomsSectionProps {
   hideTV?: boolean;
@@ -35,13 +53,38 @@ export function MyRoomsSection({
   sort = "recent",
   searchQuery = ""
 }: MyRoomsSectionProps) {
-  const { rooms, loading, filter: activeFilter } = useMyRooms({ filter, sort, searchQuery });
+  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, sort, searchQuery });
   const { enterRoom } = useMultiplayerV2();
   const { t } = useLanguage();
   const [showTVModal, setShowTVModal] = useState(false);
   
   const platform = Capacitor.getPlatform();
   const TVIcon = platform === 'ios' ? Airplay : platform === 'android' ? Cast : Tv;
+
+  // Delete room handler
+  const handleDeleteRoom = async (roomId: string) => {
+    try {
+      // Delete related data first (cascade)
+      await supabase.from("player_answers").delete().eq("room_id", roomId);
+      await supabase.from("room_questions").delete().eq("room_id", roomId);
+      await supabase.from("room_chat_messages").delete().eq("room_id", roomId);
+      await supabase.from("room_participants").delete().eq("room_id", roomId);
+      await supabase.from("room_category_queue").delete().eq("room_id", roomId);
+      await supabase.from("game_invitations").delete().eq("room_id", roomId);
+      await supabase.from("room_games").delete().eq("room_id", roomId);
+      
+      // Delete the room
+      const { error } = await supabase.from("game_rooms").delete().eq("id", roomId);
+      
+      if (error) throw error;
+      
+      toast.success("ოთახი წაიშალა");
+      refreshRooms();
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      toast.error("ოთახის წაშლა ვერ მოხერხდა");
+    }
+  };
 
   // Clear unread activity when joining a room
   const handleJoin = async (room: MyRoom) => {
@@ -126,6 +169,7 @@ export function MyRoomsSection({
               room={room}
               index={index}
               onJoin={() => handleJoin(room)}
+              onDelete={handleDeleteRoom}
             />
           ))}
         </div>
@@ -138,6 +182,7 @@ export function MyRoomsSection({
                 room={room}
                 index={index}
                 onJoin={() => handleJoin(room)}
+                onDelete={handleDeleteRoom}
               />
             ))}
             {/* View All Card */}
@@ -169,11 +214,25 @@ interface RoomCardProps {
   room: MyRoom;
   index: number;
   onJoin: () => void;
+  onDelete: (roomId: string) => void;
   fullWidth?: boolean;
 }
 
-function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
+function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCardProps) {
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Swipe state for mobile
+  const x = useMotionValue(0);
+  const deleteOpacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
+  const deleteScale = useTransform(x, [-100, -50, 0], [1, 0.8, 0.5]);
+  const cardOpacity = useTransform(x, [-150, -100], [0.5, 1]);
+  
+  // Touch tracking for swipe vs tap detection
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isSwiping = useRef(false);
   
   // Display name: only room_name, no fallback to code
   const displayName = room.room_name || "თამაშის ოთახი";
@@ -186,131 +245,237 @@ function RoomCard({ room, index, onJoin, fullWidth = false }: RoomCardProps) {
   // Get gradient preset based on index
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    // If swiped left past threshold, show delete confirmation
+    if (info.offset.x < -100) {
+      setShowDeleteConfirm(true);
+    }
+    // Reset position
+    x.set(0);
+    isSwiping.current = false;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    touchStartX.current = e.clientX;
+    touchStartY.current = e.clientY;
+    isSwiping.current = false;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const deltaX = Math.abs(e.clientX - touchStartX.current);
+    const deltaY = Math.abs(e.clientY - touchStartY.current);
+    // 8px threshold to distinguish swipe from tap
+    if (deltaX > 8 || deltaY > 8) {
+      isSwiping.current = true;
+    }
+  };
+
+  const handleClick = () => {
+    // Only trigger join if not swiping
+    if (!isSwiping.current) {
+      onJoin();
+    }
+  };
+
+  const confirmDelete = () => {
+    onDelete(room.id);
+    setShowDeleteConfirm(false);
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: fullWidth ? 0 : 20, y: fullWidth ? 10 : 0 }}
-      animate={{ opacity: 1, x: 0, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      onClick={onJoin}
-      className={`${fullWidth ? "w-full" : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start"} rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-        room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{
-        boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
-      }}
-    >
-      {/* Full card with dynamic gradient background */}
-      <GradientBackground
-        colors={gradientPreset.colors}
-        gradientSize="125% 125%"
-        gradientOrigin="bottom-middle"
-        enableNoise={false}
-        className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
-      >
-        {/* Cover image with radial fade - flip based on index for variety */}
-        <div 
-          className="absolute inset-0 opacity-40 overflow-hidden"
+    <>
+      <div className="relative">
+        {/* Delete indicator background (mobile only) */}
+        {isMobile && (
+          <motion.div 
+            className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6"
+            style={{ opacity: deleteOpacity }}
+          >
+            <motion.div style={{ scale: deleteScale }}>
+              <Trash2 className="w-8 h-8 text-white" />
+            </motion.div>
+          </motion.div>
+        )}
+        
+        <motion.div
+          initial={{ opacity: 0, x: fullWidth ? 0 : 20, y: fullWidth ? 10 : 0 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          transition={{ delay: index * 0.05 }}
+          drag={isMobile ? "x" : false}
+          dragConstraints={{ left: -150, right: 0 }}
+          dragElastic={0.1}
+          onDragEnd={isMobile ? handleDragEnd : undefined}
+          onPointerDown={isMobile ? handlePointerDown : undefined}
+          onPointerMove={isMobile ? handlePointerMove : undefined}
+          onClick={handleClick}
+          className={`${fullWidth ? "w-full" : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start"} rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
+          }`}
           style={{
-            maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+            boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
+            ...(isMobile ? { x } : {}),
           }}
         >
-          <div 
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${coverImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              transform: `scaleX(${index % 2 === 0 ? 1 : -1}) scaleY(${index % 4 < 2 ? 1 : -1})`,
-            }}
-          />
-        </div>
-        
-        {/* Top row - Avatars left, Status badge right */}
-        <div className="relative z-10 px-2 pb-4">
-          <div className="flex items-start justify-between mb-8">
-            {/* Top left - Avatars */}
-            <div className="flex -space-x-2">
-              {room.participants.slice(0, 3).map((p) => (
-                <div 
-                  key={p.user_id} 
-                  className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 shadow-md"
-                >
-                  {p.avatar_url ? (
-                    <img 
-                      src={p.avatar_url} 
-                      alt={p.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-sm font-bold">
-                      {p.nickname?.charAt(0).toUpperCase() || "?"}
+          {/* Full card with dynamic gradient background */}
+          <GradientBackground
+            colors={gradientPreset.colors}
+            gradientSize="125% 125%"
+            gradientOrigin="bottom-middle"
+            enableNoise={false}
+            className="relative px-2.5 pb-2.5 pt-6 rounded-2xl"
+          >
+            {/* Cover image with radial fade - flip based on index for variety */}
+            <div 
+              className="absolute inset-0 opacity-40 overflow-hidden"
+              style={{
+                maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+              }}
+            >
+              <div 
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url(${coverImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  transform: `scaleX(${index % 2 === 0 ? 1 : -1}) scaleY(${index % 4 < 2 ? 1 : -1})`,
+                }}
+              />
+            </div>
+            
+            {/* Top row - Avatars left, Status badge + menu right */}
+            <div className="relative z-10 px-2 pb-4">
+              <div className="flex items-start justify-between mb-8">
+                {/* Top left - Avatars */}
+                <div className="flex -space-x-2">
+                  {room.participants.slice(0, 3).map((p) => (
+                    <div 
+                      key={p.user_id} 
+                      className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 shadow-md"
+                    >
+                      {p.avatar_url ? (
+                        <img 
+                          src={p.avatar_url} 
+                          alt={p.nickname}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-sm font-bold">
+                          {p.nickname?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {room.participants.length > 3 && (
+                    <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
+                      <span className="text-xs font-bold text-white">
+                        +{room.participants.length - 3}
+                      </span>
                     </div>
                   )}
                 </div>
-              ))}
-              {room.participants.length > 3 && (
-                <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
-                  <span className="text-xs font-bold text-white">
-                    +{room.participants.length - 3}
-                  </span>
-                </div>
-              )}
-            </div>
 
-            {/* Top right - Status badge */}
-            {isPlaying ? (
-              <LiveBadge />
-            ) : isCompleted ? (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                დასრულდა
-              </span>
-            ) : (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-                მოლოდინი
-              </span>
-            )}
-          </div>
-          
-          {/* Bottom left - Room name with icon and category */}
-          <div className="flex items-center gap-2.5 mb-1">
-            {room.room_icon && (
-              <img 
-                src={room.room_icon} 
-                alt="" 
-                className="w-10 h-10 object-contain drop-shadow-lg"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
-                {displayName}
-              </h3>
-              {room.category_name && (
-                <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
-                  {room.category_name}
+                {/* Top right - Status badge + menu (desktop/tablet) */}
+                <div className="flex items-center gap-2">
+                  {isPlaying ? (
+                    <LiveBadge />
+                  ) : isCompleted ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                      დასრულდა
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                      მოლოდინი
+                    </span>
+                  )}
+                  
+                  {/* 3-dot menu (tablet/desktop only) */}
+                  {!isMobile && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                          <MoreHorizontal className="w-4 h-4 text-white" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-card border-border">
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteConfirm(true);
+                          }}
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          წაშლა
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </div>
+              
+              {/* Bottom left - Room name with icon and category */}
+              <div className="flex items-center gap-2.5 mb-1">
+                {room.room_icon && (
+                  <img 
+                    src={room.room_icon} 
+                    alt="" 
+                    className="w-10 h-10 object-contain drop-shadow-lg"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-display text-white text-lg leading-tight truncate drop-shadow-md">
+                    {displayName}
+                  </h3>
+                  {room.category_name && (
+                    <p className="text-sm text-white/70 truncate font-medium drop-shadow-sm">
+                      {room.category_name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Bottom section - players count only (avatars moved to top) */}
+            <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-white/80" />
+                  <span className="text-sm font-bold text-white">{room.participants.length} მოთამაშე</span>
+                </div>
+                <p className="text-xs text-white/60">
+                  {formatDistanceToNow(new Date(room.created_at), { 
+                    addSuffix: true, 
+                    locale: ka 
+                  })}
                 </p>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Bottom section - players count only (avatars moved to top) */}
-        <div className="bg-white/15 backdrop-blur-md border border-white/20 px-4 py-3 rounded-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-white/80" />
-              <span className="text-sm font-bold text-white">{room.participants.length} მოთამაშე</span>
-            </div>
-            <p className="text-xs text-white/60">
-              {formatDistanceToNow(new Date(room.created_at), { 
-                addSuffix: true, 
-                locale: ka 
-              })}
-            </p>
-          </div>
-        </div>
-      </GradientBackground>
-    </motion.div>
+          </GradientBackground>
+        </motion.div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+          <AlertDialogHeader className="text-center">
+            <AlertDialogTitle>ოთახის წაშლა</AlertDialogTitle>
+            <AlertDialogDescription>
+              დარწმუნებული ხარ? ეს მოქმედება შეუქცევადია.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3">
+            <AlertDialogCancel className="flex-1 mt-0">გაუქმება</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="flex-1 bg-destructive hover:bg-destructive/90"
+            >
+              წაშლა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -319,10 +484,25 @@ interface RoomCardGridProps {
   room: MyRoom;
   index: number;
   onJoin: () => void;
+  onDelete: (roomId: string) => void;
 }
 
-function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
+function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const { openProfile } = usePlayerProfile();
+  const isMobile = useIsMobile();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Swipe state for mobile
+  const x = useMotionValue(0);
+  const deleteOpacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
+  const deleteScale = useTransform(x, [-100, -50, 0], [1, 0.8, 0.5]);
+  const cardOpacity = useTransform(x, [-150, -100], [0.5, 1]);
+  
+  // Touch tracking for swipe vs tap detection
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isSwiping = useRef(false);
+  
   const displayName = room.room_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
@@ -330,129 +510,228 @@ function RoomCardGrid({ room, index, onJoin }: RoomCardGridProps) {
   const coverImage = roomCoverPlaceholder;
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
 
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    if (info.offset.x < -100) {
+      setShowDeleteConfirm(true);
+    }
+    x.set(0);
+    isSwiping.current = false;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    touchStartX.current = e.clientX;
+    touchStartY.current = e.clientY;
+    isSwiping.current = false;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const deltaX = Math.abs(e.clientX - touchStartX.current);
+    const deltaY = Math.abs(e.clientY - touchStartY.current);
+    if (deltaX > 8 || deltaY > 8) {
+      isSwiping.current = true;
+    }
+  };
+
+  const handleClick = () => {
+    if (!isSwiping.current) {
+      onJoin();
+    }
+  };
+
+  const confirmDelete = () => {
+    onDelete(room.id);
+    setShowDeleteConfirm(false);
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.03 }}
-      onClick={onJoin}
-      className={`aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-        room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{
-        boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
-      }}
-    >
-      <GradientBackground
-        colors={gradientPreset.colors}
-        gradientSize="125% 125%"
-        gradientOrigin="bottom-middle"
-        enableNoise={false}
-        className="relative w-full h-full p-3 flex flex-col"
-      >
-        {/* Cover image with radial fade */}
-        <div 
-          className="absolute inset-0 opacity-30 overflow-hidden"
+    <>
+      <div className="relative">
+        {/* Delete indicator background (mobile only) */}
+        {isMobile && (
+          <motion.div 
+            className="absolute inset-0 bg-destructive rounded-2xl flex items-center justify-end pr-6"
+            style={{ opacity: deleteOpacity }}
+          >
+            <motion.div style={{ scale: deleteScale }}>
+              <Trash2 className="w-8 h-8 text-white" />
+            </motion.div>
+          </motion.div>
+        )}
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.03 }}
+          drag={isMobile ? "x" : false}
+          dragConstraints={{ left: -150, right: 0 }}
+          dragElastic={0.1}
+          onDragEnd={isMobile ? handleDragEnd : undefined}
+          onPointerDown={isMobile ? handlePointerDown : undefined}
+          onPointerMove={isMobile ? handlePointerMove : undefined}
+          onClick={handleClick}
+          className={`aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
+          }`}
           style={{
-            maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+            boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
+            ...(isMobile ? { x, opacity: cardOpacity } : {}),
           }}
         >
-          <div 
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${coverImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              transform: `scaleX(${index % 2 === 0 ? 1 : -1})`,
-            }}
-          />
-        </div>
-        
-        {/* Top Left: Status Badge */}
-        <div className="relative z-10">
-          {isPlaying ? (
-            <LiveBadge />
-          ) : isCompleted ? (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-              დასრულდა
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              მოლოდინი
-            </span>
-          )}
-        </div>
-        
-        {/* Middle: Icon + Title + Category + Time */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center py-3">
-          <div className="flex items-center gap-3">
-            {room.room_icon && (
-              <img 
-                src={room.room_icon} 
-                alt="" 
-                className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg flex-shrink-0"
+          <GradientBackground
+            colors={gradientPreset.colors}
+            gradientSize="125% 125%"
+            gradientOrigin="bottom-middle"
+            enableNoise={false}
+            className="relative w-full h-full p-3 flex flex-col"
+          >
+            {/* Cover image with radial fade */}
+            <div 
+              className="absolute inset-0 opacity-30 overflow-hidden"
+              style={{
+                maskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 140% 120% at 50% 0%, black 0%, transparent 75%)',
+              }}
+            >
+              <div 
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url(${coverImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  transform: `scaleX(${index % 2 === 0 ? 1 : -1})`,
+                }}
               />
-            )}
-            <div className="min-w-0 flex-1">
-              <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
-                {displayName}
-              </h3>
-              {room.category_name && (
-                <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Bottom: Glass container with player count + avatars */}
-        <div className="relative z-10">
-          <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between">
-            {/* Left: Player count */}
-            <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
-              <Users className="w-4 h-4 text-white" />
-              <span className="text-white font-bold text-sm">
-                {room.participants.length}
-              </span>
             </div>
             
-            {/* Right: Avatars */}
-            <div className="flex -space-x-2">
-              {room.participants.slice(0, 4).map((p) => (
-                <div 
-                  key={p.user_id} 
-                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openProfile(p.user_id);
-                  }}
-                >
-                  {p.avatar_url ? (
-                    <img 
-                      src={p.avatar_url} 
-                      alt={p.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
-                      {p.nickname?.charAt(0).toUpperCase() || "?"}
+            {/* Top Row: Status Badge + Menu */}
+            <div className="relative z-10 flex items-start justify-between">
+              {isPlaying ? (
+                <LiveBadge />
+              ) : isCompleted ? (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                  დასრულდა
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  მოლოდინი
+                </span>
+              )}
+              
+              {/* 3-dot menu (tablet/desktop only) */}
+              {!isMobile && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
+                      <MoreHorizontal className="w-4 h-4 text-white" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-card border-border">
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      წაშლა
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            
+            {/* Middle: Icon + Title + Category + Time */}
+            <div className="relative z-10 flex-1 flex flex-col justify-center py-3">
+              <div className="flex items-center gap-3">
+                {room.room_icon && (
+                  <img 
+                    src={room.room_icon} 
+                    alt="" 
+                    className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-lg flex-shrink-0"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display text-white text-lg leading-tight line-clamp-2 drop-shadow-md">
+                    {displayName}
+                  </h3>
+                  {room.category_name && (
+                    <p className="text-white/70 text-sm truncate mt-0.5">{room.category_name}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Bottom: Glass container with player count + avatars */}
+            <div className="relative z-10">
+              <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between">
+                {/* Left: Player count */}
+                <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
+                  <Users className="w-4 h-4 text-white" />
+                  <span className="text-white font-bold text-sm">
+                    {room.participants.length}
+                  </span>
+                </div>
+                
+                {/* Right: Avatars */}
+                <div className="flex -space-x-2">
+                  {room.participants.slice(0, 4).map((p) => (
+                    <div 
+                      key={p.user_id} 
+                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openProfile(p.user_id);
+                      }}
+                    >
+                      {p.avatar_url ? (
+                        <img 
+                          src={p.avatar_url} 
+                          alt={p.nickname}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
+                          {p.nickname?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {room.participants.length > 4 && (
+                    <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
+                      <span className="text-white text-[10px] font-bold">
+                        +{room.participants.length - 4}
+                      </span>
                     </div>
                   )}
                 </div>
-              ))}
-              {room.participants.length > 4 && (
-                <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
-                  <span className="text-white text-[10px] font-bold">
-                    +{room.participants.length - 4}
-                  </span>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-      </GradientBackground>
-    </motion.div>
+          </GradientBackground>
+        </motion.div>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+          <AlertDialogHeader className="text-center">
+            <AlertDialogTitle>ოთახის წაშლა</AlertDialogTitle>
+            <AlertDialogDescription>
+              დარწმუნებული ხარ? ეს მოქმედება შეუქცევადია.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-3">
+            <AlertDialogCancel className="flex-1 mt-0">გაუქმება</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="flex-1 bg-destructive hover:bg-destructive/90"
+            >
+              წაშლა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
