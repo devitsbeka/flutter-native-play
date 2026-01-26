@@ -990,7 +990,7 @@ export function GameStylePersonalTrivia({
                     )}>
                       {/* Question Counter */}
                       <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-medium">
-                        {index + 1}/{MAX_QUESTIONS}
+                        {index + 1}/{questions.length}
                       </div>
 
                       {/* AI Generate Button - top right, positioned left of X button when bg exists */}
