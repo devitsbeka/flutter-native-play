@@ -71,7 +71,41 @@ export function RoomLobbyV2() {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
+
+  // Detect and redirect to active TV session when host returns to room
+  useEffect(() => {
+    if (!currentRoom?.id || !isHost || hasCheckedTVSession) return;
+    
+    const checkActiveSession = async () => {
+      try {
+        // Check if room has an active TV session
+        if (currentRoom.tv_session_id) {
+          const { data: session } = await supabase
+            .from('tv_sessions')
+            .select('id, status')
+            .eq('id', currentRoom.tv_session_id)
+            .maybeSingle();
+          
+          // Active session statuses that should redirect host to controller
+          const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'];
+          
+          if (session && activeStatuses.includes(session.status || '')) {
+            console.log('[RoomLobbyV2] Active TV session detected, redirecting host to controller');
+            navigate(`/tv/host/${session.id}`, { replace: true });
+            return;
+          }
+        }
+        setHasCheckedTVSession(true);
+      } catch (error) {
+        console.error('[RoomLobbyV2] Error checking TV session:', error);
+        setHasCheckedTVSession(true);
+      }
+    };
+    
+    checkActiveSession();
+  }, [currentRoom?.id, currentRoom?.tv_session_id, isHost, hasCheckedTVSession, navigate]);
 
   const { messages, sendMessage } = useRoomChat(currentRoom?.id || null);
   const { matches } = useRoomMatchHistory(currentRoom?.id || null);

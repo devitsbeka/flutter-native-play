@@ -10,7 +10,6 @@ import { ControllerResults } from '@/components/controller/ControllerResults';
 import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerRoundIntroWaiting';
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
-import { useTVPoll } from '@/hooks/useTVPoll';
 import { Loader2 } from 'lucide-react';
 
 const TVJoinContent: React.FC = () => {
@@ -28,15 +27,6 @@ const TVJoinContent: React.FC = () => {
 
   // Find current player from players array
   const myPlayer = players.find(p => p.id === myPlayerId);
-
-  // Poll hook for detecting poll phase changes faster than context
-  const pollHook = useTVPoll({
-    sessionId: sessionId || null,
-    userId: myPlayerId || null,
-    nickname: myPlayer?.nickname || 'Player',
-    avatarUrl: myPlayer?.avatar_url,
-    isHost: false,
-  });
 
   // If we have a session, we're joined
   useEffect(() => {
@@ -82,9 +72,8 @@ const TVJoinContent: React.FC = () => {
     );
   }
 
-  // Use context phase as the source of truth - don't override with pollHook
+  // Use context phase as the source of truth
   // This ensures guests stay in voting phase until the context updates from the database
-  // The pollHook phase was causing premature transitions to results
   const effectivePhase = phase;
 
   // CRITICAL DEBUG: Log phase and questions to understand guest state after poll
