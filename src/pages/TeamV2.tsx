@@ -1047,7 +1047,7 @@ function TeamContentV2() {
   );
 }
 
-// Main component with provider wrapper
+// Main component with provider wrapper - Forces Vite rebundle
 export default function TeamV2() {
   return (
     <MultiplayerProviderV2>
