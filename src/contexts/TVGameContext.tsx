@@ -1084,12 +1084,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let session: any = null;
       let error: any = null;
 
+      // Include all active session statuses for rejoining (lobby, poll phases, round-intro, etc.)
+      const activeStatuses = [
+        'waiting', 'paired', 'lobby', 'countdown', 'playing', 'reveal', 'completed',
+        'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'
+      ];
+
       if (isSessionIdJoin) {
         const { data, error: byIdError } = await supabase
           .from('tv_sessions')
           .select('*')
           .eq('id', raw)
-          .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
+          .in('status', activeStatuses)
           .maybeSingle();
         session = data;
         error = byIdError;
@@ -1099,7 +1105,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .from('tv_sessions')
           .select('*')
           .eq('tv_pairing_code', upperCode)
-          .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
+          .in('status', activeStatuses)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
