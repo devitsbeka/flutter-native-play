@@ -409,12 +409,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         suggesterId: suggesterId ? suggesterId.substring(0, 8) + '...' : null,
       });
 
-      // Calculate expected count from the locked session value
-      let expectedCount = sessionLockedCount;
-      if (suggesterId) {
-        expectedCount = Math.max(1, expectedCount - 1); // Suggester skips round
-        console.log('[AutoAdvance] 👤 Suggester skips round, adjusted expected:', expectedCount);
-      }
+      // CRITICAL: Use locked count directly - NO double subtraction!
+      // The active_player_count is ALREADY adjusted for suggester in startPlaying/startNextRoundFromQueueIfAny
+      const expectedCount = sessionLockedCount;
+      console.log('[AutoAdvance] 🎯 Using locked expected count (already adjusted for suggester):', expectedCount);
 
       // SAFETY: Never advance if expected count is unreliable
       if (expectedCount <= 0) {
@@ -1914,6 +1912,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {
+    // CRITICAL: Block suggester from answering (defense in depth)
+    if (state.currentRoundSuggesterId && myPlayerId === state.currentRoundSuggesterId) {
+      tvLog('Submit answer blocked: player is suggester for this round', { 
+        myPlayerId: myPlayerId?.slice(0, 8), 
+        suggesterId: state.currentRoundSuggesterId?.slice(0, 8) 
+      });
+      return { correct: false, points: 0 };
+    }
+
     if (!state.sessionId || !myPlayerId || myAnswer) {
       tvLog('Submit answer blocked', { sessionId: !!state.sessionId, playerId: !!myPlayerId, alreadyAnswered: !!myAnswer });
       return { correct: false, points: 0 };

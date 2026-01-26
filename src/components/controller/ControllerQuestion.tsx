@@ -3,12 +3,42 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Clock, Check, Loader2, AlertCircle, X } from 'lucide-react';
+import { Clock, Check, Loader2, AlertCircle, X, Star } from 'lucide-react';
 
 export const ControllerQuestion: React.FC = () => {
   const navigate = useNavigate();
-  const { questions, currentQuestionIndex, timeRemaining, myAnswer, myScore, submitAnswer, leaveSession } = useTVGame();
+  const { 
+    questions, currentQuestionIndex, timeRemaining, myAnswer, myScore, 
+    submitAnswer, leaveSession, currentRoundSuggesterId, myPlayerId 
+  } = useTVGame();
   const currentQuestion = questions[currentQuestionIndex];
+
+  // Check if current player is the suggester (they observe, don't answer)
+  const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
+
+  // CRITICAL: Suggester sees observer UI - they cannot answer this round
+  if (isSuggester) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
+        <div className="text-center">
+          <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+          <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
+          <p className="text-purple-300 mb-2">შენ შემოგთავაზე ეს კატეგორია,</p>
+          <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები.</p>
+          <div className="bg-white/10 rounded-xl p-4 mb-6">
+            <p className="text-white font-semibold text-center text-sm">
+              კითხვა {currentQuestionIndex + 1}/{questions.length}
+            </p>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <Clock className="w-4 h-4 text-purple-300" />
+              <span className="text-purple-300">{timeRemaining}წ</span>
+            </div>
+          </div>
+          <p className="text-purple-300 text-sm">ტელევიზორზე უყურე...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Handle missing question gracefully - show loading/error state instead of blank screen
   if (!currentQuestion || questions.length === 0) {
