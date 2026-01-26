@@ -81,8 +81,14 @@ const TVJoinContent: React.FC = () => {
   // The pollHook phase was causing premature transitions to results
   const effectivePhase = phase;
 
-  // Debug logging
-  console.log('[TVJoin] Phase debug:', { contextPhase: phase, effectivePhase });
+  // CRITICAL DEBUG: Log phase and questions to understand guest state after poll
+  console.log('[TVJoin] 🎯 Phase debug:', { 
+    contextPhase: phase, 
+    effectivePhase,
+    questionsLength: questions.length,
+    myPlayerId: myPlayerId ? myPlayerId.substring(0, 8) + '...' : 'NULL',
+    sessionId: sessionId ? sessionId.substring(0, 8) + '...' : 'NULL',
+  });
 
   // Show appropriate screen based on phase
   // Handle both TVPhase values and database status values
