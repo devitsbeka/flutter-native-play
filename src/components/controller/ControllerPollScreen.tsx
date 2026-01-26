@@ -7,7 +7,7 @@ import {
   Timer, 
   Sparkles, 
   Library, 
-  User, 
+  User,
   Play,
   ChevronRight,
   Crown,
@@ -16,6 +16,7 @@ import {
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { supabase } from '@/integrations/supabase/client';
@@ -666,13 +667,12 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                           : 'bg-white/10 opacity-40'
                       }`}
                     >
-                      {player.avatar_url ? (
-                        <img src={player.avatar_url} alt="" className="w-5 h-5 rounded-full" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full bg-purple-500/50 flex items-center justify-center">
-                          <User className="w-3 h-3 text-white" />
-                        </div>
-                      )}
+                      <SafeAvatarImage
+                        avatarUrl={player.avatar_url}
+                        fallback={player.nickname}
+                        className="w-5 h-5 rounded-full object-cover"
+                        containerClassName="w-5 h-5 rounded-full"
+                      />
                       <span className={`text-xs ${hasPlayerVoted ? 'text-green-300' : 'text-white/60'}`}>
                         {player.nickname}
                       </span>

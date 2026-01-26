@@ -1149,9 +1149,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const raw = (code || '').trim();
       const upperCode = raw.toUpperCase();
       
+      tvLog('joinSession called', { code: raw, isUuid: isUuid(raw) });
+      
       // Get current auth user if any
       const { data: { user } } = await supabase.auth.getUser();
       const authUserId = user?.id || null;
+      
+      tvLog('Auth user check', { authUserId: authUserId?.slice(0, 8), hasUser: !!user });
 
       const isSessionIdJoin = isUuid(raw);
       
@@ -1186,12 +1190,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         session = data;
         error = byCodeError;
+        
+        tvLog('Session lookup by 4-digit code', { 
+          code: upperCode, 
+          found: !!data, 
+          error: byCodeError?.message,
+          sessionId: data?.id?.slice(0, 8),
+          status: data?.status
+        });
       }
 
       if (error || !session) {
-        console.error('Session not found:', error);
+        console.error('Session not found:', { code: raw, upperCode, error });
+        tvLog('Session NOT found - rejoin failed', { code: raw, error: error?.message });
         return false;
       }
+      
+      tvLog('Session found successfully', { 
+        sessionId: session.id.slice(0, 8), 
+        status: session.status,
+        hostId: session.host_user_id?.slice(0, 8)
+      });
 
       // Check for existing session binding (join idempotency)
       // This prevents duplicate player entries when double-clicking join

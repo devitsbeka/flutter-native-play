@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Play, Settings, Trophy, Users, RefreshCw, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import glitchIcon from "@/assets/glitch.png";
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
 interface Category {
   id: string;
@@ -122,13 +123,11 @@ export const TVIdleScreen: React.FC = () => {
 
                   {/* Avatar */}
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center overflow-hidden">
-                    {player.avatar_url ? (
-                      <img src={player.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white font-bold text-lg">
-                        {player.nickname.slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
+                    <SafeAvatarImage
+                      avatarUrl={player.avatar_url}
+                      fallback={player.nickname}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   {/* Name & Host Badge */}

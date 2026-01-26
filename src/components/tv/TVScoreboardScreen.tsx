@@ -5,6 +5,7 @@ import { useTVGame, TVPlayer } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
 import { AppIcon } from '@/components/shared/AppIcon';
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
 const PODIUM_HEIGHTS = [160, 200, 120]; // 2nd, 1st, 3rd place heights
 const PODIUM_COLORS = ['bg-gray-400', 'bg-yellow-500', 'bg-amber-700'];
@@ -130,17 +131,11 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
               >
                 <div className="relative">
                   <div className={`w-24 h-24 rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center overflow-hidden border-4 ${actualRank === 0 ? 'border-yellow-500' : actualRank === 1 ? 'border-gray-400' : 'border-amber-700'} shadow-xl`}>
-                    {player.avatar_url ? (
-                      <img 
-                        src={player.avatar_url} 
-                        alt={player.nickname}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-4xl font-bold text-white">
-                        {player.nickname?.[0]?.toUpperCase() || '?'}
-                      </span>
-                    )}
+                    <SafeAvatarImage
+                      avatarUrl={player.avatar_url}
+                      fallback={player.nickname || '?'}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   {actualRank === 0 && (
                     <motion.div
@@ -205,17 +200,11 @@ export const TVScoreboardScreen: React.FC<TVScoreboardScreenProps> = ({
                   #{index + 4}
                 </span>
                 <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
-                  {player.avatar_url ? (
-                    <img 
-                      src={player.avatar_url} 
-                      alt={player.nickname}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl font-bold text-white">
-                      {player.nickname?.[0]?.toUpperCase() || '?'}
-                    </span>
-                  )}
+                  <SafeAvatarImage
+                    avatarUrl={player.avatar_url}
+                    fallback={player.nickname || '?'}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-white font-medium flex-1 text-lg">
                   {player.nickname}
