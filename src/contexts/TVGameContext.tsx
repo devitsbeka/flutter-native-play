@@ -313,15 +313,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // IMPROVEMENT: Get actual active player count from tv_players table
-      // This is more accurate than the locked count, especially after refreshes
-      const { count: activePlayersCount } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', current.sessionId)
-        .eq('is_active', true);
-
-      const dbPlayerCount = activePlayersCount ?? session.active_player_count ?? 0;
+      // FIX: Use LOCKED player count from session, not live tv_players query
+      // Live query is unreliable due to presence flickers marking players as inactive
+      // The active_player_count is locked at game/round start and stays stable
+      const dbPlayerCount = session.active_player_count ?? 0;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
       
@@ -1314,9 +1309,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           tvLog('Player disconnected', { nickname: leftPlayer.nickname || key });
         }
         
-        // Mark player as inactive in tv_players table
-        // This ensures accurate player count for auto-advance after disconnect
-        if (key !== 'TV_DISPLAY') {
+        // FIX: Only mark player as inactive when NOT in active gameplay phases
+        // During active gameplay, presence flickers should NOT affect player count
+        // The player count is locked at round start and auto-advance uses that locked count
+        const activePhases = ['countdown', 'question', 'playing', 'reveal'];
+        const currentPhase = stateRef.current.phase;
+        
+        if (key !== 'TV_DISPLAY' && !activePhases.includes(currentPhase)) {
           const currentSessionId = stateRef.current.sessionId;
           if (currentSessionId) {
             await supabase
@@ -1324,8 +1323,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               .update({ is_active: false })
               .eq('tv_session_id', currentSessionId)
               .eq('player_id', key);
-            tvLog('Marked player as inactive', { playerId: key.slice(0, 8) });
+            tvLog('Marked player as inactive', { playerId: key.slice(0, 8), phase: currentPhase });
           }
+        } else if (activePhases.includes(currentPhase)) {
+          tvLog('Ignored presence leave during active gameplay', { playerId: key.slice(0, 8), phase: currentPhase });
         }
       })
       .on('broadcast', { event: 'RESET_SCORES' }, () => {
@@ -1671,6 +1672,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else {
         console.log('[startPlaying] 🧹 Answers cleared successfully for clean round start');
       }
+      
+      // FIX: Small delay for DB consistency after delete before checking answers
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // Check if another device already transitioned to playing
       const { data: session } = await supabase
