@@ -13,6 +13,10 @@ import { Loader2 } from 'lucide-react';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
 import { supabase } from '@/integrations/supabase/client';
 
+// UUID validation helper
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+
 const TVDisplayContent: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
@@ -40,6 +44,9 @@ const TVDisplayContent: React.FC = () => {
 
       tvLog('TVDisplay initializing', { code });
 
+      // All valid statuses that a TV can connect to
+      const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'playing', 'reveal', 'completed', 'poll-suggest', 'poll-voting', 'poll-results', 'round-intro', 'results'];
+
       // If code is provided in URL, this is a TV display joining an existing session
       if (code) {
         try {
@@ -48,8 +55,8 @@ const TVDisplayContent: React.FC = () => {
             .from('tv_sessions')
             .select('*')
             .eq('pairing_code', code.toUpperCase())
-            .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
-            .single();
+            .in('status', activeStatuses)
+            .maybeSingle();
 
           // If not found, try 4-digit code
           if (!session) {
@@ -57,9 +64,20 @@ const TVDisplayContent: React.FC = () => {
               .from('tv_sessions')
               .select('*')
               .eq('tv_pairing_code', code.toUpperCase())
-              .in('status', ['waiting', 'paired', 'countdown', 'playing', 'reveal', 'completed'])
-              .single();
+              .in('status', activeStatuses)
+              .maybeSingle();
             session = session4;
+          }
+          
+          // Still not found? Try by session ID directly (for /tv/:sessionId routes)
+          if (!session && isUuid(code)) {
+            const { data: sessionById } = await supabase
+              .from('tv_sessions')
+              .select('*')
+              .eq('id', code)
+              .in('status', activeStatuses)
+              .maybeSingle();
+            session = sessionById;
           }
 
           if (!session) {
@@ -69,7 +87,7 @@ const TVDisplayContent: React.FC = () => {
             return;
           }
 
-          tvLog('TVDisplay joining existing session', { sessionId: session.id, code });
+          tvLog('TVDisplay joining existing session', { sessionId: session.id, code, status: session.status });
           
           // Join using context's joinSession as TV_DISPLAY
           const success = await joinSession(code, 'TV_DISPLAY', null);
@@ -97,6 +115,7 @@ const TVDisplayContent: React.FC = () => {
 
     initSession();
   }, [code, createSession, joinSession]);
+
 
   if (loading) {
     return (
