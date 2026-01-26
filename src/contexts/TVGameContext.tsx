@@ -644,13 +644,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         },
         (payload) => {
           const answer = payload.new as { user_id?: string; question_index?: number; is_correct?: boolean };
+          const currentState = stateRef.current;
+          
           console.log('[AutoAdvance] 📥 Realtime: New answer received!', {
             userId: answer.user_id?.substring(0, 8) + '...',
             questionIndex: answer.question_index,
+            currentQuestionIndex: currentState.currentQuestionIndex,
+            phase: currentState.phase,
             isCorrect: answer.is_correct,
             timestamp: new Date().toISOString(),
           });
-          // Trigger check on every new answer
+          
+          // CRITICAL FIX: Only trigger check if answer is for CURRENT question
+          // This prevents stale answers from previous questions triggering advancement
+          if (answer.question_index !== currentState.currentQuestionIndex) {
+            console.log('[AutoAdvance] ⏭️ Ignoring stale answer for wrong question index:', {
+              received: answer.question_index,
+              expected: currentState.currentQuestionIndex,
+            });
+            return;
+          }
+          
+          // CRITICAL FIX: Only check during playing phase
+          if (currentState.phase !== 'question' && currentState.phase !== 'playing') {
+            console.log('[AutoAdvance] ⏭️ Ignoring answer - not in playing phase:', currentState.phase);
+            return;
+          }
+          
+          // Trigger check on valid answer
           if (isHostRef.current) {
             console.log('[AutoAdvance] 🔄 Triggering check from realtime event...');
             checkAndAdvanceIfAllAnswered();
@@ -1074,6 +1095,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             isActive: true,
           });
         }
+
+        // CRITICAL FIX: Delete stale answers for the PREVIOUS question BEFORE transitioning
+        // This prevents race conditions where old answers are counted for new question
+        console.log('[Next Question] 🗑️ Clearing answers for previous question index:', state.currentQuestionIndex);
+        const { error: deleteError } = await supabase
+          .from('player_answers')
+          .delete()
+          .eq('tv_session_id', state.sessionId)
+          .eq('question_index', state.currentQuestionIndex);
+        
+        if (deleteError) {
+          console.warn('[Next Question] ⚠️ Failed to delete old answers:', deleteError);
+        } else {
+          console.log('[Next Question] ✅ Cleared old answers for question', state.currentQuestionIndex);
+        }
+        
+        // Wait for delete to propagate before continuing
+        await new Promise(resolve => setTimeout(resolve, 150));
 
         // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
         console.log('[Next Question] 🔒 Using confirmActivePlayers for next question...');
@@ -2257,6 +2296,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         myPlayerId: myPlayerId?.slice(0, 8), 
         suggesterId: state.currentRoundSuggesterId?.slice(0, 8) 
       });
+      return { correct: false, points: 0 };
+    }
+
+    // CRITICAL FIX: Only allow answer submission during playing/question phase
+    // This prevents "force clicks" during reveal phase or transitions
+    if (state.phase !== 'question' && state.phase !== 'playing') {
+      console.log('[submitAnswer] ❌ Blocked: not in playing phase, current:', state.phase);
+      tvLog('Submit answer blocked - wrong phase', { phase: state.phase });
       return { correct: false, points: 0 };
     }
 
