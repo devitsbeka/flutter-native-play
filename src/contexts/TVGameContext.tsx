@@ -207,6 +207,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Track when the current question started (for safety guard)
   const questionStartedAtRef = useRef<number>(0);
 
+  // CRITICAL FIX: Debounce ref to prevent concurrent checkAndAdvanceIfAllAnswered calls
+  // Multiple triggers (realtime, interval, timer) can cause race conditions
+  const checkInProgressRef = useRef(false);
+
   // ============================================================================
   // CORE FUNCTION: Advance to reveal phase
   // ============================================================================
@@ -261,46 +265,56 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const checkAndAdvanceIfAllAnswered = useCallback(async () => {
     const checkStartTime = Date.now();
     
+    // CRITICAL FIX: Debounce - skip if already checking
+    if (checkInProgressRef.current) {
+      console.log('[AutoAdvance] ⏭️ Skip: check already in progress');
+      return;
+    }
+    
     // Guard: only host checks
     if (!isHostRef.current) {
       console.log('[AutoAdvance] ⏭️ Skip: not host');
       return;
     }
     
-    const current = stateRef.current;
+    // Set debounce flag
+    checkInProgressRef.current = true;
     
-    // Guard: must be in question phase
-    if (current.phase !== 'question') {
-      console.log('[AutoAdvance] ⏭️ Skip: phase is', current.phase, 'not "question"');
-      return;
-    }
-    
-    // Guard: already advanced
-    if (hasAdvancedRef.current) {
-      console.log('[AutoAdvance] ⏭️ Skip: already advanced this question');
-      return;
-    }
-    
-    // Guard: need session
-    if (!current.sessionId) {
-      console.log('[AutoAdvance] ⏭️ Skip: no sessionId');
-      return;
-    }
-    
-    // Safety guard: don't check in first 300ms after question start
-    const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-    if (timeSinceStart < 300) {
-      console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart });
-      return;
-    }
-
-    console.log('[AutoAdvance] 🔍 Checking...', {
-      questionIndex: current.currentQuestionIndex,
-      timeSinceQuestionStart: timeSinceStart,
-      sessionId: current.sessionId.substring(0, 8) + '...',
-    });
-
     try {
+      const current = stateRef.current;
+      
+      // Guard: must be in question phase
+      if (current.phase !== 'question') {
+        console.log('[AutoAdvance] ⏭️ Skip: phase is', current.phase, 'not "question"');
+        return;
+      }
+      
+      // Guard: already advanced
+      if (hasAdvancedRef.current) {
+        console.log('[AutoAdvance] ⏭️ Skip: already advanced this question');
+        return;
+      }
+      
+      // Guard: need session
+      if (!current.sessionId) {
+        console.log('[AutoAdvance] ⏭️ Skip: no sessionId');
+        return;
+      }
+      
+      // Safety guard: don't check in first 500ms after question start
+      // Increased from 300ms to account for network latency and DB propagation
+      const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
+      if (timeSinceStart < 500) {
+        console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart });
+        return;
+      }
+
+      console.log('[AutoAdvance] 🔍 Checking...', {
+        questionIndex: current.currentQuestionIndex,
+        timeSinceQuestionStart: timeSinceStart,
+        sessionId: current.sessionId.substring(0, 8) + '...',
+      });
+
       // Get expected count from DB (authoritative source)
       const { data: session, error: sessionError } = await supabase
         .from('tv_sessions')
@@ -399,6 +413,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     } catch (err) {
       console.error('[AutoAdvance] ❌ Exception:', err);
+    } finally {
+      // CRITICAL: Always reset debounce flag
+      checkInProgressRef.current = false;
     }
   }, [advanceToReveal]);
 
@@ -868,14 +885,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
 
+        // CRITICAL FIX: Reset timing protection refs BEFORE the next question
         hasAdvancedRef.current = false;
         questionStartedAtRef.current = Date.now();
+        console.log('[Next Question] ⏱️ Reset timing protection refs');
         
-        // Update active_player_count for the new question (in case players joined/left)
+        // CRITICAL FIX: Query LIVE active player count instead of using stale state
+        // stateRef.current.players.length can be stale during rapid question transitions
+        const { count: liveNextCount } = await supabase
+          .from('tv_players')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', state.sessionId)
+          .eq('is_active', true);
+
         const currentPlayerCount = stateRef.current.isPaired 
-          ? Math.max(stateRef.current.players.length, 2) 
-          : stateRef.current.players.length;
-        console.log('[Next Question] Updated expected player count:', currentPlayerCount);
+          ? Math.max(liveNextCount ?? 2, 2) 
+          : (liveNextCount ?? stateRef.current.players.length);
+        console.log('[Next Question] 🎯 LIVE player count for next question:', { liveNextCount, currentPlayerCount });
         
         await supabase
           .from('tv_sessions')
@@ -1659,16 +1685,43 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           console.log('[AutoAdvance] 🧹 Cleared all answers for fresh game start');
           tvLog('Cleared all answers for fresh game start');
         }
+        
+        // CRITICAL FIX: Wait for DB to fully process deletions before proceeding
+        // This prevents race conditions where stale answer counts affect auto-advance
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      // CRITICAL: Lock player count BEFORE countdown starts
-      // This is stored in DB and read when checking if all answered
-      const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
+      // CRITICAL FIX: Reset timing protection refs for the new game
+      // This prevents stale hasAdvancedRef from previous games causing issues
+      hasAdvancedRef.current = false;
+      questionStartedAtRef.current = Date.now();
+      console.log('[startGame] ⏱️ Reset timing protection refs for new game');
+
+      // CRITICAL FIX: Reset ALL players to is_active = true before locking count
+      // This ensures players who may have flickered during poll are properly counted
+      await supabase
+        .from('tv_players')
+        .update({ is_active: true })
+        .eq('tv_session_id', state.sessionId);
+
+      // CRITICAL FIX: Query LIVE active player count instead of using stale state
+      // state.players.length can be stale after poll phases
+      const { count: livePlayerCount } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', state.sessionId)
+        .eq('is_active', true);
+
+      // Use live count instead of stale state, with minimum of 2 in paired mode
+      const playerCount = state.isPaired 
+        ? Math.max(livePlayerCount ?? 2, 2) 
+        : (livePlayerCount ?? state.players.length);
       
       tvLog('Starting game', { 
         questionCount: formattedQuestions.length, 
         categoryName,
         isUserTrivia: !!userTriviaId,
+        livePlayerCount,
         lockedPlayerCount: playerCount,
       });
 
