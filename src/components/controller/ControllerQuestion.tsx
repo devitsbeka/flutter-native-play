@@ -86,7 +86,7 @@ export const ControllerQuestion: React.FC = () => {
         </motion.div>
       ) : isTrueFalseQuestion ? (
         /* True/False Layout - side by side cards */
-        <div className="flex-1 flex gap-3 px-1 pt-2">
+        <div className="flex gap-3 px-1 pt-2">
           {currentQuestion.options.map((option, index) => {
             const isTrue = option.toLowerCase() === "მართალია" || option.toLowerCase() === "true";
             return (
@@ -94,7 +94,7 @@ export const ControllerQuestion: React.FC = () => {
                 key={index}
                 onClick={() => handleAnswer(option)}
                 whileTap={{ scale: 0.95 }}
-                className="flex-1 relative min-h-[120px] cursor-pointer"
+                className="flex-1 relative h-[120px] sm:h-[140px] cursor-pointer"
               >
                 {/* Shadow Layer */}
                 <div 
@@ -112,19 +112,19 @@ export const ControllerQuestion: React.FC = () => {
                 >
                   {/* Icon Circle */}
                   <div 
-                    className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg"
                     style={{ background: isTrue ? '#22C55E' : '#EF4444' }}
                   >
                     {isTrue ? (
-                      <Check className="w-8 h-8 text-white" strokeWidth={3} />
+                      <Check className="w-7 h-7 sm:w-8 sm:h-8 text-white" strokeWidth={3} />
                     ) : (
-                      <X className="w-8 h-8 text-white" strokeWidth={3} />
+                      <X className="w-7 h-7 sm:w-8 sm:h-8 text-white" strokeWidth={3} />
                     )}
                   </div>
                   
                   {/* Label Text */}
                   <span 
-                    className="font-bold text-lg"
+                    className="font-bold text-base sm:text-lg"
                     style={{ color: isTrue ? '#22C55E' : '#EF4444' }}
                   >
                     {isTrue ? "მართალია" : "მცდარია"}
