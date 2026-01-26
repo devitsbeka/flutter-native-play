@@ -33,6 +33,7 @@ interface InvitedGuest {
 export const TVLobbyScreenV2: React.FC = () => {
   const { code, sessionId, players, categoryName, categoryIcon, isHost, startGame, categoryQueue: contextQueue } = useTVGame() as any;
   const [roomName, setRoomName] = useState('');
+  const [roomIcon, setRoomIcon] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -130,19 +131,24 @@ export const TVLobbyScreenV2: React.FC = () => {
           setEditedName(data.room_name);
         }
         
-        // If we have a room_id, fetch from game_rooms as fallback for name
+        // If we have a room_id, fetch from game_rooms for room icon and fallback name
         if (data.room_id) {
           setRoomId(data.room_id);
           
-          // Fetch room name from game_rooms if not set in tv_sessions
-          if (!data.room_name) {
-            const { data: gameRoom } = await supabase
-              .from('game_rooms')
-              .select('room_name')
-              .eq('id', data.room_id)
-              .maybeSingle();
-            
-            if (gameRoom?.room_name) {
+          // Always fetch room icon, and room name if not set in tv_sessions
+          const { data: gameRoom } = await supabase
+            .from('game_rooms')
+            .select('room_name, room_icon')
+            .eq('id', data.room_id)
+            .maybeSingle();
+          
+          if (gameRoom) {
+            // Set room icon if available
+            if (gameRoom.room_icon) {
+              setRoomIcon(gameRoom.room_icon);
+            }
+            // Fallback for room name
+            if (!data.room_name && gameRoom.room_name) {
               setRoomName(gameRoom.room_name);
               setEditedName(gameRoom.room_name);
             }
@@ -375,7 +381,12 @@ export const TVLobbyScreenV2: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
+              {/* Show room icon if available, otherwise fallback to TV icon */}
+              {roomIcon ? (
+                <img src={roomIcon} alt="Room" className="w-10 h-10 object-cover rounded-lg" />
+              ) : (
+                <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
+              )}
               <h1 
                 className="text-3xl font-bold text-white"
                 style={{ fontFamily: 'var(--font-display, inherit)' }}
@@ -624,8 +635,18 @@ export const TVLobbyScreenV2: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5 mt-[15px]">
+        {/* Right Side - TV Icon + QR Code */}
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-2 mt-[15px]">
+          {/* TV Icon - 20% larger (10 → 12) and centered above QR */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3"
+          >
+            <img src={retroTvIcon} alt="TV რეჟიმი" className="w-12 h-12 object-contain" />
+          </motion.div>
+          
+          {/* QR Code */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
