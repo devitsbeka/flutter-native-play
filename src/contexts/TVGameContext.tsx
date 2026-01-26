@@ -1699,10 +1699,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // CRITICAL FIX: Reset ALL players to is_active = true before locking count
       // This ensures players who may have flickered during poll are properly counted
-      await supabase
+      console.log('[startGame] 🔄 Resetting ALL players to is_active=true...');
+      const { error: resetError } = await supabase
         .from('tv_players')
         .update({ is_active: true })
         .eq('tv_session_id', state.sessionId);
+
+      if (resetError) {
+        console.warn('[startGame] ⚠️ Failed to reset player activity:', resetError);
+      } else {
+        console.log('[startGame] ✅ Reset all players to active');
+      }
+
+      // CRITICAL: Longer delay for DB consistency after bulk update
+      // Post-poll the DB may have more latency, so we wait 150ms instead of 50ms
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       // CRITICAL FIX: Query LIVE active player count instead of using stale state
       // state.players.length can be stale after poll phases
@@ -1711,6 +1722,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .select('*', { count: 'exact', head: true })
         .eq('tv_session_id', state.sessionId)
         .eq('is_active', true);
+      
+      console.log('[startGame] 📊 Live player count from DB:', livePlayerCount);
 
       // Use live count instead of stale state, with minimum of 2 in paired mode
       const playerCount = state.isPaired 
