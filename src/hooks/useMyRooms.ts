@@ -169,6 +169,9 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
             players: players,
           });
         });
+
+        // Debug log TV session data
+        console.log('[useMyRooms] TV sessions loaded:', tvSessions?.map(s => ({ id: s.id, status: s.status })));
       }
 
       const participantsByRoom = new Map<string, typeof allParticipants>();
@@ -321,29 +324,48 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
     // Sort: Active TV sessions first (LIVE), then playing, then waiting, then unread, then by activity
     result = [...result].sort((a, b) => {
-      // Active TV sessions first (LIVE badge)
+      // Priority 1: Active TV sessions first (LIVE badge) - these are the most important
       const aHasActiveTv = isActiveTVSession(a.tv_status);
       const bHasActiveTv = isActiveTVSession(b.tv_status);
+      
+      // LIVE rooms with active players should be at the very top
+      const aIsLiveWithPlayers = aHasActiveTv && a.tv_active_players > 0;
+      const bIsLiveWithPlayers = bHasActiveTv && b.tv_active_players > 0;
+      
+      if (aIsLiveWithPlayers && !bIsLiveWithPlayers) return -1;
+      if (bIsLiveWithPlayers && !aIsLiveWithPlayers) return 1;
+      
+      // Then any active TV session
       if (aHasActiveTv && !bHasActiveTv) return -1;
       if (bHasActiveTv && !aHasActiveTv) return 1;
       
-      // Playing rooms next
+      // Priority 2: Playing rooms next
       if (a.status === "playing" && b.status !== "playing") return -1;
       if (b.status === "playing" && a.status !== "playing") return 1;
       
-      // Then waiting/active rooms
+      // Priority 3: Waiting/active rooms over completed
       if (a.status === "waiting" && b.status === "completed") return -1;
       if (b.status === "waiting" && a.status === "completed") return 1;
       
-      // Then rooms with unread activity
+      // Priority 4: Rooms with unread activity
       if (a.has_unread_activity && !b.has_unread_activity) return -1;
       if (b.has_unread_activity && !a.has_unread_activity) return 1;
       
-      // Then by last activity (most recent first)
+      // Priority 5: By last activity (most recent first)
       const aTime = new Date(a.last_activity_at || a.created_at).getTime();
       const bTime = new Date(b.last_activity_at || b.created_at).getTime();
       return bTime - aTime;
     });
+
+    // Debug log to verify sorting
+    if (result.length > 0) {
+      console.log('[useMyRooms] Sorted rooms:', result.slice(0, 3).map(r => ({
+        name: r.room_name,
+        tv_status: r.tv_status,
+        tv_active_players: r.tv_active_players,
+        isActiveTv: isActiveTVSession(r.tv_status)
+      })));
+    }
 
     return result;
   }, [rooms, filter, friendIds, searchQuery]);
