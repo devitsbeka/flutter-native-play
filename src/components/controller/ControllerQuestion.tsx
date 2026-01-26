@@ -9,12 +9,26 @@ export const ControllerQuestion: React.FC = () => {
   const navigate = useNavigate();
   const { 
     questions, currentQuestionIndex, timeRemaining, myAnswer, myScore, 
-    submitAnswer, leaveSession, currentRoundSuggesterId, myPlayerId 
+    submitAnswer, leaveSession, currentRoundSuggesterId, myPlayerId, phase
   } = useTVGame();
   const currentQuestion = questions[currentQuestionIndex];
 
   // Check if current player is the suggester (they observe, don't answer)
   const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
+
+  // CRITICAL DEBUG: Log render state to understand what guests are seeing
+  console.log('[ControllerQuestion] 🎮 Render state:', {
+    phase,
+    questionsLength: questions.length,
+    currentQuestionIndex,
+    currentQuestion: currentQuestion ? currentQuestion.question_text?.substring(0, 30) + '...' : 'NULL',
+    hasOptions: currentQuestion?.options?.length || 0,
+    isSuggester,
+    myPlayerId: myPlayerId ? myPlayerId.substring(0, 8) + '...' : 'NULL',
+    currentRoundSuggesterId: currentRoundSuggesterId ? currentRoundSuggesterId.substring(0, 8) + '...' : 'NULL',
+    myAnswer,
+    timeRemaining,
+  });
 
   // CRITICAL: Suggester sees observer UI - they cannot answer this round
   if (isSuggester) {

@@ -1312,6 +1312,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (prev.phase !== newPhase) {
               tvLogPhase(prev.phase, newPhase, 'session subscription');
               
+              // CRITICAL DEBUG: Log questions during phase transitions (especially poll -> countdown)
+              console.log('[Subscription] 🔄 Phase transition:', {
+                from: prev.phase,
+                to: newPhase,
+                dbStatus: newData.status,
+                questionsInUpdate: questions.length,
+                prevQuestionsCount: prev.questions.length,
+                suggesterId: (newData as any).current_round_suggester_id || 'none',
+              });
+              
               // CRITICAL: When transitioning to 'playing', enable auto-advance timing
               // This catches cases where subscription didn't see question change during countdown
               if (newData.status === 'playing' && questionStartedAtRef.current === 0) {

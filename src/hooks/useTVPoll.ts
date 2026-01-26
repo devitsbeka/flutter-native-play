@@ -702,10 +702,21 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     }
 
     // Clear any old player answers for this session
-    await supabase
+    console.log('[finalizePollAndStartGame] 🗑️ Deleting old player answers...');
+    const { error: deleteAnswersError, count: deletedCount } = await supabase
       .from('player_answers')
       .delete()
       .eq('tv_session_id', sessionId);
+
+    if (deleteAnswersError) {
+      console.warn('[finalizePollAndStartGame] ⚠️ Failed to delete old answers:', deleteAnswersError);
+    } else {
+      console.log('[finalizePollAndStartGame] ✅ Deleted old answers, count:', deletedCount);
+    }
+
+    // CRITICAL: Wait for delete to propagate before continuing
+    // This prevents race conditions where old answers cause incorrect counts
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Update session: set to countdown with questions loaded
     // CRITICAL: This bypasses lobby and starts game directly
