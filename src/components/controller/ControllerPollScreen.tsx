@@ -537,7 +537,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                 <p className="text-purple-300 text-sm mb-3">
                   ჰოსტის არჩევანი ({suggestions.length}):
                 </p>
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-2 max-h-[70vh] overflow-y-auto pb-4">
                   {suggestions.map((suggestion, index) => (
                     <motion.div
                       key={suggestion.id}
