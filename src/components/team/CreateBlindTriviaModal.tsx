@@ -264,7 +264,11 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     // Convert back to GeneratedQuestion format
     const questions = convertToGeneratedQuestions(editorQuestions);
     isClosingRef.current = true; // Prevent auto-save on close
-    onTriviaReady(questions, title, subject);
+    
+    // AWAIT the async callback to ensure database save completes before closing
+    await onTriviaReady(questions, title, subject);
+    
+    // Only reset and close AFTER save is complete
     resetForm();
     onOpenChange(false);
   };
