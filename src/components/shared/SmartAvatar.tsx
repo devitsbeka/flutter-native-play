@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 interface SmartAvatarProps {
   avatarUrl?: string | null;
@@ -151,7 +152,8 @@ export function SmartAvatar({
   };
 
   const hasAnimatedAvatar = animatedAvatarUrl && !videoError;
-  const displayUrl = avatarUrl || undefined;
+  // Resolve avatar URL to handle local asset paths
+  const displayUrl = resolveAvatarUrl(avatarUrl) || undefined;
 
   const isClickable = clickable || !!onClick;
 

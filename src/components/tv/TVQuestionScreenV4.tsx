@@ -11,6 +11,7 @@ import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
+import { resolveAvatarUrl } from '@/utils/avatarUtils';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -119,7 +120,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 layout
               >
                 <Avatar className="w-10 h-10 ring-3 ring-red-400 border-2 border-white">
-                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
                   <AvatarFallback className="bg-red-500 text-white font-bold text-sm">
                     {player.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -152,7 +153,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                   }}
                 />
                 <Avatar className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white relative z-10">
-                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
                   <AvatarFallback className="bg-yellow-500 text-white font-bold text-sm">
                     {player.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -179,7 +180,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 layout
               >
                 <Avatar className="w-10 h-10 ring-3 ring-green-400 border-2 border-white">
-                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
                   <AvatarFallback className="bg-green-500 text-white font-bold text-sm">
                     {player.nickname.slice(0, 2).toUpperCase()}
                   </AvatarFallback>

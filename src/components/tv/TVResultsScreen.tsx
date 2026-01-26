@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import goldMedal from '@/assets/trophy-gold.png';
 import silverMedal from '@/assets/trophy-silver.png';
 import bronzeMedal from '@/assets/trophy-bronze.png';
+import { resolveAvatarUrl } from '@/utils/avatarUtils';
 
 export const TVResultsScreen: React.FC = () => {
   const { players, code } = useTVGame();
@@ -139,7 +140,7 @@ export const TVResultsScreen: React.FC = () => {
                   actualRank === 1 ? 'ring-gray-400' :
                   'ring-orange-400'
                 }`}>
-                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
                   <AvatarFallback className="bg-purple-600 text-white text-lg">
                     {player.nickname.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -176,7 +177,7 @@ export const TVResultsScreen: React.FC = () => {
               >
                 <span className="text-purple-400 font-bold w-5 text-sm">{index + 4}</span>
                 <Avatar className="w-6 h-6">
-                  <AvatarImage src={player.avatar_url || undefined} />
+                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
                   <AvatarFallback className="bg-purple-600 text-white text-xs">
                     {player.nickname.charAt(0).toUpperCase()}
                   </AvatarFallback>

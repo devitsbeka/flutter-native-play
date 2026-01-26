@@ -5,6 +5,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import confetti from 'canvas-confetti';
 import crown2 from '@/assets/icons/crown-2.png';
 import { AppIcon } from '@/components/shared/AppIcon';
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
 interface Player {
   id: string;
@@ -200,17 +201,11 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                   
                   {/* Avatar */}
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-                    {player.avatar_url ? (
-                      <img 
-                        src={player.avatar_url} 
-                        alt={player.nickname}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg font-bold">
-                        {player.nickname.charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                    <SafeAvatarImage
+                      avatarUrl={player.avatar_url}
+                      fallback={player.nickname}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   
                   {/* Name */}

@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { supabase } from '@/integrations/supabase/client';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import { resolveAvatarUrl } from '@/utils/avatarUtils';
 
 interface Category {
   id: string;
@@ -74,7 +75,7 @@ export const ControllerLobby: React.FC = () => {
           {players.map(player => (
             <div key={player.id} className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={player.avatar_url || undefined} />
+                <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
                 <AvatarFallback className="bg-purple-600 text-white">
                   {player.nickname.charAt(0).toUpperCase()}
                 </AvatarFallback>
