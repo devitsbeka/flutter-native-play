@@ -1557,9 +1557,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               roomId: newData.room_id || prev.roomId, // Sync roomId for FK constraints
               players: updatedPlayers,
               // Sync suggester info for the current round
-              currentRoundSuggesterId: (newData as any).current_round_suggester_id ?? prev.currentRoundSuggesterId,
-              currentRoundSuggesterNickname: (newData as any).current_round_suggester_nickname ?? prev.currentRoundSuggesterNickname,
-              currentRoundSuggesterAvatarUrl: (newData as any).current_round_suggester_avatar_url ?? prev.currentRoundSuggesterAvatarUrl,
+              // CRITICAL FIX: Use explicit null check - null means "cleared", not "keep previous"
+              // This prevents stale suggester IDs from blocking players in subsequent rounds
+              currentRoundSuggesterId: 'current_round_suggester_id' in (newData as any) 
+                ? (newData as any).current_round_suggester_id 
+                : prev.currentRoundSuggesterId,
+              currentRoundSuggesterNickname: 'current_round_suggester_nickname' in (newData as any)
+                ? (newData as any).current_round_suggester_nickname
+                : prev.currentRoundSuggesterNickname,
+              currentRoundSuggesterAvatarUrl: 'current_round_suggester_avatar_url' in (newData as any)
+                ? (newData as any).current_round_suggester_avatar_url
+                : prev.currentRoundSuggesterAvatarUrl,
             };
           });
         }

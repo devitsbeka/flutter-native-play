@@ -67,7 +67,12 @@ const TVHostController: React.FC = () => {
     isHost,
     leaveSession,
     resetGame,
+    myPlayerId,
+    currentRoundSuggesterId,
   } = useTVGame();
+  
+  // CRITICAL: Check if host is the suggester for this round (they can only observe)
+  const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
 
   // Room ID for queue fallback
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -152,7 +157,11 @@ const TVHostController: React.FC = () => {
     pollHookPhase: pollHook.pollPhase,
     questionsLength: questions.length,
     currentQuestionIndex,
-    playersCount: players.length 
+    playersCount: players.length,
+    // CRITICAL: Log suggester state to debug round 2 blocking issue
+    isSuggester,
+    myPlayerId: myPlayerId ? myPlayerId.substring(0, 8) + '...' : 'NULL',
+    currentRoundSuggesterId: currentRoundSuggesterId ? currentRoundSuggesterId.substring(0, 8) + '...' : 'NULL',
   });
 
   const joinUrl = sessionId ? `${window.location.origin}/join/session/${sessionId}` : `${window.location.origin}/join`;
@@ -1098,6 +1107,36 @@ const TVHostController: React.FC = () => {
   }
 
   // Playing phase - host can answer questions with FULL question UI (like guests)
+  // CRITICAL: If host is the suggester, show observer UI instead
+  if (isSuggester) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
+        <div className="text-center">
+          <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+          <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
+          <p className="text-purple-300 mb-2">შენ შემოგთავაზე ეს კატეგორია,</p>
+          <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები.</p>
+          <div className="bg-white/10 rounded-xl p-4 mb-6">
+            <p className="text-white font-semibold text-center text-sm">
+              კითხვა {currentQuestionIndex + 1}/{totalQuestions}
+            </p>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <span className="text-purple-300">{timeRemaining}წ</span>
+            </div>
+          </div>
+          <p className="text-purple-300 text-sm mb-6">ტელევიზორზე უყურე...</p>
+          
+          <ChunkyButton
+            variant="secondary"
+            onClick={handleEndGame}
+          >
+            თამაშის დასრულება
+          </ChunkyButton>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
       {/* Header - Question counter, Timer, Score */}
