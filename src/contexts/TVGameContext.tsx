@@ -295,9 +295,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     console.log('[confirmActivePlayers] 📡 Connected players from presence:', connectedPlayerIds.length, connectedPlayerIds.map((id: string) => id.slice(0, 8)));
     
-    // Step 2: Activate ONLY players who are in presence channel (not quitters!)
-    // This handles both: mid-game joiners who are connected AND players who temporarily disconnected
+    // CRITICAL: Only modify is_active status if we have presence data
+    // If presence returns 0, it might be a timing issue - don't deactivate everyone!
     if (connectedPlayerIds.length > 0) {
+      // Step 2a: Activate players who are in presence channel
       const { error: activateError } = await supabase
         .from('tv_players')
         .update({ is_active: true })
@@ -307,27 +308,32 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (activateError) {
         console.warn('[confirmActivePlayers] ⚠️ Activate error:', activateError);
       } else {
-        console.log('[confirmActivePlayers] 🔄 Activated', connectedPlayerIds.length, 'connected players (quitters stay inactive)');
+        console.log('[confirmActivePlayers] 🔄 Activated', connectedPlayerIds.length, 'connected players');
       }
+      
+      // Step 2b: Deactivate players NOT in presence (quitters)
+      const { error: deactivateError } = await supabase
+        .from('tv_players')
+        .update({ is_active: false })
+        .eq('tv_session_id', sessionId)
+        .not('player_id', 'in', `(${connectedPlayerIds.join(',')})`)
+        .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
+        .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
+      
+      if (deactivateError) {
+        console.warn('[confirmActivePlayers] ⚠️ Deactivate error:', deactivateError);
+      } else {
+        console.log('[confirmActivePlayers] 🔄 Deactivated players not in presence (quitters)');
+      }
+    } else {
+      // Fallback: Presence is empty - don't modify is_active, just count current state
+      console.log('[confirmActivePlayers] ⚠️ Presence returned 0 players - using existing is_active state from DB');
     }
     
-    // Step 3: Deactivate players NOT in presence (they quit or disconnected)
-    const { error: deactivateError } = await supabase
-      .from('tv_players')
-      .update({ is_active: false })
-      .eq('tv_session_id', sessionId)
-      .not('player_id', 'in', connectedPlayerIds.length > 0 ? `(${connectedPlayerIds.join(',')})` : '(NULL)')
-      .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
-      .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
-    
-    if (deactivateError) {
-      console.warn('[confirmActivePlayers] ⚠️ Deactivate error:', deactivateError);
-    }
-    
-    // Step 4: Extended delay for DB consistency
+    // Step 3: Extended delay for DB consistency
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Step 5: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
+    // Step 4: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
     let verifiedCount = 0;
     const isPaired = stateRef.current.isPaired;
     const minExpected = isPaired ? 2 : 1;
@@ -343,7 +349,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
       
       verifiedCount = count ?? 0;
-      console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/7: ${verifiedCount} real players (excluding system devices)`);
+      console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/7: ${verifiedCount} active players from DB`);
       
       if (verifiedCount >= minExpected) break;
       
@@ -352,7 +358,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
     
-    // Step 6: Lock the verified count in session (with minimum for paired mode)
+    // Step 5: Lock the verified count in session (with minimum for paired mode)
     const finalCount = isPaired ? Math.max(verifiedCount, 2) : verifiedCount;
     
     await supabase
@@ -501,7 +507,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         sessionId: current.sessionId.substring(0, 8) + '...',
       });
 
-      // Get expected count from DB (authoritative source)
+      // Get session data
       const { data: session, error: sessionError } = await supabase
         .from('tv_sessions')
         .select('active_player_count, is_paired, current_round_suggester_id')
@@ -513,26 +519,53 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // TRUST the session's locked active_player_count (verified by confirmActivePlayers at game start)
-      // No need to re-verify live - confirmActivePlayers already performed robust 7-attempt verification
-      const sessionLockedCount = session.active_player_count ?? 0;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
+      
+      // CRITICAL FIX: Live-verify active player count instead of trusting stale locked count
+      // This ensures we don't advance when only host is active but stale count says 2+
+      const systemDeviceIdentifiers = ['TV_DISPLAY', 'TV_MIRROR'];
+      const { count: liveActiveCount, error: countActiveError } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', current.sessionId)
+        .eq('is_active', true)
+        .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
+        .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
+      
+      if (countActiveError) {
+        console.error('[AutoAdvance] ❌ Error counting active players:', countActiveError);
+        return;
+      }
+      
+      let expectedCount = liveActiveCount ?? 0;
+      
+      // Subtract suggester if they're active (they can't answer)
+      if (suggesterId) {
+        const { data: suggesterData } = await supabase
+          .from('tv_players')
+          .select('is_active')
+          .eq('tv_session_id', current.sessionId)
+          .eq('player_id', suggesterId)
+          .single();
+        
+        if (suggesterData?.is_active) {
+          expectedCount = Math.max(0, expectedCount - 1);
+          console.log('[AutoAdvance] 🎯 Adjusted for active suggester:', { original: liveActiveCount, adjusted: expectedCount });
+        }
+      }
 
-      console.log('[AutoAdvance] 🎯 Using session locked count:', {
-        sessionLockedCount,
+      console.log('[AutoAdvance] 🎯 Live verified player count:', {
+        liveActiveCount,
+        expectedCount,
         isPaired,
         suggesterId: suggesterId ? suggesterId.substring(0, 8) + '...' : null,
+        sessionLockedCount: session.active_player_count, // For debugging comparison
       });
-
-      // CRITICAL: Use locked count directly - NO double subtraction!
-      // The active_player_count is ALREADY adjusted for suggester in startPlaying/startNextRoundFromQueueIfAny
-      const expectedCount = sessionLockedCount;
-      console.log('[AutoAdvance] 🎯 Using locked expected count (already adjusted for suggester):', expectedCount);
 
       // SAFETY: Never advance if expected count is unreliable
       if (expectedCount <= 0) {
-        console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0');
+        console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0 (no eligible players)');
         return;
       }
 
