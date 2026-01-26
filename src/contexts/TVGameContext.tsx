@@ -675,6 +675,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [state.phase, state.sessionId, advanceToReveal]);
 
+  // ============================================================================
+  // PERIODIC FALLBACK: Check every 2s if all players answered
+  // This catches cases where realtime subscription missed an INSERT event
+  // ============================================================================
+  useEffect(() => {
+    if (state.phase !== 'question') return;
+    if (!isHost) return;
+    if (!state.sessionId) return;
+    
+    // Start checking after a short delay to avoid race with initial renders
+    const fallbackInterval = setInterval(() => {
+      checkAndAdvanceIfAllAnswered();
+    }, 2000);
+    
+    tvLog('Fallback check interval started (2s)');
+    
+    return () => {
+      clearInterval(fallbackInterval);
+    };
+  }, [state.phase, isHost, state.sessionId, checkAndAdvanceIfAllAnswered]);
+
   // NOTE: Presence-based auto-advance has been DISABLED.
   // Auto-advance logic is now handled by database-based answer counting via:
   // - setupAnswersSubscription() - subscribes to player_answers INSERT events
@@ -1417,6 +1438,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
+      // ALSO clear any answers from current session (handles game restart scenario)
+      // This ensures a clean slate when restarting a game mid-session
+      if (state.sessionId) {
+        const { error: currentSessionCleanup } = await supabase
+          .from('player_answers')
+          .delete()
+          .eq('tv_session_id', state.sessionId);
+
+        if (currentSessionCleanup) {
+          tvLog('Warning: Could not clean current session answers', currentSessionCleanup);
+        } else {
+          tvLog('Cleared all answers for fresh game start');
+        }
+      }
+
       // CRITICAL: Lock player count BEFORE countdown starts
       // This is stored in DB and read when checking if all answered
       const playerCount = state.isPaired ? Math.max(state.players.length, 2) : state.players.length;
@@ -1587,6 +1623,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       if (error) {
         tvLogError('submitAnswer DB insert', error);
+        // IMPORTANT: Even on duplicate key error (23505), the answer exists in DB
+        // Still trigger the auto-advance check - this prevents stalls in True/False games
+        if (isHostRef.current && error.code === '23505') {
+          tvLog('Duplicate answer detected, triggering auto-advance check');
+          setTimeout(() => {
+            checkAndAdvanceIfAllAnswered();
+          }, 150);
+        }
       } else {
         // Belt-and-suspenders: trigger DB-based check after successful insert
         // The realtime subscription will also trigger this, but this is faster
