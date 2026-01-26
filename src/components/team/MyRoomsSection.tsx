@@ -240,10 +240,20 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   const isCompleted = room.status === "completed";
   const hasTVSession = isActiveTVSession(room.tv_status);
   
-  // For display: use TV active players if there's an active TV session, otherwise participants
+  // For display: use TV active players if there's an active TV session with players
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
     ? room.tv_active_players 
     : room.participants.length;
+  
+  // Use TV players for avatars when session is active, otherwise use room participants
+  const displayPlayers = hasTVSession && room.tv_players.length > 0
+    ? room.tv_players.map(p => ({ 
+        user_id: p.user_id || '', 
+        nickname: p.nickname, 
+        avatar_url: p.avatar_url,
+        is_host: false 
+      }))
+    : room.participants;
   
   // Always use the placeholder image
   const coverImage = roomCoverPlaceholder;
@@ -351,11 +361,11 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
             {/* Top row - Avatars left, Status badge + menu right */}
             <div className="relative z-10 px-2 pb-4">
               <div className="flex items-start justify-between mb-8">
-                {/* Top left - Avatars */}
+                {/* Top left - Avatars (use TV players when active) */}
                 <div className="flex -space-x-2">
-                  {room.participants.slice(0, 3).map((p) => (
+                  {displayPlayers.slice(0, 3).map((p, idx) => (
                     <div 
-                      key={p.user_id} 
+                      key={p.user_id || idx} 
                       className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 shadow-md"
                     >
                       {p.avatar_url ? (
@@ -371,10 +381,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                       )}
                     </div>
                   ))}
-                  {room.participants.length > 3 && (
+                  {displayPlayers.length > 3 && (
                     <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
                       <span className="text-xs font-bold text-white">
-                        +{room.participants.length - 3}
+                        +{displayPlayers.length - 3}
                       </span>
                     </div>
                   )}
@@ -511,6 +521,22 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const displayName = room.room_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
+  const hasTVSession = isActiveTVSession(room.tv_status);
+  
+  // For display: use TV active players if there's an active TV session
+  const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
+    ? room.tv_active_players 
+    : room.participants.length;
+  
+  // Use TV players for avatars when session is active
+  const displayPlayers = hasTVSession && room.tv_players.length > 0
+    ? room.tv_players.map(p => ({ 
+        user_id: p.user_id || '', 
+        nickname: p.nickname, 
+        avatar_url: p.avatar_url,
+        is_host: false 
+      }))
+    : room.participants;
   
   const coverImage = roomCoverPlaceholder;
   const gradientPreset = ROOM_GRADIENT_PRESETS[index % ROOM_GRADIENT_PRESETS.length];
@@ -610,7 +636,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {isPlaying ? (
+              {(isPlaying || hasTVSession) ? (
                 <LiveBadge />
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
@@ -671,23 +697,23 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             {/* Bottom: Glass container with player count + avatars */}
             <div className="relative z-10">
               <div className="bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 flex items-center justify-between">
-                {/* Left: Player count */}
+                {/* Left: Player count (use TV active players if available) */}
                 <div className="flex items-center gap-2 bg-white/20 rounded-lg px-2.5 py-1.5">
                   <Users className="w-4 h-4 text-white" />
                   <span className="text-white font-bold text-sm">
-                    {room.participants.length}
+                    {displayPlayerCount}
                   </span>
                 </div>
                 
-                {/* Right: Avatars */}
+                {/* Right: Avatars (use TV players if session is active) */}
                 <div className="flex -space-x-2">
-                  {room.participants.slice(0, 4).map((p) => (
+                  {displayPlayers.slice(0, 4).map((p, idx) => (
                     <div 
-                      key={p.user_id} 
+                      key={p.user_id || idx} 
                       className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openProfile(p.user_id);
+                        if (p.user_id) openProfile(p.user_id);
                       }}
                     >
                       {p.avatar_url ? (
@@ -703,10 +729,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
                       )}
                     </div>
                   ))}
-                  {room.participants.length > 4 && (
+                  {displayPlayers.length > 4 && (
                     <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                       <span className="text-white text-[10px] font-bold">
-                        +{room.participants.length - 4}
+                        +{displayPlayers.length - 4}
                       </span>
                     </div>
                   )}
