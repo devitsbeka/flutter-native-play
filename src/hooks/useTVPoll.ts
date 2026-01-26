@@ -524,8 +524,26 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       console.warn('[finalizePollAndStartGame] ⚠️ Failed to reset player activity:', resetError);
     }
 
-    // CRITICAL: Extended delay for DB consistency (200ms, critical after poll/transitions)
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // CRITICAL FIX: Also sync user_id for any authenticated player whose user_id is NULL
+    // This fixes RLS policy issues where guests can't vote because user_id is missing
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser) {
+      const { error: userIdError } = await supabase
+        .from('tv_players')
+        .update({ user_id: currentUser.id, is_active: true })
+        .eq('tv_session_id', sessionId)
+        .eq('player_id', currentUser.id)
+        .is('user_id', null);
+      
+      if (userIdError) {
+        console.warn('[finalizePollAndStartGame] ⚠️ Failed to sync user_id:', userIdError);
+      } else {
+        console.log('[finalizePollAndStartGame] ✅ Synced user_id for current player');
+      }
+    }
+
+    // CRITICAL: Extended delay for DB consistency (300ms, critical after poll/transitions)
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // ROBUST VERIFICATION LOOP: 7 attempts, 200ms apart (same as confirmActivePlayers utility)
     // This ensures we get a stable, accurate player count before locking
@@ -676,9 +694,16 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     if (error) {
       tvLogError('[useTVPoll] Error finalizing poll', error);
+      console.error('[finalizePollAndStartGame] ❌ DB update failed:', error);
       return false;
     }
 
+    console.log('[finalizePollAndStartGame] ✅ Successfully set status to countdown with', {
+      categoryName: firstSuggestion.category_name,
+      questionCount: questions.length,
+      totalRounds: topN,
+      activePlayerCount: expectedCount,
+    });
     tvLog('[useTVPoll] ✅ Poll finalized and game started directly in countdown');
     return true;
   }, [sessionId, suggestions]);
