@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Plus, Bell, MessageCircle, Layers, ScanLine } from "lucide-react";
@@ -85,6 +86,7 @@ function TeamContentV2() {
     acceptInvitation,
   } = useGameInvitations();
   const { createRoom } = useMultiplayerV2();
+  const queryClient = useQueryClient();
 
   // Auto-open PersonalTrivia from navigation state
   const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
@@ -904,10 +906,68 @@ function TeamContentV2() {
           setShowBlindTriviaModal(open);
           if (!open) setEditingDraftId(null);
         }}
-        onTriviaReady={() => {
+        onTriviaReady={async (questions, title, subject) => {
+          if (!user) return;
+          
+          // Generate hashtags from subject
+          const hashtags = subject
+            .split(/[\s,]+/)
+            .filter(word => word.length > 2)
+            .slice(0, 5)
+            .map(word => `#${word.replace(/[^a-zA-Zა-ჰ0-9]/g, "")}`);
+
+          // Format questions for storage
+          const questionsToSave = questions.map(q => ({
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            incorrect_answers: q.incorrect_answers,
+            difficulty: q.difficulty || "medium",
+            iconSlug: q.icon_slug || null,
+          }));
+
+          // Get random gradient for cover
+          const gradients = [
+            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+            "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+            "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+            "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+          ];
+          const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+
+          // Insert into user_quiz_posts
+          const { error } = await supabase
+            .from("user_quiz_posts")
+            .insert([{
+              user_id: user.id,
+              title,
+              subject,
+              hashtags,
+              cover_gradient: randomGradient,
+              question_count: questions.length,
+              answer_format: questions[0]?.incorrect_answers?.length === 1 ? 'true_false' : 'multiple',
+              questions: questionsToSave,
+              icon_slug: questions[0]?.icon_slug || null,
+              is_public: false,
+            }]);
+
+          if (error) {
+            console.error("Error saving trivia:", error);
+            toast.error("ტრივიას შენახვა ვერ მოხერხდა");
+            return;
+          }
+
+          // Invalidate queries to refresh the list
+          queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+          queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
+          queryClient.invalidateQueries({ queryKey: ["my-recent-trivias-widget"] });
+
+          // Close modal and show success
           setShowBlindTriviaModal(false);
           setEditingDraftId(null);
           setActiveTab("my-content");
+          toast.success(`ტრივია "${title}" შეიქმნა!`);
         }}
         resumeDraftId={editingDraftId}
         onDraftResumed={() => setEditingDraftId(null)}
