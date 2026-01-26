@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw, GripVertical } from 'lucide-react';
+import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw, GripVertical, Clock } from 'lucide-react';
 import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -634,7 +634,50 @@ const TVHostController: React.FC = () => {
     );
   }
 
-  // No reveal phase handling needed - timer directly advances to next question
+  // Reveal phase - show host's answer result (mirrors guest ControllerReveal)
+  // CRITICAL FIX: Host must also see reveal screen to stay in sync with guests
+  if (localPhase === 'reveal') {
+    const isCorrect = myAnswer && currentQuestion ? myAnswer === currentQuestion.correct_answer : false;
+    const didAnswer = myAnswer !== null;
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+        <motion.div 
+          initial={{ scale: 0 }} 
+          animate={{ scale: 1 }} 
+          transition={{ type: 'spring' }}
+          className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${
+            didAnswer ? (isCorrect ? 'bg-green-500' : 'bg-red-500') : 'bg-gray-500'
+          }`}
+        >
+          {didAnswer ? (
+            isCorrect ? <Check className="w-12 h-12 text-white" /> : <X className="w-12 h-12 text-white" />
+          ) : (
+            <Clock className="w-12 h-12 text-white" />
+          )}
+        </motion.div>
+        
+        <h2 className={`text-3xl font-bold mb-2 ${
+          didAnswer ? (isCorrect ? 'text-green-400' : 'text-red-400') : 'text-gray-400'
+        }`}>
+          {didAnswer ? (isCorrect ? 'სწორია!' : 'არასწორია!') : 'დრო ამოიწურა!'}
+        </h2>
+        
+        {!isCorrect && currentQuestion && (
+          <p className="text-purple-300 text-center mb-4">
+            პასუხი: {currentQuestion.correct_answer}
+          </p>
+        )}
+        
+        <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
+          <span className="text-purple-300">შენი ქულა: </span>
+          <span className="text-white text-2xl font-bold">{myScore}</span>
+        </div>
+        
+        <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
+      </div>
+    );
+  }
 
 
   // Completed phase - show game over screen with leaderboard
