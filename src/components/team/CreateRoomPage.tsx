@@ -33,6 +33,9 @@ import triviaBuzzer from "@/assets/trivia-buzzer-3.png";
 import iconGroupOfPeople from "@/assets/group-of-people.png";
 import stickerAlbum from "@/assets/sticker-album.png";
 import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
+import { getRandomGradient } from "@/config/roomGradients";
+import { useQueryClient } from "@tanstack/react-query";
+import type { Json } from "@/integrations/supabase/types";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPICS = [
@@ -104,6 +107,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { createRoom, loading } = useMultiplayerV2();
   const { friends } = useFriends();
   const { sendInvitation, addInvitedParticipant } = useGameInvitations();
@@ -466,9 +470,67 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [customTriviaTitle, setCustomTriviaTitle] = useState("");
   const [customTriviaSubject, setCustomTriviaSubject] = useState("");
   const [isPersonalTrivia, setIsPersonalTrivia] = useState(false);
+  const [createdTriviaId, setCreatedTriviaId] = useState<string | null>(null);
 
   // Handle blind trivia creation - questions are hidden from creator
+  // IMPORTANT: This now persists the trivia to user_quiz_posts so it appears in "My Trivia"
   const handleBlindTriviaReady = async (questions: GeneratedQuestion[], title: string, subject: string) => {
+    if (!user) return;
+
+    // 1. Generate hashtags from subject
+    const hashtags = subject
+      .split(/[\s,]+/)
+      .filter(word => word.length > 2)
+      .slice(0, 5)
+      .map(word => `#${word.replace(/[^a-zA-Zა-ჰ0-9]/g, "")}`);
+
+    // 2. Format questions for storage
+    const questionsToSave = questions.map(q => ({
+      question_text: q.question_text,
+      correct_answer: q.correct_answer,
+      incorrect_answers: q.incorrect_answers,
+      difficulty: q.difficulty || "medium",
+      iconSlug: q.icon_slug || null,
+    }));
+
+    // 3. Get random gradient for cover
+    const gradientId = getRandomGradient();
+
+    // 4. Insert into user_quiz_posts to persist the trivia
+    const { data: newTrivia, error } = await supabase
+      .from("user_quiz_posts")
+      .insert([{
+        user_id: user.id,
+        title,
+        subject,
+        hashtags,
+        cover_gradient: `gradient:${gradientId}`,
+        question_count: questions.length,
+        answer_format: questions[0]?.incorrect_answers?.length === 1 ? 'true_false' : 'multiple',
+        questions: structuredClone(questionsToSave) as unknown as Json,
+        icon_slug: questions[0]?.icon_slug || null,
+        is_public: false,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error saving trivia:", error);
+      toast({
+        title: "შეცდომა",
+        description: "ტრივიას შენახვა ვერ მოხერხდა",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 5. Invalidate queries to refresh lists
+    queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+    queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
+    queryClient.invalidateQueries({ queryKey: ["my-recent-trivias-widget"] });
+
+    // 6. Store the new trivia ID for room creation & set state
+    setCreatedTriviaId(newTrivia.id);
     setCustomTriviaQuestions(questions);
     setCustomTriviaTitle(title);
     setCustomTriviaSubject(subject);
@@ -544,16 +606,64 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         navigate(`/team?join=${roomCode}`);
       } else if (selectionMode === "create" && customTriviaQuestions) {
         // Create room with custom trivia questions
-        room = await createRoom(
-          "custom", 
-          customTriviaTitle || "Custom Trivia",
-          customTriviaQuestions,
-          roomName,
-          roomIcon
-        );
+        // If we have a createdTriviaId, link the room to the persisted trivia
+        if (createdTriviaId) {
+          const { data: userProfile } = await supabase
+            .from("profiles")
+            .select("nickname, avatar_url, country_code")
+            .eq("user_id", user.id)
+            .single();
 
-        if (room?.id) {
-          await persistQueuedRounds(room.id);
+          const { data: codeData } = await supabase.rpc("generate_room_code");
+          const roomCode = codeData || generateRoomCode();
+          
+          const { data: createdRoom, error } = await supabase
+            .from("game_rooms")
+            .insert({
+              room_code: roomCode,
+              host_user_id: user.id,
+              room_name: roomName,
+              room_icon: roomIcon,
+              category_name: customTriviaTitle,
+              game_type: "async",
+              game_mode: `trivia:${createdTriviaId}`,
+              user_trivia_id: createdTriviaId,
+              status: "waiting",
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Add host as participant
+          await supabase.from("room_participants").insert({
+            room_id: createdRoom.id,
+            user_id: user.id,
+            nickname: userProfile?.nickname || "Player",
+            avatar_url: userProfile?.avatar_url,
+            country_code: userProfile?.country_code || "GE",
+            is_host: true,
+            status: "joined",
+          });
+
+          room = createdRoom;
+          await persistQueuedRounds(createdRoom.id);
+          
+          onClose();
+          navigate(`/team?join=${roomCode}`);
+        } else {
+          // Fallback to old behavior if no persisted trivia ID
+          room = await createRoom(
+            "custom", 
+            customTriviaTitle || "Custom Trivia",
+            customTriviaQuestions,
+            roomName,
+            roomIcon
+          );
+
+          if (room?.id) {
+            await persistQueuedRounds(room.id);
+          }
         }
       } else if (selectedCategory) {
         // Create the room with selected category
