@@ -1,169 +1,103 @@
 
-# Fix: Guest Players Can't Play After Poll
+# Fix: Guest Players Can't Join/Play After Poll
 
-## Problem Summary
+## Problem Identified
 
-Guest players (who join via QR code) cannot participate in the game after a poll ends because:
+After extensive code analysis, I identified a critical bug in `TVJoin.tsx` that prevents guests from playing after a poll:
 
-1. **They don't receive the questions array** via the realtime subscription during the poll-to-countdown transition
-2. **No fallback fetch mechanism** exists to recover from missed realtime updates
-3. **The error screen blocks them** when `questions.length === 0` during `playing` phase
+**The `refetchSession` function in `TVJoin.tsx` fetches session data but NEVER updates the context state.**
 
-## Root Cause Analysis
-
-### The Flow That Breaks
-
-```text
-1. Guest joins during poll phase
-   → Session has NO questions (poll phase doesn't have questions)
-   → Guest state: questions = []
-
-2. Host finalizes poll → Session updated with questions
-   → Realtime event sent to all subscribers
-   → Guest's subscription SHOULD receive it...
-   
-3. BUT: Guest might miss the update if:
-   - Network latency
-   - Subscription not fully synced
-   - Browser tab was in background (Safari throttling)
-   - Reconnection in progress
-
-4. Guest transitions to 'playing' phase
-   → TVJoin.tsx checks: hasInvalidState = phase === 'playing' && questions.length === 0
-   → Shows "თამაში არ არის მზად" (Game not ready) error screen
-   → Guest can't play!
-```
-
-### Evidence from Code
-
-**TVJoin.tsx (lines 54-77):**
+The current code (lines 65-88) contains this flawed logic:
 ```typescript
-const requiresQuestions = ['question', 'playing', 'reveal'].includes(phase);
-const hasInvalidState = requiresQuestions && (!questions || questions.length === 0);
-
-if (hasInvalidState) {
-  // Shows error screen - Guest is blocked!
-}
-```
-
-**TVGameContext.tsx (line 1356):**
-```typescript
-questions: questions.length > 0 ? questions : prev.questions,
-```
-This only preserves `prev.questions` - if BOTH are empty, guest has no questions.
-
----
-
-## The Solution: Proactive Session Refetch on Phase Change
-
-### Fix 1: Add Session Refetch Function
-
-Create a utility function that can be called to force-fetch the current session state:
-
-**File:** `src/contexts/TVGameContext.tsx`
-
-Add a new function `refetchSession` that:
-1. Fetches the full session from the database
-2. Updates state with questions, suggester info, and other critical fields
-3. Can be called when phase changes to `countdown` or `playing`
-
-### Fix 2: Auto-Refetch on Critical Phase Transitions
-
-**File:** `src/contexts/TVGameContext.tsx`
-
-In the session subscription handler, when transitioning FROM poll phases TO game phases:
-- Detect: `prev.phase.includes('poll') && ['countdown', 'playing'].includes(newPhase)`
-- If `questions.length === 0`, trigger a full session refetch
-- This ensures guests recover from missed realtime updates
-
-### Fix 3: Remove Blocking Error Screen, Show Loading Instead
-
-**File:** `src/pages/TVJoin.tsx`
-
-Instead of showing an error screen when `questions.length === 0` during `playing` phase:
-- Show a loading spinner with "იტვირთება კითხვები..." (Loading questions...)
-- Trigger a session refetch
-- Auto-recover when questions arrive
-
-### Fix 4: Add Suggester Fields to Subscription Type
-
-**File:** `src/contexts/TVGameContext.tsx`
-
-Add the missing fields to the `newData` type definition to ensure TypeScript properly handles them:
-```typescript
-current_round_suggester_id?: string | null;
-current_round_suggester_nickname?: string | null;
-current_round_suggester_avatar_url?: string | null;
-```
-
----
-
-## Technical Implementation Details
-
-### New `refetchSession` Function
-
-```typescript
-const refetchSession = async (sessionId: string) => {
-  console.log('[refetchSession] 🔄 Force-fetching session state...');
-  
-  const { data: session, error } = await supabase
-    .from('tv_sessions')
-    .select('*')
-    .eq('id', sessionId)
-    .maybeSingle();
-  
-  if (error || !session) {
-    console.error('[refetchSession] Failed:', error);
-    return;
-  }
-  
-  // Parse questions
-  let questions: TVQuestion[] = [];
-  if (session.questions) {
-    const rawQuestions = session.questions as unknown as Array<...>;
-    questions = rawQuestions.map(q => ({...}));
-  }
-  
-  setState(prev => ({
-    ...prev,
-    questions: questions.length > 0 ? questions : prev.questions,
-    currentRoundSuggesterId: session.current_round_suggester_id ?? null,
-    currentRoundSuggesterNickname: session.current_round_suggester_nickname ?? null,
-    currentRoundSuggesterAvatarUrl: session.current_round_suggester_avatar_url ?? null,
-    // ... other fields
-  }));
-  
-  console.log('[refetchSession] ✅ Loaded', questions.length, 'questions');
+const refetchSession = async () => {
+  const { data: session } = await supabase.from('tv_sessions').select('*')...
+  console.log('[TVJoin] Refetched session:', { ... });
+  // Comment says: "The realtime subscription should pick up this fetch"
+  // ❌ THIS IS WRONG - a SELECT query doesn't trigger realtime events!
 };
 ```
 
-### Phase Transition Recovery
+Meanwhile, `TVGameContext.tsx` has a proper `refetchSessionData` function that correctly updates state, but it's not being used in `TVJoin.tsx`.
+
+---
+
+## Root Cause Flow
+
+```text
+1. Guest joins during poll phase
+   → State: phase='poll-voting', questions=[]
+
+2. Host finalizes poll → DB updated with questions
+   → Realtime event sent to subscribers
+
+3. Guest's realtime subscription might MISS the update
+   → Due to: network latency, background tabs, reconnection
+
+4. TVJoin.tsx detects hasInvalidState (phase='playing' but questions=[])
+   → Shows loading screen
+   → Calls refetchSession()
+
+5. refetchSession() fetches data BUT DOESN'T UPDATE STATE
+   → Data is fetched and logged, then discarded!
+   → questions[] remains empty
+   → Guest stays stuck in loading screen
+
+6. Guest cannot play - blocked indefinitely
+```
+
+---
+
+## The Fix
+
+### Option 1: Use TVGameContext's refetchSessionData (Preferred)
+
+Expose `refetchSessionData` from the context and use it in `TVJoin.tsx`:
+
+**File:** `src/contexts/TVGameContext.tsx`
+- Add `refetchSessionData` to the context interface and value
+
+**File:** `src/pages/TVJoin.tsx`
+- Import and call `refetchSessionData` from the context instead of using a broken local function
+
+### Option 2: Fix the local refetchSession in TVJoin.tsx
+
+Parse the fetched data and update the context state directly:
+
+**File:** `src/pages/TVJoin.tsx`
+- After fetching session data, parse the questions and call a context update function
+
+---
+
+## Implementation Details
+
+### Step 1: Add refetchSessionData to TVGameContext exports
+
+Modify the context interface to expose the refetch function:
 
 ```typescript
-// In setupSessionSubscription, after detecting phase change:
-if (prevPhaseRef.current?.includes('poll') && ['countdown', 'playing'].includes(newPhase)) {
-  // Give realtime a moment to deliver the full payload
-  setTimeout(async () => {
-    if (stateRef.current.questions.length === 0) {
-      console.log('[Subscription] ⚠️ No questions after poll->game transition, refetching...');
-      await refetchSession(sessionId);
-    }
-  }, 500);
+interface TVGameContextType extends TVGameState {
+  // ... existing methods ...
+  refetchSessionData: () => Promise<void>;  // NEW
 }
 ```
 
-### TVJoin.tsx Recovery UI
+### Step 2: Update TVJoin.tsx to use context refetch
+
+Replace the broken local function with the context function:
 
 ```typescript
-if (hasInvalidState) {
-  // Instead of error, show loading and trigger refetch
-  return (
-    <div className="...loading screen...">
-      <Loader2 className="animate-spin" />
-      <p>იტვირთება კითხვები...</p>
-    </div>
-  );
-}
+const { phase, sessionId, questions, refetchSessionData, myPlayerId, players } = useTVGame();
+
+// In the useEffect:
+useEffect(() => {
+  if (hasInvalidState && sessionId) {
+    console.log('[TVJoin] ⚠️ Invalid state - triggering context refetch...');
+    const timer = setTimeout(() => {
+      refetchSessionData(); // Uses context's state-updating function
+    }, 500);
+    return () => clearTimeout(timer);
+  }
+}, [hasInvalidState, sessionId, refetchSessionData]);
 ```
 
 ---
@@ -172,26 +106,34 @@ if (hasInvalidState) {
 
 | File | Changes |
 |------|---------|
-| `src/contexts/TVGameContext.tsx` | Add `refetchSession` function, update subscription type, add auto-recovery on phase transitions |
-| `src/pages/TVJoin.tsx` | Replace blocking error with loading + auto-refetch |
-| `src/components/controller/ControllerQuestion.tsx` | Add defensive check before rendering, trigger refetch if needed |
+| `src/contexts/TVGameContext.tsx` | Add `refetchSessionData` to context interface and value export |
+| `src/pages/TVJoin.tsx` | Use context's `refetchSessionData` instead of broken local function |
 
 ---
 
 ## Expected Behavior After Fix
 
-1. **Guest joins during poll** → Has no questions (expected)
-2. **Poll ends, game starts** → Realtime sends questions
-3. **If guest misses update** → Auto-refetch triggers within 500ms
-4. **Guest sees loading briefly** → Then questions appear
-5. **All players can answer** → Game proceeds normally
+1. Guest joins during poll → `questions=[]`
+2. Poll ends, game starts → Realtime updates questions
+3. If realtime is missed → `hasInvalidState` triggers
+4. `refetchSessionData()` fetches and **updates context state**
+5. Questions appear → Guest can play!
 
 ---
 
 ## Why This Will Work
 
-1. **Redundancy**: Even if realtime fails, the fallback fetch ensures data arrives
-2. **Non-blocking**: Loading UI keeps guest engaged instead of showing error
-3. **Automatic**: No user action required - system self-heals
-4. **Fast**: 500ms delay is imperceptible to users
-5. **Defensive**: Works regardless of network conditions or browser throttling
+1. **State is actually updated** - The context's `refetchSessionData` calls `setState` with fetched data
+2. **All subscribers get updated** - State change propagates to all components
+3. **Retry logic works** - The `useEffect` will retry if still in invalid state
+4. **Consistent implementation** - Same refetch logic used everywhere
+
+---
+
+## Additional Considerations
+
+The same pattern should be verified in other places where manual refetch might be needed, such as:
+- `ControllerQuestion.tsx` - Already has proper error handling UI
+- Network reconnection scenarios - Consider adding a refetch after connection restoration
+
+This fix addresses the core issue where guests appear to join successfully but get stuck in a loading state after the poll ends.
