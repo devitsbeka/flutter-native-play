@@ -1,139 +1,118 @@
 
-# Fix: Guest Players Can't Join/Play After Poll
+# Fix: QR Code Guest Join White Screen - Route Order Bug
 
 ## Problem Identified
 
-After extensive code analysis, I identified a critical bug in `TVJoin.tsx` that prevents guests from playing after a poll:
+When guests scan the QR code to join a TV game, they see a white screen and cannot join. The root cause is a **React Router route ordering bug** in `src/App.tsx`.
 
-**The `refetchSession` function in `TVJoin.tsx` fetches session data but NEVER updates the context state.**
+### The Bug
 
-The current code (lines 65-88) contains this flawed logic:
-```typescript
-const refetchSession = async () => {
-  const { data: session } = await supabase.from('tv_sessions').select('*')...
-  console.log('[TVJoin] Refetched session:', { ... });
-  // Comment says: "The realtime subscription should pick up this fetch"
-  // ❌ THIS IS WRONG - a SELECT query doesn't trigger realtime events!
-};
+```javascript
+// Current route order (BROKEN):
+<Route path="/join" element={<TVJoin />} />
+<Route path="/join/:code" element={<TVJoin />} />
+<Route path="/join/session/:sessionId" element={<TVJoin />} />
 ```
 
-Meanwhile, `TVGameContext.tsx` has a proper `refetchSessionData` function that correctly updates state, but it's not being used in `TVJoin.tsx`.
+When a guest visits `/join/session/5d4c72e8-...`:
+1. `/join/:code` matches FIRST with `code = "session"` (literal string)
+2. `/join/session/:sessionId` is NEVER reached
 
----
-
-## Root Cause Flow
-
-```text
-1. Guest joins during poll phase
-   → State: phase='poll-voting', questions=[]
-
-2. Host finalizes poll → DB updated with questions
-   → Realtime event sent to subscribers
-
-3. Guest's realtime subscription might MISS the update
-   → Due to: network latency, background tabs, reconnection
-
-4. TVJoin.tsx detects hasInvalidState (phase='playing' but questions=[])
-   → Shows loading screen
-   → Calls refetchSession()
-
-5. refetchSession() fetches data BUT DOESN'T UPDATE STATE
-   → Data is fetched and logged, then discarded!
-   → questions[] remains empty
-   → Guest stays stuck in loading screen
-
-6. Guest cannot play - blocked indefinitely
-```
+**Result:**
+- `urlSessionId` = `undefined` (never set)
+- `urlCode` = `"session"` (literal string, not UUID)
+- `initialCode` = `"session"`
+- `joinSession("session")` fails (no session with code "session")
+- White screen or stuck on code entry
 
 ---
 
 ## The Fix
 
-### Option 1: Use TVGameContext's refetchSessionData (Preferred)
+Reorder routes so the MORE SPECIFIC route comes FIRST:
 
-Expose `refetchSessionData` from the context and use it in `TVJoin.tsx`:
-
-**File:** `src/contexts/TVGameContext.tsx`
-- Add `refetchSessionData` to the context interface and value
-
-**File:** `src/pages/TVJoin.tsx`
-- Import and call `refetchSessionData` from the context instead of using a broken local function
-
-### Option 2: Fix the local refetchSession in TVJoin.tsx
-
-Parse the fetched data and update the context state directly:
-
-**File:** `src/pages/TVJoin.tsx`
-- After fetching session data, parse the questions and call a context update function
-
----
-
-## Implementation Details
-
-### Step 1: Add refetchSessionData to TVGameContext exports
-
-Modify the context interface to expose the refetch function:
-
-```typescript
-interface TVGameContextType extends TVGameState {
-  // ... existing methods ...
-  refetchSessionData: () => Promise<void>;  // NEW
-}
+```javascript
+// Fixed route order:
+<Route path="/join" element={<TVJoin />} />
+<Route path="/join/session/:sessionId" element={<TVJoin />} />  // MOVED UP
+<Route path="/join/:code" element={<TVJoin />} />
 ```
 
-### Step 2: Update TVJoin.tsx to use context refetch
-
-Replace the broken local function with the context function:
-
-```typescript
-const { phase, sessionId, questions, refetchSessionData, myPlayerId, players } = useTVGame();
-
-// In the useEffect:
-useEffect(() => {
-  if (hasInvalidState && sessionId) {
-    console.log('[TVJoin] ⚠️ Invalid state - triggering context refetch...');
-    const timer = setTimeout(() => {
-      refetchSessionData(); // Uses context's state-updating function
-    }, 500);
-    return () => clearTimeout(timer);
-  }
-}, [hasInvalidState, sessionId, refetchSessionData]);
-```
+Now when visiting `/join/session/5d4c72e8-...`:
+1. `/join` doesn't match
+2. `/join/session/:sessionId` matches correctly with `sessionId = "5d4c72e8-..."`
+3. Guest joins successfully!
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/contexts/TVGameContext.tsx` | Add `refetchSessionData` to context interface and value export |
-| `src/pages/TVJoin.tsx` | Use context's `refetchSessionData` instead of broken local function |
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Reorder routes: move `/join/session/:sessionId` before `/join/:code` |
 
 ---
 
-## Expected Behavior After Fix
+## Technical Details
 
-1. Guest joins during poll → `questions=[]`
-2. Poll ends, game starts → Realtime updates questions
-3. If realtime is missed → `hasInvalidState` triggers
-4. `refetchSessionData()` fetches and **updates context state**
-5. Questions appear → Guest can play!
+### Route Matching in React Router
+
+React Router v6 evaluates routes in order and uses the FIRST match. When two routes could match the same URL pattern, the more specific one must come first.
+
+**Pattern matching:**
+- `/join/:code` - Matches `/join/` followed by ANY segment (including "session")
+- `/join/session/:sessionId` - Matches only `/join/session/` followed by a segment
+
+Since "session" is a valid value for `:code`, the first route consumes the URL before the second route is checked.
+
+### Why This Causes White Screen
+
+1. `TVJoin` receives `urlCode = "session"` instead of `urlSessionId = UUID`
+2. `ControllerCodeEntry` calls `joinSession("session")`
+3. Supabase query finds no session with `tv_pairing_code = "SESSION"` or `id = "session"`
+4. `joinSession` returns `false`
+5. `setError('თამაში ვერ მოიძებნა...')` is called
+6. If error display has issues OR user sees error and page doesn't recover, they see white screen
 
 ---
 
-## Why This Will Work
+## Implementation
 
-1. **State is actually updated** - The context's `refetchSessionData` calls `setState` with fetched data
-2. **All subscribers get updated** - State change propagates to all components
-3. **Retry logic works** - The `useEffect` will retry if still in invalid state
-4. **Consistent implementation** - Same refetch logic used everywhere
+Change line order in `src/App.tsx` from:
+
+```javascript
+<Route path="/join" element={<TVJoin />} />
+<Route path="/join/:code" element={<TVJoin />} />
+<Route path="/join/session/:sessionId" element={<TVJoin />} />
+```
+
+To:
+
+```javascript
+<Route path="/join" element={<TVJoin />} />
+<Route path="/join/session/:sessionId" element={<TVJoin />} />
+<Route path="/join/:code" element={<TVJoin />} />
+```
 
 ---
 
-## Additional Considerations
+## Expected Outcome
 
-The same pattern should be verified in other places where manual refetch might be needed, such as:
-- `ControllerQuestion.tsx` - Already has proper error handling UI
-- Network reconnection scenarios - Consider adding a refetch after connection restoration
+After this fix:
+1. Guest scans QR code → navigates to `/join/session/UUID`
+2. Route `/join/session/:sessionId` matches correctly
+3. `urlSessionId` = UUID (correct!)
+4. `initialCode` = UUID
+5. `ControllerCodeEntry` shows `GuestJoinModal`
+6. Guest enters name → `joinSession(UUID, nickname)` succeeds
+7. Guest joins game successfully
 
-This fix addresses the core issue where guests appear to join successfully but get stuck in a loading state after the poll ends.
+---
+
+## Why This is Correct
+
+- **Specificity Rule**: More specific routes should be defined before generic catch-all routes
+- **No Breaking Changes**: The `/join/:code` route still works for 4-digit codes
+- **Backwards Compatible**: All existing URL patterns continue to work
+
+This is a one-line route reordering fix that solves the entire guest QR join flow.
