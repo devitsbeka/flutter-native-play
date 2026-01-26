@@ -801,7 +801,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Subscribe to session changes
       setupSessionSubscription(data.id);
-      setupPresenceChannel(data.id, 'TV_DISPLAY', null, false, true); // isTVDisplay = true
+      setupPresenceChannel(data.id, 'TV_DISPLAY', null, false, true, 'TV_DISPLAY'); // Pass explicit ID
       setupAnswersSubscription(data.id); // Subscribe to player answers for auto-advance
 
       return fourDigitCode;
@@ -954,7 +954,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Setup subscriptions
       setupSessionSubscription(session.id);
-      setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, isTVDisplay);
+      // CRITICAL: Pass the pre-computed playerId to prevent ID regeneration on refresh/reconnect
+      setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, isTVDisplay, playerId);
       setupAnswersSubscription(session.id);
 
       return true;
@@ -1106,13 +1107,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Setup presence channel for players
-  const setupPresenceChannel = (sessionId: string, nickname: string, avatarUrl: string | null, isHostPlayer: boolean, isTVDisplay: boolean = false) => {
+  // IMPORTANT: playerIdOverride ensures the presence key matches the player ID computed in joinSession,
+  // preventing duplicate avatars when refreshing or reconnecting
+  const setupPresenceChannel = (sessionId: string, nickname: string, avatarUrl: string | null, isHostPlayer: boolean, isTVDisplay: boolean = false, playerIdOverride?: string) => {
     if (presenceChannelRef.current) {
       supabase.removeChannel(presenceChannelRef.current);
     }
 
-    // Use consistent player ID
-    const playerId = isTVDisplay ? 'TV_DISPLAY' : getOrCreatePlayerId(myPlayerId || undefined);
+    // Use override if provided, otherwise fall back to existing logic
+    // This is critical for preventing duplicate player IDs on refresh/reconnect
+    const playerId = playerIdOverride || (isTVDisplay ? 'TV_DISPLAY' : getOrCreatePlayerId(myPlayerId || undefined));
     if (!myPlayerId && !isTVDisplay) setMyPlayerId(playerId);
 
     tvLog('Setting up presence', { playerId: playerId.slice(0, 8), nickname, isHost: isHostPlayer, isTVDisplay });
@@ -1155,13 +1159,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         });
 
+        // DEDUPLICATION: Prevent duplicate avatars from stale presence entries
+        // Keep the player with highest score (most likely the "real" active one)
+        const seenNicknames = new Map<string, TVPlayer>();
+        players.forEach(player => {
+          const existing = seenNicknames.get(player.nickname);
+          if (!existing || player.score > existing.score || (player.score === existing.score && player.isActive)) {
+            seenNicknames.set(player.nickname, player);
+          }
+        });
+        const deduplicatedPlayers = Array.from(seenNicknames.values());
+
         // Host should always appear first, then sort by score
-        players.sort((a, b) => {
+        deduplicatedPlayers.sort((a, b) => {
           if (a.isHost !== b.isHost) return a.isHost ? -1 : 1;
           return b.score - a.score;
         });
 
-        setState(prev => ({ ...prev, players }));
+        setState(prev => ({ ...prev, players: deduplicatedPlayers }));
 
         // NOTE: Auto-advance logic has been moved to database-based answer counting.
         // Presence sync is now ONLY used for UI updates (showing player states).
