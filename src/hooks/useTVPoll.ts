@@ -482,11 +482,15 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       .eq('session_id', sessionId);
 
     // Update session to poll-suggest phase
+    // CRITICAL: Clear stale suggester from previous round to prevent blocking issues
     const { error } = await supabase
       .from('tv_sessions')
       .update({
         status: 'poll-suggest',
         poll_start_time: null,
+        current_round_suggester_id: null,
+        current_round_suggester_nickname: null,
+        current_round_suggester_avatar_url: null,
       })
       .eq('id', sessionId);
 
@@ -524,28 +528,37 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       console.warn('[finalizePollAndStartGame] ⚠️ Failed to reset player activity:', resetError);
     }
 
-    // CRITICAL FIX: Sync user_id for ALL players whose player_id matches an auth user
-    // This fixes RLS policy issues where guests can't vote because user_id is missing
-    const { data: playersWithNullUserId } = await supabase
+    // CRITICAL FIX: MORE AGGRESSIVE SYNC - Update ALL players to ensure user_id matches player_id
+    // This handles edge cases where player_id is an auth UUID but user_id wasn't set during registration
+    const { data: allPlayers } = await supabase
       .from('tv_players')
-      .select('id, player_id')
-      .eq('tv_session_id', sessionId)
-      .is('user_id', null);
+      .select('id, player_id, user_id')
+      .eq('tv_session_id', sessionId);
 
-    if (playersWithNullUserId && playersWithNullUserId.length > 0) {
-      console.log('[finalizePollAndStartGame] 🔄 Syncing user_id for', playersWithNullUserId.length, 'players...');
-      for (const player of playersWithNullUserId) {
-        // player_id IS the auth user id for authenticated players
-        const { error: userIdError } = await supabase
-          .from('tv_players')
-          .update({ user_id: player.player_id, is_active: true })
-          .eq('id', player.id);
-        
-        if (userIdError) {
-          console.warn('[finalizePollAndStartGame] ⚠️ Failed to sync user_id for player:', player.id, userIdError);
+    if (allPlayers && allPlayers.length > 0) {
+      console.log('[finalizePollAndStartGame] 🔄 Checking user_id sync for', allPlayers.length, 'players...');
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      for (const player of allPlayers) {
+        // If player_id looks like a UUID (auth user) and user_id doesn't match, sync them
+        const isValidUUID = UUID_REGEX.test(player.player_id);
+        if (isValidUUID && player.user_id !== player.player_id) {
+          console.log('[finalizePollAndStartGame] 🔄 Syncing user_id for player:', player.id, {
+            player_id: player.player_id,
+            old_user_id: player.user_id
+          });
+          
+          const { error: userIdError } = await supabase
+            .from('tv_players')
+            .update({ user_id: player.player_id, is_active: true })
+            .eq('id', player.id);
+          
+          if (userIdError) {
+            console.warn('[finalizePollAndStartGame] ⚠️ Failed to sync user_id for player:', player.id, userIdError);
+          }
         }
       }
-      console.log('[finalizePollAndStartGame] ✅ Synced user_id for all players with null user_id');
+      console.log('[finalizePollAndStartGame] ✅ Completed user_id sync check for all players');
     }
 
     // CRITICAL: Extended delay for DB consistency (300ms, critical after poll/transitions)
@@ -574,8 +587,22 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     }
 
     // Calculate initial expected count - minimum 2 for paired mode
-    const expectedCount = Math.max(livePlayerCount, 2);
+    let expectedCount = Math.max(livePlayerCount, 2);
     console.log('[finalizePollAndStartGame] ✅ Final VERIFIED player count:', expectedCount);
+    
+    // CRITICAL: Get first suggestion's suggester - they will skip answering
+    const firstSuggestionForAdjust = topSuggestions[0];
+    
+    // CRITICAL FIX: Adjust expected count for suggester skip rule
+    // The suggester won't answer, so reduce expected count by 1
+    if (firstSuggestionForAdjust?.user_id) {
+      expectedCount = Math.max(1, expectedCount - 1);
+      console.log('[finalizePollAndStartGame] 👤 Adjusted for suggester:', { 
+        original: livePlayerCount, 
+        adjusted: expectedCount,
+        suggesterId: firstSuggestionForAdjust.user_id 
+      });
+    }
 
     tvLog('[useTVPoll] Resetting players and locking count for new game', { 
       livePlayerCount, 
@@ -682,6 +709,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     // Update session: set to countdown with questions loaded
     // CRITICAL: This bypasses lobby and starts game directly
+    // CRITICAL FIX: Include suggester fields to prevent stale data blocking players
     const { error } = await supabase
       .from('tv_sessions')
       .update({
@@ -695,6 +723,10 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         category_id: firstSuggestion.category_id,
         category_name: firstSuggestion.category_name,
         user_trivia_id: firstSuggestion.user_trivia_id,
+        // CRITICAL FIX: Set suggester fields so only they see Observer UI
+        current_round_suggester_id: firstSuggestion.user_id || null,
+        current_round_suggester_nickname: firstSuggestion.nickname || null,
+        current_round_suggester_avatar_url: firstSuggestion.avatar_url || null,
       })
       .eq('id', sessionId);
 
