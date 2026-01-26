@@ -74,6 +74,7 @@ const MissingIcons = lazy(() => import("./pages/admin/MissingIcons"));
 const FixIcons = lazy(() => import("./pages/admin/FixIcons"));
 const AIGenerations = lazy(() => import("./pages/admin/AIGenerations"));
 const PushNotifications = lazy(() => import("./pages/admin/PushNotifications"));
+const TVModeGameDocs = lazy(() => import("./pages/admin/TVModeGameDocs"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const AdminFlow = lazy(() => import("./pages/admin/Flow"));
 const AdminDesign = lazy(() => import("./pages/admin/Design"));
@@ -163,6 +164,7 @@ const App = () => (
                   <Route path="guest" element={<AdminGuestShowcase />} />
                   <Route path="economy" element={<AdminEconomy />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="tvmodegame" element={<TVModeGameDocs />} />
                 </Route>
                 <Route path="/shop/success" element={<ShopSuccess />} />
                 <Route path="/shop/cancel" element={<ShopCancel />} />
