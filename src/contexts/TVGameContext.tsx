@@ -845,7 +845,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         tvLog('Reusing existing player ID from session binding', { playerId: playerId.slice(0, 8) });
       } else {
         // Generate new player ID
-        playerId = getOrCreatePlayerId();
+        playerId = getOrCreatePlayerId(authUserId || undefined);
         // Store the binding for future rejoins
         setSessionBinding(session.id, playerId);
         tvLog('Created new player ID and session binding', { playerId: playerId.slice(0, 8) });
