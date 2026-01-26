@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useFriends } from "@/hooks/useFriends";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
 
@@ -351,12 +351,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               exit={{ opacity: 0, scale: 0.95 }}
                               className={`flex items-center gap-3 p-3 ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
                             >
-                              <Avatar className="w-11 h-11 border border-white/20">
-                                <AvatarImage src={result.avatar_url || undefined} />
-                                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
-                                  {result.nickname.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
+                              <SafeAvatar
+                                avatarUrl={result.avatar_url}
+                                fallback={result.nickname}
+                                className="w-11 h-11 border border-white/20"
+                                fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
+                              />
 
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm text-white truncate">{result.nickname}</p>

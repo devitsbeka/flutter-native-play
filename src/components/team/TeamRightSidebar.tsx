@@ -5,7 +5,7 @@ import { ActiveRoomsWidget } from "./widgets/ActiveRoomsWidget";
 import { MyTriviasWidget } from "./widgets/MyTriviasWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFriends, Friend } from "@/hooks/useFriends";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import tvIcon from "@/assets/tv-3d-icon.png";
 
 interface TeamRightSidebarProps {
@@ -156,12 +156,12 @@ export function TeamRightSidebar({
                     className="w-full flex items-center gap-3 p-3 hover:bg-muted/80 transition-colors"
                   >
                     <div className="relative">
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src={friend.avatarUrl || undefined} />
-                        <AvatarFallback className="bg-muted text-muted-foreground">
-                          {friend.nickname?.[0]?.toUpperCase() || "?"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <SafeAvatar
+                        avatarUrl={friend.avatarUrl}
+                        fallback={friend.nickname || '?'}
+                        className="w-10 h-10"
+                        fallbackClassName="bg-muted text-muted-foreground"
+                      />
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
                     </div>
                     
