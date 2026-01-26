@@ -11,9 +11,7 @@ import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerR
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
 import { useTVPoll } from '@/hooks/useTVPoll';
-import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 const TVJoinContent: React.FC = () => {
   const { code: urlCode, sessionId: urlSessionId } = useParams<{ code?: string; sessionId?: string }>();
@@ -25,7 +23,7 @@ const TVJoinContent: React.FC = () => {
   // Hard switch: QR should pass sessionId; manual entry uses 4-digit TV code.
   const initialCode = urlSessionId || querySessionId || urlCode || queryCode || '';
   
-  const { phase, sessionId, questions, leaveSession, myPlayerId, players } = useTVGame();
+  const { phase, sessionId, questions, leaveSession, myPlayerId, players, refetchSessionData } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);
 
   // Find current player from players array
@@ -60,39 +58,15 @@ const TVJoinContent: React.FC = () => {
   // This recovers from missed realtime updates during poll->game transitions
   useEffect(() => {
     if (hasInvalidState && sessionId) {
-      console.log('[TVJoin] ⚠️ Invalid state detected - attempting to refetch session...');
+      console.log('[TVJoin] ⚠️ Invalid state detected - triggering context refetch...');
       
-      const refetchSession = async () => {
-        try {
-          const { data: session, error } = await supabase
-            .from('tv_sessions')
-            .select('*')
-            .eq('id', sessionId)
-            .maybeSingle();
-          
-          if (error || !session) {
-            console.error('[TVJoin] Failed to refetch session:', error);
-            return;
-          }
-          
-          console.log('[TVJoin] 🔄 Refetched session:', {
-            status: session.status,
-            questionsCount: Array.isArray(session.questions) ? (session.questions as any[]).length : 0,
-            suggesterId: session.current_round_suggester_id,
-          });
-          
-          // The realtime subscription should pick up this fetch and update state
-          // If not, the component will retry on next render cycle
-        } catch (err) {
-          console.error('[TVJoin] Refetch error:', err);
-        }
-      };
-      
-      // Delay slightly to avoid race with realtime updates
-      const timer = setTimeout(refetchSession, 500);
+      // Use context's refetchSessionData which properly updates state
+      const timer = setTimeout(() => {
+        refetchSessionData();
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [hasInvalidState, sessionId]);
+  }, [hasInvalidState, sessionId, refetchSessionData]);
 
   // Show loading instead of error when waiting for questions
   if (hasInvalidState) {
