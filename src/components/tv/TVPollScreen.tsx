@@ -154,28 +154,28 @@ export const TVPollScreen: React.FC = () => {
           </div>
 
           {/* Active Players List */}
-          <div className="w-full bg-white/10 rounded-2xl p-4 border border-white/20">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="w-full bg-white/10 rounded-2xl p-4 border border-white/20 flex-1 overflow-hidden">
+            <div className="flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-purple-300" />
               <span className="text-white font-bold">მოთამაშეები ({activePlayers.length})</span>
             </div>
-            <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
               {activePlayers.map((player) => (
                 <div 
                   key={player.id || player.nickname}
-                  className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5"
+                  className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3"
                 >
                   <SafeAvatarImage
                     avatarUrl={player.avatar_url}
                     fallback={player.nickname}
-                    className="w-6 h-6 rounded-full object-cover"
-                    containerClassName="w-6 h-6 rounded-full text-xs"
+                    className="w-10 h-10 rounded-full object-cover"
+                    containerClassName="w-10 h-10 rounded-full text-sm"
                   />
-                  <span className="text-white text-sm">{player.nickname}</span>
+                  <span className="text-white text-lg font-medium truncate">{player.nickname}</span>
                 </div>
               ))}
               {activePlayers.length === 0 && (
-                <p className="text-purple-300 text-sm">ველოდებით მოთამაშეებს...</p>
+                <p className="text-purple-300 text-sm text-center py-4">ველოდებით მოთამაშეებს...</p>
               )}
             </div>
           </div>
