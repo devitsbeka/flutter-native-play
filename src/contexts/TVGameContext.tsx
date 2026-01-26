@@ -396,78 +396,35 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // CRITICAL FIX: Query LIVE active player count MULTIPLE TIMES for verification
-      // This prevents race conditions where a single stale query causes premature advancement
-      let liveActiveCount = 0;
-      let verificationPassed = false;
-      
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const { count } = await supabase
-          .from('tv_players')
-          .select('*', { count: 'exact', head: true })
-          .eq('tv_session_id', current.sessionId)
-          .eq('is_active', true);
-        
-        liveActiveCount = count ?? 0;
-        
-        // In paired mode, we expect at least 2 players
-        // If we only see 1, wait a bit and check again
-        if (current.isPaired && liveActiveCount >= 2) {
-          verificationPassed = true;
-          break;
-        } else if (!current.isPaired && liveActiveCount >= 1) {
-          verificationPassed = true;
-          break;
-        }
-        
-        if (attempt === 0) {
-          console.log('[AutoAdvance] 🔄 First count check low, waiting 200ms to verify...', { liveActiveCount });
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      }
-
-      const dbPlayerCount = liveActiveCount;
+      // TRUST the session's locked active_player_count (verified by confirmActivePlayers at game start)
+      // No need to re-verify live - confirmActivePlayers already performed robust 7-attempt verification
+      const sessionLockedCount = session.active_player_count ?? 0;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
-      
-      // SAFETY: In paired mode, ALWAYS expect at least 2 players
-      let expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
-      if (suggesterId) {
-        expectedCount = Math.max(1, expectedCount - 1); // At least 1 player must answer
-        console.log('[AutoAdvance] 👤 Suggester skips round:', { 
-          suggesterId: suggesterId.substring(0, 8) + '...', 
-          adjustedExpectedCount: expectedCount 
-        });
-      }
 
-      console.log('[AutoAdvance] 🎯 Player count check:', {
-        liveActiveCount,
-        sessionLockedCount: session.active_player_count,
+      console.log('[AutoAdvance] 🎯 Using session locked count:', {
+        sessionLockedCount,
         isPaired,
-        finalExpected: expectedCount,
-        verificationPassed,
+        suggesterId: suggesterId ? suggesterId.substring(0, 8) + '...' : null,
       });
 
-      // SAFETY CHECKS: Never advance if expected count is unreliable
+      // Calculate expected count from the locked session value
+      let expectedCount = sessionLockedCount;
+      if (suggesterId) {
+        expectedCount = Math.max(1, expectedCount - 1); // Suggester skips round
+        console.log('[AutoAdvance] 👤 Suggester skips round, adjusted expected:', expectedCount);
+      }
+
+      // SAFETY: Never advance if expected count is unreliable
       if (expectedCount <= 0) {
         console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0');
         return;
       }
 
-      // CRITICAL: In paired mode with no suggester, refuse to advance if only 1 expected
-      // This catches race conditions where count was locked before all players registered
+      // SAFETY: In paired mode with no suggester, refuse to advance if only 1 expected
+      // This catches edge cases where count was locked incorrectly
       if (isPaired && expectedCount === 1 && !suggesterId) {
-        console.log('[AutoAdvance] ⚠️ Refusing to advance: paired mode but only 1 expected (likely stale data)', {
-          expectedCount,
-          isPaired,
-          suggesterId,
-        });
-        return; // Wait for timer instead - this prevents premature advancement
-      }
-      
-      // ADDITIONAL SAFETY: If verification failed in paired mode, don't auto-advance
-      if (isPaired && !verificationPassed && !suggesterId) {
-        console.log('[AutoAdvance] ⚠️ Verification failed: could not confirm 2+ players, waiting for timer');
+        console.log('[AutoAdvance] ⚠️ Refusing: paired mode but only 1 expected (likely stale data)');
         return;
       }
 
