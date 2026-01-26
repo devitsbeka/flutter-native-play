@@ -223,7 +223,23 @@ export function UnifiedDesktopNav({
               <NavButton
                 icon={item.icon}
                 label={item.label}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  if (isActive(item.path)) {
+                    // Already on this page - scroll to top
+                    if (item.path === "/team") {
+                      const mainEl = document.getElementById("team-main-content");
+                      if (mainEl) {
+                        mainEl.scrollTo({ top: 0, behavior: "smooth" });
+                      } else {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    } else {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
                 active={isActive(item.path)}
                 badge={item.id === "team" ? pendingCount : undefined}
               />
