@@ -61,6 +61,7 @@ interface TVGameState {
 interface TVGameContextType extends TVGameState {
   // TV Display actions
   createSession: () => Promise<string | null>;
+  mirrorSession: (code: string) => Promise<boolean>; // Mirror an existing TV session
   // Controller actions
   joinSession: (code: string, nickname: string, avatarUrl?: string | null) => Promise<boolean>;
   // Host actions
@@ -79,6 +80,7 @@ interface TVGameContextType extends TVGameState {
   leaveSession: () => void;
   refetchSessionData: () => Promise<void>; // Force refetch session state from DB
   isHost: boolean;
+  isMirror: boolean; // Whether this is a mirror display (read-only)
   myPlayerId: string | null;
   myScore: number;
   myAnswer: string | null;
@@ -173,6 +175,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
 
   const [isHost, setIsHost] = useState(false);
+  const [isMirror, setIsMirror] = useState(false); // Mirror display mode (read-only)
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [myScore, setMyScore] = useState(0);
   const [myAnswer, setMyAnswer] = useState<string | null>(null);
@@ -1063,6 +1066,77 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error('Error creating TV session:', error);
       return null;
+    }
+  }, []);
+
+  // Mirror an existing TV session (called by secondary TV displays)
+  // This connects to an existing session as a read-only display
+  const mirrorSession = useCallback(async (code: string): Promise<boolean> => {
+    try {
+      const upperCode = code.trim().toUpperCase();
+      
+      // Look up session by 4-digit code
+      const { data: session, error } = await supabase
+        .from('tv_sessions')
+        .select('*')
+        .eq('tv_pairing_code', upperCode)
+        .neq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !session) {
+        console.error('Mirror session not found:', error);
+        return false;
+      }
+
+      tvLog('Mirroring session', { sessionId: session.id, code: upperCode });
+
+      // Parse questions from session
+      const rawQuestions = (session.questions as Json) || [];
+      const questions: TVQuestion[] = (Array.isArray(rawQuestions) ? rawQuestions : []).map((q: any) => ({
+        id: q.id || crypto.randomUUID(),
+        question_text: q.question_text || '',
+        correct_answer: q.correct_answer || '',
+        options: q.options || [],
+        icon_slug: q.icon_slug || null,
+      }));
+
+      // Set state to mirror the session
+      setState(prev => ({
+        ...prev,
+        code: session.tv_pairing_code,
+        sessionId: session.id,
+        roomId: session.room_id || null,
+        phase: mapDbStatusToPhase(session.status),
+        questions,
+        currentQuestionIndex: session.current_question_index || 0,
+        roundNumber: session.round_number || 1,
+        totalRounds: session.total_rounds || 1,
+        categoryName: session.category_name || null,
+        categoryIcon: session.category_icon || null,
+        roomName: session.room_name || null,
+        totalRoundsPlayed: session.total_rounds_played || 0,
+        accumulatedScores: (session.accumulated_scores as Record<string, number>) || {},
+        isPaired: session.is_paired || false,
+        currentRoundSuggesterId: session.current_round_suggester_id || null,
+        currentRoundSuggesterNickname: session.current_round_suggester_nickname || null,
+        currentRoundSuggesterAvatarUrl: session.current_round_suggester_avatar_url || null,
+      }));
+
+      setIsMirror(true);
+      setIsHost(false);
+
+      // Subscribe to session changes (same as primary display)
+      setupSessionSubscription(session.id);
+      setupPresenceChannel(session.id, 'TV_MIRROR', null, false, true, 'TV_MIRROR');
+      setupAnswersSubscription(session.id);
+
+      tvLog('Mirror session connected successfully');
+      return true;
+    } catch (error) {
+      console.error('Error mirroring session:', error);
+      return false;
     }
   }, []);
 
@@ -2514,6 +2588,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       value={{
         ...state,
         createSession,
+        mirrorSession,
         joinSession,
         startGame,
         startPlaying,
@@ -2528,6 +2603,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         leaveSession,
         refetchSessionData: refetchSession,
         isHost,
+        isMirror,
         myPlayerId,
         myScore,
         myAnswer,
