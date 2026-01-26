@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Input } from '@/components/ui/input';
 import { Tv, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { GuestJoinModal } from './GuestJoinModal';
 
 interface ControllerCodeEntryProps {
   initialCode?: string;
@@ -16,9 +16,9 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
   const [code, setCode] = useState(initialCode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showGuestModal, setShowGuestModal] = useState(false);
   const { joinSession } = useTVGame();
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   const isUuid = (value: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
@@ -29,9 +29,12 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
       const trimmed = (initialCode || '').trim();
       if (!trimmed || loading) return;
 
-      // If QR provided a session id and user is a guest, prompt for nickname immediately.
-      if (isUuid(trimmed) && !user) {
-        setShowGuestModal(true);
+      // If user is not authenticated, redirect to auth with return URL
+      if (!user) {
+        const returnUrl = isUuid(trimmed) 
+          ? `/join/session/${trimmed}` 
+          : `/join?code=${trimmed}`;
+        navigate(`/auth?returnTo=${encodeURIComponent(returnUrl)}`);
         return;
       }
 
@@ -84,13 +87,6 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     return success;
   };
 
-  const handleGuestJoin = async (nickname: string) => {
-    const success = await handleJoin(code, nickname);
-    if (success) {
-      setShowGuestModal(false);
-    }
-  };
-
   const handleSubmitCode = async () => {
     if (code.length < 4) {
       setError('კოდი უნდა იყოს მინიმუმ 4 სიმბოლო');
@@ -100,7 +96,11 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     if (user && profile) {
       await handleJoin(code, profile.nickname, profile.avatar_url || profile.animated_avatar_url || undefined);
     } else {
-      setShowGuestModal(true);
+      // Redirect to auth with return URL
+      const returnUrl = isUuid(code) 
+        ? `/join/session/${code}` 
+        : `/join?code=${code}`;
+      navigate(`/auth?returnTo=${encodeURIComponent(returnUrl)}`);
     }
   };
 
@@ -174,14 +174,6 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
           </ChunkyButton>
         </motion.div>
       </div>
-
-      {/* Guest Join Modal */}
-      <GuestJoinModal
-        isOpen={showGuestModal}
-        onJoinAsGuest={handleGuestJoin}
-        onClose={() => setShowGuestModal(false)}
-        code={code}
-      />
     </>
   );
 };
