@@ -17,7 +17,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { joinSession } = useTVGame();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const isUuid = (value: string) =>
@@ -25,6 +25,9 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
 
   // Auto-join if authenticated and code is provided
   useEffect(() => {
+    // Wait for auth to finish loading before making decisions
+    if (authLoading) return;
+    
     const attemptAutoJoin = async () => {
       const trimmed = (initialCode || '').trim();
       if (!trimmed || loading) return;
@@ -60,7 +63,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     };
     
     attemptAutoJoin();
-  }, [initialCode, user, profile?.nickname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialCode, user, profile?.nickname, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleJoin = async (codeToJoin: string, nickname: string, avatarUrl?: string) => {
     if (!codeToJoin || codeToJoin.length < 4) {
@@ -110,6 +113,16 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     setCode(value);
     setError(null);
   };
+
+  // Show loading while auth is checking
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-12 h-12 text-purple-300 animate-spin mb-4" />
+        <p className="text-white text-lg">იტვირთება...</p>
+      </div>
+    );
+  }
 
   return (
     <>
