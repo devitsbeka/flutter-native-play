@@ -710,7 +710,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     {suggestion.cover_image ? (
                       <img src={suggestion.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
                     ) : suggestion.icon_slug ? (
-                      <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-10 h-10" />
+                      <QuizCategoryIcon iconSlug={suggestion.icon_slug} size={40} className="w-10 h-10" />
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-purple-300" />

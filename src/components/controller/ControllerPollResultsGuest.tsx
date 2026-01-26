@@ -80,7 +80,7 @@ export const ControllerPollResultsGuest: React.FC<ControllerPollResultsGuestProp
             {suggestion.cover_image ? (
               <img src={suggestion.cover_image} alt="" className="w-12 h-12 rounded-lg object-cover" />
             ) : suggestion.icon_slug ? (
-              <QuizCategoryIcon iconSlug={suggestion.icon_slug} className="w-12 h-12" />
+              <QuizCategoryIcon iconSlug={suggestion.icon_slug} size={48} className="w-12 h-12" />
             ) : (
               <div className="w-12 h-12 rounded-lg bg-purple-500/30 flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-purple-300" />
