@@ -45,17 +45,13 @@ const TVJoinContent: React.FC = () => {
     }
   }, [sessionId]);
 
-  // Show code entry if not joined yet
-  if (!isJoined) {
-    return <ControllerCodeEntry initialCode={initialCode} onJoined={() => setIsJoined(true)} />;
-  }
-
   // Detect invalid state: phase requires questions but none exist
   const requiresQuestions = ['question', 'playing', 'reveal'].includes(phase);
-  const hasInvalidState = requiresQuestions && (!questions || questions.length === 0);
+  const hasInvalidState = isJoined && requiresQuestions && (!questions || questions.length === 0);
 
   // CRITICAL FIX: Auto-refetch questions when in invalid state
   // This recovers from missed realtime updates during poll->game transitions
+  // IMPORTANT: This hook must be called unconditionally (before any early returns)
   useEffect(() => {
     if (hasInvalidState && sessionId) {
       console.log('[TVJoin] ⚠️ Invalid state detected - triggering context refetch...');
@@ -67,6 +63,11 @@ const TVJoinContent: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [hasInvalidState, sessionId, refetchSessionData]);
+
+  // Show code entry if not joined yet
+  if (!isJoined) {
+    return <ControllerCodeEntry initialCode={initialCode} onJoined={() => setIsJoined(true)} />;
+  }
 
   // Show loading instead of error when waiting for questions
   if (hasInvalidState) {
