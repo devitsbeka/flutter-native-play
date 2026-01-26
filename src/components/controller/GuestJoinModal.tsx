@@ -43,7 +43,7 @@ export const GuestJoinModal = React.forwardRef<HTMLDivElement, GuestJoinModalPro
     }
     
     // Reserved names check
-    const reserved = ['TV_DISPLAY', 'SYSTEM', 'ADMIN', 'HOST'];
+    const reserved = ['TV_DISPLAY', 'TV_MIRROR', 'SYSTEM', 'ADMIN', 'HOST'];
     if (reserved.includes(trimmed.toUpperCase())) {
       setNicknameError('ეს სახელი დაცულია');
       return false;
