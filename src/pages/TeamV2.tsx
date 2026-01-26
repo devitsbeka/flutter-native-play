@@ -959,15 +959,18 @@ function TeamContentV2() {
           }
 
           // Invalidate queries to refresh the list
-          queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
-          queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
-          queryClient.invalidateQueries({ queryKey: ["my-recent-trivias-widget"] });
+          await queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+          await queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
+          await queryClient.invalidateQueries({ queryKey: ["my-recent-trivias-widget"] });
+
+          // Brief delay to allow UI to refresh before switching tabs
+          await new Promise(resolve => setTimeout(resolve, 200));
 
           // Close modal and show success
           setShowBlindTriviaModal(false);
           setEditingDraftId(null);
           setActiveTab("my-content");
-          toast.success(`ტრივია "${title}" შეიქმნა!`);
+          toast.success(`✨ ტრივია "${title}" შეიქმნა!`);
         }}
         resumeDraftId={editingDraftId}
         onDraftResumed={() => setEditingDraftId(null)}
