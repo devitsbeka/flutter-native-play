@@ -274,18 +274,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const confirmActivePlayers = useCallback(async (sessionId: string): Promise<number> => {
     console.log('[confirmActivePlayers] 🔒 Starting robust player verification...');
     
-    // Step 1: Bulk reset ALL players to is_active = true
+    // CRITICAL: System devices that should NEVER be counted as players
+    const systemDeviceIdentifiers = ['TV_DISPLAY', 'TV_MIRROR'];
+    
+    // Step 1: Bulk reset ALL real players to is_active = true (exclude system devices)
     const { error: resetError } = await supabase
       .from('tv_players')
       .update({ is_active: true })
-      .eq('tv_session_id', sessionId);
+      .eq('tv_session_id', sessionId)
+      .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
+      .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
 
     if (resetError) {
       console.warn('[confirmActivePlayers] ⚠️ Reset error:', resetError);
     }
     
     // Step 2: Extended delay for DB consistency (critical after poll/transitions)
-    // INCREASED to 300ms for more reliable propagation after poll phase
     await new Promise(resolve => setTimeout(resolve, 300));
     
     // Step 3: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
@@ -294,14 +298,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const minExpected = isPaired ? 2 : 1;
     
     for (let attempt = 0; attempt < 7; attempt++) {
+      // CRITICAL: Exclude system devices from the count - they don't answer questions!
       const { count } = await supabase
         .from('tv_players')
         .select('*', { count: 'exact', head: true })
         .eq('tv_session_id', sessionId)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
+        .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
       
       verifiedCount = count ?? 0;
-      console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/7: ${verifiedCount} players`);
+      console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/7: ${verifiedCount} real players (excluding system devices)`);
       
       if (verifiedCount >= minExpected) break;
       
@@ -318,7 +325,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .update({ active_player_count: finalCount })
       .eq('id', sessionId);
     
-    console.log('[confirmActivePlayers] ✅ Locked player count:', finalCount);
+    console.log('[confirmActivePlayers] ✅ Locked player count:', finalCount, '(system devices excluded)');
     return finalCount;
   }, []);
 
