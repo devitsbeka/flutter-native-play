@@ -212,7 +212,16 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
           },
         });
 
-        if (error) throw error;
+        // Check for FunctionsHttpError (422, 500, etc.)
+        if (error) {
+          const errorMessage = error.message || `რაუნდი "${roundName}" ვერ დაგენერირდა`;
+          throw new Error(errorMessage);
+        }
+
+        // Also check for error in the data itself (edge function error response)
+        if (data?.error) {
+          throw new Error(`რაუნდი "${roundName}": ${data.error}`);
+        }
 
         const generatedQuestions = data?.questions || [];
         if (!generatedQuestions.length) {
