@@ -2204,9 +2204,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           tvLog('Cleared all answers for fresh game start');
         }
         
-        // CRITICAL FIX: Wait for DB to fully process deletions before proceeding
+        // CRITICAL FIX: Wait 300ms (was 100ms) for DB to fully process deletions
         // This prevents race conditions where stale answer counts affect auto-advance
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       // CRITICAL FIX: Reset timing protection refs for the new game
