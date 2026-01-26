@@ -6,7 +6,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
 import { Avatar } from '@/components/shared/Avatar';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
-import confetti from 'canvas-confetti';
+
 
 export const TVPollScreen: React.FC = () => {
   const { players, code, sessionId } = useTVGame();
@@ -22,7 +22,6 @@ export const TVPollScreen: React.FC = () => {
   });
 
   const [timeRemaining, setTimeRemaining] = useState(pollDuration);
-  const [previousLeader, setPreviousLeader] = useState<string | null>(null);
 
   // Calculate time remaining for voting phase
   useEffect(() => {
@@ -41,23 +40,6 @@ export const TVPollScreen: React.FC = () => {
     const interval = setInterval(updateTime, 100);
     return () => clearInterval(interval);
   }, [pollPhase, pollStartTime, pollDuration]);
-
-  // Celebrate when leader changes
-  useEffect(() => {
-    if (suggestions.length > 0 && pollPhase === 'voting') {
-      const currentLeader = suggestions[0]?.id;
-      if (previousLeader && currentLeader !== previousLeader) {
-        // Leader changed! Celebrate
-        confetti({
-          particleCount: 30,
-          spread: 60,
-          origin: { y: 0.3 },
-          colors: ['#A855F7', '#7C3AED', '#EC4899'],
-        });
-      }
-      setPreviousLeader(currentLeader);
-    }
-  }, [suggestions, pollPhase, previousLeader]);
 
   const joinUrl = `${window.location.origin}/join/session/${sessionId}`;
 
@@ -132,9 +114,9 @@ export const TVPollScreen: React.FC = () => {
               </p>
             </motion.div>
           ) : (
-            <div className={`grid ${getGridCols(suggestions.length)} gap-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
+            <div className={`grid ${getGridCols(suggestions.filter(s => s.category_name && s.category_name.trim()).length)} gap-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
               <AnimatePresence mode="popLayout">
-                {suggestions.map((suggestion, index) => (
+                {suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
                   <SuggestionCard
                     key={suggestion.id}
                     suggestion={suggestion}

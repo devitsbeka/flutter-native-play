@@ -692,7 +692,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                     onClick={() => handleVote(suggestion.id)}
                     className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all active:scale-98 ${
                       hasVoted
-                        ? 'bg-purple-500/30 border-purple-400'
+                        ? 'bg-green-500/30 border-green-400'
                         : 'bg-white/10 border-white/20 hover:border-purple-400'
                     }`}
                   >

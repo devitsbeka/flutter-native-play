@@ -583,18 +583,94 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       await supabase.from('tv_session_queue').insert(queueItem as any);
     }
 
-    // Update session: reset state and set to lobby (game will start from there)
-    // CRITICAL: Also set the active_player_count to ensure proper auto-advance
+    // CRITICAL FIX: Fetch questions for first category and start countdown directly
+    // This bypasses the lobby phase so game starts with a single click
+    const firstSuggestion = topSuggestions[0];
+    let questions: Array<{
+      id: string;
+      question_text: string;
+      correct_answer: string;
+      incorrect_answers: any;
+      difficulty: string;
+      icon_slug: string | null;
+    }> | null = null;
+
+    // Fetch questions based on source type
+    if (firstSuggestion.source_type === 'category' && firstSuggestion.category_id) {
+      const { data: questionsData } = await supabase
+        .from('questions')
+        .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+        .eq('category_id', firstSuggestion.category_id)
+        .eq('is_active', true)
+        .limit(10);
+
+      if (questionsData && questionsData.length > 0) {
+        questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10);
+      }
+    } else if (firstSuggestion.source_type === 'trivia' && firstSuggestion.user_trivia_id) {
+      // Fetch from user_quiz_posts table (questions stored as JSON)
+      const { data: postData } = await supabase
+        .from('user_quiz_posts')
+        .select('questions')
+        .eq('id', firstSuggestion.user_trivia_id)
+        .single();
+
+      if (postData?.questions && Array.isArray(postData.questions)) {
+        questions = (postData.questions as any[]).map((q: any, idx: number) => ({
+          id: `user-q-${idx}`,
+          question_text: q.question_text || q.question || '',
+          correct_answer: q.correct_answer || '',
+          incorrect_answers: q.incorrect_answers || [],
+          difficulty: 'medium',
+          icon_slug: q.icon_slug || null,
+        }));
+      }
+    }
+
+    // If no questions found, fall back to lobby mode
+    if (!questions || questions.length === 0) {
+      tvLog('[useTVPoll] No questions found for first category, falling back to lobby');
+      const { error } = await supabase
+        .from('tv_sessions')
+        .update({
+          status: 'paired',
+          current_question_index: 0,
+          questions: null,
+          round_number: 1,
+          total_rounds: topN,
+          poll_start_time: null,
+          active_player_count: expectedCount,
+        })
+        .eq('id', sessionId);
+
+      if (error) {
+        tvLogError('[useTVPoll] Error finalizing poll (fallback)', error);
+        return false;
+      }
+      return true;
+    }
+
+    // Clear any old player answers for this session
+    await supabase
+      .from('player_answers')
+      .delete()
+      .eq('tv_session_id', sessionId);
+
+    // Update session: set to countdown with questions loaded
+    // CRITICAL: This bypasses lobby and starts game directly
     const { error } = await supabase
       .from('tv_sessions')
       .update({
-        status: 'paired',
+        status: 'countdown', // Go directly to countdown!
         current_question_index: 0,
-        questions: null,
+        questions: questions,
         round_number: 1,
         total_rounds: topN,
         poll_start_time: null,
-        active_player_count: expectedCount, // LOCK COUNT
+        active_player_count: expectedCount,
+        category_id: firstSuggestion.category_id,
+        category_name: firstSuggestion.category_name,
+        user_trivia_id: firstSuggestion.user_trivia_id,
       })
       .eq('id', sessionId);
 
@@ -603,6 +679,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       return false;
     }
 
+    tvLog('[useTVPoll] ✅ Poll finalized and game started directly in countdown');
     return true;
   }, [sessionId, suggestions]);
 
