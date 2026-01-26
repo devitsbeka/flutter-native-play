@@ -250,8 +250,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
     if (info.offset.x < -100) {
       setShowDeleteConfirm(true);
     }
-    // Reset position
-    x.set(0);
+    // Let framer-motion spring handle snap-back (no manual x.set)
     isSwiping.current = false;
   };
 
@@ -298,23 +297,23 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
         )}
         
         <motion.div
-          initial={{ opacity: 0, x: fullWidth ? 0 : 20, y: fullWidth ? 10 : 0 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          transition={{ delay: index * 0.05 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
-          dragConstraints={{ left: -150, right: 0 }}
-          dragElastic={0.1}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
           onDragEnd={isMobile ? handleDragEnd : undefined}
           onPointerDown={isMobile ? handlePointerDown : undefined}
           onPointerMove={isMobile ? handlePointerMove : undefined}
           onClick={handleClick}
-          className={`${fullWidth ? "w-full" : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start"} rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-            room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
-          }`}
           style={{
             boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
             ...(isMobile ? { x } : {}),
           }}
+          className={`${fullWidth ? "w-full" : "flex-shrink-0 w-[70vw] max-w-[280px] snap-start"} rounded-2xl overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
+            room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
+          }`}
         >
           {/* Full card with dynamic gradient background */}
           <GradientBackground
@@ -514,7 +513,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
     if (info.offset.x < -100) {
       setShowDeleteConfirm(true);
     }
-    x.set(0);
+    // Let framer-motion spring handle snap-back (no manual x.set)
     isSwiping.current = false;
   };
 
@@ -559,23 +558,23 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
         )}
         
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.03 }}
+          transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 30 }}
           drag={isMobile ? "x" : false}
-          dragConstraints={{ left: -150, right: 0 }}
-          dragElastic={0.1}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
           onDragEnd={isMobile ? handleDragEnd : undefined}
           onPointerDown={isMobile ? handlePointerDown : undefined}
           onPointerMove={isMobile ? handlePointerMove : undefined}
           onClick={handleClick}
-          className={`aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] ${
-            room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
-          }`}
           style={{
             boxShadow: "0 4px 0 0 hsl(var(--border)), 0 6px 20px -4px rgba(0,0,0,0.1)",
             ...(isMobile ? { x, opacity: cardOpacity } : {}),
           }}
+          className={`aspect-[1.45/1] md:aspect-[1.15/1] rounded-2xl overflow-hidden cursor-pointer ${!isMobile ? "transition-transform duration-200 hover:scale-[1.02]" : ""} active:scale-[0.98] ${
+            room.has_unread_activity ? "ring-2 ring-primary ring-offset-2" : ""
+          }`}
         >
           <GradientBackground
             colors={gradientPreset.colors}
