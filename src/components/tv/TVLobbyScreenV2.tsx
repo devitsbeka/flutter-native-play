@@ -340,7 +340,7 @@ export const TVLobbyScreenV2: React.FC = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 p-4 flex flex-col overflow-hidden relative">
       {/* Branding Overlay */}
-      <TVBrandingOverlay showLogo={false} showCode compact />
+      <TVBrandingOverlay showLogo={false} showCode={false} />
 
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
