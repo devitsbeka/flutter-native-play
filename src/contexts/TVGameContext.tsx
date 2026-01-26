@@ -77,6 +77,7 @@ interface TVGameContextType extends TVGameState {
   markReady: () => Promise<void>; // Mark player as ready for next round
   // Shared
   leaveSession: () => void;
+  refetchSessionData: () => Promise<void>; // Force refetch session state from DB
   isHost: boolean;
   myPlayerId: string | null;
   myScore: number;
@@ -2495,6 +2496,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setMyAnswer(null);
   }, []);
 
+  // Wrapper to call refetchSessionData with current sessionId
+  const refetchSession = useCallback(async () => {
+    if (state.sessionId) {
+      await refetchSessionData(state.sessionId);
+    }
+  }, [state.sessionId, refetchSessionData]);
+
   return (
     <TVGameContext.Provider
       value={{
@@ -2512,6 +2520,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         submitAnswer,
         markReady,
         leaveSession,
+        refetchSessionData: refetchSession,
         isHost,
         myPlayerId,
         myScore,
