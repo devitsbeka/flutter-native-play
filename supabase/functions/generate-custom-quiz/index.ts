@@ -430,9 +430,13 @@ Return ONLY valid JSON.`;
     const factCheckedQuestions = candidateQuestions.filter((_, idx) => fcByIndex.get(idx)?.pass);
 
     const finalQuestions = factCheckedQuestions.slice(0, questionCount);
-    if (finalQuestions.length < questionCount) {
+    
+    // Be lenient: accept if we got at least 50% of requested questions
+    // Only fail if we got less than half
+    const minimumRequired = Math.max(1, Math.floor(questionCount * 0.5));
+    if (finalQuestions.length < minimumRequired) {
       console.warn(
-        `Fact-check filtered too many: requested ${questionCount}, got ${finalQuestions.length}.`,
+        `Fact-check filtered too many: requested ${questionCount}, got ${finalQuestions.length}, minimum ${minimumRequired}.`,
       );
       return new Response(
         JSON.stringify({
@@ -440,6 +444,11 @@ Return ONLY valid JSON.`;
         }),
         { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    }
+    
+    // Log if we're returning fewer than requested (but still above threshold)
+    if (finalQuestions.length < questionCount) {
+      console.log(`Returning ${finalQuestions.length}/${questionCount} questions after fact-check filtering.`);
     }
 
     // Blocked generic keywords that match random icons
