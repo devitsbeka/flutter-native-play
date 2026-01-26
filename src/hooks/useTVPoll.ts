@@ -512,6 +512,28 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       return false;
     }
 
+    // CRITICAL FIX: Reset ALL players to is_active = true BEFORE starting new game
+    // This ensures everyone is counted after poll phase where presence may have flickered
+    await supabase
+      .from('tv_players')
+      .update({ is_active: true })
+      .eq('tv_session_id', sessionId);
+
+    // Query LIVE active player count after reset
+    const { count: livePlayerCount } = await supabase
+      .from('tv_players')
+      .select('*', { count: 'exact', head: true })
+      .eq('tv_session_id', sessionId)
+      .eq('is_active', true);
+
+    // Calculate initial expected count - minimum 2 for paired mode
+    const expectedCount = Math.max(livePlayerCount ?? 2, 2);
+
+    tvLog('[useTVPoll] Resetting players and locking count for new game', { 
+      livePlayerCount, 
+      expectedCount 
+    });
+
     // Clear existing queue
     await supabase
       .from('tv_session_queue')
@@ -538,6 +560,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     }
 
     // Update session: reset state and set to lobby (game will start from there)
+    // CRITICAL: Also set the active_player_count to ensure proper auto-advance
     const { error } = await supabase
       .from('tv_sessions')
       .update({
@@ -547,6 +570,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         round_number: 1,
         total_rounds: topN,
         poll_start_time: null,
+        active_player_count: expectedCount, // LOCK COUNT
       })
       .eq('id', sessionId);
 
