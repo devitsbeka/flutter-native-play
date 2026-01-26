@@ -278,6 +278,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const systemDeviceIdentifiers = ['TV_DISPLAY', 'TV_MIRROR'];
     
     // Step 1: Bulk reset ALL real players to is_active = true (exclude system devices)
+    // This also activates players who joined mid-game and were initially marked inactive
     const { error: resetError } = await supabase
       .from('tv_players')
       .update({ is_active: true })
@@ -287,6 +288,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     if (resetError) {
       console.warn('[confirmActivePlayers] ⚠️ Reset error:', resetError);
+    } else {
+      console.log('[confirmActivePlayers] 🔄 Reset all players to active (including mid-game joiners)');
     }
     
     // Step 2: Extended delay for DB consistency (critical after poll/transitions)
@@ -1281,13 +1284,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           .eq('player_id', playerId)
           .maybeSingle();
 
+        // CRITICAL FIX: Determine if we're joining mid-game
+        // If so, new players should NOT be marked active until the next question starts
+        // This prevents breaking the active_player_count that was locked at question start
+        const isActiveGameplay = ['playing', 'reveal', 'question'].includes(session.status);
+        const isReturningPlayer = !!existingPlayer;
+        
+        // Only mark active if:
+        // - Not in active gameplay, OR
+        // - They're a returning player who was already part of this round
+        const shouldBeActive = !isActiveGameplay || isReturningPlayer;
+        
         if (existingPlayer) {
           // Player exists - update their is_active status to true (they're back!)
           // CRITICAL FIX: Also preserve/set user_id for authenticated players
           await supabase
             .from('tv_players')
             .update({ 
-              is_active: true,
+              is_active: true, // Returning players are always active
               nickname,
               avatar_url: avatarUrl || null,
               user_id: authUid || (existingPlayer as any).user_id, // Preserve or set user_id
@@ -1296,6 +1310,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           tvLog('Updated existing tv_player as active', { playerId: playerId.slice(0, 8), userId: authUid?.slice(0, 8) });
         } else {
           // New player - insert them
+          // CRITICAL: If game is in progress, mark as INACTIVE until next question
+          // This prevents breaking the active_player_count for the current question
           const { error: insertError } = await supabase
             .from('tv_players')
             .insert({
@@ -1305,14 +1321,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               nickname,
               avatar_url: avatarUrl || null,
               is_host: isHostPlayer,
-              is_active: true,
+              is_active: shouldBeActive, // Inactive if joining mid-game!
             });
 
           if (insertError) {
             // Log but don't fail - presence will still work
             console.warn('[joinSession] Failed to insert tv_player:', insertError);
           } else {
-            tvLog('Registered new tv_player', { playerId: playerId.slice(0, 8), isHost: isHostPlayer });
+            tvLog('Registered new tv_player', { 
+              playerId: playerId.slice(0, 8), 
+              isHost: isHostPlayer,
+              isActive: shouldBeActive,
+              joinedMidGame: isActiveGameplay && !isReturningPlayer
+            });
+            
+            if (!shouldBeActive) {
+              console.log('[joinSession] ⚠️ Player joined mid-game - marked INACTIVE until next question');
+            }
           }
         }
       }
