@@ -301,10 +301,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
       
-      // Safety guard: don't check in first 500ms after question start
-      // Increased from 300ms to account for network latency and DB propagation
+      // Safety guard: don't check in first 1000ms after question start
+      // Increased to 1s to account for network latency, DB propagation, and player sync
       const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-      if (timeSinceStart < 500) {
+      if (timeSinceStart < 1000) {
         console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart });
         return;
       }
@@ -1803,6 +1803,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         startPlayingMutexRef.current = false;
         return;
       }
+
+      // CRITICAL FIX: Reset ALL players to is_active = true before counting
+      // This ensures players who may have flickered during transitions are properly counted
+      await supabase
+        .from('tv_players')
+        .update({ is_active: true })
+        .eq('tv_session_id', state.sessionId);
+
+      // Small delay to ensure DB consistency after bulk update
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       // FIX: Query LIVE active player count from tv_players table
       // This is the authoritative count right now, not the stale session value
