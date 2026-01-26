@@ -6,7 +6,7 @@ import { Users, Crown, Play, ChevronDown, Loader2 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { supabase } from '@/integrations/supabase/client';
-import retroTvIcon from '@/assets/retro-tv-icon.png';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 interface Category {
   id: string;
