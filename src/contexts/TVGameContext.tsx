@@ -1371,6 +1371,27 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setupPresenceChannel(session.id, nickname, avatarUrl || null, isHostPlayer, isTVDisplay, playerId);
       setupAnswersSubscription(session.id);
 
+      // CRITICAL FIX: Restore myAnswer from database on rejoin
+      // This prevents the host from seeing clickable answer buttons when they've already answered
+      const currentQIdx = session.current_question_index || 0;
+      if (session.status === 'playing' || session.status === 'reveal') {
+        const { data: existingAnswer } = await supabase
+          .from('player_answers')
+          .select('answer')
+          .eq('tv_session_id', session.id)
+          .eq('user_id', playerId)
+          .eq('question_index', currentQIdx)
+          .maybeSingle();
+        
+        if (existingAnswer) {
+          tvLog('Restored myAnswer from database on rejoin', { 
+            answer: existingAnswer.answer.substring(0, 20), 
+            questionIndex: currentQIdx 
+          });
+          setMyAnswer(existingAnswer.answer);
+        }
+      }
+
       return true;
     } catch (error) {
       console.error('Error joining session:', error);
@@ -2220,13 +2241,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         tvLogError('submitAnswer DB insert', error);
         // IMPORTANT: Even on duplicate key error (23505), the answer exists in DB
         // Still trigger the auto-advance check - this prevents stalls in True/False games
-        if (isHostRef.current && error.code === '23505') {
+        if (error.code === '23505') {
           console.log('[AutoAdvance] ⚠️ Duplicate key error (23505) - answer already exists');
-          console.log('[AutoAdvance] 🔄 Triggering check anyway to prevent stall...');
-          tvLog('Duplicate answer detected, triggering auto-advance check');
-          setTimeout(() => {
-            checkAndAdvanceIfAllAnswered();
-          }, 150);
+          
+          // CRITICAL FIX: Set myAnswer anyway so UI shows "Answer Submitted" state
+          // This prevents users from seeing clickable buttons after a duplicate error
+          setMyAnswer(answer);
+          
+          if (isHostRef.current) {
+            console.log('[AutoAdvance] 🔄 Triggering check anyway to prevent stall...');
+            tvLog('Duplicate answer detected, triggering auto-advance check');
+            setTimeout(() => {
+              checkAndAdvanceIfAllAnswered();
+            }, 150);
+          }
         }
       } else {
         console.log('[AutoAdvance] ✅ Answer inserted successfully', {

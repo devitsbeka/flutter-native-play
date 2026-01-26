@@ -501,7 +501,20 @@ const TVHostController: React.FC = () => {
   };
 
   const handleAnswer = async (answer: string) => {
-    if (hasAnswered || !currentQuestion) return;
+    // DEBUG: Log click attempt to diagnose blocking issue
+    console.log('[TVHostController] handleAnswer called:', {
+      answer: answer.substring(0, 20) + '...',
+      hasAnswered,
+      myAnswer: myAnswer ? 'SET' : 'NULL',
+      isSuggester,
+      currentQuestionIndex,
+      currentQuestion: !!currentQuestion,
+    });
+    
+    if (hasAnswered || !currentQuestion) {
+      console.log('[TVHostController] ⚠️ BLOCKED:', { hasAnswered, noQuestion: !currentQuestion });
+      return;
+    }
     
     try {
       // Use context's submitAnswer which handles scoring and presence
