@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { t } from "@/lib/i18n";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 // Import default bot avatars
 import botAvatar1 from '@/assets/avatars/bot-avatar-1.png';
@@ -91,7 +92,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     try {
       setStep("camera");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 720 } },
+        video: { 
+          facingMode: { ideal: "user" },
+          width: { min: 320, ideal: 720, max: 1280 },
+          height: { min: 320, ideal: 720, max: 1280 }
+        },
         audio: false,
       });
       
@@ -483,9 +488,10 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-primary/30 mb-2">
               {profile?.avatar_url ? (
                 <img 
-                  src={profile.avatar_url} 
+                  src={resolveAvatarUrl(profile.avatar_url) || profile.avatar_url} 
                   alt="Current avatar" 
                   className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info, Heart } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import medalGold from "@/assets/icons/medal-gold.png";
@@ -164,12 +164,12 @@ export default function TriviaLobby() {
             onClick={() => openProfile(creator.user_id)}
             className="absolute top-4 right-4 z-10"
           >
-            <Avatar className="w-9 h-9 border-2 border-white/40 shadow-lg">
-              <AvatarImage src={creator.avatar_url || undefined} />
-              <AvatarFallback className="text-sm bg-white/20 text-white">
-                {creator.nickname?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <SafeAvatar
+              avatarUrl={creator.avatar_url}
+              fallback={creator.nickname || 'U'}
+              className="w-9 h-9 border-2 border-white/40 shadow-lg"
+              fallbackClassName="text-sm bg-white/20 text-white"
+            />
           </button>
         )}
 
@@ -273,12 +273,12 @@ export default function TriviaLobby() {
                   </div>
 
                   {/* Avatar */}
-                  <Avatar className="w-9 h-9 border border-border">
-                    <AvatarImage src={entry.avatar_url || undefined} />
-                    <AvatarFallback className="text-xs bg-muted">
-                      {entry.nickname?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <SafeAvatar
+                    avatarUrl={entry.avatar_url}
+                    fallback={entry.nickname || 'U'}
+                    className="w-9 h-9 border border-border"
+                    fallbackClassName="text-xs bg-muted"
+                  />
 
                   {/* Name */}
                   <div className="flex-1 min-w-0">

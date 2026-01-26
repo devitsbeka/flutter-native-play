@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {
@@ -208,7 +209,7 @@ export function AvatarCircle({
           <>
             {/* Static avatar image */}
             <motion.img 
-              src={avatarUrl} 
+              src={resolveAvatarUrl(avatarUrl) || avatarUrl} 
               alt="Avatar" 
               className="rounded-full object-cover"
               style={{

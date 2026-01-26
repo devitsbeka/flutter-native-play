@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
 import { ChevronDown, Check, Crown } from 'lucide-react';
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Popover,
@@ -168,10 +169,11 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
                   {/* Avatar with status */}
                   <div className="relative flex-shrink-0">
                     {user.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.nickname}
+                      <SafeAvatarImage
+                        avatarUrl={user.avatar_url}
+                        fallback={user.nickname || '?'}
                         className="w-10 h-10 rounded-full object-cover"
+                        containerClassName="w-10 h-10 rounded-full"
                       />
                     ) : user.isGuest ? (
                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
