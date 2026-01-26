@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
+  const returnTo = searchParams.get('returnTo');
   const { t } = useLanguage();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -41,9 +42,18 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Check for saved returnTo from OAuth flow first
+      const savedReturnTo = localStorage.getItem('authReturnTo');
+      if (savedReturnTo) {
+        localStorage.removeItem('authReturnTo');
+        navigate(savedReturnTo);
+      } else if (returnTo) {
+        navigate(decodeURIComponent(returnTo));
+      } else {
+        navigate("/");
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, returnTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +122,7 @@ export default function Auth() {
           } else {
             notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: "🎉" });
           }
-          navigate("/");
+          navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
       } else {
         const result = signInSchema.safeParse({ email, password });
@@ -133,7 +143,7 @@ export default function Auth() {
           notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
         } else {
           notify.success(t("auth.welcomeBack"), { description: t("auth.signIn"), icon: "👋" });
-          navigate("/");
+          navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
       }
     } catch (err) {
@@ -153,7 +163,7 @@ export default function Auth() {
         }
       } else {
         notify.success(t("common.welcome"), { description: t("auth.signIn"), icon: "🍎" });
-        navigate("/");
+        navigate(returnTo ? decodeURIComponent(returnTo) : "/");
       }
     } catch (err) {
       notify.error(t("common.error"), { description: t("errors.generic") });
@@ -165,6 +175,10 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      // Store returnTo for OAuth redirect (will be checked after OAuth callback)
+      if (returnTo) {
+        localStorage.setItem('authReturnTo', returnTo);
+      }
       const { error } = await signInWithGoogle();
       if (error) {
         notify.error(t("common.error"), { description: error.message });
