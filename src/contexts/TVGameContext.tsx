@@ -313,22 +313,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // FIX: Use LOCKED player count from session, not live tv_players query
-      // Live query is unreliable due to presence flickers marking players as inactive
-      // The active_player_count is locked at game/round start and stays stable
-      const dbPlayerCount = session.active_player_count ?? 0;
+      // FIX: Query LIVE active player count from tv_players table
+      // The session's locked count can be stale if set before all players reconnected
+      const { count: liveActiveCount } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', current.sessionId)
+        .eq('is_active', true);
+
+      const dbPlayerCount = liveActiveCount ?? session.active_player_count ?? 0;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
       
-      // If there's a suggester, they skip this round - reduce expected count by 1
+      // SAFETY: In paired mode, ALWAYS expect at least 2 players
       let expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
       if (suggesterId) {
-        expectedCount = Math.max(0, expectedCount - 1);
+        expectedCount = Math.max(1, expectedCount - 1); // At least 1 player must answer
         console.log('[AutoAdvance] 👤 Suggester skips round:', { 
           suggesterId: suggesterId.substring(0, 8) + '...', 
           adjustedExpectedCount: expectedCount 
         });
       }
+
+      console.log('[AutoAdvance] 🎯 Player count check:', {
+        liveActiveCount,
+        sessionLockedCount: session.active_player_count,
+        isPaired,
+        finalExpected: expectedCount,
+      });
 
       if (expectedCount <= 0) {
         console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0');
@@ -1691,40 +1703,45 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // Read the active_player_count that was locked in startGame/markReady
-      let dbPlayerCount = session?.active_player_count || 0;
-      
-      // FIX: Verify player count is correct (in case players joined/left during countdown)
-      const currentStatePlayerCount = state.isPaired 
-        ? Math.max(state.players.length, 2) 
-        : state.players.length;
-      
+      // FIX: Query LIVE active player count from tv_players table
+      // This is the authoritative count right now, not the stale session value
+      const { count: liveActiveCount } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', state.sessionId)
+        .eq('is_active', true);
+
       const suggesterId = (session as any)?.current_round_suggester_id as string | null;
-      let expectedCount = currentStatePlayerCount;
+      
+      // Calculate expected count from LIVE data, with minimum of 2 in paired mode
+      let expectedCount = state.isPaired 
+        ? Math.max(liveActiveCount ?? 2, 2) 
+        : (liveActiveCount ?? state.players.length);
+      
       if (suggesterId) {
-        expectedCount = Math.max(0, currentStatePlayerCount - 1);
+        expectedCount = Math.max(1, expectedCount - 1); // Suggester doesn't answer, but at least 1 must
       }
 
-      // If DB count is stale, fix it NOW before playing starts
-      if (dbPlayerCount !== expectedCount) {
-        console.log('[startPlaying] ⚠️ Fixing stale player count:', { 
-          old: dbPlayerCount, 
-          new: expectedCount,
-          hasSuggester: !!suggesterId,
-        });
-        await supabase
-          .from('tv_sessions')
-          .update({ active_player_count: expectedCount })
-          .eq('id', state.sessionId);
-        dbPlayerCount = expectedCount;
-      }
+      console.log('[startPlaying] 🎯 Locking player count from LIVE query:', { 
+        liveActiveCount,
+        staleSessionCount: session?.active_player_count,
+        statePlayersLength: state.players.length,
+        hasSuggester: !!suggesterId,
+        finalExpected: expectedCount,
+      });
 
-      tvLog('startPlaying: Using DB player count', { dbPlayerCount });
+      // Update the session with the CORRECT live count
+      await supabase
+        .from('tv_sessions')
+        .update({ active_player_count: expectedCount })
+        .eq('id', state.sessionId);
+
+      tvLog('startPlaying: Locked player count', { expectedCount });
       
       // CRITICAL: Reset timing refs for the new question
       questionStartedAtRef.current = Date.now();
       hasAdvancedRef.current = false;
-      console.log('[startPlaying] ⏱️ Question timing reset, expected players:', dbPlayerCount);
+      console.log('[startPlaying] ⏱️ Question timing reset, expected players:', expectedCount);
       
       // Transition to playing
       await supabase
@@ -1901,9 +1918,31 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // This ensures the 300ms safety window is active for each new round
       questionStartedAtRef.current = Date.now();
       
-      console.log('[markReady] 🔒 Locking player count for round 2+:', {
-        currentPlayerCount,
-        expectedPlayerCount,
+      // FIX: Reset ALL players to is_active = true before locking count
+      // This ensures everyone is counted, even if presence flickered them off
+      await supabase
+        .from('tv_players')
+        .update({ is_active: true })
+        .eq('tv_session_id', state.sessionId);
+
+      // Query LIVE count after resetting everyone to active
+      const { count: liveCount } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', state.sessionId)
+        .eq('is_active', true);
+
+      const liveExpectedCount = state.isPaired 
+        ? Math.max(liveCount ?? 2, 2) 
+        : (liveCount ?? currentPlayerCount);
+      
+      const finalExpected = suggesterId 
+        ? Math.max(1, liveExpectedCount - 1) 
+        : liveExpectedCount;
+      
+      console.log('[markReady] 🔒 Locking player count for round 2+ from LIVE query:', {
+        liveCount,
+        finalExpected,
         hasSuggester: !!suggesterId,
         roundNumber: stateRef.current.roundNumber,
       });
@@ -1912,7 +1951,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .from('tv_sessions')
         .update({ 
           status: 'countdown',
-          active_player_count: expectedPlayerCount, // LOCK IT HERE FOR ROUND 2+
+          active_player_count: finalExpected, // LOCK LIVE COUNT
         })
         .eq('id', state.sessionId);
 
