@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { Users, Vote, Timer, Sparkles, Trophy, Crown } from 'lucide-react';
+import { Users, Vote, Timer, Sparkles, Crown } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
-import { Avatar } from '@/components/shared/Avatar';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
 
 
 export const TVPollScreen: React.FC = () => {
@@ -20,6 +20,11 @@ export const TVPollScreen: React.FC = () => {
     userId: null, // TV display doesn't have a user
     nickname: 'TV',
   });
+
+  // Get active players
+  const activePlayers = useMemo(() => {
+    return players.filter(p => p.isActive !== false);
+  }, [players]);
 
   const [timeRemaining, setTimeRemaining] = useState(pollDuration);
 
@@ -130,22 +135,49 @@ export const TVPollScreen: React.FC = () => {
           )}
         </div>
 
-        {/* QR Code sidebar */}
+        {/* QR Code sidebar + Active Players */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="w-64 flex flex-col items-center"
+          className="w-72 flex flex-col items-center"
         >
           <div className="bg-white p-4 rounded-2xl mb-4">
-            <QRCodeSVG value={joinUrl} size={200} level="H" />
+            <QRCodeSVG value={joinUrl} size={180} level="H" />
           </div>
           <p className="text-purple-300 text-center text-sm mb-2">
             დასკანერეთ შესერთებლად
           </p>
-          <div className="bg-white/10 px-4 py-2 rounded-xl">
+          <div className="bg-white/10 px-4 py-2 rounded-xl mb-6">
             <span className="text-2xl font-mono font-bold text-white tracking-wider">
               {code}
             </span>
+          </div>
+
+          {/* Active Players List */}
+          <div className="w-full bg-white/10 rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="w-5 h-5 text-purple-300" />
+              <span className="text-white font-bold">მოთამაშეები ({activePlayers.length})</span>
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
+              {activePlayers.map((player) => (
+                <div 
+                  key={player.id || player.nickname}
+                  className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5"
+                >
+                  <SafeAvatarImage
+                    avatarUrl={player.avatar_url}
+                    fallback={player.nickname}
+                    className="w-6 h-6 rounded-full object-cover"
+                    containerClassName="w-6 h-6 rounded-full text-xs"
+                  />
+                  <span className="text-white text-sm">{player.nickname}</span>
+                </div>
+              ))}
+              {activePlayers.length === 0 && (
+                <p className="text-purple-300 text-sm">ველოდებით მოთამაშეებს...</p>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>
@@ -254,16 +286,6 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
       <h3 className="text-xl font-bold text-white text-center mb-3 line-clamp-2">
         {suggestion.category_name}
       </h3>
-
-      {/* Suggester */}
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <Avatar 
-          imageUrl={suggestion.avatar_url || undefined} 
-          emoji={suggestion.nickname[0]} 
-          size="sm" 
-        />
-        <span className="text-purple-300 text-sm">{suggestion.nickname}</span>
-      </div>
 
       {/* Vote count */}
       {showVotes && (
