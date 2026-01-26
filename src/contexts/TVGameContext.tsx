@@ -301,10 +301,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
       
-      // Safety guard: don't check in first 1000ms after question start
-      // Increased to 1s to account for network latency, DB propagation, and player sync
+      // Safety guard: don't check in first 1500ms after question start
+      // Increased to 1.5s to account for network latency, DB propagation, and player sync
+      // This is especially important after polls where there may be additional latency
       const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
-      if (timeSinceStart < 1000) {
+      if (timeSinceStart < 1500) {
         console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart });
         return;
       }
@@ -327,15 +328,37 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      // FIX: Query LIVE active player count from tv_players table
-      // The session's locked count can be stale if set before all players reconnected
-      const { count: liveActiveCount } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', current.sessionId)
-        .eq('is_active', true);
+      // CRITICAL FIX: Query LIVE active player count MULTIPLE TIMES for verification
+      // This prevents race conditions where a single stale query causes premature advancement
+      let liveActiveCount = 0;
+      let verificationPassed = false;
+      
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const { count } = await supabase
+          .from('tv_players')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', current.sessionId)
+          .eq('is_active', true);
+        
+        liveActiveCount = count ?? 0;
+        
+        // In paired mode, we expect at least 2 players
+        // If we only see 1, wait a bit and check again
+        if (current.isPaired && liveActiveCount >= 2) {
+          verificationPassed = true;
+          break;
+        } else if (!current.isPaired && liveActiveCount >= 1) {
+          verificationPassed = true;
+          break;
+        }
+        
+        if (attempt === 0) {
+          console.log('[AutoAdvance] 🔄 First count check low, waiting 200ms to verify...', { liveActiveCount });
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
 
-      const dbPlayerCount = liveActiveCount ?? session.active_player_count ?? 0;
+      const dbPlayerCount = liveActiveCount;
       const isPaired = session.is_paired ?? current.isPaired;
       const suggesterId = (session as any).current_round_suggester_id as string | null;
       
@@ -354,6 +377,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         sessionLockedCount: session.active_player_count,
         isPaired,
         finalExpected: expectedCount,
+        verificationPassed,
       });
 
       // SAFETY CHECKS: Never advance if expected count is unreliable
@@ -371,6 +395,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           suggesterId,
         });
         return; // Wait for timer instead - this prevents premature advancement
+      }
+      
+      // ADDITIONAL SAFETY: If verification failed in paired mode, don't auto-advance
+      if (isPaired && !verificationPassed && !suggesterId) {
+        console.log('[AutoAdvance] ⚠️ Verification failed: could not confirm 2+ players, waiting for timer');
+        return;
       }
 
       // Count actual answers from DB
@@ -1712,23 +1742,38 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // CRITICAL: Longer delay for DB consistency after bulk update
-      // Post-poll the DB may have more latency, so we wait 150ms instead of 50ms
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Post-poll the DB may have more latency, so we wait 200ms
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      // CRITICAL FIX: Query LIVE active player count instead of using stale state
-      // state.players.length can be stale after poll phases
-      const { count: livePlayerCount } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', state.sessionId)
-        .eq('is_active', true);
+      // CRITICAL FIX: Query LIVE active player count with VERIFICATION LOOP
+      // This ensures we don't lock in a stale count right after poll transitions
+      let livePlayerCount = 0;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { count } = await supabase
+          .from('tv_players')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', state.sessionId)
+          .eq('is_active', true);
+        
+        livePlayerCount = count ?? 0;
+        console.log(`[startGame] 📊 Player count check ${attempt + 1}/3:`, livePlayerCount);
+        
+        // If we have at least 2 players in paired mode, we're good
+        if (state.isPaired && livePlayerCount >= 2) break;
+        if (!state.isPaired && livePlayerCount >= 1) break;
+        
+        // Wait a bit and try again
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
       
-      console.log('[startGame] 📊 Live player count from DB:', livePlayerCount);
+      console.log('[startGame] ✅ Final live player count:', livePlayerCount);
 
       // Use live count instead of stale state, with minimum of 2 in paired mode
       const playerCount = state.isPaired 
-        ? Math.max(livePlayerCount ?? 2, 2) 
-        : (livePlayerCount ?? state.players.length);
+        ? Math.max(livePlayerCount, 2) 
+        : (livePlayerCount || state.players.length);
       
       tvLog('Starting game', { 
         questionCount: formattedQuestions.length, 
