@@ -45,6 +45,7 @@ interface ControllerPollScreenProps {
   isHost: boolean;
   onVotingEnded?: () => void; // Callback when voting timer expires (host only)
   contextPhase?: string; // Phase from parent context - used as primary source of truth
+  code?: string; // Game/TV pairing code to display
 }
 
 const MAX_VOTES = 3;
@@ -57,6 +58,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   isHost,
   onVotingEnded,
   contextPhase,
+  code,
 }) => {
   const {
     suggestions,
@@ -414,9 +416,16 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
           <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
-            <div className="flex items-center gap-3 mb-6">
-              <Crown className="w-7 h-7 text-yellow-400" />
-              <h1 className="text-xl font-bold text-white">დაამატე კატეგორიები</h1>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Crown className="w-7 h-7 text-yellow-400" />
+                <h1 className="text-xl font-bold text-white">დაამატე კატეგორიები</h1>
+              </div>
+              {code && (
+                <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
+                  <span className="text-sm font-mono font-bold text-white tracking-wider">{code}</span>
+                </div>
+              )}
             </div>
 
             {/* Host's suggestions */}
