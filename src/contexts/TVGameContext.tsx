@@ -319,8 +319,78 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   // ============================================================================
-  // TRIGGER 2: Check if all players answered (from DB)
+  // CRITICAL: Session Refetch Function for Recovering Missed Realtime Updates
   // ============================================================================
+  // This function is called when guests transition from poll to game phases
+  // but don't receive the questions via realtime subscription. It forces a
+  // full session fetch from the database to recover the game state.
+  // ============================================================================
+  const refetchSessionData = useCallback(async (sessionId: string) => {
+    console.log('[refetchSessionData] 🔄 Force-fetching session state...');
+    
+    try {
+      const { data: session, error } = await supabase
+        .from('tv_sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .maybeSingle();
+      
+      if (error || !session) {
+        console.error('[refetchSessionData] Failed:', error);
+        return;
+      }
+      
+      // Parse questions
+      let questions: TVQuestion[] = [];
+      if (session.questions) {
+        const rawQuestions = session.questions as unknown as Array<{
+          id: string;
+          question_text: string;
+          correct_answer: string;
+          options: string[];
+          icon_slug?: string | null;
+        }>;
+        questions = rawQuestions.map(q => ({
+          id: q.id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          options: q.options,
+          icon_slug: q.icon_slug,
+        }));
+      }
+      
+      console.log('[refetchSessionData] ✅ Fetched session:', {
+        status: session.status,
+        questionsCount: questions.length,
+        suggesterId: session.current_round_suggester_id,
+      });
+      
+      // Update state with fetched data
+      setState(prev => ({
+        ...prev,
+        phase: mapDbStatusToPhase(session.status),
+        questions: questions.length > 0 ? questions : prev.questions,
+        currentQuestionIndex: session.current_question_index ?? prev.currentQuestionIndex,
+        categoryName: session.category_name || prev.categoryName,
+        categoryIcon: session.category_icon || prev.categoryIcon,
+        isPaired: session.is_paired ?? prev.isPaired,
+        roomName: session.room_name || prev.roomName,
+        roundNumber: session.round_number ?? prev.roundNumber,
+        totalRounds: session.total_rounds ?? prev.totalRounds,
+        roomId: session.room_id || prev.roomId,
+        currentRoundSuggesterId: session.current_round_suggester_id ?? prev.currentRoundSuggesterId,
+        currentRoundSuggesterNickname: session.current_round_suggester_nickname ?? prev.currentRoundSuggesterNickname,
+        currentRoundSuggesterAvatarUrl: session.current_round_suggester_avatar_url ?? prev.currentRoundSuggesterAvatarUrl,
+      }));
+      
+      console.log('[refetchSessionData] ✅ State updated with', questions.length, 'questions');
+    } catch (err) {
+      console.error('[refetchSessionData] Error:', err);
+    }
+  }, []);
+
+  // ============================================================================
+  // TRIGGER 2: Check if all players answered (from DB)
   const checkAndAdvanceIfAllAnswered = useCallback(async () => {
     const checkStartTime = Date.now();
     
@@ -1231,6 +1301,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             round_number?: number | null;
             total_rounds?: number | null;
             room_id?: string | null;
+            current_round_suggester_id?: string | null;
+            current_round_suggester_nickname?: string | null;
+            current_round_suggester_avatar_url?: string | null;
+            active_player_count?: number | null;
           };
 
           // New question detection must happen BEFORE setState, and must also reset presence.
@@ -1319,8 +1393,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 dbStatus: newData.status,
                 questionsInUpdate: questions.length,
                 prevQuestionsCount: prev.questions.length,
-                suggesterId: (newData as any).current_round_suggester_id || 'none',
+                suggesterId: newData.current_round_suggester_id || 'none',
               });
+              
+              // CRITICAL FIX: Auto-refetch if transitioning from poll to game phases with no questions
+              // This handles cases where realtime update was missed (network issues, background tabs, etc.)
+              if (prev.phase.includes('poll') && ['countdown', 'playing'].includes(newPhase)) {
+                if (questions.length === 0 && prev.questions.length === 0) {
+                  console.log('[Subscription] ⚠️ Poll->game transition with NO questions - scheduling refetch');
+                  // Use setTimeout to avoid blocking the realtime callback
+                  setTimeout(() => {
+                    refetchSessionData(sessionId);
+                  }, 300);
+                }
+              }
               
               // CRITICAL: When transitioning to 'playing', enable auto-advance timing
               // This catches cases where subscription didn't see question change during countdown

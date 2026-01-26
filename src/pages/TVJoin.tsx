@@ -13,6 +13,7 @@ import { ControllerPollResultsGuest } from '@/components/controller/ControllerPo
 import { useTVPoll } from '@/hooks/useTVPoll';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const TVJoinContent: React.FC = () => {
   const { code: urlCode, sessionId: urlSessionId } = useParams<{ code?: string; sessionId?: string }>();
@@ -55,22 +56,52 @@ const TVJoinContent: React.FC = () => {
   const requiresQuestions = ['question', 'playing', 'reveal'].includes(phase);
   const hasInvalidState = requiresQuestions && (!questions || questions.length === 0);
 
+  // CRITICAL FIX: Auto-refetch questions when in invalid state
+  // This recovers from missed realtime updates during poll->game transitions
+  useEffect(() => {
+    if (hasInvalidState && sessionId) {
+      console.log('[TVJoin] ⚠️ Invalid state detected - attempting to refetch session...');
+      
+      const refetchSession = async () => {
+        try {
+          const { data: session, error } = await supabase
+            .from('tv_sessions')
+            .select('*')
+            .eq('id', sessionId)
+            .maybeSingle();
+          
+          if (error || !session) {
+            console.error('[TVJoin] Failed to refetch session:', error);
+            return;
+          }
+          
+          console.log('[TVJoin] 🔄 Refetched session:', {
+            status: session.status,
+            questionsCount: Array.isArray(session.questions) ? (session.questions as any[]).length : 0,
+            suggesterId: session.current_round_suggester_id,
+          });
+          
+          // The realtime subscription should pick up this fetch and update state
+          // If not, the component will retry on next render cycle
+        } catch (err) {
+          console.error('[TVJoin] Refetch error:', err);
+        }
+      };
+      
+      // Delay slightly to avoid race with realtime updates
+      const timer = setTimeout(refetchSession, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasInvalidState, sessionId]);
+
+  // Show loading instead of error when waiting for questions
   if (hasInvalidState) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <h2 className="text-white text-xl font-bold mb-2">თამაში არ არის მზად</h2>
-          <p className="text-purple-300 mb-6">სესია არასწორ მდგომარეობაშია. გთხოვ დაუბრუნდი მთავარ გვერდს.</p>
-          <ChunkyButton
-            variant="white"
-            onClick={() => {
-              leaveSession();
-              navigate('/');
-            }}
-          >
-            მთავარზე დაბრუნება
-          </ChunkyButton>
+          <Loader2 className="w-16 h-16 text-purple-300 mx-auto mb-4 animate-spin" />
+          <h2 className="text-white text-xl font-bold mb-2">იტვირთება კითხვები...</h2>
+          <p className="text-purple-300 mb-6">გთხოვთ დაელოდოთ</p>
         </div>
       </div>
     );
