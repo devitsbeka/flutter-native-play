@@ -259,26 +259,46 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // TRIGGER 2: Check if all players answered (from DB)
   // ============================================================================
   const checkAndAdvanceIfAllAnswered = useCallback(async () => {
+    const checkStartTime = Date.now();
+    
     // Guard: only host checks
-    if (!isHostRef.current) return;
+    if (!isHostRef.current) {
+      console.log('[AutoAdvance] ⏭️ Skip: not host');
+      return;
+    }
     
     const current = stateRef.current;
     
     // Guard: must be in question phase
-    if (current.phase !== 'question') return;
+    if (current.phase !== 'question') {
+      console.log('[AutoAdvance] ⏭️ Skip: phase is', current.phase, 'not "question"');
+      return;
+    }
     
     // Guard: already advanced
-    if (hasAdvancedRef.current) return;
+    if (hasAdvancedRef.current) {
+      console.log('[AutoAdvance] ⏭️ Skip: already advanced this question');
+      return;
+    }
     
     // Guard: need session
-    if (!current.sessionId) return;
+    if (!current.sessionId) {
+      console.log('[AutoAdvance] ⏭️ Skip: no sessionId');
+      return;
+    }
     
     // Safety guard: don't check in first 300ms after question start
     const timeSinceStart = questionStartedAtRef.current ? Date.now() - questionStartedAtRef.current : Infinity;
     if (timeSinceStart < 300) {
-      console.log('[checkAndAdvanceIfAllAnswered] Too soon, skipping');
+      console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart });
       return;
     }
+
+    console.log('[AutoAdvance] 🔍 Checking...', {
+      questionIndex: current.currentQuestionIndex,
+      timeSinceQuestionStart: timeSinceStart,
+      sessionId: current.sessionId.substring(0, 8) + '...',
+    });
 
     try {
       // Get expected count from DB (authoritative source)
@@ -289,7 +309,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .single();
 
       if (sessionError || !session) {
-        console.error('[checkAndAdvanceIfAllAnswered] Error fetching session:', sessionError);
+        console.error('[AutoAdvance] ❌ Error fetching session:', sessionError);
         return;
       }
 
@@ -301,11 +321,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let expectedCount = isPaired ? Math.max(dbPlayerCount, 2) : dbPlayerCount;
       if (suggesterId) {
         expectedCount = Math.max(0, expectedCount - 1);
-        console.log('[checkAndAdvanceIfAllAnswered] Suggester skips round, adjusted count:', expectedCount);
+        console.log('[AutoAdvance] 👤 Suggester skips round:', { 
+          suggesterId: suggesterId.substring(0, 8) + '...', 
+          adjustedExpectedCount: expectedCount 
+        });
       }
 
       if (expectedCount <= 0) {
-        console.log('[checkAndAdvanceIfAllAnswered] No expected count, skipping');
+        console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0');
         return;
       }
 
@@ -317,20 +340,38 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('question_index', current.currentQuestionIndex);
 
       if (countError) {
-        console.error('[checkAndAdvanceIfAllAnswered] Error counting answers:', countError);
+        console.error('[AutoAdvance] ❌ Error counting answers:', countError);
         return;
       }
 
       const actualCount = answerCount || 0;
-      console.log('[checkAndAdvanceIfAllAnswered] DB check:', { actualCount, expectedCount });
+      const checkDuration = Date.now() - checkStartTime;
+      
+      console.log('[AutoAdvance] 📊 DB Status:', { 
+        actualAnswers: actualCount, 
+        expectedPlayers: expectedCount,
+        progress: `${actualCount}/${expectedCount}`,
+        checkDurationMs: checkDuration,
+        questionIndex: current.currentQuestionIndex,
+      });
 
       // All answered? Advance!
       if (actualCount >= expectedCount) {
-        console.log('[checkAndAdvanceIfAllAnswered] ✅ All players answered!');
+        console.log('[AutoAdvance] ✅ ALL PLAYERS ANSWERED! Advancing to reveal...', {
+          actualCount,
+          expectedCount,
+          questionIndex: current.currentQuestionIndex,
+          timeSinceQuestionStart: timeSinceStart,
+        });
         advanceToReveal('all players answered');
+      } else {
+        console.log('[AutoAdvance] ⏳ Waiting for more answers:', {
+          remaining: expectedCount - actualCount,
+          progress: `${actualCount}/${expectedCount}`,
+        });
       }
     } catch (err) {
-      console.error('[checkAndAdvanceIfAllAnswered] Exception:', err);
+      console.error('[AutoAdvance] ❌ Exception:', err);
     }
   }, [advanceToReveal]);
 
@@ -342,7 +383,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       supabase.removeChannel(answersChannelRef.current);
     }
 
-    console.log('[Answers Subscription] Setting up for session:', sessionId);
+    console.log('[AutoAdvance] 📡 Setting up realtime subscription for session:', sessionId.substring(0, 8) + '...');
 
     const channel = supabase
       .channel(`tv-answers-${sessionId}`)
@@ -355,15 +396,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           filter: `tv_session_id=eq.${sessionId}`,
         },
         (payload) => {
-          console.log('[Answers Subscription] New answer:', payload.new);
+          const answer = payload.new as { user_id?: string; question_index?: number; is_correct?: boolean };
+          console.log('[AutoAdvance] 📥 Realtime: New answer received!', {
+            userId: answer.user_id?.substring(0, 8) + '...',
+            questionIndex: answer.question_index,
+            isCorrect: answer.is_correct,
+            timestamp: new Date().toISOString(),
+          });
           // Trigger check on every new answer
           if (isHostRef.current) {
+            console.log('[AutoAdvance] 🔄 Triggering check from realtime event...');
             checkAndAdvanceIfAllAnswered();
           }
         }
       )
       .subscribe((status) => {
-        console.log('[Answers Subscription] Status:', status);
+        console.log('[AutoAdvance] 📡 Subscription status:', status);
       });
 
     answersChannelRef.current = channel;
@@ -685,13 +733,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!state.sessionId) return;
     
     // Start checking after a short delay to avoid race with initial renders
+    let fallbackCheckCount = 0;
     const fallbackInterval = setInterval(() => {
+      fallbackCheckCount++;
+      console.log('[AutoAdvance] ⏰ Fallback interval check #' + fallbackCheckCount, {
+        phase: stateRef.current.phase,
+        questionIndex: stateRef.current.currentQuestionIndex,
+        timestamp: new Date().toISOString(),
+      });
       checkAndAdvanceIfAllAnswered();
     }, 2000);
     
+    console.log('[AutoAdvance] ⏰ Fallback interval STARTED (every 2s) for question phase');
     tvLog('Fallback check interval started (2s)');
     
     return () => {
+      console.log('[AutoAdvance] ⏰ Fallback interval STOPPED (phase changed or unmount)');
       clearInterval(fallbackInterval);
     };
   }, [state.phase, isHost, state.sessionId, checkAndAdvanceIfAllAnswered]);
@@ -1456,14 +1513,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // ALSO clear any answers from current session (handles game restart scenario)
       // This ensures a clean slate when restarting a game mid-session
       if (state.sessionId) {
+        console.log('[AutoAdvance] 🧹 Cleaning current session answers for fresh start...');
         const { error: currentSessionCleanup } = await supabase
           .from('player_answers')
           .delete()
           .eq('tv_session_id', state.sessionId);
 
         if (currentSessionCleanup) {
+          console.warn('[AutoAdvance] ⚠️ Could not clean current session answers:', currentSessionCleanup);
           tvLog('Warning: Could not clean current session answers', currentSessionCleanup);
         } else {
+          console.log('[AutoAdvance] 🧹 Cleared all answers for fresh game start');
           tvLog('Cleared all answers for fresh game start');
         }
       }
@@ -1641,15 +1701,23 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // IMPORTANT: Even on duplicate key error (23505), the answer exists in DB
         // Still trigger the auto-advance check - this prevents stalls in True/False games
         if (isHostRef.current && error.code === '23505') {
+          console.log('[AutoAdvance] ⚠️ Duplicate key error (23505) - answer already exists');
+          console.log('[AutoAdvance] 🔄 Triggering check anyway to prevent stall...');
           tvLog('Duplicate answer detected, triggering auto-advance check');
           setTimeout(() => {
             checkAndAdvanceIfAllAnswered();
           }, 150);
         }
       } else {
+        console.log('[AutoAdvance] ✅ Answer inserted successfully', {
+          questionIndex: state.currentQuestionIndex,
+          isCorrect,
+          points,
+        });
         // Belt-and-suspenders: trigger DB-based check after successful insert
         // The realtime subscription will also trigger this, but this is faster
         if (isHostRef.current) {
+          console.log('[AutoAdvance] 🔄 Host triggering immediate check after own answer...');
           setTimeout(() => {
             checkAndAdvanceIfAllAnswered();
           }, 100);
