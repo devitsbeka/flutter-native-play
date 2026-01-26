@@ -31,11 +31,8 @@ export const ControllerCountdown: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center"
         >
-          <p className="text-purple-300 text-sm">Playing</p>
-          <div className="flex items-center gap-2 text-white text-lg font-bold">
-            {categoryIcon && <span className="text-xl">{categoryIcon}</span>}
-            <span>{categoryName}</span>
-          </div>
+          <p className="text-purple-300 text-sm">ვთამაშობთ</p>
+          <p className="text-white text-lg font-bold">{categoryName}</p>
         </motion.div>
       )}
 

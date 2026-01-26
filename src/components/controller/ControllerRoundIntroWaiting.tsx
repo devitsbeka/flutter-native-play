@@ -12,8 +12,8 @@ export const ControllerRoundIntroWaiting: React.FC = () => {
           alt="TV"
           className="w-20 h-20 object-contain mx-auto mb-4"
         />
-        <h2 className="text-white text-xl font-bold mb-2">მოლოდინი ჰოსტზე</h2>
-        <p className="text-purple-200 mb-6">ჰოსტი იწყებს შემდეგ რაუნდს როცა მზად იქნება.</p>
+        <h2 className="text-white text-xl font-bold mb-2">ველოდებით ჰოსტს</h2>
+        <p className="text-purple-200 mb-6">შემდეგი რაუნდი მალე დაიწყება</p>
         <div className="flex items-center justify-center gap-2 text-purple-200">
           <Loader2 className="w-5 h-5 animate-spin" />
           <span>მოლოდინი...</span>

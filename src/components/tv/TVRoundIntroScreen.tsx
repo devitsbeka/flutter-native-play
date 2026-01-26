@@ -142,7 +142,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
           className="flex items-center gap-2 text-purple-200"
         >
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span>მოლოდინი ჰოსტზე...</span>
+          <span>ველოდებით ჰოსტს...</span>
         </motion.div>
       )}
     </div>
