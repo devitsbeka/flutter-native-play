@@ -385,6 +385,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return false;
     }
 
+    // CRITICAL: Clear all answers from previous rounds for this session
+    // This prevents 409 duplicate key conflicts when question_index resets to 0
+    // and ensures accurate auto-advance answer counts for the new round
+    const { error: roundCleanupError } = await supabase
+      .from('player_answers')
+      .delete()
+      .eq('tv_session_id', state.sessionId);
+    
+    if (roundCleanupError) {
+      tvLog('Warning: Could not clean previous round answers', roundCleanupError);
+    } else {
+      tvLog('Cleared answers from previous rounds for new round start');
+    }
+
     // Prefer the explicit TV queue, but fallback to the room queue when TV queue is empty.
     const { data: queueItems } = await supabase
       .from('tv_session_queue')
