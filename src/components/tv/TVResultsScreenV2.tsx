@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Check, X, Crown, Coins, ArrowRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
@@ -111,12 +111,12 @@ export const TVResultsScreenV2: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs z-10 border-2 border-white">
                   2
                 </div>
-                <Avatar className="w-12 h-12 ring-2 ring-gray-300 border-2 border-white">
-                  <AvatarImage src={secondPlace.avatar_url || undefined} />
-                  <AvatarFallback className="bg-gray-400 text-white font-bold text-sm">
-                    {secondPlace.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={secondPlace.avatar_url}
+                  fallback={secondPlace.nickname}
+                  className="w-12 h-12 ring-2 ring-gray-300 border-2 border-white"
+                  fallbackClassName="bg-gray-400 text-white font-bold text-sm"
+                />
               </div>
               <p className="text-white font-bold text-sm mb-0.5">{secondPlace.nickname}</p>
               <p className="text-yellow-400 font-semibold text-[10px] flex items-center gap-1">
@@ -155,12 +155,12 @@ export const TVResultsScreenV2: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-900 font-bold text-sm z-10 border-2 border-white">
                   1
                 </div>
-                <Avatar className="w-16 h-16 ring-4 ring-yellow-400 border-2 border-white">
-                  <AvatarImage src={firstPlace.avatar_url || undefined} />
-                  <AvatarFallback className="bg-yellow-500 text-white font-bold text-lg">
-                    {firstPlace.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={firstPlace.avatar_url}
+                  fallback={firstPlace.nickname}
+                  className="w-16 h-16 ring-4 ring-yellow-400 border-2 border-white"
+                  fallbackClassName="bg-yellow-500 text-white font-bold text-lg"
+                />
               </div>
               <p className="text-white font-bold text-base mb-0.5">{firstPlace.nickname}</p>
               <p className="text-yellow-400 font-semibold text-xs flex items-center gap-1">
@@ -190,12 +190,12 @@ export const TVResultsScreenV2: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xs z-10 border-2 border-white">
                   3
                 </div>
-                <Avatar className="w-10 h-10 ring-2 ring-amber-600 border-2 border-white">
-                  <AvatarImage src={thirdPlace.avatar_url || undefined} />
-                  <AvatarFallback className="bg-amber-700 text-white font-bold text-sm">
-                    {thirdPlace.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={thirdPlace.avatar_url}
+                  fallback={thirdPlace.nickname}
+                  className="w-10 h-10 ring-2 ring-amber-600 border-2 border-white"
+                  fallbackClassName="bg-amber-700 text-white font-bold text-sm"
+                />
               </div>
               <p className="text-white font-bold text-sm mb-0.5">{thirdPlace.nickname}</p>
               <p className="text-yellow-400 font-semibold text-[10px] flex items-center gap-1">
@@ -277,12 +277,12 @@ export const TVResultsScreenV2: React.FC = () => {
                 </div>
 
                 {/* Avatar */}
-                <Avatar className="w-7 h-7 ring-1 ring-cyan-400 border border-white/30">
-                  <AvatarImage src={player.avatar_url || undefined} />
-                  <AvatarFallback className="bg-purple-500 text-white font-bold text-[10px]">
-                    {player.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname}
+                  className="w-7 h-7 ring-1 ring-cyan-400 border border-white/30"
+                  fallbackClassName="bg-purple-500 text-white font-bold text-[10px]"
+                />
 
                 {/* Name */}
                 <span className="text-white font-medium flex-1 truncate text-xs">

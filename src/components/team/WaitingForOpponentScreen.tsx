@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Clock, Users, Loader2 } from "lucide-react";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { cn } from "@/lib/utils";
 
 export function WaitingForOpponentScreen() {
@@ -71,12 +71,12 @@ export function WaitingForOpponentScreen() {
                 <div key={player.id} className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={player.avatar_url || undefined} />
-                        <AvatarFallback className="bg-gradient-to-br from-purple-400 to-pink-400 text-white text-xs">
-                          {player.nickname?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <SafeAvatar 
+                        avatarUrl={player.avatar_url}
+                        fallback={player.nickname || '?'}
+                        className="w-8 h-8"
+                        fallbackClassName="bg-gradient-to-br from-purple-400 to-pink-400 text-white text-xs"
+                      />
                       <span className="text-white text-sm font-medium truncate max-w-[100px]">
                         {player.nickname}
                       </span>

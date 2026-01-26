@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, UserCheck, Clock, Play, Layers } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Button } from "@/components/ui/button";
 import { PlayerInfo, CollectionItem } from "@/hooks/usePlayerFeedItems";
 import { SamplePost } from "@/data/samplePosts";
@@ -207,12 +207,12 @@ export function PlayerFeedItem({
             onClick={() => openProfile(player.user_id)}
             className="cursor-pointer hover:scale-105 transition-transform active:scale-95"
           >
-            <Avatar className="w-10 h-10 border-2 border-border">
-              <AvatarImage src={player.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-sm">
-                {player.nickname.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <SafeAvatar 
+              avatarUrl={player.avatar_url}
+              fallback={player.nickname}
+              className="w-10 h-10 border-2 border-border"
+              fallbackClassName="bg-muted text-sm"
+            />
           </div>
           
           {/* Name and Stats */}

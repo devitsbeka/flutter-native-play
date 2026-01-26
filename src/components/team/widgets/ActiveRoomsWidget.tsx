@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Layers, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMyRooms, isActiveTVSession } from "@/hooks/useMyRooms";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 
@@ -112,12 +112,13 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                 {/* Participant Avatars (use TV players if session is active) */}
                 <div className="flex -space-x-2">
                   {displayPlayers.slice(0, 3).map((p, i) => (
-                    <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                      <AvatarImage src={p.avatar_url || undefined} />
-                      <AvatarFallback className="text-[10px] bg-muted">
-                        {p.nickname?.[0]?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
+                    <SafeAvatar 
+                      key={i} 
+                      avatarUrl={p.avatar_url}
+                      fallback={p.nickname || '?'}
+                      className="w-6 h-6 border-2 border-background"
+                      fallbackClassName="text-[10px] bg-muted"
+                    />
                   ))}
                 </div>
                 

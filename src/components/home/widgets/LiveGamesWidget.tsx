@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import glitchIcon from "@/assets/glitch.png";
@@ -85,19 +85,13 @@ export function LiveGamesWidget() {
               {/* Top left - User avatars */}
               <div className="absolute top-3 left-3 flex items-center -space-x-2">
                 {room.participants.slice(0, 4).map((participant) => (
-                  <Avatar
+                  <SafeAvatar
                     key={participant.user_id}
+                    avatarUrl={participant.avatar_url}
+                    fallback={participant.nickname}
                     className="w-8 h-8 border-2 border-card/80 cursor-pointer hover:scale-110 transition-transform shadow-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openProfile(participant.user_id);
-                    }}
-                  >
-                    <AvatarImage src={participant.avatar_url || undefined} />
-                    <AvatarFallback className="text-[10px] bg-primary text-primary-foreground font-bold">
-                      {participant.nickname.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                    fallbackClassName="text-[10px] bg-primary text-primary-foreground font-bold"
+                  />
                 ))}
                 {room.participants.length > 4 && (
                   <span className="w-8 h-8 rounded-full bg-muted/80 border-2 border-card/80 flex items-center justify-center text-[10px] font-semibold text-muted-foreground">

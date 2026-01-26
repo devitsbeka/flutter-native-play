@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Check, X, Clock } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
@@ -11,7 +11,7 @@ import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { TVDebugOverlay } from './TVDebugOverlay';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
-import { resolveAvatarUrl } from '@/utils/avatarUtils';
+
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -119,12 +119,12 @@ export const TVQuestionScreenV4: React.FC = () => {
                 transition={{ type: "spring", bounce: 0.5 }}
                 layout
               >
-                <Avatar className="w-10 h-10 ring-3 ring-red-400 border-2 border-white">
-                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
-                  <AvatarFallback className="bg-red-500 text-white font-bold text-sm">
-                    {player.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname}
+                  className="w-10 h-10 ring-3 ring-red-400 border-2 border-white"
+                  fallbackClassName="bg-red-500 text-white font-bold text-sm"
+                />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
                   <X className="w-3 h-3 text-white" />
                 </div>
@@ -152,12 +152,12 @@ export const TVQuestionScreenV4: React.FC = () => {
                     boxShadow: '0 0 12px 3px rgba(250, 204, 21, 0.4)',
                   }}
                 />
-                <Avatar className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white relative z-10">
-                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
-                  <AvatarFallback className="bg-yellow-500 text-white font-bold text-sm">
-                    {player.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname}
+                  className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white relative z-10"
+                  fallbackClassName="bg-yellow-500 text-white font-bold text-sm"
+                />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white z-20">
                   <Clock className="w-3 h-3 text-white" />
                 </div>
@@ -179,12 +179,12 @@ export const TVQuestionScreenV4: React.FC = () => {
                 transition={{ type: "spring", bounce: 0.5 }}
                 layout
               >
-                <Avatar className="w-10 h-10 ring-3 ring-green-400 border-2 border-white">
-                  <AvatarImage src={resolveAvatarUrl(player.avatar_url)} />
-                  <AvatarFallback className="bg-green-500 text-white font-bold text-sm">
-                    {player.nickname.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={player.avatar_url}
+                  fallback={player.nickname}
+                  className="w-10 h-10 ring-3 ring-green-400 border-2 border-white"
+                  fallbackClassName="bg-green-500 text-white font-bold text-sm"
+                />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
                   <Check className="w-3 h-3 text-white" />
                 </div>
@@ -224,12 +224,12 @@ export const TVQuestionScreenV4: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Avatar className="w-10 h-10 ring-2 ring-purple-300 border-2 border-white shadow-lg">
-                <AvatarImage src={currentRoundSuggesterAvatarUrl || undefined} />
-                <AvatarFallback className="bg-purple-500 text-white font-bold text-xs">
-                  {(currentRoundSuggesterNickname || '?').slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <SafeAvatar 
+                avatarUrl={currentRoundSuggesterAvatarUrl}
+                fallback={currentRoundSuggesterNickname || '?'}
+                className="w-10 h-10 ring-2 ring-purple-300 border-2 border-white shadow-lg"
+                fallbackClassName="bg-purple-500 text-white font-bold text-xs"
+              />
               <span className="text-white/80 text-xs font-medium bg-black/30 px-2 py-1 rounded-lg">
                 {currentRoundSuggesterNickname}
               </span>

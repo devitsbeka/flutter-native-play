@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Trophy, Check, Clock } from 'lucide-react';
 
 export const TVLeaderboardPanel: React.FC = () => {
@@ -57,12 +57,12 @@ export const TVLeaderboardPanel: React.FC = () => {
               </div>
 
               {/* Avatar */}
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={player.avatar_url || undefined} />
-                <AvatarFallback className="bg-purple-600 text-white text-sm">
-                  {player.nickname.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <SafeAvatar 
+                avatarUrl={player.avatar_url}
+                fallback={player.nickname}
+                className="w-10 h-10"
+                fallbackClassName="bg-purple-600 text-white text-sm"
+              />
 
               {/* Name and status */}
               <div className="flex-1 min-w-0">
