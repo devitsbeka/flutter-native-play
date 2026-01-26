@@ -524,14 +524,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       console.warn('[finalizePollAndStartGame] ⚠️ Failed to reset player activity:', resetError);
     }
 
-    // CRITICAL: Wait for DB to fully process the bulk update
-    // This is essential to prevent race conditions where the count query runs before reset completes
+    // CRITICAL: Extended delay for DB consistency (200ms, critical after poll/transitions)
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Query LIVE active player count after reset WITH VERIFICATION
-    // We do multiple checks to ensure we're getting a stable count
+    // ROBUST VERIFICATION LOOP: 7 attempts, 200ms apart (same as confirmActivePlayers utility)
+    // This ensures we get a stable, accurate player count before locking
     let livePlayerCount = 0;
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 7; attempt++) {
       const { count } = await supabase
         .from('tv_players')
         .select('*', { count: 'exact', head: true })
@@ -539,18 +538,20 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         .eq('is_active', true);
       
       livePlayerCount = count ?? 0;
-      console.log(`[finalizePollAndStartGame] 📊 Player count check ${attempt + 1}/3:`, livePlayerCount);
+      console.log(`[finalizePollAndStartGame] 📊 Player count check ${attempt + 1}/7:`, livePlayerCount);
       
       // If we have at least 2 players, we're good
       if (livePlayerCount >= 2) break;
       
-      // Wait a bit and try again
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait a bit and try again (except on last attempt)
+      if (attempt < 6) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
     }
 
     // Calculate initial expected count - minimum 2 for paired mode
     const expectedCount = Math.max(livePlayerCount, 2);
-    console.log('[finalizePollAndStartGame] ✅ Final locked player count:', expectedCount);
+    console.log('[finalizePollAndStartGame] ✅ Final VERIFIED player count:', expectedCount);
 
     tvLog('[useTVPoll] Resetting players and locking count for new game', { 
       livePlayerCount, 

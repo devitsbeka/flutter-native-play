@@ -205,6 +205,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const hasAdvancedRef = useRef(false);
 
   // Track when the current question started (for safety guard)
+  // CRITICAL: Set to 0 during countdown/transitions to DISABLE auto-advance checks
+  // Only set to Date.now() in startPlaying AFTER the DB transition to 'playing'
   const questionStartedAtRef = useRef<number>(0);
 
   // CRITICAL FIX: Debounce ref to prevent concurrent checkAndAdvanceIfAllAnswered calls
@@ -260,6 +262,62 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   // ============================================================================
+  // CENTRALIZED UTILITY: Confirm active players with robust verification
+  // ============================================================================
+  // This utility performs a bulk reset + multi-attempt verification loop
+  // to ensure we always have an accurate player count before game transitions
+  // ============================================================================
+  const confirmActivePlayers = useCallback(async (sessionId: string): Promise<number> => {
+    console.log('[confirmActivePlayers] 🔒 Starting robust player verification...');
+    
+    // Step 1: Bulk reset ALL players to is_active = true
+    const { error: resetError } = await supabase
+      .from('tv_players')
+      .update({ is_active: true })
+      .eq('tv_session_id', sessionId);
+
+    if (resetError) {
+      console.warn('[confirmActivePlayers] ⚠️ Reset error:', resetError);
+    }
+    
+    // Step 2: Extended delay for DB consistency (critical after poll/transitions)
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Step 3: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
+    let verifiedCount = 0;
+    const isPaired = stateRef.current.isPaired;
+    const minExpected = isPaired ? 2 : 1;
+    
+    for (let attempt = 0; attempt < 7; attempt++) {
+      const { count } = await supabase
+        .from('tv_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('tv_session_id', sessionId)
+        .eq('is_active', true);
+      
+      verifiedCount = count ?? 0;
+      console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/7: ${verifiedCount} players`);
+      
+      if (verifiedCount >= minExpected) break;
+      
+      if (attempt < 6) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    
+    // Step 4: Lock the verified count in session (with minimum for paired mode)
+    const finalCount = isPaired ? Math.max(verifiedCount, 2) : verifiedCount;
+    
+    await supabase
+      .from('tv_sessions')
+      .update({ active_player_count: finalCount })
+      .eq('id', sessionId);
+    
+    console.log('[confirmActivePlayers] ✅ Locked player count:', finalCount);
+    return finalCount;
+  }, []);
+
+  // ============================================================================
   // TRIGGER 2: Check if all players answered (from DB)
   // ============================================================================
   const checkAndAdvanceIfAllAnswered = useCallback(async () => {
@@ -301,21 +359,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
       
-      // Safety guard: don't check in first 2000ms after question start
-      // Increased to 2s to account for network latency, DB propagation, and player sync
-      // This is especially important after polls where there may be additional latency
+      // CRITICAL: Safety guard - don't check in first 2500ms after question start
+      // Increased to 2.5s to account for network latency, DB propagation, player sync,
+      // and especially post-poll transitions where there may be additional latency
       // The questionStartedAtRef is set AFTER the DB transition in startPlaying
       const questionStartTime = questionStartedAtRef.current;
       
-      // CRITICAL: If questionStartedAtRef is 0, it means startPlaying hasn't set it yet
-      // This can happen during race conditions - skip and wait for proper initialization
+      // CRITICAL: If questionStartedAtRef is 0, it means we're in countdown or startPlaying hasn't run yet
+      // This DISABLES auto-advance during countdown phase entirely - only timer can advance
       if (!questionStartTime || questionStartTime === 0) {
-        console.log('[AutoAdvance] ⏭️ Skip: questionStartedAtRef not yet initialized');
+        console.log('[AutoAdvance] ⏭️ Skip: questionStartedAtRef=0 (countdown or not initialized)');
         return;
       }
       
       const timeSinceStart = Date.now() - questionStartTime;
-      if (timeSinceStart < 2000) {
+      if (timeSinceStart < 2500) {
         console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart, questionStartTime });
         return;
       }
@@ -660,24 +718,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const suggesterNickname = (nextItem as any).suggester_nickname as string | null;
       const suggesterAvatarUrl = (nextItem as any).suggester_avatar_url as string | null;
 
-      // CRITICAL FIX: Reset ALL players to is_active = true BEFORE locking count
-      // This ensures presence flickers from the previous round don't affect the new round's count
-      await supabase
-        .from('tv_players')
-        .update({ is_active: true })
-        .eq('tv_session_id', state.sessionId);
-
-      // Query LIVE active player count after reset
-      const { count: livePlayerCount } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', state.sessionId)
-        .eq('is_active', true);
-
-      // Calculate expected count - minimum 2 for paired mode
-      let expectedCount = stateRef.current.isPaired 
-        ? Math.max(livePlayerCount ?? 2, 2) 
-        : (livePlayerCount ?? 2);
+      // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
+      console.log('[startNextRoundFromQueueIfAny] 🔒 Using confirmActivePlayers...');
+      let expectedCount = await confirmActivePlayers(state.sessionId!);
 
       // Adjust for suggester skip rule
       if (suggesterUserId) {
@@ -686,13 +729,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           suggesterId: suggesterUserId.slice(0, 8), 
           adjustedCount: expectedCount 
         });
+        
+        // Update session with adjusted count
+        await supabase
+          .from('tv_sessions')
+          .update({ active_player_count: expectedCount })
+          .eq('id', state.sessionId);
       }
 
-      tvLog('startNextRoundFromQueueIfAny: Locking player count', { 
-        livePlayerCount, 
-        expectedCount,
-        hasSuggester: !!suggesterUserId,
-      });
+      console.log('[startNextRoundFromQueueIfAny] ✅ Verified player count:', expectedCount);
 
       const { error: updateError } = await supabase
         .from('tv_sessions')
@@ -794,7 +839,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toast.error('ვერ დაიწყო შემდეგი რაუნდი');
       return false;
     }
-  }, [isHost, state.sessionId]);
+  }, [isHost, state.sessionId, confirmActivePlayers]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -925,44 +970,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
         }
 
-        // CRITICAL FIX: Reset ALL players to is_active = true before transitioning
-        await supabase
-          .from('tv_players')
-          .update({ is_active: true })
-          .eq('tv_session_id', state.sessionId);
+        // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
+        console.log('[Next Question] 🔒 Using confirmActivePlayers for next question...');
+        const currentPlayerCount = await confirmActivePlayers(state.sessionId);
+        console.log('[Next Question] ✅ Verified player count for next question:', currentPlayerCount);
         
-        // Small delay for DB consistency
-        await new Promise(resolve => setTimeout(resolve, 150));
-
-        // CRITICAL FIX: Query LIVE active player count instead of using stale state
-        // stateRef.current.players.length can be stale during rapid question transitions
-        const { count: liveNextCount } = await supabase
-          .from('tv_players')
-          .select('*', { count: 'exact', head: true })
-          .eq('tv_session_id', state.sessionId)
-          .eq('is_active', true);
-
-        // CRITICAL: Verification loop to ensure we have correct count
-        let verifiedCount = liveNextCount ?? 0;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          if (stateRef.current.isPaired && verifiedCount >= 2) break;
-          if (!stateRef.current.isPaired && verifiedCount >= 1) break;
-          
-          await new Promise(resolve => setTimeout(resolve, 100));
-          const { count: retryCount } = await supabase
-            .from('tv_players')
-            .select('*', { count: 'exact', head: true })
-            .eq('tv_session_id', state.sessionId)
-            .eq('is_active', true);
-          verifiedCount = retryCount ?? verifiedCount;
-        }
-
-        const currentPlayerCount = stateRef.current.isPaired 
-          ? Math.max(verifiedCount, 2) 
-          : verifiedCount;
-        console.log('[Next Question] 🎯 VERIFIED player count for next question:', { liveNextCount, verifiedCount, currentPlayerCount });
-        
-        // Transition to playing FIRST
+        // Transition to playing with verified count
         await supabase
           .from('tv_sessions')
           .update({
@@ -974,18 +987,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           })
           .eq('id', state.sessionId);
         
-        // CRITICAL: Small delay before setting timing refs - ensures React state has caught up
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // CRITICAL: Longer delay before setting timing refs - ensures React state has caught up
+        await new Promise(resolve => setTimeout(resolve, 150));
         
         // Reset timing protection refs AFTER the DB transition
+        // questionStartedAtRef = Date.now() ENABLES auto-advance checks
         hasAdvancedRef.current = false;
         questionStartedAtRef.current = Date.now();
-        console.log('[Next Question] ⏱️ Timing refs reset AFTER transition');
+        console.log('[Next Question] ⏱️ Timing refs ENABLED after transition');
       }
     }, REVEAL_DURATION_MS);
 
     return () => clearTimeout(t);
-  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny]);
+  }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny, confirmActivePlayers]);
 
   // Create TV session (called by TV display)
   const createSession = useCallback(async (): Promise<string | null> => {
@@ -1767,64 +1781,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // CRITICAL FIX: Reset timing protection refs for the new game
-      // This prevents stale hasAdvancedRef from previous games causing issues
+      // hasAdvancedRef prevents double-advance per question
+      // questionStartedAtRef = 0 DISABLES auto-advance during countdown (only timer can advance)
       hasAdvancedRef.current = false;
-      questionStartedAtRef.current = Date.now();
-      console.log('[startGame] ⏱️ Reset timing protection refs for new game');
+      questionStartedAtRef.current = 0; // Set to 0 to DISABLE auto-advance during countdown
+      console.log('[startGame] ⏱️ Reset timing refs (questionStartedAtRef=0 disables auto-advance during countdown)');
 
-      // CRITICAL FIX: Reset ALL players to is_active = true before locking count
-      // This ensures players who may have flickered during poll are properly counted
-      console.log('[startGame] 🔄 Resetting ALL players to is_active=true...');
-      const { error: resetError } = await supabase
-        .from('tv_players')
-        .update({ is_active: true })
-        .eq('tv_session_id', state.sessionId);
-
-      if (resetError) {
-        console.warn('[startGame] ⚠️ Failed to reset player activity:', resetError);
-      } else {
-        console.log('[startGame] ✅ Reset all players to active');
-      }
-
-      // CRITICAL: Longer delay for DB consistency after bulk update
-      // Post-poll the DB may have more latency, so we wait 200ms
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // CRITICAL FIX: Query LIVE active player count with VERIFICATION LOOP
-      // This ensures we don't lock in a stale count right after poll transitions
-      let livePlayerCount = 0;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const { count } = await supabase
-          .from('tv_players')
-          .select('*', { count: 'exact', head: true })
-          .eq('tv_session_id', state.sessionId)
-          .eq('is_active', true);
-        
-        livePlayerCount = count ?? 0;
-        console.log(`[startGame] 📊 Player count check ${attempt + 1}/3:`, livePlayerCount);
-        
-        // If we have at least 2 players in paired mode, we're good
-        if (state.isPaired && livePlayerCount >= 2) break;
-        if (!state.isPaired && livePlayerCount >= 1) break;
-        
-        // Wait a bit and try again
-        if (attempt < 2) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
+      // CRITICAL: Use centralized confirmActivePlayers utility for robust count locking
+      console.log('[startGame] 🔄 Using confirmActivePlayers for robust verification...');
+      const playerCount = await confirmActivePlayers(state.sessionId);
       
-      console.log('[startGame] ✅ Final live player count:', livePlayerCount);
-
-      // Use live count instead of stale state, with minimum of 2 in paired mode
-      const playerCount = state.isPaired 
-        ? Math.max(livePlayerCount, 2) 
-        : (livePlayerCount || state.players.length);
+      console.log('[startGame] ✅ Verified and locked player count:', playerCount);
       
       tvLog('Starting game', { 
         questionCount: formattedQuestions.length, 
         categoryName,
         isUserTrivia: !!userTriviaId,
-        livePlayerCount,
         lockedPlayerCount: playerCount,
       });
 
@@ -1839,7 +1811,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           category_icon: categoryIcon,
           round_number: 1,
           total_rounds: totalRoundsCount,
-          active_player_count: playerCount, // Lock it here BEFORE countdown!
+          active_player_count: playerCount, // Already locked by confirmActivePlayers
         })
         .eq('id', state.sessionId);
 
@@ -1901,58 +1873,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       if (session?.status === 'playing') {
         tvLog('startPlaying skipped: already playing (another device beat us)');
-        questionStartedAtRef.current = Date.now();
+        // Still set timing refs even if we didn't transition - someone else did
         hasAdvancedRef.current = false;
+        questionStartedAtRef.current = Date.now();
         startPlayingMutexRef.current = false;
         return;
       }
 
-      // CRITICAL FIX: Reset ALL players to is_active = true before counting
-      // This ensures players who may have flickered during transitions are properly counted
-      await supabase
-        .from('tv_players')
-        .update({ is_active: true })
-        .eq('tv_session_id', state.sessionId);
+      // CRITICAL: Use centralized confirmActivePlayers utility for robust count locking
+      console.log('[startPlaying] 🔒 Using confirmActivePlayers for robust verification...');
+      let expectedCount = await confirmActivePlayers(state.sessionId);
 
-      // Small delay to ensure DB consistency after bulk update
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      // FIX: Query LIVE active player count from tv_players table
-      // This is the authoritative count right now, not the stale session value
-      const { count: liveActiveCount } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', state.sessionId)
-        .eq('is_active', true);
-
+      // Adjust for suggester skip rule
       const suggesterId = (session as any)?.current_round_suggester_id as string | null;
-      
-      // Calculate expected count from LIVE data, with minimum of 2 in paired mode
-      let expectedCount = state.isPaired 
-        ? Math.max(liveActiveCount ?? 2, 2) 
-        : (liveActiveCount ?? state.players.length);
-      
       if (suggesterId) {
         expectedCount = Math.max(1, expectedCount - 1); // Suggester doesn't answer, but at least 1 must
+        console.log('[startPlaying] 👤 Adjusted for suggester:', { suggesterId: suggesterId.slice(0, 8) + '...', adjustedCount: expectedCount });
+        
+        // Update session with adjusted count
+        await supabase
+          .from('tv_sessions')
+          .update({ active_player_count: expectedCount })
+          .eq('id', state.sessionId);
       }
 
-      console.log('[startPlaying] 🎯 Locking player count from LIVE query:', { 
-        liveActiveCount,
-        staleSessionCount: session?.active_player_count,
-        statePlayersLength: state.players.length,
-        hasSuggester: !!suggesterId,
-        finalExpected: expectedCount,
-      });
-
-      // Update the session with the CORRECT live count
-      await supabase
-        .from('tv_sessions')
-        .update({ active_player_count: expectedCount })
-        .eq('id', state.sessionId);
-
+      console.log('[startPlaying] ✅ Verified player count:', expectedCount);
       tvLog('startPlaying: Locked player count', { expectedCount });
       
-      // Transition to playing FIRST
+      // Transition to playing
       await supabase
         .from('tv_sessions')
         .update({
@@ -1963,22 +1911,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       tvLogPhase('countdown', 'playing', 'startPlaying');
       
-      // CRITICAL: Small delay to ensure React state propagates before setting timing refs
+      // CRITICAL: Longer delay to ensure React state and DB fully propagate
       // This ensures the fallback interval and other checks don't fire prematurely
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
       
       // CRITICAL: Reset timing refs for the new question AFTER the DB transition
-      // This ensures the 1500ms safety window starts AFTER the game is actually playing
+      // questionStartedAtRef = Date.now() ENABLES auto-advance checks (was 0 during countdown)
       hasAdvancedRef.current = false;
       questionStartedAtRef.current = Date.now();
-      console.log('[startPlaying] ⏱️ Question timing reset AFTER transition, expected players:', expectedCount);
+      console.log('[startPlaying] ⏱️ Question timing ENABLED (questionStartedAtRef set), expected players:', expectedCount);
       tvLogTimer('start', QUESTION_TIME);
     } catch (error) {
       tvLogError('startPlaying', error);
     } finally {
       startPlayingMutexRef.current = false;
     }
-  }, [state.sessionId, state.players.length, state.isPaired]);
+  }, [state.sessionId, state.players.length, state.isPaired, confirmActivePlayers]);
 
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {
@@ -2108,12 +2056,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setMyAnswer(null);
       hasAdvancedRef.current = false;
-
-      // FIX: For rounds 2+, we MUST lock the player count and reset timing protection
-      // This was missing, causing host's first answer to trigger premature auto-advance
-      const currentPlayerCount = state.isPaired 
-        ? Math.max(state.players.length, 2) 
-        : state.players.length;
+      
+      // CRITICAL: Set questionStartedAtRef = 0 to DISABLE auto-advance during countdown
+      // Only startPlaying will set it to Date.now() AFTER transitioning to 'playing'
+      questionStartedAtRef.current = 0;
 
       // Check for suggester to potentially subtract from count
       const { data: sessionData } = await supabase
@@ -2122,55 +2068,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('id', state.sessionId)
         .single();
 
-      let expectedPlayerCount = currentPlayerCount;
       const suggesterId = (sessionData as any)?.current_round_suggester_id as string | null;
+
+      // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
+      console.log('[markReady] 🔒 Using confirmActivePlayers for round 2+...');
+      let expectedPlayerCount = await confirmActivePlayers(state.sessionId);
+      
+      // Adjust for suggester skip rule
       if (suggesterId) {
-        expectedPlayerCount = Math.max(0, currentPlayerCount - 1);
-        console.log('[markReady] 👤 Suggester detected, adjusting count:', {
+        expectedPlayerCount = Math.max(1, expectedPlayerCount - 1);
+        console.log('[markReady] 👤 Adjusted for suggester:', {
           suggesterId: suggesterId.substring(0, 8) + '...',
-          originalCount: currentPlayerCount,
           adjustedCount: expectedPlayerCount,
         });
+        
+        // Update session with adjusted count
+        await supabase
+          .from('tv_sessions')
+          .update({ active_player_count: expectedPlayerCount })
+          .eq('id', state.sessionId);
       }
-
-      // CRITICAL: Reset timing protection ref BEFORE countdown starts
-      // This ensures the 300ms safety window is active for each new round
-      questionStartedAtRef.current = Date.now();
       
-      // FIX: Reset ALL players to is_active = true before locking count
-      // This ensures everyone is counted, even if presence flickered them off
-      await supabase
-        .from('tv_players')
-        .update({ is_active: true })
-        .eq('tv_session_id', state.sessionId);
-
-      // Query LIVE count after resetting everyone to active
-      const { count: liveCount } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', state.sessionId)
-        .eq('is_active', true);
-
-      const liveExpectedCount = state.isPaired 
-        ? Math.max(liveCount ?? 2, 2) 
-        : (liveCount ?? currentPlayerCount);
-      
-      const finalExpected = suggesterId 
-        ? Math.max(1, liveExpectedCount - 1) 
-        : liveExpectedCount;
-      
-      console.log('[markReady] 🔒 Locking player count for round 2+ from LIVE query:', {
-        liveCount,
-        finalExpected,
-        hasSuggester: !!suggesterId,
-        roundNumber: stateRef.current.roundNumber,
-      });
+      console.log('[markReady] ✅ Verified player count for round 2+:', expectedPlayerCount);
 
       await supabase
         .from('tv_sessions')
         .update({ 
           status: 'countdown',
-          active_player_count: finalExpected, // LOCK LIVE COUNT
+          active_player_count: expectedPlayerCount, // Already set by confirmActivePlayers or adjusted above
         })
         .eq('id', state.sessionId);
 
@@ -2192,7 +2117,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       isReadyForNextRound: true,
     });
     tvLog('Player marked ready for next round', { playerId: myPlayerId.slice(0, 8) });
-  }, [state.players, state.sessionId, state.phase, myPlayerId, myScore, isHost, state.isPaired]);
+  }, [state.players, state.sessionId, state.phase, myPlayerId, myScore, isHost, state.isPaired, confirmActivePlayers]);
 
   // NOTE: Previously we auto-advanced from round-intro when ALL players pressed ready.
   // That stalled because regular controllers don't have a ready button.
