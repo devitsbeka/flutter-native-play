@@ -4,6 +4,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SmartAvatar } from '@/components/shared/SmartAvatar';
 import { Check, Loader2 } from 'lucide-react';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
+import { AppIcon } from '@/components/shared/AppIcon';
 
 interface TVRoundIntroScreenProps {
   isController?: boolean;
@@ -17,6 +18,7 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
   const { 
     players, 
     categoryName, 
+    categoryIcon,
     roundNumber,
     totalRounds,
   } = useTVGame();
@@ -61,8 +63,9 @@ export const TVRoundIntroScreen: React.FC<TVRoundIntroScreenProps> = ({
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-        className="mb-10 flex flex-col items-center"
+        className="mb-10 flex flex-col items-center gap-4"
       >
+        <AppIcon slug={categoryIcon} size={80} hideIfEmpty />
         <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
           {categoryName || 'კატეგორია'}
         </h2>

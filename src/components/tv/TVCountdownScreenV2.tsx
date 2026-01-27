@@ -4,6 +4,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { tvLog, tvLogPhase } from '@/utils/tvDebug';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
+import { AppIcon } from '@/components/shared/AppIcon';
 
 
 export const TVCountdownScreenV2: React.FC = () => {
@@ -60,7 +61,7 @@ export const TVCountdownScreenV2: React.FC = () => {
         >
           <p className="text-purple-300 text-lg">რაუნდი {roundNumber || 1}</p>
           <div className="flex items-center gap-3 text-white text-2xl font-bold">
-            {categoryIcon && <span className="text-3xl">{categoryIcon}</span>}
+            <AppIcon slug={categoryIcon} size={40} hideIfEmpty />
             <span>{categoryName}</span>
           </div>
         </motion.div>
