@@ -115,7 +115,7 @@ serve(async (req) => {
   }
 
   try {
-    const { categoryName } = await req.json();
+    const { categoryName, excludeTopics = [] } = await req.json();
 
     if (!categoryName) {
       return new Response(
@@ -131,9 +131,14 @@ serve(async (req) => {
 
     // Detect category type and get appropriate prompt
     const categoryType = detectCategoryType(categoryName);
-    const prompt = getPromptForCategory(categoryName, categoryType);
+    let prompt = getPromptForCategory(categoryName, categoryType);
+    
+    // Add exclusion instruction if there are topics to exclude
+    if (excludeTopics.length > 0) {
+      prompt += `\n\nIMPORTANT: Do NOT include any of these already-used topics: ${excludeTopics.join(', ')}. Generate completely DIFFERENT suggestions that are not in this list.`;
+    }
 
-    console.log(`Generating suggestions for category "${categoryName}" (type: ${categoryType})`);
+    console.log(`Generating suggestions for category "${categoryName}" (type: ${categoryType}), excluding ${excludeTopics.length} topics`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -146,11 +151,11 @@ serve(async (req) => {
         messages: [
           { 
             role: "system", 
-            content: "You are a trivia question expert. Always return valid JSON arrays with specific, famous names that have Wikipedia pages. Never return generic categories or themes." 
+            content: "You are a trivia question expert. Always return valid JSON arrays with specific, famous names that have Wikipedia pages. Never return generic categories or themes. Never repeat topics from any exclusion list provided." 
           },
           { role: "user", content: prompt }
         ],
-        temperature: 0.9, // Higher for variety on refresh
+        temperature: 0.95, // Higher for variety on refresh
       }),
     });
 
@@ -178,9 +183,16 @@ serve(async (req) => {
       suggestions = [];
     }
 
+    // Filter out any excluded topics that might still appear (case-insensitive)
+    const filteredSuggestions = suggestions.filter(
+      (s: string) => !excludeTopics.some(
+        (e: string) => e.toLowerCase() === s.toLowerCase()
+      )
+    );
+    
     return new Response(
       JSON.stringify({ 
-        suggestions: suggestions.slice(0, 12),
+        suggestions: filteredSuggestions.slice(0, 12),
         categoryType 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
