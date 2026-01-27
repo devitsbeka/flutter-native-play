@@ -147,6 +147,12 @@ export function getQuestionText(theme: ThemeType, questionType: 'text' | 'image'
 
 export function getSuggestionsForCategory(categoryName: string): string[] {
   const theme = detectThemeFromCategoryName(categoryName);
+  
+  // Only return suggestions if we have a matching theme
+  if (theme === 'generic') {
+    return []; // No suggestions for unknown categories
+  }
+  
   const preset = PRESET_CATEGORIES.find(c => c.id === theme);
   
   if (preset) {
@@ -154,7 +160,5 @@ export function getSuggestionsForCategory(categoryName: string): string[] {
     return shuffled.slice(0, 6);
   }
   
-  const allKeywords = PRESET_CATEGORIES.flatMap(c => c.keywords);
-  const shuffled = [...allKeywords].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 6);
+  return [];
 }
