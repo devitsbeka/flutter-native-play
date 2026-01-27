@@ -195,7 +195,8 @@ export default function CategoryQuizPage() {
   // Fetch questions using unified questionService
   useEffect(() => {
     if (hasFetched.current) return;
-    if (!categoryId || !category) return;
+    // Only require categoryId - category may be undefined for DB-only categories like image_trivia
+    if (!categoryId) return;
 
     hasFetched.current = true;
     setLoading(true);
@@ -266,7 +267,7 @@ export default function CategoryQuizPage() {
     };
 
     fetchQuestionsFromService();
-  }, [categoryId, category, levelId]);
+  }, [categoryId, levelId]);
 
   // Timer - pauses when frozen
   useEffect(() => {
