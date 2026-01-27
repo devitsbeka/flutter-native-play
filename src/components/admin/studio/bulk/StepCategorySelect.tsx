@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { FileText, ImageIcon, X, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, ImageIcon, X, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,8 +10,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { getSuggestionsForCategory, detectThemeFromCategoryName, getQuestionText, ThemeType } from './PresetCategories';
+import { detectThemeFromCategoryName, getQuestionText, ThemeType } from './PresetCategories';
 import { CategoryWithCounts } from '@/hooks/useQuestionStudio';
+import { supabase } from '@/integrations/supabase/client';
 
 type SimpleQuestionType = 'text' | 'image';
 
@@ -37,14 +38,37 @@ export function StepCategorySelect({
   onNext,
 }: StepCategorySelectProps) {
   const [inputValue, setInputValue] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
   
-  // Get AI suggestions based on selected category
-  const suggestions = useMemo(() => {
-    if (!selectedCategory) return [];
-    return getSuggestionsForCategory(selectedCategory.name);
-  }, [selectedCategory?.name]);
+  // Fetch AI suggestions when category changes
+  useEffect(() => {
+    if (!selectedCategory) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-topic-suggestions', {
+          body: { categoryName: selectedCategory.name }
+        });
+        
+        if (error) throw error;
+        setSuggestions(data?.suggestions || []);
+      } catch (err) {
+        console.error('Failed to fetch suggestions:', err);
+        setSuggestions([]);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    fetchSuggestions();
+  }, [selectedCategory?.id]);
 
   // Detect theme for dynamic question text preview
   const theme: ThemeType = selectedCategory 
@@ -92,33 +116,44 @@ export function StepCategorySelect({
         </Select>
       </div>
 
-      {/* 2. AI Suggestions (only show when category is selected) */}
-      {selectedCategoryId && suggestions.length > 0 && (
+      {/* 2. AI Suggestions (dynamic, fetched from AI) */}
+      {selectedCategoryId && (
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             AI რეკომენდაციები
           </Label>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map(suggestion => {
-              const isAdded = subjects.includes(suggestion);
-              return (
-                <button
-                  key={suggestion}
-                  onClick={() => !isAdded && addSubject(suggestion)}
-                  disabled={isAdded}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full border text-sm transition-all",
-                    isAdded
-                      ? "border-primary/30 bg-primary/10 text-muted-foreground cursor-default"
-                      : "border-border hover:border-primary hover:bg-primary/10 cursor-pointer"
-                  )}
-                >
-                  {isAdded ? '✓' : '+'} {suggestion}
-                </button>
-              );
-            })}
-          </div>
+          {isLoadingSuggestions ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              იტვირთება რეკომენდაციები...
+            </div>
+          ) : suggestions.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map(suggestion => {
+                const isAdded = subjects.includes(suggestion);
+                return (
+                  <button
+                    key={suggestion}
+                    onClick={() => !isAdded && addSubject(suggestion)}
+                    disabled={isAdded}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full border text-sm transition-all",
+                      isAdded
+                        ? "border-primary/30 bg-primary/10 text-muted-foreground cursor-default"
+                        : "border-border hover:border-primary hover:bg-primary/10 cursor-pointer"
+                    )}
+                  >
+                    {isAdded ? '✓' : '+'} {suggestion}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              ვერ მოიძებნა რეკომენდაციები. დაამატეთ თემები ხელით ქვემოთ.
+            </p>
+          )}
         </div>
       )}
 
