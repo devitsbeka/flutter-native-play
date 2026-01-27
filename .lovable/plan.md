@@ -1,113 +1,73 @@
 
-# Fix TV Screens Category Icon Display
+# Fix TV Results Screen - Georgian Translation & Background
 
-## Problem
-On TV screens before a round begins (Countdown and Round Intro screens), category icons sometimes display as raw text (e.g., "khachapuri ქართული სამზარეულო") instead of the actual icon graphic. This happens because:
+## Issues Found
 
-1. **TVCountdownScreenV2** renders `categoryIcon` as plain text inside a `<span>`
-2. **TVRoundIntroScreen** doesn't render any icon at all
-
-## Solution
-Replace raw text rendering with the `AppIcon` component that properly handles icon slugs and shows nothing when no valid icon exists.
+1. **English text (line 200-202)**: The text "Host can start a new round from their phone" is hardcoded in English
+2. **White bottom space**: The component uses `h-screen` with `-mt-10` negative margin, which creates visual issues. The container doesn't fully extend to fill the viewport height
 
 ---
 
 ## Changes
 
-### 1. TVCountdownScreenV2.tsx
+### 1. Translate English Text to Georgian (TVResultsScreen.tsx)
 
-**Current code (line 62-65):**
+**Line 200-202 - Change from:**
 ```tsx
-<div className="flex items-center gap-3 text-white text-2xl font-bold">
-  {categoryIcon && <span className="text-3xl">{categoryIcon}</span>}
-  <span>{categoryName}</span>
-</div>
+<p className="text-purple-300 text-sm">
+  Host can start a new round from their phone
+</p>
 ```
 
-**Updated code:**
+**To:**
 ```tsx
-<div className="flex items-center gap-3 text-white text-2xl font-bold">
-  <AppIcon slug={categoryIcon} size={40} hideIfEmpty />
-  <span>{categoryName}</span>
-</div>
+<p className="text-purple-300 text-sm">
+  მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან
+</p>
 ```
-
-- Import `AppIcon` from `@/components/shared/AppIcon`
-- Use `hideIfEmpty` so if no valid icon slug exists, nothing is shown (not even a placeholder)
 
 ---
 
-### 2. TVRoundIntroScreen.tsx
+### 2. Fix Background Coverage (TVResultsScreen.tsx)
 
-**Current code (lines 17-22):**
+**Line 67 - Current container:**
 ```tsx
-const { 
-  players, 
-  categoryName, 
-  roundNumber,
-  totalRounds,
-} = useTVGame();
+<div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col -mt-10">
 ```
 
-**Updated to include categoryIcon:**
+**Updated container - use `min-h-screen` and remove negative margin:**
 ```tsx
-const { 
-  players, 
-  categoryName, 
-  categoryIcon,
-  roundNumber,
-  totalRounds,
-} = useTVGame();
+<div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col">
 ```
 
-**Current category display (lines 59-69):**
+The `-mt-10` was causing the component to shift up, leaving a gap at the bottom. Using `min-h-screen` without the negative margin ensures the purple gradient background fills the entire viewport.
+
+Additionally, adjust the header margin to compensate:
+
+**Line 99 - Change header class from:**
 ```tsx
-<motion.div
-  initial={{ opacity: 0, scale: 0.8 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-  className="mb-10 flex flex-col items-center"
->
-  <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
-    {categoryName || 'კატეგორია'}
-  </h2>
-</motion.div>
+className="text-center mb-6 flex-shrink-0 mt-10"
 ```
 
-**Updated with icon:**
+**To (remove mt-10 since we removed the negative margin above):**
 ```tsx
-<motion.div
-  initial={{ opacity: 0, scale: 0.8 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-  className="mb-10 flex flex-col items-center gap-4"
->
-  <AppIcon slug={categoryIcon} size={80} hideIfEmpty />
-  <h2 className="text-2xl sm:text-3xl font-bold text-white text-center">
-    {categoryName || 'კატეგორია'}
-  </h2>
-</motion.div>
+className="text-center mb-6 flex-shrink-0"
 ```
-
-- Import `AppIcon` from `@/components/shared/AppIcon`
-- Add `categoryIcon` to destructured context values
-- Add `gap-4` to container for spacing between icon and text
-- Display icon above the category name with `hideIfEmpty` to show nothing if invalid
 
 ---
 
 ## File Changes Summary
 
-| File | Change |
-|------|--------|
-| `src/components/tv/TVCountdownScreenV2.tsx` | Import AppIcon, replace `<span>{categoryIcon}</span>` with `<AppIcon>` |
-| `src/components/tv/TVRoundIntroScreen.tsx` | Import AppIcon, add `categoryIcon` from context, add icon above category name |
+| File | Line | Change |
+|------|------|--------|
+| `src/components/tv/TVResultsScreen.tsx` | 67 | Remove `-mt-10`, change `h-screen` to `min-h-screen` |
+| `src/components/tv/TVResultsScreen.tsx` | 99 | Remove `mt-10` from header |
+| `src/components/tv/TVResultsScreen.tsx` | 201 | Translate to Georgian |
 
 ---
 
 ## Result
 
 After these changes:
-- Valid icon slugs (e.g., "khachapuri", "sports") will render as proper graphics from the icon library
-- Invalid or missing icons will show nothing (clean UI, no text fallback)
-- Both Countdown and Round Intro screens will have consistent icon rendering behavior
+- The hint text will display in Georgian: "მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან"
+- The purple gradient background will fill the entire TV screen with no white gaps at the bottom
