@@ -1006,6 +1006,11 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     </div>
                   </div>
 
+                  {/* AI info text */}
+                  <p className="text-sm text-white/80 text-center">
+                    ✨ AI დააგენერირებს <span className="font-bold">{DEFAULT_QUESTIONS_PER_ROUND} კითხვას</span> თითოეულ რაუნდზე
+                  </p>
+
                   {/* Add round button */}
                   {roundNames.length < 5 && (
                     <button
@@ -1017,13 +1022,6 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     </button>
                   )}
 
-                  {/* Info */}
-                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm text-center">
-                    <p className="text-sm text-white/80">
-                      ✨ AI დაგენერირებს <span className="font-bold">{DEFAULT_QUESTIONS_PER_ROUND} კითხვას</span> თითოეულ რაუნდზე
-                    </p>
-                  </div>
-
                   {/* Generate button */}
                   <ChunkyButton
                     variant="whitePurple"
@@ -1032,7 +1030,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     className="w-full"
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
-                    დაგენერირება
+                    შექმნა
                     <ChevronRight className="w-5 h-5 ml-2" />
                   </ChunkyButton>
                 </motion.div>
