@@ -1,170 +1,194 @@
 
-# Smarter AI Suggestions: Category-Specific Person/Place/Item Recommendations
 
-## Problem Analysis
+# Fix AI Suggestions: Persistent Refresh with Duplicate Prevention
 
-The current suggestions are **abstract topic themes** (like "Famous Athletes", "Sports Equipment") that aren't directly usable for Wikipedia lookups. What you actually need is:
+## Problems Identified
 
-| Category | Suggestions Should Be | Question Format |
-|----------|----------------------|-----------------|
-| **Sports** | Specific sportspeople names | "ვინ არის ეს ფეხბურთელი?", "ვინ არის ეს კალათბურთელი?" |
-| **Geography** | Cities, flags, landmarks | "რომელი ქალაქია?", "რომელი ქვეყნის დროშაა?" |
-| **Art** | Painters, paintings, sculptors | "ვინ დახატა?", "ვინ არის ეს მხატვარი?" |
-| **History** | Historical figures | "ვინ არის ეს ისტორიული პიროვნება?" |
-| **Science** | Scientists, inventions | "ვინ არის ეს მეცნიერი?" |
+1. **Refresh returns same suggestions** - The AI doesn't know what was already shown, so clicking refresh can return duplicate suggestions
+2. **Previously selected topics reappear** - When refreshing, topics you already added as subjects show up again in recommendations
 
-## Solution Architecture
+## Solution
 
-### 1. Category-Aware Prompt System
-
-Update the edge function to detect the category type and generate **specific, searchable names**:
-
-```text
-Category: "სპორტი" (Sports)
-┌─────────────────────────────────────────────────────────────────┐
-│  AI რეკომენდაციები  [↻]                                         │
-│  ┌────────────────┐ ┌────────────────┐ ┌──────────────────────┐  │
-│  │ + Lionel Messi │ │ + Michael Jordan│ │ + Serena Williams   │  │
-│  └────────────────┘ └────────────────┘ └──────────────────────┘  │
-│  ┌─────────────────┐ ┌──────────────────┐ ┌────────────────────┐ │
-│  │ + Usain Bolt    │ │ + Cristiano Ronaldo│ │ + LeBron James   │ │
-│  └─────────────────┘ └──────────────────┘ └────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-
-Preview: "ვინ არის ეს სპორტსმენი?" → Image of athlete → 4 athlete options
-```
-
-### 2. Category Type Detection
-
-Create a mapping system that detects the category's primary subject type:
-
-| Category Keywords | Subject Type | Question Template |
-|-------------------|--------------|-------------------|
-| sport, athlete, football | `athletes` | "ვინ არის ეს სპორტსმენი?" |
-| geography, city, country | `places` | "რომელი ქალაქია?" / "რომელი ქვეყანაა?" |
-| art, painting, museum | `artworks` | "ვინ დახატა?" / "ვინ არის ეს მხატვარი?" |
-| history, war, revolution | `historical_figures` | "ვინ არის ეს ისტორიული პიროვნება?" |
-| science, physics, chemistry | `scientists` | "ვინ არის ეს მეცნიერი?" |
-| music, singer, composer | `musicians` | "ვინ არის ეს მუსიკოსი?" |
-| cinema, actor, director | `entertainers` | "ვინ არის ეს მსახიობი?" |
-
-### 3. Dynamic Question Text
-
-The question format should adapt based on:
-- **Category type** (sports → athletes, geography → places)
-- **Specific subtopic** within category (footballers vs tennis players)
+Track ALL topics that have been shown or selected during the session, and pass them to the edge function to exclude when generating new suggestions.
 
 ## Technical Changes
 
-### File 1: `supabase/functions/generate-topic-suggestions/index.ts`
+### File 1: `src/components/admin/studio/bulk/StepCategorySelect.tsx`
 
-Complete rewrite with smart category detection:
-
-```typescript
-// Category type definitions
-type CategoryType = 'athletes' | 'places' | 'artworks' | 'historical' | 'scientists' | 'musicians' | 'entertainers' | 'generic';
-
-// Detect category type from name
-function detectCategoryType(categoryName: string): CategoryType {
-  const name = categoryName.toLowerCase();
-  
-  if (/sport|athlete|football|basketball|tennis|olympic/.test(name)) return 'athletes';
-  if (/geography|city|country|capital|flag|landmark/.test(name)) return 'places';
-  if (/art|paint|sculpt|museum|gallery/.test(name)) return 'artworks';
-  if (/history|war|revolution|ancient|medieval/.test(name)) return 'historical';
-  if (/science|physics|chemistry|biology|math/.test(name)) return 'scientists';
-  if (/music|song|singer|composer|band|orchestra/.test(name)) return 'musicians';
-  if (/cinema|movie|actor|director|film|hollywood/.test(name)) return 'entertainers';
-  
-  return 'generic';
-}
-
-// Get category-specific prompt
-function getPromptForCategory(categoryName: string, categoryType: CategoryType): string {
-  const prompts: Record<CategoryType, string> = {
-    athletes: `Generate 12 famous athletes and sportspeople. Include:
-- 4 football/soccer players (e.g., Lionel Messi, Cristiano Ronaldo)
-- 3 basketball players (e.g., Michael Jordan, LeBron James)
-- 2 tennis players (e.g., Serena Williams, Roger Federer)
-- 3 other sports athletes (e.g., Usain Bolt, Michael Phelps)
-Each person must have a Wikipedia page with their photo.`,
-
-    places: `Generate 12 famous places for visual trivia. Include:
-- 4 major world cities (e.g., Paris, Tokyo, New York)
-- 4 famous landmarks (e.g., Eiffel Tower, Colosseum)
-- 4 countries with distinctive flags (e.g., Japan, Brazil)
-Each must be visually recognizable.`,
-
-    artworks: `Generate 12 famous art-related subjects. Include:
-- 4 famous painters (e.g., Leonardo da Vinci, Van Gogh)
-- 4 famous paintings (e.g., Mona Lisa, Starry Night)
-- 4 famous sculptors or their works (e.g., Michelangelo, The Thinker)
-Each must have Wikipedia images.`,
-
-    // ... other category types
-  };
-  
-  return prompts[categoryType] || prompts.generic;
-}
-```
-
-### File 2: `src/components/admin/studio/bulk/PresetCategories.ts`
-
-Add extended theme types and question templates:
+Add state to track all used/shown topics and pass them to the edge function:
 
 ```typescript
-export type ExtendedThemeType = 
-  | 'athletes' | 'footballers' | 'basketballers' | 'tennis_players'
-  | 'cities' | 'countries' | 'flags' | 'landmarks'
-  | 'painters' | 'paintings' | 'sculptors'
-  | 'scientists' | 'historical_figures'
-  | 'musicians' | 'composers' | 'singers'
-  | 'actors' | 'directors'
-  | 'generic';
+// Add new state to track all topics ever shown or selected
+const [usedTopics, setUsedTopics] = useState<Set<string>>(new Set());
 
-// Extended question templates
-const extendedTemplates: Record<ExtendedThemeType, Record<'text' | 'image', string>> = {
-  athletes: { image: 'ვინ არის ეს სპორტსმენი?', text: 'ვინ არის ეს სპორტსმენი?' },
-  footballers: { image: 'ვინ არის ეს ფეხბურთელი?', text: 'ვინ არის ეს ფეხბურთელი?' },
-  basketballers: { image: 'ვინ არის ეს კალათბურთელი?', text: 'ვინ არის ეს კალათბურთელი?' },
-  cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
-  countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
-  flags: { image: 'რომელი ქვეყნის დროშაა?', text: 'რომელი ქვეყნის დროშაა?' },
-  landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
-  painters: { image: 'ვინ არის ეს მხატვარი?', text: 'ვინ არის ეს მხატვარი?' },
-  paintings: { image: 'ვინ დახატა ეს ნახატი?', text: 'ვინ დახატა?' },
-  // ... etc
+// Update fetchSuggestions to accept exclusion list
+const fetchSuggestions = async (excludeTopics: string[] = []) => {
+  if (!selectedCategory) {
+    setAllSuggestions([]);
+    return;
+  }
+  
+  setIsLoadingSuggestions(true);
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-topic-suggestions', {
+      body: { 
+        categoryName: selectedCategory.name,
+        excludeTopics: excludeTopics  // Pass topics to exclude
+      }
+    });
+    
+    if (error) throw error;
+    
+    const newSuggestions = data?.suggestions || [];
+    
+    // Add new suggestions to used topics set
+    setUsedTopics(prev => {
+      const updated = new Set(prev);
+      newSuggestions.forEach((s: string) => updated.add(s));
+      return updated;
+    });
+    
+    setAllSuggestions(newSuggestions);
+  } catch (err) {
+    console.error('Failed to fetch suggestions:', err);
+    setAllSuggestions([]);
+  } finally {
+    setIsLoadingSuggestions(false);
+  }
 };
+
+// Update refresh to exclude all previously used topics
+const refreshSuggestions = () => {
+  // Combine current subjects with all previously shown suggestions
+  const toExclude = [...subjects, ...Array.from(usedTopics)];
+  fetchSuggestions(toExclude);
+};
+
+// When adding a subject, also add to usedTopics
+const addSubject = (subject: string) => {
+  if (subject.trim() && !subjects.includes(subject.trim())) {
+    onSubjectsChange([...subjects, subject.trim()]);
+    setUsedTopics(prev => new Set(prev).add(subject.trim()));
+  }
+};
+
+// Reset usedTopics when category changes
+useEffect(() => {
+  setUsedTopics(new Set());
+  fetchSuggestions([]);
+}, [selectedCategory?.id]);
 ```
 
-### File 3: `supabase/functions/bulk-generate-contextual-questions/index.ts`
+### File 2: `supabase/functions/generate-topic-suggestions/index.ts`
 
-Update to use extended themes for more accurate question formatting and distractor generation.
+Update to accept and use the exclusion list:
 
-## Implementation Summary
+```typescript
+serve(async (req) => {
+  // ...existing code...
+  
+  try {
+    const { categoryName, excludeTopics = [] } = await req.json();
+    
+    // ...existing category detection code...
+    
+    // Add exclusion instruction to prompt
+    let excludeInstruction = '';
+    if (excludeTopics.length > 0) {
+      excludeInstruction = `\n\nIMPORTANT: Do NOT include any of these already-used topics: ${excludeTopics.join(', ')}. Generate completely different suggestions.`;
+    }
+    
+    const fullPrompt = prompt + excludeInstruction;
+    
+    // Use the fullPrompt in the AI call
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { 
+            role: "system", 
+            content: "You are a trivia question expert. Always return valid JSON arrays with specific, famous names. Never repeat topics from the exclusion list." 
+          },
+          { role: "user", content: fullPrompt }
+        ],
+        temperature: 0.95, // Higher temperature for more variety
+      }),
+    });
+    
+    // ...rest of existing code...
+    
+    // Filter out any excluded topics that might still appear
+    const filteredSuggestions = suggestions.filter(
+      (s: string) => !excludeTopics.some(
+        (e: string) => e.toLowerCase() === s.toLowerCase()
+      )
+    );
+    
+    return new Response(
+      JSON.stringify({ 
+        suggestions: filteredSuggestions.slice(0, 12),
+        categoryType 
+      }),
+      // ...
+    );
+  }
+});
+```
+
+## Flow Diagram
+
+```text
+Initial Load:
+┌──────────────────┐     ┌─────────────────────┐
+│ Select Category  │────>│ Fetch 12 suggestions│
+└──────────────────┘     │ usedTopics = []     │
+                         └─────────────────────┘
+                                   │
+                                   v
+                         ┌─────────────────────┐
+                         │ Show 6 suggestions  │
+                         │ Store all 12 in     │
+                         │ usedTopics Set      │
+                         └─────────────────────┘
+
+Click Refresh:
+┌──────────────────┐     ┌─────────────────────┐
+│ Click Refresh    │────>│ Fetch NEW 12 topics │
+│                  │     │ excludeTopics =     │
+│                  │     │   usedTopics +      │
+│                  │     │   subjects          │
+└──────────────────┘     └─────────────────────┘
+                                   │
+                                   v
+                         ┌─────────────────────┐
+                         │ Show 6 NEW topics   │
+                         │ Add to usedTopics   │
+                         └─────────────────────┘
+
+Select Topic:
+┌──────────────────┐     ┌─────────────────────┐
+│ Click "+ Messi"  │────>│ Add to subjects     │
+│                  │     │ Add to usedTopics   │
+│                  │     │ Remove from visible │
+└──────────────────┘     └─────────────────────┘
+```
+
+## Expected Behavior After Fix
+
+1. **First load**: Shows 6 random athletes (e.g., Messi, Ronaldo, Pelé, Jordan, LeBron, Bolt)
+2. **Click "+ Messi"**: Messi moves to subjects, next suggestion from pool appears
+3. **Click Refresh**: Fetches 12 NEW names, excluding all previously shown + selected
+4. **Click Refresh again**: Fetches 12 MORE new names, none repeated from before
+
+## Summary
 
 | File | Changes |
 |------|---------|
-| `generate-topic-suggestions/index.ts` | Complete rewrite with category detection and specific person/place suggestions |
-| `PresetCategories.ts` | Add extended theme types and question templates |
-| `bulk-generate-contextual-questions/index.ts` | Update theme context and question templates |
-| `StepCategorySelect.tsx` | Minor update to pass detected theme type |
+| `StepCategorySelect.tsx` | Add `usedTopics` Set state, pass exclusions to edge function, update refresh logic |
+| `generate-topic-suggestions/index.ts` | Accept `excludeTopics` param, add exclusion instruction to prompt, filter results |
 
-## Expected Result
-
-After implementation:
-
-**Sports category:**
-- Suggestions: "Lionel Messi", "Michael Jordan", "Serena Williams" (actual names)
-- Question: "ვინ არის ეს ფეხბურთელი?" with athlete's image
-- Distractors: Other famous athletes
-
-**Geography category:**
-- Suggestions: "Paris", "Eiffel Tower", "Japan Flag" (actual places)
-- Question: "რომელი ქალაქია?" or "რომელი ქვეყნის დროშაა?"
-- Distractors: Other similar places/flags
-
-**Art category:**
-- Suggestions: "Leonardo da Vinci", "Mona Lisa", "The Starry Night"
-- Question: "ვინ დახატა?" or "ვინ არის ეს მხატვარი?"
-- Distractors: Other painters/artworks
