@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Vote, 
   Check, 
@@ -62,6 +63,15 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   contextPhase,
   code,
 }) => {
+  const navigate = useNavigate();
+  
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigate('/team');
+    }
+  };
   const {
     suggestions,
     mySuggestions,
@@ -420,7 +430,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
           <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <button 
-                onClick={() => window.history.back()}
+                onClick={handleBack}
                 className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
               >
                 <ChevronLeft className="w-6 h-6" />
