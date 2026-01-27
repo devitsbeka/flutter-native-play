@@ -31,6 +31,7 @@ interface UserTrivia {
   title: string;
   cover_image?: string;
   icon_slug?: string;
+  is_blind?: boolean;
 }
 
 interface ControllerDirectSelectionProps {
@@ -76,7 +77,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     if (showTriviaPicker && userTrivias.length === 0) {
       supabase
         .from('user_quiz_posts')
-        .select('id, title, cover_image, icon_slug')
+        .select('id, title, cover_image, icon_slug, is_blind')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .then(({ data }) => {
@@ -275,8 +276,14 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     ) : (
                       <Sparkles className="w-10 h-10 text-purple-300" />
                     )}
-                    <span className="flex-1 text-left font-medium text-white">{trivia.title}</span>
-                    <span className="text-xs text-yellow-400">⚠️ გამოტოვებ</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-left font-medium text-white block truncate">{trivia.title}</span>
+                      {trivia.is_blind ? (
+                        <span className="text-xs text-green-400">ითამაშე</span>
+                      ) : (
+                        <span className="text-xs text-yellow-400">⚠️ გამოტოვებ</span>
+                      )}
+                    </div>
                     {isSelected ? (
                       <Check className="w-5 h-5 text-green-400" />
                     ) : (
@@ -335,9 +342,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-white text-sm truncate">{item.category_name}</p>
                     <p className="text-xs text-purple-300">
-                      {item.source_type === 'category' ? 'კატეგორია' : (
-                        <span className="text-yellow-400">შენი ტრივია - გამოტოვებ</span>
-                      )}
+                      {item.source_type === 'category' ? 'კატეგორია' : 'შენი ტრივია'}
                     </p>
                   </div>
                   <button 

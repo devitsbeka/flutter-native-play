@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Play, ChevronLeft, Lock, Globe, Plus } from "lucide-react";
+import { Heart, Play, ChevronLeft, Lock, Globe, Plus, Gamepad2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ interface Trivia {
   plays_count: number;
   likes_count: number;
   is_public: boolean;
+  is_blind: boolean;
   subject?: string;
 }
 
@@ -64,7 +65,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
 
       const { data, error } = await supabase
         .from("user_quiz_posts")
-        .select("id, title, cover_image, plays_count, likes_count, is_public, subject")
+        .select("id, title, cover_image, plays_count, likes_count, is_public, is_blind, subject")
         .eq("user_id", user.id)
         .is("collection_id", null)
         .neq("subject", "personal")
@@ -258,6 +259,16 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                                 <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
                               </span>
                             </div>
+                            {/* Spoiler indicator */}
+                            {trivia.is_blind ? (
+                              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
+                                <Gamepad2 className="w-3 h-3" /> ითამაშე
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                👀 იცი პასუხები
+                              </span>
+                            )}
                           </div>
                         </motion.button>
                       ))}

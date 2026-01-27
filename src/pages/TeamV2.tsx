@@ -950,6 +950,7 @@ function TeamContentV2() {
               questions: questionsToSave,
               icon_slug: questions[0]?.icon_slug || null,
               is_public: false,
+              is_blind: true, // Creator never saw answers (play mode)
             }]);
 
           if (error) {

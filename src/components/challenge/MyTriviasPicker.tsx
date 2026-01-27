@@ -14,6 +14,7 @@ interface Trivia {
   plays_count: number;
   likes_count: number;
   is_public: boolean;
+  is_blind: boolean;
   subject?: string;
 }
 
@@ -42,7 +43,7 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
 
       const { data, error } = await supabase
         .from("user_quiz_posts")
-        .select("id, title, cover_image, plays_count, likes_count, is_public, subject")
+        .select("id, title, cover_image, plays_count, likes_count, is_public, is_blind, subject")
         .eq("user_id", user.id)
         .is("collection_id", null)
         .neq("subject", "personal")
@@ -169,6 +170,16 @@ export function MyTriviasPicker({ onSelect }: MyTriviasPickerProps) {
                       <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
                     </span>
                   </div>
+                  {/* Spoiler indicator */}
+                  {trivia.is_blind ? (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
+                      <Gamepad2 className="w-3 h-3" /> ითამაშე
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      👀 იცი პასუხები
+                    </span>
+                  )}
                 </div>
               </motion.button>
             ))}

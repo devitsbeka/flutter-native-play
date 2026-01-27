@@ -510,6 +510,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         questions: structuredClone(questionsToSave) as unknown as Json,
         icon_slug: questions[0]?.icon_slug || null,
         is_public: false,
+        is_blind: true, // Creator never saw answers (play mode)
       }])
       .select()
       .single();
