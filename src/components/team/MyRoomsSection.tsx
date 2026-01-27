@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession } from "@/hooks/useMyRooms";
@@ -368,17 +369,12 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                       key={p.user_id || idx} 
                       className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 shadow-md"
                     >
-                      {p.avatar_url ? (
-                        <img 
-                          src={p.avatar_url} 
-                          alt={p.nickname}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-sm font-bold">
-                          {p.nickname?.charAt(0).toUpperCase() || "?"}
-                        </div>
-                      )}
+                      <SafeAvatarImage
+                        avatarUrl={p.avatar_url}
+                        fallback={p.nickname || "?"}
+                        className="w-full h-full object-cover"
+                        containerClassName="w-full h-full"
+                      />
                     </div>
                   ))}
                   {displayPlayers.length > 3 && (
@@ -716,17 +712,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
                         if (p.user_id) openProfile(p.user_id);
                       }}
                     >
-                      {p.avatar_url ? (
-                        <img 
-                          src={p.avatar_url} 
-                          alt={p.nickname}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
-                          {p.nickname?.charAt(0).toUpperCase() || "?"}
-                        </div>
-                      )}
+                      <SafeAvatarImage
+                        avatarUrl={p.avatar_url}
+                        fallback={p.nickname || "?"}
+                        className="w-full h-full object-cover"
+                        containerClassName="w-full h-full"
+                      />
                     </div>
                   ))}
                   {displayPlayers.length > 4 && (
