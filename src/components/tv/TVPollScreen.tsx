@@ -92,18 +92,22 @@ export const TVPollScreen: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Player count + TV icon - Top Right */}
-        <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl">
-          <Users className="w-6 h-6 text-purple-300" />
-          <span className="text-xl font-bold text-white">{players.length}</span>
-          <img src={retroTvIcon} alt="TV რეჟიმი" className="w-10 h-10 object-contain" />
+        {/* QR Code - Top Right */}
+        <div className="flex items-center gap-3">
+          <div className="bg-white p-2 rounded-lg">
+            <QRCodeSVG value={joinUrl} size={56} level="H" />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-purple-300 text-xs">კოდი</span>
+            <span className="text-lg font-mono font-bold text-white">{code}</span>
+          </div>
         </div>
       </motion.div>
 
       {/* Title section - below header */}
       <div className="mb-3">
         <div className="flex items-center gap-2 mb-1">
-          <Vote className="w-6 h-6 text-purple-300" />
+          <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
           <h1 className="text-2xl font-bold text-white">
             {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
           </h1>
@@ -150,31 +154,18 @@ export const TVPollScreen: React.FC = () => {
           )}
         </div>
 
-        {/* QR Code sidebar + Active Players */}
+        {/* Active Players List */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="w-56 flex flex-col items-center"
+          className="w-56 flex flex-col"
         >
-          <div className="bg-white p-3 rounded-xl mb-2">
-            <QRCodeSVG value={joinUrl} size={120} level="H" />
-          </div>
-          <p className="text-purple-300 text-center text-xs mb-1">
-            დაასკანერეთ სათამაშოდ
-          </p>
-          <div className="bg-white/10 px-3 py-1.5 rounded-lg mb-3">
-            <span className="text-xl font-mono font-bold text-white tracking-wider">
-              {code}
-            </span>
-          </div>
-
-          {/* Active Players List */}
           <div className="w-full bg-white/10 rounded-xl p-3 border border-white/20 flex-1 overflow-hidden">
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-4 h-4 text-purple-300" />
               <span className="text-white font-bold text-sm">მოთამაშეები ({activePlayers.length})</span>
             </div>
-            <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-1.5 max-h-[320px] overflow-y-auto pr-1">
               {activePlayers.map((player) => (
                 <div 
                   key={player.id || player.nickname}
