@@ -595,13 +595,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       console.log('[finalizePollAndStartGame] ✅ Completed user_id sync check for all players');
     }
 
-    // CRITICAL: Extended delay for DB consistency (300ms, critical after poll/transitions)
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // OPTIMIZED: Reduced delay from 300ms to 100ms for faster response
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    // ROBUST VERIFICATION LOOP: 7 attempts, 200ms apart (same as confirmActivePlayers utility)
-    // This ensures we get a stable, accurate player count before locking
+    // OPTIMIZED VERIFICATION: Only 3 attempts with 100ms apart (max 300ms vs 1400ms)
+    // Poll phase already ensured players are active, so we just need a quick count
     let livePlayerCount = 0;
-    for (let attempt = 0; attempt < 7; attempt++) {
+    for (let attempt = 0; attempt < 3; attempt++) {
       const { count } = await supabase
         .from('tv_players')
         .select('*', { count: 'exact', head: true })
@@ -609,14 +609,14 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         .eq('is_active', true);
       
       livePlayerCount = count ?? 0;
-      console.log(`[finalizePollAndStartGame] 📊 Player count check ${attempt + 1}/7:`, livePlayerCount);
+      console.log(`[finalizePollAndStartGame] 📊 Player count check ${attempt + 1}/3:`, livePlayerCount);
       
-      // If we have at least 2 players, we're good
+      // If we have at least 2 players, exit immediately
       if (livePlayerCount >= 2) break;
       
-      // Wait a bit and try again (except on last attempt)
-      if (attempt < 6) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait only 100ms before retry (except on last attempt)
+      if (attempt < 2) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
@@ -649,24 +649,23 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       .delete()
       .eq('session_id', sessionId);
 
-    // Insert winning categories as queue items with suggester info
-    for (let i = 0; i < topSuggestions.length; i++) {
-      const suggestion = topSuggestions[i];
-      const queueItem = {
-        session_id: sessionId,
-        position: i,
-        source_type: suggestion.source_type,
-        category_id: suggestion.category_id,
-        category_name: suggestion.category_name,
-        icon_slug: suggestion.icon_slug,
-        user_trivia_id: suggestion.user_trivia_id,
-        // Store suggester info - they will skip this round
-        suggester_user_id: suggestion.user_id,
-        suggester_nickname: suggestion.nickname,
-        suggester_avatar_url: suggestion.avatar_url,
-      };
-      await supabase.from('tv_session_queue').insert(queueItem as any);
-    }
+    // OPTIMIZED: Insert all queue items in a single batch operation (was sequential loop)
+    const queueItems = topSuggestions.map((suggestion, i) => ({
+      session_id: sessionId,
+      position: i,
+      source_type: suggestion.source_type,
+      category_id: suggestion.category_id,
+      category_name: suggestion.category_name,
+      icon_slug: suggestion.icon_slug,
+      user_trivia_id: suggestion.user_trivia_id,
+      // Store suggester info - they will skip this round
+      suggester_user_id: suggestion.user_id,
+      suggester_nickname: suggestion.nickname,
+      suggester_avatar_url: suggestion.avatar_url,
+    }));
+    
+    // Single batch insert instead of N sequential inserts
+    await supabase.from('tv_session_queue').insert(queueItems as any);
 
     // CRITICAL FIX: Fetch questions for first category and start countdown directly
     // This bypasses the lobby phase so game starts with a single click
@@ -769,9 +768,8 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       console.log('[finalizePollAndStartGame] ✅ Deleted old answers, count:', deletedCount);
     }
 
-    // CRITICAL: Wait for delete to propagate before continuing
-    // This prevents race conditions where old answers cause incorrect counts
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // OPTIMIZED: Reduced delay from 300ms to 100ms since we already did cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Update session: set to countdown with questions loaded
     // CRITICAL: This bypasses lobby and starts game directly
