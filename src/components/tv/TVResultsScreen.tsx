@@ -64,7 +64,7 @@ export const TVResultsScreen: React.FC = () => {
   const podiumOrder = [1, 0, 2].map(i => podiumPlayers[i]).filter(Boolean);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col -mt-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col">
       {/* Background sparkles - reduced to 10 */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -96,7 +96,7 @@ export const TVResultsScreen: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6 flex-shrink-0 mt-10"
+        className="text-center mb-6 flex-shrink-0"
       >
         <h1 className="text-4xl font-bold text-white font-display mb-1">თამაში დასრულდა</h1>
         <p className="text-purple-300 text-lg">საბოლოო შედეგები</p>
@@ -198,7 +198,7 @@ export const TVResultsScreen: React.FC = () => {
         className="mt-4 text-center flex-shrink-0"
       >
         <p className="text-purple-300 text-sm">
-          Host can start a new round from their phone
+          მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან
         </p>
       </motion.div>
     </div>
