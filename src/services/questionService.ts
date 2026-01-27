@@ -55,6 +55,7 @@ export interface FormattedQuestion {
   category?: string;          // Category name for display
   categorySlug?: string;      // Category slug
   iconSlug?: string | null;   // Question-specific icon
+  imageUrl?: string | null;   // Image URL for image trivia questions
 }
 
 export interface QuestionResult {
@@ -79,6 +80,7 @@ interface RawQuestion {
   level_number?: number | null;
   icon_slug?: string | null;
   category_id?: string;
+  image_url?: string | null;
 }
 
 // ============================================================================
@@ -156,6 +158,7 @@ function formatQuestion(q: RawQuestion, categoryName?: string, categorySlug?: st
     category: categoryName,
     categorySlug,
     iconSlug: q.icon_slug,
+    imageUrl: q.image_url,
   };
 }
 
@@ -303,7 +306,7 @@ async function getCategoryQuestions(
   // Build query
   let query = supabase
     .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
@@ -322,7 +325,7 @@ async function getCategoryQuestions(
     usedFallback = true;
     let fallbackQuery = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -347,7 +350,7 @@ async function getCategoryQuestions(
     
     const { data: resetQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -438,7 +441,7 @@ async function getTVQuestions(
   // Build query
   let query = supabase
     .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
@@ -458,7 +461,7 @@ async function getTVQuestions(
     
     const { data: resetQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -477,7 +480,7 @@ async function getTVQuestions(
     
     const { data: finalQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -590,7 +593,7 @@ async function getSingleCategoryVSQuestions(
   // Query questions from specific category
   let query = supabase
     .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
@@ -610,7 +613,7 @@ async function getSingleCategoryVSQuestions(
     
     const { data: resetQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -720,7 +723,7 @@ async function getMultiCategoryVSQuestions(
     
     let query = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('category_id', cat.id)
@@ -754,7 +757,7 @@ async function getMultiCategoryVSQuestions(
     
     let fallbackQuery = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, category_id')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, category_id')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language);

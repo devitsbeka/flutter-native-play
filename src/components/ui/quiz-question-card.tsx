@@ -18,6 +18,10 @@ interface QuizQuestionCardProps {
   timerMaxSeconds?: number;
   freezeTimeLeft?: number;
   /**
+   * Optional image URL for image-based trivia questions
+   */
+  imageUrl?: string | null;
+  /**
    * When a large icon is rendered overlapping the top-center of the card
    * (outside this component), enable this to reserve extra whitespace so the
    * icon never covers the question text.
@@ -49,6 +53,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       timerSeconds,
       timerMaxSeconds = 20,
       freezeTimeLeft = 0,
+      imageUrl,
       reserveTopSpace = false,
     },
     ref
@@ -58,6 +63,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
     const questionStyles = getQuestionStyles(questionText);
     const isLowTime = timerSeconds !== undefined && timerSeconds <= 5 && !isFrozen;
     const hasTopBadges = timerSeconds !== undefined || !!difficultyLabel;
+    const hasImage = !!imageUrl;
 
     return (
       <motion.div
@@ -75,6 +81,19 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
+        {/* Image for Image Trivia questions */}
+        {hasImage && (
+          <div className="w-full h-40 overflow-hidden">
+            <img 
+              src={imageUrl!} 
+              alt="Question" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         {/* Freeze overlay effect */}
         {isFrozen && (
           <div className="absolute inset-0 pointer-events-none z-0">
@@ -161,9 +180,11 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         <div className={cn(
           "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
           // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon
-          hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14",
-          hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16",
-          !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10"
+          // Reduce top padding if we have an image (no need for icon space)
+          hasImage && "pt-4",
+          !hasImage && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14",
+          !hasImage && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16",
+          !hasImage && !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10"
         )}>
           {isLoading ? (
             <div className="space-y-2 w-full">
