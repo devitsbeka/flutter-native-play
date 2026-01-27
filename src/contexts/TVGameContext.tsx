@@ -2361,10 +2361,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     startPlayingMutexRef.current = true;
 
     try {
-      // Check if another device already transitioned to playing
+      // CRITICAL FIX: Fetch ACTUAL current_question_index from DB
+      // React state (state.currentQuestionIndex) can be STALE during second round transitions
+      // because the state update from startNextRoundFromQueueIfAny hasn't propagated yet.
+      // For round 2, state might still show index=9 (last Q of round 1) when DB shows index=0
       const { data: session } = await supabase
         .from('tv_sessions')
-        .select('status')
+        .select('status, current_question_index')
         .eq('id', state.sessionId)
         .single();
       
@@ -2373,13 +2376,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Still ensure timing refs are correct - someone else did the transition
         hasAdvancedRef.current = false;
         questionStartedAtRef.current = Date.now();
+        // CRITICAL: Use DB question index, not stale state
+        timerInitializedForQuestionRef.current = session.current_question_index ?? 0;
         startPlayingMutexRef.current = false;
         return;
       }
+      
+      // Use DB question index as source of truth (not stale React state)
+      const actualQuestionIndex = session?.current_question_index ?? stateRef.current.currentQuestionIndex;
+      console.log('[startPlaying] 📊 Question index: DB=', session?.current_question_index, 'state=', state.currentQuestionIndex, 'using=', actualQuestionIndex);
 
       // UNIFIED: Use prepareForPlaying for consistent initialization
       console.log('[startPlaying] 🎯 Using UNIFIED prepareForPlaying...');
-      const { expectedCount } = await prepareForPlaying(state.sessionId, state.currentQuestionIndex);
+      const { expectedCount } = await prepareForPlaying(state.sessionId, actualQuestionIndex);
 
       console.log('[startPlaying] ✅ UNIFIED preparation complete, expectedCount:', expectedCount);
       tvLog('startPlaying: Locked player count', { expectedCount });
@@ -2402,11 +2411,11 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         timeRemaining: QUESTION_TIME,
       }));
       
-      // CRITICAL FIX: Mark timer as initialized for this question
+      // CRITICAL FIX: Mark timer as initialized for the ACTUAL question index from DB
       // This prevents the realtime subscription from overwriting our fresh timer
       // when it receives the DB update (which may have significant elapsed time due to latency)
-      timerInitializedForQuestionRef.current = state.currentQuestionIndex;
-      console.log('[startPlaying] Timer marked as initialized for question', state.currentQuestionIndex);
+      timerInitializedForQuestionRef.current = actualQuestionIndex;
+      console.log('[startPlaying] Timer marked as initialized for question', actualQuestionIndex, '(DB source of truth)');
       
       // CRITICAL: Longer delay to ensure React state and DB fully propagate
       // This ensures the fallback interval and other checks don't fire prematurely
@@ -2423,7 +2432,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       startPlayingMutexRef.current = false;
     }
-  }, [state.sessionId, state.currentQuestionIndex, prepareForPlaying]);
+  }, [state.sessionId, prepareForPlaying]);
 
   // Submit answer (player)
   const submitAnswer = useCallback(async (answer: string): Promise<{ correct: boolean; points: number }> => {
