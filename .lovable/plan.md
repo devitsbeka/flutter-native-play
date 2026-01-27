@@ -1,169 +1,202 @@
 
-# Fix: White Screen for Players When Playing Host-Created Trivia
 
-## Problem Summary
+# Feature: Creator Experience Mode Selection
 
-When a host suggests their own user-created trivia and players vote for it:
-- **Host sees**: Observer screen ("შენი კატეგორიაა!") - working correctly
-- **Other players see**: White/blank screen - **BUG**
+## Overview
+Add an option when creating Trivia or Collection to choose between two experiences:
+1. **Edit Mode** - See all questions and answers to review and modify before publishing
+2. **Play Mode (Blind)** - Don't see the answers, create content to play with friends/family without spoiling it for yourself
 
-The screenshot shows the host's working observer view, but the other device shows a completely white page.
+---
 
-## Root Cause
-
-The `finalizePollAndStartGame` function in `useTVPoll.ts` stores questions to the database **without the required `options` array**.
+## User Flow
 
 ```text
-Current question structure in database:
-{
-  id: "user-q-0",
-  question_text: "...",
-  correct_answer: "Nintendo",
-  incorrect_answers: ["Sony", "Microsoft", "Sega"],  // Stored separately
-  difficulty: "medium"
-}
-
-Expected question structure for ControllerQuestion:
-{
-  id: "user-q-0",
-  question_text: "...",
-  correct_answer: "Nintendo",
-  options: ["Nintendo", "Sega", "Sony", "Microsoft"]  // MISSING! Shuffled array required
-}
+User clicks "ტრივია" or "კოლექცია"
+           ↓
+   NEW: Experience Selection Step
+   ┌─────────────────────────────────────┐
+   │ როგორ გინდა შექმნა?                 │
+   │                                     │
+   │ ┌─────────────┐ ┌─────────────────┐ │
+   │ │ 📝 რედაქტი- │ │ 🎮 თამაში      │ │
+   │ │  რება       │ │ (მეგობრებთან)  │ │
+   │ │             │ │                 │ │
+   │ │ ნახე პასუ- │ │ არ ნახო პასუ-  │ │
+   │ │ ხები,       │ │ ხები, ითამაშე  │ │
+   │ │ შეასწორე   │ │ ერთად          │ │
+   │ └─────────────┘ └─────────────────┘ │
+   └─────────────────────────────────────┘
+           ↓                    ↓
+   Current flow:          Blind flow:
+   Generate → Edit →      Generate → Title →
+   Post                   Save → Start Game
 ```
-
-When players' devices fetch questions via `TVGameContext.refetchSessionData`, the `options` field is undefined, causing `currentQuestion.options.map()` to crash, resulting in a white screen.
-
-## Solution
-
-Update `finalizePollAndStartGame` to create and store the `options` array by shuffling `correct_answer` with `incorrect_answers` - matching the format used in `TVGameContext.tsx`.
 
 ---
 
 ## Implementation
 
-### File: `src/hooks/useTVPoll.ts`
+### File 1: `src/components/social/CreateQuizModal.tsx`
 
-**Change 1: Add shuffle utility (at top of file or inline)**
+**Add new step 0 for experience selection before topic input**
 
+Changes:
+- Add `creatorMode` state: `"edit" | "play"`
+- Insert new step at the beginning for mode selection
+- Shift existing steps by +1
+- When `creatorMode === "play"`:
+  - Skip showing questions in editor (step 5 becomes title/cover selection only)
+  - Hide answer text in editor view OR skip editor entirely
+  - Add "დაიწყე თამაში" button that saves trivia and opens game mode
+
+**New State:**
 ```typescript
-// Shuffle array utility (Fisher-Yates)
-const shuffleArray = <T>(array: T[]): T[] => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
+const [creatorMode, setCreatorMode] = useState<"edit" | "play" | null>(null);
 ```
 
-**Change 2: Update question format for user trivia (lines 712-721)**
-
-Before:
+**New Step (Step 1 - Mode Selection):**
 ```typescript
-questions = (postData.questions as any[]).map((q: any, idx: number) => ({
-  id: `user-q-${idx}`,
-  question_text: q.question_text || q.question || '',
-  correct_answer: q.correct_answer || '',
-  incorrect_answers: q.incorrect_answers || [],
-  difficulty: 'medium',
-  icon_slug: q.icon_slug || null,
-}));
+// Step 1: Choose experience mode
+<div className="space-y-6">
+  <div className="text-center">
+    <h3 className="text-2xl font-bold text-white mb-2">როგორ გინდა შექმნა?</h3>
+    <p className="text-white/70">აირჩიე შენთვის შესაფერისი გზა</p>
+  </div>
+  
+  <div className="grid grid-cols-2 gap-4">
+    {/* Edit Mode Card */}
+    <button onClick={() => { setCreatorMode("edit"); setStep(2); }}>
+      <div className="p-6 rounded-2xl bg-white/15 border border-white/20">
+        <Edit3 className="w-10 h-10 text-white mb-3" />
+        <h4 className="font-bold text-white">რედაქტირება</h4>
+        <p className="text-white/60 text-sm">ნახე პასუხები, შეასწორე და გამოაქვეყნე</p>
+      </div>
+    </button>
+    
+    {/* Play Mode Card */}
+    <button onClick={() => { setCreatorMode("play"); setStep(2); }}>
+      <div className="p-6 rounded-2xl bg-white/15 border border-white/20">
+        <Play className="w-10 h-10 text-white mb-3" />
+        <h4 className="font-bold text-white">თამაში</h4>
+        <p className="text-white/60 text-sm">არ ნახო პასუხები, ითამაშე მეგობრებთან</p>
+      </div>
+    </button>
+  </div>
+</div>
 ```
 
-After:
-```typescript
-questions = (postData.questions as any[]).map((q: any, idx: number) => {
-  const incorrectAnswers = Array.isArray(q.incorrect_answers) ? q.incorrect_answers : [];
-  const allAnswers = shuffleArray([q.correct_answer || '', ...incorrectAnswers]);
-  return {
-    id: `user-q-${idx}`,
-    question_text: q.question_text || q.question || '',
-    correct_answer: q.correct_answer || '',
-    options: allAnswers,  // ADD THIS - shuffled array for UI
-    difficulty: 'medium',
-    icon_slug: q.icon_slug || null,
-  };
-});
-```
+**Conditional Editor Behavior (Step 5/6):**
+- If `creatorMode === "edit"`: Show full question editor (current behavior)
+- If `creatorMode === "play"`: 
+  - Show title editing only
+  - Show question count but hide actual questions/answers
+  - Replace "გამოაქვეყნე" with "შეინახე და დაიწყე თამაში"
+  - Save to database then trigger game start flow
 
-**Change 3: Update question format for category questions (lines 700-702)**
+---
 
-Before:
-```typescript
-if (questionsData && questionsData.length > 0) {
-  questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10);
-}
-```
+### File 2: `src/components/social/CreateCollectionModal.tsx`
 
-After:
-```typescript
-if (questionsData && questionsData.length > 0) {
-  questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10).map(q => {
-    const incorrectAnswers = Array.isArray(q.incorrect_answers) ? q.incorrect_answers : [];
-    const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
-    return {
-      ...q,
-      options: allAnswers,  // ADD shuffled options array
-    };
-  });
-}
-```
+**Same pattern - add experience mode selection**
 
-**Change 4: Update type definition (lines 673-680)**
+Changes:
+- Add `creatorMode` state
+- Insert mode selection as first step before round names
+- Shift existing steps by +1
+- When `creatorMode === "play"`:
+  - After generation, show only round names and question counts
+  - Hide actual question content
+  - Add "შეინახე და დაიწყე თამაში" action
 
-Before:
-```typescript
-let questions: Array<{
-  id: string;
-  question_text: string;
-  correct_answer: string;
-  incorrect_answers: any;
-  difficulty: string;
-  icon_slug: string | null;
-}> | null = null;
-```
+---
 
-After:
-```typescript
-let questions: Array<{
-  id: string;
-  question_text: string;
-  correct_answer: string;
-  options: string[];           // ADD THIS
-  difficulty: string;
-  icon_slug: string | null;
-}> | null = null;
+### File 3: `src/components/social/CreateTriviaTypeModal.tsx` (Alternative Approach)
+
+**Option: Add mode selection here at the type selection level**
+
+This approach puts the choice earlier, on the main creation type modal:
+- Add toggle or tabs: "შექმნა და რედაქტირება" vs "შექმნა და თამაში"
+- Pass selected mode to the individual creation modals via props
+
+---
+
+## Database Considerations
+
+No schema changes needed. The trivia is saved the same way regardless of mode - the only difference is the creator's viewing experience during creation.
+
+When `creatorMode === "play"`:
+- Save trivia to `user_quiz_posts` with `is_public: false` (private by default for game sessions)
+- Optionally add a flag `creator_played: false` to track if creator has played their own content
+
+---
+
+## Step-by-Step Changes for CreateQuizModal
+
+| Current Step | New Step Number | Description |
+|--------------|-----------------|-------------|
+| - | 1 (NEW) | Mode selection: Edit vs Play |
+| 1 | 2 | Topic input |
+| 2 | 3 | Question count & difficulty |
+| 3 | 4 | Generation loading |
+| 4 | 5 | Success animation |
+| 5 | 6 | Editor (conditional based on mode) |
+
+---
+
+## UI Mockup for Mode Selection
+
+```text
+┌──────────────────────────────────────────────┐
+│                                              │
+│     🎯 როგორ გინდა შექმნა?                   │
+│     აირჩიე შენთვის შესაფერისი გზა           │
+│                                              │
+│  ┌────────────────┐  ┌────────────────────┐  │
+│  │      📝        │  │        🎮          │  │
+│  │                │  │                    │  │
+│  │  რედაქტირება  │  │      თამაში        │  │
+│  │                │  │                    │  │
+│  │ ნახე პასუხები │  │ არ ნახო პასუხები  │  │
+│  │ და შეასწორე   │  │ ითამაშე ერთად     │  │
+│  │                │  │                    │  │
+│  │  გამოქვეყნება │  │ მეგობრებთან       │  │
+│  └────────────────┘  └────────────────────┘  │
+│                                              │
+└──────────────────────────────────────────────┘
 ```
 
 ---
 
-## Technical Summary
+## Play Mode Flow After Generation
 
-| File | Change |
-|------|--------|
-| `src/hooks/useTVPoll.ts` | Add `shuffleArray` utility, create `options` array for both category and user trivia questions |
+When user selects "Play" mode:
 
-## What Gets Fixed
+1. Generate questions (same as now)
+2. Skip editor - show summary screen:
+   ```
+   ✅ 10 კითხვა მზადაა!
+   
+   სათაური: [editable title input]
+   
+   [შეინახე და დაიწყე თამაში]
+   ```
+3. On button click:
+   - Save to `user_quiz_posts` (private)
+   - Close modal
+   - Optionally: Navigate to game room creation or TV mode setup
 
-| Before | After |
-|--------|-------|
-| Questions stored without `options` | Questions stored with shuffled `options` array |
-| `currentQuestion.options` is undefined | `currentQuestion.options` is properly populated |
-| Players see white screen (crash on `.map()`) | Players see answer buttons correctly |
-| Only host sees the game | All players can play host-created trivia |
+---
 
-## Data Flow After Fix
+## Summary
 
-```text
-1. Host creates trivia with questions
-2. Poll votes for host's trivia
-3. finalizePollAndStartGame:
-   - Fetches questions from user_quiz_posts
-   - Creates shuffled `options` array
-   - Stores questions WITH options to tv_sessions
-4. Player devices fetch via realtime/refetch
-5. ControllerQuestion reads `options` array
-6. Answer buttons render correctly
-```
+| File | Changes |
+|------|---------|
+| `CreateQuizModal.tsx` | Add mode selection step, conditional editor display, play mode save+start flow |
+| `CreateCollectionModal.tsx` | Same pattern for collections |
+| Optional: `CreateTriviaTypeModal.tsx` | Alternative location for mode toggle |
+
+This gives creators flexibility to either:
+- **Edit mode**: Full control, see everything, modify, then publish
+- **Play mode**: Surprise themselves, play along with friends/family without spoilers
+
