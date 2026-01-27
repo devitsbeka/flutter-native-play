@@ -169,3 +169,10 @@ verify_jwt = true
 
 [functions.generate-media-questions]
 verify_jwt = true
+
+# --- BULK QUESTION GENERATION ---
+[functions.bulk-resolve-topics]
+verify_jwt = true
+
+[functions.bulk-generate-contextual-questions]
+verify_jwt = true

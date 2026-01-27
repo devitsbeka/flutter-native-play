@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Link2 } from 'lucide-react';
+import { Plus, Link2, Sparkles } from 'lucide-react';
 import { useQuestionStudio, StudioQuestion } from '@/hooks/useQuestionStudio';
 import { StudioTabs } from '@/components/admin/studio/StudioTabs';
 import { CategorySidebar } from '@/components/admin/studio/CategorySidebar';
@@ -8,6 +8,7 @@ import { QuestionPreviewPanel } from '@/components/admin/studio/QuestionPreviewP
 import { BulkActionsBar } from '@/components/admin/studio/BulkActionsBar';
 import { CreateQuestionModal, NewQuestionData } from '@/components/admin/studio/CreateQuestionModal';
 import { URLImportTool } from '@/components/admin/studio/URLImportTool';
+import { BulkGeneratorModal } from '@/components/admin/studio/BulkGeneratorModal';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ export default function QuestionStudio() {
   // Create/Import modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showURLImport, setShowURLImport] = useState(false);
+  const [showBulkGenerator, setShowBulkGenerator] = useState(false);
 
   // Open edit modal
   const handleEdit = (question: StudioQuestion) => {
@@ -159,6 +161,10 @@ export default function QuestionStudio() {
           <Button size="sm" variant="outline" onClick={() => setShowURLImport(true)}>
             <Link2 className="h-4 w-4 mr-1" />
             URL იმპორტი
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setShowBulkGenerator(true)}>
+            <Sparkles className="h-4 w-4 mr-1" />
+            Bulk Generator
           </Button>
           <StudioTabs
             activeTab={studio.productionStatus}
@@ -338,6 +344,14 @@ export default function QuestionStudio() {
         onOpenChange={setShowURLImport}
         categories={studio.allCategories}
         onImport={handleURLImport}
+      />
+
+      {/* Bulk Generator */}
+      <BulkGeneratorModal
+        open={showBulkGenerator}
+        onOpenChange={setShowBulkGenerator}
+        categories={studio.allCategories}
+        onImport={studio.bulkAddQuestions}
       />
     </div>
   );
