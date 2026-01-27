@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw, GripVertical, Clock } from 'lucide-react';
+import { Play, Users, Loader2, QrCode, Copy, Check, ChevronRight, Sparkles, ArrowLeft, Star, X, AlertCircle, Plus, RefreshCw, GripVertical, Clock, Edit2 } from 'lucide-react';
 import { CategoryPickerModal } from '@/components/team/CategoryPickerModal';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +19,7 @@ import { ControllerPollScreen } from '@/components/controller/ControllerPollScre
 import { ControllerPollResults } from '@/components/controller/ControllerPollResults';
 import { ControllerDirectSelection } from '@/components/controller/ControllerDirectSelection';
 import { useTVPoll } from '@/hooks/useTVPoll';
+import { RoomIconPickerModal } from '@/components/team/RoomIconPickerModal';
 
 interface Category {
   id: string;
@@ -103,6 +104,11 @@ const TVHostController: React.FC = () => {
   
   // Poll voting ended state - for transitioning from voting to results
   const [votingEnded, setVotingEnded] = useState(false);
+  
+  // Room editing state
+  const [roomName, setRoomName] = useState('');
+  const [roomIcon, setRoomIcon] = useState<string | null>(null);
+  const [showIconPicker, setShowIconPicker] = useState(false);
   
   // Poll hook - must be called unconditionally at top level to avoid React error #310
   const pollHook = useTVPoll({
@@ -202,9 +208,21 @@ const TVHostController: React.FC = () => {
         return;
       }
 
-      // Store room_id for queue fallback
+      // Store room_id and fetch room details for editing
       if (sessionData.room_id) {
         setRoomId(sessionData.room_id);
+        
+        // Fetch room name and icon from game_rooms
+        const { data: gameRoom } = await supabase
+          .from('game_rooms')
+          .select('room_name, room_icon')
+          .eq('id', sessionData.room_id)
+          .maybeSingle();
+        
+        if (gameRoom) {
+          setRoomName(gameRoom.room_name || '');
+          setRoomIcon(gameRoom.room_icon || null);
+        }
       }
 
       // Note: Host verification is also handled by context's isHost state
@@ -493,6 +511,22 @@ const TVHostController: React.FC = () => {
     navigate('/team');
   };
 
+  const handleSaveRoomDetails = async (newIcon: string | null, newName: string) => {
+    if (!roomId) return;
+    
+    await supabase
+      .from('game_rooms')
+      .update({ 
+        room_name: newName.trim(),
+        room_icon: newIcon 
+      })
+      .eq('id', roomId);
+    
+    setRoomName(newName.trim());
+    setRoomIcon(newIcon);
+    toast.success('ოთახი განახლდა!');
+  };
+
   const handleCopyCode = () => {
     navigator.clipboard.writeText(gameCode || '');
     setCopied(true);
@@ -567,10 +601,10 @@ const TVHostController: React.FC = () => {
         roomId={roomId}
         onStartGame={handleStartGame}
         onBack={() => {
-          if (window.history.length > 1) {
+          if (window.history.state && window.history.state.idx > 0) {
             window.history.back();
           } else {
-            navigate('/team');
+            navigate('/team', { replace: true });
           }
         }}
       />
@@ -826,13 +860,38 @@ const TVHostController: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-6"
+          className="flex items-center justify-between gap-3 mb-6"
         >
-          <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10">
-            <ArrowLeft className="w-5 h-5 text-purple-200" />
-          </button>
-          <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
-          <span className="font-bold text-white">TV თამაში</span>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <button 
+              onClick={() => {
+                if (window.history.state && window.history.state.idx > 0) {
+                  window.history.back();
+                } else {
+                  navigate('/team', { replace: true });
+                }
+              }} 
+              className="p-2 rounded-full hover:bg-white/10 shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5 text-purple-200" />
+            </button>
+            {/* Room icon */}
+            {roomIcon ? (
+              <img src={roomIcon} alt="Room" className="w-8 h-8 object-contain rounded-lg shrink-0" />
+            ) : (
+              <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain shrink-0" />
+            )}
+            {/* Room name */}
+            <span className="font-bold text-white truncate">{roomName || 'TV თამაში'}</span>
+            {/* Edit button */}
+            <button
+              onClick={() => setShowIconPicker(true)}
+              className="p-2 rounded-full hover:bg-white/10 shrink-0"
+              title="შეცვალე სახელი/აიკონი"
+            >
+              <Edit2 className="w-4 h-4 text-purple-300" />
+            </button>
+          </div>
         </motion.div>
 
         {/* QR Code section */}
@@ -1025,6 +1084,18 @@ const TVHostController: React.FC = () => {
           }}
           onAddToQueue={handlePickerAddToQueue}
           showQueueOption={true}
+        />
+
+        {/* Room Icon/Name Editor Modal */}
+        <RoomIconPickerModal
+          isOpen={showIconPicker}
+          onClose={() => setShowIconPicker(false)}
+          currentIconUrl={roomIcon}
+          roomName={roomName}
+          onConfirm={(newIcon, newName) => {
+            handleSaveRoomDetails(newIcon, newName);
+            setShowIconPicker(false);
+          }}
         />
       </div>
     );
