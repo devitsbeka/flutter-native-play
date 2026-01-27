@@ -40,6 +40,7 @@ export function StepCategorySelect({
   const [inputValue, setInputValue] = useState('');
   const [allSuggestions, setAllSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [usedTopics, setUsedTopics] = useState<Set<string>>(new Set());
 
   // Filter suggestions to only show ones not already added
   const visibleSuggestions = allSuggestions
@@ -48,7 +49,7 @@ export function StepCategorySelect({
 
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
   
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = async (excludeTopics: string[] = []) => {
     if (!selectedCategory) {
       setAllSuggestions([]);
       return;
@@ -57,11 +58,24 @@ export function StepCategorySelect({
     setIsLoadingSuggestions(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-topic-suggestions', {
-        body: { categoryName: selectedCategory.name }
+        body: { 
+          categoryName: selectedCategory.name,
+          excludeTopics
+        }
       });
       
       if (error) throw error;
-      setAllSuggestions(data?.suggestions || []);
+      
+      const newSuggestions = data?.suggestions || [];
+      
+      // Add new suggestions to used topics set
+      setUsedTopics(prev => {
+        const updated = new Set(prev);
+        newSuggestions.forEach((s: string) => updated.add(s));
+        return updated;
+      });
+      
+      setAllSuggestions(newSuggestions);
     } catch (err) {
       console.error('Failed to fetch suggestions:', err);
       setAllSuggestions([]);
@@ -70,13 +84,16 @@ export function StepCategorySelect({
     }
   };
 
-  // Fetch AI suggestions when category changes
+  // Fetch AI suggestions when category changes - reset used topics
   useEffect(() => {
-    fetchSuggestions();
+    setUsedTopics(new Set());
+    fetchSuggestions([]);
   }, [selectedCategory?.id]);
 
   const refreshSuggestions = () => {
-    fetchSuggestions();
+    // Combine current subjects with all previously shown suggestions
+    const toExclude = [...subjects, ...Array.from(usedTopics)];
+    fetchSuggestions(toExclude);
   };
 
   // Detect theme for dynamic question text preview
@@ -89,6 +106,7 @@ export function StepCategorySelect({
   const addSubject = (subject: string) => {
     if (subject.trim() && !subjects.includes(subject.trim())) {
       onSubjectsChange([...subjects, subject.trim()]);
+      setUsedTopics(prev => new Set(prev).add(subject.trim()));
     }
   };
 
