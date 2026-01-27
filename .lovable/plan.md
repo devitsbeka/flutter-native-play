@@ -1,57 +1,30 @@
 
-# Fix: Button Click Issues and Timer Desync Between Host and Players
 
-## Summary of Issues
+# Fix: Host Timer Starting at 5 Seconds Instead of 15
 
-### Issue 1: Button Not Clickable / Two Different Screens
-The host sees different screens based on whether `hasQueue` is true:
-- When `hasQueue === true`: Shows **Lobby screen** with "დაწყება" button (works)
-- When `hasQueue === false`: Shows **ControllerDirectSelection** with "თამაშის დაწყება" button (may not work)
+## Problem Identified
 
-The problem is that after a game ends and the status becomes `category-select`, the `hasQueue` value depends on async fetching. If the fetch is incomplete, the wrong screen is shown.
+The timer shows only 5 seconds for the host instead of 15. The root cause is a race condition:
 
-**Root Cause (line 146 in TVHostController.tsx):**
-```typescript
-let localPhase: LocalPhase = (rawLocalPhase === 'category-select' && hasQueue) ? 'lobby' : rawLocalPhase;
-```
+1. Host calls `startPlaying()` which sets `timeRemaining = 15`
+2. Host updates DB with `status = 'playing'` and `question_start_time`
+3. The realtime subscription then fires (often 5+ seconds later due to network latency)
+4. The subscription handler checks `timerInitializedForQuestionRef.current !== currentQuestionIdx`
+5. Since `startPlaying()` never sets this ref, the check passes
+6. Timer gets recalculated as `15 - elapsed = ~5 seconds`
+7. Timer useEffect starts counting from 5 instead of 15
 
-### Issue 2: Timer Shows 15s for Players but 5s for Host
-The timer fix I implemented only affects the **realtime subscription handler** that processes incoming updates. However, the **host** experiences a different code path:
+## Solution
 
-1. Host calls `startPlaying()` which sets `question_start_time` in DB
-2. Realtime subscription fires, but host may already be in `question` phase
-3. Timer `useEffect` starts counting down from whatever `state.timeRemaining` currently is
-4. If `state.timeRemaining` was stale (e.g., 5 from a previous question), timer starts from 5
-
-**Root Cause:** The host needs to explicitly reset `timeRemaining` to `QUESTION_TIME` when transitioning to `playing` phase, independent of the realtime subscription.
+In the `startPlaying` function, after setting `timeRemaining = QUESTION_TIME`, also mark the timer as initialized for this question index. This will prevent the realtime subscription from overwriting the timer.
 
 ---
 
-## Technical Solution
+## Technical Changes
 
-### Fix 1: Consistent Phase Display for Category Selection
+### File: `src/contexts/TVGameContext.tsx`
 
-**File: `src/pages/TVHostController.tsx`**
-
-Remove the automatic conversion from `category-select` to `lobby` based on `hasQueue`. Instead, always show `ControllerDirectSelection` when the context phase is `category-select`. The queue data will be fetched and displayed within that component.
-
-**Change at line 146:**
-```typescript
-// BEFORE
-let localPhase: LocalPhase = (rawLocalPhase === 'category-select' && hasQueue) ? 'lobby' : rawLocalPhase;
-
-// AFTER - Don't convert category-select to lobby based on hasQueue
-// This ensures consistent screen regardless of queue fetch timing
-let localPhase: LocalPhase = rawLocalPhase;
-```
-
-### Fix 2: Reset Timer in startPlaying Function
-
-**File: `src/contexts/TVGameContext.tsx`**
-
-In the `startPlaying` function, explicitly set `timeRemaining` to `QUESTION_TIME` before the phase transition. This ensures the host starts with the full timer regardless of realtime subscription timing.
-
-**Add after line 2376 (after the DB update):**
+**Current Code (lines 2383-2388):**
 ```typescript
 // CRITICAL: Reset local timeRemaining to ensure host timer starts fresh
 // This must happen BEFORE the phase changes to 'question' which triggers the timer useEffect
@@ -61,58 +34,73 @@ setState(prev => ({
 }));
 ```
 
-### Fix 3: Timer Reset for All Question Transitions
-
-**File: `src/contexts/TVGameContext.tsx`**
-
-In the reveal-to-next-question transition (around line 1200), ensure `timeRemaining` is reset to `QUESTION_TIME`:
-
-**Add to the transition logic:**
+**Fixed Code:**
 ```typescript
-// Reset timer for next question
-setState(prev => ({ ...prev, timeRemaining: QUESTION_TIME }));
+// CRITICAL: Reset local timeRemaining to ensure host timer starts fresh
+// This must happen BEFORE the phase changes to 'question' which triggers the timer useEffect
+setState(prev => ({
+  ...prev,
+  timeRemaining: QUESTION_TIME,
+}));
+
+// CRITICAL FIX: Mark timer as initialized for this question
+// This prevents the realtime subscription from overwriting our fresh timer
+// when it receives the DB update (which may have significant elapsed time due to latency)
+timerInitializedForQuestionRef.current = state.currentQuestionIndex;
+console.log('[startPlaying] Timer marked as initialized for question', state.currentQuestionIndex);
+```
+
+---
+
+## Why This Fixes The Issue
+
+The realtime subscription handler has this logic (lines 1746-1769):
+```typescript
+if (timerInitializedForQuestionRef.current !== currentQuestionIdx) {
+  // Calculate timer from server time (can result in 5s due to latency)
+  ...
+  timerInitializedForQuestionRef.current = currentQuestionIdx;
+} 
+// If timer already initialized, keep prev.timeRemaining (preserves the 15s)
+```
+
+By setting `timerInitializedForQuestionRef.current = state.currentQuestionIndex` in `startPlaying()`, the subscription check will fail, and the host's timer will remain at 15 seconds.
+
+---
+
+## Flow After Fix
+
+```text
+BEFORE (Bug):
+startPlaying() → timeRemaining = 15 → DB update
+                                           ↓
+Subscription fires (5s later) → timerRef NOT SET → recalculates to 5s
+                                           ↓
+Timer useEffect starts with timeRemaining = 5 ❌
+
+AFTER (Fixed):
+startPlaying() → timeRemaining = 15, timerRef = questionIndex → DB update
+                                                                      ↓
+Subscription fires (5s later) → timerRef MATCHES → SKIPS recalculation
+                                                                      ↓
+Timer useEffect starts with timeRemaining = 15 ✓
 ```
 
 ---
 
 ## Files to Modify
 
-| File | Change | Purpose |
-|------|--------|---------|
-| `src/pages/TVHostController.tsx` | Remove `hasQueue` condition on line 146 | Consistent screen display |
-| `src/contexts/TVGameContext.tsx` | Add timer reset in `startPlaying` | Host timer starts at 15s |
-| `src/contexts/TVGameContext.tsx` | Add timer reset in reveal→question transition | All questions start at 15s |
+| File | Change |
+|------|--------|
+| `src/contexts/TVGameContext.tsx` | Add `timerInitializedForQuestionRef.current = state.currentQuestionIndex` after line 2388 |
 
 ---
 
-## Explanation
+## Expected Result
 
-```text
-CURRENT FLOW (Bug):
-┌─────────────────┐   startPlaying()   ┌─────────────────┐
-│ countdown phase │ ─────────────────► │ playing phase   │
-│ timeRemaining=15│                    │ timeRemaining=? │ ← May be stale!
-└─────────────────┘                    └─────────────────┘
-                                                │
-                                                ▼
-                                       Timer useEffect
-                                       starts countdown
-                                       from stale value
+After this fix:
+1. **Host always sees 15 seconds** when starting a question
+2. **Players also see 15 seconds** (already working with late-join threshold)
+3. **No more "time up" showing early** for the host
+4. **Late joiners still sync correctly** to server time if they join mid-question
 
-FIXED FLOW:
-┌─────────────────┐   startPlaying()   ┌─────────────────┐
-│ countdown phase │ ─────────────────► │ playing phase   │
-│ timeRemaining=15│    setState()      │ timeRemaining=15│ ← Always fresh!
-└─────────────────┘       ↓            └─────────────────┘
-              timeRemaining = 15
-```
-
----
-
-## Expected Results
-
-After these fixes:
-1. **Category Selection Screen**: Always shows `ControllerDirectSelection` when in `category-select` phase, regardless of queue loading state
-2. **Start Button**: Will work on first click (fixed footer already in place)
-3. **Timer Sync**: Both host and players will see 15 seconds when a question starts
-4. **No more refresh needed**: Screen will be consistent on first load
