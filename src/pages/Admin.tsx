@@ -22,7 +22,8 @@ import {
   Palette,
   Coins,
   Settings,
-  Smartphone
+  Smartphone,
+  Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,11 @@ const mainNavItems: NavItem[] = [
     icon: LayoutDashboard, 
     label: 'დეშბორდი',
     end: true 
+  },
+  { 
+    to: '/admin/question-studio', 
+    icon: Layers, 
+    label: 'Question Studio' 
   },
   { 
     to: '/admin/flow', 
