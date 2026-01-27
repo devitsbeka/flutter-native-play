@@ -66,11 +66,8 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   const navigate = useNavigate();
   
   const handleBack = () => {
-    if (window.history.state && window.history.state.idx > 0) {
-      window.history.back();
-    } else {
-      navigate('/team', { replace: true });
-    }
+    // Always navigate to /team - the rooms page
+    navigate('/team', { replace: true });
   };
   const {
     suggestions,

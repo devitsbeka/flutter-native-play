@@ -864,13 +864,7 @@ const TVHostController: React.FC = () => {
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <button 
-              onClick={() => {
-                if (window.history.state && window.history.state.idx > 0) {
-                  window.history.back();
-                } else {
-                  navigate('/team', { replace: true });
-                }
-              }} 
+              onClick={() => navigate('/team', { replace: true })}
               className="p-2 rounded-full hover:bg-white/10 shrink-0"
             >
               <ArrowLeft className="w-5 h-5 text-purple-200" />
