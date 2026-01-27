@@ -1,94 +1,203 @@
 
-# Fix Image Display in Game: Full Image + No Difficulty Badge
 
-## Issues Found
+# Fix Plan: Three TV Mode Issues
 
-From the screenshots, I can see two problems with image-based trivia questions during gameplay:
+## Issues to Fix
 
-1. **Image is cropped** - Abraham Lincoln's head is cut off at the top
-2. **"საშუალო" (Medium) difficulty badge appears** - This badge overlays the image in the top-right corner, covering content
+### Issue 1: Back/Start Game Buttons Not Clickable (Category Selection Screen)
+**Location**: `src/components/controller/ControllerDirectSelection.tsx` and `src/pages/TVHostController.tsx`
 
-## Root Cause Analysis
+**Root Cause**: After the game ends and the session transitions to `category-select` phase, the `useTVSessionQueue` hook may be returning stale or unmounted state, or there's a race condition where button handlers try to interact with uninitialized queue state.
 
-### Issue 1: Image Cropping
+**Evidence from Code Analysis**:
+- The `ControllerDirectSelection` component (lines 186-192) has a guard that blocks start game if `!hasQueue || queue.length === 0`
+- The back button handler in `TVHostController.tsx` (lines 603-611) uses complex history state checking which can fail
+- After game completion, the session state may not properly reset the queue subscriptions
 
-In `src/components/ui/quiz-question-card.tsx`, line 100:
-```tsx
-<div className="w-full h-48 overflow-hidden">
-  <img className="w-full h-full object-cover object-top" />
-</div>
+### Issue 2: TV Winners Preview After Poll
+**Location**: `src/components/tv/TVResultsScreenV2.tsx` and `src/hooks/useTVPoll.ts`
+
+**Root Cause**: After a poll completes and before the game starts, there's no dedicated screen showing which categories won and will be played in upcoming rounds. The TV transitions directly from `poll-results` to `countdown`.
+
+**Current Behavior**: 
+- `TVResultsScreenV2.tsx` (lines 218-249) does show a "Next round" preview if queue exists
+- But there's no dedicated **post-poll winners preview** screen showing all selected categories before game start
+
+**Solution**: Add a TV screen component for `poll-results` phase that displays all winning categories before transitioning to countdown.
+
+### Issue 3: TV Timer Behavior (5 Second No-Answer Advance)
+**Location**: `src/contexts/TVGameContext.tsx`
+
+**Root Cause**: The current timer logic (lines 1086-1121) waits the full 15 seconds (`QUESTION_TIME`) before advancing to reveal. The user wants a different behavior: if no one answers for 5 seconds, stop the timer early, show the correct answer for 10 seconds, then move on.
+
+**Current Logic**:
+```typescript
+// Timer runs full 15 seconds
+if (prev.timeRemaining <= 1) {
+  advanceToReveal('timer expired');
+}
 ```
 
-The fixed `h-48` (192px) height with `object-cover` forces cropping on portrait images. Even with `object-top`, taller images get clipped.
+**Required Logic**:
+- Track if any player has answered during the question phase
+- If no one answers for 5 consecutive seconds, trigger early reveal
+- Reveal phase should display for 10 seconds (currently uses `REVEAL_DURATION_MS = 1400`)
 
-### Issue 2: Difficulty Badge on Image Questions
+---
 
-In `src/components/game/QuizGameScreenProd.tsx`, lines 384-385:
-```tsx
-difficultyLabel={!opponent ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
-difficultyColor={!opponent ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
+## Technical Solution
+
+### Fix 1: Category Selection Button Issues
+
+**File**: `src/components/controller/ControllerDirectSelection.tsx`
+
+**Changes**:
+1. Add proper state initialization and reset when entering category-select phase
+2. Simplify the back button handler to use direct navigation
+3. Add loading state guards for queue operations
+
+```typescript
+// Line 186: Simplify handleStartGame
+const handleStartGame = () => {
+  // Remove blocking condition - allow start even if queue is still loading
+  if (queue.length === 0) {
+    toast.error('აირჩიე მინიმუმ 1 კატეგორია');
+    return;
+  }
+  onStartGame();
+};
 ```
 
-The condition only checks `!opponent` (solo mode) but doesn't exclude image/video/audio questions. This causes the badge to render on top of media content.
+**File**: `src/pages/TVHostController.tsx`
 
-## Solution
+**Changes**:
+1. Simplify back button handler in category-select phase (lines 603-611)
 
-### File 1: `src/components/ui/quiz-question-card.tsx`
-
-Change the image container to use `object-contain` instead of `object-cover` to show the full image without cropping:
-
-```tsx
-{/* Image for Image Trivia questions */}
-{hasImage && !hasVideo && !hasAudio && (
-  <div className="w-full h-52 overflow-hidden bg-gray-100 flex items-start justify-center">
-    <img 
-      src={imageUrl!} 
-      alt="Question" 
-      className="w-full h-full object-contain object-top"
-      onError={(e) => {
-        e.currentTarget.style.display = 'none';
-      }}
-    />
-  </div>
-)}
+```typescript
+// Line 603-610: Replace complex history check with direct navigation
+onBack={() => navigate('/team', { replace: true })}
 ```
 
-Key changes:
-- `object-cover` → `object-contain`: Shows full image without cropping
-- `h-48` → `h-52`: Slightly more height for better display
-- Added `bg-gray-100`: Subtle background for letterboxing if needed
-- Added `flex items-start justify-center`: Centers image while aligning to top
+### Fix 2: TV Poll Winners Preview Screen
 
-### File 2: `src/components/game/QuizGameScreenProd.tsx`
+**New File**: `src/components/tv/TVPollResultsScreen.tsx`
 
-Update the condition to hide difficulty badge when media is present:
+Create a dedicated TV display screen for poll results that shows:
+- Winning categories with rank badges
+- Who suggested each category
+- Clear "Coming up..." header
+- Auto-transition to countdown after a brief display (or host triggers it)
 
-```tsx
-// Lines 384-385: Add media check to hide difficulty badge for image/video/audio questions
-const hasMedia = currentQuestion.imageUrl || currentQuestion.videoUrl || currentQuestion.audioUrl;
+**File**: `src/pages/TVLobby.tsx`
 
-// In QuizQuestionCard props:
-difficultyLabel={!opponent && !hasMedia ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
-difficultyColor={!opponent && !hasMedia ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
+**Changes**:
+- Add routing for `poll-results` phase to show `TVPollResultsScreen`
+
+```typescript
+case 'poll-results':
+  return <TVPollResultsScreen />;
 ```
 
-This ensures:
-- Solo mode still shows difficulty badge for text-only questions
-- Image/video/audio questions never show the overlapping badge
+**File**: `src/hooks/useTVPoll.ts`
 
-## Visual Result
+The `finalizePollAndStartGame` function already sets up the queue correctly. We need to ensure the TV display shows this before transitioning.
 
-**Before:**
-- Image cropped at top (Lincoln's hair/head cut off)
-- "საშუალო" badge overlaying image corner
+### Fix 3: Early Timer Advance When No One Answers
 
-**After:**
-- Full image displayed with `object-contain` (entire portrait visible)
-- No difficulty badge on media questions
+**File**: `src/contexts/TVGameContext.tsx`
 
-## Summary of Changes
+**Changes**:
 
-| File | Change |
-|------|--------|
-| `quiz-question-card.tsx` | Change `object-cover` → `object-contain`, increase height to `h-52` |
-| `QuizGameScreenProd.tsx` | Add `!hasMedia` condition to hide difficulty badge for image questions |
+1. Add new constant for no-answer timeout:
+```typescript
+const NO_ANSWER_TIMEOUT = 5; // seconds without answers before early advance
+const REVEAL_DURATION_LONG_MS = 10000; // 10 seconds for timeout reveals
+```
+
+2. Add a ref to track "seconds since last answer":
+```typescript
+const noAnswerTimeRef = useRef<number>(0);
+```
+
+3. Modify the timer effect (lines 1092-1121) to check for no-answer condition:
+```typescript
+useEffect(() => {
+  if (state.phase !== 'question') return;
+  if (!state.sessionId) return;
+  
+  // Reset no-answer counter at start of question
+  noAnswerTimeRef.current = 0;
+  
+  timerRef.current = setInterval(() => {
+    setState(prev => {
+      // Check if any player has answered
+      const anyAnswered = prev.players.some(p => p.hasAnswered);
+      
+      // Increment no-answer time if no one has answered yet
+      if (!anyAnswered) {
+        noAnswerTimeRef.current += 1;
+      } else {
+        noAnswerTimeRef.current = 0; // Reset if someone answered
+      }
+      
+      // Early advance if no one answered for 5 seconds
+      if (!anyAnswered && noAnswerTimeRef.current >= NO_ANSWER_TIMEOUT) {
+        if (isHostRef.current && prev.phase === 'question') {
+          advanceToReveal('no answers for 5 seconds');
+        }
+        return { ...prev, timeRemaining: 0 };
+      }
+      
+      // Normal timer expiration
+      if (prev.timeRemaining <= 1) {
+        if (isHostRef.current && prev.phase === 'question') {
+          advanceToReveal('timer expired');
+        }
+        return { ...prev, timeRemaining: 0 };
+      }
+      
+      return { ...prev, timeRemaining: prev.timeRemaining - 1 };
+    });
+  }, 1000);
+
+  return () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+}, [state.phase, state.sessionId, advanceToReveal]);
+```
+
+4. Modify reveal duration to be longer for no-answer scenarios (line 1162-1230):
+```typescript
+// In the reveal auto-advance effect, use longer timeout if no one answered
+const revealDuration = state.players.every(p => !p.hasAnswered) 
+  ? REVEAL_DURATION_LONG_MS 
+  : REVEAL_DURATION_MS;
+  
+const t = setTimeout(async () => {
+  // ... existing next question logic
+}, revealDuration);
+```
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/controller/ControllerDirectSelection.tsx` | Simplify button handlers, remove blocking conditions |
+| `src/pages/TVHostController.tsx` | Simplify back button navigation |
+| `src/pages/TVLobby.tsx` | Add `poll-results` phase routing |
+| `src/components/tv/TVPollResultsScreen.tsx` | **NEW** - Winners preview screen for TV |
+| `src/contexts/TVGameContext.tsx` | Add no-answer early advance logic, increase reveal duration for timeouts |
+
+---
+
+## Expected Behavior After Fixes
+
+1. **Category Selection**: Back button and Start Game button work reliably after game ends
+2. **TV Winners Preview**: After poll completes, TV shows winning categories with ranks before game starts
+3. **Timer Behavior**: If no one answers for 5 seconds, timer stops, correct answer shows for 10 seconds, then next question appears
+
