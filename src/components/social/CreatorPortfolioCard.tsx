@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, UserCheck, Clock, Eye, Play } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Button } from "@/components/ui/button";
 import { TriviaPortfolioCard } from "./TriviaPortfolioCard";
 import { Creator } from "@/hooks/useExploreCreators";
@@ -151,12 +151,12 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
             onClick={() => openProfile(creator.user_id)}
             className="cursor-pointer hover:scale-105 transition-transform active:scale-95"
           >
-            <Avatar className="w-12 h-12 border-2 border-border">
-              <AvatarImage src={creator.avatar_url || undefined} />
-              <AvatarFallback className="bg-muted text-lg">
-                {creator.nickname.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <SafeAvatar 
+              avatarUrl={creator.avatar_url}
+              fallback={creator.nickname}
+              className="w-12 h-12 border-2 border-border"
+              fallbackClassName="bg-muted text-lg"
+            />
           </div>
           
           {/* Name and Stats */}
