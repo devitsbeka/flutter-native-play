@@ -97,7 +97,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
-          <div className="w-full h-40 overflow-hidden">
+          <div className="w-full h-48 overflow-hidden">
             <img 
               src={imageUrl!} 
               alt="Question" 
