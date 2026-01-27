@@ -132,6 +132,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showCreateTriviaModal, setShowCreateTriviaModal] = useState(false);
   const [showCreateCollectionModal, setShowCreateCollectionModal] = useState(false);
+  const [collectionInitialSubject, setCollectionInitialSubject] = useState<string>("");
   const [showCreateOptionsMenu, setShowCreateOptionsMenu] = useState(false);
   const [showIconPickerModal, setShowIconPickerModal] = useState(false);
   const [showMyTriviasModal, setShowMyTriviasModal] = useState(false);
@@ -1364,6 +1365,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         open={showCreateTriviaModal}
         onOpenChange={setShowCreateTriviaModal}
         onTriviaReady={handleBlindTriviaReady}
+        onSwitchToCollection={(subject) => {
+          setCollectionInitialSubject(subject);
+          setShowCreateCollectionModal(true);
+        }}
       />
 
       {/* How It Works Modal */}
@@ -1375,7 +1380,10 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
       {/* Create Collection Modal */}
       <CreateCollectionModal
         open={showCreateCollectionModal}
-        onOpenChange={setShowCreateCollectionModal}
+        onOpenChange={(open) => {
+          setShowCreateCollectionModal(open);
+          if (!open) setCollectionInitialSubject("");
+        }}
         onCollectionCreated={() => {
           // After collection is created, could auto-select it for the room
           toast({
@@ -1383,6 +1391,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
             description: "ახლა შეგიძლია გამოიყენო მეგობრებთან ერთად",
           });
         }}
+        initialRoundSubject={collectionInitialSubject}
       />
 
       {/* Room Icon Picker Modal */}

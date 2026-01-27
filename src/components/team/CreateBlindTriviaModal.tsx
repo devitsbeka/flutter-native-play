@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, Edit3, Users, CheckCircle } from "lucide-react";
+import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, Edit3, Users, CheckCircle, Plus } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -27,6 +27,7 @@ interface CreateBlindTriviaModalProps {
   onTriviaReady: (questions: GeneratedQuestion[], title: string, subject: string) => void;
   resumeDraftId?: string | null;
   onDraftResumed?: () => void;
+  onSwitchToCollection?: (firstRoundSubject: string) => void;
 }
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
@@ -72,7 +73,7 @@ interface TopicSuggestion {
   icon_slug: string;
 }
 
-export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resumeDraftId, onDraftResumed }: CreateBlindTriviaModalProps) {
+export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resumeDraftId, onDraftResumed, onSwitchToCollection }: CreateBlindTriviaModalProps) {
   const { toast: toastHook } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -104,7 +105,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     setIsLoadingTopics(true);
     
     const shuffled = [...TRIVIA_TOPIC_POOL].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 6);
+    const selected = shuffled.slice(0, 4);
     
     const iconSlugs = [...new Set(selected.map(t => t.icon_slug))];
     
@@ -402,7 +403,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 
                 <div className="flex flex-wrap gap-2 justify-center">
                   {isLoadingTopics ? (
-                    Array.from({ length: 6 }).map((_, i) => (
+                    Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="h-9 w-24 bg-white/20 rounded-full animate-pulse" />
                     ))
                   ) : (
@@ -429,6 +430,20 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                     ))
                   )}
                 </div>
+
+                {/* Add round button - switch to collection mode */}
+                {onSwitchToCollection && (
+                  <button
+                    onClick={() => {
+                      onOpenChange(false);
+                      onSwitchToCollection(subject);
+                    }}
+                    className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors mt-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    დაამატე რაუნდი
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
