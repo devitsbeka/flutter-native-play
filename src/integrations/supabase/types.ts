@@ -1525,6 +1525,7 @@ export type Database = {
       questions: {
         Row: {
           answer_shorten_status: string | null
+          audio_url: string | null
           category_id: string
           correct_answer: string
           created_at: string | null
@@ -1549,9 +1550,11 @@ export type Database = {
           question_text: string
           shorten_status: string | null
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
           answer_shorten_status?: string | null
+          audio_url?: string | null
           category_id: string
           correct_answer: string
           created_at?: string | null
@@ -1576,9 +1579,11 @@ export type Database = {
           question_text: string
           shorten_status?: string | null
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
           answer_shorten_status?: string | null
+          audio_url?: string | null
           category_id?: string
           correct_answer?: string
           created_at?: string | null
@@ -1603,6 +1608,7 @@ export type Database = {
           question_text?: string
           shorten_status?: string | null
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {

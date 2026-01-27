@@ -56,6 +56,8 @@ export interface FormattedQuestion {
   categorySlug?: string;      // Category slug
   iconSlug?: string | null;   // Question-specific icon
   imageUrl?: string | null;   // Image URL for image trivia questions
+  videoUrl?: string | null;   // Video URL for video trivia questions
+  audioUrl?: string | null;   // Audio URL for sound trivia questions
 }
 
 export interface QuestionResult {
@@ -81,6 +83,8 @@ interface RawQuestion {
   icon_slug?: string | null;
   category_id?: string;
   image_url?: string | null;
+  video_url?: string | null;
+  audio_url?: string | null;
 }
 
 // ============================================================================
@@ -159,6 +163,8 @@ function formatQuestion(q: RawQuestion, categoryName?: string, categorySlug?: st
     categorySlug,
     iconSlug: q.icon_slug,
     imageUrl: q.image_url,
+    videoUrl: q.video_url,
+    audioUrl: q.audio_url,
   };
 }
 
@@ -306,7 +312,7 @@ async function getCategoryQuestions(
   // Build query
   let query = supabase
     .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
@@ -325,7 +331,7 @@ async function getCategoryQuestions(
     usedFallback = true;
     let fallbackQuery = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -350,7 +356,7 @@ async function getCategoryQuestions(
     
     const { data: resetQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -441,7 +447,7 @@ async function getTVQuestions(
   // Build query
   let query = supabase
     .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
@@ -461,7 +467,7 @@ async function getTVQuestions(
     
     const { data: resetQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -480,7 +486,7 @@ async function getTVQuestions(
     
     const { data: finalQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -593,7 +599,7 @@ async function getSingleCategoryVSQuestions(
   // Query questions from specific category
   let query = supabase
     .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
@@ -613,7 +619,7 @@ async function getSingleCategoryVSQuestions(
     
     const { data: resetQuestions } = await supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
@@ -723,7 +729,7 @@ async function getMultiCategoryVSQuestions(
     
     let query = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('category_id', cat.id)
@@ -757,7 +763,7 @@ async function getMultiCategoryVSQuestions(
     
     let fallbackQuery = supabase
       .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, category_id')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url, category_id')
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language);

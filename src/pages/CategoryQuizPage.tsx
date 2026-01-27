@@ -67,6 +67,8 @@ interface TriviaQuestion {
   allAnswers?: string[];
   icon_slug?: string | null;
   image_url?: string | null;
+  video_url?: string | null;
+  audio_url?: string | null;
 }
 
 export default function CategoryQuizPage() {
@@ -246,6 +248,8 @@ export default function CategoryQuizPage() {
           allAnswers: q.allAnswers,
           icon_slug: q.iconSlug,
           image_url: q.imageUrl,
+          video_url: q.videoUrl,
+          audio_url: q.audioUrl,
         }));
         
         setQuestionIds(mapped.map(q => q.id));
@@ -984,8 +988,8 @@ export default function CategoryQuizPage() {
 
       {/* Question Card with Overlapping Icon - Solo mode optimized */}
       <div className="px-4 flex-shrink-0 mt-10 mb-2 relative">
-        {/* Category Icon - hide for image questions */}
-        {!currentQuestion?.image_url && (
+        {/* Category Icon - hide for media questions (image/video/audio) */}
+        {!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
             <DynamicIcon 
               slug={currentQuestion?.icon_slug || aiIconSlug || dbCategory?.icon_slug || undefined}
@@ -998,12 +1002,14 @@ export default function CategoryQuizPage() {
         <QuizQuestionCard
           questionText={currentQuestion?.question || ""}
           imageUrl={currentQuestion?.image_url}
+          videoUrl={currentQuestion?.video_url}
+          audioUrl={currentQuestion?.audio_url}
           progressPercent={(timeRemaining / (15 + timerBonus)) * 100}
           state={timerFrozen ? "frozen" : "default"}
           difficultyLabel={DIFFICULTY_LABELS[difficultyKey]}
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
-          reserveTopSpace={!currentQuestion?.image_url}
+          reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}
         />
       </div>
 

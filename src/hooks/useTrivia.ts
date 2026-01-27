@@ -19,6 +19,8 @@ export interface TriviaQuestion {
   incorrectAnswers: string[];
   allAnswers: string[];
   imageUrl?: string;
+  videoUrl?: string;
+  audioUrl?: string;
 }
 
 export interface ExhaustionInfo {
@@ -95,6 +97,8 @@ export function useTrivia() {
         incorrectAnswers: q.incorrectAnswers,
         allAnswers: q.allAnswers,
         imageUrl: q.imageUrl || undefined,
+        videoUrl: q.videoUrl || undefined,
+        audioUrl: q.audioUrl || undefined,
       }));
 
       // Store exhaustion info for UI display
