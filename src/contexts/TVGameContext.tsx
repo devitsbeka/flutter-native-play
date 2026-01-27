@@ -2387,6 +2387,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         timeRemaining: QUESTION_TIME,
       }));
       
+      // CRITICAL FIX: Mark timer as initialized for this question
+      // This prevents the realtime subscription from overwriting our fresh timer
+      // when it receives the DB update (which may have significant elapsed time due to latency)
+      timerInitializedForQuestionRef.current = state.currentQuestionIndex;
+      console.log('[startPlaying] Timer marked as initialized for question', state.currentQuestionIndex);
+      
       // CRITICAL: Longer delay to ensure React state and DB fully propagate
       // This ensures the fallback interval and other checks don't fire prematurely
       await new Promise(resolve => setTimeout(resolve, 150));
