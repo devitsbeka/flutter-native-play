@@ -7,7 +7,15 @@ interface InputItem {
   imageUrl?: string;
 }
 
-type ThemeType = 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'generic';
+type ThemeType = 
+  | 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'sports'
+  | 'athletes' | 'footballers' | 'basketballers' | 'tennis_players'
+  | 'painters' | 'paintings' | 'sculptors' | 'artworks'
+  | 'scientists' | 'historical_figures'
+  | 'musicians' | 'composers' | 'singers'
+  | 'actors' | 'directors' | 'entertainers'
+  | 'flags'
+  | 'generic';
 
 interface GeneratedQuestion {
   subject: string;
@@ -20,30 +28,67 @@ interface GeneratedQuestion {
   audio_url?: string;
 }
 
+// Extended question templates for all theme types
+const questionTemplates: Record<ThemeType, Record<string, string>> = {
+  people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+  cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
+  countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
+  companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
+  landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
+  animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
+  sports: { image: 'ვინ არის ეს სპორტსმენი?', text: 'ვინ არის ეს სპორტსმენი?' },
+  athletes: { image: 'ვინ არის ეს სპორტსმენი?', text: 'ვინ არის ეს სპორტსმენი?' },
+  footballers: { image: 'ვინ არის ეს ფეხბურთელი?', text: 'ვინ არის ეს ფეხბურთელი?' },
+  basketballers: { image: 'ვინ არის ეს კალათბურთელი?', text: 'ვინ არის ეს კალათბურთელი?' },
+  tennis_players: { image: 'ვინ არის ეს ტენისისტი?', text: 'ვინ არის ეს ტენისისტი?' },
+  painters: { image: 'ვინ არის ეს მხატვარი?', text: 'ვინ არის ეს მხატვარი?' },
+  paintings: { image: 'ვინ დახატა ეს ნახატი?', text: 'ვინ დახატა?' },
+  sculptors: { image: 'ვინ არის ეს მოქანდაკე?', text: 'ვინ არის ეს მოქანდაკე?' },
+  artworks: { image: 'ვინ შექმნა ეს ნაწარმოები?', text: 'ვინ შექმნა?' },
+  scientists: { image: 'ვინ არის ეს მეცნიერი?', text: 'ვინ არის ეს მეცნიერი?' },
+  historical_figures: { image: 'ვინ არის ეს ისტორიული პიროვნება?', text: 'ვინ არის?' },
+  musicians: { image: 'ვინ არის ეს მუსიკოსი?', text: 'ვინ არის ეს მუსიკოსი?' },
+  composers: { image: 'ვინ არის ეს კომპოზიტორი?', text: 'ვინ არის ეს კომპოზიტორი?' },
+  singers: { image: 'ვინ არის ეს მომღერალი?', text: 'ვინ არის ეს მომღერალი?' },
+  actors: { image: 'ვინ არის ეს მსახიობი?', text: 'ვინ არის ეს მსახიობი?' },
+  directors: { image: 'ვინ არის ეს რეჟისორი?', text: 'ვინ არის ეს რეჟისორი?' },
+  entertainers: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+  flags: { image: 'რომელი ქვეყნის დროშაა?', text: 'რომელი ქვეყნის დროშაა?' },
+  generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
+};
+
 // Dynamic question text based on theme and type
 function getQuestionText(theme: ThemeType, questionType: string): string {
-  const templates: Record<ThemeType, Record<string, string>> = {
-    people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
-    cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
-    countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
-    companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
-    landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
-    animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
-    generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
-  };
-  
-  return templates[theme]?.[questionType] || templates.generic[questionType] || templates.generic.image;
+  return questionTemplates[theme]?.[questionType] || questionTemplates.generic[questionType] || questionTemplates.generic.image;
 }
 
 // Get theme description for AI context
 function getThemeContext(theme: ThemeType): string {
   const contexts: Record<ThemeType, string> = {
-    people: 'famous people, celebrities, historical figures, scientists, artists, athletes, politicians',
+    people: 'famous people, celebrities, historical figures, scientists, artists',
     cities: 'cities, capitals, urban areas, metropolitan regions',
     countries: 'countries, nations, sovereign states',
     companies: 'companies, brands, corporations, businesses, tech companies',
     landmarks: 'landmarks, monuments, famous buildings, architectural wonders, tourist attractions',
     animals: 'animals, wildlife, mammals, birds, fish, reptiles',
+    sports: 'athletes, sportspeople, sports stars',
+    athletes: 'athletes, sportspeople, sports stars from various disciplines',
+    footballers: 'football/soccer players, professional footballers',
+    basketballers: 'basketball players, NBA players, professional basketballers',
+    tennis_players: 'tennis players, professional tennis athletes',
+    painters: 'famous painters, visual artists, art masters',
+    paintings: 'famous paintings, artworks, masterpieces',
+    sculptors: 'sculptors, sculpture artists, famous sculptors',
+    artworks: 'artworks, art pieces, museum exhibits',
+    scientists: 'scientists, inventors, researchers, Nobel laureates',
+    historical_figures: 'historical figures, leaders, revolutionaries, famous historical people',
+    musicians: 'musicians, music artists, singers, performers',
+    composers: 'classical composers, music composers, conductors',
+    singers: 'singers, vocalists, music performers',
+    actors: 'actors, actresses, movie stars, theater performers',
+    directors: 'film directors, movie directors, famous filmmakers',
+    entertainers: 'entertainers, celebrities, movie stars, directors',
+    flags: 'national flags, country flags',
     generic: 'various topics and subjects'
   };
   return contexts[theme] || contexts.generic;
