@@ -31,6 +31,9 @@ export interface TVQuestion {
   correct_answer: string;
   options: string[];
   icon_slug?: string | null; // Per-question icon for display
+  image_url?: string | null; // For image trivia questions
+  video_url?: string | null; // For video trivia questions
+  audio_url?: string | null; // For sound trivia questions
 }
 
 export type TVPhase = 'pairing' | 'waiting' | 'lobby' | 'countdown' | 'question' | 'playing' | 'reveal' | 'results' | 'completed' | 'idle' | 'round-intro' | 'poll-suggest' | 'poll-voting' | 'poll-results' | 'category-select';
@@ -507,6 +510,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           correct_answer: string;
           options: string[];
           icon_slug?: string | null;
+          image_url?: string | null;
+          video_url?: string | null;
+          audio_url?: string | null;
         }>;
         questions = rawQuestions.map(q => ({
           id: q.id,
@@ -514,6 +520,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           correct_answer: q.correct_answer,
           options: q.options,
           icon_slug: q.icon_slug,
+          image_url: q.image_url,
+          video_url: q.video_url,
+          audio_url: q.audio_url,
         }));
       }
       
@@ -847,7 +856,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!nextItem.category_id && !nextItem.user_trivia_id) return false;
 
     try {
-      let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[] }[] = [];
+      let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[]; icon_slug?: string | null; image_url?: string | null; video_url?: string | null; audio_url?: string | null }[] = [];
       let nextCategoryName: string | null = nextItem.category_name || null;
       // NOTE: category_icon is historically an emoji; tv_session_queue.icon_slug is used similarly in UI.
       let nextCategoryIcon: string | null = nextItem.icon_slug || null;
@@ -916,6 +925,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           correct_answer: q.correctAnswer,
           options: q.allAnswers,
           icon_slug: q.iconSlug,
+          image_url: q.imageUrl,
+          video_url: q.videoUrl,
+          audio_url: q.audioUrl,
         }));
 
         markQuestionsAsAsked(`tv_${categoryUUID}`, formattedQuestions.map((q) => q.id));
@@ -2074,7 +2086,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Current round + (remaining) queued rounds
       const totalRoundsCount = 1 + queueCount;
 
-      let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[] }[] = [];
+      let formattedQuestions: { id: string; question_text: string; correct_answer: string; options: string[]; icon_slug?: string | null; image_url?: string | null; video_url?: string | null; audio_url?: string | null }[] = [];
       let categoryName: string | null = null;
       let categoryIcon: string | null = null;
 
@@ -2170,6 +2182,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           correct_answer: q.correctAnswer,
           options: q.allAnswers, // Already shuffled by questionService
           icon_slug: q.iconSlug,
+          image_url: q.imageUrl,
+          video_url: q.videoUrl,
+          audio_url: q.audioUrl,
         }));
 
         // Track using standardized key

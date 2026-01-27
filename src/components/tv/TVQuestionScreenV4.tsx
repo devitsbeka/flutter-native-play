@@ -35,6 +35,12 @@ export const TVQuestionScreenV4: React.FC = () => {
   const totalQuestions = questions.length;
   const timerMax = 15;
   const timerPercent = (timeRemaining / timerMax) * 100;
+  
+  // Check if this is a media-based question
+  const hasImage = !!currentQuestion?.image_url;
+  const hasVideo = !!currentQuestion?.video_url;
+  const hasAudio = !!currentQuestion?.audio_url;
+  const hasMedia = hasImage || hasVideo || hasAudio;
 
   // Filter out the suggester from active players - they skip this round
   const activePlayers = players.filter(p => p.id !== currentRoundSuggesterId);
@@ -209,70 +215,127 @@ export const TVQuestionScreenV4: React.FC = () => {
       </div>
 
       {/* Question + answers (game UI) */}
-      <motion.div 
-        className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col min-h-0"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <div className="relative flex justify-center mb-3 flex-shrink-0 pt-16 [@media(max-height:700px)]:pt-12">
-          {/* Suggester Avatar - top left corner */}
-          {currentRoundSuggesterId && (
-            <motion.div 
-              className="absolute left-0 top-12 z-30 flex items-center gap-2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <SafeAvatar 
-                avatarUrl={currentRoundSuggesterAvatarUrl}
-                fallback={currentRoundSuggesterNickname || '?'}
-                className="w-10 h-10 ring-2 ring-purple-300 border-2 border-white shadow-lg"
-                fallbackClassName="bg-purple-500 text-white font-bold text-xs"
+      {hasImage ? (
+        // SPECIAL LAYOUT FOR IMAGE QUESTIONS: 50/50 split
+        <motion.div 
+          className="max-w-6xl mx-auto w-full px-6 flex-1 flex min-h-0"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* Left 50%: Question text + Image */}
+          <div className="w-1/2 pr-4 flex flex-col justify-center">
+            {/* Question text card */}
+            <div className="bg-white rounded-2xl p-4 mb-4 shadow-lg">
+              <p className="text-xl font-semibold text-center text-[#2A2550]">
+                {currentQuestion.question_text}
+              </p>
+            </div>
+            {/* Image */}
+            <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg">
+              <img 
+                src={currentQuestion.image_url!} 
+                alt="Question" 
+                className="w-full h-full object-cover object-top"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
               />
-              <span className="text-white/80 text-xs font-medium bg-black/30 px-2 py-1 rounded-lg">
-                {currentRoundSuggesterNickname}
-              </span>
-            </motion.div>
-          )}
-          {/* Category/Question Icon - overlapping top of card */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
-            <DynamicIcon 
-              slug={currentQuestion?.icon_slug || undefined}
-              questionId={currentQuestion?.id}
-              size={96}
-              className="drop-shadow-lg"
-              hideIfEmpty={false}
+            </div>
+          </div>
+          
+          {/* Right 50%: Answers stacked vertically */}
+          <div className="w-1/2 pl-4 flex flex-col justify-center gap-3">
+            {currentQuestion.options.slice(0, 4).map((option, index) => (
+              <QuizAnswerButton
+                key={index}
+                state={
+                  isReveal
+                    ? option === correctAnswer
+                      ? 'correct'
+                      : 'disabled'
+                    : 'default'
+                }
+                label={GEORGIAN_LABELS[index]}
+                text={option}
+                disabled
+                className="w-full"
+              />
+            ))}
+          </div>
+        </motion.div>
+      ) : (
+        // STANDARD LAYOUT: Question card + 2x2 grid
+        <motion.div 
+          className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col min-h-0"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="relative flex justify-center mb-3 flex-shrink-0 pt-16 [@media(max-height:700px)]:pt-12">
+            {/* Suggester Avatar - top left corner */}
+            {currentRoundSuggesterId && (
+              <motion.div 
+                className="absolute left-0 top-12 z-30 flex items-center gap-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <SafeAvatar 
+                  avatarUrl={currentRoundSuggesterAvatarUrl}
+                  fallback={currentRoundSuggesterNickname || '?'}
+                  className="w-10 h-10 ring-2 ring-purple-300 border-2 border-white shadow-lg"
+                  fallbackClassName="bg-purple-500 text-white font-bold text-xs"
+                />
+                <span className="text-white/80 text-xs font-medium bg-black/30 px-2 py-1 rounded-lg">
+                  {currentRoundSuggesterNickname}
+                </span>
+              </motion.div>
+            )}
+            {/* Category/Question Icon - overlapping top of card (hide if media) */}
+            {!hasMedia && (
+              <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
+                <DynamicIcon 
+                  slug={currentQuestion?.icon_slug || undefined}
+                  questionId={currentQuestion?.id}
+                  size={96}
+                  className="drop-shadow-lg"
+                  hideIfEmpty={false}
+                />
+              </div>
+            )}
+            <QuizQuestionCard
+              questionText={currentQuestion.question_text}
+              imageUrl={currentQuestion.image_url}
+              videoUrl={currentQuestion.video_url}
+              audioUrl={currentQuestion.audio_url}
+              progressPercent={Math.max(0, Math.min(100, timerPercent))}
+              className="w-full pt-8"
+              reserveTopSpace={!hasMedia}
             />
           </div>
-          <QuizQuestionCard
-            questionText={currentQuestion.question_text}
-            progressPercent={Math.max(0, Math.min(100, timerPercent))}
-            className="w-full pt-8"
-            reserveTopSpace
-          />
-        </div>
 
-        {/* Answer Options 2x2 Grid - clean single container buttons */}
-        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-          {currentQuestion.options.slice(0, 4).map((option, index) => (
-            <QuizAnswerButton
-              key={index}
-              state={
-                isReveal
-                  ? option === correctAnswer
-                    ? 'correct'
-                    : 'disabled'
-                  : 'default'
-              }
-              label={GEORGIAN_LABELS[index]}
-              text={option}
-              disabled
-              className="w-full h-full"
-            />
-          ))}
-        </div>
-      </motion.div>
+          {/* Answer Options 2x2 Grid - clean single container buttons */}
+          <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
+            {currentQuestion.options.slice(0, 4).map((option, index) => (
+              <QuizAnswerButton
+                key={index}
+                state={
+                  isReveal
+                    ? option === correctAnswer
+                      ? 'correct'
+                      : 'disabled'
+                    : 'default'
+                }
+                label={GEORGIAN_LABELS[index]}
+                text={option}
+                disabled
+                className="w-full h-full"
+              />
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
