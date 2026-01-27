@@ -1776,27 +1776,37 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 const startTime = new Date(newData.question_start_time).getTime();
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 
-                // CRITICAL FIX: Distinguish between "late joiner" and "was in pre-question phase but network lagged"
-                // If wasInPreQuestionPhaseRef is true, this player was present during countdown/reveal → give FULL time
-                // If wasInPreQuestionPhaseRef is false, this player is truly joining mid-question → sync to server
-                const isActualLateJoiner = !wasInPreQuestionPhaseRef.current;
+                // CRITICAL FIX v2: Use ELAPSED TIME as the primary indicator
+                // If elapsed < 5 seconds, this player definitely isn't late - they're just experiencing
+                // normal network latency from the host's startPlaying() to receiving the subscription.
+                // Only sync to server time if elapsed >= 5 seconds (true late joiner scenario)
+                const FRESH_START_THRESHOLD = 5; // If < 5s elapsed, give full time
+                const EXTREME_LAG_THRESHOLD = 12; // If > 12s elapsed, definitely sync to server
                 
-                // Also consider the LATE_JOIN_THRESHOLD for edge cases
-                // If someone was in countdown but their network lagged 12+ seconds, they might have missed most of the question
-                const LATE_JOIN_THRESHOLD = 10; // Increased from 3 to 10 seconds to account for slow networks
-                const isTooLateEvenAfterCountdown = elapsed > LATE_JOIN_THRESHOLD;
-                
-                if (isActualLateJoiner || isTooLateEvenAfterCountdown) {
-                  // Late joiner OR extreme network lag - sync to server time
-                  timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
-                  console.log('[Timer] Late join/extreme lag sync for question', currentQuestionIdx, 
-                    'elapsed:', elapsed, 'remaining:', timeRemaining, 
-                    'wasInPreQuestionPhase:', wasInPreQuestionPhaseRef.current, 'isActualLateJoiner:', isActualLateJoiner);
-                } else {
-                  // Was present during countdown/reveal and network lag is reasonable - give full time
+                if (elapsed < FRESH_START_THRESHOLD) {
+                  // Fresh question start - network latency is within normal range
                   timeRemaining = QUESTION_TIME;
-                  console.log('[Timer] ✅ Was in pre-question phase - giving FULL time for question', currentQuestionIdx, 
-                    'ignoring elapsed:', elapsed, 'giving full:', QUESTION_TIME);
+                  console.log('[Timer] ✅ Fresh start (elapsed < 5s) - giving FULL time for question', currentQuestionIdx, 
+                    'elapsed:', elapsed, 'giving full:', QUESTION_TIME);
+                } else if (elapsed >= EXTREME_LAG_THRESHOLD) {
+                  // Definitely late or extreme lag - sync to server time
+                  timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                  console.log('[Timer] ⚠️ Extreme lag/late join (elapsed >= 12s) - syncing for question', currentQuestionIdx, 
+                    'elapsed:', elapsed, 'remaining:', timeRemaining);
+                } else {
+                  // Middle ground (5-12s): Use wasInPreQuestionPhase flag as tiebreaker
+                  const wasPresent = wasInPreQuestionPhaseRef.current;
+                  if (wasPresent) {
+                    // Player was in countdown/reveal - give full time despite moderate lag
+                    timeRemaining = QUESTION_TIME;
+                    console.log('[Timer] ✅ Was in pre-question phase (5-12s elapsed) - giving FULL time for question', currentQuestionIdx, 
+                      'elapsed:', elapsed);
+                  } else {
+                    // Player wasn't tracked in pre-question phase - sync to server
+                    timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                    console.log('[Timer] ⚠️ Not in pre-question phase (5-12s elapsed) - syncing for question', currentQuestionIdx, 
+                      'elapsed:', elapsed, 'remaining:', timeRemaining);
+                  }
                 }
                 
                 timerInitializedForQuestionRef.current = currentQuestionIdx;

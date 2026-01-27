@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { SafeAvatar } from '@/components/shared/SafeAvatar';
-import { tvLog, tvLogPhase } from '@/utils/tvDebug';
+import { tvLog } from '@/utils/tvDebug';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
 import { AppIcon } from '@/components/shared/AppIcon';
 
 
 export const TVCountdownScreenV2: React.FC = () => {
-  const { players, categoryName, categoryIcon, isHost, startPlaying, roundNumber } = useTVGame();
+  const { players, categoryName, categoryIcon, roundNumber } = useTVGame();
   const [count, setCount] = useState(3);
-  const hasTriggeredPlaying = useRef(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,21 +25,15 @@ export const TVCountdownScreenV2: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // When countdown ends, ONLY the host triggers startPlaying
-  // NO FALLBACK - this prevents race conditions where both TV and Phone trigger
+  // NOTE: startPlaying is now ONLY called from TVHostController.tsx (the phone)
+  // This prevents race conditions where both TV display and Host phone try to trigger simultaneously.
+  // The TV display component just shows the countdown animation - it doesn't control game state.
+  // TVHostController has its own countdown timer that triggers startPlaying on the HOST PHONE.
   useEffect(() => {
-    if (count === 0 && !hasTriggeredPlaying.current && isHost) {
-      hasTriggeredPlaying.current = true;
-      tvLog('Countdown ended, host triggering startPlaying');
-      
-      const transitionTimer = setTimeout(() => {
-        startPlaying();
-        tvLogPhase('countdown', 'playing', 'countdown ended');
-      }, 500);
-
-      return () => clearTimeout(transitionTimer);
+    if (count === 0) {
+      tvLog('TV Countdown display reached 0 - host phone will trigger startPlaying');
     }
-  }, [count, isHost, startPlaying]);
+  }, [count]);
 
   const getCountDisplay = () => {
     if (count === 0) return 'დაიწყო!';
