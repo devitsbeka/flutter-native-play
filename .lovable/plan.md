@@ -1,75 +1,103 @@
 
-# Fix TV Poll Screen Layout and Add to Showcase
+# Fix Poll Screen Rank Badges
 
 ## Overview
-Three changes to improve the TV Poll Screen experience:
-1. Display categories in 4 columns instead of 3 to fit 6 categories in viewport
-2. Update QR code text from "დასკანერეთ შესერთებლად" to "დაასკანერეთ სათამაშოდ"  
-3. Add Poll screen to TV Showcase for preview in admin
+Two fixes are needed for the rank badges on poll screens:
+
+1. **Controller Poll Screen (Mobile)**: All rank badges (1, 2, 3) should have a white background container like badge #2 currently has
+2. **TV Poll Screen**: Rank badges are being cropped because they're positioned outside the card bounds
 
 ---
 
 ## Changes
 
-### 1. Fix Grid Columns (TVPollScreen.tsx)
+### 1. Controller Poll Screen - White Badges (ControllerPollScreen.tsx)
 
-**Current logic (line 53-57):**
+**Current code (lines 722-729):**
 ```typescript
-const getGridCols = (count: number) => {
-  if (count <= 2) return 'grid-cols-2';
-  if (count <= 4) return 'grid-cols-2 md:grid-cols-4';
-  return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';  // ← 3 cols on medium screens
-};
+<div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+  index === 0 ? 'bg-yellow-500 text-yellow-900' :
+  index === 1 ? 'bg-gray-300 text-gray-700' :
+  index === 2 ? 'bg-orange-400 text-orange-900' :
+  'bg-purple-500/30 text-purple-200'
+}`}>
 ```
 
-**Updated logic:**
+**Updated code - All 1, 2, 3 use white background:**
 ```typescript
-const getGridCols = (count: number) => {
-  if (count <= 2) return 'grid-cols-2';
-  return 'grid-cols-2 md:grid-cols-4';  // Always 4 columns on TV
-};
+<div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+  index < 3 
+    ? 'bg-white text-purple-900'  // White background for 1, 2, 3
+    : 'bg-purple-500/30 text-purple-200'
+}`}>
 ```
 
-This ensures categories display in 4 columns on TV screens (which are typically 1080p+), allowing 6 categories to fit in 2 rows without cropping.
+This makes badges 1, 2, and 3 all have a consistent white background with dark purple text, matching the design intent from the screenshot.
 
 ---
 
-### 2. Update QR Code Text (TVPollScreen.tsx)
+### 2. TV Poll Screen - Fix Badge Cropping (TVPollScreen.tsx)
 
-**Line 165 - Change from:**
+**Problem:** The rank badge uses `absolute -top-3 -left-3` which places it outside the card's bounds. The parent grid or card clips this.
+
+**Solution:** 
+- Add `overflow-visible` to the card container
+- Add padding to the grid to accommodate the badges
+- Ensure proper z-index on badges
+
+**Current card (lines 245-259):**
 ```typescript
-დასკანერეთ შესერთებლად
+<motion.div
+  layout
+  className={`relative bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 transition-all ${
+    isLeader 
+      ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
+      : 'border-white/20'
+  }`}
+>
 ```
 
-**To:**
+**Updated card:**
 ```typescript
-დაასკანერეთ სათამაშოდ
+<motion.div
+  layout
+  className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 transition-all ${
+    isLeader 
+      ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
+      : 'border-white/20'
+  }`}
+>
 ```
 
----
-
-### 3. Add Poll Screen to TV Showcase (TVScreensShowcase.tsx)
-
-**Add import:**
+**Current rank badge (lines 272-282):**
 ```typescript
-import { TVPollScreen } from '@/components/tv/TVPollScreen';
+{showVotes && (
+  <div className={`absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+    rank === 1 ? 'bg-yellow-500 text-yellow-900' :
+    rank === 2 ? 'bg-gray-300 text-gray-700' :
+    rank === 3 ? 'bg-orange-400 text-orange-900' :
+    'bg-purple-500/50 text-white'
+  }`}>
 ```
 
-**Add to SCREENS array:**
+**Updated rank badge - white background and z-index:**
 ```typescript
-const SCREENS = [
-  { id: 'pairing', name: 'Pairing', phase: 'pairing' as const },
-  { id: 'lobby', name: 'Lobby', phase: 'lobby' as const },
-  { id: 'poll', name: 'Poll', phase: 'poll-suggest' as const },  // ← NEW
-  { id: 'round-intro', name: 'Round Intro', phase: 'round_intro' as const },
-  // ...rest
-];
+{showVotes && (
+  <div className={`absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+    rank <= 3 
+      ? 'bg-white text-purple-900'  // White background for 1, 2, 3
+      : 'bg-purple-500/50 text-white'
+  }`}>
 ```
 
-**Add to ScreenRenderer:**
+**Current grid container (line 138):**
 ```typescript
-case 'poll':
-  return <TVPollScreen />;
+<div className={`grid ${getGridCols(...)} gap-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
+```
+
+**Updated grid - add top padding for badges:**
+```typescript
+<div className={`grid ${getGridCols(...)} gap-4 pt-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
 ```
 
 ---
@@ -78,15 +106,16 @@ case 'poll':
 
 | File | Change |
 |------|--------|
-| `src/components/tv/TVPollScreen.tsx` | Simplify `getGridCols()` to always use 4 columns |
-| `src/components/tv/TVPollScreen.tsx` | Update text on line 165 |
-| `src/pages/TVScreensShowcase.tsx` | Import TVPollScreen, add to SCREENS array and ScreenRenderer |
+| `src/components/controller/ControllerPollScreen.tsx` | Lines 722-729: Change all 1,2,3 badges to use white background |
+| `src/components/tv/TVPollScreen.tsx` | Line 138: Add `pt-4` to grid for badge space |
+| `src/components/tv/TVPollScreen.tsx` | Line 255: Add `overflow-visible` to card |
+| `src/components/tv/TVPollScreen.tsx` | Lines 274-279: Add `z-10` and change to white background |
 
 ---
 
 ## Result
 
 After these changes:
-- TV Poll screen will show 4 columns of categories, fitting 6+ without vertical scrolling
-- QR code section will display the corrected Georgian text
-- Admin can preview the Poll screen at `/tv-showcase` by selecting the "Poll" tab
+- All rank badges (1, 2, 3) on both mobile and TV will have a clean white background with dark text
+- TV screen badges will not be cropped - they'll be fully visible overlapping the card corners
+- Consistent visual style across both screens
