@@ -143,7 +143,9 @@ const TVHostController: React.FC = () => {
   // Determine actual phase - prioritize poll hook's state for poll phases
   // This handles the race condition where pollHook updates before contextPhase
   const rawLocalPhase = mapContextPhaseToLocal(contextPhase);
-  let localPhase: LocalPhase = (rawLocalPhase === 'category-select' && hasQueue) ? 'lobby' : rawLocalPhase;
+  // Don't convert category-select to lobby based on hasQueue
+  // This ensures consistent screen regardless of queue fetch timing
+  let localPhase: LocalPhase = rawLocalPhase;
   
   // Override with poll hook state if we're in poll phases
   // The poll hook subscribes to the same DB but updates its local state immediately after endVoting()
