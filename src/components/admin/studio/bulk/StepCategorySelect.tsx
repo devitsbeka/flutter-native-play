@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, ImageIcon, X, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, ImageIcon, X, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -48,32 +48,36 @@ export function StepCategorySelect({
 
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
   
-  // Fetch AI suggestions when category changes
-  useEffect(() => {
+  const fetchSuggestions = async () => {
     if (!selectedCategory) {
       setAllSuggestions([]);
       return;
     }
+    
+    setIsLoadingSuggestions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-topic-suggestions', {
+        body: { categoryName: selectedCategory.name }
+      });
+      
+      if (error) throw error;
+      setAllSuggestions(data?.suggestions || []);
+    } catch (err) {
+      console.error('Failed to fetch suggestions:', err);
+      setAllSuggestions([]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
 
-    const fetchSuggestions = async () => {
-      setIsLoadingSuggestions(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-topic-suggestions', {
-          body: { categoryName: selectedCategory.name }
-        });
-        
-        if (error) throw error;
-        setAllSuggestions(data?.suggestions || []);
-      } catch (err) {
-        console.error('Failed to fetch suggestions:', err);
-        setAllSuggestions([]);
-      } finally {
-        setIsLoadingSuggestions(false);
-      }
-    };
-
+  // Fetch AI suggestions when category changes
+  useEffect(() => {
     fetchSuggestions();
   }, [selectedCategory?.id]);
+
+  const refreshSuggestions = () => {
+    fetchSuggestions();
+  };
 
   // Detect theme for dynamic question text preview
   const theme: ThemeType = selectedCategory 
@@ -127,6 +131,17 @@ export function StepCategorySelect({
           <Label className="text-base font-medium flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             AI რეკომენდაციები
+            <button
+              onClick={refreshSuggestions}
+              disabled={isLoadingSuggestions}
+              className="ml-auto p-1.5 rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+              title="ახალი რეკომენდაციები"
+            >
+              <RefreshCw className={cn(
+                "h-4 w-4",
+                isLoadingSuggestions && "animate-spin"
+              )} />
+            </button>
           </Label>
           {isLoadingSuggestions ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">

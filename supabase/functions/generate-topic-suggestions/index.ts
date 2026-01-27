@@ -25,16 +25,25 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const prompt = `You are a trivia expert. Given the category "${categoryName}", suggest exactly 18 specific, well-known topics/subjects that would make great trivia questions for this category.
+    const prompt = `You are a trivia question designer. Given the category "${categoryName}", suggest exactly 12 TOPIC THEMES (subtopics) that would be great for generating visual trivia questions.
 
 Requirements:
-- Each suggestion should be a single, specific item (a person's name, place, thing, concept, etc.)
-- Choose famous/recognizable topics that people would enjoy guessing
-- Make suggestions diverse within the category
-- Use English names (they will be used to search for images/info)
+- Each suggestion should be a THEME/SUBTOPIC, not a specific item
+- Themes should be visually identifiable (good for image-based questions)
+- Examples for "Sports" category:
+  • "Famous Athletes" (images of sportspeople)
+  • "Sports Equipment" (baseball bats, tennis rackets, etc.)
+  • "Team Logos" (recognizable sports team emblems)
+  • "Sports Stadiums" (iconic arenas)
+  • "Olympic Sports" (various disciplines)
+  • "Sports Uniforms" (jerseys, gear)
+  
+- For other categories, think similarly about visual themes
+- Keep suggestions broad enough to generate 5-10 questions each
+- Use English for searchability
 
-Return ONLY a JSON array of 18 strings, nothing else. Example format:
-["Topic 1", "Topic 2", "Topic 3", ...]`;
+Return ONLY a JSON array of 12 strings. Example:
+["Famous Athletes", "Sports Equipment", "Team Logos", ...]`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -76,7 +85,7 @@ Return ONLY a JSON array of 18 strings, nothing else. Example format:
     }
 
     return new Response(
-      JSON.stringify({ suggestions: suggestions.slice(0, 18) }),
+      JSON.stringify({ suggestions: suggestions.slice(0, 12) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
