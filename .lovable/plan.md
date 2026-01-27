@@ -1,100 +1,84 @@
 
-# Remove Container and Fix Card Hover Cropping
 
-## Problem Analysis
+# Fix Back Button Navigation in ControllerPollScreen
 
-From the screenshot, there are two issues with the trivia/collections display in the Explore tab:
+## Problem
 
-1. **Back Container**: The `CreatorPortfolioCard` component wraps trivias in a bordered/background container on tablet & desktop (`md:bg-card md:rounded-2xl md:border md:border-border md:shadow-sm`) - user wants this removed
+The back button in the poll-suggest phase (shown in the screenshot with categories like "ქართული ლიტერატურა", "მეცნიერება", etc.) does not navigate to the rooms page (`/team`) when clicked.
 
-2. **Hover Cropping**: Cards use `whileHover={{ scale: 1.02, y: -4 }}` animation, but the parent carousel has `overflow-hidden`, causing the scale effect to be cropped at the edges
-
----
+**Root Cause**: The current implementation uses `window.history.state && window.history.state.idx > 0` to check if there's navigation history. This check can fail because:
+1. When users enter via notifications, QR codes, or direct links, `window.history.state.idx` is often 0 or undefined
+2. Different browsers and navigation patterns handle history state inconsistently
 
 ## Solution
 
-### File: `src/components/social/CreatorPortfolioCard.tsx`
-
-#### 1. Remove Container Styling (Line 141)
-
-**Current:**
-```tsx
-className="md:bg-card md:rounded-2xl md:border md:border-border md:shadow-sm overflow-hidden"
-```
-
-**Change to:**
-```tsx
-className="overflow-visible"
-```
-
-This removes the background, border, and shadow on tablet/desktop while allowing hover effects to overflow.
-
-#### 2. Add Breathing Room to Carousel (Line 217)
-
-**Current:**
-```tsx
-<div className="hidden md:block overflow-hidden w-full max-w-full">
-```
-
-**Change to:**
-```tsx
-<div className="hidden md:block overflow-visible w-full max-w-full py-3">
-```
-
-The `overflow-visible` allows scaled cards to not be clipped, and `py-3` adds vertical breathing room for the hover scale effect.
-
-#### 3. Update Carousel Container (Lines 224-226)
-
-**Current:**
-```tsx
-<Carousel
-  opts={{...}}
-  className="w-full"
->
-  <CarouselContent className="-ml-3">
-```
-
-**Change to:**
-```tsx
-<Carousel
-  opts={{...}}
-  className="w-full overflow-visible"
->
-  <CarouselContent className="-ml-3 overflow-visible">
-```
-
-#### 4. Add Padding to Carousel Items (Line 228)
-
-**Current:**
-```tsx
-<CarouselItem key={trivia.id} className="pl-3 basis-auto">
-```
-
-**Change to:**
-```tsx
-<CarouselItem key={trivia.id} className="pl-3 basis-auto py-2">
-```
-
-The `py-2` gives each item vertical breathing room for the hover effect.
+Replace the unreliable history state check with direct navigation to `/team`. Since the user's expected behavior is always to go back to the rooms page when clicking the back button in the TV Host Controller, we should navigate directly there instead of relying on browser history.
 
 ---
 
-## Summary of Changes
+## Technical Changes
 
-| Location | Before | After |
-|----------|--------|-------|
-| Main container (line 141) | `md:bg-card md:rounded-2xl md:border md:border-border md:shadow-sm overflow-hidden` | `overflow-visible` |
-| Carousel wrapper (line 217) | `overflow-hidden` | `overflow-visible py-3` |
-| Carousel (line 224) | `w-full` | `w-full overflow-visible` |
-| CarouselContent (line 226) | `-ml-3` | `-ml-3 overflow-visible` |
-| CarouselItem (line 228) | `pl-3 basis-auto` | `pl-3 basis-auto py-2` |
+### File: `src/components/controller/ControllerPollScreen.tsx`
+
+**Lines 68-74** - Replace the `handleBack` function:
+
+**Current:**
+```tsx
+const handleBack = () => {
+  if (window.history.state && window.history.state.idx > 0) {
+    window.history.back();
+  } else {
+    navigate('/team', { replace: true });
+  }
+};
+```
+
+**Change to:**
+```tsx
+const handleBack = () => {
+  // Always navigate to /team - the rooms page
+  // Using replace: true prevents building up navigation history
+  navigate('/team', { replace: true });
+};
+```
+
+This simplifies the logic and ensures consistent behavior - clicking back always takes the host to the rooms page.
 
 ---
 
-## Expected Result
+### File: `src/pages/TVHostController.tsx`
 
-After these changes:
-- No background/border container around trivia cards on desktop and tablet
-- Cards can scale up on hover without being cropped
-- Adequate breathing space around cards for the hover animation effect
-- Clean, modern look matching the user's expectations
+**Lines 867-872** - Also update the lobby phase back button for consistency:
+
+**Current:**
+```tsx
+onClick={() => {
+  if (window.history.state && window.history.state.idx > 0) {
+    window.history.back();
+  } else {
+    navigate('/team', { replace: true });
+  }
+}}
+```
+
+**Change to:**
+```tsx
+onClick={() => navigate('/team', { replace: true })}
+```
+
+---
+
+## Summary
+
+| File | Location | Change |
+|------|----------|--------|
+| `src/components/controller/ControllerPollScreen.tsx` | Lines 68-74 | Simplify `handleBack` to always navigate to `/team` |
+| `src/pages/TVHostController.tsx` | Lines 867-872 | Simplify lobby back button to always navigate to `/team` |
+
+## Expected Outcome
+
+After this change:
+- Clicking the back button (chevron left) in the poll-suggest screen will reliably navigate to `/team` (rooms page)
+- The same applies to the lobby phase back button
+- No more failed navigation attempts when history state is missing or invalid
+
