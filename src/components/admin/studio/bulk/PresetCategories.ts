@@ -5,7 +5,16 @@ export interface PresetCategory {
   keywords: string[];
 }
 
-export type ThemeType = 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'sports' | 'generic';
+// Extended theme types for more specific question phrasing
+export type ThemeType = 
+  | 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'sports'
+  | 'athletes' | 'footballers' | 'basketballers' | 'tennis_players'
+  | 'painters' | 'paintings' | 'sculptors' | 'artworks'
+  | 'scientists' | 'historical_figures'
+  | 'musicians' | 'composers' | 'singers'
+  | 'actors' | 'directors' | 'entertainers'
+  | 'flags'
+  | 'generic';
 
 export const PRESET_CATEGORIES: PresetCategory[] = [
   {
@@ -106,20 +115,63 @@ export const PRESET_CATEGORIES: PresetCategory[] = [
   },
 ];
 
+// Theme detection keywords (supports Georgian and English)
 const themeKeywords: Record<ThemeType, string[]> = {
-  people: ['ადამიან', 'person', 'people', 'ცნობილ', 'famous', 'მეცნიერ', 'scientist', 'მსახიობ', 'actor', 'მომღერ', 'singer', 'მხატვ', 'artist', 'პოლიტიკოს', 'politician', 'მწერალ', 'writer'],
+  // Original themes
+  people: ['ადამიან', 'person', 'people', 'ცნობილ', 'famous'],
   cities: ['ქალაქ', 'city', 'cities', 'urban', 'დედაქალაქ', 'capital'],
-  countries: ['ქვეყან', 'country', 'countries', 'nation', 'დროშ', 'flag', 'სახელმწიფო', 'state'],
+  countries: ['ქვეყან', 'country', 'countries', 'nation', 'სახელმწიფო', 'state'],
   companies: ['კომპანი', 'company', 'companies', 'brand', 'ბრენდ', 'ლოგო', 'logo', 'ბიზნეს', 'business'],
   landmarks: ['ღირსშესანიშნაობ', 'landmark', 'monument', 'ძეგლ', 'არქიტექტურ', 'architecture', 'შენობ', 'building'],
   animals: ['ცხოველ', 'animal', 'ფრინველ', 'bird', 'თევზ', 'fish', 'ძუძუმწოვარ', 'mammal'],
-  sports: ['სპორტ', 'sport', 'sports', 'ფეხბურთ', 'football', 'soccer', 'კალათბურთ', 'basketball', 'ტენის', 'tennis', 'ათლეტ', 'athlete', 'მოთამაშე', 'player', 'ჩემპიონ', 'champion'],
+  sports: ['სპორტ', 'sport', 'sports'],
+  
+  // Extended athlete themes
+  athletes: ['ათლეტ', 'athlete', 'სპორტსმენ', 'sportsman', 'sportspeople'],
+  footballers: ['ფეხბურთ', 'football', 'soccer', 'footballer'],
+  basketballers: ['კალათბურთ', 'basketball', 'basketballer'],
+  tennis_players: ['ტენის', 'tennis'],
+  
+  // Art themes
+  painters: ['მხატვ', 'painter', 'artist'],
+  paintings: ['ნახატ', 'painting', 'artwork'],
+  sculptors: ['მოქანდაკე', 'sculptor'],
+  artworks: ['ხელოვნება', 'art', 'museum', 'gallery', 'მუზეუმ'],
+  
+  // Other themes
+  scientists: ['მეცნიერ', 'scientist', 'physics', 'chemistry', 'ფიზიკ', 'ქიმია'],
+  historical_figures: ['ისტორი', 'history', 'historical'],
+  musicians: ['მუსიკ', 'music', 'მომღერ', 'singer'],
+  composers: ['კომპოზიტორ', 'composer'],
+  singers: ['მომღერალ', 'vocalist'],
+  actors: ['მსახიობ', 'actor', 'actress'],
+  directors: ['რეჟისორ', 'director'],
+  entertainers: ['კინო', 'cinema', 'movie', 'film', 'ფილმ', 'hollywood'],
+  flags: ['დროშ', 'flag', 'flags'],
+  
   generic: []
 };
 
 export function detectThemeFromCategoryName(categoryName: string): ThemeType {
   const name = categoryName.toLowerCase();
   
+  // Check extended themes first (more specific)
+  const extendedThemes: ThemeType[] = [
+    'footballers', 'basketballers', 'tennis_players', 'athletes',
+    'painters', 'paintings', 'sculptors', 'artworks',
+    'scientists', 'historical_figures',
+    'musicians', 'composers', 'singers',
+    'actors', 'directors', 'entertainers',
+    'flags'
+  ];
+  
+  for (const theme of extendedThemes) {
+    if (themeKeywords[theme].some(kw => name.includes(kw))) {
+      return theme;
+    }
+  }
+  
+  // Check original themes
   for (const [theme, keywords] of Object.entries(themeKeywords)) {
     if (theme === 'generic') continue;
     if (keywords.some(kw => name.includes(kw))) {
@@ -130,19 +182,45 @@ export function detectThemeFromCategoryName(categoryName: string): ThemeType {
   return 'generic';
 }
 
-export function getQuestionText(theme: ThemeType, questionType: 'text' | 'image'): string {
-  const templates: Record<ThemeType, Record<'text' | 'image', string>> = {
-    people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
-    cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
-    countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
-    companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
-    landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
-    animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
-    sports: { image: 'ვინ არის ეს სპორტსმენი?', text: 'ვინ არის ეს სპორტსმენი?' },
-    generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
-  };
+// Extended question templates for all theme types
+const questionTemplates: Record<ThemeType, Record<'text' | 'image', string>> = {
+  // Original themes
+  people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+  cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
+  countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
+  companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
+  landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
+  animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
+  sports: { image: 'ვინ არის ეს სპორტსმენი?', text: 'ვინ არის ეს სპორტსმენი?' },
   
-  return templates[theme][questionType];
+  // Extended athlete themes
+  athletes: { image: 'ვინ არის ეს სპორტსმენი?', text: 'ვინ არის ეს სპორტსმენი?' },
+  footballers: { image: 'ვინ არის ეს ფეხბურთელი?', text: 'ვინ არის ეს ფეხბურთელი?' },
+  basketballers: { image: 'ვინ არის ეს კალათბურთელი?', text: 'ვინ არის ეს კალათბურთელი?' },
+  tennis_players: { image: 'ვინ არის ეს ტენისისტი?', text: 'ვინ არის ეს ტენისისტი?' },
+  
+  // Art themes
+  painters: { image: 'ვინ არის ეს მხატვარი?', text: 'ვინ არის ეს მხატვარი?' },
+  paintings: { image: 'ვინ დახატა ეს ნახატი?', text: 'ვინ დახატა?' },
+  sculptors: { image: 'ვინ არის ეს მოქანდაკე?', text: 'ვინ არის ეს მოქანდაკე?' },
+  artworks: { image: 'ვინ შექმნა ეს ნაწარმოები?', text: 'ვინ შექმნა?' },
+  
+  // Other themes
+  scientists: { image: 'ვინ არის ეს მეცნიერი?', text: 'ვინ არის ეს მეცნიერი?' },
+  historical_figures: { image: 'ვინ არის ეს ისტორიული პიროვნება?', text: 'ვინ არის?' },
+  musicians: { image: 'ვინ არის ეს მუსიკოსი?', text: 'ვინ არის ეს მუსიკოსი?' },
+  composers: { image: 'ვინ არის ეს კომპოზიტორი?', text: 'ვინ არის ეს კომპოზიტორი?' },
+  singers: { image: 'ვინ არის ეს მომღერალი?', text: 'ვინ არის ეს მომღერალი?' },
+  actors: { image: 'ვინ არის ეს მსახიობი?', text: 'ვინ არის ეს მსახიობი?' },
+  directors: { image: 'ვინ არის ეს რეჟისორი?', text: 'ვინ არის ეს რეჟისორი?' },
+  entertainers: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+  flags: { image: 'რომელი ქვეყნის დროშაა?', text: 'რომელი ქვეყნის დროშაა?' },
+  
+  generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
+};
+
+export function getQuestionText(theme: ThemeType, questionType: 'text' | 'image'): string {
+  return questionTemplates[theme]?.[questionType] || questionTemplates.generic[questionType];
 }
 
 export function getSuggestionsForCategory(categoryName: string): string[] {
@@ -153,7 +231,37 @@ export function getSuggestionsForCategory(categoryName: string): string[] {
     return []; // No suggestions for unknown categories
   }
   
-  const preset = PRESET_CATEGORIES.find(c => c.id === theme);
+  // Map extended themes back to preset categories
+  const themeToPreset: Record<ThemeType, string> = {
+    people: 'people',
+    cities: 'cities',
+    countries: 'countries',
+    companies: 'companies',
+    landmarks: 'landmarks',
+    animals: 'animals',
+    sports: 'sports',
+    athletes: 'sports',
+    footballers: 'sports',
+    basketballers: 'sports',
+    tennis_players: 'sports',
+    painters: 'people',
+    paintings: 'people',
+    sculptors: 'people',
+    artworks: 'people',
+    scientists: 'people',
+    historical_figures: 'people',
+    musicians: 'people',
+    composers: 'people',
+    singers: 'people',
+    actors: 'people',
+    directors: 'people',
+    entertainers: 'people',
+    flags: 'countries',
+    generic: 'people'
+  };
+  
+  const presetId = themeToPreset[theme];
+  const preset = PRESET_CATEGORIES.find(c => c.id === presetId);
   
   if (preset) {
     const shuffled = [...preset.keywords].sort(() => Math.random() - 0.5);
