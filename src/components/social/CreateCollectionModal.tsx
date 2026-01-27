@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Loader2, ChevronLeft, Sparkles, Settings, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Loader2, ChevronLeft, Sparkles, Settings, ChevronRight, Edit3, Users, Check, Play } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,7 @@ import confetti from "canvas-confetti";
 import iconCollections from "@/assets/icon-collections.png";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
+type CreatorMode = "edit" | "play" | null;
 
 interface CollectionRound {
   subject: string;
@@ -43,6 +44,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const queryClient = useQueryClient();
   
   const [step, setStep] = useState(1);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
   const [title, setTitle] = useState("");
   const [coverGradient] = useState(COVER_GRADIENTS[0]);
   const [isPublic, setIsPublic] = useState(false);
@@ -50,14 +52,14 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
   const [showRoundSettings, setShowRoundSettings] = useState(false);
   
-  // Step 1: Round names
+  // Step 2: Round names
   const [roundNames, setRoundNames] = useState<string[]>(["", ""]);
   
-  // Step 2: Generation progress
+  // Step 3: Generation progress
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState<{current: number; total: number; currentRound: string}>({ current: 0, total: 0, currentRound: "" });
   
-  // Step 3: Editor state
+  // Step 4: Editor state
   const [rounds, setRounds] = useState<CollectionRound[]>([]);
   const [roundQuestions, setRoundQuestions] = useState<EditorQuestion[][]>([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
@@ -104,7 +106,8 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     // Load saved questions if available
     if (data.generated_data && (data.generated_data as any).roundQuestions) {
       setRoundQuestions((data.generated_data as any).roundQuestions);
-      setStep(3); // Go directly to editor
+      setCreatorMode("edit"); // Assume edit mode for drafts
+      setStep(4); // Go directly to editor
     }
     
     toast.success("დრაფტი ჩაიტვირთა");
@@ -112,6 +115,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
 
   const resetForm = () => {
     setStep(1);
+    setCreatorMode(null);
     setTitle("");
     setIsPublic(false);
     setRoundNames(["", ""]);
@@ -129,7 +133,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     // Auto-save draft if there's content in editor
     const hasContent = roundQuestions.some(rq => rq.some(q => q.question.trim().length > 0));
     
-    if (user && hasContent && !isPosting && step === 3) {
+    if (user && hasContent && !isPosting && step === 4) {
       try {
         const draftData = {
           user_id: user.id,
@@ -192,7 +196,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     if (validRounds.length === 0) return;
 
     setIsGenerating(true);
-    setStep(2);
+    setStep(3);
     setGenerationProgress({ current: 0, total: validRounds.length, currentRound: validRounds[0] });
 
     const generatedRounds: CollectionRound[] = [];
@@ -248,11 +252,11 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       setRoundQuestions(allQuestions);
       setTitle(validRounds.length > 1 ? `${validRounds[0]} & ${validRounds.length - 1} სხვა` : validRounds[0]);
       
-      setTimeout(() => setStep(3), 300);
+      setTimeout(() => setStep(4), 300);
     } catch (error) {
       console.error("Error generating quiz:", error);
       toast.error(error instanceof Error ? error.message : "კითხვების გენერაცია ვერ მოხერხდა");
-      setStep(1);
+      setStep(2);
     } finally {
       setIsGenerating(false);
     }
@@ -385,6 +389,84 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     } catch (error: any) {
       console.error("Error publishing collection:", error);
       toast.error(error.message || "გამოქვეყნება ვერ მოხერხდა");
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  // Save for play mode
+  const handleSaveAndStartGame = async () => {
+    if (!user) return;
+
+    setIsPosting(true);
+
+    try {
+      const { data: collection, error: collectionError } = await supabase
+        .from("quiz_collections")
+        .insert({
+          user_id: user.id,
+          title: title || `კოლექცია: ${rounds.map(r => r.subject).join(", ")}`,
+          description: null,
+          cover_gradient: coverGradient,
+          cover_image: null,
+          is_public: false, // Private by default for play mode
+        })
+        .select()
+        .single();
+
+      if (collectionError) throw collectionError;
+
+      for (let i = 0; i < rounds.length; i++) {
+        const round = rounds[i];
+        const questions = roundQuestions[i];
+        const convertedQuestions = convertToGeneratedQuestions(questions).map(q => ({
+          ...q,
+          difficulty: round.difficulty || "medium",
+          icon_slug: q.icon_slug || null,
+        }));
+        
+        const { error: postError } = await supabase
+          .from("user_quiz_posts")
+          .insert([{
+            user_id: user.id,
+            title: round.subject,
+            subject: round.subject,
+            questions: convertedQuestions as unknown as any,
+            question_count: questions.length,
+            answer_format: round.answerFormat,
+            cover_gradient: coverGradient,
+            cover_image: null,
+            is_public: false,
+            collection_id: collection.id,
+            round_number: i + 1,
+          }]);
+
+        if (postError) throw postError;
+      }
+
+      if (currentDraftId) {
+        await supabase
+          .from("collection_drafts")
+          .delete()
+          .eq("id", currentDraftId);
+      }
+
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.5 }
+      });
+
+      toast.success("მზადაა! კოლექცია შენახულია თამაშისთვის");
+      queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["my-collections"] });
+      queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
+      queryClient.invalidateQueries({ queryKey: ["collection-drafts"] });
+      onCollectionCreated?.();
+      handleClose();
+    } catch (error: any) {
+      console.error("Error saving collection:", error);
+      toast.error(error.message || "შენახვა ვერ მოხერხდა");
     } finally {
       setIsPosting(false);
     }
@@ -525,10 +607,125 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     </AnimatePresence>
   );
 
+  const handleModeSelect = (mode: CreatorMode) => {
+    setCreatorMode(mode);
+    setStep(2);
+  };
+
+  // Calculate total questions for summary
+  const totalQuestions = roundQuestions.reduce((sum, rq) => sum + rq.length, 0);
+
   if (!open) return null;
 
-  // Step 3: Question Editor
-  if (step === 3) {
+  // Step 4: Question Editor or Play Mode Summary
+  if (step === 4) {
+    // Play mode: show summary
+    if (creatorMode === "play") {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50"
+          style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
+        >
+          {/* Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 safe-top">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
+              <button 
+                onClick={handleClose} 
+                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
+                <Users className="w-4 h-4 text-white" />
+                <span className="text-xs font-semibold text-white">თამაში</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                {/* Success header */}
+                <div className="text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", duration: 0.6 }}
+                    className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-emerald-500/30"
+                  >
+                    <Check className="w-10 h-10 text-emerald-400" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-white mb-2">კოლექცია მზადაა!</h3>
+                  <p className="text-white/70">პასუხები დამალულია - ითამაშე მეგობრებთან</p>
+                </div>
+
+                {/* Summary */}
+                <div className="p-4 rounded-xl bg-white/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/70">რაუნდები</span>
+                    <span className="text-white font-bold">{rounds.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/70">სულ კითხვები</span>
+                    <span className="text-white font-bold">{totalQuestions}</span>
+                  </div>
+                  <div className="border-t border-white/20 pt-3 space-y-1.5">
+                    {rounds.map((round, i) => (
+                      <div key={i} className="flex items-center justify-between text-sm">
+                        <span className="text-white/80">{round.subject}</span>
+                        <span className="text-white/60">{roundQuestions[i]?.length || 0} კითხვა</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Title input */}
+                <div className="space-y-2">
+                  <label className="text-sm text-white/80 block text-center">სათაური</label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="კოლექციის სათაური..."
+                    className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
+                  />
+                </div>
+
+                {/* Save button */}
+                <ChunkyButton
+                  onClick={handleSaveAndStartGame}
+                  disabled={isPosting || !title.trim()}
+                  className="w-full"
+                  style={{ marginBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+                >
+                  {isPosting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      ინახება...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5 mr-2" />
+                      შეინახე
+                    </>
+                  )}
+                </ChunkyButton>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
+
+    // Edit mode: show editor
     return (
       <>
         <GameStyleQuestionEditor
@@ -552,8 +749,9 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
     );
   }
 
-  // Step 1: Round Names Entry
-  // Step 2: Generation Progress
+  // Step 1: Mode Selection
+  // Step 2: Round Names Entry
+  // Step 3: Generation Progress
   return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -566,7 +764,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <div className="fixed top-0 left-0 right-0 z-50 safe-top">
           <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
             <button 
-              onClick={handleClose} 
+              onClick={step === 1 ? handleClose : () => setStep(step - 1)} 
               className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
               disabled={isGenerating}
             >
@@ -574,7 +772,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             </button>
             
             <div className="flex items-center gap-1.5">
-              {[1, 2].map((dot) => (
+              {[1, 2, 3].map((dot) => (
                 <div
                   key={dot}
                   className={`h-2 rounded-full transition-all ${
@@ -599,9 +797,67 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
         <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
           <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
             <AnimatePresence>
+              {/* Step 1: Mode Selection */}
               {step === 1 && (
                 <motion.div
                   key="step1"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center mb-4">
+                      <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">როგორ გინდა შექმნა?</h3>
+                    <p className="text-white/70">აირჩიე შენთვის შესაფერისი გზა</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Edit Mode Card */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleModeSelect("edit")}
+                      className="relative p-5 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30"
+                    >
+                      <div className="space-y-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                          <Edit3 className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-base">რედაქტირება</h4>
+                          <p className="text-white/60 text-xs mt-1">ნახე პასუხები, შეასწორე და გამოაქვეყნე</p>
+                        </div>
+                      </div>
+                    </motion.button>
+
+                    {/* Play Mode Card */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleModeSelect("play")}
+                      className="relative p-5 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30"
+                    >
+                      <div className="space-y-3">
+                        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-base">თამაში</h4>
+                          <p className="text-white/60 text-xs mt-1">არ ნახო პასუხები, ითამაშე მეგობრებთან</p>
+                        </div>
+                      </div>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 2: Round Names */}
+              {step === 2 && (
+                <motion.div
+                  key="step2"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
@@ -679,9 +935,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                 </motion.div>
               )}
 
-              {step === 2 && (
+              {/* Step 3: Generation Progress */}
+              {step === 3 && (
                 <motion.div
-                  key="step2"
+                  key="step3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
