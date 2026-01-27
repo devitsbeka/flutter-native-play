@@ -50,18 +50,17 @@ export const TVPollScreen: React.FC = () => {
   const joinUrl = `${window.location.origin}/join/session/${sessionId}`;
 
   // Determine grid columns based on suggestion count
-  const getGridCols = (count: number) => {
-    if (count <= 2) return 'grid-cols-2';
-    return 'grid-cols-2 md:grid-cols-4';
+  const getGridCols = () => {
+    return 'grid-cols-4'; // Always 4 columns for TV
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-8 pb-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 pb-3 flex flex-col">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-6"
+        className="flex items-center justify-between mb-3"
       >
         {/* Logo - Top Left */}
         <div className="flex items-center gap-2">
@@ -102,17 +101,17 @@ export const TVPollScreen: React.FC = () => {
       </motion.div>
 
       {/* Title section - below header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Vote className="w-8 h-8 text-purple-300" />
-          <h1 className="text-3xl font-bold text-white">
+      <div className="mb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <Vote className="w-6 h-6 text-purple-300" />
+          <h1 className="text-2xl font-bold text-white">
             {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
           </h1>
         </div>
-        <p className="text-purple-300 text-lg ml-11">
+        <p className="text-purple-300 text-sm ml-8">
           {pollPhase === 'voting' 
-            ? 'აირჩიეთ რომელი კატეგორიები გსურთ ითამაშოთ'
-            : 'შემოთავაზებული ვარიანტებიდან აირჩიე მაქსიმუმ 3 ვარიანტი'}
+            ? 'აირჩიეთ რომელი კატეგორიები გსურთ'
+            : 'აირჩიე მაქსიმუმ 3 ვარიანტი'}
         </p>
       </div>
 
@@ -135,7 +134,7 @@ export const TVPollScreen: React.FC = () => {
               </p>
             </motion.div>
           ) : (
-            <div className={`grid ${getGridCols(suggestions.filter(s => s.category_name && s.category_name.trim()).length)} gap-4 pt-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
+            <div className={`grid ${getGridCols()} gap-3 auto-rows-fr`}>
               <AnimatePresence mode="popLayout">
                 {suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
                   <SuggestionCard
@@ -155,43 +154,43 @@ export const TVPollScreen: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="w-72 flex flex-col items-center"
+          className="w-56 flex flex-col items-center"
         >
-          <div className="bg-white p-4 rounded-2xl mb-4">
-            <QRCodeSVG value={joinUrl} size={180} level="H" />
+          <div className="bg-white p-3 rounded-xl mb-2">
+            <QRCodeSVG value={joinUrl} size={120} level="H" />
           </div>
-          <p className="text-purple-300 text-center text-sm mb-2">
+          <p className="text-purple-300 text-center text-xs mb-1">
             დაასკანერეთ სათამაშოდ
           </p>
-          <div className="bg-white/10 px-4 py-2 rounded-xl mb-6">
-            <span className="text-2xl font-mono font-bold text-white tracking-wider">
+          <div className="bg-white/10 px-3 py-1.5 rounded-lg mb-3">
+            <span className="text-xl font-mono font-bold text-white tracking-wider">
               {code}
             </span>
           </div>
 
           {/* Active Players List */}
-          <div className="w-full bg-white/10 rounded-2xl p-4 border border-white/20 flex-1 overflow-hidden">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-purple-300" />
-              <span className="text-white font-bold">მოთამაშეები ({activePlayers.length})</span>
+          <div className="w-full bg-white/10 rounded-xl p-3 border border-white/20 flex-1 overflow-hidden">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-purple-300" />
+              <span className="text-white font-bold text-sm">მოთამაშეები ({activePlayers.length})</span>
             </div>
-            <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1">
               {activePlayers.map((player) => (
                 <div 
                   key={player.id || player.nickname}
-                  className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3"
+                  className="flex items-center gap-2 bg-white/10 rounded-lg px-2 py-1.5"
                 >
                   <SafeAvatarImage
                     avatarUrl={player.avatar_url}
                     fallback={player.nickname}
-                    className="w-10 h-10 rounded-full object-cover"
-                    containerClassName="w-10 h-10 rounded-full text-sm"
+                    className="w-7 h-7 rounded-full object-cover"
+                    containerClassName="w-7 h-7 rounded-full text-xs"
                   />
-                  <span className="text-white text-lg font-medium truncate">{player.nickname}</span>
+                  <span className="text-white text-sm font-medium truncate">{player.nickname}</span>
                 </div>
               ))}
               {activePlayers.length === 0 && (
-                <p className="text-purple-300 text-sm text-center py-4">ველოდებით მოთამაშეებს...</p>
+                <p className="text-purple-300 text-xs text-center py-2">ველოდებით მოთამაშეებს...</p>
               )}
             </div>
           </div>
@@ -203,9 +202,9 @@ export const TVPollScreen: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="text-center mt-6"
+        className="text-center mt-3"
       >
-        <p className="text-purple-400 text-lg">
+        <p className="text-purple-400 text-sm">
           {pollPhase === 'suggest' 
             ? '⏳ ველოდებით ჰოსტს ხმის მიცემის დასაწყებად...'
             : timeRemaining === 0 
@@ -252,7 +251,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
         transition: { type: 'spring', stiffness: 500, damping: 30 }
       }}
       exit={{ opacity: 0, scale: 0.8 }}
-      className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 transition-all ${
+      className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 transition-all ${
         isLeader 
           ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
           : 'border-white/20'
@@ -281,24 +280,24 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
       )}
 
       {/* Category icon/image */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center mb-2">
         {suggestion.cover_image ? (
           <img 
             src={suggestion.cover_image} 
             alt={suggestion.category_name}
-            className="w-20 h-20 rounded-xl object-cover"
+            className="w-14 h-14 rounded-lg object-cover"
           />
         ) : suggestion.icon_slug ? (
-          <QuizCategoryIcon iconSlug={suggestion.icon_slug} size={80} className="w-20 h-20" />
+          <QuizCategoryIcon iconSlug={suggestion.icon_slug} size={56} className="w-14 h-14" />
         ) : (
-          <div className="w-20 h-20 rounded-xl bg-purple-500/30 flex items-center justify-center">
-            <Sparkles className="w-10 h-10 text-purple-300" />
+          <div className="w-14 h-14 rounded-lg bg-purple-500/30 flex items-center justify-center">
+            <Sparkles className="w-7 h-7 text-purple-300" />
           </div>
         )}
       </div>
 
       {/* Category name */}
-      <h3 className="text-xl font-bold text-white text-center mb-3 line-clamp-2">
+      <h3 className="text-base font-bold text-white text-center mb-2 line-clamp-1">
         {suggestion.category_name}
       </h3>
 
@@ -306,13 +305,13 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
       {showVotes && (
         <motion.div
           animate={{ scale: isAnimating ? 1.2 : 1 }}
-          className="flex items-center justify-center gap-2 bg-purple-500/30 rounded-xl py-2"
+          className="flex items-center justify-center gap-1.5 bg-purple-500/30 rounded-lg py-1.5"
         >
-          <Vote className="w-5 h-5 text-purple-300" />
-          <span className="text-2xl font-bold text-white">
+          <Vote className="w-4 h-4 text-purple-300" />
+          <span className="text-lg font-bold text-white">
             {suggestion.vote_count}
           </span>
-          <span className="text-purple-300 text-sm">ხმა</span>
+          <span className="text-purple-300 text-xs">ხმა</span>
         </motion.div>
       )}
     </motion.div>
