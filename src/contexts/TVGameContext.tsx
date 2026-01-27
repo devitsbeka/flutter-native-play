@@ -1812,8 +1812,16 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 timerInitializedForQuestionRef.current = currentQuestionIdx;
                 // Reset the pre-question phase flag now that we've used it for this question
                 wasInPreQuestionPhaseRef.current = false;
+              } else {
+                // CRITICAL FIX: Timer already initialized for this question by startPlaying()
+                // We must FORCE timeRemaining = QUESTION_TIME here to avoid race conditions:
+                // - startPlaying() sets timerInitializedForQuestionRef BEFORE its setState propagates
+                // - This subscription handler may run with stale prev.timeRemaining (from previous game)
+                // - By forcing QUESTION_TIME, we ensure consistency regardless of React batching
+                timeRemaining = QUESTION_TIME;
+                console.log('[Timer] ⏭️ Timer already initialized for question', currentQuestionIdx, 
+                  '- forcing timeRemaining to QUESTION_TIME to avoid race condition');
               }
-              // If timer already initialized for this question, keep prev.timeRemaining (local timer manages it)
             } else if (newData.status === 'countdown') {
               // Reset timer tracker for new countdown phase
               timerInitializedForQuestionRef.current = null;
