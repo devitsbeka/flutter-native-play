@@ -97,11 +97,11 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
-          <div className="w-full h-48 overflow-hidden">
+          <div className="w-full h-52 overflow-hidden bg-gray-100 flex items-start justify-center">
             <img 
               src={imageUrl!} 
               alt="Question" 
-              className="w-full h-full object-cover object-top"
+              className="w-full h-full object-contain object-top"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}

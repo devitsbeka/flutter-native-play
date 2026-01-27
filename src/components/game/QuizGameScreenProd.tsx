@@ -374,20 +374,25 @@ export function QuizGameScreenProd() {
           </div>
         )}
 
-        <QuizQuestionCard
-          questionText={currentQuestion.question}
-          imageUrl={currentQuestion.imageUrl}
-          videoUrl={currentQuestion.videoUrl}
-          audioUrl={currentQuestion.audioUrl}
-          progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
-          state={playerTimerFrozen ? "frozen" : "default"}
-          difficultyLabel={!opponent ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
-          difficultyColor={!opponent ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
-          timerSeconds={!opponent ? timeRemaining : undefined}
-          timerMaxSeconds={timePerQuestion + playerTimerBonus}
-          freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
-          reserveTopSpace={!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl}
-        />
+        {(() => {
+          const hasMedia = currentQuestion.imageUrl || currentQuestion.videoUrl || currentQuestion.audioUrl;
+          return (
+            <QuizQuestionCard
+              questionText={currentQuestion.question}
+              imageUrl={currentQuestion.imageUrl}
+              videoUrl={currentQuestion.videoUrl}
+              audioUrl={currentQuestion.audioUrl}
+              progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
+              state={playerTimerFrozen ? "frozen" : "default"}
+              difficultyLabel={!opponent && !hasMedia ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
+              difficultyColor={!opponent && !hasMedia ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
+              timerSeconds={!opponent ? timeRemaining : undefined}
+              timerMaxSeconds={timePerQuestion + playerTimerBonus}
+              freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
+              reserveTopSpace={!hasMedia}
+            />
+          );
+        })()}
       </div>
 
       {/* Progress Dots */}
