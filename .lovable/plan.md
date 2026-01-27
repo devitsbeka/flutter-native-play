@@ -1,401 +1,164 @@
 
-# Bulk Wikipedia Import Tool - Multi-Step Question Generator
+# Bulk Generator Redesign: Category-First Flow with AI Suggestions
 
 ## Overview
 
-Build a new "Bulk Generator" tool that allows creating hundreds of image/text/audio questions at once by:
-1. User specifies broad categories (e.g., "People", "Cities", "Countries", "Companies")
-2. System generates Wikipedia page slugs for each category
-3. System parses each page, extracts media and content
-4. AI generates questions with contextually similar wrong answers
-5. User reviews and bulk imports to selected category
+Redesign the Bulk Generator wizard to:
+1. **Select Target Category FIRST** - User picks the database category where questions will be imported
+2. **AI Topic Suggestions** - Show 6 AI-generated topic suggestions based on selected category
+3. **Custom Subject Input with Chips** - Enter subjects one by one (Enter to add), displayed as removable chips
+4. **Text & Image Only** - Remove video and audio options
+5. **Dynamic Question Text** - Question phrasing adapts based on theme + type
 
 ---
 
-## User Flow (4-Step Wizard)
+## New Workflow (3 Steps Instead of 4)
 
 ```text
-Step 1: Category Selection
+Step 1: Setup (Category + Topics + Type)
 ┌─────────────────────────────────────────────────────────────────┐
-│  Bulk Generator                                                 │
+│  Bulk Generator  ნაბიჯი 1/3                                    │
 ├─────────────────────────────────────────────────────────────────┤
-│  აირჩიეთ თემატიკა:                                              │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
-│  │ ადამიანები │ │ ქალაქები │ │ ქვეყნები │ │ კომპანიები │ │ სხვა     │   │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘   │
+│  კატეგორია:                                                     │
+│  [აირჩიეთ კატეგორია ▼]                                          │
 │                                                                 │
-│  ან ჩაწერეთ საკვანძო სიტყვები (მძიმით გამოყოფილი):             │
-│  [Albert Einstein, Elon Musk, Leonardo da Vinci, Bill Gates...]│
+│  AI რეკომენდაციები: (based on selected category)               │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                           │
+│  │ Einstein │ │ Newton  │ │ Tesla   │                           │
+│  └─────────┘ └─────────┘ └─────────┘                           │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                           │
+│  │ Curie   │ │ Hawking │ │ Darwin  │                           │
+│  └─────────┘ └─────────┘ └─────────┘                           │
+│                                                                 │
+│  დაამატეთ თემები:                                               │
+│  ┌─────────────────────────────────────┐                       │
+│  │ Bill Gates × │ Steve Jobs × │ ___  │                        │
+│  └─────────────────────────────────────┘                       │
 │                                                                 │
 │  კითხვის ტიპი:                                                  │
-│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐                   │
-│  │ ტექსტი │ │ სურათი │ │ ვიდეო  │ │ აუდიო  │                   │
-│  └────────┘ └────────┘ └────────┘ └────────┘                   │
+│  ┌────────┐ ┌────────┐                                         │
+│  │ ტექსტი │ │ სურათი │ (only 2 options now)                    │
+│  └────────┘ └────────┘                                         │
 │                                                                 │
 │  [შემდეგი →]                                                    │
 └─────────────────────────────────────────────────────────────────┘
 
-Step 2: Topic Resolution (Wikipedia Slugs)
-┌─────────────────────────────────────────────────────────────────┐
-│  მოიძებნა 25 თემა                                               │
-├─────────────────────────────────────────────────────────────────┤
-│  ☑ Albert Einstein → Albert_Einstein (Wikipedia)               │
-│  ☑ Elon Musk → Elon_Musk (Wikipedia)                            │
-│  ☐ Leonardo → Leonardo_da_Vinci (disambiguation - skip?)       │
-│  ☑ Bill Gates → Bill_Gates (Wikipedia)                          │
-│  ...                                                            │
-│                                                                 │
-│  [← უკან]  [22 აირჩეული - სკანირება →]                          │
-└─────────────────────────────────────────────────────────────────┘
+Step 2: Processing (same as before, but skip validation)
 
-Step 3: Content Parsing & Question Generation
-┌─────────────────────────────────────────────────────────────────┐
-│  მიმდინარეობს დამუშავება... (8/22)                              │
-├─────────────────────────────────────────────────────────────────┤
-│  ✓ Albert Einstein - სურათი მოიძებნა, კითხვა დაგენერირდა       │
-│  ✓ Elon Musk - სურათი მოიძებნა, კითხვა დაგენერირდა             │
-│  ⏳ Bill Gates - მიმდინარეობს...                                │
-│  ○ Steve Jobs - მოლოდინში                                       │
-│  ...                                                            │
-│                                                                 │
-│  [პროგრეს ბარი: ████████░░░░░░░░ 36%]                           │
-└─────────────────────────────────────────────────────────────────┘
-
-Step 4: Review & Import
-┌─────────────────────────────────────────────────────────────────┐
-│  22 კითხვა მზადაა                                               │
-├─────────────────────────────────────────────────────────────────┤
-│  ☑ [სურათი: Einstein] ვინ არის ეს?                             │
-│    ✓ ალბერტ აინშტაინი                                          │
-│    ✗ ნიკოლა ტესლა • მარი კიური • სტივენ ჰოკინგი               │
-│                                                                 │
-│  ☑ [სურათი: Musk] ვინ არის ეს?                                 │
-│    ✓ ილონ მასკი                                                │
-│    ✗ ჯეფ ბეზოსი • მარკ ცუკერბერგი • ბილ გეითსი                │
-│  ...                                                            │
-├─────────────────────────────────────────────────────────────────┤
-│  კატეგორია: [ცნობილი ადამიანები ▼]                              │
-│                                                                 │
-│  [← უკან]  [ბიბლიოთეკაში დამატება (22)]                         │
-└─────────────────────────────────────────────────────────────────┘
+Step 3: Review & Import (category already selected in Step 1)
 ```
 
 ---
 
-## Technical Architecture
+## Key Changes
 
-### New Edge Function: `bulk-resolve-wikipedia-topics`
+### 1. StepCategorySelect.tsx - Complete Redesign
 
-Converts keywords to Wikipedia page slugs with validation:
+**New Props:**
+```typescript
+interface StepCategorySelectProps {
+  // Database categories (for import target)
+  categories: CategoryWithCounts[];
+  selectedCategoryId: string;
+  onCategoryChange: (categoryId: string) => void;
+  
+  // Topics (subjects to generate questions for)
+  subjects: string[];
+  onSubjectsChange: (subjects: string[]) => void;
+  
+  // Question type (text or image only)
+  questionType: 'text' | 'image';
+  onQuestionTypeChange: (type: 'text' | 'image') => void;
+  
+  onNext: () => void;
+}
+```
+
+**New Features:**
+- **Category Dropdown** - Select from database categories first
+- **AI Suggestions** - 6 topic chips based on category (using preset keywords from PRESET_CATEGORIES)
+- **Chip Input** - Type subject, press Enter to add as chip. Each chip has X to remove
+- **Only Text/Image** - Remove video and audio buttons
+
+### 2. Dynamic Question Text by Category + Type
+
+Add a mapping function to generate appropriate question phrasing:
 
 ```typescript
-// Input
-{
-  keywords: ["Albert Einstein", "Elon Musk", "Bill Gates"],
-  language: "en" // or "ka" for Georgian Wikipedia
-}
-
-// Output
-{
-  success: true,
-  topics: [
-    {
-      keyword: "Albert Einstein",
-      slug: "Albert_Einstein",
-      wikiUrl: "https://en.wikipedia.org/wiki/Albert_Einstein",
-      valid: true,
-      title: "Albert Einstein"
+function getQuestionTextForTheme(
+  themeType: 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'generic',
+  questionType: 'text' | 'image',
+  language: 'ka' | 'en'
+): string {
+  const templates = {
+    people: {
+      image: { ka: 'ვინ არის ეს?', en: 'Who is this?' },
+      text: { ka: 'ვინ არის?', en: 'Who is?' }
     },
-    {
-      keyword: "Some Invalid Topic",
-      slug: null,
-      valid: false,
-      error: "Page not found"
-    }
-  ]
-}
-```
-
-**Implementation:**
-- Use Wikipedia API to search/validate pages: `https://en.wikipedia.org/w/api.php?action=query&titles=Albert_Einstein&format=json`
-- Return resolved slugs with validation status
-- Handle disambiguation pages
-
-### New Edge Function: `bulk-parse-wikipedia-pages`
-
-Batch parse multiple Wikipedia pages:
-
-```typescript
-// Input
-{
-  pages: [
-    { slug: "Albert_Einstein", language: "en" },
-    { slug: "Elon_Musk", language: "en" }
-  ],
-  questionType: "image" // text | image | video | audio
-}
-
-// Output
-{
-  success: true,
-  results: [
-    {
-      slug: "Albert_Einstein",
-      title: "Albert Einstein",
-      content: "...",
-      imageUrl: "https://upload.wikimedia.org/...",
-      success: true
-    }
-  ]
-}
-```
-
-**Implementation:**
-- Reuse existing `parse-wikipedia-media` logic
-- Process in batches of 5 to avoid rate limits
-- Use Firecrawl for content extraction
-
-### New Edge Function: `bulk-generate-contextual-questions`
-
-Generate questions with contextually similar wrong answers:
-
-```typescript
-// Input
-{
-  items: [
-    {
-      title: "Albert Einstein",
-      content: "...",
-      imageUrl: "...",
-      category: "famous_people"
+    cities: {
+      image: { ka: 'რომელი ქალაქია?', en: 'What city is this?' },
+      text: { ka: 'რომელი ქალაქია?', en: 'What city is this?' }
     },
-    {
-      title: "Elon Musk",
-      content: "...",
-      imageUrl: "...",
-      category: "famous_people"
+    countries: {
+      image: { ka: 'რომელი ქვეყანაა?', en: 'What country is this?' },
+      text: { ka: 'რომელი ქვეყანაა?', en: 'What country is this?' }
+    },
+    companies: {
+      image: { ka: 'რომელი კომპანიაა?', en: 'What company is this?' },
+      text: { ka: 'რომელი კომპანიაა?', en: 'What company is this?' }
+    },
+    landmarks: {
+      image: { ka: 'რომელი ღირსშესანიშნაობაა?', en: 'What landmark is this?' },
+      text: { ka: 'რომელი ღირსშესანიშნაობაა?', en: 'What landmark is this?' }
+    },
+    animals: {
+      image: { ka: 'რომელი ცხოველია?', en: 'What animal is this?' },
+      text: { ka: 'რომელი ცხოველია?', en: 'What animal is this?' }
+    },
+    generic: {
+      image: { ka: 'რა არის ეს?', en: 'What is this?' },
+      text: { ka: 'დაასახელეთ:', en: 'Name:' }
     }
-  ],
-  questionType: "image",
-  language: "ka"
-}
-
-// Output
-{
-  success: true,
-  questions: [
-    {
-      subject: "Albert Einstein",
-      question_text: "ვინ არის ეს?",
-      correct_answer: "ალბერტ აინშტაინი",
-      incorrect_answers: ["ნიკოლა ტესლა", "მარი კიური", "სტივენ ჰოკინგი"],
-      difficulty: "medium",
-      image_url: "https://..."
-    }
-  ]
+  };
+  
+  return templates[themeType]?.[questionType]?.[language] || templates.generic[questionType][language];
 }
 ```
 
-**Key AI Logic:**
-- For each correct answer, find 3 contextually similar alternatives from the same batch
-- For "People" category: other famous people from similar field
-- For "Cities": other cities from same country/continent
-- For "Countries": neighboring countries or similar size
-- For "Companies": competitors or same industry
+### 3. AI Suggestions Logic
 
----
-
-## Frontend Components
-
-### New Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/components/admin/studio/BulkGeneratorModal.tsx` | Main 4-step wizard modal |
-| `src/components/admin/studio/BulkCategorySelector.tsx` | Preset category cards + custom input |
-| `src/components/admin/studio/BulkTopicResolver.tsx` | Step 2: Topic validation UI |
-| `src/components/admin/studio/BulkProcessingStatus.tsx` | Step 3: Progress tracking |
-| `src/components/admin/studio/BulkQuestionReview.tsx` | Step 4: Review & select questions |
-| `supabase/functions/bulk-resolve-wikipedia-topics/index.ts` | Topic → Wikipedia slug resolution |
-| `supabase/functions/bulk-parse-wikipedia-pages/index.ts` | Batch page parsing |
-| `supabase/functions/bulk-generate-contextual-questions/index.ts` | AI question generation with context |
-
-### Modify Existing Files
-
-| File | Changes |
-|------|---------|
-| `src/pages/admin/QuestionStudio.tsx` | Add "Bulk Generator" button, integrate modal |
-
----
-
-## Preset Categories with Sample Keywords
-
-Pre-built category templates for quick selection:
+When a user selects a category, show 6 random relevant suggestions:
 
 ```typescript
-const PRESET_CATEGORIES = {
-  people: {
-    label: "ადამიანები",
-    icon: "users",
-    keywords: [
-      // Scientists
-      "Albert Einstein", "Isaac Newton", "Marie Curie", "Nikola Tesla",
-      // Tech Leaders
-      "Elon Musk", "Bill Gates", "Steve Jobs", "Jeff Bezos", "Mark Zuckerberg",
-      // Artists
-      "Leonardo da Vinci", "Pablo Picasso", "Vincent van Gogh",
-      // Musicians
-      "Mozart", "Beethoven", "Michael Jackson", "Freddie Mercury",
-      // Leaders
-      "Napoleon Bonaparte", "Winston Churchill", "Mahatma Gandhi",
-      // Athletes
-      "Lionel Messi", "Cristiano Ronaldo", "Michael Jordan",
-      // ... 50+ more
-    ]
-  },
-  cities: {
-    label: "ქალაქები",
-    icon: "building-2",
-    keywords: [
-      "Paris", "London", "New York City", "Tokyo", "Rome", "Barcelona",
-      "Sydney", "Dubai", "Singapore", "Berlin", "Amsterdam", "Vienna",
-      // ... 50+ more
-    ]
-  },
-  countries: {
-    label: "ქვეყნები",
-    icon: "flag",
-    keywords: [
-      // By continent, include flag references
-      "France", "Germany", "Italy", "Spain", "United Kingdom",
-      "United States", "Canada", "Brazil", "Argentina",
-      "Japan", "China", "India", "Australia",
-      // ... all 195 countries
-    ]
-  },
-  companies: {
-    label: "კომპანიები",
-    icon: "briefcase",
-    keywords: [
-      "Apple", "Google", "Microsoft", "Amazon", "Tesla", "Netflix",
-      "Coca-Cola", "McDonald's", "Nike", "Mercedes-Benz", "BMW",
-      // ... 50+ more
-    ]
-  },
-  landmarks: {
-    label: "ღირსშესანიშნაობები",
-    icon: "landmark",
-    keywords: [
-      "Eiffel Tower", "Statue of Liberty", "Colosseum", "Taj Mahal",
-      "Great Wall of China", "Machu Picchu", "Petra", "Christ the Redeemer",
-      // ... 50+ more
-    ]
+function getSuggestionsForCategory(categoryName: string): string[] {
+  // Match category name to preset themes
+  const lowerName = categoryName.toLowerCase();
+  
+  if (lowerName.includes('ადამიან') || lowerName.includes('people') || lowerName.includes('person')) {
+    return getRandomFromList(PRESET_CATEGORIES.find(c => c.id === 'people')?.keywords || [], 6);
   }
-};
-```
-
----
-
-## Contextual Wrong Answer Generation
-
-The key innovation is generating **contextually similar** wrong answers that make questions challenging:
-
-### Strategy by Category
-
-| Category | Correct Answer | Wrong Answer Strategy |
-|----------|---------------|----------------------|
-| People (Scientists) | Albert Einstein | Other famous scientists: Newton, Tesla, Curie |
-| People (Tech) | Elon Musk | Other tech CEOs: Bezos, Gates, Zuckerberg |
-| Cities (Europe) | Paris | Other European capitals: London, Berlin, Rome |
-| Countries (South America) | Brazil | Other SA countries: Argentina, Colombia, Peru |
-| Companies (Tech) | Apple | Other tech giants: Google, Microsoft, Amazon |
-| Landmarks (Ancient) | Colosseum | Other ancient wonders: Parthenon, Pyramids |
-
-### AI Prompt for Contextual Answers
-
-```text
-Given this list of subjects from the same category:
-- Albert Einstein (Scientist)
-- Isaac Newton (Scientist)
-- Marie Curie (Scientist)
-- Nikola Tesla (Scientist)
-- Galileo Galilei (Scientist)
-
-For each subject, create a trivia question where:
-1. The correct answer is the subject's name (in Georgian)
-2. The 3 wrong answers are OTHER subjects from this same list
-3. All 4 answers should be similarly famous/recognizable
-4. Wrong answers should be from the same "sub-category" if possible
-
-This makes questions challenging because all answers are plausible.
-```
-
----
-
-## Processing Pipeline
-
-### Batch Processing with Progress
-
-```typescript
-async function processTopicsInBatches(topics: Topic[], questionType: QuestionType) {
-  const BATCH_SIZE = 5;
-  const results: ProcessedQuestion[] = [];
-  
-  for (let i = 0; i < topics.length; i += BATCH_SIZE) {
-    const batch = topics.slice(i, i + BATCH_SIZE);
-    
-    // Parse Wikipedia pages in parallel
-    const parsed = await Promise.all(
-      batch.map(t => supabase.functions.invoke('parse-wikipedia-media', {
-        body: { url: t.wikiUrl, questionType }
-      }))
-    );
-    
-    // Update progress
-    onProgress((i + BATCH_SIZE) / topics.length);
-    
-    // Collect successful parses
-    results.push(...parsed.filter(p => p.success));
-    
-    // Rate limit delay
-    await sleep(500);
+  if (lowerName.includes('ქალაქ') || lowerName.includes('city') || lowerName.includes('cities')) {
+    return getRandomFromList(PRESET_CATEGORIES.find(c => c.id === 'cities')?.keywords || [], 6);
   }
+  // ... similar for countries, companies, landmarks, animals
   
-  // Generate questions with contextual wrong answers
-  const questions = await supabase.functions.invoke('bulk-generate-contextual-questions', {
-    body: { items: results, questionType, language: 'ka' }
-  });
-  
-  return questions;
+  // Generic fallback - mix from all categories
+  return getRandomFromList(allKeywords, 6);
 }
 ```
 
----
+### 4. BulkGeneratorModal.tsx Changes
 
-## Error Handling
+- Pass `selectedCategoryId` from step 1 to step 3 (no category selection needed in review)
+- Track `selectedThemeType` for dynamic question text
+- Remove video/audio from QuestionType
+- Skip validation step (go directly from select → process)
 
-| Scenario | Handling |
-|----------|----------|
-| Wikipedia page not found | Mark as invalid, skip in processing |
-| No image found for image question | Skip or fallback to text question |
-| Rate limit from Firecrawl | Implement exponential backoff |
-| AI generation fails | Retry up to 3 times, then skip |
-| Partial batch failure | Continue with successful items, report failures |
+### 5. bulk-generate-contextual-questions Edge Function Update
 
----
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/components/admin/studio/BulkGeneratorModal.tsx` | Main wizard component |
-| `src/components/admin/studio/bulk/StepCategorySelect.tsx` | Step 1: Category & keyword input |
-| `src/components/admin/studio/bulk/StepTopicValidation.tsx` | Step 2: Wikipedia validation |
-| `src/components/admin/studio/bulk/StepProcessing.tsx` | Step 3: Progress UI |
-| `src/components/admin/studio/bulk/StepReview.tsx` | Step 4: Review & import |
-| `src/components/admin/studio/bulk/PresetCategories.ts` | Preset keyword lists |
-| `supabase/functions/bulk-resolve-topics/index.ts` | Wikipedia slug resolution |
-| `supabase/functions/bulk-generate-contextual-questions/index.ts` | Contextual Q&A generation |
+- Accept `themeType` parameter
+- Use dynamic question text based on theme + type
+- Pass theme context to AI for better wrong answer generation
 
 ---
 
@@ -403,19 +166,182 @@ async function processTopicsInBatches(topics: Topic[], questionType: QuestionTyp
 
 | File | Changes |
 |------|---------|
-| `src/pages/admin/QuestionStudio.tsx` | Add "Bulk Generator" button |
-| `supabase/config.toml` | Register new edge functions |
+| `src/components/admin/studio/bulk/StepCategorySelect.tsx` | Complete redesign with category dropdown, AI suggestions, chip input |
+| `src/components/admin/studio/BulkGeneratorModal.tsx` | New state management, skip validation step, pass category early |
+| `src/components/admin/studio/bulk/StepReview.tsx` | Remove category selection (already chosen in step 1) |
+| `src/components/admin/studio/bulk/PresetCategories.ts` | Add theme detection helper functions |
+| `supabase/functions/bulk-generate-contextual-questions/index.ts` | Accept themeType, use dynamic question text |
 
 ---
 
-## Summary
+## Detailed Component Changes
 
-This Bulk Generator enables creating 100+ questions at once by:
-1. **Preset Categories** - Quick select from People, Cities, Countries, Companies, Landmarks
-2. **Custom Keywords** - Or paste your own list of topics
-3. **Wikipedia Resolution** - Validate and convert to Wikipedia page slugs
-4. **Batch Processing** - Parse pages and extract media in parallel
-5. **Contextual AI** - Generate questions with smart, related wrong answers
-6. **Bulk Import** - Review and add all to library at once
+### StepCategorySelect.tsx - New UI Structure
 
-The contextually similar wrong answers make questions challenging and educational, not just random guessing.
+```tsx
+<div className="space-y-6">
+  {/* 1. Category Selection (First!) */}
+  <div className="space-y-3">
+    <Label>კატეგორია</Label>
+    <Select value={selectedCategoryId} onValueChange={onCategoryChange}>
+      <SelectTrigger>
+        <SelectValue placeholder="აირჩიეთ კატეგორია" />
+      </SelectTrigger>
+      <SelectContent>
+        {categories.map(cat => (
+          <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+
+  {/* 2. AI Suggestions (6 clickable chips) */}
+  {selectedCategoryId && (
+    <div className="space-y-3">
+      <Label>AI რეკომენდაციები</Label>
+      <div className="flex flex-wrap gap-2">
+        {suggestions.map(suggestion => (
+          <button
+            key={suggestion}
+            onClick={() => addSubject(suggestion)}
+            disabled={subjects.includes(suggestion)}
+            className="px-3 py-1.5 rounded-full border text-sm hover:bg-primary/10"
+          >
+            + {suggestion}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {/* 3. Custom Subject Input with Chips */}
+  <div className="space-y-3">
+    <Label>დაამატეთ თემები</Label>
+    <div className="border rounded-lg p-3 flex flex-wrap gap-2 min-h-[60px]">
+      {subjects.map(subject => (
+        <span key={subject} className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-sm">
+          {subject}
+          <button onClick={() => removeSubject(subject)}>
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+      <input
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && inputValue.trim()) {
+            addSubject(inputValue.trim());
+            setInputValue('');
+          }
+        }}
+        placeholder="ჩაწერეთ და დააჭირეთ Enter..."
+        className="flex-1 min-w-[120px] bg-transparent outline-none text-sm"
+      />
+    </div>
+    <p className="text-xs text-muted-foreground">{subjects.length} თემა დამატებულია</p>
+  </div>
+
+  {/* 4. Question Type (Text or Image only) */}
+  <div className="space-y-3">
+    <Label>კითხვის ტიპი</Label>
+    <div className="grid grid-cols-2 gap-3">
+      <button onClick={() => onQuestionTypeChange('text')} className={...}>
+        <FileText /> ტექსტი
+      </button>
+      <button onClick={() => onQuestionTypeChange('image')} className={...}>
+        <Image /> სურათი
+      </button>
+    </div>
+  </div>
+
+  {/* Footer */}
+  <div className="flex justify-between pt-4 border-t">
+    <span className="text-sm text-muted-foreground">
+      სულ: {subjects.length} თემა
+    </span>
+    <Button onClick={onNext} disabled={!selectedCategoryId || subjects.length === 0}>
+      შემდეგი →
+    </Button>
+  </div>
+</div>
+```
+
+---
+
+## Theme Detection Logic (PresetCategories.ts)
+
+Add helper to detect theme from category name:
+
+```typescript
+export type ThemeType = 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'generic';
+
+export function detectThemeFromCategoryName(categoryName: string): ThemeType {
+  const name = categoryName.toLowerCase();
+  
+  // Georgian and English keywords for each theme
+  const themeKeywords: Record<ThemeType, string[]> = {
+    people: ['ადამიან', 'person', 'people', 'ცნობილ', 'famous', 'მეცნიერ', 'scientist', 'მსახიობ', 'actor'],
+    cities: ['ქალაქ', 'city', 'cities', 'urban'],
+    countries: ['ქვეყან', 'country', 'countries', 'nation', 'დროშ', 'flag'],
+    companies: ['კომპანი', 'company', 'companies', 'brand', 'ბრენდ', 'ლოგო', 'logo'],
+    landmarks: ['ღირსშესანიშნაობ', 'landmark', 'monument', 'ძეგლ', 'არქიტექტურ'],
+    animals: ['ცხოველ', 'animal', 'ფრინველ', 'bird', 'თევზ', 'fish'],
+    generic: []
+  };
+  
+  for (const [theme, keywords] of Object.entries(themeKeywords)) {
+    if (keywords.some(kw => name.includes(kw))) {
+      return theme as ThemeType;
+    }
+  }
+  
+  return 'generic';
+}
+
+export function getQuestionText(theme: ThemeType, questionType: 'text' | 'image'): string {
+  const templates: Record<ThemeType, Record<'text' | 'image', string>> = {
+    people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+    cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
+    countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
+    companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
+    landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
+    animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
+    generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
+  };
+  
+  return templates[theme][questionType];
+}
+```
+
+---
+
+## Edge Function Update
+
+Modify `bulk-generate-contextual-questions` to accept theme:
+
+```typescript
+// New input
+{
+  items: [...],
+  questionType: "image",
+  themeType: "people",  // NEW
+  language: "ka"
+}
+
+// Use themeType in prompt
+const questionPrompt = getQuestionText(themeType, questionType);
+```
+
+---
+
+## Summary of Changes
+
+1. **Category First** - User selects target database category at the beginning
+2. **AI Suggestions** - 6 relevant topic suggestions based on category name matching
+3. **Chip Input** - Type subject → Enter → adds chip with X to remove
+4. **Text/Image Only** - Remove video and audio buttons
+5. **Dynamic Questions** - Question text adapts based on theme (people → "ვინ არის ეს?", cities → "რომელი ქალაქია?", etc.)
+6. **Skip Validation Step** - Go directly from selection to processing
+7. **No Category in Review** - Category is already selected in step 1, so review step is simpler
+
