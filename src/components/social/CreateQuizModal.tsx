@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Edit3, Globe, Lock } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Edit3, Globe, Lock, Play, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ interface CreateQuizModalProps {
 }
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
+type CreatorMode = "edit" | "play" | null;
 
 const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string; description: string }[] = [
   { value: "mixed", emoji: "🎲", label: "შერეული", description: "ადვილი → რთული" },
@@ -147,6 +148,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
   const queryClient = useQueryClient();
   
   const [step, setStep] = useState(1);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
@@ -219,6 +221,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
   const resetForm = () => {
     setStep(1);
+    setCreatorMode(null);
     setSubject("");
     setQuestionCount(10);
     setAnswerFormat("4_answers");
@@ -236,7 +239,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     setIsEditingTitle(false);
   };
 
-  // Auto-generate cover image when entering step 5
+  // Auto-generate cover image when entering step 6
   const handleGenerateCover = async () => {
     if (!user || isGeneratingCoverLocal || coverGenerationCount >= 3) return;
     
@@ -258,9 +261,9 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     }
   };
 
-  // Trigger cover generation when entering step 5
+  // Trigger cover generation when entering step 6
   useEffect(() => {
-    if (step === 5 && questions.length > 0 && !coverImageUrl && !isGeneratingCoverLocal && coverGenerationCount === 0) {
+    if (step === 6 && questions.length > 0 && !coverImageUrl && !isGeneratingCoverLocal && coverGenerationCount === 0) {
       handleGenerateCover();
     }
   }, [step, questions.length]);
@@ -323,7 +326,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       setEditorQuestions(convertToEditorQuestions(uniqueQuestions));
       setTitle(data?.suggestedTitle || `${subject} ტრივია`);
       
-      setTimeout(() => setStep(5), 300);
+      setTimeout(() => setStep(6), 300);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
@@ -415,6 +418,73 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     }
   };
 
+  // Save and start game for play mode
+  const handleSaveAndStartGame = async () => {
+    if (!user) {
+      toast({
+        title: "შესვლა საჭიროა",
+        description: "გთხოვთ შეხვიდეთ თქვენს ანგარიშში",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPosting(true);
+    try {
+      const questionsToSave = convertToGeneratedQuestions(editorQuestions);
+      
+      const hashtags = subject
+        .split(/[\s,]+/)
+        .filter(word => word.length > 2)
+        .slice(0, 5)
+        .map(word => `#${word.replace(/[^a-zA-Zა-ჰ0-9]/g, "")}`);
+
+      const iconSlug = editorQuestions[0]?.iconSlug || null;
+
+      const { error } = await supabase.from("user_quiz_posts").insert([{
+        user_id: user.id,
+        title,
+        subject,
+        hashtags,
+        cover_image: coverImageUrl,
+        cover_gradient: selectedGradient,
+        question_count: questionsToSave.length,
+        answer_format: answerFormat,
+        questions: structuredClone(questionsToSave) as unknown as Json,
+        icon_slug: iconSlug,
+        is_public: false, // Private by default for play mode
+      }]);
+
+      if (error) throw error;
+
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.5 }
+      });
+
+      toast({
+        title: "მზადაა! 🎮",
+        description: "ტრივია შენახულია და მზადაა თამაშისთვის!",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["my-trivias-for-room"] });
+
+      handleClose();
+      onQuizCreated?.();
+    } catch (error) {
+      console.error("Error saving quiz:", error);
+      toast({
+        title: "შეცდომა",
+        description: "შენახვა ვერ მოხერხდა",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
   const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty) {
       case 'easy': return 'text-green-500';
@@ -433,9 +503,74 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
     }
   };
 
+  const handleModeSelect = (mode: CreatorMode) => {
+    setCreatorMode(mode);
+    setStep(2);
+  };
+
   const renderStep = () => {
     switch (step) {
+      // Step 1: Mode Selection (NEW)
       case 1:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col min-h-[calc(100vh-120px)]"
+          >
+            <div className="flex-1 space-y-6">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
+                  <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">როგორ გინდა შექმნა?</h3>
+                <p className="text-white/70">აირჩიე შენთვის შესაფერისი გზა</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Edit Mode Card */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleModeSelect("edit")}
+                  className="relative p-5 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30"
+                >
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                      <Edit3 className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-base">რედაქტირება</h4>
+                      <p className="text-white/60 text-xs mt-1">ნახე პასუხები, შეასწორე და გამოაქვეყნე</p>
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* Play Mode Card */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleModeSelect("play")}
+                  className="relative p-5 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30"
+                >
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white text-base">თამაში</h4>
+                      <p className="text-white/60 text-xs mt-1">არ ნახო პასუხები, ითამაშე მეგობრებთან</p>
+                    </div>
+                  </div>
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      // Step 2: Topic Input (was step 1)
+      case 2:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -527,7 +662,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             {/* Fixed bottom section */}
             <div className="mt-auto pt-4 space-y-3" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
               <ChunkyButton
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 disabled={!subject.trim()}
                 className="w-full"
               >
@@ -552,7 +687,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
           </motion.div>
         );
 
-      case 2:
+      // Step 3: Difficulty (was step 2)
+      case 3:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -586,11 +722,11 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
-              <ChunkyButton onClick={() => setStep(3)} className="flex-1">
+              <ChunkyButton onClick={() => setStep(4)} className="flex-1">
                 შემდეგი
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
@@ -598,7 +734,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
           </motion.div>
         );
 
-      case 3:
+      // Step 4: Question Count (was step 3)
+      case 4:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -636,11 +773,11 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
+              <Button variant="outline" onClick={() => setStep(3)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
-              <ChunkyButton onClick={() => setStep(4)} className="flex-1">
+              <ChunkyButton onClick={() => setStep(5)} className="flex-1">
                 შემდეგი
                 <ChevronRight className="w-5 h-5 ml-2" />
               </ChunkyButton>
@@ -648,7 +785,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
           </motion.div>
         );
 
-      case 4:
+      // Step 5: Format & Generate (was step 4)
+      case 5:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -708,7 +846,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(3)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
+              <Button variant="outline" onClick={() => setStep(4)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -752,12 +890,86 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
           </motion.div>
         );
 
-      case 5:
+      // Step 6: Editor or Play Mode Summary (was step 5)
+      case 6:
+        // Play mode: show summary without questions
+        if (creatorMode === "play") {
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-col min-h-[calc(100vh-120px)]"
+            >
+              <div className="flex-1 space-y-6">
+                <div className="text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", duration: 0.6 }}
+                    className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-full bg-emerald-500/30"
+                  >
+                    <Check className="w-10 h-10 text-emerald-400" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-white mb-2">{questions.length} კითხვა მზადაა!</h3>
+                  <p className="text-white/70">პასუხები დამალულია - ითამაშე მეგობრებთან ერთად</p>
+                </div>
+
+                {/* Title input */}
+                <div className="space-y-2">
+                  <label className="text-sm text-white/80 block text-center">სათაური</label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="ტრივიას სათაური..."
+                    className="text-center text-lg h-14 rounded-xl bg-white/95 text-slate-800 placeholder:text-slate-400 border-0"
+                  />
+                </div>
+
+                {/* Info card */}
+                <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/30 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-purple-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-white font-medium">თამაშის რეჟიმი</p>
+                      <p className="text-xs text-white/60">შენახვის შემდეგ შეგიძლია დაიწყო თამაში მეგობრებთან</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom buttons */}
+              <div className="mt-auto pt-4 space-y-3" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+                <ChunkyButton
+                  onClick={handleSaveAndStartGame}
+                  disabled={isPosting || !title.trim()}
+                  className="w-full"
+                >
+                  {isPosting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      ინახება...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-5 h-5 mr-2" />
+                      შეინახე
+                    </>
+                  )}
+                </ChunkyButton>
+              </div>
+            </motion.div>
+          );
+        }
+
+        // Edit mode: show full editor
         return (
           <GameStyleQuestionEditor
             questions={editorQuestions}
             onQuestionsChange={handleEditorQuestionsChange}
-            onBack={() => setStep(4)}
+            onBack={() => setStep(5)}
             onSave={handlePost}
             subject={subject}
             answerFormat={answerFormat}
@@ -781,13 +993,13 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
 
   if (!open) return null;
 
-  // Step 5 uses a fullscreen editor, render it separately
-  if (step === 5 && editorQuestions.length > 0) {
+  // Step 6 uses a fullscreen editor in edit mode, render it separately
+  if (step === 6 && editorQuestions.length > 0 && creatorMode === "edit") {
     return (
       <GameStyleQuestionEditor
         questions={editorQuestions}
         onQuestionsChange={handleEditorQuestionsChange}
-        onBack={() => setStep(4)}
+        onBack={() => setStep(5)}
         onSave={handlePost}
         subject={subject}
         answerFormat={answerFormat}
@@ -820,17 +1032,17 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             <div className="fixed top-0 left-0 right-0 z-50 safe-top">
               <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full flex items-center justify-between px-4 py-3">
                 <button
-                  onClick={handleClose}
+                  onClick={step === 1 ? handleClose : () => setStep(step - 1)}
                   className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-6 h-6 text-white" />
+                  {step === 1 ? <X className="w-6 h-6 text-white" /> : <ChevronLeft className="w-6 h-6 text-white" />}
                 </button>
                 
                 <h2 className="text-lg font-bold text-white">შექმენი Trivia</h2>
                 
                 {/* Progress dots */}
                 <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((s) => (
+                  {[1, 2, 3, 4, 5, 6].map((s) => (
                     <motion.div
                       key={s}
                       animate={{
