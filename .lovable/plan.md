@@ -1,117 +1,105 @@
 
-# Fix: Timer Showing Only 5 Seconds Instead of 15
+# Fix: Unclickable "თამაშის დაწყება" Button in Category Selection Screen
 
-## Problem Identified
+## Problem Summary
 
-The timer shows only ~5 seconds instead of the full 15 seconds when a question starts. This happens because:
+The "თამაშის დაწყება" (Start Game) button in `ControllerDirectSelection` becomes unclickable after completing a game and entering the category selection screen. However, when the user leaves and re-enters the room, a different "დაწყება" button appears that works correctly.
 
-1. **Host sets `question_start_time`** in the database when transitioning to `playing` status
-2. **Realtime update propagates** to player devices (takes 1-3+ seconds depending on network)
-3. **Player's client calculates** `timeRemaining = 15 - elapsed` where `elapsed = Date.now() - question_start_time`
-4. **Result**: If there's 10 seconds of latency, timer shows only 5 seconds
+## Root Cause Analysis
 
-The current logic at lines 1741-1748 in `TVGameContext.tsx`:
-```typescript
-if (newData.status === 'playing' && newData.question_start_time) {
-  if (timerInitializedForQuestionRef.current !== currentQuestionIdx) {
-    const startTime = new Date(newData.question_start_time).getTime();
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    timeRemaining = Math.max(0, QUESTION_TIME - elapsed);  // Bug: Already reduced!
-  }
-}
-```
+There are two different screens with similar functionality:
 
-## Root Cause
+1. **`ControllerDirectSelection`** (rendered when `localPhase === 'category-select'`)
+   - Has the UNCLICKABLE "თამაშის დაწყება" button
+   - Uses relative layout positioning
+   - Button is inside a flex container without proper click protection
 
-The design assumes server time synchronization is necessary for all clients, but this creates poor UX because:
-- Network latency causes significant elapsed time before clients receive the update
-- Players feel cheated when they only see 5 seconds to answer
-- The server timestamp approach is only useful for **late joiners** who need to sync to an in-progress question
+2. **Lobby phase in `TVHostController`** (rendered when `localPhase === 'lobby'`)
+   - Has the WORKING "დაწყება" button
+   - Uses `fixed` positioning with `pointer-events-none` on container
+   - Button has explicit `pointer-events-auto` class
+
+The key issues in `ControllerDirectSelection`:
+1. **Missing `pointer-events-auto`** on the button for explicit click handling
+2. **Framer Motion animations** on queue items can create invisible overlays
+3. **Container layout** can cause the button to be visually present but non-interactive
 
 ## Solution
 
-Change the timer initialization logic to:
-1. **For phase transitions (countdown → question)**: Always start with full `QUESTION_TIME` (15 seconds)
-2. **For late joiners (joining mid-question)**: Use server timestamp calculation (current behavior)
-3. **Detect late join**: If `elapsed > 3 seconds`, we're likely a late joiner
+Match the button pattern from the working `lobby` phase, using a fixed-position footer with proper pointer-events handling.
 
----
+### File: `src/components/controller/ControllerDirectSelection.tsx`
 
-## Technical Changes
+**Change 1: Convert button container to fixed position (lines 410-423)**
 
-### File: `src/contexts/TVGameContext.tsx`
-
-**Lines 1741-1749: Modify timer initialization logic**
+Replace the current relative button container with a fixed-position footer matching the lobby pattern:
 
 ```text
-CURRENT (Bug):
-const elapsed = Math.floor((Date.now() - startTime) / 1000);
-timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+BEFORE (lines 410-423):
+<div className="shrink-0 pt-4 relative z-30">
+  <ChunkyButton
+    variant="primary"
+    className="w-full"
+    ...
+  >
 
-FIXED:
-1. Calculate elapsed time from server
-2. If elapsed <= 3 seconds, treat as "fresh start" → use full QUESTION_TIME
-3. If elapsed > 3 seconds, treat as "late joiner" → use calculated timeRemaining
+AFTER:
+<div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-50 pointer-events-none">
+  <div className="max-w-xl mx-auto">
+    <ChunkyButton
+      variant="primary"
+      className="w-full pointer-events-auto"
+      ...
+    >
+  </div>
+</div>
 ```
 
-**Specific code change:**
+**Change 2: Add bottom padding to main container to account for fixed footer (line 321)**
 
-```typescript
-if (newData.status === 'playing' && newData.question_start_time) {
-  if (timerInitializedForQuestionRef.current !== currentQuestionIdx) {
-    const startTime = new Date(newData.question_start_time).getTime();
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    
-    // LATE JOINER THRESHOLD: If more than 3 seconds have elapsed,
-    // the player is likely joining mid-question and needs sync.
-    // Otherwise, this is a fresh question start and we give full time.
-    const LATE_JOIN_THRESHOLD = 3;
-    
-    if (elapsed > LATE_JOIN_THRESHOLD) {
-      // Late joiner - sync to server time
-      timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
-      console.log('[Timer] Late join sync for question', currentQuestionIdx, 
-        'elapsed:', elapsed, 'remaining:', timeRemaining);
-    } else {
-      // Fresh question start - give full time
-      timeRemaining = QUESTION_TIME;
-      console.log('[Timer] Fresh start for question', currentQuestionIdx, 
-        'ignoring elapsed:', elapsed, 'giving full:', QUESTION_TIME);
-    }
-    
-    timerInitializedForQuestionRef.current = currentQuestionIdx;
-  }
-}
+```text
+BEFORE:
+<div className="min-h-[100dvh] bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-8 flex flex-col">
+
+AFTER:
+<div className="min-h-[100dvh] bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-28 flex flex-col overflow-y-auto">
 ```
 
----
+**Change 3: Adjust queue card max-height to prevent overlap (line 338)**
 
-## Why This Fixes the Issue
+```text
+BEFORE:
+<div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1 min-h-0 max-h-[calc(100dvh-220px)] overflow-hidden flex flex-col">
 
-| Scenario | Before Fix | After Fix |
-|----------|------------|-----------|
-| Normal game flow (countdown → question) | Shows 5-10 seconds (due to latency) | Shows full 15 seconds |
-| Late joiner (joins mid-question) | Syncs correctly to server time | Still syncs correctly |
-| Page refresh during question | Syncs correctly to server time | Still syncs correctly |
+AFTER:
+<div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1 min-h-0 max-h-[calc(100dvh-250px)] overflow-hidden flex flex-col">
+```
 
-The 3-second threshold is chosen because:
-- Normal realtime propagation takes 0.5-2 seconds
-- If more than 3 seconds have elapsed, the player is definitely late
-- This provides buffer for slow networks while still fixing the main issue
+## Why This Fix Works
 
----
+| Pattern | `ControllerDirectSelection` (broken) | `TVHostController` lobby (working) |
+|---------|--------------------------------------|-------------------------------------|
+| Position | `relative z-30` | `fixed z-40` |
+| Container pointer | default | `pointer-events-none` |
+| Button pointer | default | `pointer-events-auto` |
+| Result | Can be blocked by flex siblings | Always receives clicks |
 
-## Files to Modify
+The `pointer-events-none` + `pointer-events-auto` pattern creates a "click-through" container that:
+1. Lets scroll events pass through the gradient background
+2. Guarantees the button itself always captures click events
+3. Places the button in a fixed position immune to layout shifts
 
-| File | Change |
-|------|--------|
-| `src/contexts/TVGameContext.tsx` | Modify timer initialization at lines 1741-1749 to use late-joiner threshold |
+## Summary of Changes
 
----
+| File | Line | Change |
+|------|------|--------|
+| `ControllerDirectSelection.tsx` | 321 | Add `pb-28 overflow-y-auto` to main container |
+| `ControllerDirectSelection.tsx` | 338 | Change max-height from `220px` to `250px` |
+| `ControllerDirectSelection.tsx` | 410-424 | Convert to fixed footer with pointer-events pattern |
 
-## Expected Result
+## Expected Behavior After Fix
 
-After this fix:
-1. **Questions always show 15 seconds** for players who were in the game during countdown
-2. **Late joiners still sync** to the correct remaining time
-3. **Reveal duration remains 10 seconds** when no one answered (unchanged)
+1. Button will **always be clickable** regardless of queue content
+2. Layout will match the working lobby phase pattern
+3. Fixed footer will stay visible during scroll
+4. No more need to leave and re-enter the room
