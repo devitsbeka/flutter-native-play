@@ -1743,9 +1743,26 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               if (timerInitializedForQuestionRef.current !== currentQuestionIdx) {
                 const startTime = new Date(newData.question_start_time).getTime();
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                
+                // LATE JOINER THRESHOLD: If more than 3 seconds have elapsed,
+                // the player is likely joining mid-question and needs sync.
+                // Otherwise, this is a fresh question start and we give full time.
+                // This fixes the bug where network latency caused timers to show only 5 seconds.
+                const LATE_JOIN_THRESHOLD = 3;
+                
+                if (elapsed > LATE_JOIN_THRESHOLD) {
+                  // Late joiner - sync to server time
+                  timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                  console.log('[Timer] Late join sync for question', currentQuestionIdx, 
+                    'elapsed:', elapsed, 'remaining:', timeRemaining);
+                } else {
+                  // Fresh question start - give full time (ignoring network latency)
+                  timeRemaining = QUESTION_TIME;
+                  console.log('[Timer] Fresh start for question', currentQuestionIdx, 
+                    'ignoring elapsed:', elapsed, 'giving full:', QUESTION_TIME);
+                }
+                
                 timerInitializedForQuestionRef.current = currentQuestionIdx;
-                console.log('[Timer] Initialized for question', currentQuestionIdx, 'with', timeRemaining, 'seconds remaining');
               }
               // If timer already initialized for this question, keep prev.timeRemaining (local timer manages it)
             } else if (newData.status === 'countdown') {
