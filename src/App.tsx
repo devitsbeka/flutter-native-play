@@ -63,6 +63,7 @@ const Support = lazy(() => import("./pages/Support"));
 const Admin = lazy(() => import("./pages/Admin"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const ContentManager = lazy(() => import("./pages/admin/ContentManager"));
+const QuestionStudio = lazy(() => import("./pages/admin/QuestionStudio"));
 const AdminOnlineUsers = lazy(() => import("./pages/admin/OnlineUsers"));
 const AdminImport = lazy(() => import("./pages/admin/Import"));
 const DuplicateScanner = lazy(() => import("./pages/admin/DuplicateScanner"));
@@ -146,6 +147,7 @@ const App = () => (
                 <Route path="/settings/privacy" element={<SettingsPrivacy />} />
                 <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="question-studio" element={<QuestionStudio />} />
                   <Route path="flow" element={<AdminFlow />} />
                   <Route path="content" element={<ContentManager />} />
                   <Route path="import" element={<AdminImport />} />
