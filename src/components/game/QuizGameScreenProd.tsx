@@ -359,7 +359,7 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card with Overlapping Icon */}
-      <div className="px-4 flex-shrink-0 mt-5 mb-2 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
+      <div className="px-4 flex-shrink-0 mt-5 mb-0 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-0 relative">
         {/* Category Icon - overlaps card by 50% (hide if media question) */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
@@ -391,7 +391,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-3 [@media(max-height:700px)]:py-1 flex-shrink-0">
+      <div className="flex justify-center py-4 [@media(max-height:700px)]:py-2 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -401,7 +401,7 @@ export function QuizGameScreenProd() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="w-full px-4 -mt-5 flex gap-2">
+        <div className="w-full px-4 mt-0 flex gap-3 pb-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -428,7 +428,7 @@ export function QuizGameScreenProd() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 -mt-5 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
+        <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-visible min-h-0 pb-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isHidden = hiddenAnswers.includes(answer);
