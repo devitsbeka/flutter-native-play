@@ -877,7 +877,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     <div className="inline-flex items-center justify-center mb-4">
                       <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">შევქმნათ ტრივია / კოლექცია</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2">შექმენი</h3>
                     <p className="text-white/70">როგორი ტრივია / კოლექცია გინდა?</p>
                   </div>
 
