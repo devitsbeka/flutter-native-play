@@ -10,6 +10,7 @@ import {
   User,
   Play,
   ChevronRight,
+  ChevronLeft,
   Crown,
   Loader2
 } from 'lucide-react';
@@ -418,10 +419,12 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
         <div className="h-[100dvh] bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
           <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
             <div className="flex items-center justify-between mb-4 shrink-0">
-              <div className="flex items-center gap-3">
-                <Crown className="w-7 h-7 text-yellow-400" />
-                <h1 className="text-xl font-bold text-white">დაამატე ვარიანტები</h1>
-              </div>
+              <button 
+                onClick={() => window.history.back()}
+                className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
               {code && (
                 <div className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
                   <span className="text-sm font-mono font-bold text-white tracking-wider">{code}</span>
