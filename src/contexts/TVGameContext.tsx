@@ -1066,6 +1066,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ...prev,
         roundNumber: newRoundNumber,
       }));
+      
+      // CRITICAL FIX: Reset timer and advance refs for new round
+      // This ensures the next round starts fresh without stale state from previous round
+      timerInitializedForQuestionRef.current = null; // Will be set on countdown->playing
+      hasAdvancedRef.current = false;
+      questionStartedAtRef.current = 0;
+      console.log('[Next Round] ✅ Reset timing refs for new round');
+      
       tvLog('Advanced to next round', { newRoundNumber });
 
       hasAdvancedRef.current = false;
@@ -1241,6 +1249,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         // CRITICAL: Reset timer for next question to ensure all clients start at QUESTION_TIME
         setState(prev => ({ ...prev, timeRemaining: QUESTION_TIME }));
+        
+        // CRITICAL FIX: Mark timer as initialized for this question index
+        // This prevents the realtime subscription from overwriting our 15s timer
+        // when it receives the DB update (which may have significant elapsed time due to latency)
+        timerInitializedForQuestionRef.current = nextIndex;
+        hasAdvancedRef.current = false;
+        console.log('[Next Question] ✅ Timer marked as initialized for question', nextIndex);
       }
     }, revealDuration);
 
