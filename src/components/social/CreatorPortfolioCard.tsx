@@ -138,7 +138,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
 
   return (
     <motion.div
-      className="md:bg-card md:rounded-2xl md:border md:border-border md:shadow-sm overflow-hidden"
+      className="overflow-visible"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -214,18 +214,18 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
         </div>
         
         {/* Tablet & Desktop: Horizontal Carousel */}
-        <div className="hidden md:block overflow-hidden w-full max-w-full">
+        <div className="hidden md:block overflow-visible w-full max-w-full py-3">
           <Carousel
             opts={{
               align: "start",
               dragFree: true,
               containScroll: "trimSnaps",
             }}
-            className="w-full"
+            className="w-full overflow-visible"
           >
-            <CarouselContent className="-ml-3">
+            <CarouselContent className="-ml-3 overflow-visible">
               {creator.trivias.map((trivia) => (
-                <CarouselItem key={trivia.id} className="pl-3 basis-auto">
+                <CarouselItem key={trivia.id} className="pl-3 basis-auto py-2">
                   <TriviaPortfolioCard
                     trivia={trivia}
                     onPlay={onPlayTrivia}
