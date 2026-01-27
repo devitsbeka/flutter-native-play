@@ -38,15 +38,20 @@ export function StepCategorySelect({
   onNext,
 }: StepCategorySelectProps) {
   const [inputValue, setInputValue] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [allSuggestions, setAllSuggestions] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+  // Filter suggestions to only show ones not already added
+  const visibleSuggestions = allSuggestions
+    .filter(s => !subjects.includes(s))
+    .slice(0, 6);
 
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
   
   // Fetch AI suggestions when category changes
   useEffect(() => {
     if (!selectedCategory) {
-      setSuggestions([]);
+      setAllSuggestions([]);
       return;
     }
 
@@ -58,10 +63,10 @@ export function StepCategorySelect({
         });
         
         if (error) throw error;
-        setSuggestions(data?.suggestions || []);
+        setAllSuggestions(data?.suggestions || []);
       } catch (err) {
         console.error('Failed to fetch suggestions:', err);
-        setSuggestions([]);
+        setAllSuggestions([]);
       } finally {
         setIsLoadingSuggestions(false);
       }
@@ -128,26 +133,17 @@ export function StepCategorySelect({
               <Loader2 className="h-4 w-4 animate-spin" />
               იტვირთება რეკომენდაციები...
             </div>
-          ) : suggestions.length > 0 ? (
+          ) : visibleSuggestions.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {suggestions.map(suggestion => {
-                const isAdded = subjects.includes(suggestion);
-                return (
-                  <button
-                    key={suggestion}
-                    onClick={() => !isAdded && addSubject(suggestion)}
-                    disabled={isAdded}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full border text-sm transition-all",
-                      isAdded
-                        ? "border-primary/30 bg-primary/10 text-muted-foreground cursor-default"
-                        : "border-border hover:border-primary hover:bg-primary/10 cursor-pointer"
-                    )}
-                  >
-                    {isAdded ? '✓' : '+'} {suggestion}
-                  </button>
-                );
-              })}
+              {visibleSuggestions.map(suggestion => (
+                <button
+                  key={suggestion}
+                  onClick={() => addSubject(suggestion)}
+                  className="px-3 py-1.5 rounded-full border border-border hover:border-primary hover:bg-primary/10 cursor-pointer text-sm transition-all"
+                >
+                  + {suggestion}
+                </button>
+              ))}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">

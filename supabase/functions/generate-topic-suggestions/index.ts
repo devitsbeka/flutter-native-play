@@ -25,7 +25,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const prompt = `You are a trivia expert. Given the category "${categoryName}", suggest exactly 6 specific, well-known topics/subjects that would make great trivia questions for this category.
+    const prompt = `You are a trivia expert. Given the category "${categoryName}", suggest exactly 18 specific, well-known topics/subjects that would make great trivia questions for this category.
 
 Requirements:
 - Each suggestion should be a single, specific item (a person's name, place, thing, concept, etc.)
@@ -33,8 +33,8 @@ Requirements:
 - Make suggestions diverse within the category
 - Use English names (they will be used to search for images/info)
 
-Return ONLY a JSON array of 6 strings, nothing else. Example format:
-["Topic 1", "Topic 2", "Topic 3", "Topic 4", "Topic 5", "Topic 6"]`;
+Return ONLY a JSON array of 18 strings, nothing else. Example format:
+["Topic 1", "Topic 2", "Topic 3", ...]`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -76,7 +76,7 @@ Return ONLY a JSON array of 6 strings, nothing else. Example format:
     }
 
     return new Response(
-      JSON.stringify({ suggestions: suggestions.slice(0, 6) }),
+      JSON.stringify({ suggestions: suggestions.slice(0, 18) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
