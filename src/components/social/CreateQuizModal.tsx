@@ -382,6 +382,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         questions: structuredClone(questionsToSave) as unknown as Json,
         icon_slug: iconSlug,
         is_public: isPublic,
+        is_blind: creatorMode === "play", // Track if creator saw answers
       }]);
 
       if (error) throw error;
@@ -453,6 +454,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
         questions: structuredClone(questionsToSave) as unknown as Json,
         icon_slug: iconSlug,
         is_public: false, // Private by default for play mode
+        is_blind: true, // Creator never saw answers (play mode)
       }]);
 
       if (error) throw error;

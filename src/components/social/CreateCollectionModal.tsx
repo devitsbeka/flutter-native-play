@@ -367,6 +367,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             is_public: isPublic,
             collection_id: collection.id,
             round_number: i + 1,
+            is_blind: creatorMode === "play", // Track if creator saw answers
           }]);
 
         if (postError) throw postError;
@@ -439,6 +440,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
             is_public: false,
             collection_id: collection.id,
             round_number: i + 1,
+            is_blind: true, // Creator never saw answers (play mode)
           }]);
 
         if (postError) throw postError;
