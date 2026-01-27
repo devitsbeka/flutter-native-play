@@ -228,6 +228,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // TIMER FIX: Track which question index the timer was initialized for
   // This prevents subscription updates from overwriting the local countdown timer
   const timerInitializedForQuestionRef = useRef<number | null>(null);
+  
+  // CRITICAL FIX: Track if this client was present during countdown or reveal phase
+  // This distinguishes between "was here during pre-question phase but network lagged"
+  // vs "actually joining mid-question" for timer sync decisions
+  // Gets set to true during: countdown phase, reveal phase
+  // Gets read during: playing phase to decide if client needs timer sync
+  const wasInPreQuestionPhaseRef = useRef(false);
 
   // ============================================================================
   // CORE FUNCTION: Advance to reveal phase
@@ -1072,6 +1079,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       timerInitializedForQuestionRef.current = null; // Will be set on countdown->playing
       hasAdvancedRef.current = false;
       questionStartedAtRef.current = 0;
+      wasInPreQuestionPhaseRef.current = false; // Reset pre-question presence flag for new round
       console.log('[Next Round] ✅ Reset timing refs for new round');
       
       tvLog('Advanced to next round', { newRoundNumber });
@@ -1255,7 +1263,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // when it receives the DB update (which may have significant elapsed time due to latency)
         timerInitializedForQuestionRef.current = nextIndex;
         hasAdvancedRef.current = false;
-        console.log('[Next Question] ✅ Timer marked as initialized for question', nextIndex);
+        
+        // CRITICAL: For reveal→playing transitions, set wasInCountdown to true
+        // All players who made it to reveal are present, not late joiners
+        // This ensures they get full 15s even if network latency causes elapsed time
+        wasInPreQuestionPhaseRef.current = true;
+        console.log('[Next Question] ✅ Timer marked as initialized for question', nextIndex, ', wasInPreQuestionPhase set for non-host clients');
       }
     }, revealDuration);
 
@@ -1693,6 +1706,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             
             // TIMER FIX: Reset timer initialization tracker for new question
             timerInitializedForQuestionRef.current = null;
+            // Note: Don't reset wasInPreQuestionPhaseRef here - it gets set during countdown/reveal phase
             
             // CRITICAL FIX: Only set questionStartedAtRef when status is 'playing'
             // During 'countdown', keep it at 0 to disable auto-advance checks
@@ -1762,31 +1776,46 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 const startTime = new Date(newData.question_start_time).getTime();
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 
-                // LATE JOINER THRESHOLD: If more than 3 seconds have elapsed,
-                // the player is likely joining mid-question and needs sync.
-                // Otherwise, this is a fresh question start and we give full time.
-                // This fixes the bug where network latency caused timers to show only 5 seconds.
-                const LATE_JOIN_THRESHOLD = 3;
+                // CRITICAL FIX: Distinguish between "late joiner" and "was in pre-question phase but network lagged"
+                // If wasInPreQuestionPhaseRef is true, this player was present during countdown/reveal → give FULL time
+                // If wasInPreQuestionPhaseRef is false, this player is truly joining mid-question → sync to server
+                const isActualLateJoiner = !wasInPreQuestionPhaseRef.current;
                 
-                if (elapsed > LATE_JOIN_THRESHOLD) {
-                  // Late joiner - sync to server time
+                // Also consider the LATE_JOIN_THRESHOLD for edge cases
+                // If someone was in countdown but their network lagged 12+ seconds, they might have missed most of the question
+                const LATE_JOIN_THRESHOLD = 10; // Increased from 3 to 10 seconds to account for slow networks
+                const isTooLateEvenAfterCountdown = elapsed > LATE_JOIN_THRESHOLD;
+                
+                if (isActualLateJoiner || isTooLateEvenAfterCountdown) {
+                  // Late joiner OR extreme network lag - sync to server time
                   timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
-                  console.log('[Timer] Late join sync for question', currentQuestionIdx, 
-                    'elapsed:', elapsed, 'remaining:', timeRemaining);
+                  console.log('[Timer] Late join/extreme lag sync for question', currentQuestionIdx, 
+                    'elapsed:', elapsed, 'remaining:', timeRemaining, 
+                    'wasInPreQuestionPhase:', wasInPreQuestionPhaseRef.current, 'isActualLateJoiner:', isActualLateJoiner);
                 } else {
-                  // Fresh question start - give full time (ignoring network latency)
+                  // Was present during countdown/reveal and network lag is reasonable - give full time
                   timeRemaining = QUESTION_TIME;
-                  console.log('[Timer] Fresh start for question', currentQuestionIdx, 
+                  console.log('[Timer] ✅ Was in pre-question phase - giving FULL time for question', currentQuestionIdx, 
                     'ignoring elapsed:', elapsed, 'giving full:', QUESTION_TIME);
                 }
                 
                 timerInitializedForQuestionRef.current = currentQuestionIdx;
+                // Reset the pre-question phase flag now that we've used it for this question
+                wasInPreQuestionPhaseRef.current = false;
               }
               // If timer already initialized for this question, keep prev.timeRemaining (local timer manages it)
             } else if (newData.status === 'countdown') {
               // Reset timer tracker for new countdown phase
               timerInitializedForQuestionRef.current = null;
               timeRemaining = QUESTION_TIME;
+              // CRITICAL: Mark that this client was present during countdown
+              // This prevents false "late joiner" detection due to network latency
+              wasInPreQuestionPhaseRef.current = true;
+              console.log('[Timer] 📍 Marked wasInPreQuestionPhase=true for upcoming question');
+            } else if (newData.status === 'reveal') {
+              // CRITICAL: Also mark pre-question phase during reveal
+              // Players in reveal are NOT late joiners for the next question
+              wasInPreQuestionPhaseRef.current = true;
             }
 
             // Log phase changes
@@ -2074,7 +2103,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // The proper values will be set in startPlaying AFTER the transition to 'playing'
     questionStartedAtRef.current = 0;
     hasAdvancedRef.current = false;
-    console.log('[startGame] ⏱️ Reset timing refs to 0 for new game');
+    timerInitializedForQuestionRef.current = null;
+    wasInPreQuestionPhaseRef.current = false;
+    console.log('[startGame] ⏱️ Reset ALL timing refs for new game');
 
     try {
       // Fetch queue items to calculate total rounds.
@@ -2823,6 +2854,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Reset timer initialization tracker
       timerInitializedForQuestionRef.current = null;
+      wasInPreQuestionPhaseRef.current = false;
       
       setState(prev => ({
         ...prev,
@@ -2880,6 +2912,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Reset timer initialization tracker
       timerInitializedForQuestionRef.current = null;
+      wasInPreQuestionPhaseRef.current = false;
       
       // Update local state
       setState(prev => ({
@@ -2919,6 +2952,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Reset timer initialization tracker
     timerInitializedForQuestionRef.current = null;
+    wasInPreQuestionPhaseRef.current = false;
     
     setState({
       code: null,
