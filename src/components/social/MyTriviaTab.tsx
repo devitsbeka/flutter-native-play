@@ -307,7 +307,7 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
             <button
               onClick={(e) => { e.stopPropagation(); onPost?.(collection); }}
               disabled={isPosting}
-              className={`flex-1 h-10 flex items-center justify-center gap-2 px-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${
+              className={`flex-1 h-10 flex items-center justify-center gap-2 px-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${
                 collection.is_public === false
                   ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                   : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
@@ -487,7 +487,7 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           ) : (
             <Lock className="w-3.5 h-3.5" aria-hidden />
           )}
-          <span>{post.question_count} კითხვა</span>
+          <span>{(Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0} კითხვა</span>
         </div>
       </div>
 
@@ -600,7 +600,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           ) : (
             <Lock className="w-3.5 h-3.5" aria-hidden />
           )}
-          <span>{post.question_count} კითხვა</span>
+          <span>{(Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0} კითხვა</span>
         </div>
       </div>
 
@@ -647,7 +647,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
           <button
             onClick={() => onPost?.(post)}
             disabled={isPosting}
-            className={`flex-1 h-10 flex items-center justify-center gap-2 px-3 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${
+            className={`flex-1 h-10 flex items-center justify-center gap-2 px-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${
               post.is_public === false
                 ? 'bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10'
                 : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'
