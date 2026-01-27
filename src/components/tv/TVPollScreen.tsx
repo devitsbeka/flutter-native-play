@@ -6,6 +6,7 @@ import { useTVGame } from '@/contexts/TVGameContext';
 import { useTVPoll, PollSuggestion } from '@/hooks/useTVPoll';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
+import retroTvIcon from '@/assets/retro-tv-colored.png';
 
 
 export const TVPollScreen: React.FC = () => {
@@ -61,20 +62,20 @@ export const TVPollScreen: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="flex items-center justify-between mb-6"
       >
-        <div className="flex items-center gap-4">
-          <Vote className="w-10 h-10 text-purple-300" />
-        <div>
-            <h1 className="text-3xl font-bold text-white">
-              {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
-            </h1>
-            {pollPhase === 'voting' && (
-              <p className="text-purple-300">
-                აირჩიეთ რომელი კატეგორიები გსურთ ითამაშოთ
-              </p>
-            )}
-          </div>
+        {/* Logo - Top Left */}
+        <div className="flex items-center gap-2">
+          <span 
+            className="text-2xl font-slackey text-white"
+            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
+          >
+            MyTrivia
+          </span>
+          <span className="px-2 py-1 rounded-md text-xs font-bold text-white bg-red-500 flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            LIVE
+          </span>
         </div>
 
         {/* Timer (voting phase only) */}
@@ -93,12 +94,28 @@ export const TVPollScreen: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Player count */}
+        {/* Player count + TV icon - Top Right */}
         <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl">
           <Users className="w-6 h-6 text-purple-300" />
           <span className="text-xl font-bold text-white">{players.length}</span>
+          <img src={retroTvIcon} alt="TV რეჟიმი" className="w-10 h-10 object-contain" />
         </div>
       </motion.div>
+
+      {/* Title section - below header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Vote className="w-8 h-8 text-purple-300" />
+          <h1 className="text-3xl font-bold text-white">
+            {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
+          </h1>
+        </div>
+        <p className="text-purple-300 text-lg ml-11">
+          {pollPhase === 'voting' 
+            ? 'აირჩიეთ რომელი კატეგორიები გსურთ ითამაშოთ'
+            : 'შემოთავაზებული ვარიანტებიდან აირჩიე მაქსიმუმ 3 ვარიანტი'}
+        </p>
+      </div>
 
       {/* Main content */}
       <div className="flex-1 flex gap-8">
