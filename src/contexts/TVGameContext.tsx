@@ -1238,6 +1238,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // This ensures the 2500ms safety window starts after all devices sync
         questionStartedAtRef.current = Date.now();
         console.log('[Next Question] ⏱️ Timing ref set AFTER DB transition:', questionStartedAtRef.current);
+        
+        // CRITICAL: Reset timer for next question to ensure all clients start at QUESTION_TIME
+        setState(prev => ({ ...prev, timeRemaining: QUESTION_TIME }));
       }
     }, revealDuration);
 
@@ -2376,6 +2379,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('id', state.sessionId);
 
       tvLogPhase('countdown', 'playing', 'startPlaying');
+      
+      // CRITICAL: Reset local timeRemaining to ensure host timer starts fresh
+      // This must happen BEFORE the phase changes to 'question' which triggers the timer useEffect
+      setState(prev => ({
+        ...prev,
+        timeRemaining: QUESTION_TIME,
+      }));
       
       // CRITICAL: Longer delay to ensure React state and DB fully propagate
       // This ensures the fallback interval and other checks don't fire prematurely
