@@ -53,13 +53,20 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
     }
 
     setIsStarting(true);
-    const success = await finalizePollAndStartGame(selectedRoundCount);
-    
-    if (success) {
-      toast.success('თამაში იწყება!');
-      onGameStart();
-    } else {
+    try {
+      const success = await finalizePollAndStartGame(selectedRoundCount);
+      
+      if (success) {
+        toast.success('თამაში იწყება!');
+        onGameStart();
+      } else {
+        toast.error('თამაშის დაწყება ვერ მოხერხდა');
+      }
+    } catch (error) {
+      console.error('[ControllerPollResults] Error starting game:', error);
       toast.error('თამაშის დაწყება ვერ მოხერხდა');
+    } finally {
+      // Always reset isStarting to ensure button isn't stuck disabled
       setIsStarting(false);
     }
   };
