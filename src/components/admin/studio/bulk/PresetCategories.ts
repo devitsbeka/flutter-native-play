@@ -5,152 +5,143 @@ export interface PresetCategory {
   keywords: string[];
 }
 
+export type ThemeType = 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'generic';
+
 export const PRESET_CATEGORIES: PresetCategory[] = [
   {
     id: 'people',
     label: 'ადამიანები',
     icon: 'users',
     keywords: [
-      // Scientists
-      "Albert Einstein", "Isaac Newton", "Marie Curie", "Nikola Tesla", "Galileo Galilei",
-      "Charles Darwin", "Stephen Hawking", "Richard Feynman", "Carl Sagan", "Neil deGrasse Tyson",
-      // Tech Leaders
-      "Elon Musk", "Bill Gates", "Steve Jobs", "Jeff Bezos", "Mark Zuckerberg",
-      "Sundar Pichai", "Tim Cook", "Satya Nadella", "Jack Dorsey", "Larry Page",
-      // Artists
-      "Leonardo da Vinci", "Pablo Picasso", "Vincent van Gogh", "Michelangelo", "Claude Monet",
-      "Salvador Dalí", "Frida Kahlo", "Andy Warhol", "Rembrandt", "Johannes Vermeer",
-      // Musicians
-      "Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Johann Sebastian Bach",
-      "Michael Jackson", "Freddie Mercury", "Elvis Presley", "The Beatles",
-      "Madonna", "Prince", "Whitney Houston",
-      // Leaders
-      "Napoleon Bonaparte", "Winston Churchill", "Mahatma Gandhi", "Nelson Mandela",
-      "Martin Luther King Jr.", "Abraham Lincoln", "George Washington", "Cleopatra",
-      "Julius Caesar", "Alexander the Great",
-      // Athletes
-      "Lionel Messi", "Cristiano Ronaldo", "Michael Jordan", "Muhammad Ali",
-      "Serena Williams", "Roger Federer", "Usain Bolt", "LeBron James",
-      "Pelé", "Diego Maradona",
-      // Actors
-      "Leonardo DiCaprio", "Tom Hanks", "Meryl Streep", "Morgan Freeman",
-      "Scarlett Johansson", "Robert Downey Jr.", "Brad Pitt", "Angelina Jolie",
-      "Denzel Washington", "Johnny Depp"
-    ]
+      'Albert Einstein', 'Isaac Newton', 'Marie Curie', 'Nikola Tesla', 'Galileo Galilei',
+      'Charles Darwin', 'Stephen Hawking', 'Richard Feynman', 'Niels Bohr', 'Max Planck',
+      'Elon Musk', 'Bill Gates', 'Steve Jobs', 'Jeff Bezos', 'Mark Zuckerberg',
+      'Larry Page', 'Sergey Brin', 'Tim Cook', 'Satya Nadella', 'Jack Dorsey',
+      'Leonardo da Vinci', 'Pablo Picasso', 'Vincent van Gogh', 'Michelangelo', 'Salvador Dalí',
+      'Claude Monet', 'Rembrandt', 'Andy Warhol', 'Frida Kahlo', 'Jackson Pollock',
+      'Wolfgang Amadeus Mozart', 'Ludwig van Beethoven', 'Michael Jackson', 'Freddie Mercury', 'Elvis Presley',
+      'The Beatles', 'Bob Marley', 'David Bowie', 'Prince', 'Madonna',
+      'Napoleon Bonaparte', 'Winston Churchill', 'Mahatma Gandhi', 'Nelson Mandela', 'Abraham Lincoln',
+      'Martin Luther King Jr.', 'John F. Kennedy', 'Franklin D. Roosevelt', 'Theodore Roosevelt', 'George Washington',
+      'Lionel Messi', 'Cristiano Ronaldo', 'Michael Jordan', 'Muhammad Ali', 'Usain Bolt',
+      'Serena Williams', 'Roger Federer', 'Tiger Woods', 'LeBron James', 'Kobe Bryant',
+      'Tom Hanks', 'Leonardo DiCaprio', 'Meryl Streep', 'Morgan Freeman', 'Robert De Niro',
+      'Brad Pitt', 'Angelina Jolie', 'Johnny Depp', 'Scarlett Johansson', 'Denzel Washington',
+    ],
   },
   {
     id: 'cities',
     label: 'ქალაქები',
     icon: 'building-2',
     keywords: [
-      // Europe
-      "Paris", "London", "Rome", "Barcelona", "Amsterdam", "Berlin", "Vienna",
-      "Prague", "Venice", "Florence", "Athens", "Lisbon", "Madrid", "Dublin",
-      "Budapest", "Stockholm", "Copenhagen", "Oslo", "Helsinki", "Warsaw",
-      // Americas
-      "New York City", "Los Angeles", "Chicago", "Miami", "San Francisco",
-      "Toronto", "Vancouver", "Mexico City", "Buenos Aires", "Rio de Janeiro",
-      "São Paulo", "Lima", "Bogotá", "Santiago",
-      // Asia
-      "Tokyo", "Beijing", "Shanghai", "Hong Kong", "Singapore", "Seoul",
-      "Bangkok", "Mumbai", "Delhi", "Dubai", "Istanbul", "Jerusalem",
-      "Kyoto", "Osaka", "Taipei",
-      // Oceania & Africa
-      "Sydney", "Melbourne", "Auckland", "Cape Town", "Cairo", "Marrakech",
-      "Nairobi", "Lagos", "Casablanca"
-    ]
+      'Paris', 'London', 'Rome', 'Barcelona', 'Berlin', 'Amsterdam', 'Vienna', 'Prague',
+      'Athens', 'Budapest', 'Lisbon', 'Dublin', 'Stockholm', 'Copenhagen', 'Warsaw',
+      'New York City', 'Los Angeles', 'Chicago', 'San Francisco', 'Miami', 'Las Vegas',
+      'Toronto', 'Vancouver', 'Mexico City', 'Rio de Janeiro', 'Buenos Aires', 'São Paulo',
+      'Tokyo', 'Beijing', 'Shanghai', 'Hong Kong', 'Singapore', 'Seoul', 'Bangkok',
+      'Mumbai', 'Delhi', 'Dubai', 'Istanbul', 'Kuala Lumpur', 'Jakarta', 'Manila',
+      'Sydney', 'Melbourne', 'Auckland', 'Cape Town', 'Cairo', 'Marrakech',
+    ],
   },
   {
     id: 'countries',
     label: 'ქვეყნები',
     icon: 'flag',
     keywords: [
-      // Europe
-      "France", "Germany", "Italy", "Spain", "United Kingdom", "Netherlands",
-      "Belgium", "Switzerland", "Austria", "Portugal", "Greece", "Sweden",
-      "Norway", "Denmark", "Finland", "Poland", "Czech Republic", "Ireland",
-      "Hungary", "Romania", "Ukraine", "Croatia", "Iceland",
-      // Americas
-      "United States", "Canada", "Mexico", "Brazil", "Argentina", "Chile",
-      "Colombia", "Peru", "Venezuela", "Cuba", "Jamaica",
-      // Asia
-      "Japan", "China", "India", "South Korea", "Thailand", "Vietnam",
-      "Indonesia", "Philippines", "Malaysia", "Singapore", "Turkey",
-      "Israel", "United Arab Emirates", "Saudi Arabia", "Iran",
-      // Oceania
-      "Australia", "New Zealand", "Fiji",
-      // Africa
-      "Egypt", "South Africa", "Morocco", "Kenya", "Nigeria", "Ethiopia",
-      "Tanzania", "Ghana"
-    ]
+      'France', 'Germany', 'Italy', 'Spain', 'United Kingdom', 'Netherlands', 'Belgium',
+      'Switzerland', 'Austria', 'Poland', 'Portugal', 'Greece', 'Sweden', 'Norway', 'Denmark',
+      'United States', 'Canada', 'Mexico', 'Brazil', 'Argentina', 'Colombia', 'Chile',
+      'Japan', 'China', 'South Korea', 'India', 'Thailand', 'Vietnam', 'Indonesia',
+      'Philippines', 'Malaysia', 'Singapore', 'United Arab Emirates', 'Saudi Arabia', 'Israel', 'Turkey',
+      'Australia', 'New Zealand', 'South Africa', 'Egypt', 'Morocco', 'Nigeria', 'Kenya',
+    ],
   },
   {
     id: 'companies',
     label: 'კომპანიები',
     icon: 'briefcase',
     keywords: [
-      // Tech
-      "Apple", "Google", "Microsoft", "Amazon", "Meta", "Netflix",
-      "Tesla", "NVIDIA", "Intel", "IBM", "Oracle", "Salesforce",
-      "Adobe", "Spotify", "Uber", "Airbnb", "Twitter", "LinkedIn",
-      // Automotive
-      "Mercedes-Benz", "BMW", "Audi", "Volkswagen", "Toyota", "Honda",
-      "Ford", "General Motors", "Ferrari", "Lamborghini", "Porsche", "Tesla",
-      // Consumer
-      "Coca-Cola", "PepsiCo", "McDonald's", "Starbucks", "Nike", "Adidas",
-      "Louis Vuitton", "Gucci", "Chanel", "Rolex", "IKEA", "H&M",
-      // Finance
-      "JPMorgan Chase", "Goldman Sachs", "Visa", "Mastercard", "PayPal",
-      // Misc
-      "Disney", "Warner Bros", "Sony", "Samsung", "LG", "Huawei"
-    ]
+      'Apple', 'Google', 'Microsoft', 'Amazon', 'Meta', 'Netflix', 'Tesla', 'SpaceX',
+      'Intel', 'IBM', 'Oracle', 'Adobe', 'Salesforce', 'Nvidia', 'Samsung',
+      'Coca-Cola', 'Pepsi', 'McDonalds', 'Starbucks', 'Nike', 'Adidas', 'IKEA',
+      'Mercedes-Benz', 'BMW', 'Toyota', 'Ferrari', 'Porsche', 'Lamborghini', 'Ford',
+      'Visa', 'Mastercard', 'PayPal', 'JPMorgan Chase', 'Goldman Sachs',
+      'Disney', 'Warner Bros', 'Sony', 'Nintendo', 'Spotify', 'YouTube',
+    ],
   },
   {
     id: 'landmarks',
     label: 'ღირსშესანიშნაობები',
     icon: 'landmark',
     keywords: [
-      // Wonders
-      "Eiffel Tower", "Statue of Liberty", "Colosseum", "Taj Mahal",
-      "Great Wall of China", "Machu Picchu", "Petra", "Christ the Redeemer",
-      "Great Pyramid of Giza", "Stonehenge",
-      // Towers & Buildings
-      "Big Ben", "Empire State Building", "Burj Khalifa", "CN Tower",
-      "Sydney Opera House", "Leaning Tower of Pisa", "Space Needle",
-      "One World Trade Center", "Shanghai Tower", "Tokyo Skytree",
-      // Natural
-      "Grand Canyon", "Niagara Falls", "Mount Everest", "Victoria Falls",
-      "Great Barrier Reef", "Amazon Rainforest", "Northern Lights",
-      // Religious
-      "Notre-Dame Cathedral", "St. Peter's Basilica", "Hagia Sophia",
-      "Angkor Wat", "Golden Gate Bridge", "Tower Bridge",
-      // Palaces
-      "Buckingham Palace", "Versailles Palace", "Forbidden City",
-      "Neuschwanstein Castle", "Alhambra", "Kremlin"
-    ]
+      'Eiffel Tower', 'Statue of Liberty', 'Colosseum', 'Taj Mahal', 'Great Wall of China',
+      'Machu Picchu', 'Petra', 'Christ the Redeemer', 'Pyramids of Giza', 'Stonehenge',
+      'Big Ben', 'Sydney Opera House', 'Burj Khalifa', 'Leaning Tower of Pisa', 'Acropolis',
+      'Hagia Sophia', 'Notre-Dame de Paris', 'Angkor Wat', 'Mount Rushmore', 'Golden Gate Bridge',
+      'Empire State Building', 'Tower Bridge', 'Brandenburg Gate', 'Arc de Triomphe', 'Sagrada Familia',
+      'Great Sphinx of Giza', 'Neuschwanstein Castle', 'Chichen Itza', 'Alhambra', 'St Peters Basilica',
+    ],
   },
   {
     id: 'animals',
     label: 'ცხოველები',
     icon: 'paw-print',
     keywords: [
-      // Mammals
-      "Lion", "Tiger", "Elephant", "Giraffe", "Zebra", "Gorilla",
-      "Chimpanzee", "Kangaroo", "Koala", "Panda", "Polar Bear", "Wolf",
-      "Fox", "Deer", "Moose", "Rhinoceros", "Hippopotamus", "Leopard",
-      // Birds
-      "Eagle", "Owl", "Penguin", "Flamingo", "Peacock", "Parrot",
-      "Toucan", "Hummingbird", "Swan", "Pelican",
-      // Marine
-      "Dolphin", "Whale", "Shark", "Octopus", "Jellyfish", "Sea Turtle",
-      "Seahorse", "Starfish", "Orca",
-      // Reptiles
-      "Crocodile", "Alligator", "Komodo Dragon", "Chameleon", "Iguana",
-      "Python", "Cobra", "Turtle", "Tortoise"
-    ]
-  }
+      'Lion', 'Tiger', 'Elephant', 'Giraffe', 'Zebra', 'Gorilla', 'Chimpanzee',
+      'Panda', 'Polar Bear', 'Wolf', 'Fox', 'Dolphin', 'Whale', 'Kangaroo', 'Koala',
+      'Eagle', 'Owl', 'Penguin', 'Flamingo', 'Peacock', 'Parrot', 'Hummingbird',
+      'Crocodile', 'Snake', 'Turtle', 'Shark', 'Octopus', 'Jellyfish', 'Butterfly',
+    ],
+  },
 ];
 
-export function getCategoryById(id: string): PresetCategory | undefined {
-  return PRESET_CATEGORIES.find(c => c.id === id);
+const themeKeywords: Record<ThemeType, string[]> = {
+  people: ['ადამიან', 'person', 'people', 'ცნობილ', 'famous', 'მეცნიერ', 'scientist', 'მსახიობ', 'actor', 'მომღერ', 'singer', 'მხატვ', 'artist', 'სპორტსმენ', 'athlete', 'პოლიტიკოს', 'politician', 'მწერალ', 'writer'],
+  cities: ['ქალაქ', 'city', 'cities', 'urban', 'დედაქალაქ', 'capital'],
+  countries: ['ქვეყან', 'country', 'countries', 'nation', 'დროშ', 'flag', 'სახელმწიფო', 'state'],
+  companies: ['კომპანი', 'company', 'companies', 'brand', 'ბრენდ', 'ლოგო', 'logo', 'ბიზნეს', 'business'],
+  landmarks: ['ღირსშესანიშნაობ', 'landmark', 'monument', 'ძეგლ', 'არქიტექტურ', 'architecture', 'შენობ', 'building'],
+  animals: ['ცხოველ', 'animal', 'ფრინველ', 'bird', 'თევზ', 'fish', 'ძუძუმწოვარ', 'mammal'],
+  generic: []
+};
+
+export function detectThemeFromCategoryName(categoryName: string): ThemeType {
+  const name = categoryName.toLowerCase();
+  
+  for (const [theme, keywords] of Object.entries(themeKeywords)) {
+    if (theme === 'generic') continue;
+    if (keywords.some(kw => name.includes(kw))) {
+      return theme as ThemeType;
+    }
+  }
+  
+  return 'generic';
+}
+
+export function getQuestionText(theme: ThemeType, questionType: 'text' | 'image'): string {
+  const templates: Record<ThemeType, Record<'text' | 'image', string>> = {
+    people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+    cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
+    countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
+    companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
+    landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
+    animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
+    generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
+  };
+  
+  return templates[theme][questionType];
+}
+
+export function getSuggestionsForCategory(categoryName: string): string[] {
+  const theme = detectThemeFromCategoryName(categoryName);
+  const preset = PRESET_CATEGORIES.find(c => c.id === theme);
+  
+  if (preset) {
+    const shuffled = [...preset.keywords].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 6);
+  }
+  
+  const allKeywords = PRESET_CATEGORIES.flatMap(c => c.keywords);
+  const shuffled = [...allKeywords].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 6);
 }

@@ -1,32 +1,23 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, X, Image, Volume2, Video } from 'lucide-react';
+import { ArrowLeft, Check, X, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { GeneratedQuestion } from './StepProcessing';
-import { CategoryWithCounts } from '@/hooks/useQuestionStudio';
 
 interface StepReviewProps {
   questions: GeneratedQuestion[];
-  categories: CategoryWithCounts[];
+  categoryName: string;
   onBack: () => void;
-  onImport: (questions: GeneratedQuestion[], categoryId: string) => void;
+  onImport: (questions: GeneratedQuestion[]) => void;
   importing: boolean;
 }
 
-export function StepReview({ questions, categories, onBack, onImport, importing }: StepReviewProps) {
+export function StepReview({ questions, categoryName, onBack, onImport, importing }: StepReviewProps) {
   const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(
     new Set(questions.map((_, i) => i))
   );
-  const [categoryId, setCategoryId] = useState<string>('');
 
   const toggleQuestion = (index: number) => {
     setSelectedQuestions(prev => {
@@ -50,13 +41,11 @@ export function StepReview({ questions, categories, onBack, onImport, importing 
 
   const handleImport = () => {
     const selected = questions.filter((_, i) => selectedQuestions.has(i));
-    onImport(selected, categoryId);
+    onImport(selected);
   };
 
   const getQuestionIcon = (q: GeneratedQuestion) => {
-    if (q.video_url) return <Video className="h-4 w-4 text-blue-500" />;
-    if (q.audio_url) return <Volume2 className="h-4 w-4 text-green-500" />;
-    if (q.image_url) return <Image className="h-4 w-4 text-purple-500" />;
+    if (q.image_url) return <ImageIcon className="h-4 w-4 text-purple-500" />;
     return null;
   };
 
@@ -67,7 +56,7 @@ export function StepReview({ questions, categories, onBack, onImport, importing 
         <div>
           <h3 className="font-medium">{questions.length} კითხვა მზადაა</h3>
           <p className="text-sm text-muted-foreground">
-            გადახედეთ და აირჩიეთ რომლები დაემატოს
+            კატეგორია: <span className="font-medium text-foreground">{categoryName}</span>
           </p>
         </div>
         <div className="flex gap-2">
@@ -106,7 +95,7 @@ export function StepReview({ questions, categories, onBack, onImport, importing 
                   <img
                     src={q.image_url}
                     alt={q.subject}
-                    className="w-16 h-16 rounded-lg object-cover shrink-0"
+                    className="w-16 h-16 rounded-lg object-cover object-top shrink-0"
                   />
                 )}
 
@@ -149,23 +138,6 @@ export function StepReview({ questions, categories, onBack, onImport, importing 
         </div>
       </ScrollArea>
 
-      {/* Category Selection */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">კატეგორია</label>
-        <Select value={categoryId} onValueChange={setCategoryId}>
-          <SelectTrigger>
-            <SelectValue placeholder="აირჩიეთ კატეგორია" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map(cat => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <Button variant="ghost" onClick={onBack} disabled={importing}>
@@ -177,7 +149,7 @@ export function StepReview({ questions, categories, onBack, onImport, importing 
         </div>
         <Button 
           onClick={handleImport}
-          disabled={selectedQuestions.size === 0 || !categoryId || importing}
+          disabled={selectedQuestions.size === 0 || importing}
         >
           {importing ? 'იტვირთება...' : `ბიბლიოთეკაში დამატება (${selectedQuestions.size})`}
         </Button>

@@ -1,154 +1,211 @@
-import { useState } from 'react';
-import { Users, Building2, Flag, Briefcase, Landmark, PawPrint, FileText, Image, Video, Volume2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { FileText, ImageIcon, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { PRESET_CATEGORIES, PresetCategory } from './PresetCategories';
-import { QuestionType } from '@/hooks/useQuestionStudio';
+import { getSuggestionsForCategory, detectThemeFromCategoryName, getQuestionText, ThemeType } from './PresetCategories';
+import { CategoryWithCounts } from '@/hooks/useQuestionStudio';
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'users': <Users className="h-5 w-5" />,
-  'building-2': <Building2 className="h-5 w-5" />,
-  'flag': <Flag className="h-5 w-5" />,
-  'briefcase': <Briefcase className="h-5 w-5" />,
-  'landmark': <Landmark className="h-5 w-5" />,
-  'paw-print': <PawPrint className="h-5 w-5" />,
-};
-
-const TYPE_OPTIONS: { type: QuestionType; label: string; icon: React.ReactNode }[] = [
-  { type: 'text', label: 'ტექსტი', icon: <FileText className="h-5 w-5" /> },
-  { type: 'image', label: 'სურათი', icon: <Image className="h-5 w-5" /> },
-  { type: 'video', label: 'ვიდეო', icon: <Video className="h-5 w-5" /> },
-  { type: 'audio', label: 'აუდიო', icon: <Volume2 className="h-5 w-5" /> },
-];
+type SimpleQuestionType = 'text' | 'image';
 
 interface StepCategorySelectProps {
-  selectedPresets: string[];
-  onPresetsChange: (presets: string[]) => void;
-  customKeywords: string;
-  onCustomKeywordsChange: (keywords: string) => void;
-  questionType: QuestionType;
-  onQuestionTypeChange: (type: QuestionType) => void;
+  categories: CategoryWithCounts[];
+  selectedCategoryId: string;
+  onCategoryChange: (categoryId: string) => void;
+  subjects: string[];
+  onSubjectsChange: (subjects: string[]) => void;
+  questionType: SimpleQuestionType;
+  onQuestionTypeChange: (type: SimpleQuestionType) => void;
   onNext: () => void;
 }
 
 export function StepCategorySelect({
-  selectedPresets,
-  onPresetsChange,
-  customKeywords,
-  onCustomKeywordsChange,
+  categories,
+  selectedCategoryId,
+  onCategoryChange,
+  subjects,
+  onSubjectsChange,
   questionType,
   onQuestionTypeChange,
   onNext,
 }: StepCategorySelectProps) {
-  const togglePreset = (id: string) => {
-    if (selectedPresets.includes(id)) {
-      onPresetsChange(selectedPresets.filter(p => p !== id));
-    } else {
-      onPresetsChange([...selectedPresets, id]);
+  const [inputValue, setInputValue] = useState('');
+
+  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+  
+  // Get AI suggestions based on selected category
+  const suggestions = useMemo(() => {
+    if (!selectedCategory) return [];
+    return getSuggestionsForCategory(selectedCategory.name);
+  }, [selectedCategory?.name]);
+
+  // Detect theme for dynamic question text preview
+  const theme: ThemeType = selectedCategory 
+    ? detectThemeFromCategoryName(selectedCategory.name)
+    : 'generic';
+  
+  const questionPreview = getQuestionText(theme, questionType);
+
+  const addSubject = (subject: string) => {
+    if (subject.trim() && !subjects.includes(subject.trim())) {
+      onSubjectsChange([...subjects, subject.trim()]);
     }
   };
 
-  const totalKeywords = () => {
-    let count = 0;
-    selectedPresets.forEach(id => {
-      const cat = PRESET_CATEGORIES.find(c => c.id === id);
-      if (cat) count += cat.keywords.length;
-    });
-    if (customKeywords.trim()) {
-      count += customKeywords.split(',').filter(k => k.trim()).length;
-    }
-    return count;
+  const removeSubject = (subject: string) => {
+    onSubjectsChange(subjects.filter(s => s !== subject));
   };
 
-  const canProceed = totalKeywords() > 0;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && inputValue.trim()) {
+      e.preventDefault();
+      addSubject(inputValue.trim());
+      setInputValue('');
+    }
+  };
+
+  const canProceed = selectedCategoryId && subjects.length > 0;
 
   return (
     <div className="space-y-6">
-      {/* Preset Categories */}
+      {/* 1. Category Selection */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">აირჩიეთ თემატიკა</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {PRESET_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => togglePreset(cat.id)}
-              className={cn(
-                "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
-                selectedPresets.includes(cat.id)
-                  ? "border-primary bg-primary/10"
-                  : "border-border hover:border-primary/50 hover:bg-accent"
-              )}
-            >
-              <div className={cn(
-                "p-2 rounded-lg",
-                selectedPresets.includes(cat.id) ? "bg-primary/20" : "bg-muted"
-              )}>
-                {CATEGORY_ICONS[cat.icon] || <FileText className="h-5 w-5" />}
-              </div>
-              <div>
-                <div className="font-medium">{cat.label}</div>
-                <div className="text-xs text-muted-foreground">
-                  {cat.keywords.length} თემა
-                </div>
-              </div>
-            </button>
-          ))}
+        <Label className="text-base font-medium">კატეგორია</Label>
+        <Select value={selectedCategoryId} onValueChange={onCategoryChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="აირჩიეთ კატეგორია" />
+          </SelectTrigger>
+          <SelectContent className="bg-background border border-border">
+            {categories.map(cat => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* 2. AI Suggestions (only show when category is selected) */}
+      {selectedCategoryId && suggestions.length > 0 && (
+        <div className="space-y-3">
+          <Label className="text-base font-medium flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            AI რეკომენდაციები
+          </Label>
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map(suggestion => {
+              const isAdded = subjects.includes(suggestion);
+              return (
+                <button
+                  key={suggestion}
+                  onClick={() => !isAdded && addSubject(suggestion)}
+                  disabled={isAdded}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full border text-sm transition-all",
+                    isAdded
+                      ? "border-primary/30 bg-primary/10 text-muted-foreground cursor-default"
+                      : "border-border hover:border-primary hover:bg-primary/10 cursor-pointer"
+                  )}
+                >
+                  {isAdded ? '✓' : '+'} {suggestion}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Custom Keywords */}
+      {/* 3. Custom Subject Input with Chips */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">
-          ან ჩაწერეთ საკვანძო სიტყვები
-          <span className="font-normal text-muted-foreground ml-2">(მძიმით გამოყოფილი)</span>
-        </Label>
-        <Textarea
-          value={customKeywords}
-          onChange={(e) => onCustomKeywordsChange(e.target.value)}
-          placeholder="Albert Einstein, Elon Musk, Leonardo da Vinci, Bill Gates..."
-          rows={3}
-          className="resize-none"
-        />
-        {customKeywords.trim() && (
-          <p className="text-sm text-muted-foreground">
-            {customKeywords.split(',').filter(k => k.trim()).length} საკვანძო სიტყვა
-          </p>
-        )}
+        <Label className="text-base font-medium">დაამატეთ თემები</Label>
+        <div className="border border-border rounded-xl p-3 flex flex-wrap gap-2 min-h-[80px] bg-background focus-within:border-primary transition-colors">
+          {subjects.map(subject => (
+            <span 
+              key={subject} 
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-sm border border-primary/20"
+            >
+              {subject}
+              <button 
+                onClick={() => removeSubject(subject)}
+                className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+          <input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={subjects.length === 0 ? "ჩაწერეთ თემა და დააჭირეთ Enter..." : "კიდევ დაამატეთ..."}
+            className="flex-1 min-w-[150px] bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {subjects.length} თემა დამატებულია
+        </p>
       </div>
 
-      {/* Question Type */}
+      {/* 4. Question Type (Text or Image only) */}
       <div className="space-y-3">
         <Label className="text-base font-medium">კითხვის ტიპი</Label>
-        <div className="grid grid-cols-4 gap-3">
-          {TYPE_OPTIONS.map((opt) => (
-            <button
-              key={opt.type}
-              onClick={() => onQuestionTypeChange(opt.type)}
-              className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-                questionType === opt.type
-                  ? "border-primary bg-primary/10"
-                  : "border-border hover:border-primary/50 hover:bg-accent"
-              )}
-            >
-              <div className={cn(
-                "p-2 rounded-lg",
-                questionType === opt.type ? "bg-primary/20" : "bg-muted"
-              )}>
-                {opt.icon}
-              </div>
-              <span className="text-sm font-medium">{opt.label}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onQuestionTypeChange('text')}
+            className={cn(
+              "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+              questionType === 'text'
+                ? "border-primary bg-primary/10"
+                : "border-border hover:border-primary/50 hover:bg-accent"
+            )}
+          >
+            <div className={cn(
+              "p-2 rounded-lg",
+              questionType === 'text' ? "bg-primary/20" : "bg-muted"
+            )}>
+              <FileText className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium">ტექსტი</span>
+          </button>
+          <button
+            onClick={() => onQuestionTypeChange('image')}
+            className={cn(
+              "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+              questionType === 'image'
+                ? "border-primary bg-primary/10"
+                : "border-border hover:border-primary/50 hover:bg-accent"
+            )}
+          >
+            <div className={cn(
+              "p-2 rounded-lg",
+              questionType === 'image' ? "bg-primary/20" : "bg-muted"
+            )}>
+              <ImageIcon className="h-5 w-5" />
+            </div>
+            <span className="text-sm font-medium">სურათი</span>
+          </button>
         </div>
       </div>
 
-      {/* Summary & Next */}
+      {/* Question Preview */}
+      {selectedCategoryId && subjects.length > 0 && (
+        <div className="p-3 rounded-lg bg-muted/50 border border-border">
+          <p className="text-xs text-muted-foreground mb-1">კითხვის ფორმატი:</p>
+          <p className="text-sm font-medium">{questionPreview}</p>
+        </div>
+      )}
+
+      {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="text-sm text-muted-foreground">
-          სულ: <span className="font-medium text-foreground">{totalKeywords()}</span> თემა
+          სულ: <span className="font-medium text-foreground">{subjects.length}</span> თემა
         </div>
         <Button onClick={onNext} disabled={!canProceed}>
           შემდეგი →

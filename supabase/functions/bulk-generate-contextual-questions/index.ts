@@ -5,8 +5,9 @@ interface InputItem {
   title: string;
   content: string;
   imageUrl?: string;
-  audioUrl?: string;
 }
+
+type ThemeType = 'people' | 'cities' | 'countries' | 'companies' | 'landmarks' | 'animals' | 'generic';
 
 interface GeneratedQuestion {
   subject: string;
@@ -19,13 +20,42 @@ interface GeneratedQuestion {
   audio_url?: string;
 }
 
+// Dynamic question text based on theme and type
+function getQuestionText(theme: ThemeType, questionType: string): string {
+  const templates: Record<ThemeType, Record<string, string>> = {
+    people: { image: 'ვინ არის ეს?', text: 'ვინ არის?' },
+    cities: { image: 'რომელი ქალაქია?', text: 'რომელი ქალაქია?' },
+    countries: { image: 'რომელი ქვეყანაა?', text: 'რომელი ქვეყანაა?' },
+    companies: { image: 'რომელი კომპანიაა?', text: 'რომელი კომპანიაა?' },
+    landmarks: { image: 'რომელი ღირსშესანიშნაობაა?', text: 'რომელი ადგილია?' },
+    animals: { image: 'რომელი ცხოველია?', text: 'რომელი ცხოველია?' },
+    generic: { image: 'რა არის ეს?', text: 'დაასახელეთ:' }
+  };
+  
+  return templates[theme]?.[questionType] || templates.generic[questionType] || templates.generic.image;
+}
+
+// Get theme description for AI context
+function getThemeContext(theme: ThemeType): string {
+  const contexts: Record<ThemeType, string> = {
+    people: 'famous people, celebrities, historical figures, scientists, artists, athletes, politicians',
+    cities: 'cities, capitals, urban areas, metropolitan regions',
+    countries: 'countries, nations, sovereign states',
+    companies: 'companies, brands, corporations, businesses, tech companies',
+    landmarks: 'landmarks, monuments, famous buildings, architectural wonders, tourist attractions',
+    animals: 'animals, wildlife, mammals, birds, fish, reptiles',
+    generic: 'various topics and subjects'
+  };
+  return contexts[theme] || contexts.generic;
+}
+
 serve(async (req) => {
   const corsResponse = handleCorsPrelight(req);
   if (corsResponse) return corsResponse;
   const corsHeaders = getCorsHeaders(req);
 
   try {
-    const { items, questionType, language = "ka" } = await req.json();
+    const { items, questionType, themeType = "generic", language = "ka" } = await req.json();
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return new Response(
@@ -57,6 +87,7 @@ serve(async (req) => {
         batch,
         allSubjects,
         questionType,
+        themeType as ThemeType,
         language,
         LOVABLE_API_KEY
       );
@@ -85,35 +116,31 @@ async function generateQuestionsForBatch(
   batch: InputItem[],
   allSubjects: string[],
   questionType: string,
+  themeType: ThemeType,
   language: string,
   apiKey: string
 ): Promise<GeneratedQuestion[]> {
   const isGeorgian = language === "ka";
-
-  // Build prompt for contextual question generation
-  const subjectsList = batch.map((item) => item.title).join(", ");
-  const otherSubjects = allSubjects.filter(
-    (s) => !batch.find((b) => b.title === s)
-  );
-
-  const questionPrompt = questionType === "image" 
-    ? (isGeorgian ? "ვინ/რა არის ეს?" : "Who/What is this?")
-    : (isGeorgian ? "დაასახელეთ:" : "Name:");
+  
+  // Get dynamic question text based on theme
+  const questionPrompt = getQuestionText(themeType, questionType);
+  const themeContext = getThemeContext(themeType);
 
   const prompt = `You are creating trivia questions in ${isGeorgian ? "Georgian" : "English"} language.
+The category is: ${themeContext}
 
 For each of the following subjects, create a trivia question where:
-1. The question is simple: "${questionPrompt}"
-2. The correct answer is the subject's name (translated to Georgian if needed)
-3. The 3 wrong answers should be OTHER items from this SAME category that are contextually similar
-4. All 4 answers should be similarly famous/recognizable so it's challenging
+1. The question text is: "${questionPrompt}"
+2. The correct answer is the subject's name (translated to Georgian if the language is Georgian)
+3. The 3 wrong answers should be OTHER items from the same category (${themeContext}) that are contextually similar and equally famous
+4. All 4 answers should be similarly famous/recognizable to make the question challenging
 
-Available subjects for wrong answers: ${allSubjects.join(", ")}
+Available subjects for wrong answers (use these for contextually similar distractors): ${allSubjects.join(", ")}
 
 Subjects to create questions for:
 ${batch.map((item, i) => `${i + 1}. ${item.title}`).join("\n")}
 
-Respond with a JSON array only, no other text:
+Respond with a JSON array only, no other text or markdown:
 [
   {
     "subject": "Original English Name",
@@ -125,10 +152,12 @@ Respond with a JSON array only, no other text:
 ]
 
 Important rules:
-- All answers must be in Georgian
-- Wrong answers must be from the same category (e.g., if subject is a scientist, wrong answers should be other scientists)
-- Keep answers short (1-3 words)
-- difficulty should be "easy", "medium", or "hard" based on how famous/recognizable the subject is`;
+- All answers must be in Georgian language
+- Wrong answers MUST be from the same category (${themeContext})
+- Keep answers short (1-3 words maximum)
+- difficulty should be "easy" (very famous), "medium" (moderately known), or "hard" (less known but notable)
+- Use the exact question_text format: "${questionPrompt}"
+- Make sure all 3 incorrect answers are different from each other and from the correct answer`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -182,10 +211,10 @@ Important rules:
         incorrect_answers: q.incorrect_answers?.slice(0, 3) || [],
         difficulty: q.difficulty || "medium",
         image_url: questionType === "image" ? originalItem?.imageUrl : undefined,
-        audio_url: questionType === "audio" ? originalItem?.audioUrl : undefined,
-        video_url: undefined, // Video requires manual input
+        video_url: undefined,
+        audio_url: undefined,
       };
-    }).filter((q: GeneratedQuestion) => 
+    }).filter((q: GeneratedQuestion) =>
       q.question_text && 
       q.correct_answer && 
       q.incorrect_answers.length >= 3

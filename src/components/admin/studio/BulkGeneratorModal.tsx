@@ -7,14 +7,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { QuestionType, CategoryWithCounts } from '@/hooks/useQuestionStudio';
+import { CategoryWithCounts } from '@/hooks/useQuestionStudio';
 import { StepCategorySelect } from './bulk/StepCategorySelect';
-import { StepTopicValidation, ResolvedTopic } from './bulk/StepTopicValidation';
 import { StepProcessing, GeneratedQuestion } from './bulk/StepProcessing';
 import { StepReview } from './bulk/StepReview';
-import { PRESET_CATEGORIES } from './bulk/PresetCategories';
+import { detectThemeFromCategoryName, ThemeType } from './bulk/PresetCategories';
 
-type Step = 'select' | 'validate' | 'process' | 'review';
+type Step = 'select' | 'process' | 'review';
+type SimpleQuestionType = 'text' | 'image';
 
 interface BulkGeneratorModalProps {
   open: boolean;
@@ -34,19 +34,22 @@ interface BulkGeneratorModalProps {
 
 export function BulkGeneratorModal({ open, onOpenChange, categories, onImport }: BulkGeneratorModalProps) {
   const [step, setStep] = useState<Step>('select');
-  const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
-  const [customKeywords, setCustomKeywords] = useState('');
-  const [questionType, setQuestionType] = useState<QuestionType>('image');
-  const [validatedTopics, setValidatedTopics] = useState<ResolvedTopic[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [questionType, setQuestionType] = useState<SimpleQuestionType>('image');
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [importing, setImporting] = useState(false);
 
+  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+  const themeType: ThemeType = selectedCategory 
+    ? detectThemeFromCategoryName(selectedCategory.name) 
+    : 'generic';
+
   const resetState = () => {
     setStep('select');
-    setSelectedPresets([]);
-    setCustomKeywords('');
+    setSelectedCategoryId('');
+    setSubjects([]);
     setQuestionType('image');
-    setValidatedTopics([]);
     setGeneratedQuestions([]);
     setImporting(false);
   };
@@ -58,32 +61,7 @@ export function BulkGeneratorModal({ open, onOpenChange, categories, onImport }:
     onOpenChange(open);
   };
 
-  // Collect all keywords from presets + custom
-  const getAllKeywords = (): string[] => {
-    const keywords: string[] = [];
-    
-    selectedPresets.forEach(presetId => {
-      const preset = PRESET_CATEGORIES.find(c => c.id === presetId);
-      if (preset) {
-        keywords.push(...preset.keywords);
-      }
-    });
-
-    if (customKeywords.trim()) {
-      const custom = customKeywords.split(',').map(k => k.trim()).filter(Boolean);
-      keywords.push(...custom);
-    }
-
-    // Remove duplicates
-    return [...new Set(keywords)];
-  };
-
   const handleStepSelectNext = () => {
-    setStep('validate');
-  };
-
-  const handleValidationNext = (topics: ResolvedTopic[]) => {
-    setValidatedTopics(topics);
     setStep('process');
   };
 
@@ -92,11 +70,11 @@ export function BulkGeneratorModal({ open, onOpenChange, categories, onImport }:
     setStep('review');
   };
 
-  const handleImport = async (questions: GeneratedQuestion[], categoryId: string) => {
+  const handleImport = async (questions: GeneratedQuestion[]) => {
     setImporting(true);
     
     const formattedQuestions = questions.map(q => ({
-      category_id: categoryId,
+      category_id: selectedCategoryId,
       question_text: q.question_text,
       correct_answer: q.correct_answer,
       incorrect_answers: q.incorrect_answers,
@@ -124,10 +102,9 @@ export function BulkGeneratorModal({ open, onOpenChange, categories, onImport }:
             <Sparkles className="h-5 w-5 text-primary" />
             Bulk Generator
             <span className="text-sm font-normal text-muted-foreground ml-2">
-              {step === 'select' && 'ნაბიჯი 1/4'}
-              {step === 'validate' && 'ნაბიჯი 2/4'}
-              {step === 'process' && 'ნაბიჯი 3/4'}
-              {step === 'review' && 'ნაბიჯი 4/4'}
+              {step === 'select' && 'ნაბიჯი 1/3'}
+              {step === 'process' && 'ნაბიჯი 2/3'}
+              {step === 'review' && 'ნაბიჯი 3/3'}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -135,29 +112,23 @@ export function BulkGeneratorModal({ open, onOpenChange, categories, onImport }:
         <div className="py-4">
           {step === 'select' && (
             <StepCategorySelect
-              selectedPresets={selectedPresets}
-              onPresetsChange={setSelectedPresets}
-              customKeywords={customKeywords}
-              onCustomKeywordsChange={setCustomKeywords}
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onCategoryChange={setSelectedCategoryId}
+              subjects={subjects}
+              onSubjectsChange={setSubjects}
               questionType={questionType}
               onQuestionTypeChange={setQuestionType}
               onNext={handleStepSelectNext}
             />
           )}
 
-          {step === 'validate' && (
-            <StepTopicValidation
-              keywords={getAllKeywords()}
-              onBack={() => setStep('select')}
-              onNext={handleValidationNext}
-            />
-          )}
-
           {step === 'process' && (
             <StepProcessing
-              topics={validatedTopics}
+              subjects={subjects}
               questionType={questionType}
-              onBack={() => setStep('validate')}
+              themeType={themeType}
+              onBack={() => setStep('select')}
               onComplete={handleProcessingComplete}
             />
           )}
@@ -165,7 +136,7 @@ export function BulkGeneratorModal({ open, onOpenChange, categories, onImport }:
           {step === 'review' && (
             <StepReview
               questions={generatedQuestions}
-              categories={categories}
+              categoryName={selectedCategory?.name || ''}
               onBack={() => setStep('process')}
               onImport={handleImport}
               importing={importing}
