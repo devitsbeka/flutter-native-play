@@ -810,26 +810,24 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                     <div className="inline-flex items-center justify-center mb-4">
                       <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">როგორ გინდა შექმნა?</h3>
-                    <p className="text-white/70">აირჩიე შენთვის შესაფერისი გზა</p>
+                    <h3 className="text-2xl font-bold text-white mb-2">შევქმნათ ტრივია / კოლექცია</h3>
+                    <p className="text-white/70">როგორი ტრივია / კოლექცია გინდა?</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-3">
                     {/* Edit Mode Card */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleModeSelect("edit")}
-                      className="relative p-5 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30"
+                      className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
                     >
-                      <div className="space-y-3">
-                        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                          <Edit3 className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white text-base">რედაქტირება</h4>
-                          <p className="text-white/60 text-xs mt-1">ნახე პასუხები, შეასწორე და გამოაქვეყნე</p>
-                        </div>
+                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <Edit3 className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-base">რედაქტირებით</h4>
+                        <p className="text-white/60 text-xs mt-1">ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე</p>
                       </div>
                     </motion.button>
 
@@ -838,16 +836,14 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleModeSelect("play")}
-                      className="relative p-5 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30"
+                      className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
                     >
-                      <div className="space-y-3">
-                        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-white text-base">თამაში</h4>
-                          <p className="text-white/60 text-xs mt-1">არ ნახო პასუხები, ითამაშე მეგობრებთან</p>
-                        </div>
+                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-base">სათამაშოდ</h4>
+                        <p className="text-white/60 text-xs mt-1">არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად</p>
                       </div>
                     </motion.button>
                   </div>

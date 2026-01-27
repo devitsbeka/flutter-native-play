@@ -323,21 +323,25 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
               <div className="inline-flex items-center justify-center mb-4">
                 <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">როგორ გინდა შექმნა?</h3>
-              <p className="text-white/70">აირჩიე შენთვის შესაფერისი გზა</p>
+              <h3 className="text-2xl font-bold text-white mb-2">შევქმნათ ტრივია / კოლექცია</h3>
+              <p className="text-white/70">როგორი ტრივია / კოლექცია გინდა?</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-3">
               {/* Edit Mode */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleModeSelect("edit")}
-                className="p-6 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left"
+                className="p-4 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left flex items-center gap-4"
               >
-                <Edit3 className="w-10 h-10 text-white mb-3" />
-                <h4 className="font-bold text-white text-lg mb-1">რედაქტირება</h4>
-                <p className="text-white/60 text-sm">ნახე პასუხები, შეასწორე და გამოაქვეყნე</p>
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Edit3 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-base">რედაქტირებით</h4>
+                  <p className="text-white/60 text-xs mt-1">ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე</p>
+                </div>
               </motion.button>
 
               {/* Play Mode */}
@@ -345,11 +349,15 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleModeSelect("play")}
-                className="p-6 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left"
+                className="p-4 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left flex items-center gap-4"
               >
-                <Users className="w-10 h-10 text-white mb-3" />
-                <h4 className="font-bold text-white text-lg mb-1">თამაში</h4>
-                <p className="text-white/60 text-sm">არ ნახო პასუხები, ითამაშე მეგობრებთან</p>
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-white text-base">სათამაშოდ</h4>
+                  <p className="text-white/60 text-xs mt-1">არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად</p>
+                </div>
               </motion.button>
             </div>
           </motion.div>
