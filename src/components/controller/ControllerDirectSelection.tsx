@@ -54,6 +54,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   const [categories, setCategories] = useState<Category[]>([]);
   const [userTrivias, setUserTrivias] = useState<UserTrivia[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(null);
+  const [pendingTriviaId, setPendingTriviaId] = useState<string | null>(null);
 
   // Use the TV session queue hook
   const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId, roomId);
@@ -87,6 +89,9 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   }, [showTriviaPicker, userTrivias.length, userId]);
 
   const handleSelectCategory = async (category: Category) => {
+    // Immediately mark as pending to prevent double-clicks
+    setPendingCategoryId(category.category_id);
+    
     // Check if this category is already in the queue
     const alreadyInQueue = queue.some(
       (item) => item.source_type === 'category' && item.category_id === category.category_id
@@ -94,6 +99,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     
     if (alreadyInQueue) {
       toast.error(`${category.name} უკვე არჩეულია!`);
+      setPendingCategoryId(null);
       setShowCategoryPicker(false);
       return;
     }
@@ -112,10 +118,14 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
       toast.error('დამატება ვერ მოხერხდა');
     }
     setLoading(false);
+    setPendingCategoryId(null);
     setShowCategoryPicker(false);
   };
 
   const handleSelectTrivia = async (trivia: UserTrivia) => {
+    // Immediately mark as pending to prevent double-clicks
+    setPendingTriviaId(trivia.id);
+    
     // Check if this trivia is already in the queue
     const alreadyInQueue = queue.some(
       (item) => item.source_type === 'user_trivia' && item.user_trivia_id === trivia.id
@@ -123,6 +133,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     
     if (alreadyInQueue) {
       toast.error(`${trivia.title} უკვე არჩეულია!`);
+      setPendingTriviaId(null);
       setShowTriviaPicker(false);
       return;
     }
@@ -158,6 +169,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
       toast.error('დამატება ვერ მოხერხდა');
     }
     setLoading(false);
+    setPendingTriviaId(null);
     setShowTriviaPicker(false);
   };
 
@@ -199,14 +211,16 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
               const isSelected = queue.some(
                 (item) => item.source_type === 'category' && item.category_id === category.category_id
               );
+              const isPending = pendingCategoryId === category.category_id;
+              const isDisabled = loading || isSelected || isPending;
               
               return (
                 <button
                   key={category.id}
-                  onClick={() => !isSelected && handleSelectCategory(category)}
-                  disabled={loading || isSelected}
+                  onClick={() => !isDisabled && handleSelectCategory(category)}
+                  disabled={isDisabled}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                    isSelected 
+                    isSelected || isPending
                       ? 'bg-white/5 border-green-400/50 opacity-60 cursor-not-allowed' 
                       : 'bg-white/10 border-white/20 hover:border-purple-400'
                   }`}
@@ -257,14 +271,16 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                 const isSelected = queue.some(
                   (item) => item.source_type === 'user_trivia' && item.user_trivia_id === trivia.id
                 );
+                const isPending = pendingTriviaId === trivia.id;
+                const isDisabled = loading || isSelected || isPending;
                 
                 return (
                   <button
                     key={trivia.id}
-                    onClick={() => !isSelected && handleSelectTrivia(trivia)}
-                    disabled={loading || isSelected}
+                    onClick={() => !isDisabled && handleSelectTrivia(trivia)}
+                    disabled={isDisabled}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                      isSelected 
+                      isSelected || isPending
                         ? 'bg-white/5 border-green-400/50 opacity-60 cursor-not-allowed' 
                         : 'bg-white/10 border-white/20 hover:border-purple-400'
                     }`}
