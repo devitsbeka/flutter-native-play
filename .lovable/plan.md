@@ -1,221 +1,200 @@
 
-# Fix TV Host Controller: Back Button and Room Edit Functionality
+# Fix TVPollScreen Layout for TV Display
 
-## Issues Identified
+## Current Issues (From Screenshot)
 
-### Issue 1: Back Button Not Working
-
-**Root Cause**: In `TVHostController.tsx` (lines 569-575) and `ControllerPollScreen.tsx` (lines 68-74), the back button uses `window.history.length > 1` as the condition. However, `window.history.length` always returns at least 2 in modern browsers (current page counts as 1), making this check unreliable.
-
-**Current Code** (TVHostController.tsx, lines 569-575):
-```tsx
-onBack={() => {
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    navigate('/team');
-  }
-}}
-```
-
-The condition `window.history.length > 1` is almost always true, but `window.history.back()` may have no effect if the user entered via a direct link (QR code, notification) with no previous navigation within the app.
-
-### Issue 2: Cannot Edit Room Name or Icon
-
-**Root Cause**: The `TVHostController` page does not include room editing functionality. The edit icons (Edit2/Pencil and Palette) seen in the user's screenshot are from `RoomLobbyV2`, which is a different page. When entering a live TV session from the "My Rooms" section, users land on `TVHostController` which lacks these editing capabilities.
-
----
+1. **Cropped Cards**: Only 4 cards visible in top row, 5th card cropped at bottom
+2. **Narrow Cards**: Cards don't utilize the wide TV screen effectively
+3. **Large QR Code**: Takes too much space (180px)
+4. **Excessive Spacing**: Too much padding and margins
+5. **Limited Grid**: Only 4 columns max, should show 4 cards per row with 2 rows (8 max)
 
 ## Solution
 
-### Fix 1: Improve Back Button Navigation
-
-Update the back button handlers to use a more reliable navigation approach. Instead of checking `window.history.length`, use a combination of `window.history.state` check and always have a fallback:
-
-**Files to update:**
-- `src/pages/TVHostController.tsx` (line 569-575)
-- `src/components/controller/ControllerDirectSelection.tsx` (no changes needed - it receives `onBack` as prop)
-- `src/components/controller/ControllerPollScreen.tsx` (lines 68-74)
-
-**New approach:**
-```tsx
-const handleBack = () => {
-  // Check if we have a meaningful history entry from the same origin
-  // window.history.state exists when navigating within React Router
-  if (window.history.state && window.history.state.idx > 0) {
-    window.history.back();
-  } else {
-    navigate('/team', { replace: true });
-  }
-};
-```
-
-React Router sets `history.state.idx` to track navigation index. If `idx > 0`, there's a previous page to go back to within the app.
-
-### Fix 2: Add Room Edit Functionality to TVHostController
-
-Add a header section in the lobby phase that allows hosts to edit the room name and icon, similar to `RoomLobbyV2`.
-
-**Changes:**
-
-1. **Add imports** for `Edit2`, `Palette`, and `RoomIconPickerModal`
-
-2. **Add state variables:**
-   - `roomName` - current room name
-   - `roomIcon` - current room icon URL  
-   - `showIconPicker` - modal visibility state
-
-3. **Fetch room data** (already partially done with `roomId`, just add room_name and room_icon)
-
-4. **Add editable header section** in the lobby phase that shows:
-   - Room icon (clickable to edit)
-   - Room name (with edit button)
-   - Palette button for gradient picker (optional)
-
-5. **Add RoomIconPickerModal** component with save handler
-
-**Files to update:**
-- `src/pages/TVHostController.tsx`
+Optimize the layout for TV's 16:9 aspect ratio:
+- Show 2 rows of 4 cards each (8 cards max visible without scrolling)
+- Reduce QR code size from 180px to 120px
+- Compact the header and reduce margins
+- Smaller card padding and icons
+- Remove overflow scrolling in favor of a 2x4 grid that fits
 
 ---
 
-## Technical Implementation Details
+## Technical Changes
 
-### TVHostController.tsx Changes
+### File: `src/components/tv/TVPollScreen.tsx`
 
-#### 1. Add imports (top of file)
+#### 1. Reduce Overall Padding (line 59)
+Change from `p-8 pb-4` to `p-6 pb-3`:
 ```tsx
-import { Edit2, Palette } from 'lucide-react';
-import { RoomIconPickerModal } from '@/components/team/RoomIconPickerModal';
+<div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 pb-3 flex flex-col">
 ```
 
-#### 2. Add state (after existing state declarations ~line 100)
+#### 2. Compact Header (line 64)
+Reduce margin from `mb-6` to `mb-3`:
 ```tsx
-const [roomName, setRoomName] = useState('');
-const [roomIcon, setRoomIcon] = useState<string | null>(null);
-const [showIconPicker, setShowIconPicker] = useState(false);
+className="flex items-center justify-between mb-3"
 ```
 
-#### 3. Fetch room data (inside the loadData function, after loading session ~line 206)
+#### 3. Compact Title Section (lines 105-117)
+Reduce margins, smaller title text, condense description:
 ```tsx
-// Fetch room name and icon from game_rooms if room_id exists
-if (sessionData.room_id) {
-  const { data: gameRoom } = await supabase
-    .from('game_rooms')
-    .select('room_name, room_icon')
-    .eq('id', sessionData.room_id)
-    .maybeSingle();
-  
-  if (gameRoom) {
-    setRoomName(gameRoom.room_name || '');
-    setRoomIcon(gameRoom.room_icon || null);
-  }
-}
+<div className="mb-3">
+  <div className="flex items-center gap-2 mb-1">
+    <Vote className="w-6 h-6 text-purple-300" />
+    <h1 className="text-2xl font-bold text-white">
+      {pollPhase === 'suggest' ? 'რა ვითამაშოთ?' : 'ხმა მიეცით!'}
+    </h1>
+  </div>
+  <p className="text-purple-300 text-sm ml-8">
+    {pollPhase === 'voting' 
+      ? 'აირჩიეთ რომელი კატეგორიები გსურთ'
+      : 'აირჩიე მაქსიმუმ 3 ვარიანტი'}
+  </p>
+</div>
 ```
 
-#### 4. Add save handler (after handleCopyCode ~line 500)
+#### 4. Update Grid Columns Function (lines 52-56)
+Show up to 4 columns for all screen sizes, and 2 rows:
 ```tsx
-const handleSaveRoomDetails = async (newIcon: string | null, newName: string) => {
-  if (!roomId) return;
-  
-  await supabase
-    .from('game_rooms')
-    .update({ 
-      room_name: newName.trim(),
-      room_icon: newIcon 
-    })
-    .eq('id', roomId);
-  
-  setRoomName(newName.trim());
-  setRoomIcon(newIcon);
-  toast.success('ოთახი განახლდა!');
+const getGridCols = (count: number) => {
+  if (count <= 4) return 'grid-cols-4';
+  return 'grid-cols-4'; // Always 4 columns for TV
 };
 ```
 
-#### 5. Fix back button handler (line 569-575)
+#### 5. Update Grid Container (line 138)
+Remove scroll, use auto-rows for 2 rows max:
 ```tsx
-onBack={() => {
-  if (window.history.state && window.history.state.idx > 0) {
-    window.history.back();
-  } else {
-    navigate('/team', { replace: true });
-  }
-}}
+<div className={`grid ${getGridCols(suggestions.filter(s => s.category_name && s.category_name.trim()).length)} gap-3 auto-rows-fr`}>
 ```
 
-#### 6. Update lobby header (in the lobby phase section ~line 823-836)
-Replace the current header with an editable version:
+#### 6. Reduce QR Code Size (lines 160-162)
+Change from 180px to 120px, reduce sidebar width:
 ```tsx
 <motion.div
-  initial={{ opacity: 0, y: -20 }}
-  animate={{ opacity: 1, y: 0 }}
-  className="flex items-center justify-between gap-3 mb-6"
+  initial={{ opacity: 0, x: 20 }}
+  animate={{ opacity: 1, x: 0 }}
+  className="w-56 flex flex-col items-center"
 >
-  <div className="flex items-center gap-3 flex-1 min-w-0">
-    <button onClick={() => navigate('/team')} className="p-2 rounded-full hover:bg-white/10 shrink-0">
-      <ArrowLeft className="w-5 h-5 text-purple-200" />
-    </button>
-    {/* Room icon */}
-    {roomIcon ? (
-      <img src={roomIcon} alt="Room" className="w-8 h-8 object-contain rounded-lg shrink-0" />
-    ) : (
-      <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain shrink-0" />
-    )}
-    {/* Room name */}
-    <span className="font-bold text-white truncate">{roomName || 'TV თამაში'}</span>
-    {/* Edit buttons */}
-    <button
-      onClick={() => setShowIconPicker(true)}
-      className="p-2 rounded-full hover:bg-white/10"
-      title="შეცვალე სახელი/აიკონი"
-    >
-      <Edit2 className="w-4 h-4 text-purple-300" />
-    </button>
+  <div className="bg-white p-3 rounded-xl mb-2">
+    <QRCodeSVG value={joinUrl} size={120} level="H" />
   </div>
-</motion.div>
 ```
 
-#### 7. Add modal at the end of the component (before closing div)
+#### 7. Compact Code Display (lines 166-169)
+Smaller padding and text:
 ```tsx
-<RoomIconPickerModal
-  isOpen={showIconPicker}
-  onClose={() => setShowIconPicker(false)}
-  currentIconUrl={roomIcon}
-  roomName={roomName}
-  onConfirm={(newIcon, newName) => {
-    handleSaveRoomDetails(newIcon, newName);
-    setShowIconPicker(false);
-  }}
-/>
+<div className="bg-white/10 px-3 py-1.5 rounded-lg mb-3">
+  <span className="text-xl font-mono font-bold text-white tracking-wider">
+    {code}
+  </span>
+</div>
 ```
 
-### ControllerPollScreen.tsx Changes
-
-#### Fix back button handler (lines 68-74)
+#### 8. Compact Player List (lines 172-197)
+Reduce padding, smaller avatars:
 ```tsx
-const handleBack = () => {
-  if (window.history.state && window.history.state.idx > 0) {
-    window.history.back();
-  } else {
-    navigate('/team', { replace: true });
-  }
-};
+<div className="w-full bg-white/10 rounded-xl p-3 border border-white/20 flex-1 overflow-hidden">
+  <div className="flex items-center gap-2 mb-2">
+    <Users className="w-4 h-4 text-purple-300" />
+    <span className="text-white font-bold text-sm">მოთამაშეები ({activePlayers.length})</span>
+  </div>
+  <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+    {activePlayers.map((player) => (
+      <div 
+        key={player.id || player.nickname}
+        className="flex items-center gap-2 bg-white/10 rounded-lg px-2 py-1.5"
+      >
+        <SafeAvatarImage
+          avatarUrl={player.avatar_url}
+          fallback={player.nickname}
+          className="w-7 h-7 rounded-full object-cover"
+          containerClassName="w-7 h-7 rounded-full text-xs"
+        />
+        <span className="text-white text-sm font-medium truncate">{player.nickname}</span>
+      </div>
+    ))}
+```
+
+#### 9. Compact Bottom Hint (lines 201-215)
+Reduce margin and text size:
+```tsx
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ delay: 1 }}
+  className="text-center mt-3"
+>
+  <p className="text-purple-400 text-sm">
+```
+
+#### 10. Compact SuggestionCard (lines 255-317)
+Smaller padding, smaller icons:
+```tsx
+className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 transition-all ${...}`}
+
+// Icon container (line 284):
+<div className="flex justify-center mb-2">
+
+// Category icon size (lines 286-296):
+{suggestion.cover_image ? (
+  <img 
+    src={suggestion.cover_image} 
+    alt={suggestion.category_name}
+    className="w-14 h-14 rounded-lg object-cover"
+  />
+) : suggestion.icon_slug ? (
+  <QuizCategoryIcon iconSlug={suggestion.icon_slug} size={56} className="w-14 h-14" />
+) : (
+  <div className="w-14 h-14 rounded-lg bg-purple-500/30 flex items-center justify-center">
+    <Sparkles className="w-7 h-7 text-purple-300" />
+  </div>
+)}
+
+// Category name (line 301):
+<h3 className="text-base font-bold text-white text-center mb-2 line-clamp-1">
+
+// Vote display (lines 306-317):
+{showVotes && (
+  <motion.div
+    animate={{ scale: isAnimating ? 1.2 : 1 }}
+    className="flex items-center justify-center gap-1.5 bg-purple-500/30 rounded-lg py-1.5"
+  >
+    <Vote className="w-4 h-4 text-purple-300" />
+    <span className="text-lg font-bold text-white">
+      {suggestion.vote_count}
+    </span>
+    <span className="text-purple-300 text-xs">ხმა</span>
+  </motion.div>
+)}
 ```
 
 ---
 
-## Files to Modify
+## Summary of Changes
 
-| File | Changes |
-|------|---------|
-| `src/pages/TVHostController.tsx` | Add room edit functionality, fix back button navigation, add RoomIconPickerModal |
-| `src/components/controller/ControllerPollScreen.tsx` | Fix back button navigation handler |
+| Element | Before | After |
+|---------|--------|-------|
+| Main padding | `p-8 pb-4` | `p-6 pb-3` |
+| Header margin | `mb-6` | `mb-3` |
+| Title size | `text-3xl` | `text-2xl` |
+| Title section margin | `mb-6` | `mb-3` |
+| Grid gaps | `gap-4` | `gap-3` |
+| QR Code size | 180px | 120px |
+| Sidebar width | `w-72` | `w-56` |
+| Card padding | `p-6` | `p-4` |
+| Card icon size | 80px | 56px |
+| Card title | `text-xl` | `text-base` |
+| Player avatar | `w-10 h-10` | `w-7 h-7` |
 
 ---
 
-## Expected Outcome
+## Result
 
-After implementation:
-1. **Back button** will reliably navigate users back to `/team` when accessed via direct link (QR/notification), or to the previous page when there's navigation history
-2. **Room editing** will be available in the TV Host Controller lobby phase, allowing hosts to change the room name and icon using the existing RoomIconPickerModal component
-3. The UI will match user expectations from the RoomLobbyV2 experience
+After these changes:
+- 8 category cards visible (4 per row × 2 rows) without cropping
+- Smaller, more proportional QR code
+- Compact header and title
+- All elements visible on TV screen without scrolling or cropping
+- Better utilization of the wide 16:9 TV aspect ratio
