@@ -1,84 +1,110 @@
 
 
-# Fix Back Button Navigation in ControllerPollScreen
+# Fix Multiple Page Transitions When Clicking Live TV Room
 
 ## Problem
 
-The back button in the poll-suggest phase (shown in the screenshot with categories like "ქართული ლიტერატურა", "მეცნიერება", etc.) does not navigate to the rooms page (`/team`) when clicked.
+When clicking on a LIVE room card with an active TV session, the app goes through multiple rapid page transitions (1→2→3→4) before finally showing the poll/game screen. This creates a jarring visual experience with rapid scaling/sliding animations.
 
-**Root Cause**: The current implementation uses `window.history.state && window.history.state.idx > 0` to check if there's navigation history. This check can fail because:
-1. When users enter via notifications, QR codes, or direct links, `window.history.state.idx` is often 0 or undefined
-2. Different browsers and navigation patterns handle history state inconsistently
+**Current Navigation Flow:**
+```text
+TeamV2 (Rooms List)
+    ↓ click on LIVE room
+RoomLobbyV2 (lobby phase set by enterRoom)
+    ↓ useEffect detects TV session
+TVHostController (final destination)
+```
+
+Each step triggers framer-motion page transition animations, causing the "1,2,3,4 pages in one second" effect.
 
 ## Solution
 
-Replace the unreliable history state check with direct navigation to `/team`. Since the user's expected behavior is always to go back to the rooms page when clicking the back button in the TV Host Controller, we should navigate directly there instead of relying on browser history.
+Detect the active TV session **before navigation** and skip directly to the appropriate TV mode page. The `MyRoom` data already contains `tv_session_id`, `tv_status`, and `is_host` - we just need to use them.
+
+**Optimized Navigation Flow:**
+```text
+TeamV2 (Rooms List)
+    ↓ click on LIVE room (detect TV session + role)
+TVHostController or TVJoin (single navigation step)
+```
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/controller/ControllerPollScreen.tsx`
+### File: `src/components/team/MyRoomsSection.tsx`
 
-**Lines 68-74** - Replace the `handleBack` function:
+#### 1. Add useNavigate import (line 4)
+
+Add `useNavigate` to existing imports from react-router-dom.
+
+#### 2. Add navigation hook in component (around line 58)
+
+```tsx
+const navigate = useNavigate();
+```
+
+#### 3. Update handleJoin function (lines 91-135)
+
+Change the `handleJoin` function to detect active TV sessions and navigate directly:
 
 **Current:**
 ```tsx
-const handleBack = () => {
-  if (window.history.state && window.history.state.idx > 0) {
-    window.history.back();
-  } else {
-    navigate('/team', { replace: true });
-  }
+const handleJoin = async (room: MyRoom) => {
+  // Clear unread flag...
+  // Reset room if completed...
+  enterRoom(room.room_code);
 };
 ```
 
-**Change to:**
+**New:**
 ```tsx
-const handleBack = () => {
-  // Always navigate to /team - the rooms page
-  // Using replace: true prevents building up navigation history
-  navigate('/team', { replace: true });
-};
-```
-
-This simplifies the logic and ensures consistent behavior - clicking back always takes the host to the rooms page.
-
----
-
-### File: `src/pages/TVHostController.tsx`
-
-**Lines 867-872** - Also update the lobby phase back button for consistency:
-
-**Current:**
-```tsx
-onClick={() => {
-  if (window.history.state && window.history.state.idx > 0) {
-    window.history.back();
-  } else {
-    navigate('/team', { replace: true });
+const handleJoin = async (room: MyRoom) => {
+  // Clear the unread flag
+  if (room.has_unread_activity) {
+    await supabase
+      .from("game_rooms")
+      .update({ has_unread_activity: false })
+      .eq("id", room.id);
   }
-}}
-```
-
-**Change to:**
-```tsx
-onClick={() => navigate('/team', { replace: true })}
+  
+  // If room is completed, reset it to waiting for rematch
+  if (room.status === "completed") {
+    // ... existing reset logic (unchanged)
+  }
+  
+  // OPTIMIZATION: Skip RoomLobbyV2 for active TV sessions
+  // Navigate directly to TV mode instead of going through enterRoom
+  if (room.tv_session_id && isActiveTVSession(room.tv_status)) {
+    if (room.is_host) {
+      // Host goes directly to TV host controller
+      navigate(`/tv/host/${room.tv_session_id}`);
+    } else {
+      // Guest goes directly to TV join flow
+      navigate(`/join/session/${room.tv_session_id}`);
+    }
+    return;
+  }
+  
+  // Standard room join for non-TV rooms
+  enterRoom(room.room_code);
+};
 ```
 
 ---
 
 ## Summary
 
-| File | Location | Change |
-|------|----------|--------|
-| `src/components/controller/ControllerPollScreen.tsx` | Lines 68-74 | Simplify `handleBack` to always navigate to `/team` |
-| `src/pages/TVHostController.tsx` | Lines 867-872 | Simplify lobby back button to always navigate to `/team` |
+| Before | After |
+|--------|-------|
+| Click → enterRoom → RoomLobbyV2 → useEffect detects TV → navigate to TVHostController | Click → detect TV session → navigate directly to TVHostController |
+| 3+ animated page transitions | 1 navigation step |
+| Jarring rapid animations | Smooth single transition |
 
-## Expected Outcome
+## Expected Result
 
-After this change:
-- Clicking the back button (chevron left) in the poll-suggest screen will reliably navigate to `/team` (rooms page)
-- The same applies to the lobby phase back button
-- No more failed navigation attempts when history state is missing or invalid
+- Clicking a LIVE room card navigates instantly to the appropriate TV mode screen
+- Only 1 page transition instead of 3-4 rapid transitions
+- Smooth user experience for TV mode rooms
+- Non-TV rooms continue to work normally through the standard `enterRoom` flow
 
