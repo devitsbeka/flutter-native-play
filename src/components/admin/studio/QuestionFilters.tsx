@@ -47,7 +47,7 @@ export function QuestionFilters({ filters, onFiltersChange }: QuestionFiltersPro
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 bg-popover">
+        <DropdownMenuContent align="end" className="w-56 bg-popover max-h-[70vh] overflow-y-auto">
           <DropdownMenuLabel>ტიპი</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             value={filters.questionType || 'all'}
