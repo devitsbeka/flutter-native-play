@@ -97,6 +97,12 @@ const QUESTION_TIME = getQuestionTime();
 // Keep it in the 1–2s range for readability before auto-advancing.
 const REVEAL_DURATION_MS = 1400;
 
+// Extended reveal duration when no one answered (shows correct answer longer)
+const REVEAL_DURATION_LONG_MS = 10000;
+
+// If no one answers for this many seconds, advance early to reveal
+const NO_ANSWER_TIMEOUT = 5;
+
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
   const mapping: Record<string, TVPhase> = {
@@ -1084,15 +1090,22 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   // ============================================================================
-  // TRIGGER 1: Timer countdown (15 seconds)
+  // TRIGGER 1: Timer countdown (15 seconds) with NO-ANSWER early advance
   // ============================================================================
-  // Simple timer: counts down from QUESTION_TIME, advances when hits 0
-  // Only runs during question phase, only host triggers advancement
+  // Timer counts down from QUESTION_TIME. If no one answers for NO_ANSWER_TIMEOUT
+  // seconds, advance early. Only host triggers advancement.
   // ============================================================================
+  const noAnswerTimeRef = useRef<number>(0);
+  const noAnswerTriggeredRef = useRef<boolean>(false);
+  
   useEffect(() => {
     // Only run during question phase
     if (state.phase !== 'question') return;
     if (!state.sessionId) return;
+    
+    // Reset no-answer tracking at start of each question
+    noAnswerTimeRef.current = 0;
+    noAnswerTriggeredRef.current = false;
     
     // Start the timer countdown
     tvLogTimer('start', state.timeRemaining);
@@ -1108,6 +1121,28 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
           return { ...prev, timeRemaining: 0 };
         }
+        
+        // Check if any player has answered
+        const anyAnswered = prev.players.some(p => p.hasAnswered);
+        
+        // Track no-answer time
+        if (!anyAnswered && !noAnswerTriggeredRef.current) {
+          noAnswerTimeRef.current += 1;
+          
+          // If no one answered for NO_ANSWER_TIMEOUT seconds, advance early
+          if (noAnswerTimeRef.current >= NO_ANSWER_TIMEOUT) {
+            console.log('[Timer] ⏰ No one answered for', NO_ANSWER_TIMEOUT, 'seconds - advancing early!');
+            noAnswerTriggeredRef.current = true;
+            if (isHostRef.current && prev.phase === 'question') {
+              advanceToReveal('no answers for ' + NO_ANSWER_TIMEOUT + ' seconds');
+            }
+            return { ...prev, timeRemaining: 0 };
+          }
+        } else if (anyAnswered) {
+          // Reset counter if someone answered
+          noAnswerTimeRef.current = 0;
+        }
+        
         return { ...prev, timeRemaining: prev.timeRemaining - 1 };
       });
     }, 1000);
@@ -1159,10 +1194,17 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // and the host's answer causes immediate advancement.
 
   // Auto-advance from reveal after a fixed duration (host only)
+  // Use longer duration if no one answered (shows correct answer for 10 seconds)
   useEffect(() => {
     if (!isHost) return;
     if (!state.sessionId) return;
     if (state.phase !== 'reveal') return;
+
+    // Check if any player answered - if not, use longer reveal duration
+    const anyPlayerAnswered = state.players.some(p => p.hasAnswered);
+    const revealDuration = anyPlayerAnswered ? REVEAL_DURATION_MS : REVEAL_DURATION_LONG_MS;
+    
+    console.log('[Reveal] ⏱️ Using reveal duration:', revealDuration, 'ms, anyAnswered:', anyPlayerAnswered);
 
     const t = setTimeout(async () => {
       const nextIndex = state.currentQuestionIndex + 1;
@@ -1225,7 +1267,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         questionStartedAtRef.current = Date.now();
         console.log('[Next Question] ⏱️ Timing ref set AFTER DB transition:', questionStartedAtRef.current);
       }
-    }, REVEAL_DURATION_MS);
+    }, revealDuration);
 
     return () => clearTimeout(t);
   }, [isHost, state.sessionId, state.phase, state.currentQuestionIndex, state.questions.length, state.players, myPlayerId, myScore, startNextRoundFromQueueIfAny, prepareForPlaying]);

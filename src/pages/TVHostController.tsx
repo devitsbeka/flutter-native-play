@@ -600,13 +600,7 @@ const TVHostController: React.FC = () => {
         userId={user?.id || ''}
         roomId={roomId}
         onStartGame={handleStartGame}
-        onBack={() => {
-          if (window.history.state && window.history.state.idx > 0) {
-            window.history.back();
-          } else {
-            navigate('/team', { replace: true });
-          }
-        }}
+        onBack={() => navigate('/team', { replace: true })}
       />
     );
   }
