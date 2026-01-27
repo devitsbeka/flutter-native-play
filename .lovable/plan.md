@@ -1,78 +1,110 @@
 
 
-# Fix Trivia Card Button Styling & Question Count
+# Fix Broken Avatar in Room Cards
 
-## Issues Identified
+## Problem Identified
 
-### Issue 1: Button Styling Inconsistency
-The three buttons on trivia cards have inconsistent styling:
-- **"ითამაშე მეგობრებთან"** (purple): Uses `ChunkyButton` with `rounded-xl` (from sm size)
-- **"გამოაქვეყნე"** (green outline): Uses plain `<button>` with `rounded-full` (more rounded)
-- **"ითამაშე"** (purple outline): Uses `ChunkyButton` with `rounded-xl`
+The room card for "თავგადასავლის მორბენალი" shows a broken avatar because:
 
-The green button uses `rounded-full` while others use `rounded-xl`, causing visual mismatch.
+1. **Database contains an invalid URL**: The `tv_players` table has an entry with `avatar_url: /assets/bot-avatar-4-uiIFWm1y.png` - this is a Vite build-time asset hash that only works locally and breaks when accessed elsewhere.
 
-### Issue 2: Wrong Question Count
-Database query confirms the bug:
+2. **No error handling in avatar rendering**: The `MyRoomsSection.tsx` component uses raw `<img>` tags without any `onError` handling, so when the URL fails to load, it shows the browser's broken image icon.
 
-| title | question_count (displayed) | actual_count (in JSONB) |
-|-------|---------------------------|-------------------------|
-| ტიკტოკი | 5 | 2 |
-
-The `question_count` column is stale (not updated when questions are edited). The card displays this incorrect value instead of the actual number of questions in the JSONB array.
+| Player | Avatar URL | Status |
+|--------|-----------|--------|
+| TriviaMaste | Valid Supabase URL | Works |
+| Test | `/assets/bot-avatar-4-uiIFWm1y.png` | **Broken** (Vite hash path) |
 
 ---
 
 ## Solution
 
-### 1. Standardize Button Styling (MyTriviaTab.tsx)
+### 1. Fix Avatar Rendering in MyRoomsSection.tsx (Primary Fix)
 
-Change the green "გამოაქვეყნე" button from `rounded-full` to `rounded-xl` to match the ChunkyButtons.
+Replace raw `<img>` tags with proper error handling that falls back to initials when images fail to load.
 
-**In `PersonalTriviaCard` (line ~535):** The primary button already uses ChunkyButton - no changes needed.
+**Locations to fix:**
+- Lines 366-382 (horizontal card avatars)
+- Lines 708-731 (grid card avatars)
 
-**In `StandaloneQuizCard` (lines 647-669):** Change the green button from:
+**Before:**
 ```tsx
-className={`flex-1 h-10 ... rounded-full ...`}
-```
-To:
-```tsx
-className={`flex-1 h-10 ... rounded-xl ...`}
-```
-
-**In `CollectionCard` (lines 306-330):** Same fix for the collection's green button.
-
-### 2. Fix Question Count Display (MyTriviaTab.tsx)
-
-Instead of displaying `post.question_count`, calculate the actual count from the JSONB questions array.
-
-**Change in `PersonalTriviaCard` (line 490):**
-```tsx
-// Before
-<span>{post.question_count} კითხვა</span>
-
-// After - use actual questions array length
-<span>{(Array.isArray(post.questions) ? post.questions.length : post.question_count) || 0} კითხვა</span>
+{p.avatar_url ? (
+  <img 
+    src={p.avatar_url} 
+    alt={p.nickname}
+    className="w-full h-full object-cover"
+  />
+) : (
+  <div>...</div>
+)}
 ```
 
-**Same change in `StandaloneQuizCard` (line 603).**
+**After - add error state and fallback:**
+```tsx
+// Use SafeAvatarImage component or add onError handler
+<SafeAvatarImage
+  avatarUrl={p.avatar_url}
+  fallback={p.nickname}
+  className="w-full h-full object-cover"
+  containerClassName="w-full h-full"
+/>
+```
+
+Or inline with `onError`:
+```tsx
+<img 
+  src={resolveAvatarUrl(p.avatar_url) || undefined}
+  alt={p.nickname}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.currentTarget.style.display = 'none';
+    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+  }}
+/>
+<div className="hidden w-full h-full bg-gradient-to-br from-white/40 to-white/20 flex items-center justify-center text-white text-xs font-bold">
+  {p.nickname?.charAt(0).toUpperCase() || "?"}
+</div>
+```
+
+### 2. Enhance resolveAvatarUrl to Handle Vite Hashed Paths (Secondary Fix)
+
+Update `src/utils/avatarUtils.ts` to detect and reject Vite-hashed asset paths like `/assets/xxx-hash.png` that can't be resolved.
+
+**Add detection for invalid paths:**
+```tsx
+// Detect Vite build-time hashed asset paths (e.g., /assets/bot-avatar-4-uiIFWm1y.png)
+// These paths are only valid during the build that created them
+const VITE_HASHED_ASSET_PATTERN = /^\/assets\/.*-[a-zA-Z0-9]{8}\.(png|jpg|jpeg|webp|gif|svg)$/;
+
+export function resolveAvatarUrl(avatarUrl: string | null | undefined): string | undefined {
+  if (!avatarUrl) return undefined;
+  
+  // Reject Vite-hashed asset paths - they won't work
+  if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
+    console.warn('Invalid Vite-hashed avatar path:', avatarUrl);
+    return undefined;
+  }
+  
+  // ... rest of existing logic
+}
+```
 
 ---
 
-## Technical Changes Summary
+## Files to Change
 
-| File | Location | Change |
-|------|----------|--------|
-| `src/components/social/MyTriviaTab.tsx` | PersonalTriviaCard, line ~490 | Use actual questions array length instead of question_count |
-| `src/components/social/MyTriviaTab.tsx` | StandaloneQuizCard, line ~603 | Use actual questions array length instead of question_count |
-| `src/components/social/MyTriviaTab.tsx` | StandaloneQuizCard, line ~650 | Change green button from `rounded-full` to `rounded-xl` |
-| `src/components/social/MyTriviaTab.tsx` | CollectionCard, line ~310 | Change green button from `rounded-full` to `rounded-xl` |
+| File | Change |
+|------|--------|
+| `src/components/team/MyRoomsSection.tsx` | Replace raw `<img>` tags with `SafeAvatarImage` or add `onError` fallback (2 locations) |
+| `src/utils/avatarUtils.ts` | Add detection for Vite-hashed asset paths to return undefined |
 
 ---
 
-## Result
+## Outcome
 
 After these changes:
-- All three buttons will have consistent `rounded-xl` edges and `h-10` heights
-- The question count badge will show the actual number of questions (2 for "ტიკტოკი") from the JSONB array, not the stale `question_count` column value
+- Broken avatar images will display the user's initial instead of the broken image icon
+- Invalid Vite-hashed paths will be detected and fallback to initials immediately
+- Both horizontal and grid card layouts will have consistent error handling
 
