@@ -141,21 +141,22 @@ export default function TriviaLobby() {
         {trivia.cover_image ? (
           <>
             <img src={trivia.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-background" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-background pointer-events-none" />
           </>
         ) : (
           <>
             <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background pointer-events-none" />
           </>
         )}
 
         {/* Back Button */}
         <button
           onClick={handleBack}
-          className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+          className="absolute top-4 left-4 z-20 w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors safe-top-offset"
+          style={{ marginTop: 'max(0px, env(safe-area-inset-top))' }}
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
         {/* Creator Avatar - Right Side */}
