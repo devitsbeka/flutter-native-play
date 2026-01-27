@@ -100,8 +100,7 @@ const REVEAL_DURATION_MS = 1400;
 // Extended reveal duration when no one answered (shows correct answer longer)
 const REVEAL_DURATION_LONG_MS = 10000;
 
-// If no one answers for this many seconds, advance early to reveal
-const NO_ANSWER_TIMEOUT = 5;
+// Note: Questions always run full QUESTION_TIME (15s). Extended reveal is used when no one answered.
 
 // Map database status values to TVPhase for consistency
 export const mapDbStatusToPhase = (status: string): TVPhase => {
@@ -1090,22 +1089,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   // ============================================================================
-  // TRIGGER 1: Timer countdown (15 seconds) with NO-ANSWER early advance
+  // TRIGGER 1: Timer countdown (15 seconds)
   // ============================================================================
-  // Timer counts down from QUESTION_TIME. If no one answers for NO_ANSWER_TIMEOUT
-  // seconds, advance early. Only host triggers advancement.
+  // Timer counts down from QUESTION_TIME. Questions always run full duration.
+  // Only host triggers advancement when timer expires.
   // ============================================================================
-  const noAnswerTimeRef = useRef<number>(0);
-  const noAnswerTriggeredRef = useRef<boolean>(false);
-  
   useEffect(() => {
     // Only run during question phase
     if (state.phase !== 'question') return;
     if (!state.sessionId) return;
-    
-    // Reset no-answer tracking at start of each question
-    noAnswerTimeRef.current = 0;
-    noAnswerTriggeredRef.current = false;
     
     // Start the timer countdown
     tvLogTimer('start', state.timeRemaining);
@@ -1122,27 +1114,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return { ...prev, timeRemaining: 0 };
         }
         
-        // Check if any player has answered
-        const anyAnswered = prev.players.some(p => p.hasAnswered);
-        
-        // Track no-answer time
-        if (!anyAnswered && !noAnswerTriggeredRef.current) {
-          noAnswerTimeRef.current += 1;
-          
-          // If no one answered for NO_ANSWER_TIMEOUT seconds, advance early
-          if (noAnswerTimeRef.current >= NO_ANSWER_TIMEOUT) {
-            console.log('[Timer] ⏰ No one answered for', NO_ANSWER_TIMEOUT, 'seconds - advancing early!');
-            noAnswerTriggeredRef.current = true;
-            if (isHostRef.current && prev.phase === 'question') {
-              advanceToReveal('no answers for ' + NO_ANSWER_TIMEOUT + ' seconds');
-            }
-            return { ...prev, timeRemaining: 0 };
-          }
-        } else if (anyAnswered) {
-          // Reset counter if someone answered
-          noAnswerTimeRef.current = 0;
-        }
-        
+        // Simply count down - no early timeout logic
         return { ...prev, timeRemaining: prev.timeRemaining - 1 };
       });
     }, 1000);
