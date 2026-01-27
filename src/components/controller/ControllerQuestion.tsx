@@ -37,8 +37,7 @@ export const ControllerQuestion: React.FC = () => {
         <div className="text-center">
           <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
           <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
-          <p className="text-purple-300 mb-2">შენ შემოგთავაზე ეს კატეგორია,</p>
-          <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები.</p>
+          <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები</p>
           <div className="bg-white/10 rounded-xl p-4 mb-6">
             <p className="text-white font-semibold text-center text-sm">
               კითხვა {currentQuestionIndex + 1}/{questions.length}
