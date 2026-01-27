@@ -1,113 +1,124 @@
 
 
-# Fix Game Screen Layout Issues
+# Fix Premature Question Advance After 5 Seconds
 
-## Problems Identified
+## Problem Analysis
 
-Comparing Screen 1 (preview) vs Screen 2 (actual mobile):
+When the game begins, questions are changing after ~5 seconds instead of waiting the full 15 seconds (or until all active players answer). This happens because:
 
-1. **Missing question count dots** - The progress dots are being rendered but appear to be getting hidden or cropped on some devices
-2. **Cropped button bottom edges** - The answer buttons' 4px depth/shadow is being cut off because the container has `overflow-hidden`
-3. **Insufficient gaps between elements** - Negative margins (`-mt-5`) pull elements too close together
+1. **Time calculation issue**: The subscription handler recalculates `timeRemaining` from the server's `question_start_time` on every update while in 'playing' status
+2. **Latency impact**: If there's network latency between when the server sets `question_start_time` and when the client receives the update, the calculated `timeRemaining` is lower than expected
+3. **Overwriting local timer**: Once the local countdown timer is running, subscription updates can override it with a stale/calculated value
+
+### Current Flow (Problematic)
+
+```text
+1. Server sets question_start_time = T0
+2. Client receives update at T0 + 3 seconds (network delay)
+3. Client calculates: elapsed = 3s, timeRemaining = 15 - 3 = 12s
+4. Later subscription fires again at T0 + 8 seconds
+5. Client recalculates: elapsed = 8s, timeRemaining = 15 - 8 = 7s (jumps backward!)
+6. Timer expires prematurely
+```
+
+---
+
+## Solution
+
+Only set `timeRemaining` from server time on the **initial phase transition** to 'playing', then let the local timer run independently without further overrides.
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/game/QuizGameScreenProd.tsx`
+### File: `src/contexts/TVGameContext.tsx`
 
-#### 1. Fix Progress Dots Visibility (Lines 393-400)
+#### 1. Track if timer has been initialized for current question (around line 215)
 
-The dots use white/semi-transparent colors which may be hard to see. Also need better spacing:
+Add a ref to track whether the timer has been initialized for the current question:
 
-**Current:**
 ```tsx
-<div className="flex justify-center py-3 [@media(max-height:700px)]:py-1 flex-shrink-0">
+// Add after line 218 (checkInProgressRef declaration)
+const timerInitializedForQuestionRef = useRef<number | null>(null);
 ```
 
-**Change to:**
+#### 2. Only calculate timeRemaining on initial transition (lines 1701-1708)
+
+Modify the subscription handler to only set `timeRemaining` from server time when first entering 'playing' phase for a new question:
+
+**Current (lines 1701-1708):**
 ```tsx
-<div className="flex justify-center py-4 [@media(max-height:700px)]:py-2 flex-shrink-0">
+setState(prev => {
+  // Calculate time remaining if question just started
+  let timeRemaining = prev.timeRemaining;
+  if (newData.status === 'playing' && newData.question_start_time) {
+    const startTime = new Date(newData.question_start_time).getTime();
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+  }
 ```
 
-#### 2. Fix Answer Buttons Container Overflow (Lines 431)
-
-The `overflow-hidden` class is cropping the button shadows:
-
-**Current:**
+**New:**
 ```tsx
-<div className="flex-1 px-4 -mt-5 flex flex-col gap-2 [@media(max-height:700px)]:gap-1.5 overflow-hidden min-h-0">
+setState(prev => {
+  // Calculate time remaining ONLY on initial transition to playing for this question
+  // Once timer is running locally, don't override it with server calculations
+  let timeRemaining = prev.timeRemaining;
+  const currentQuestionIdx = newData.current_question_index ?? prev.currentQuestionIndex;
+  
+  if (newData.status === 'playing' && newData.question_start_time) {
+    // Only recalculate if this is a NEW question we haven't initialized timer for
+    if (timerInitializedForQuestionRef.current !== currentQuestionIdx) {
+      const startTime = new Date(newData.question_start_time).getTime();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+      timerInitializedForQuestionRef.current = currentQuestionIdx;
+      console.log('[Timer] Initialized for question', currentQuestionIdx, 'with', timeRemaining, 'seconds remaining');
+    }
+    // If timer already initialized for this question, keep prev.timeRemaining (local timer manages it)
+  } else if (newData.status === 'countdown') {
+    // Reset timer tracker for new countdown
+    timerInitializedForQuestionRef.current = null;
+    timeRemaining = QUESTION_TIME;
+  }
 ```
 
-**Change to:**
+#### 3. Reset timer tracker on question advance (around line 1641-1656)
+
+Reset the timer tracker when a new question is detected:
+
+**Add after line 1644:**
 ```tsx
-<div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-visible min-h-0 pb-2">
+// Reset timer initialization tracker for new question
+timerInitializedForQuestionRef.current = null;
 ```
 
-Changes:
-- `-mt-5` → `mt-0` - Remove negative margin that overlaps elements
-- `gap-2` → `gap-3` - Increase gap between answer buttons
-- `overflow-hidden` → `overflow-visible` - Allow button shadows to display fully
-- Add `pb-2` - Bottom padding to prevent last button shadow from cropping
+#### 4. Reset timer tracker on game reset (around line 2720, 2777, 2815)
 
-#### 3. Fix True/False Button Container (Lines 404)
+Reset the timer tracker when the game is reset in `leaveSession`, `resetGame`, or initial state:
 
-Same issue with true/false questions:
-
-**Current:**
+**Add after each `timeRemaining: QUESTION_TIME` line:**
 ```tsx
-<div className="w-full px-4 -mt-5 flex gap-2">
+// Also reset: timerInitializedForQuestionRef.current = null;
 ```
-
-**Change to:**
-```tsx
-<div className="w-full px-4 mt-0 flex gap-3 pb-2">
-```
-
-#### 4. Adjust Question Card Spacing (Line 362)
-
-Balance spacing after removing negative margins:
-
-**Current:**
-```tsx
-<div className="px-4 flex-shrink-0 mt-5 mb-2 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
-```
-
-**Change to:**
-```tsx
-<div className="px-4 flex-shrink-0 mt-5 mb-0 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-0 relative">
-```
-
----
-
-### File: `src/components/ui/quiz-answer-button.tsx`
-
-#### 5. Ensure Button Has Space for Shadow (Line 116)
-
-The button needs to ensure its min-height accounts for the 4px depth:
-
-**Current:**
-```tsx
-className="relative flex items-center h-full min-h-[68px] [@media(max-height:700px)]:min-h-[60px] py-2.5 [@media(max-height:700px)]:py-2 rounded-2xl transition-transform duration-100"
-```
-
-Keep as-is but the container fix above will allow it to display properly.
 
 ---
 
 ## Summary of Changes
 
-| Issue | Before | After |
-|-------|--------|-------|
-| Answer buttons cropped | `overflow-hidden`, `-mt-5` | `overflow-visible`, `mt-0`, `pb-2` |
-| Button gaps too tight | `gap-2` | `gap-3` |
-| Progress dots cramped | `py-3` | `py-4` |
-| Question card overlap | `mb-2` + answers `-mt-5` | `mb-0` + answers `mt-0` |
+| Location | Change |
+|----------|--------|
+| Line ~215 | Add `timerInitializedForQuestionRef` to track timer initialization |
+| Lines 1701-1708 | Only calculate `timeRemaining` from server on first transition to 'playing' |
+| Line ~1644 | Reset timer tracker on new question detection |
+| Lines 2720, 2777, 2815 | Reset timer tracker on game reset |
+
+---
 
 ## Expected Result
 
-- Progress dots clearly visible below question card
-- Answer button shadows/depth fully visible (no cropping)
-- Proper gaps between all elements
-- Consistent appearance between preview and mobile device
+- Timer starts at 15 seconds (or calculated remaining) only on initial question start
+- Subsequent subscription updates during 'playing' phase don't override local timer
+- Questions wait the full countdown time before advancing
+- If all active players answer before time expires, auto-advance still works correctly
 
