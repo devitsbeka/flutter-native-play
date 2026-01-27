@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Medal, LogOut, Library, Vote } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import confetti from 'canvas-confetti';
+
 import crown2 from '@/assets/icons/crown-2.png';
 import { AppIcon } from '@/components/shared/AppIcon';
 import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
@@ -39,49 +39,13 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
   onDirectSelection,
   onStartPoll,
 }) => {
-  const [showConfetti, setShowConfetti] = useState(false);
+  
 
   // Sort players by score
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
   const currentPlayerRank = sortedPlayers.findIndex(p => p.id === currentPlayerId) + 1;
   const currentPlayer = sortedPlayers.find(p => p.id === currentPlayerId);
 
-  useEffect(() => {
-    // Trigger confetti for top 3
-    if (currentPlayerRank <= 3 && currentPlayerRank > 0) {
-      setShowConfetti(true);
-      const duration = 3000;
-      const end = Date.now() + duration;
-
-      const colors = currentPlayerRank === 1 
-        ? ['#FFD700', '#FFA500', '#FFEC8B'] 
-        : currentPlayerRank === 2 
-        ? ['#C0C0C0', '#E8E8E8', '#A8A8A8']
-        : ['#CD7F32', '#D2691E', '#8B4513'];
-
-      const frame = () => {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors,
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors,
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      frame();
-    }
-  }, [currentPlayerRank]);
 
   const getMedalIcon = (rank: number) => {
     switch (rank) {
