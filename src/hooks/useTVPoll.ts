@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { tvLog, tvLogError } from "@/utils/tvDebug";
+import { resolveCategoryUuid } from "@/services/questionService";
 
 export interface PollSuggestion {
   id: string;
@@ -680,15 +681,25 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     // Fetch questions based on source type
     if (firstSuggestion.source_type === 'category' && firstSuggestion.category_id) {
-      const { data: questionsData } = await supabase
-        .from('questions')
-        .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
-        .eq('category_id', firstSuggestion.category_id)
-        .eq('is_active', true)
-        .limit(10);
+      // CRITICAL FIX: Resolve category slug to UUID before querying questions
+      const categoryUuid = await resolveCategoryUuid(firstSuggestion.category_id);
+      
+      if (!categoryUuid) {
+        console.error('[finalizePollAndStartGame] Failed to resolve category UUID for:', firstSuggestion.category_id);
+        // Fall through to fallback logic below - questions will be null
+      } else {
+        const { data: questionsData } = await supabase
+          .from('questions')
+          .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug')
+          .eq('category_id', categoryUuid)
+          .eq('is_active', true)
+          .eq('in_production', true)
+          .eq('language', 'ka')
+          .limit(10);
 
-      if (questionsData && questionsData.length > 0) {
-        questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10);
+        if (questionsData && questionsData.length > 0) {
+          questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10);
+        }
       }
     } else if (firstSuggestion.source_type === 'trivia' && firstSuggestion.user_trivia_id) {
       // Fetch from user_quiz_posts table (questions stored as JSON)
