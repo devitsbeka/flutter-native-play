@@ -45,7 +45,7 @@ const TVDisplayContent: React.FC = () => {
       tvLog('TVDisplay initializing', { code });
 
       // All valid statuses that a TV can connect to
-      const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'playing', 'reveal', 'completed', 'poll-suggest', 'poll-voting', 'poll-results', 'round-intro', 'results'];
+      const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'playing', 'reveal', 'completed', 'poll-suggest', 'poll-voting', 'poll-results', 'round-intro', 'results', 'category-select'];
 
       // If code is provided in URL, this is a TV display joining an existing session
       if (code) {

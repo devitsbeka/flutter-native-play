@@ -1349,10 +1349,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let session: any = null;
       let error: any = null;
 
-      // Include all active session statuses for rejoining (lobby, poll phases, round-intro, etc.)
+      // Include all active session statuses for rejoining (lobby, poll phases, round-intro, category-select, etc.)
       const activeStatuses = [
         'waiting', 'paired', 'lobby', 'countdown', 'playing', 'reveal', 'completed',
-        'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'
+        'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'
       ];
 
       if (isSessionIdJoin) {
