@@ -774,9 +774,8 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         total_rounds: topN,
         poll_start_time: null,
         active_player_count: expectedCount,
-        category_id: firstSuggestion.category_id,
         category_name: firstSuggestion.category_name,
-        user_trivia_id: firstSuggestion.user_trivia_id,
+        category_icon: firstSuggestion.icon_slug || null,
         // CRITICAL FIX: Set suggester fields so only they see Observer UI
         current_round_suggester_id: firstSuggestion.user_id || null,
         current_round_suggester_nickname: firstSuggestion.nickname || null,
