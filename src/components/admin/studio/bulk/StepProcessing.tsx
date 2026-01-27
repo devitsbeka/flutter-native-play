@@ -5,15 +5,13 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { ResolvedTopic } from './StepTopicValidation';
-import { QuestionType } from '@/hooks/useQuestionStudio';
+import { ThemeType, getQuestionText } from './PresetCategories';
 
 interface ParsedItem {
-  slug: string;
+  subject: string;
   title: string;
   content: string;
   imageUrl?: string;
-  audioUrl?: string;
   status: 'pending' | 'processing' | 'success' | 'error';
   error?: string;
 }
@@ -30,8 +28,9 @@ export interface GeneratedQuestion {
 }
 
 interface StepProcessingProps {
-  topics: ResolvedTopic[];
-  questionType: QuestionType;
+  subjects: string[];
+  questionType: 'text' | 'image';
+  themeType: ThemeType;
   onBack: () => void;
   onComplete: (questions: GeneratedQuestion[]) => void;
 }
@@ -39,7 +38,7 @@ interface StepProcessingProps {
 const BATCH_SIZE = 3;
 const DELAY_BETWEEN_BATCHES = 1000;
 
-export function StepProcessing({ topics, questionType, onBack, onComplete }: StepProcessingProps) {
+export function StepProcessing({ subjects, questionType, themeType, onBack, onComplete }: StepProcessingProps) {
   const [items, setItems] = useState<ParsedItem[]>([]);
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState<'parsing' | 'generating' | 'done' | 'error'>('parsing');
@@ -57,21 +56,48 @@ export function StepProcessing({ topics, questionType, onBack, onComplete }: Ste
     abortRef.current = false;
     
     // Initialize items
-    const initialItems: ParsedItem[] = topics.map(t => ({
-      slug: t.slug!,
-      title: t.title || t.keyword,
+    const initialItems: ParsedItem[] = subjects.map(subject => ({
+      subject,
+      title: subject,
       content: '',
       status: 'pending'
     }));
     setItems(initialItems);
 
-    // Process in batches
+    // First, resolve Wikipedia slugs
     const results: ParsedItem[] = [...initialItems];
     
-    for (let i = 0; i < topics.length; i += BATCH_SIZE) {
+    // Step 1: Resolve topics to Wikipedia URLs
+    setProgress(5);
+    let resolvedTopics: { subject: string; wikiUrl: string; slug: string }[] = [];
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('bulk-resolve-topics', {
+        body: { keywords: subjects, language: 'en' }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.topics) {
+        resolvedTopics = data.topics
+          .filter((t: any) => t.valid)
+          .map((t: any) => ({
+            subject: t.keyword,
+            wikiUrl: t.wikiUrl,
+            slug: t.slug
+          }));
+      }
+    } catch (err: any) {
+      console.error('Topic resolution error:', err);
+    }
+
+    setProgress(10);
+
+    // Step 2: Parse Wikipedia pages in batches
+    for (let i = 0; i < subjects.length; i += BATCH_SIZE) {
       if (abortRef.current) return;
       
-      const batch = topics.slice(i, i + BATCH_SIZE);
+      const batch = subjects.slice(i, i + BATCH_SIZE);
       
       // Mark as processing
       batch.forEach((_, idx) => {
@@ -83,42 +109,77 @@ export function StepProcessing({ topics, questionType, onBack, onComplete }: Ste
       setItems([...results]);
 
       // Parse each in batch
-      const batchPromises = batch.map(async (topic, batchIdx) => {
+      const batchPromises = batch.map(async (subject, batchIdx) => {
         const itemIndex = i + batchIdx;
-        try {
-          const { data, error } = await supabase.functions.invoke('parse-wikipedia-media', {
-            body: {
-              url: topic.wikiUrl,
-              questionType
-            }
-          });
-
-          if (error) throw error;
+        const resolvedTopic = resolvedTopics.find(t => t.subject === subject);
+        
+        if (!resolvedTopic) {
+          // Try direct Wikipedia URL construction
+          const slug = subject.replace(/ /g, '_');
+          const wikiUrl = `https://en.wikipedia.org/wiki/${slug}`;
           
-          if (data?.success) {
-            results[itemIndex] = {
-              ...results[itemIndex],
-              content: data.content || '',
-              imageUrl: data.mediaUrl,
-              audioUrl: data.mediaType === 'audio' ? data.mediaUrl : undefined,
-              status: 'success'
-            };
-          } else {
+          try {
+            const { data, error } = await supabase.functions.invoke('parse-wikipedia-media', {
+              body: {
+                url: wikiUrl,
+                questionType
+              }
+            });
+
+            if (error) throw error;
+            
+            if (data?.success) {
+              results[itemIndex] = {
+                ...results[itemIndex],
+                title: data.title || subject,
+                content: data.content || '',
+                imageUrl: questionType === 'image' ? data.mediaUrl : undefined,
+                status: 'success'
+              };
+            } else {
+              results[itemIndex].status = 'error';
+              results[itemIndex].error = data?.error || 'გვერდი ვერ მოიძებნა';
+            }
+          } catch (err: any) {
             results[itemIndex].status = 'error';
-            results[itemIndex].error = data?.error || 'Unknown error';
+            results[itemIndex].error = err.message || 'Parse failed';
           }
-        } catch (err: any) {
-          results[itemIndex].status = 'error';
-          results[itemIndex].error = err.message || 'Parse failed';
+        } else {
+          try {
+            const { data, error } = await supabase.functions.invoke('parse-wikipedia-media', {
+              body: {
+                url: resolvedTopic.wikiUrl,
+                questionType
+              }
+            });
+
+            if (error) throw error;
+            
+            if (data?.success) {
+              results[itemIndex] = {
+                ...results[itemIndex],
+                title: data.title || subject,
+                content: data.content || '',
+                imageUrl: questionType === 'image' ? data.mediaUrl : undefined,
+                status: 'success'
+              };
+            } else {
+              results[itemIndex].status = 'error';
+              results[itemIndex].error = data?.error || 'Unknown error';
+            }
+          } catch (err: any) {
+            results[itemIndex].status = 'error';
+            results[itemIndex].error = err.message || 'Parse failed';
+          }
         }
       });
 
       await Promise.all(batchPromises);
       setItems([...results]);
-      setProgress(Math.round(((i + BATCH_SIZE) / topics.length) * 50));
+      setProgress(10 + Math.round(((i + BATCH_SIZE) / subjects.length) * 50));
 
       // Rate limit delay
-      if (i + BATCH_SIZE < topics.length) {
+      if (i + BATCH_SIZE < subjects.length) {
         await new Promise(r => setTimeout(r, DELAY_BETWEEN_BATCHES));
       }
     }
@@ -126,7 +187,7 @@ export function StepProcessing({ topics, questionType, onBack, onComplete }: Ste
     // Generate questions
     if (abortRef.current) return;
     setStage('generating');
-    setProgress(60);
+    setProgress(65);
 
     const successfulItems = results.filter(r => r.status === 'success');
     
@@ -142,10 +203,10 @@ export function StepProcessing({ topics, questionType, onBack, onComplete }: Ste
           items: successfulItems.map(item => ({
             title: item.title,
             content: item.content.slice(0, 2000), // Limit content size
-            imageUrl: item.imageUrl,
-            audioUrl: item.audioUrl
+            imageUrl: item.imageUrl
           })),
           questionType,
+          themeType,
           language: 'ka'
         }
       });
