@@ -9,6 +9,7 @@ import { TVResultsScreenV2 } from '@/components/tv/TVResultsScreenV2';
 import { TVIdleScreen } from '@/components/tv/TVIdleScreen';
 import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
 import { TVPollScreen } from '@/components/tv/TVPollScreen';
+import { TVPollResultsScreen } from '@/components/tv/TVPollResultsScreen';
 import { Loader2 } from 'lucide-react';
 
 const CODE_REFRESH_INTERVAL = 5 * 60 * 1000; // Refresh code every 5 minutes if no players
@@ -95,6 +96,8 @@ const TVLobbyContent: React.FC = () => {
     case 'poll-suggest':
     case 'poll-voting':
       return <TVPollScreen />;
+    case 'poll-results':
+      return <TVPollResultsScreen />;
     case 'countdown':
       return <TVCountdownScreenV2 />;
     case 'question':

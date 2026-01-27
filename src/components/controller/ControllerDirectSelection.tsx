@@ -184,7 +184,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   };
 
   const handleStartGame = () => {
-    if (!hasQueue || queue.length === 0) {
+    // Simplified check - only verify queue has items, don't block on hasQueue loading state
+    if (queue.length === 0) {
       toast.error('აირჩიე მინიმუმ 1 კატეგორია');
       return;
     }
