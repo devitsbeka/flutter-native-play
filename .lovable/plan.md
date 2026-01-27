@@ -1,194 +1,94 @@
 
+# Fix Image Display in Game: Full Image + No Difficulty Badge
 
-# Fix AI Suggestions: Persistent Refresh with Duplicate Prevention
+## Issues Found
 
-## Problems Identified
+From the screenshots, I can see two problems with image-based trivia questions during gameplay:
 
-1. **Refresh returns same suggestions** - The AI doesn't know what was already shown, so clicking refresh can return duplicate suggestions
-2. **Previously selected topics reappear** - When refreshing, topics you already added as subjects show up again in recommendations
+1. **Image is cropped** - Abraham Lincoln's head is cut off at the top
+2. **"საშუალო" (Medium) difficulty badge appears** - This badge overlays the image in the top-right corner, covering content
+
+## Root Cause Analysis
+
+### Issue 1: Image Cropping
+
+In `src/components/ui/quiz-question-card.tsx`, line 100:
+```tsx
+<div className="w-full h-48 overflow-hidden">
+  <img className="w-full h-full object-cover object-top" />
+</div>
+```
+
+The fixed `h-48` (192px) height with `object-cover` forces cropping on portrait images. Even with `object-top`, taller images get clipped.
+
+### Issue 2: Difficulty Badge on Image Questions
+
+In `src/components/game/QuizGameScreenProd.tsx`, lines 384-385:
+```tsx
+difficultyLabel={!opponent ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
+difficultyColor={!opponent ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
+```
+
+The condition only checks `!opponent` (solo mode) but doesn't exclude image/video/audio questions. This causes the badge to render on top of media content.
 
 ## Solution
 
-Track ALL topics that have been shown or selected during the session, and pass them to the edge function to exclude when generating new suggestions.
+### File 1: `src/components/ui/quiz-question-card.tsx`
 
-## Technical Changes
+Change the image container to use `object-contain` instead of `object-cover` to show the full image without cropping:
 
-### File 1: `src/components/admin/studio/bulk/StepCategorySelect.tsx`
-
-Add state to track all used/shown topics and pass them to the edge function:
-
-```typescript
-// Add new state to track all topics ever shown or selected
-const [usedTopics, setUsedTopics] = useState<Set<string>>(new Set());
-
-// Update fetchSuggestions to accept exclusion list
-const fetchSuggestions = async (excludeTopics: string[] = []) => {
-  if (!selectedCategory) {
-    setAllSuggestions([]);
-    return;
-  }
-  
-  setIsLoadingSuggestions(true);
-  try {
-    const { data, error } = await supabase.functions.invoke('generate-topic-suggestions', {
-      body: { 
-        categoryName: selectedCategory.name,
-        excludeTopics: excludeTopics  // Pass topics to exclude
-      }
-    });
-    
-    if (error) throw error;
-    
-    const newSuggestions = data?.suggestions || [];
-    
-    // Add new suggestions to used topics set
-    setUsedTopics(prev => {
-      const updated = new Set(prev);
-      newSuggestions.forEach((s: string) => updated.add(s));
-      return updated;
-    });
-    
-    setAllSuggestions(newSuggestions);
-  } catch (err) {
-    console.error('Failed to fetch suggestions:', err);
-    setAllSuggestions([]);
-  } finally {
-    setIsLoadingSuggestions(false);
-  }
-};
-
-// Update refresh to exclude all previously used topics
-const refreshSuggestions = () => {
-  // Combine current subjects with all previously shown suggestions
-  const toExclude = [...subjects, ...Array.from(usedTopics)];
-  fetchSuggestions(toExclude);
-};
-
-// When adding a subject, also add to usedTopics
-const addSubject = (subject: string) => {
-  if (subject.trim() && !subjects.includes(subject.trim())) {
-    onSubjectsChange([...subjects, subject.trim()]);
-    setUsedTopics(prev => new Set(prev).add(subject.trim()));
-  }
-};
-
-// Reset usedTopics when category changes
-useEffect(() => {
-  setUsedTopics(new Set());
-  fetchSuggestions([]);
-}, [selectedCategory?.id]);
+```tsx
+{/* Image for Image Trivia questions */}
+{hasImage && !hasVideo && !hasAudio && (
+  <div className="w-full h-52 overflow-hidden bg-gray-100 flex items-start justify-center">
+    <img 
+      src={imageUrl!} 
+      alt="Question" 
+      className="w-full h-full object-contain object-top"
+      onError={(e) => {
+        e.currentTarget.style.display = 'none';
+      }}
+    />
+  </div>
+)}
 ```
 
-### File 2: `supabase/functions/generate-topic-suggestions/index.ts`
+Key changes:
+- `object-cover` → `object-contain`: Shows full image without cropping
+- `h-48` → `h-52`: Slightly more height for better display
+- Added `bg-gray-100`: Subtle background for letterboxing if needed
+- Added `flex items-start justify-center`: Centers image while aligning to top
 
-Update to accept and use the exclusion list:
+### File 2: `src/components/game/QuizGameScreenProd.tsx`
 
-```typescript
-serve(async (req) => {
-  // ...existing code...
-  
-  try {
-    const { categoryName, excludeTopics = [] } = await req.json();
-    
-    // ...existing category detection code...
-    
-    // Add exclusion instruction to prompt
-    let excludeInstruction = '';
-    if (excludeTopics.length > 0) {
-      excludeInstruction = `\n\nIMPORTANT: Do NOT include any of these already-used topics: ${excludeTopics.join(', ')}. Generate completely different suggestions.`;
-    }
-    
-    const fullPrompt = prompt + excludeInstruction;
-    
-    // Use the fullPrompt in the AI call
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { 
-            role: "system", 
-            content: "You are a trivia question expert. Always return valid JSON arrays with specific, famous names. Never repeat topics from the exclusion list." 
-          },
-          { role: "user", content: fullPrompt }
-        ],
-        temperature: 0.95, // Higher temperature for more variety
-      }),
-    });
-    
-    // ...rest of existing code...
-    
-    // Filter out any excluded topics that might still appear
-    const filteredSuggestions = suggestions.filter(
-      (s: string) => !excludeTopics.some(
-        (e: string) => e.toLowerCase() === s.toLowerCase()
-      )
-    );
-    
-    return new Response(
-      JSON.stringify({ 
-        suggestions: filteredSuggestions.slice(0, 12),
-        categoryType 
-      }),
-      // ...
-    );
-  }
-});
+Update the condition to hide difficulty badge when media is present:
+
+```tsx
+// Lines 384-385: Add media check to hide difficulty badge for image/video/audio questions
+const hasMedia = currentQuestion.imageUrl || currentQuestion.videoUrl || currentQuestion.audioUrl;
+
+// In QuizQuestionCard props:
+difficultyLabel={!opponent && !hasMedia ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
+difficultyColor={!opponent && !hasMedia ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
 ```
 
-## Flow Diagram
+This ensures:
+- Solo mode still shows difficulty badge for text-only questions
+- Image/video/audio questions never show the overlapping badge
 
-```text
-Initial Load:
-┌──────────────────┐     ┌─────────────────────┐
-│ Select Category  │────>│ Fetch 12 suggestions│
-└──────────────────┘     │ usedTopics = []     │
-                         └─────────────────────┘
-                                   │
-                                   v
-                         ┌─────────────────────┐
-                         │ Show 6 suggestions  │
-                         │ Store all 12 in     │
-                         │ usedTopics Set      │
-                         └─────────────────────┘
+## Visual Result
 
-Click Refresh:
-┌──────────────────┐     ┌─────────────────────┐
-│ Click Refresh    │────>│ Fetch NEW 12 topics │
-│                  │     │ excludeTopics =     │
-│                  │     │   usedTopics +      │
-│                  │     │   subjects          │
-└──────────────────┘     └─────────────────────┘
-                                   │
-                                   v
-                         ┌─────────────────────┐
-                         │ Show 6 NEW topics   │
-                         │ Add to usedTopics   │
-                         └─────────────────────┘
+**Before:**
+- Image cropped at top (Lincoln's hair/head cut off)
+- "საშუალო" badge overlaying image corner
 
-Select Topic:
-┌──────────────────┐     ┌─────────────────────┐
-│ Click "+ Messi"  │────>│ Add to subjects     │
-│                  │     │ Add to usedTopics   │
-│                  │     │ Remove from visible │
-└──────────────────┘     └─────────────────────┘
-```
+**After:**
+- Full image displayed with `object-contain` (entire portrait visible)
+- No difficulty badge on media questions
 
-## Expected Behavior After Fix
+## Summary of Changes
 
-1. **First load**: Shows 6 random athletes (e.g., Messi, Ronaldo, Pelé, Jordan, LeBron, Bolt)
-2. **Click "+ Messi"**: Messi moves to subjects, next suggestion from pool appears
-3. **Click Refresh**: Fetches 12 NEW names, excluding all previously shown + selected
-4. **Click Refresh again**: Fetches 12 MORE new names, none repeated from before
-
-## Summary
-
-| File | Changes |
-|------|---------|
-| `StepCategorySelect.tsx` | Add `usedTopics` Set state, pass exclusions to edge function, update refresh logic |
-| `generate-topic-suggestions/index.ts` | Accept `excludeTopics` param, add exclusion instruction to prompt, filter results |
-
+| File | Change |
+|------|--------|
+| `quiz-question-card.tsx` | Change `object-cover` → `object-contain`, increase height to `h-52` |
+| `QuizGameScreenProd.tsx` | Add `!hasMedia` condition to hide difficulty badge for image questions |
