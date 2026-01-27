@@ -36,7 +36,7 @@ export const MOCK_CATEGORY_QUEUE = [
   { id: 'cat-5', position: 4, category_id: 'sports', category_name: 'სპორტი', icon_slug: 'trophy', source_type: 'category' },
 ];
 
-export type TVPhase = 'pairing' | 'lobby' | 'round_intro' | 'countdown' | 'playing' | 'reveal' | 'results' | 'final_results';
+export type TVPhase = 'pairing' | 'lobby' | 'round_intro' | 'countdown' | 'playing' | 'reveal' | 'results' | 'final_results' | 'poll-suggest' | 'poll-voting' | 'poll-results';
 
 export interface MockCategoryQueueItem {
   id: string;

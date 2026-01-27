@@ -52,8 +52,7 @@ export const TVPollScreen: React.FC = () => {
   // Determine grid columns based on suggestion count
   const getGridCols = (count: number) => {
     if (count <= 2) return 'grid-cols-2';
-    if (count <= 4) return 'grid-cols-2 md:grid-cols-4';
-    return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+    return 'grid-cols-2 md:grid-cols-4';
   };
 
   return (
@@ -162,7 +161,7 @@ export const TVPollScreen: React.FC = () => {
             <QRCodeSVG value={joinUrl} size={180} level="H" />
           </div>
           <p className="text-purple-300 text-center text-sm mb-2">
-            დასკანერეთ შესერთებლად
+            დაასკანერეთ სათამაშოდ
           </p>
           <div className="bg-white/10 px-4 py-2 rounded-xl mb-6">
             <span className="text-2xl font-mono font-bold text-white tracking-wider">
