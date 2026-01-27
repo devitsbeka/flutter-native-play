@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { tvLog, tvLogError } from "@/utils/tvDebug";
 import { resolveCategoryUuid } from "@/services/questionService";
+import { shuffleArray } from "@/utils/shuffle";
 
 export interface PollSuggestion {
   id: string;
@@ -674,7 +675,7 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       id: string;
       question_text: string;
       correct_answer: string;
-      incorrect_answers: any;
+      options: string[];
       difficulty: string;
       icon_slug: string | null;
     }> | null = null;
@@ -698,7 +699,14 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
           .limit(10);
 
         if (questionsData && questionsData.length > 0) {
-          questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10);
+          questions = questionsData.sort(() => Math.random() - 0.5).slice(0, 10).map(q => {
+            const incorrectAnswers = Array.isArray(q.incorrect_answers) ? q.incorrect_answers as string[] : [];
+            const allAnswers = shuffleArray([q.correct_answer, ...incorrectAnswers]);
+            return {
+              ...q,
+              options: allAnswers,
+            };
+          });
         }
       }
     } else if (firstSuggestion.source_type === 'trivia' && firstSuggestion.user_trivia_id) {
@@ -710,14 +718,18 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         .single();
 
       if (postData?.questions && Array.isArray(postData.questions)) {
-        questions = (postData.questions as any[]).map((q: any, idx: number) => ({
-          id: `user-q-${idx}`,
-          question_text: q.question_text || q.question || '',
-          correct_answer: q.correct_answer || '',
-          incorrect_answers: q.incorrect_answers || [],
-          difficulty: 'medium',
-          icon_slug: q.icon_slug || null,
-        }));
+        questions = (postData.questions as any[]).map((q: any, idx: number) => {
+          const incorrectAnswers = Array.isArray(q.incorrect_answers) ? q.incorrect_answers : [];
+          const allAnswers = shuffleArray([q.correct_answer || '', ...incorrectAnswers]);
+          return {
+            id: `user-q-${idx}`,
+            question_text: q.question_text || q.question || '',
+            correct_answer: q.correct_answer || '',
+            options: allAnswers,
+            difficulty: 'medium',
+            icon_slug: q.icon_slug || null,
+          };
+        });
       }
     }
 
