@@ -217,6 +217,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Multiple triggers (realtime, interval, timer) can cause race conditions
   const checkInProgressRef = useRef(false);
 
+  // TIMER FIX: Track which question index the timer was initialized for
+  // This prevents subscription updates from overwriting the local countdown timer
+  const timerInitializedForQuestionRef = useRef<number | null>(null);
+
   // ============================================================================
   // CORE FUNCTION: Advance to reveal phase
   // ============================================================================
@@ -1643,6 +1647,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setMyAnswer(null);
             hasAdvancedRef.current = false;  // Reset for new question
             
+            // TIMER FIX: Reset timer initialization tracker for new question
+            timerInitializedForQuestionRef.current = null;
+            
             // CRITICAL FIX: Only set questionStartedAtRef when status is 'playing'
             // During 'countdown', keep it at 0 to disable auto-advance checks
             // This prevents premature auto-advance when host answers first after a poll
@@ -1699,12 +1706,26 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
 
           setState(prev => {
-            // Calculate time remaining if question just started
+            // Calculate time remaining ONLY on initial transition to 'playing' for this question
+            // Once the local timer is running, don't override it with server calculations
+            // This prevents premature question advances due to network latency
             let timeRemaining = prev.timeRemaining;
+            const currentQuestionIdx = newData.current_question_index ?? prev.currentQuestionIndex;
+            
             if (newData.status === 'playing' && newData.question_start_time) {
-              const startTime = new Date(newData.question_start_time).getTime();
-              const elapsed = Math.floor((Date.now() - startTime) / 1000);
-              timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+              // Only recalculate if this is a NEW question we haven't initialized timer for
+              if (timerInitializedForQuestionRef.current !== currentQuestionIdx) {
+                const startTime = new Date(newData.question_start_time).getTime();
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                timeRemaining = Math.max(0, QUESTION_TIME - elapsed);
+                timerInitializedForQuestionRef.current = currentQuestionIdx;
+                console.log('[Timer] Initialized for question', currentQuestionIdx, 'with', timeRemaining, 'seconds remaining');
+              }
+              // If timer already initialized for this question, keep prev.timeRemaining (local timer manages it)
+            } else if (newData.status === 'countdown') {
+              // Reset timer tracker for new countdown phase
+              timerInitializedForQuestionRef.current = null;
+              timeRemaining = QUESTION_TIME;
             }
 
             // Log phase changes
@@ -2714,6 +2735,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
       }
 
+      // Reset timer initialization tracker
+      timerInitializedForQuestionRef.current = null;
+      
       setState(prev => ({
         ...prev,
         phase: 'lobby',
@@ -2768,6 +2792,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         })
         .eq('id', state.sessionId);
 
+      // Reset timer initialization tracker
+      timerInitializedForQuestionRef.current = null;
+      
       // Update local state
       setState(prev => ({
         ...prev,
@@ -2804,6 +2831,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       timerRef.current = null;
     }
 
+    // Reset timer initialization tracker
+    timerInitializedForQuestionRef.current = null;
+    
     setState({
       code: null,
       sessionId: null,
