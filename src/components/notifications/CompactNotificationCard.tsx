@@ -49,10 +49,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isRoomInvite = notification.type === 'room_invite';
   const isGameStarted = notification.type === 'game_started';
   const isGameResult = notification.type === 'game_result';
-  const isTriviaAction = ['trivia_liked', 'trivia_saved', 'trivia_played'].includes(notification.type);
+  const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
+  const isTriviaPlayed = notification.type === 'trivia_played';
 
   const hasDualActions = (isFriendRequest || isGameInvite) && isUnread;
-  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaAction) && !hasDualActions;
+  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved || isTriviaPlayed) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
 
@@ -86,12 +87,12 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   };
 
   const getActionButtonLabel = () => {
-    if (isRoomInvite || isGameStarted || isTriviaAction) return 'ითამაშე';
-    if (isGameResult) return 'ნახვა';
+    if (isRoomInvite || isGameStarted || isTriviaPlayed) return 'ითამაშე';
+    if (isGameResult || isTriviaLikedOrSaved) return 'ნახვა';
     return 'გახსნა';
   };
 
-  const isPlayButton = isRoomInvite || isGameStarted || isTriviaAction;
+  const isPlayButton = isRoomInvite || isGameStarted || isTriviaPlayed;
 
   const handleClick = () => {
     if (!hasDualActions && !hasSingleAction) {
