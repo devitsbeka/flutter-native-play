@@ -1,110 +1,94 @@
 
-
-# Fix Multiple Page Transitions When Clicking Live TV Room
+# Optimize TV Poll Screen Layout for More Players
 
 ## Problem
 
-When clicking on a LIVE room card with an active TV session, the app goes through multiple rapid page transitions (1→2→3→4) before finally showing the poll/game screen. This creates a jarring visual experience with rapid scaling/sliding animations.
-
-**Current Navigation Flow:**
-```text
-TeamV2 (Rooms List)
-    ↓ click on LIVE room
-RoomLobbyV2 (lobby phase set by enterRoom)
-    ↓ useEffect detects TV session
-TVHostController (final destination)
-```
-
-Each step triggers framer-motion page transition animations, causing the "1,2,3,4 pages in one second" effect.
-
-## Solution
-
-Detect the active TV session **before navigation** and skip directly to the appropriate TV mode page. The `MyRoom` data already contains `tv_session_id`, `tv_status`, and `is_host` - we just need to use them.
-
-**Optimized Navigation Flow:**
-```text
-TeamV2 (Rooms List)
-    ↓ click on LIVE room (detect TV session + role)
-TVHostController or TVJoin (single navigation step)
-```
-
----
+The current layout has the QR code and players list in a sidebar on the right, which limits vertical space for displaying 4-8 players. The user wants to:
+- Move QR code to the top-right header area
+- Remove redundant player count from header (already shown in players list)
+- Add TV icon before the title "რა ვითამაშოთ?"
+- Give players list more vertical space
 
 ## Technical Changes
 
-### File: `src/components/team/MyRoomsSection.tsx`
+### File: `src/components/tv/TVPollScreen.tsx`
 
-#### 1. Add useNavigate import (line 4)
+#### 1. Restructure Header (Lines 59-101)
 
-Add `useNavigate` to existing imports from react-router-dom.
+Move QR code into the header, replacing the player count badge:
 
-#### 2. Add navigation hook in component (around line 58)
-
+**Current header right side:**
 ```tsx
-const navigate = useNavigate();
+{/* Player count + TV icon - Top Right */}
+<div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl">
+  <Users className="w-6 h-6 text-purple-300" />
+  <span className="text-xl font-bold text-white">{players.length}</span>
+  <img src={retroTvIcon} alt="TV რეჟიმი" className="w-10 h-10 object-contain" />
+</div>
 ```
 
-#### 3. Update handleJoin function (lines 91-135)
+**New header right side:**
+```tsx
+{/* QR Code - Top Right */}
+<div className="flex items-center gap-3">
+  <div className="bg-white p-2 rounded-lg">
+    <QRCodeSVG value={joinUrl} size={56} level="H" />
+  </div>
+  <div className="flex flex-col items-center">
+    <span className="text-purple-300 text-xs">კოდი</span>
+    <span className="text-lg font-mono font-bold text-white">{code}</span>
+  </div>
+</div>
+```
 
-Change the `handleJoin` function to detect active TV sessions and navigate directly:
+#### 2. Add TV Icon to Title (Lines 104-116)
+
+Replace the `Vote` icon with the retro TV icon before the title:
 
 **Current:**
 ```tsx
-const handleJoin = async (room: MyRoom) => {
-  // Clear unread flag...
-  // Reset room if completed...
-  enterRoom(room.room_code);
-};
+<div className="flex items-center gap-2 mb-1">
+  <Vote className="w-6 h-6 text-purple-300" />
+  <h1 className="text-2xl font-bold text-white">
 ```
 
 **New:**
 ```tsx
-const handleJoin = async (room: MyRoom) => {
-  // Clear the unread flag
-  if (room.has_unread_activity) {
-    await supabase
-      .from("game_rooms")
-      .update({ has_unread_activity: false })
-      .eq("id", room.id);
-  }
-  
-  // If room is completed, reset it to waiting for rematch
-  if (room.status === "completed") {
-    // ... existing reset logic (unchanged)
-  }
-  
-  // OPTIMIZATION: Skip RoomLobbyV2 for active TV sessions
-  // Navigate directly to TV mode instead of going through enterRoom
-  if (room.tv_session_id && isActiveTVSession(room.tv_status)) {
-    if (room.is_host) {
-      // Host goes directly to TV host controller
-      navigate(`/tv/host/${room.tv_session_id}`);
-    } else {
-      // Guest goes directly to TV join flow
-      navigate(`/join/session/${room.tv_session_id}`);
-    }
-    return;
-  }
-  
-  // Standard room join for non-TV rooms
-  enterRoom(room.room_code);
-};
+<div className="flex items-center gap-2 mb-1">
+  <img src={retroTvIcon} alt="TV" className="w-7 h-7 object-contain" />
+  <h1 className="text-2xl font-bold text-white">
 ```
 
----
+#### 3. Restructure Main Content (Lines 118-198)
 
-## Summary
+Remove QR code from the sidebar and expand players list to use more vertical space:
 
-| Before | After |
-|--------|-------|
-| Click → enterRoom → RoomLobbyV2 → useEffect detects TV → navigate to TVHostController | Click → detect TV session → navigate directly to TVHostController |
-| 3+ animated page transitions | 1 navigation step |
-| Jarring rapid animations | Smooth single transition |
+**Current layout:**
+- Left: Suggestions grid (flex-1)
+- Right: QR code + join code + Players list (w-56)
+
+**New layout:**
+- Left: Suggestions grid (flex-1)
+- Right: Players list only (w-56) - with taller max-height for 8 players
+
+Changes:
+- Remove QR code container from sidebar (lines 159-169)
+- Increase players list max-height from `max-h-[200px]` to `max-h-[320px]`
+- Move players list to start of the sidebar
+
+## Summary of Changes
+
+| Element | Before | After |
+|---------|--------|-------|
+| Header right | Player count + TV icon | QR code + join code |
+| Title icon | Vote icon | Retro TV icon |
+| Sidebar | QR + code + players list | Players list only |
+| Players list height | max-h-[200px] | max-h-[320px] |
 
 ## Expected Result
 
-- Clicking a LIVE room card navigates instantly to the appropriate TV mode screen
-- Only 1 page transition instead of 3-4 rapid transitions
-- Smooth user experience for TV mode rooms
-- Non-TV rooms continue to work normally through the standard `enterRoom` flow
-
+- QR code prominently visible in top-right header
+- TV icon matches the branding before the title
+- Players list has ~60% more vertical space (320px vs 200px)
+- Can comfortably display 8 players without scrolling
+- Cleaner, more focused layout
