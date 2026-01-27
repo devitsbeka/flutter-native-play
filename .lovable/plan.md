@@ -1,73 +1,125 @@
 
-# Fix TV Results Screen - Georgian Translation & Background
 
-## Issues Found
+# Fix Trivia Creation UI - Text and Layout Changes
 
-1. **English text (line 200-202)**: The text "Host can start a new round from their phone" is hardcoded in English
-2. **White bottom space**: The component uses `h-screen` with `-mt-10` negative margin, which creates visual issues. The container doesn't fully extend to fill the viewport height
+## Overview
+The user wants several changes to the trivia creation modals:
+1. Change "დააგენერირე" to "შექმნა" for the generate button
+2. Move "დაამატე რაუნდი" button above the "შექმნა" button 
+3. Remove the background container from the AI info text
+4. Show different AI text based on context:
+   - Single trivia: "AI დააგენერირებს 5 კითხვას"
+   - Collection (multiple rounds): "AI დააგენერირებს 5 კითხვას თითოეულ რაუნდზე"
 
 ---
 
 ## Changes
 
-### 1. Translate English Text to Georgian (TVResultsScreen.tsx)
+### 1. CreateBlindTriviaModal.tsx
 
-**Line 200-202 - Change from:**
+**File:** `src/components/team/CreateBlindTriviaModal.tsx`
+
+#### a) Move "დაამატე რაუნდი" from Step 2 to Step 3 (above generate button)
+
+**Current location (lines 434-446):** Inside step 2 content
+**New location:** Inside step 3 content (after answer format selection, before the generation progress)
+
+Move the button block and add the AI info text:
+
 ```tsx
-<p className="text-purple-300 text-sm">
-  Host can start a new round from their phone
-</p>
+// After the answer format grid (line 532), before isGenerating check:
+
+{/* Add round button - switch to collection mode */}
+{onSwitchToCollection && !isGenerating && (
+  <button
+    onClick={() => {
+      onOpenChange(false);
+      onSwitchToCollection(subject);
+    }}
+    className="w-full py-3 rounded-xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
+  >
+    <Plus className="w-5 h-5" />
+    დაამატე რაუნდი
+  </button>
+)}
+
+{/* AI info text - no background container */}
+{!isGenerating && (
+  <p className="text-sm text-white/80 text-center">
+    ✨ AI დააგენერირებს <span className="font-bold">{questionCount} კითხვას</span>
+  </p>
+)}
 ```
 
-**To:**
-```tsx
-<p className="text-purple-300 text-sm">
-  მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან
-</p>
-```
+**Remove from lines 434-446** (step 2)
+
+#### b) Change button text from "შექმენი" to "შექმნა"
+
+**Line 616:** Change `შექმენი` to `შექმნა`
 
 ---
 
-### 2. Fix Background Coverage (TVResultsScreen.tsx)
+### 2. CreateCollectionModal.tsx
 
-**Line 67 - Current container:**
+**File:** `src/components/social/CreateCollectionModal.tsx`
+
+#### a) Remove background container from AI info text
+
+**Lines 1021-1025 - Current:**
 ```tsx
-<div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col -mt-10">
+<div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm text-center">
+  <p className="text-sm text-white/80">
+    ✨ AI დაგენერირებს <span className="font-bold">{DEFAULT_QUESTIONS_PER_ROUND} კითხვას</span> თითოეულ რაუნდზე
+  </p>
+</div>
 ```
 
-**Updated container - use `min-h-screen` and remove negative margin:**
+**Updated - just the text, no container:**
 ```tsx
-<div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col">
+<p className="text-sm text-white/80 text-center">
+  ✨ AI დააგენერირებს <span className="font-bold">{DEFAULT_QUESTIONS_PER_ROUND} კითხვას</span> თითოეულ რაუნდზე
+</p>
 ```
 
-The `-mt-10` was causing the component to shift up, leaving a gap at the bottom. Using `min-h-screen` without the negative margin ensures the purple gradient background fills the entire viewport.
+Note: Also fixing the verb from "დაგენერირებს" to "დააგენერირებს" (prefixed form)
 
-Additionally, adjust the header margin to compensate:
+#### b) Change button text from "დაგენერირება" to "შექმნა"
 
-**Line 99 - Change header class from:**
-```tsx
-className="text-center mb-6 flex-shrink-0 mt-10"
-```
+**Line 1035:** Change `დაგენერირება` to `შექმნა`
 
-**To (remove mt-10 since we removed the negative margin above):**
-```tsx
-className="text-center mb-6 flex-shrink-0"
-```
+#### c) Reorder: Move "დაამატე რაუნდი" button AFTER the info text (so it's above the "შექმნა" button)
+
+**Current order (lines 1010-1037):**
+1. Add round button
+2. Info text
+3. Generate button
+
+**New order:**
+1. Info text (no container)
+2. Add round button  
+3. Generate button
 
 ---
 
 ## File Changes Summary
 
-| File | Line | Change |
-|------|------|--------|
-| `src/components/tv/TVResultsScreen.tsx` | 67 | Remove `-mt-10`, change `h-screen` to `min-h-screen` |
-| `src/components/tv/TVResultsScreen.tsx` | 99 | Remove `mt-10` from header |
-| `src/components/tv/TVResultsScreen.tsx` | 201 | Translate to Georgian |
+| File | Lines | Change |
+|------|-------|--------|
+| `src/components/team/CreateBlindTriviaModal.tsx` | 434-446 | Remove "დაამატე რაუნდი" button from step 2 |
+| `src/components/team/CreateBlindTriviaModal.tsx` | ~532 | Add "დაამატე რაუნდი" button + AI info text after answer format in step 3 |
+| `src/components/team/CreateBlindTriviaModal.tsx` | 616 | Change "შექმენი" → "შექმნა" |
+| `src/components/social/CreateCollectionModal.tsx` | 1021-1025 | Remove container, just show text (with "თითოეულ რაუნდზე") |
+| `src/components/social/CreateCollectionModal.tsx` | 1010-1025 | Reorder: info text first, then add round button |
+| `src/components/social/CreateCollectionModal.tsx` | 1035 | Change "დაგენერირება" → "შექმნა" |
 
 ---
 
 ## Result
 
 After these changes:
-- The hint text will display in Georgian: "მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან"
-- The purple gradient background will fill the entire TV screen with no white gaps at the bottom
+- Button text will be "შექმნა" in both modals
+- "დაამატე რაუნდი" will appear directly above the "შექმნა" button
+- AI info text will have no background container
+- Single trivia shows: "AI დააგენერირებს 5 კითხვას"
+- Collection shows: "AI დააგენერირებს 5 კითხვას თითოეულ რაუნდზე"
+
