@@ -89,7 +89,7 @@ export function RoomLobbyV2() {
             .maybeSingle();
           
           // Active session statuses that should redirect host to controller
-          const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'];
+          const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'];
           
           if (session && activeStatuses.includes(session.status || '')) {
             console.log('[RoomLobbyV2] Active TV session detected, redirecting host to controller');

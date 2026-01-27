@@ -41,7 +41,7 @@ export interface MyRoom {
 
 // Active TV session statuses that indicate a "LIVE" game
 // Active TV session statuses that indicate a "LIVE" game - paired means TV is connected and waiting for host
-const ACTIVE_TV_STATUSES = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results'];
+const ACTIVE_TV_STATUSES = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'];
 
 export function isActiveTVSession(tvStatus: string | null): boolean {
   return tvStatus !== null && ACTIVE_TV_STATUSES.includes(tvStatus);
