@@ -40,6 +40,7 @@ export function AvatarCircle({
   const [showVideo, setShowVideo] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isReversing, setIsReversing] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const progressRingWidth = 20;
@@ -99,6 +100,11 @@ export function AvatarCircle({
       }
     };
   }, []);
+
+  // Reset error state when avatarUrl changes
+  useEffect(() => {
+    setHasImageError(false);
+  }, [avatarUrl]);
   
   return (
     <div 
@@ -205,7 +211,7 @@ export function AvatarCircle({
           }
         }}
       >
-        {avatarUrl ? (
+        {avatarUrl && !hasImageError ? (
           <>
             {/* Static avatar image */}
             <motion.img 
@@ -221,6 +227,7 @@ export function AvatarCircle({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: showVideo && animatedAvatarUrl ? 0 : 1 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
+              onError={() => setHasImageError(true)}
             />
             
             {/* Animated video overlay */}
