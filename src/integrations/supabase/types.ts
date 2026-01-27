@@ -1531,6 +1531,7 @@ export type Database = {
           difficulty: string
           icon_slug: string | null
           id: string
+          image_url: string | null
           in_production: boolean | null
           incorrect_answers: Json
           is_active: boolean | null
@@ -1557,6 +1558,7 @@ export type Database = {
           difficulty?: string
           icon_slug?: string | null
           id?: string
+          image_url?: string | null
           in_production?: boolean | null
           incorrect_answers?: Json
           is_active?: boolean | null
@@ -1583,6 +1585,7 @@ export type Database = {
           difficulty?: string
           icon_slug?: string | null
           id?: string
+          image_url?: string | null
           in_production?: boolean | null
           incorrect_answers?: Json
           is_active?: boolean | null

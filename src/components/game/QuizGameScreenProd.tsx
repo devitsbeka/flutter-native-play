@@ -360,20 +360,23 @@ export function QuizGameScreenProd() {
 
       {/* Question Card with Overlapping Icon */}
       <div className="px-4 flex-shrink-0 mt-5 mb-2 [@media(max-height:700px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
-        {/* Category Icon - overlaps card by 50% */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
-          <DynamicIcon 
-            slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
-            categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
-            questionId={currentQuestion.id}
-            size={opponent ? 80 : 64}
-            className="drop-shadow-lg"
-            hideIfEmpty={true}
-          />
-        </div>
+        {/* Category Icon - overlaps card by 50% (hide if image question) */}
+        {!currentQuestion.imageUrl && (
+          <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+            <DynamicIcon 
+              slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
+              categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
+              questionId={currentQuestion.id}
+              size={opponent ? 80 : 64}
+              className="drop-shadow-lg"
+              hideIfEmpty={true}
+            />
+          </div>
+        )}
 
         <QuizQuestionCard
           questionText={currentQuestion.question}
+          imageUrl={currentQuestion.imageUrl}
           progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
           state={playerTimerFrozen ? "frozen" : "default"}
           difficultyLabel={!opponent ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
@@ -381,7 +384,7 @@ export function QuizGameScreenProd() {
           timerSeconds={!opponent ? timeRemaining : undefined}
           timerMaxSeconds={timePerQuestion + playerTimerBonus}
           freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
-          reserveTopSpace
+          reserveTopSpace={!currentQuestion.imageUrl}
         />
       </div>
 

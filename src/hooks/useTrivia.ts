@@ -94,6 +94,7 @@ export function useTrivia() {
         correctAnswer: q.correctAnswer,
         incorrectAnswers: q.incorrectAnswers,
         allAnswers: q.allAnswers,
+        imageUrl: q.imageUrl || undefined,
       }));
 
       // Store exhaustion info for UI display
