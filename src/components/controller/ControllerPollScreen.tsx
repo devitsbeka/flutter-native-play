@@ -66,10 +66,10 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   const navigate = useNavigate();
   
   const handleBack = () => {
-    if (window.history.length > 1) {
+    if (window.history.state && window.history.state.idx > 0) {
       window.history.back();
     } else {
-      navigate('/team');
+      navigate('/team', { replace: true });
     }
   };
   const {
