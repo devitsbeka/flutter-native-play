@@ -479,6 +479,73 @@ export const useQuestionStudio = () => {
     }
   }, [fetchQuestions, fetchCategories]);
 
+  // Add new question
+  const addQuestion = useCallback(async (question: Omit<StudioQuestion, 'id' | 'created_at' | 'updated_at' | 'is_active' | 'level_number'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .insert({
+          category_id: question.category_id,
+          question_text: question.question_text,
+          correct_answer: question.correct_answer,
+          incorrect_answers: question.incorrect_answers,
+          difficulty: question.difficulty,
+          level_number: 1,
+          is_active: true,
+          in_production: false,
+          icon_slug: question.icon_slug,
+          image_url: question.image_url,
+          video_url: question.video_url,
+          audio_url: question.audio_url,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      toast.success('კითხვა შეიქმნა');
+      fetchQuestions();
+      fetchCategories();
+      return true;
+    } catch (err) {
+      console.error('Error adding question:', err);
+      toast.error('კითხვის შექმნა ვერ მოხერხდა');
+      return false;
+    }
+  }, [fetchQuestions, fetchCategories]);
+
+  // Bulk add questions
+  const bulkAddQuestions = useCallback(async (questions: Array<{
+    category_id: string;
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+    difficulty: 'easy' | 'medium' | 'hard';
+    image_url?: string;
+    video_url?: string;
+    audio_url?: string;
+  }>) => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .insert(questions.map(q => ({
+          ...q,
+          level_number: 1,
+          is_active: true,
+          in_production: false,
+        })));
+      
+      if (error) throw error;
+      toast.success(`${questions.length} კითხვა დაემატა`);
+      fetchQuestions();
+      fetchCategories();
+      return true;
+    } catch (err) {
+      console.error('Error bulk adding questions:', err);
+      toast.error('კითხვების დამატება ვერ მოხერხდა');
+      return false;
+    }
+  }, [fetchQuestions, fetchCategories]);
+
   // Reset page when filters change
   useEffect(() => {
     setPage(0);
@@ -554,6 +621,8 @@ export const useQuestionStudio = () => {
     updateQuestion,
     deleteQuestion,
     duplicateQuestion,
+    addQuestion,
+    bulkAddQuestions,
     
     // Refetch
     refetchCategories: fetchCategories,

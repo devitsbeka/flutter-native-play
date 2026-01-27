@@ -162,3 +162,10 @@ verify_jwt = false
 # --- PUBLIC/READ-ONLY (can remain public if needed) ---
 [functions.search-question-image]
 verify_jwt = true
+
+# --- NEW: Media Question Functions ---
+[functions.parse-wikipedia-media]
+verify_jwt = true
+
+[functions.generate-media-questions]
+verify_jwt = true
