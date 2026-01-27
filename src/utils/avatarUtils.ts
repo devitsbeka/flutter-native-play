@@ -18,6 +18,10 @@ import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
 const LOCAL_ASSET_PATTERN = /^\/src\/assets\//;
 const RELATIVE_ASSET_PATTERN = /^src\/assets\//;
 
+// Detect Vite build-time hashed asset paths (e.g., /assets/bot-avatar-4-uiIFWm1y.png)
+// These paths are only valid during the build that created them
+const VITE_HASHED_ASSET_PATTERN = /^\/assets\/.*-[a-zA-Z0-9]{8}\.(png|jpg|jpeg|webp|gif|svg)$/;
+
 // Map local paths to imported assets
 const BOT_AVATAR_MAP: Record<string, string> = {
   'bot-avatar-1.png': botAvatar1,
@@ -41,6 +45,12 @@ const BOT_AVATAR_MAP: Record<string, string> = {
  */
 export function resolveAvatarUrl(avatarUrl: string | null | undefined): string | undefined {
   if (!avatarUrl) return undefined;
+  
+  // Reject Vite-hashed asset paths - they won't work
+  if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
+    console.warn('Invalid Vite-hashed avatar path:', avatarUrl);
+    return undefined;
+  }
   
   // Already a valid URL
   if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
