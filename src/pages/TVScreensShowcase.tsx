@@ -16,10 +16,12 @@ import { TVRoundIntroScreen } from '@/components/tv/TVRoundIntroScreen';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
 import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
 import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
+import { TVPollScreen } from '@/components/tv/TVPollScreen';
 
 const SCREENS = [
   { id: 'pairing', name: 'Pairing', phase: 'pairing' as const },
   { id: 'lobby', name: 'Lobby', phase: 'lobby' as const },
+  { id: 'poll', name: 'Poll', phase: 'poll-suggest' as const },
   { id: 'round-intro', name: 'Round Intro', phase: 'round_intro' as const },
   { id: 'countdown', name: 'Countdown', phase: 'countdown' as const },
   { id: 'question', name: 'Question', phase: 'playing' as const },
@@ -89,6 +91,8 @@ const ScreenRenderer: React.FC<{ screenId: string }> = ({ screenId }) => {
       return <TVPairingScreenV3 />;
     case 'lobby':
       return <TVLobbyScreenV2 />;
+    case 'poll':
+      return <TVPollScreen />;
     case 'round-intro':
       return <TVRoundIntroScreen />;
     case 'countdown':
