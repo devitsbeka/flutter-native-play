@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock } from "lucide-react";
+import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, Edit3, Users, CheckCircle } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -30,6 +30,7 @@ interface CreateBlindTriviaModalProps {
 }
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
+type CreatorMode = "edit" | "play" | null;
 
 const DIFFICULTY_OPTIONS: { value: DifficultyLevel; emoji: string; label: string; description: string }[] = [
   { value: "mixed", emoji: "🎲", label: "შერეული", description: "ადვილი → რთული" },
@@ -78,6 +79,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   const { saveDraft, loadDraft, deleteDraft } = useTriviaDrafts();
   
   const [step, setStep] = useState(1);
+  const [creatorMode, setCreatorMode] = useState<CreatorMode>(null);
   const [subject, setSubject] = useState("");
   const [questionCount, setQuestionCount] = useState(10);
   const [answerFormat, setAnswerFormat] = useState<"4_answers" | "true_false">("4_answers");
@@ -137,7 +139,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
           if (draft.questions && Array.isArray(draft.questions) && draft.questions.length > 0) {
             const converted = convertToEditorQuestions(draft.questions);
             setEditorQuestions(converted);
-            setStep(4); // Go directly to editor
+            setCreatorMode("edit"); // Drafts always go to edit mode
+            setStep(5); // Go directly to editor
           }
           
           toast.success("დრაფტი ჩაიტვირთა");
@@ -156,6 +159,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
 
   const resetForm = () => {
     setStep(1);
+    setCreatorMode(null);
     setSubject("");
     setQuestionCount(10);
     setDifficulty("mixed");
@@ -167,11 +171,43 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     isClosingRef.current = false;
   };
 
+  const handleModeSelect = (mode: CreatorMode) => {
+    setCreatorMode(mode);
+    setStep(2);
+  };
+
+  const handleSaveAndStartGame = async () => {
+    if (!user) {
+      toast.error("გაიარე ავტორიზაცია");
+      return;
+    }
+
+    // Delete draft if it exists
+    if (currentDraftId) {
+      try {
+        await supabase.from("trivia_drafts").delete().eq("id", currentDraftId);
+        queryClient.invalidateQueries({ queryKey: ["trivia-drafts"] });
+      } catch (error) {
+        console.error("Failed to delete draft:", error);
+      }
+    }
+
+    // Convert questions and save as private
+    const questions = convertToGeneratedQuestions(editorQuestions);
+    isClosingRef.current = true;
+
+    // Save to database as private (play mode)
+    await onTriviaReady(questions, title, subject);
+
+    resetForm();
+    onOpenChange(false);
+  };
+
   const handleClose = async () => {
-    // Auto-save draft if there's content in editor (step 4)
+    // Auto-save draft if there's content in editor (step 5) and in edit mode
     const hasContent = editorQuestions.some(q => q.question.trim().length > 0);
     
-    if (user && hasContent && step === 4 && !isClosingRef.current) {
+    if (user && hasContent && step === 5 && creatorMode === "edit" && !isClosingRef.current) {
       isClosingRef.current = true;
       try {
         // Convert editor questions to storage format
@@ -236,7 +272,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
       setEditorQuestions(converted);
       setTitle(data?.suggestedTitle || `${subject} ტრივია`);
       
-      setTimeout(() => setStep(4), 300);
+      setTimeout(() => setStep(5), 300);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error generating quiz:", error);
@@ -276,6 +312,50 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   const renderStep = () => {
     switch (step) {
       case 1:
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center mb-4">
+                <img src={triviaBuzzer} alt="Create Trivia" className="w-16 h-16 object-contain" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">როგორ გინდა შექმნა?</h3>
+              <p className="text-white/70">აირჩიე შენთვის შესაფერისი გზა</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Edit Mode */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleModeSelect("edit")}
+                className="p-6 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left"
+              >
+                <Edit3 className="w-10 h-10 text-white mb-3" />
+                <h4 className="font-bold text-white text-lg mb-1">რედაქტირება</h4>
+                <p className="text-white/60 text-sm">ნახე პასუხები, შეასწორე და გამოაქვეყნე</p>
+              </motion.button>
+
+              {/* Play Mode */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleModeSelect("play")}
+                className="p-6 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left"
+              >
+                <Users className="w-10 h-10 text-white mb-3" />
+                <h4 className="font-bold text-white text-lg mb-1">თამაში</h4>
+                <p className="text-white/60 text-sm">არ ნახო პასუხები, ითამაშე მეგობრებთან</p>
+              </motion.button>
+            </div>
+          </motion.div>
+        );
+
+      case 2:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -346,7 +426,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
           </motion.div>
         );
 
-      case 2:
+      case 3:
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -456,25 +536,41 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
   };
 
   const renderBottomCTA = () => {
+    // Step 1 - Mode selection (no CTA, handled by buttons)
     if (step === 1) {
-      return (
-        <ChunkyButton
-          variant="whitePurple"
-          onClick={() => setStep(2)}
-          disabled={!subject.trim()}
-          className="w-full"
-        >
-          შემდეგი
-          <ChevronRight className="w-5 h-5 ml-2" />
-        </ChunkyButton>
-      );
+      return null;
     }
 
+    // Step 2 - Topic input
     if (step === 2) {
       return (
         <div className="flex gap-3">
           <button 
             onClick={() => setStep(1)} 
+            className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            უკან
+          </button>
+          <ChunkyButton
+            variant="whitePurple"
+            onClick={() => setStep(3)}
+            disabled={!subject.trim()}
+            className="flex-[2]"
+          >
+            შემდეგი
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </ChunkyButton>
+        </div>
+      );
+    }
+
+    // Step 3 - Count/difficulty/format
+    if (step === 3) {
+      return (
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setStep(2)} 
             className="flex-1 h-14 rounded-2xl bg-white/20 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/30 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -505,13 +601,88 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
     return null;
   };
 
-  const totalSteps = 2;
+  const totalSteps = 3;
   const progressDots = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   if (!open) return null;
 
-  // Step 4: Show GameStyleQuestionEditor
-  if (step === 4) {
+  // Step 5: Show Editor (conditional based on creatorMode)
+  if (step === 5) {
+    // Play mode - show summary without revealing answers
+    if (creatorMode === "play") {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50"
+          style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
+        >
+          <div className="fixed top-0 left-0 right-0 z-50 safe-top">
+            <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full flex items-center justify-between px-4 py-3">
+              <button 
+                onClick={() => setStep(3)} 
+                className="p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors"
+              >
+                <ChevronLeft className="w-6 h-6 text-white" />
+              </button>
+              
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
+                <Sparkles className="w-4 h-4 text-white" />
+                <span className="text-xs font-semibold text-white">AI</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-full overflow-y-auto pt-[80px] pb-40 safe-top">
+            <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full p-5">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center space-y-6"
+              >
+                <div className="flex justify-center">
+                  <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle className="w-10 h-10 text-emerald-400" />
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {editorQuestions.length} კითხვა მზადაა!
+                  </h3>
+                  <p className="text-white/70">
+                    პასუხები დამალულია — ითამაშე მეგობრებთან ერთად
+                  </p>
+                </div>
+
+                <div className="bg-white/10 rounded-2xl p-4 space-y-3">
+                  <label className="text-sm text-white/70 block text-left">სათაური</label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="ტრივიას სათაური..."
+                    className="w-full text-base h-14 px-5 rounded-2xl border-0 bg-white/95 text-slate-800 placeholder:text-slate-400 shadow-lg"
+                  />
+                </div>
+
+                <div className="pt-4">
+                  <ChunkyButton
+                    variant="success"
+                    onClick={handleSaveAndStartGame}
+                    className="w-full"
+                  >
+                    შეინახე და დაიწყე თამაში 🎮
+                  </ChunkyButton>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
+
+    // Edit mode - show full editor
     return (
       <GameStyleQuestionEditor
         questions={editorQuestions}
@@ -519,7 +690,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
         title={title}
         onTitleChange={setTitle}
         onSave={handleStartGame}
-        onBack={() => setStep(2)}
+        onBack={() => setStep(3)}
         saveButtonText="მზადაა! 🚀"
         showTitleEditor={true}
         subject={subject}
