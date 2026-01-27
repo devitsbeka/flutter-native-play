@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { ChunkyButton } from '@/components/ui/chunky-button';
-import { Check, X, Loader2 } from 'lucide-react';
+import { Check, X, Loader2, Star } from 'lucide-react';
 
 export const ControllerReveal: React.FC = () => {
   const navigate = useNavigate();
-  const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId, leaveSession, phase } = useTVGame();
+  const { questions, currentQuestionIndex, myAnswer, myScore, players, myPlayerId, leaveSession, phase, currentRoundSuggesterId } = useTVGame();
+  
+  // Check if current player is the suggester for this round
+  const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
   
   // FIX: Capture the answer state when we first enter reveal
   // This prevents showing wrong data when myAnswer is cleared during transition
@@ -65,6 +68,29 @@ export const ControllerReveal: React.FC = () => {
             თამაშიდან გასვლა
           </ChunkyButton>
         </div>
+      </div>
+    );
+  }
+
+  // CRITICAL FIX: Suggester sees observer reveal UI, not "Time expired"
+  if (isSuggester && currentQuestion) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+        <Star className="w-16 h-16 text-yellow-400 mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">შენი კატეგორიაა!</h2>
+        <p className="text-purple-300 mb-4">ამ რაუნდში აკვირდები</p>
+        
+        <div className="bg-white/10 rounded-xl p-4 mb-4 max-w-sm">
+          <p className="text-purple-300 text-sm mb-1">სწორი პასუხი:</p>
+          <p className="text-white font-semibold text-center">{currentQuestion.correct_answer}</p>
+        </div>
+        
+        <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
+          <span className="text-purple-300">შენი ქულა: </span>
+          <span className="text-white text-2xl font-bold">{myScore}</span>
+        </div>
+        
+        <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
       </div>
     );
   }

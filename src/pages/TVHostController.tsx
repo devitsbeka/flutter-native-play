@@ -637,6 +637,31 @@ const TVHostController: React.FC = () => {
   // Reveal phase - show host's answer result (mirrors guest ControllerReveal)
   // CRITICAL FIX: Host must also see reveal screen to stay in sync with guests
   if (localPhase === 'reveal') {
+    // CRITICAL FIX: Suggester sees observer reveal, not "Time expired"
+    if (isSuggester) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+          <Star className="w-16 h-16 text-yellow-400 mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">შენი კატეგორიაა!</h2>
+          <p className="text-purple-300 mb-4">ამ რაუნდში აკვირდები</p>
+          
+          {currentQuestion && (
+            <div className="bg-white/10 rounded-xl p-4 mb-4 max-w-sm">
+              <p className="text-purple-300 text-sm mb-1">სწორი პასუხი:</p>
+              <p className="text-white font-semibold text-center">{currentQuestion.correct_answer}</p>
+            </div>
+          )}
+          
+          <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
+            <span className="text-purple-300">შენი ქულა: </span>
+            <span className="text-white text-2xl font-bold">{myScore}</span>
+          </div>
+          
+          <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
+        </div>
+      );
+    }
+    
     const isCorrect = myAnswer && currentQuestion ? myAnswer === currentQuestion.correct_answer : false;
     const didAnswer = myAnswer !== null;
     
