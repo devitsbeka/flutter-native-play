@@ -8,7 +8,8 @@ import {
   ChevronRight, 
   Sparkles,
   Crown,
-  ArrowLeft
+  ArrowLeft,
+  Check
 } from 'lucide-react';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
@@ -85,6 +86,17 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   }, [showTriviaPicker, userTrivias.length, userId]);
 
   const handleSelectCategory = async (category: Category) => {
+    // Check if this category is already in the queue
+    const alreadyInQueue = queue.some(
+      (item) => item.source_type === 'category' && item.category_id === category.category_id
+    );
+    
+    if (alreadyInQueue) {
+      toast.error(`${category.name} უკვე არჩეულია!`);
+      setShowCategoryPicker(false);
+      return;
+    }
+    
     setLoading(true);
     try {
       // Add to queue using hook
@@ -103,6 +115,17 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   };
 
   const handleSelectTrivia = async (trivia: UserTrivia) => {
+    // Check if this trivia is already in the queue
+    const alreadyInQueue = queue.some(
+      (item) => item.source_type === 'user_trivia' && item.user_trivia_id === trivia.id
+    );
+    
+    if (alreadyInQueue) {
+      toast.error(`${trivia.title} უკვე არჩეულია!`);
+      setShowTriviaPicker(false);
+      return;
+    }
+    
     setLoading(true);
     try {
       // Get current queue length for position
@@ -171,22 +194,36 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
           </div>
           
           <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleSelectCategory(category)}
-                disabled={loading}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20 hover:border-purple-400 transition-all"
-              >
-                {category.icon_slug ? (
-                  <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
-                ) : (
-                  <span className="text-2xl">{category.icon}</span>
-                )}
-                <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-                <ChevronRight className="w-5 h-5 text-purple-300" />
-              </button>
-            ))}
+            {categories.map((category) => {
+              const isSelected = queue.some(
+                (item) => item.source_type === 'category' && item.category_id === category.category_id
+              );
+              
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => !isSelected && handleSelectCategory(category)}
+                  disabled={loading || isSelected}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                    isSelected 
+                      ? 'bg-white/5 border-green-400/50 opacity-60 cursor-not-allowed' 
+                      : 'bg-white/10 border-white/20 hover:border-purple-400'
+                  }`}
+                >
+                  {category.icon_slug ? (
+                    <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
+                  ) : (
+                    <span className="text-2xl">{category.icon}</span>
+                  )}
+                  <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                  {isSelected ? (
+                    <Check className="w-5 h-5 text-green-400" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-purple-300" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -215,25 +252,39 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
             </div>
           ) : (
             <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-              {userTrivias.map((trivia) => (
-                <button
-                  key={trivia.id}
-                  onClick={() => handleSelectTrivia(trivia)}
-                  disabled={loading}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20 hover:border-purple-400 transition-all"
-                >
-                  {trivia.cover_image ? (
-                    <img src={trivia.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                  ) : trivia.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={trivia.icon_slug} size={40} className="w-10 h-10" />
-                  ) : (
-                    <Sparkles className="w-10 h-10 text-purple-300" />
-                  )}
-                  <span className="flex-1 text-left font-medium text-white">{trivia.title}</span>
-                  <span className="text-xs text-yellow-400">⚠️ გამოტოვებ</span>
-                  <ChevronRight className="w-5 h-5 text-purple-300" />
-                </button>
-              ))}
+              {userTrivias.map((trivia) => {
+                const isSelected = queue.some(
+                  (item) => item.source_type === 'user_trivia' && item.user_trivia_id === trivia.id
+                );
+                
+                return (
+                  <button
+                    key={trivia.id}
+                    onClick={() => !isSelected && handleSelectTrivia(trivia)}
+                    disabled={loading || isSelected}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      isSelected 
+                        ? 'bg-white/5 border-green-400/50 opacity-60 cursor-not-allowed' 
+                        : 'bg-white/10 border-white/20 hover:border-purple-400'
+                    }`}
+                  >
+                    {trivia.cover_image ? (
+                      <img src={trivia.cover_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    ) : trivia.icon_slug ? (
+                      <QuizCategoryIcon iconSlug={trivia.icon_slug} size={40} className="w-10 h-10" />
+                    ) : (
+                      <Sparkles className="w-10 h-10 text-purple-300" />
+                    )}
+                    <span className="flex-1 text-left font-medium text-white">{trivia.title}</span>
+                    <span className="text-xs text-yellow-400">⚠️ გამოტოვებ</span>
+                    {isSelected ? (
+                      <Check className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-purple-300" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
