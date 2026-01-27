@@ -31,20 +31,43 @@ interface CreateCollectionModalProps {
   initialRoundSubject?: string;
 }
 
-// Topic pool for rotating suggestions
+// Topic pool for rotating suggestions - specific, engaging topics
 const COLLECTION_TOPIC_POOL = [
-  { label: "სპორტი", icon_slug: "basketball" },
-  { label: "მუსიკა", icon_slug: "music-note" },
-  { label: "ფილმები", icon_slug: "film-reel" },
-  { label: "ისტორია", icon_slug: "clock" },
-  { label: "გეოგრაფია", icon_slug: "globe" },
-  { label: "მეცნიერება", icon_slug: "chemistry" },
-  { label: "ტექნოლოგია", icon_slug: "computer" },
-  { label: "ხელოვნება", icon_slug: "palette" },
-  { label: "ლიტერატურა", icon_slug: "book" },
-  { label: "პოლიტიკა", icon_slug: "landmark" },
-  { label: "საქართველო", icon_slug: "flag" },
-  { label: "კულინარია", icon_slug: "food" },
+  // TV Shows & Entertainment
+  { label: "Squid Game", icon_slug: "tv" },
+  { label: "House of the Dragon", icon_slug: "dragon" },
+  { label: "Wednesday", icon_slug: "gothic" },
+  { label: "The Last of Us", icon_slug: "zombie" },
+  
+  // Trending & Pop Culture
+  { label: "Taylor Swift", icon_slug: "music" },
+  { label: "Marvel ფილმები", icon_slug: "superhero" },
+  { label: "K-Pop", icon_slug: "star" },
+  { label: "TikTok ტრენდები", icon_slug: "phone" },
+  
+  // Facts & Knowledge
+  { label: "უცნაური ფაქტები", icon_slug: "lightbulb" },
+  { label: "კოსმოსის საიდუმლოებები", icon_slug: "rocket" },
+  { label: "ცხოველთა სამყარო", icon_slug: "paw" },
+  { label: "ადამიანის სხეული", icon_slug: "heart" },
+  
+  // Georgian Topics  
+  { label: "ქართული კინო", icon_slug: "film" },
+  { label: "თბილისის ისტორია", icon_slug: "castle" },
+  { label: "ქართული სამზარეულო", icon_slug: "food" },
+  { label: "საქართველოს ბუნება", icon_slug: "mountain" },
+  
+  // Sports Specific
+  { label: "Champions League", icon_slug: "trophy" },
+  { label: "NBA ვარსკვლავები", icon_slug: "basketball" },
+  { label: "ფორმულა 1", icon_slug: "car" },
+  { label: "ოლიმპიური თამაშები", icon_slug: "medal" },
+  
+  // Science & Tech
+  { label: "AI და რობოტები", icon_slug: "robot" },
+  { label: "iPhone vs Android", icon_slug: "phone" },
+  { label: "Video Games", icon_slug: "gamepad" },
+  { label: "Social Media", icon_slug: "share" },
 ];
 
 const COVER_GRADIENTS = [
@@ -114,7 +137,7 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
       
       const interval = setInterval(() => {
         setSuggestionIndex(prev => (prev + 4) % shuffled.length);
-      }, 3000);
+      }, 4000);
       
       return () => clearInterval(interval);
     }
