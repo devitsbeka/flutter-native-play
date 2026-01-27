@@ -53,7 +53,7 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, loading } = usePlayerProfileData(userId);
+  const { data, loading, refetch } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
@@ -93,6 +93,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
       if (error) throw error;
       toast.success("მოთხოვნა გაიგზავნა!");
+      // Refetch profile to update button state
+      refetch();
     } catch (err) {
       toast.error("შეცდომა მოხდა");
     } finally {

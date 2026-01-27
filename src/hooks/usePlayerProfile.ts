@@ -69,6 +69,9 @@ export function usePlayerProfile(userId: string | null) {
   const [data, setData] = useState<PlayerProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refetch = () => setRefreshKey(k => k + 1);
 
   useEffect(() => {
     if (!userId) {
@@ -227,7 +230,7 @@ export function usePlayerProfile(userId: string | null) {
     }
 
     fetchProfile();
-  }, [userId, user?.id]);
+  }, [userId, user?.id, refreshKey]);
 
-  return { data, loading, error };
+  return { data, loading, error, refetch };
 }
