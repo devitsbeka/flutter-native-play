@@ -224,6 +224,7 @@ function TeamContentV2() {
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
   const [showBlindTriviaModal, setShowBlindTriviaModal] = useState(false);
   const [showPersonalTriviaModal, setShowPersonalTriviaModal] = useState(false);
+  const [collectionInitialSubject, setCollectionInitialSubject] = useState<string>("");
   const [playingQuiz, setPlayingQuiz] = useState<{ post: SamplePost; collectionPosts?: SamplePost[] } | null>(null);
   const [previewPost, setPreviewPost] = useState<SamplePost | null>(null);
   const [showAllFriendsModal, setShowAllFriendsModal] = useState(false);
@@ -975,6 +976,10 @@ function TeamContentV2() {
         }}
         resumeDraftId={editingDraftId}
         onDraftResumed={() => setEditingDraftId(null)}
+        onSwitchToCollection={(subject) => {
+          setCollectionInitialSubject(subject);
+          setShowCreateCollectionModal(true);
+        }}
       />
       <CreateQuizModal
         open={showCreateQuizModal}
@@ -986,10 +991,14 @@ function TeamContentV2() {
         open={showCreateCollectionModal}
         onOpenChange={(open) => {
           setShowCreateCollectionModal(open);
-          if (!open) setEditingDraftId(null);
+          if (!open) {
+            setEditingDraftId(null);
+            setCollectionInitialSubject("");
+          }
         }}
         onCollectionCreated={() => setActiveTab("my-content")}
         draftId={editingDraftId}
+        initialRoundSubject={collectionInitialSubject}
       />
       <TriviaPreviewModal
         open={!!previewPost}

@@ -10,6 +10,8 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { GameStyleQuestionEditor, convertToEditorQuestions, convertToGeneratedQuestions, EditorQuestion, createEmptyQuestion } from "./GameStyleQuestionEditor";
 import confetti from "canvas-confetti";
 import iconCollections from "@/assets/icon-collections.png";
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
+import { shuffleArray } from "@/utils/shuffle";
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
 type CreatorMode = "edit" | "play" | null;
@@ -26,7 +28,24 @@ interface CreateCollectionModalProps {
   onOpenChange: (open: boolean) => void;
   onCollectionCreated?: () => void;
   draftId?: string | null;
+  initialRoundSubject?: string;
 }
+
+// Topic pool for rotating suggestions
+const COLLECTION_TOPIC_POOL = [
+  { label: "სპორტი", icon_slug: "basketball" },
+  { label: "მუსიკა", icon_slug: "music-note" },
+  { label: "ფილმები", icon_slug: "film-reel" },
+  { label: "ისტორია", icon_slug: "clock" },
+  { label: "გეოგრაფია", icon_slug: "globe" },
+  { label: "მეცნიერება", icon_slug: "chemistry" },
+  { label: "ტექნოლოგია", icon_slug: "computer" },
+  { label: "ხელოვნება", icon_slug: "palette" },
+  { label: "ლიტერატურა", icon_slug: "book" },
+  { label: "პოლიტიკა", icon_slug: "landmark" },
+  { label: "საქართველო", icon_slug: "flag" },
+  { label: "კულინარია", icon_slug: "food" },
+];
 
 const COVER_GRADIENTS = [
   "linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%)",
@@ -39,7 +58,7 @@ const COVER_GRADIENTS = [
 
 const DEFAULT_QUESTIONS_PER_ROUND = 5;
 
-export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId }: CreateCollectionModalProps) {
+export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated, draftId, initialRoundSubject }: CreateCollectionModalProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -64,6 +83,10 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   const [roundQuestions, setRoundQuestions] = useState<EditorQuestion[][]>([]);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   
+  // Rotating topic suggestions
+  const [topicSuggestions, setTopicSuggestions] = useState<string[]>([]);
+  const [suggestionIndex, setSuggestionIndex] = useState(0);
+  
   // Load specific draft if draftId provided
   useEffect(() => {
     if (draftId && open) {
@@ -75,8 +98,27 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
   useEffect(() => {
     if (open && !draftId) {
       resetForm();
+      // If coming from trivia modal with initial subject, set it
+      if (initialRoundSubject) {
+        setRoundNames([initialRoundSubject, ""]);
+      }
     }
-  }, [open, draftId]);
+  }, [open, draftId, initialRoundSubject]);
+  
+  // Initialize and rotate topic suggestions
+  useEffect(() => {
+    if (open) {
+      const shuffled = shuffleArray(COLLECTION_TOPIC_POOL);
+      setTopicSuggestions(shuffled.map(t => t.label));
+      setSuggestionIndex(0);
+      
+      const interval = setInterval(() => {
+        setSuggestionIndex(prev => (prev + 4) % shuffled.length);
+      }, 3000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [open]);
 
   const loadDraft = async (id: string) => {
     if (!user) return;
@@ -861,13 +903,23 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                   exit={{ opacity: 0, y: -20 }}
                   className="space-y-5"
                 >
-                   {/* Header */}
+                   {/* Header - dynamic based on round count */}
                    <div className="text-center">
                      <div className="inline-flex items-center justify-center mb-4">
-                       <img src={iconCollections} alt="Create Collection" className="w-16 h-16 object-contain" />
+                       <img 
+                         src={roundNames.filter(n => n.trim()).length <= 1 ? triviaBuzzer : iconCollections} 
+                         alt="Create" 
+                         className="w-16 h-16 object-contain" 
+                       />
                      </div>
-                     <h3 className="text-2xl font-bold text-white mb-2">შექმენი კოლექცია</h3>
-                     <p className="text-white/70">ჩაწერე რა თემებზე გსურს რაუნდები</p>
+                     <h3 className="text-2xl font-bold text-white mb-2">
+                       {roundNames.filter(n => n.trim()).length <= 1 ? "შექმენი Trivia" : "შექმენი კოლექცია"}
+                     </h3>
+                     <p className="text-white/70">
+                       {roundNames.filter(n => n.trim()).length <= 1 
+                         ? "ჩაწერე თემა" 
+                         : "ჩაწერე რა თემებზე გსურს რაუნდები"}
+                     </p>
                    </div>
 
                   {/* Round name inputs */}
@@ -899,6 +951,36 @@ export function CreateCollectionModal({ open, onOpenChange, onCollectionCreated,
                         )}
                       </motion.div>
                     ))}
+                  </div>
+
+                  {/* Rotating topic suggestions */}
+                  <div className="space-y-2">
+                    <span className="text-sm text-white/70">💡 იდეები:</span>
+                    <div className="flex flex-wrap gap-2">
+                      <AnimatePresence mode="popLayout">
+                        {topicSuggestions.slice(suggestionIndex, suggestionIndex + 4).map((topic) => (
+                          <motion.button
+                            key={topic}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => {
+                              // Find first empty round or add new round
+                              const emptyIndex = roundNames.findIndex(n => !n.trim());
+                              if (emptyIndex !== -1) {
+                                updateRoundName(emptyIndex, topic);
+                              } else if (roundNames.length < 5) {
+                                setRoundNames([...roundNames, topic]);
+                              }
+                            }}
+                            className="px-4 py-2 rounded-full text-sm font-medium bg-white/20 text-white hover:bg-white/30 transition-colors"
+                          >
+                            {topic}
+                          </motion.button>
+                        ))}
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                   {/* Add round button */}
