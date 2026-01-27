@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { Plus, Link2 } from 'lucide-react';
 import { useQuestionStudio, StudioQuestion } from '@/hooks/useQuestionStudio';
 import { StudioTabs } from '@/components/admin/studio/StudioTabs';
 import { CategorySidebar } from '@/components/admin/studio/CategorySidebar';
 import { QuestionList } from '@/components/admin/studio/QuestionList';
 import { QuestionPreviewPanel } from '@/components/admin/studio/QuestionPreviewPanel';
 import { BulkActionsBar } from '@/components/admin/studio/BulkActionsBar';
+import { CreateQuestionModal, NewQuestionData } from '@/components/admin/studio/CreateQuestionModal';
+import { URLImportTool } from '@/components/admin/studio/URLImportTool';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +50,10 @@ export default function QuestionStudio() {
   
   // Delete confirmation state
   const [deleteQuestion, setDeleteQuestion] = useState<StudioQuestion | null>(null);
+
+  // Create/Import modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showURLImport, setShowURLImport] = useState(false);
 
   // Open edit modal
   const handleEdit = (question: StudioQuestion) => {
@@ -96,6 +103,44 @@ export default function QuestionStudio() {
   // Bulk operations
   const selectedArray = Array.from(studio.selectedIds);
 
+  // Handle create question
+  const handleCreateQuestion = async (data: NewQuestionData): Promise<boolean> => {
+    return await studio.addQuestion({
+      category_id: data.category_id,
+      question_text: data.question_text,
+      correct_answer: data.correct_answer,
+      incorrect_answers: data.incorrect_answers,
+      difficulty: data.difficulty,
+      in_production: false,
+      icon_slug: data.icon_slug,
+      image_url: data.image_url,
+      video_url: data.video_url,
+      audio_url: data.audio_url,
+    });
+  };
+
+  // Handle URL import
+  const handleURLImport = async (questions: Array<{
+    question_text: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+    difficulty: 'easy' | 'medium' | 'hard';
+    image_url?: string;
+    video_url?: string;
+    audio_url?: string;
+  }>) => {
+    // Get currently selected category or first category
+    const categoryId = studio.selectedCategoryId || studio.allCategories[0]?.id;
+    if (!categoryId) return;
+
+    await studio.bulkAddQuestions(
+      questions.map(q => ({
+        ...q,
+        category_id: categoryId,
+      }))
+    );
+  };
+
   return (
     <div className="h-[calc(100vh-theme(spacing.14))] flex flex-col -m-6">
       {/* Top Bar */}
@@ -106,15 +151,25 @@ export default function QuestionStudio() {
             Manage and preview all questions
           </p>
         </div>
-        <StudioTabs
-          activeTab={studio.productionStatus}
-          onTabChange={(tab) => {
-            studio.setProductionStatus(tab);
-            studio.clearSelection();
-          }}
-          libraryCount={studio.libraryCounts}
-          productionCount={studio.productionCounts}
-        />
+        <div className="flex items-center gap-3">
+          <Button size="sm" onClick={() => setShowCreateModal(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            ახალი კითხვა
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowURLImport(true)}>
+            <Link2 className="h-4 w-4 mr-1" />
+            URL იმპორტი
+          </Button>
+          <StudioTabs
+            activeTab={studio.productionStatus}
+            onTabChange={(tab) => {
+              studio.setProductionStatus(tab);
+              studio.clearSelection();
+            }}
+            libraryCount={studio.libraryCounts}
+            productionCount={studio.productionCounts}
+          />
+        </div>
       </div>
 
       {/* Main Content */}
@@ -268,6 +323,22 @@ export default function QuestionStudio() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create Question Modal */}
+      <CreateQuestionModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        categories={studio.allCategories}
+        onSubmit={handleCreateQuestion}
+      />
+
+      {/* URL Import Tool */}
+      <URLImportTool
+        open={showURLImport}
+        onOpenChange={setShowURLImport}
+        categories={studio.allCategories}
+        onImport={handleURLImport}
+      />
     </div>
   );
 }
