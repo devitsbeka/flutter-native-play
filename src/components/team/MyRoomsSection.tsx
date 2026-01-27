@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal } from "lucide-react";
@@ -56,6 +57,7 @@ export function MyRoomsSection({
 }: MyRoomsSectionProps) {
   const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, sort, searchQuery });
   const { enterRoom } = useMultiplayerV2();
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const [showTVModal, setShowTVModal] = useState(false);
   
@@ -131,6 +133,20 @@ export function MyRoomsSection({
         .eq("room_id", room.id);
     }
     
+    // OPTIMIZATION: Skip RoomLobbyV2 for active TV sessions
+    // Navigate directly to TV mode instead of going through enterRoom
+    if (room.tv_session_id && isActiveTVSession(room.tv_status)) {
+      if (room.is_host) {
+        // Host goes directly to TV host controller
+        navigate(`/tv/host/${room.tv_session_id}`);
+      } else {
+        // Guest goes directly to TV join flow
+        navigate(`/join/session/${room.tv_session_id}`);
+      }
+      return;
+    }
+    
+    // Standard room join for non-TV rooms
     enterRoom(room.room_code);
   };
 
