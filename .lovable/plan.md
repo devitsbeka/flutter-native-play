@@ -1,211 +1,237 @@
 
-# Add Video Trivia and Sound Trivia Categories
+# Admin Question Studio - Complete Content Management System
 
 ## Overview
 
-Following the same pattern as Image Trivia, we'll add two new specialized trivia categories:
-1. **Video Trivia** (ვიდეო ტრივია) - Questions with embedded video clips
-2. **Sound Trivia** (ხმის ტრივია) - Questions with audio-only clips
-
-These will reuse the existing game UI with new media display components in the question card.
+Build a brand new, comprehensive admin page for bulk question management with **100% replica live previews** of all 4 question types (Text, Image, Video, Audio). The system will feature two primary navigation tabs (**Library** vs **Production**), advanced filtering, bulk actions, and seamless navigation between questions with real-time design previews.
 
 ---
 
-## Database Changes
+## Core Architecture
 
-### 1. Add `video_url` and `audio_url` columns to questions table
+### New Page: `/admin/question-studio`
 
-```sql
-ALTER TABLE questions
-ADD COLUMN video_url TEXT DEFAULT NULL,
-ADD COLUMN audio_url TEXT DEFAULT NULL;
-```
-
-### 2. Create new categories
-
-```sql
--- Video Trivia category
-INSERT INTO categories (
-  category_id, name, icon, icon_slug, color, description,
-  total_levels, type, is_active, sort_order, language, is_language_specific
-) VALUES (
-  'video_trivia',
-  'ვიდეო ტრივია',
-  '🎬',
-  'video-camera',
-  'from-red-500 to-orange-600',
-  'გამოიცანი ვიდეოში რა ხდება',
-  1, 'fun', true, 47, 'ka', false
-);
-
--- Sound Trivia category
-INSERT INTO categories (
-  category_id, name, icon, icon_slug, color, description,
-  total_levels, type, is_active, sort_order, language, is_language_specific
-) VALUES (
-  'sound_trivia',
-  'ხმის ტრივია',
-  '🎧',
-  'headphones',
-  'from-blue-500 to-cyan-600',
-  'გამოიცანი ხმა რას ეკუთვნის',
-  1, 'fun', true, 48, 'ka', false
-);
-```
-
-### 3. Insert 10 initial questions for each category
-
-Questions will have:
-- **Video Trivia**: Short video URL + 2-3 word question (e.g., "რა ცხოველია?", "ვინ არის?")
-- **Sound Trivia**: Audio URL + short question (e.g., "რა ინსტრუმენტია?", "ვინ მღერის?")
+A dedicated full-screen admin experience replacing/augmenting the current ContentManager with:
+- **Two-tab layout**: Library (in_production=false) vs Production (in_production=true)
+- **Three-panel design**: Categories sidebar | Questions list | Live Preview Panel
+- **Real-time sync** with database changes
 
 ---
 
-## Frontend Changes
+## UI Layout
 
-### 1. Update interfaces in `src/services/questionService.ts`
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│  [📚 Library]  [🚀 Production]                        [Bulk Actions ▼] │
+├──────────────┬─────────────────────────┬───────────────────────────────┤
+│ CATEGORIES   │  QUESTIONS              │  LIVE PREVIEW                 │
+│              │                         │                               │
+│ 🔍 Search    │  🔍 Search   [Filters▼] │  ┌─────────────────────────┐  │
+│              │                         │  │      iPhone Frame       │  │
+│ ○ All (523)  │  ☑ Question 1 [Text]   │  │  ┌───────────────────┐  │  │
+│ ● Sports(42) │  ☐ Question 2 [Image]  │  │  │    Game Screen    │  │  │
+│ ○ Movies(89) │  ☐ Question 3 [Video]  │  │  │   with answers    │  │  │
+│ ○ Music (34) │  ☐ Question 4 [Audio]  │  │  │   and media       │  │  │
+│              │                         │  │  └───────────────────┘  │  │
+│ [+Add]       │  Page 1/10  [← →]      │  └─────────────────────────┘  │
+│              │                         │  [◀ Prev] [Edit] [Next ▶]    │
+│              │  Selected: 3           │  [Push to Prod] [Remove Icon] │
+└──────────────┴─────────────────────────┴───────────────────────────────┘
+```
 
-Add new fields to `RawQuestion` and `FormattedQuestion`:
+---
 
+## Key Features
+
+### 1. Primary Navigation Tabs
+- **Library Tab**: Shows questions where `in_production = false`
+- **Production Tab**: Shows questions where `in_production = true`
+- Tab badges show total count for each state
+- Switching tabs resets filters and selection
+
+### 2. Categories Panel (Left Sidebar)
+- Scrollable list of all categories with question counts
+- Counts are split: `(Library / Production)` format
+- Search filter for category name
+- "All Categories" option at top
+- Click to filter questions by category
+- Visual indicator showing which categories have Library vs Production content
+
+### 3. Questions Panel (Center)
+- Checkbox selection for bulk operations
+- **Advanced Filters Dropdown**:
+  - Question Type: All | Text | Image | Video | Audio
+  - Difficulty: All | Easy | Medium | Hard
+  - Has Icon: All | With Icon | Without Icon
+  - Date Range: Created after / before
+  - Sort: Newest | Oldest | Alphabetical
+- Search by question text, answer, or ID
+- Pagination with adjustable page size (25/50/100)
+- Inline badges: Type indicator (📝/🖼️/🎬/🎧), Difficulty chip, Icon status
+- Multi-select with Shift+Click range selection
+- Row click opens in preview panel
+
+### 4. Live Preview Panel (Right)
+- **100% replica of production game UI** in an iPhone frame
+- Dynamic preview based on question type:
+  - **Text**: Standard QuizQuestionCard with icon
+  - **Image**: Card with image at top, short question below
+  - **Video**: Card with auto-playing muted video loop
+  - **Audio**: Card with AudioPlayer waveform and controls
+- **Navigation arrows** (Prev/Next) to browse through filtered questions
+- Edit button opens inline editing modal
+- Quick actions:
+  - Toggle production status
+  - Assign/change icon
+  - Duplicate question
+  - Delete question
+
+### 5. Bulk Actions Toolbar
+Appears when items are selected:
+- **Push to Production**: Move selected from Library → Production
+- **Remove from Production**: Move selected from Production → Library
+- **Bulk Assign Icon**: Open icon picker for all selected
+- **Bulk Change Difficulty**: Dropdown to set difficulty
+- **Bulk Delete**: With confirmation dialog
+- **Export Selected**: Download as JSON/CSV
+- **Duplicate Selected**: Create copies in Library
+
+---
+
+## Database Considerations
+
+### Required Query Modifications
+The `AdminQuestion` interface and `useAdminQuestions` hook need to include:
 ```typescript
-interface RawQuestion {
+interface AdminQuestion {
   // ... existing fields
+  image_url?: string | null;
   video_url?: string | null;
   audio_url?: string | null;
-}
-
-export interface FormattedQuestion {
-  // ... existing fields
-  videoUrl?: string | null;
-  audioUrl?: string | null;
+  language?: string;
 }
 ```
 
-Update `formatQuestion()` function to include new fields.
-
-### 2. Update all SELECT queries in `questionService.ts`
-
-Add `video_url, audio_url` to all question fetch queries.
-
-### 3. Update `TriviaQuestion` interface in `src/hooks/useTrivia.ts`
-
+### Production Status Filter
+Add `productionStatus` parameter to `useAdminQuestions`:
 ```typescript
-export interface TriviaQuestion {
-  // ... existing fields
-  videoUrl?: string;
-  audioUrl?: string;
-}
+useAdminQuestions(categoryId, searchTerm, {
+  inProduction: boolean | null, // null = all, true = prod, false = lib
+  questionType: 'text' | 'image' | 'video' | 'audio' | null,
+  difficulty: 'easy' | 'medium' | 'hard' | null,
+  hasIcon: boolean | null,
+})
 ```
 
-### 4. Update `QuizQuestionCard` component
+---
 
-Add video and audio rendering support with play controls:
+## Components to Create
 
-```typescript
-interface QuizQuestionCardProps {
-  // ... existing props
-  videoUrl?: string | null;
-  audioUrl?: string | null;
-}
+### 1. `src/pages/admin/QuestionStudio.tsx`
+Main page with three-panel layout and tab navigation
 
-// Render video player (auto-play, muted with click to unmute)
-{hasVideo && (
-  <div className="w-full h-44 overflow-hidden bg-black">
-    <video 
-      src={videoUrl!}
-      className="w-full h-full object-cover"
-      autoPlay
-      loop
-      muted
-      playsInline
-    />
+### 2. `src/components/admin/studio/`
+- `StudioTabs.tsx` - Library/Production tab switcher with counts
+- `CategorySidebar.tsx` - Categories list with filtering
+- `QuestionList.tsx` - Paginated, filterable question list with checkboxes
+- `QuestionFilters.tsx` - Advanced filter dropdown
+- `QuestionPreviewPanel.tsx` - Live preview with navigation
+- `BulkActionsBar.tsx` - Floating toolbar for bulk operations
+- `QuestionTypeIndicator.tsx` - Icon/badge for question type
+
+### 3. `src/components/admin/studio/previews/`
+- `TextQuestionPreview.tsx` - Standard text question in phone frame
+- `ImageQuestionPreview.tsx` - Image trivia preview
+- `VideoQuestionPreview.tsx` - Video trivia preview with player
+- `AudioQuestionPreview.tsx` - Audio trivia preview with waveform
+
+### 4. `src/hooks/useQuestionStudio.ts`
+Enhanced hook with:
+- Production/Library filtering
+- Question type filtering
+- Multi-select state management
+- Bulk operation handlers
+
+---
+
+## Preview Component Details
+
+### iPhone Frame Wrapper (Shared)
+Reuses the existing mockup frame pattern but enhanced:
+```tsx
+<div className="relative w-[320px] h-[640px] bg-black rounded-[50px] p-3">
+  {/* Notch */}
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-7 bg-black rounded-b-3xl z-10" />
+  
+  {/* Screen */}
+  <div className="w-full h-full bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5] rounded-[40px] overflow-hidden">
+    {/* Header with scores, power-ups */}
+    {/* QuizQuestionCard with media */}
+    {/* Answer buttons */}
   </div>
-)}
-
-// Render audio player (waveform visualization + play button)
-{hasAudio && (
-  <div className="w-full h-32 flex items-center justify-center bg-gradient-to-r from-purple-600 to-blue-600">
-    <AudioPlayer src={audioUrl!} />
-  </div>
-)}
+</div>
 ```
 
-### 5. Create `AudioPlayer` component
+### Type-Specific Rendering
+The preview panel dynamically shows:
+- **Text**: Icon at top center, question text, 4 answer buttons
+- **Image**: Image fills top section, short question below, answers
+- **Video**: Video auto-plays muted in top section, question below
+- **Audio**: Waveform player, play/pause button, question below
 
-A simple audio player with:
-- Play/Pause button (large, centered)
-- Progress bar
-- Visual waveform animation
-- Auto-play on question load
+All using the **actual production components** (QuizQuestionCard, AudioPlayer) for pixel-perfect accuracy.
 
-Location: `src/components/ui/audio-player.tsx`
+---
 
-### 6. Update `CategoryQuizPage.tsx`
+## Navigation in Admin Sidebar
 
-Pass video and audio URLs to the question card:
-
+Add new entry to `src/pages/Admin.tsx`:
 ```typescript
-interface TriviaQuestion {
-  // ... existing fields
-  video_url?: string | null;
-  audio_url?: string | null;
+{ 
+  to: '/admin/question-studio', 
+  icon: Layers, // or similar
+  label: 'Question Studio' 
 }
-
-// In question mapping
-const mapped = result.questions.map(q => ({
-  // ... existing fields
-  video_url: q.videoUrl,
-  audio_url: q.audioUrl,
-}));
-
-// Pass to card
-<QuizQuestionCard
-  questionText={currentQuestion?.question || ""}
-  imageUrl={currentQuestion?.image_url}
-  videoUrl={currentQuestion?.video_url}
-  audioUrl={currentQuestion?.audio_url}
-  reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}
-/>
-```
-
-### 7. Update icon visibility logic
-
-Hide category icon when video/audio is present (same as image):
-
-```typescript
-{!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url && (
-  <DynamicIcon ... />
-)}
 ```
 
 ---
 
 ## File Changes Summary
 
-| Component | Change |
-|-----------|--------|
-| Database: `questions` | Add `video_url`, `audio_url` columns |
-| Database: `categories` | Insert 2 new categories |
-| Database: `questions` | Insert 20 sample questions (10 each) |
-| `src/services/questionService.ts` | Add video/audio to interfaces and queries |
-| `src/hooks/useTrivia.ts` | Add video/audio to interface |
-| `src/components/ui/quiz-question-card.tsx` | Add video/audio rendering |
-| `src/components/ui/audio-player.tsx` | NEW - Audio player component |
-| `src/pages/CategoryQuizPage.tsx` | Pass video/audio to card |
-| `src/components/game/QuizGameScreenProd.tsx` | Pass video/audio to card |
+| Type | Path | Description |
+|------|------|-------------|
+| NEW | `src/pages/admin/QuestionStudio.tsx` | Main studio page |
+| NEW | `src/components/admin/studio/StudioTabs.tsx` | Tab navigation |
+| NEW | `src/components/admin/studio/CategorySidebar.tsx` | Category filter panel |
+| NEW | `src/components/admin/studio/QuestionList.tsx` | Question list with selection |
+| NEW | `src/components/admin/studio/QuestionFilters.tsx` | Advanced filters |
+| NEW | `src/components/admin/studio/QuestionPreviewPanel.tsx` | Live preview with navigation |
+| NEW | `src/components/admin/studio/BulkActionsBar.tsx` | Bulk operations toolbar |
+| NEW | `src/hooks/useQuestionStudio.ts` | Enhanced data hook |
+| EDIT | `src/hooks/useAdminQuestions.ts` | Add media fields, production filter |
+| EDIT | `src/pages/Admin.tsx` | Add route to sidebar |
+| EDIT | `src/App.tsx` | Add route |
 
 ---
 
-## Media Format
+## Technical Implementation Notes
 
-### Video Questions
-- **Format**: MP4, short clips (5-15 seconds)
-- **Display**: Auto-play, muted, looped
-- **Question**: 2-3 words (e.g., "რომელი ფილმია?", "რა სპორტია?")
+1. **Live Preview Accuracy**: Use the actual `QuizQuestionCard` component (not a mockup replica) wrapped in a phone frame to guarantee 100% design fidelity
 
-### Audio Questions
-- **Format**: MP3/WAV clips (5-20 seconds)
-- **Display**: Large play button with waveform animation
-- **Question**: 2-3 words (e.g., "რომელი სიმღერაა?", "რა ცხოველია?")
+2. **Bulk Operations**: Use Supabase batch updates with array of IDs for performance
 
-The existing game UI handles timer, answers, power-ups, and scoring - only the question card gets new media rendering capabilities.
+3. **Selection State**: Track selected IDs in a Set for O(1) operations
+
+4. **Question Type Detection**: Helper function:
+   ```typescript
+   function getQuestionType(q: AdminQuestion): 'text' | 'image' | 'video' | 'audio' {
+     if (q.video_url) return 'video';
+     if (q.audio_url) return 'audio';
+     if (q.image_url) return 'image';
+     return 'text';
+   }
+   ```
+
+5. **Keyboard Navigation**: Arrow keys to navigate questions, Enter to edit, Space to toggle selection
+
+6. **Real-time Updates**: Subscribe to questions table changes for live sync across admin sessions
