@@ -318,11 +318,15 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
 
   // Main selection UI
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col">
-      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
-        <div className="flex items-center gap-3 mb-6">
+    <div className="h-[100dvh] bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col overflow-hidden">
+      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
+        {/* Header - fixed height */}
+        <div className="flex items-center gap-3 mb-6 shrink-0">
           {onBack && (
-            <button onClick={onBack} className="p-2 rounded-full hover:bg-white/10">
+            <button 
+              onClick={onBack} 
+              className="p-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform z-20"
+            >
               <ArrowLeft className="w-5 h-5 text-purple-200" />
             </button>
           )}
@@ -330,57 +334,59 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
           <h1 className="text-xl font-bold text-white">აირჩიე კატეგორიები</h1>
         </div>
 
-        {/* Queue */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1">
-          <p className="text-purple-300 text-sm mb-3">
+        {/* Queue - scrollable area */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20 flex-1 min-h-0 overflow-hidden flex flex-col">
+          <p className="text-purple-300 text-sm mb-3 shrink-0">
             არჩეული რაუნდები: <span className="font-bold text-white">{queue.length}/8</span>
           </p>
           
-          {/* Show queue items */}
-          {queue.length > 0 ? (
-            <div className="space-y-2 mb-4 max-h-[40vh] overflow-y-auto">
-              {queue.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-2 rounded-xl bg-white/5"
-                >
-                  <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
-                    {index + 1}
-                  </div>
-                {item.icon_slug ? (
-                  <QuizCategoryIcon iconSlug={item.icon_slug} size={40} className="w-10 h-10" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-purple-300" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm truncate">{item.category_name}</p>
-                    <p className="text-xs text-purple-300">
-                      {item.source_type === 'category' ? 'კატეგორია' : 'შენი ტრივია'}
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => handleRemoveFromQueue(item.id)}
-                    className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30 active:scale-95 transition-transform shrink-0"
+          {/* Show queue items - scrollable */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {queue.length > 0 ? (
+              <div className="space-y-2">
+                {queue.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-3 p-2 rounded-xl bg-white/5"
                   >
-                    <X className="w-4 h-4 text-red-400" />
-                  </button>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-3" />
-              <p className="text-purple-300">აირჩიე კატეგორიები თამაშისთვის</p>
-            </div>
-          )}
+                    <div className="w-6 h-6 rounded-full bg-purple-500/30 flex items-center justify-center text-xs font-bold text-purple-200">
+                      {index + 1}
+                    </div>
+                  {item.icon_slug ? (
+                    <QuizCategoryIcon iconSlug={item.icon_slug} size={40} className="w-10 h-10" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-purple-300" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-white text-sm truncate">{item.category_name}</p>
+                      <p className="text-xs text-purple-300">
+                        {item.source_type === 'category' ? 'კატეგორია' : 'შენი ტრივია'}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveFromQueue(item.id)}
+                      className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30 active:scale-95 transition-transform shrink-0"
+                    >
+                      <X className="w-4 h-4 text-red-400" />
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-3" />
+                <p className="text-purple-300">აირჩიე კატეგორიები თამაშისთვის</p>
+              </div>
+            )}
+          </div>
 
-          {/* Add buttons */}
+          {/* Add buttons - fixed at bottom of card */}
           {queue.length < 8 && (
-            <div className="space-y-2">
+            <div className="space-y-2 shrink-0 pt-3">
               <ChunkyButton
                 variant="secondary"
                 className="w-full"
@@ -401,8 +407,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
           )}
         </div>
 
-        {/* Start game button */}
-        <div className="mt-auto">
+        {/* Start game button - fixed at bottom */}
+        <div className="shrink-0 pt-4">
           <ChunkyButton
             variant="primary"
             className="w-full"
