@@ -720,10 +720,9 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
                   >
                     {/* Rank */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      index === 0 ? 'bg-yellow-500 text-yellow-900' :
-                      index === 1 ? 'bg-gray-300 text-gray-700' :
-                      index === 2 ? 'bg-orange-400 text-orange-900' :
-                      'bg-purple-500/30 text-purple-200'
+                      index < 3 
+                        ? 'bg-white text-purple-900'
+                        : 'bg-purple-500/30 text-purple-200'
                     }`}>
                       {index + 1}
                     </div>

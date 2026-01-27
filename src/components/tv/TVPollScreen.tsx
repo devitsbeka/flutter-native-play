@@ -135,7 +135,7 @@ export const TVPollScreen: React.FC = () => {
               </p>
             </motion.div>
           ) : (
-            <div className={`grid ${getGridCols(suggestions.filter(s => s.category_name && s.category_name.trim()).length)} gap-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
+            <div className={`grid ${getGridCols(suggestions.filter(s => s.category_name && s.category_name.trim()).length)} gap-4 pt-4 pb-8 overflow-y-auto max-h-[calc(100vh-220px)]`}>
               <AnimatePresence mode="popLayout">
                 {suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
                   <SuggestionCard
@@ -252,7 +252,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
         transition: { type: 'spring', stiffness: 500, damping: 30 }
       }}
       exit={{ opacity: 0, scale: 0.8 }}
-      className={`relative bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 transition-all ${
+      className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-2xl p-6 border-2 transition-all ${
         isLeader 
           ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
           : 'border-white/20'
@@ -271,11 +271,10 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
 
       {/* Rank badge */}
       {showVotes && (
-        <div className={`absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-          rank === 1 ? 'bg-yellow-500 text-yellow-900' :
-          rank === 2 ? 'bg-gray-300 text-gray-700' :
-          rank === 3 ? 'bg-orange-400 text-orange-900' :
-          'bg-purple-500/50 text-white'
+        <div className={`absolute -top-3 -left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+          rank <= 3 
+            ? 'bg-white text-purple-900'
+            : 'bg-purple-500/50 text-white'
         }`}>
           {rank}
         </div>
