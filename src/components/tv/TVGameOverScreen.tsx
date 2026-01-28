@@ -251,7 +251,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                 className="w-full"
               >
                 <Library className="w-5 h-5 mr-2" />
-                კატეგორიის არჩევა
+                კატეგორიის დამატება
               </ChunkyButton>
             )}
             {onStartPoll && (
@@ -261,7 +261,7 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
                 className="w-full"
               >
                 <Vote className="w-5 h-5 mr-2" />
-                ხმის მიცემა
+                არჩევნების დაწყება
               </ChunkyButton>
             )}
           </div>

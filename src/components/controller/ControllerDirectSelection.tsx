@@ -152,7 +152,19 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         ? currentQueue[0].position + 1 
         : 0;
 
+      // Fetch user profile for suggester info (only needed for non-blind trivias)
+      let suggesterInfo: { nickname: string | null; avatar_url: string | null } = { nickname: null, avatar_url: null };
+      if (!trivia.is_blind) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname, avatar_url')
+          .eq('user_id', userId)
+          .maybeSingle();
+        suggesterInfo = profile || { nickname: null, avatar_url: null };
+      }
+
       // Insert directly into tv_session_queue for user trivia
+      // Only set suggester if this is NOT a blind trivia (host knows answers)
       const { error } = await supabase.from('tv_session_queue').insert({
         session_id: sessionId,
         position: nextPosition,
@@ -160,6 +172,9 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         user_trivia_id: trivia.id,
         category_name: trivia.title,
         icon_slug: trivia.icon_slug,
+        suggester_user_id: trivia.is_blind ? null : userId,
+        suggester_nickname: trivia.is_blind ? null : suggesterInfo.nickname,
+        suggester_avatar_url: trivia.is_blind ? null : suggesterInfo.avatar_url,
       });
 
       if (error) throw error;
