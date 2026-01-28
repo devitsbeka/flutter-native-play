@@ -10,11 +10,14 @@ import {
   Search,
   Loader2,
   Check,
-  ChevronLeft
+  ChevronLeft,
+  Clock
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useFriends } from "@/hooks/useFriends";
+import { useAuth } from "@/contexts/AuthContext";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
@@ -104,8 +107,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const [invitingUser, setInvitingUser] = useState<string | null>(null);
   const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
+  const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
+  const { user } = useAuth();
   
   // Memoize friendIds to prevent infinite re-renders
   const friendIds = useMemo(
@@ -122,6 +127,25 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   // Determine mode: pre-room selection vs room invite vs friend request
   const isPreRoomMode = Boolean(onFriendSelect);
   const isRoomInviteMode = Boolean(roomId);
+  
+  // Fetch pending outgoing friend requests on modal open
+  useEffect(() => {
+    const fetchPendingOutgoing = async () => {
+      if (!user?.id || !isOpen) return;
+      
+      const { data } = await supabase
+        .from("friendships")
+        .select("friend_id")
+        .eq("user_id", user.id)
+        .eq("status", "pending");
+      
+      if (data) {
+        setPendingOutgoingIds(new Set(data.map(f => f.friend_id)));
+      }
+    };
+    
+    fetchPendingOutgoing();
+  }, [user?.id, isOpen]);
   
   const appLink = inviteLink || `${window.location.origin}/team`;
   const shareMessage = "მოგიწვიე MyTrivia-ში თამაშზე! 🎮🧠 შემოგვიერთდი და გავერთოთ ერთად!";
@@ -166,6 +190,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       console.log("[InviteFriendsModal] sendFriendRequest result:", success);
       if (success) {
         setSentRequests(prev => new Set([...prev, userId]));
+        setPendingOutgoingIds(prev => new Set([...prev, userId]));
       }
     } catch (error) {
       console.error("[InviteFriendsModal] sendFriendRequest error:", error);
@@ -386,40 +411,55 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 )}
                               </div>
 
-                              <motion.button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (isRoomInviteMode) {
-                                    handleInviteToRoom(result.user_id);
-                                  } else {
-                                    handleSendRequest(result.user_id);
-                                  }
-                                }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                                disabled={sentRequests.has(result.user_id) || invitingUser === result.user_id || sendingRequestTo === result.user_id}
-                                className={`relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
-                                  sentRequests.has(result.user_id)
-                                    ? "bg-white/15 border-white/20 text-white/90"
-                                    : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
-                                }`}
-                                whileHover={!sentRequests.has(result.user_id) && !sendingRequestTo ? { scale: 1.02 } : {}}
-                                whileTap={!sentRequests.has(result.user_id) && !sendingRequestTo ? { scale: 0.98 } : {}}
-                              >
-                                {(invitingUser === result.user_id || sendingRequestTo === result.user_id) ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : sentRequests.has(result.user_id) ? (
-                                  <>
-                                    <Check className="w-3 h-3" />
-                                    გაგზავნილი
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="w-4 h-4" />
-                                    {isRoomInviteMode ? "მოწვევა" : "დამატება"}
-                                  </>
-                                )}
-                              </motion.button>
+                              {(() => {
+                                const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
+                                const isLoading = invitingUser === result.user_id || sendingRequestTo === result.user_id;
+                                const isSent = sentRequests.has(result.user_id);
+                                const isDisabled = isSent || isPendingOutgoing || isLoading;
+                                
+                                return (
+                                  <motion.button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (isPendingOutgoing) return;
+                                      if (isRoomInviteMode) {
+                                        handleInviteToRoom(result.user_id);
+                                      } else {
+                                        handleSendRequest(result.user_id);
+                                      }
+                                    }}
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    disabled={isDisabled}
+                                    className={`relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
+                                      isSent || isPendingOutgoing
+                                        ? "bg-white/15 border-white/20 text-white/70"
+                                        : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
+                                    }`}
+                                    whileHover={!isDisabled ? { scale: 1.02 } : {}}
+                                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                                  >
+                                    {isLoading ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : isPendingOutgoing ? (
+                                      <>
+                                        <Clock className="w-4 h-4" />
+                                        მოლოდინში
+                                      </>
+                                    ) : isSent ? (
+                                      <>
+                                        <Check className="w-3 h-3" />
+                                        გაგზავნილი
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserPlus className="w-4 h-4" />
+                                        {isRoomInviteMode ? "მოწვევა" : "დამატება"}
+                                      </>
+                                    )}
+                                  </motion.button>
+                                );
+                              })()}
                             </motion.div>
                           ))
                         );
