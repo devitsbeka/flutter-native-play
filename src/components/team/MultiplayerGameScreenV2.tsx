@@ -15,6 +15,7 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { QuizTrueFalseButton, QuizTrueFalseState } from "@/components/ui/quiz-true-false-button";
 import { cn } from "@/lib/utils";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { MultiplayerObserverScreen } from "./MultiplayerObserverScreen";
 
 export function MultiplayerGameScreenV2() {
   const navigate = useNavigate();
@@ -41,6 +42,8 @@ export function MultiplayerGameScreenV2() {
     participants,
     exitRoom,
     currentRoom,
+    hostIsObserver,
+    isHost,
   } = useMultiplayerV2();
 
   // Start background music when game starts
@@ -165,6 +168,16 @@ export function MultiplayerGameScreenV2() {
         <div className="animate-spin w-10 h-10 border-4 border-white border-t-transparent rounded-full mb-4" />
         <p className="text-white/80 text-lg">{t("game.gameLoading")}</p>
       </div>
+    );
+  }
+
+  // Show observer screen for host when they're in observer mode
+  if (isHost && hostIsObserver) {
+    return (
+      <MultiplayerObserverScreen 
+        timeRemaining={timeRemaining} 
+        onExit={handleExit}
+      />
     );
   }
 

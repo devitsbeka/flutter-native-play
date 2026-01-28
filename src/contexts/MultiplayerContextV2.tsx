@@ -85,6 +85,8 @@ interface MultiplayerState {
   lastQuestionResult: { correct: boolean; points: number } | null;
   timePerQuestion: number;
   opponentAnswers: Record<string, PlayerAnswer>;
+  hostIsObserver: boolean; // Host can't answer but earns points from player mistakes
+  observerBonusThisRound: number; // Accumulated observer bonus for current round
 }
 
 interface MultiplayerContextType extends MultiplayerState {
@@ -95,7 +97,7 @@ interface MultiplayerContextType extends MultiplayerState {
   // Actions
   createRoom: (categoryId?: string, categoryName?: string, customQuestions?: any[], roomName?: string | null, roomIcon?: string | null) => Promise<GameRoom | null>;
   enterRoom: (roomCode: string) => Promise<boolean>;
-  startGame: () => Promise<void>;
+  startGame: (hostShouldObserve?: boolean) => Promise<void>;
   startNewRound: () => Promise<void>; // Any player can start a new round
   startNextFromQueue: () => Promise<void>; // Continue with next queued category
   submitAnswer: (answer: string, timeRemaining: number) => Promise<void>;
@@ -105,6 +107,7 @@ interface MultiplayerContextType extends MultiplayerState {
   leaveRoomPermanently: () => Promise<void>;
   deleteRoom: () => Promise<void>;
   resetMultiplayer: () => void;
+  awardObserverBonus: (incorrectCount: number) => Promise<void>; // Award bonus to observer host
   
   // Modals
   showCreateModal: boolean;
@@ -123,6 +126,8 @@ const initialState: MultiplayerState = {
   lastQuestionResult: null,
   timePerQuestion: 15,
   opponentAnswers: {},
+  hostIsObserver: false,
+  observerBonusThisRound: 0,
 };
 
 // NOTE: We use a non-undefined default value to avoid hard crashes (blank screen)
@@ -149,6 +154,7 @@ const MultiplayerContext = createContext<MultiplayerContextType>({
   leaveRoomPermanently: async () => missingProvider(),
   deleteRoom: async () => missingProvider(),
   resetMultiplayer: () => missingProvider(),
+  awardObserverBonus: async () => missingProvider(),
   showCreateModal: false,
   setShowCreateModal: () => missingProvider(),
   showJoinModal: false,
@@ -662,12 +668,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   }, []);
 
   // Start game (host only)
-  const startGame = useCallback(async () => {
+  // hostShouldObserve: when true, host enters observer mode (can't answer, but earns points from mistakes)
+  const startGame = useCallback(async (hostShouldObserve: boolean = false) => {
     if (!state.currentRoom || !isHost) return;
     
     const roomId = state.currentRoom.id;
     const questionCount = state.currentRoom.total_questions || 5;
     const usedIds = state.currentRoom.used_question_ids || [];
+    
+    // Set host_is_observer in database
+    if (hostShouldObserve) {
+      await supabase
+        .from("game_rooms")
+        .update({ host_is_observer: true })
+        .eq("id", roomId);
+    }
     
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), use existing custom questions
@@ -743,6 +758,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             myScore: 0,
             lastQuestionResult: null,
             opponentAnswers: {},
+            hostIsObserver: hostShouldObserve,
+            observerBonusThisRound: 0,
             currentGame: game ? {
               id: game.id,
               room_id: game.room_id,
@@ -855,6 +872,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               myScore: 0,
               lastQuestionResult: null,
               opponentAnswers: {},
+              hostIsObserver: hostShouldObserve,
+              observerBonusThisRound: 0,
               currentGame: game ? {
                 id: game.id,
                 room_id: game.room_id,
@@ -910,7 +929,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
       
-      await saveQuestionsAndStartGame(roomId, questions);
+      await saveQuestionsAndStartGame(roomId, questions, hostShouldObserve);
       
       // Consume matching queue item if it exists (prevents "next round" showing played category)
       await consumeMatchingQueueItem(roomId, state.currentRoom.category_id, null);
@@ -922,7 +941,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   }, [state.currentRoom, isHost]);
 
   // Helper to save questions and update room status
-  const saveQuestionsAndStartGame = useCallback(async (roomId: string, questions: TriviaQuestion[]) => {
+  const saveQuestionsAndStartGame = useCallback(async (
+    roomId: string, 
+    questions: TriviaQuestion[],
+    hostShouldObserve: boolean = false
+  ) => {
     // Clear old questions/answers
     await supabase.from("room_questions").delete().eq("room_id", roomId);
     await supabase.from("player_answers").delete().eq("room_id", roomId);
@@ -975,6 +998,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       myScore: 0,
       lastQuestionResult: null,
       opponentAnswers: {},
+      hostIsObserver: hostShouldObserve,
+      observerBonusThisRound: 0,
       currentGame: game ? {
         id: game.id,
         room_id: game.room_id,
@@ -1628,6 +1653,30 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     setParticipants([]);
   }, [cleanupChannels]);
 
+  // Award observer bonus - called when host is observing and players make mistakes
+  const awardObserverBonus = useCallback(async (incorrectCount: number) => {
+    if (!state.currentRoom || !user || !state.hostIsObserver) return;
+    
+    const bonus = incorrectCount * 100; // 100 points per incorrect answer
+    if (bonus <= 0) return;
+    
+    const newScore = state.myScore + bonus;
+    const newBonusTotal = state.observerBonusThisRound + bonus;
+    
+    // Update participant score in database
+    await supabase
+      .from("room_participants")
+      .update({ score: newScore })
+      .eq("room_id", state.currentRoom.id)
+      .eq("user_id", user.id);
+    
+    setState(prev => ({
+      ...prev,
+      myScore: newScore,
+      observerBonusThisRound: newBonusTotal,
+    }));
+  }, [state.currentRoom, state.hostIsObserver, state.myScore, state.observerBonusThisRound, user]);
+
   // Get share link
   const getShareLink = useCallback((roomCode: string) => {
     // Use production domain or fallback to current origin
@@ -1654,6 +1703,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     leaveRoomPermanently,
     deleteRoom,
     resetMultiplayer,
+    awardObserverBonus,
     showCreateModal,
     setShowCreateModal,
     showJoinModal,
@@ -1675,6 +1725,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     leaveRoomPermanently,
     deleteRoom,
     resetMultiplayer,
+    awardObserverBonus,
     showCreateModal,
     showJoinModal,
   ]);

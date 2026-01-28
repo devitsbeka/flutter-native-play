@@ -240,15 +240,16 @@ export function RoomLobbyV2() {
       }
     }
     
-    // Proceed with starting the game
-    await proceedWithStartGame();
+    // Proceed with starting the game (host can participate normally)
+    await proceedWithStartGame(false);
   };
 
-  const proceedWithStartGame = async () => {
+  // Called when proceeding after warning modal - host will observe
+  const proceedWithStartGame = async (hostShouldObserve: boolean = false) => {
     setShowHostObserverWarning(false);
     setIsStarting(true);
     playSound("button-click");
-    await startGame();
+    await startGame(hostShouldObserve);
     setIsStarting(false);
   };
 
@@ -1003,7 +1004,7 @@ export function RoomLobbyV2() {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col mt-4">
             <AlertDialogAction
-              onClick={proceedWithStartGame}
+              onClick={() => proceedWithStartGame(true)}
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
             >
               გასაგებია, დავიწყოთ!

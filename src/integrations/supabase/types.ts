@@ -636,6 +636,7 @@ export type Database = {
           game_mode: string | null
           game_type: Database["public"]["Enums"]["game_type"]
           has_unread_activity: boolean | null
+          host_is_observer: boolean | null
           host_user_id: string
           id: string
           is_permanent: boolean | null
@@ -666,6 +667,7 @@ export type Database = {
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           has_unread_activity?: boolean | null
+          host_is_observer?: boolean | null
           host_user_id: string
           id?: string
           is_permanent?: boolean | null
@@ -696,6 +698,7 @@ export type Database = {
           game_mode?: string | null
           game_type?: Database["public"]["Enums"]["game_type"]
           has_unread_activity?: boolean | null
+          host_is_observer?: boolean | null
           host_user_id?: string
           id?: string
           is_permanent?: boolean | null
