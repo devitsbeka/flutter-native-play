@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, RotateCcw, Star, Crown, Shuffle, Library, ChevronRight } from "lucide-react";
+import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Plus } from "lucide-react";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -412,21 +412,38 @@ export function GameResultsScreenV2() {
           </motion.div>
         )}
 
-        <ChunkyButton
-          variant="mint"
-          size="lg"
-          className="w-full"
-          onClick={handlePlayAgain}
-          disabled={isStartingRematch}
-          icon={nextQueueItem ? <ChevronRight className="w-5 h-5" /> : <RotateCcw className="w-5 h-5" />}
-        >
-          {isStartingRematch 
-            ? t("game.starting") 
-            : nextQueueItem 
-              ? `გაგრძელება: ${nextQueueItem.source_type === "random" ? "შემთხვევითი" : (nextQueueItem.category_name || "კატეგორია")}`
-              : t("game.newRound")
-          }
-        </ChunkyButton>
+        {queue.length > 0 ? (
+          // Has queue - show continue button
+          <ChunkyButton
+            variant="mint"
+            size="lg"
+            className="w-full"
+            onClick={handlePlayAgain}
+            disabled={isStartingRematch}
+            icon={<ChevronRight className="w-5 h-5" />}
+          >
+            {isStartingRematch 
+              ? t("game.starting") 
+              : `გაგრძელება: ${nextQueueItem?.source_type === "random" ? "შემთხვევითი" : (nextQueueItem?.category_name || "კატეგორია")}`
+            }
+          </ChunkyButton>
+        ) : isHost ? (
+          // No queue, is host - add category button
+          <ChunkyButton
+            variant="mint"
+            size="lg"
+            className="w-full"
+            onClick={handleBackToRoom}
+            icon={<Plus className="w-5 h-5" />}
+          >
+            კატეგორიის დამატება
+          </ChunkyButton>
+        ) : (
+          // No queue, not host - waiting indicator
+          <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <p className="text-white/70 font-medium">ველოდებით მასპინძელს...</p>
+          </div>
+        )}
 
         <ChunkyButton
           variant="secondary"
