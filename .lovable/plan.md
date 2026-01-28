@@ -1,105 +1,97 @@
 
+# Add Question Button to My Trivia Party Edit Screen
 
-# Fix: Friend Request Button Issues on Mobile + UX Improvements
+## Overview
 
-## Problems Identified
+When editing a saved My Trivia Party (or any trivia in the `EditRoundModal`), users should be able to add new questions via a "+" button in the top right corner of the questions view.
 
-### Issue 1: "მოლოდინში" (Pending) Status is Actually Correct
-The database shows that user `b15c0d28-5316-4708-b3bd-def38fadc753` (Mako) already sent a friend request to `615aae02-c044-4fd0-bec0-4bd7463e7381` (Test) on **January 27, 2026**. The request WAS sent successfully - the "მოლოდინში" status is accurate.
+---
 
-**User Confusion**: The user may not realize the request was sent successfully previously, or the success toast was missed.
+## Current State
 
-### Issue 2: "დამატება" Button Not Clickable on Android Mobile
-Looking at the screenshot, the user can see "Testera" with an active "დამატება" button but cannot tap it. This is a **mobile touch event handling issue**.
+The `EditRoundModal` component handles editing saved trivias:
+- Shows "კითხვა X / Y" header in questions view mode
+- Has an empty spacer div on the right side of the header: `<div className="w-10" />`
+- Has functions for updating and deleting questions, but **no function to add new questions**
 
-**Root Causes:**
-1. **Framer Motion `whileTap` can interfere with touch events** on some mobile browsers
-2. **Touch target size may be too small** - current padding is `px-4 py-2.5` which is only ~40px height
-3. **The `motion.button` with onClick may not register properly** on Android - need to add `onTouchEnd` as fallback
-4. **Disabled state check happens inside onClick** after checking `isPendingOutgoing`, but the button is already disabled, causing confusion
+---
 
-## Solution
+## Changes Required
 
-### Part 1: Fix Touch Handling for Mobile
+### File: `src/components/social/EditRoundModal.tsx`
 
-Add explicit touch event handlers and increase touch target size:
+#### 1. Add `addQuestion` Function (after `deleteQuestion` ~line 197)
 
-**File: `src/components/team/InviteFriendsModal.tsx`**
+Create a new function to add a blank question:
 
 ```typescript
-// Change from motion.button to regular button with touch-friendly handling
-<button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (isDisabled) return;
-    if (isRoomInviteMode) {
-      handleInviteToRoom(result.user_id);
-    } else {
-      handleSendRequest(result.user_id);
-    }
-  }}
-  onTouchEnd={(e) => {
-    e.stopPropagation();
-    // For Android, sometimes onClick doesn't fire - handle on touchEnd
-    if (isDisabled) return;
-    if (isRoomInviteMode) {
-      handleInviteToRoom(result.user_id);
-    } else {
-      handleSendRequest(result.user_id);
-    }
-  }}
-  disabled={isDisabled}
-  className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${...}`}
-  style={{ touchAction: 'manipulation' }}
->
+const addQuestion = useCallback(() => {
+  const newQuestion: Question = {
+    question_text: "",
+    correct_answer: "",
+    incorrect_answers: ["", "", ""],
+    icon_slug: undefined,
+  };
+  const newQuestions = [...questions, newQuestion];
+  setQuestions(newQuestions);
+  
+  // Navigate to the new question after a short delay
+  setTimeout(() => {
+    carouselApi?.scrollTo(newQuestions.length - 1);
+  }, 100);
+}, [questions, carouselApi]);
 ```
 
-### Part 2: Fix Same Issue in AddFriendModal
+#### 2. Replace Empty Spacer with Add Button (line 309)
 
-**File: `src/components/team/AddFriendModal.tsx`**
+Replace the empty spacer div with a conditional + button:
 
-Apply the same touch handling improvements to the `SearchResultCard` component's button.
-
-### Part 3: Add Better Feedback When Request Already Exists
-
-When the button is disabled due to pending status, show a toast on tap explaining the situation:
-
-```typescript
-onClick={(e) => {
-  e.stopPropagation();
-  if (isPendingOutgoing) {
-    toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
-    return;
-  }
-  // ... rest of logic
-}}
+**Before:**
+```tsx
+<div className="w-10" />
 ```
+
+**After:**
+```tsx
+{viewMode === "questions" ? (
+  <button
+    onClick={addQuestion}
+    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors active:scale-95"
+    title="დაამატე კითხვა"
+  >
+    <Plus className="w-5 h-5 text-white" />
+  </button>
+) : (
+  <div className="w-10" />
+)}
+```
+
+---
+
+## Visual Design
+
+The + button will:
+- Appear only in "questions" view mode (when viewing/editing questions carousel)
+- Match the header styling with white icon on purple background
+- Have a circular shape (40x40px) matching the back button style
+- Include hover and active states for feedback
+
+---
+
+## User Flow After Implementation
+
+1. User opens an existing My Trivia Party to edit
+2. User taps "კითხვების ნახვა" to view questions
+3. User sees "კითხვა 1 / 1" header with + button on the right
+4. User taps + button
+5. New blank question is added and carousel navigates to it
+6. User fills in the question and answers
+7. User taps "შენახვა" to save all changes
+
+---
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/team/InviteFriendsModal.tsx` | Fix touch handling, increase touch target, add onTouchEnd fallback |
-| `src/components/team/AddFriendModal.tsx` | Same fixes for consistency |
-
-## Technical Details
-
-### Key Changes:
-1. **Replace `motion.button` with regular `button`** for the Add/Pending buttons - Framer Motion animations can interfere with touch events on Android
-2. **Add `onTouchEnd` handler** as a fallback for Android devices where `onClick` may not fire
-3. **Add `touchAction: 'manipulation'`** CSS to prevent double-tap zoom and improve responsiveness
-4. **Increase minimum touch target to 48px** (recommended by mobile UX guidelines)
-5. **Add CSS `active:scale-95`** instead of Framer Motion `whileTap` for simpler touch feedback
-6. **Add feedback toast** when tapping on pending requests to clarify the situation
-7. **Prevent default** on click to avoid any bubbling issues
-
-## Expected Results
-
-| Action | Before | After |
-|--------|--------|-------|
-| Tap "დამატება" on Android | No response | Request sends, shows loading then "გაგზავნილი" |
-| Tap "მოლოდინში" | No response | Toast explains "მოთხოვნა უკვე გაგზავნილია" |
-| Touch responsiveness | Inconsistent | Reliable 48px+ touch targets |
-
+| `src/components/social/EditRoundModal.tsx` | Add `addQuestion` function, replace spacer with + button in questions view |
