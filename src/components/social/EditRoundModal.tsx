@@ -196,6 +196,22 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
     });
   }, [questions, carouselApi, toast]);
 
+  const addQuestion = useCallback(() => {
+    const newQuestion: Question = {
+      question_text: "",
+      correct_answer: "",
+      incorrect_answers: ["", "", ""],
+      icon_slug: undefined,
+    };
+    const newQuestions = [...questions, newQuestion];
+    setQuestions(newQuestions);
+    
+    // Navigate to the new question after a short delay
+    setTimeout(() => {
+      carouselApi?.scrollTo(newQuestions.length - 1);
+    }, 100);
+  }, [questions, carouselApi]);
+
   const handleSave = async () => {
     if (!round) return;
     
@@ -306,7 +322,17 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                   }
                 </h1>
               </div>
-              <div className="w-10" />
+              {viewMode === "questions" ? (
+                <button
+                  onClick={addQuestion}
+                  className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors active:scale-95"
+                  title="დაამატე კითხვა"
+                >
+                  <Plus className="w-5 h-5 text-white" />
+                </button>
+              ) : (
+                <div className="w-10" />
+              )}
             </div>
             
             {/* Progress dots for questions view */}
