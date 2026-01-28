@@ -50,6 +50,7 @@ export interface GameRoom {
   used_question_ids?: string[];
   background_gradient?: string | null;
   tv_session_id?: string | null;
+  user_trivia_id?: string | null; // Track which user trivia is being played
 }
 
 export interface RoomGame {
@@ -166,8 +167,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   const [showJoinModal, setShowJoinModal] = useState(false);
   
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([]);
+  
+  // Phase ref for stable subscription access (prevents recreation on phase change)
+  const phaseRef = useRef<GamePhase>(state.phase);
+  useEffect(() => {
+    phaseRef.current = state.phase;
+  }, [state.phase]);
 
   const isHost = state.currentRoom?.host_user_id === user?.id;
+  const isHostRef = useRef(isHost);
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
 
   // Cleanup channels
   const cleanupChannels = useCallback(() => {
@@ -221,15 +232,38 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           const updated = payload.new as GameRoom;
           setState(prev => ({ ...prev, currentRoom: updated }));
           
+          // Use refs for stable access (prevents stale closure issues)
+          const currentPhase = phaseRef.current;
+          const currentIsHost = isHostRef.current;
+          
           // Handle status changes
-          if (updated.status === "playing" && (state.phase === "lobby" || state.phase === "results")) {
+          if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results")) {
             // Non-host: fetch questions when game starts - USE shuffled_answers from DB
-            if (!isHost) {
-              const { data: roomQuestions } = await supabase
-                .from("room_questions")
-                .select("*")
-                .eq("room_id", roomId)
-                .order("question_index", { ascending: true });
+            if (!currentIsHost) {
+              // Wait briefly for questions to be fully committed by host
+              await new Promise(resolve => setTimeout(resolve, 300));
+              
+              // Fetch with retry logic to handle race conditions
+              let attempts = 0;
+              let roomQuestions: any[] | null = null;
+              
+              while (attempts < 3) {
+                const { data } = await supabase
+                  .from("room_questions")
+                  .select("*")
+                  .eq("room_id", roomId)
+                  .order("question_index", { ascending: true });
+                
+                roomQuestions = data;
+                
+                if (roomQuestions && roomQuestions.length > 0) {
+                  break; // Success - got questions
+                }
+                
+                // Wait and retry
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+              }
               
               if (roomQuestions && roomQuestions.length > 0) {
                 const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
@@ -253,6 +287,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   myScore: 0,
                   phase: "playing",
                 }));
+              } else {
+                console.error("Failed to fetch questions after retries");
               }
             }
           } else if (updated.status === "completed") {
@@ -324,7 +360,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     fetchParticipants(roomId);
     
     return () => cleanupChannels();
-  }, [state.currentRoom?.id, state.phase, state.currentQuestionIndex, isHost, user?.id, fetchParticipants, cleanupChannels]);
+  }, [state.currentRoom?.id, user?.id, fetchParticipants, cleanupChannels]); // Removed state.phase and isHost - use refs instead
 
   // Generate room code
   const generateRoomCode = async (): Promise<string> => {
@@ -574,6 +610,57 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     }
   }, [user, profile]);
 
+  // Helper to consume matching queue item when game starts (prevents "next round" showing played category)
+  const consumeMatchingQueueItem = useCallback(async (
+    roomId: string, 
+    categoryId: string | null, 
+    userTriviaId: string | null
+  ) => {
+    try {
+      const { data: queueItems } = await supabase
+        .from("room_category_queue")
+        .select("*")
+        .eq("room_id", roomId)
+        .order("position", { ascending: true })
+        .limit(1);
+      
+      const firstQueueItem = queueItems?.[0];
+      
+      if (!firstQueueItem) return; // No queue items
+      
+      // Check if first queue item matches what we just played
+      const matchesCategory = categoryId && firstQueueItem.category_id === categoryId;
+      const matchesUserTrivia = userTriviaId && firstQueueItem.user_trivia_id === userTriviaId;
+      
+      if (matchesCategory || matchesUserTrivia) {
+        // Delete the matching queue item
+        await supabase
+          .from("room_category_queue")
+          .delete()
+          .eq("id", firstQueueItem.id);
+        
+        // Reorder remaining items
+        const { data: remaining } = await supabase
+          .from("room_category_queue")
+          .select("id")
+          .eq("room_id", roomId)
+          .order("position", { ascending: true });
+        
+        if (remaining && remaining.length > 0) {
+          await Promise.all(
+            remaining.map((item, index) =>
+              supabase.from("room_category_queue")
+                .update({ position: index })
+                .eq("id", item.id)
+            )
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error consuming queue item:", error);
+    }
+  }, []);
+
   // Start game (host only)
   const startGame = useCallback(async () => {
     if (!state.currentRoom || !isHost) return;
@@ -665,6 +752,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             phase: "playing",
           }));
           
+          // Consume matching queue item for custom trivia
+          // For custom rooms, we need to check by user_trivia_id from room
+          await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id || null);
+          
           return; // Exit early - custom questions handled
         }
       }
@@ -705,6 +796,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       markQuestionsAsSeen(questions.map(q => q.id));
       
       await saveQuestionsAndStartGame(roomId, questions);
+      
+      // Consume matching queue item if it exists (prevents "next round" showing played category)
+      await consumeMatchingQueueItem(roomId, state.currentRoom.category_id, null);
       
     } catch (error) {
       console.error("Error starting game:", error);
