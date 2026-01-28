@@ -861,15 +861,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
               {/* Horizontal scrolling friends */}
               <div className="flex-1 overflow-x-auto scrollbar-hide">
                 <div className="flex gap-3 pb-1 pt-1 pl-1">
-                  {/* Invite via link button - FIRST */}
+                  {/* Invite friends button - Opens friend selection modal */}
                   <motion.button
-                    onClick={handleShareInviteLink}
+                    onClick={() => setShowInviteModal(true)}
                     className="shrink-0 flex flex-col items-center justify-center gap-1.5 p-2 min-w-[68px]"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="w-[52px] h-[52px] rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center">
-                      <Share2 className="w-6 h-6 text-primary" />
+                      <UserPlus className="w-6 h-6 text-primary" />
                     </div>
                     <span className="text-xs text-primary font-medium">მოწვევა</span>
                   </motion.button>
@@ -1346,10 +1346,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
         categoryName={selectedCategory?.name}
       />
       
-      {/* Invite Friends Modal */}
+      {/* Invite Friends Modal - Pre-room selection mode */}
       <InviteFriendsModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
+        onFriendSelect={(friendId: string) => {
+          const newSelected = new Set(selectedFriends);
+          if (newSelected.has(friendId)) {
+            newSelected.delete(friendId);
+          } else {
+            newSelected.add(friendId);
+          }
+          setSelectedFriends(newSelected);
+        }}
+        selectedFriends={selectedFriends}
       />
 
       {/* Category Selector Modal */}
