@@ -103,6 +103,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [searching, setSearching] = useState(false);
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
   const [invitingUser, setInvitingUser] = useState<string | null>(null);
+  const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
   
@@ -157,9 +158,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   }, [searchQuery, performSearch]);
 
   const handleSendRequest = async (userId: string) => {
-    const success = await sendFriendRequest(userId);
-    if (success) {
-      setSentRequests(prev => new Set([...prev, userId]));
+    setSendingRequestTo(userId);
+    try {
+      const success = await sendFriendRequest(userId);
+      if (success) {
+        setSentRequests(prev => new Set([...prev, userId]));
+      }
+    } finally {
+      setSendingRequestTo(null);
     }
   };
 
@@ -226,6 +232,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     setSearchQuery("");
     setSearchResults([]);
     setSentRequests(new Set());
+    setSendingRequestTo(null);
     onClose();
   };
   
@@ -376,20 +383,21 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               </div>
 
                               <motion.button
+                                type="button"
                                 onClick={() => isRoomInviteMode 
                                   ? handleInviteToRoom(result.user_id) 
                                   : handleSendRequest(result.user_id)
                                 }
-                                disabled={sentRequests.has(result.user_id) || invitingUser === result.user_id}
+                                disabled={sentRequests.has(result.user_id) || invitingUser === result.user_id || sendingRequestTo === result.user_id}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
                                   sentRequests.has(result.user_id)
                                     ? "bg-white/15 border-white/20 text-white/90"
                                     : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
                                 }`}
-                                whileHover={!sentRequests.has(result.user_id) ? { scale: 1.02 } : {}}
-                                whileTap={!sentRequests.has(result.user_id) ? { scale: 0.98 } : {}}
+                                whileHover={!sentRequests.has(result.user_id) && !sendingRequestTo ? { scale: 1.02 } : {}}
+                                whileTap={!sentRequests.has(result.user_id) && !sendingRequestTo ? { scale: 0.98 } : {}}
                               >
-                                {invitingUser === result.user_id ? (
+                                {(invitingUser === result.user_id || sendingRequestTo === result.user_id) ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : sentRequests.has(result.user_id) ? (
                                   <>
