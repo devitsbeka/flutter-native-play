@@ -415,6 +415,10 @@ export const ka = {
   // Notifications / შეტყობინებები
   // ==========================================
   notifications: {
+    // Dynamic sender-based messages
+    gameStartedBy: "{name} დაიწყო თამაში: {room}",
+    friendRequestFrom: "{name} გთხოვს მეგობრობას",
+    friendAcceptedBy: "{name} დაგიმეგობრდა",
     title: "შეტყობინებები",
     unread: "წაუკითხავი",
     all: "ყველა",

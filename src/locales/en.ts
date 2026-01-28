@@ -417,6 +417,10 @@ export const en: KaTranslations = {
   // Notifications
   // ==========================================
   notifications: {
+    // Dynamic sender-based messages
+    gameStartedBy: "{name} started a game: {room}",
+    friendRequestFrom: "{name} wants to be your friend",
+    friendAcceptedBy: "{name} accepted your friend request",
     title: "Notifications",
     unread: "Unread",
     all: "All",
