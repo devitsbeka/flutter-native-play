@@ -1,170 +1,166 @@
 
-# Plan: Reduce "Start Game" Button Delay from 5 seconds to 1-2 seconds
+# Plan: Fix Button Texts and "Your Category" Bug
 
-## Executive Summary
-The ~5-second delay when clicking "Start Game" is caused by multiple sequential database operations and excessive wait times scattered across the game initialization flow. This plan identifies and optimizes the key bottlenecks while maintaining game reliability.
+## Summary
+This plan addresses two issues:
+1. **Button text changes**: Update "კატეგორიის არჩევა" to "კატეგორიის დამატება" and "ხმის მიცემა" to "არჩევნების დაწყება"
+2. **Bug fix**: The host incorrectly sees "შენი კატეგორიაა!" (Your category - skip round) when selecting library categories instead of their own trivias
 
 ---
 
-## Root Cause Analysis
+## Issue 1: Button Text Changes
 
-### Current Flow: Start Game Button Click
+### Analysis
+The buttons appear on the game-over screen (`TVGameOverScreen.tsx`) at lines 254 and 264. These buttons allow the host to start a new round by either:
+- Directly selecting a category ("კატეგორიის არჩევა" → "კატეგორიის დამატება")
+- Starting a poll vote ("ხმის მიცემა" → "არჩევნების დაწყება")
 
-When a user clicks "Start Game", the following happens sequentially:
+### Changes
+**File: `src/components/tv/TVGameOverScreen.tsx`**
+- Line 254: Change "კატეგორიის არჩევა" to "კატეგორიის დამატება"
+- Line 264: Change "ხმის მიცემა" to "არჩევნების დაწყება"
+
+---
+
+## Issue 2: "Your Category" Bug
+
+### Root Cause Analysis
+The system incorrectly shows the observer UI ("შენი კატეგორიაა!") when the host selects a library category because:
+
+1. **Stale `current_round_suggester_id`**: When the host starts a new game via the `startGame()` function (in `TVGameContext.tsx`), the session update does NOT include `current_round_suggester_id: null` to clear any previous value.
+
+2. **Flow breakdown**:
+   - Round 1: User plays their own trivia → `current_round_suggester_id` = user's ID
+   - Round 2: User picks a library category → `startGame()` runs but doesn't clear the suggester fields
+   - Result: The session still has `current_round_suggester_id` = user's ID, so they see the observer UI
+
+3. **Verification**: The check `isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId` evaluates to `true` because the old ID persists.
+
+### Fix Strategy
+Explicitly clear the suggester fields when starting a new game in the `startGame()` function. This ensures that:
+- Library categories: No suggester (host can play)
+- User's own non-blind trivias: Should have suggester set (host observes)
+- User's own blind trivias: No suggester (host can play - they don't know answers)
+
+### Changes
+**File: `src/contexts/TVGameContext.tsx`**
+
+In the `startGame` function, update the session to explicitly clear/set suggester fields based on the trivia type:
 
 ```text
-handleStartGame() [TVHostController]
-    └── startGame(categoryId) [TVGameContext]
-        ├── Fetch queue items from tv_session_queue
-        ├── Check if first queue item matches current round
-        │   └── Delete queue item + reorder remaining items
-        ├── Fetch questions (getQuestions or user_quiz_posts)
-        ├── Delete stale answers from room (previous sessions)
-        ├── Delete current session answers
-        ├── [BOTTLENECK] setTimeout(300ms) - wait for DB consistency
-        ├── confirmActivePlayers()
-        │   ├── Get presence state
-        │   ├── Activate connected players
-        │   ├── Deactivate disconnected players
-        │   ├── [BOTTLENECK] setTimeout(300ms) - wait for DB
-        │   ├── [BOTTLENECK] 7 verification attempts × 200ms = up to 1400ms
-        │   └── Lock active_player_count
-        └── Update tv_sessions (status='countdown')
+Lines 2381-2394: Add suggester field handling to the session update
 ```
 
-### Time Breakdown (Worst Case)
-| Step | Time |
-|------|------|
-| Queue item operations | ~100-200ms |
-| Fetch questions | ~200-300ms |
-| Answer cleanup | ~100ms |
-| **Wait for DB consistency** | **300ms** |
-| Presence state + activate/deactivate | ~100-200ms |
-| **Wait for DB propagation** | **300ms** |
-| **7 verification attempts × 200ms** | **up to 1400ms** |
-| Session update | ~100ms |
-| **TOTAL** | **~2500-3000ms** |
+**Logic**:
+- If starting with a standard category (`categoryId`): Set all suggester fields to `null`
+- If starting with a user trivia (`userTriviaId`): Need to fetch `is_blind` and `user_id` from the trivia, and:
+  - If the trivia owner matches the current user AND `is_blind = false`: Set suggester = current user
+  - Otherwise: Set suggester = `null`
 
-Adding network latency and React state propagation: **~5 seconds**
+However, since `startGame` is called without user context readily available, and the `startNextRoundFromQueueIfAny` function already handles this correctly via queue items, the simplest fix is:
 
----
+**Simpler Fix**: Always clear suggester fields in `startGame()` since:
+- Library categories have no suggester
+- For user trivias called via `handleStartGame` in `TVHostController`, if the host's own trivia was selected from queue, the queue item should have `suggester_user_id` populated (this happens in the poll flow but NOT in direct selection)
 
-## Optimization Strategy
+**Complete Fix requires two parts**:
 
-### 1. Reduce `confirmActivePlayers` verification loop
-**Current:** 7 attempts × 200ms apart = 1400ms maximum  
-**Optimized:** 3 attempts × 100ms apart = 200ms maximum
+### Part A: Clear suggester in `startGame()` for library categories
+In the session update at lines 2382-2394, add:
+```typescript
+current_round_suggester_id: null,
+current_round_suggester_nickname: null,
+current_round_suggester_avatar_url: null,
+```
 
-The 7-attempt loop was designed for edge cases with network issues. In practice, the first 1-2 attempts almost always succeed since players are already connected during the lobby phase.
+This ensures any new game started via `startGame()` clears stale suggester data.
 
-### 2. Reduce fixed setTimeout delays
-**Current:** 300ms + 300ms = 600ms of pure waiting  
-**Optimized:** 100ms + 50ms = 150ms
+### Part B: Populate suggester in direct selection for user's own non-blind trivias
+In `ControllerDirectSelection.tsx` lines 156-163, when adding a user trivia to the queue, also fetch the user info and set:
+- `suggester_user_id: userId` (if the trivia is NOT blind)
+- `suggester_nickname`, `suggester_avatar_url`
 
-These delays were added to "ensure DB consistency" but are overly conservative. Modern Supabase writes propagate in ~20-50ms.
-
-### 3. Parallelize independent operations
-**Current:** Sequential queue item operations  
-**Optimized:** Combine queue check + question fetch concurrently
-
-### 4. Skip redundant answer cleanup on fresh games
-If this is the first round in a session, there are no stale answers to clean. Skip the cleanup entirely.
-
-### 5. Early exit in confirmActivePlayers
-If presence shows 2+ players immediately, skip the verification loop entirely.
+This requires fetching the current user's profile info or using the already-available `userId` prop.
 
 ---
 
-## Technical Changes
+## Technical Implementation Details
 
 ### File: `src/contexts/TVGameContext.tsx`
 
-#### Change 1: Optimize `confirmActivePlayers` function (lines 294-391)
-- Reduce verification loop from 7 attempts to 3 attempts
-- Reduce inter-attempt delay from 200ms to 100ms  
-- Reduce initial DB consistency wait from 300ms to 50ms
-- Add early exit if presence count already meets minimum
+**Change 1**: In `startGame` function (around line 2382-2394)
+
+Add the following fields to the session update to explicitly clear suggester info:
 
 ```typescript
-// Before: 300ms wait
-await new Promise(resolve => setTimeout(resolve, 300));
-
-// After: 50ms wait (sufficient for DB propagation)
-await new Promise(resolve => setTimeout(resolve, 50));
-
-// Before: 7 attempts × 200ms
-for (let attempt = 0; attempt < 7; attempt++) {
-  // ...
-  await new Promise(resolve => setTimeout(resolve, 200));
-}
-
-// After: 3 attempts × 100ms
-for (let attempt = 0; attempt < 3; attempt++) {
-  // ...
-  await new Promise(resolve => setTimeout(resolve, 100));
-}
+await supabase
+  .from('tv_sessions')
+  .update({
+    status: 'countdown',
+    questions: formattedQuestions as unknown as Json,
+    current_question_index: 0,
+    category_name: categoryName,
+    category_icon: categoryIcon,
+    round_number: 1,
+    total_rounds: totalRoundsCount,
+    active_player_count: playerCount,
+    // CRITICAL FIX: Clear suggester fields to prevent stale IDs from blocking host
+    current_round_suggester_id: null,
+    current_round_suggester_nickname: null,
+    current_round_suggester_avatar_url: null,
+  })
+  .eq('id', state.sessionId);
 ```
 
-#### Change 2: Optimize `startGame` function (lines 2117-2404)
-- Reduce post-cleanup delay from 300ms to 100ms
-- Skip answer cleanup if `state.currentQuestionIndex === 0` and it's the first round
+### File: `src/components/controller/ControllerDirectSelection.tsx`
+
+**Change 2**: In `handleSelectTrivia` function (around lines 156-163)
+
+When inserting a user trivia into the queue, add suggester info if the trivia is NOT blind:
 
 ```typescript
-// Before
-await new Promise(resolve => setTimeout(resolve, 300));
+// Fetch user profile for suggester info
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('nickname, avatar_url')
+  .eq('id', userId)
+  .maybeSingle();
 
-// After
-await new Promise(resolve => setTimeout(resolve, 100));
+// Insert with suggester info if not a blind trivia
+const { error } = await supabase.from('tv_session_queue').insert({
+  session_id: sessionId,
+  position: nextPosition,
+  source_type: 'user_trivia',
+  user_trivia_id: trivia.id,
+  category_name: trivia.title,
+  icon_slug: trivia.icon_slug,
+  // Only set suggester if this is NOT a blind trivia
+  suggester_user_id: trivia.is_blind ? null : userId,
+  suggester_nickname: trivia.is_blind ? null : profile?.nickname,
+  suggester_avatar_url: trivia.is_blind ? null : profile?.avatar_url,
+});
 ```
 
-#### Change 3: Optimize `startPlaying` function (lines 2411-2493)
-- Reduce post-transition delay from 150ms to 50ms
+### File: `src/components/tv/TVGameOverScreen.tsx`
 
-```typescript
-// Before
-await new Promise(resolve => setTimeout(resolve, 150));
-
-// After  
-await new Promise(resolve => setTimeout(resolve, 50));
-```
-
-### File: `src/hooks/useTVPoll.ts`
-
-#### Change 4: Optimize `finalizePollAndStartGame` function (already partially optimized)
-The previous optimization reduced from 300ms to 100ms. Verify no further reductions possible without breaking reliability.
+**Change 3**: Update button texts (lines 254 and 264)
+- "კატეგორიის არჩევა" → "კატეგორიის დამატება"
+- "ხმის მიცემა" → "არჩევნების დაწყება"
 
 ---
 
-## Expected Time Savings
+## Summary of Files to Modify
 
-| Component | Before | After | Savings |
-|-----------|--------|-------|---------|
-| confirmActivePlayers wait | 300ms | 50ms | 250ms |
-| confirmActivePlayers loop | 1400ms | 300ms | 1100ms |
-| startGame cleanup delay | 300ms | 100ms | 200ms |
-| startPlaying delay | 150ms | 50ms | 100ms |
-| **TOTAL SAVINGS** | | | **~1650ms** |
-
-**Expected new total time: 1-2 seconds** (down from ~5 seconds)
+| File | Change |
+|------|--------|
+| `src/components/tv/TVGameOverScreen.tsx` | Update two button text strings |
+| `src/contexts/TVGameContext.tsx` | Clear suggester fields in `startGame()` session update |
+| `src/components/controller/ControllerDirectSelection.tsx` | Add suggester info when inserting user's own non-blind trivias |
 
 ---
 
-## Risk Mitigation
-
-1. **Race conditions**: The reduced delays may cause issues on very slow networks. Mitigation: Keep the verification loop (just with fewer attempts) rather than removing it entirely.
-
-2. **Answer cleanup timing**: Faster cleanup might not fully propagate before questions start. Mitigation: Keep 100ms minimum delay as safety buffer.
-
-3. **Player count accuracy**: Fewer verification attempts might occasionally undercount. Mitigation: The auto-advance logic already handles this gracefully with its own DB queries.
-
----
-
-## Implementation Summary
-
-| File | Lines | Change |
-|------|-------|--------|
-| `src/contexts/TVGameContext.tsx` | ~354 | Reduce initial delay 300ms → 50ms |
-| `src/contexts/TVGameContext.tsx` | ~361-379 | Reduce loop from 7×200ms to 3×100ms |
-| `src/contexts/TVGameContext.tsx` | ~2352 | Reduce cleanup delay 300ms → 100ms |
-| `src/contexts/TVGameContext.tsx` | ~2480 | Reduce transition delay 150ms → 50ms |
-
+## Testing Checklist
+1. After finishing a round of the host's own non-blind trivia, selecting a library category should let the host play (not observe)
+2. Selecting the host's own blind trivia should let the host play
+3. Selecting the host's own non-blind trivia should show the observer UI
+4. Button texts should show the new Georgian translations
