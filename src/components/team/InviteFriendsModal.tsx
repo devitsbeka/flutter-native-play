@@ -292,7 +292,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
           }}
         >
           {/* Purple backdrop with soft glow */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 pointer-events-none">
             <div
               className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full blur-3xl"
               style={{ background: "hsl(var(--primary) / 0.55)" }}
