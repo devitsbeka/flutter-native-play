@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface AddFriendModalProps {
   isOpen: boolean;
@@ -168,7 +169,14 @@ interface SearchResultCardProps {
 }
 
 function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchResultCardProps) {
-  const isDisabled = isSent || isPending;
+  const handleButtonAction = () => {
+    if (isPending) {
+      toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+      return;
+    }
+    if (isSent) return;
+    onSendRequest();
+  };
   
   return (
     <motion.div
@@ -193,18 +201,26 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
         )}
       </div>
 
-      <motion.button
-        onClick={onSendRequest}
-        disabled={isDisabled}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          handleButtonAction();
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          handleButtonAction();
+        }}
+        disabled={isSent}
+        className={`flex items-center gap-1.5 px-5 py-3 min-h-[48px] rounded-xl text-sm font-medium transition-colors active:scale-95 ${
           isSent
             ? "bg-green-500/20 text-green-400 cursor-default"
             : isPending
             ? "bg-amber-500/20 text-amber-400 cursor-default"
             : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90"
         }`}
-        whileHover={!isDisabled ? { scale: 1.02 } : {}}
-        whileTap={!isDisabled ? { scale: 0.98 } : {}}
+        style={{ touchAction: 'manipulation' }}
       >
         {isPending ? (
           <>
@@ -222,7 +238,7 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
             დამატება
           </>
         )}
-      </motion.button>
+      </button>
     </motion.div>
   );
 }
