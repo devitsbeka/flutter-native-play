@@ -1,365 +1,261 @@
 
-# Plan: Implement Host Play/Skip Policy in Regular Multiplayer Rooms
 
-## Overview
+# Plan: Fix Question Sync and Queue Display Issues in Multiplayer Rooms
 
-Implement a strict "fair play" policy for regular (non-TV) multiplayer rooms that determines whether the host should observe or play each round, plus enable any player to add categories to the queue.
+## Problem Summary
 
-## Policy Rules
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           HOST PLAY POLICY                                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  1. LIBRARY CATEGORIES → Host PLAYS ✅                                      │
-│     - Source: categories table                                              │
-│     - Reason: Host doesn't know answers                                     │
-│                                                                             │
-│  2. MY TRIVIA (non-blind) → Host SKIPS (Observer) 👁️                        │
-│     - Source: user_quiz_posts where is_blind = false                        │
-│     - Reason: Host knows all questions/answers                              │
-│                                                                             │
-│  3. BLIND TRIVIA (plays_count = 0) → Host PLAYS ✅                          │
-│     - Source: user_quiz_posts where is_blind = true AND plays_count = 0     │
-│     - Reason: Questions are locked, host hasn't seen them yet               │
-│                                                                             │
-│  4. BLIND TRIVIA (plays_count > 0) → Host SKIPS (Observer) 👁️               │
-│     - Source: user_quiz_posts where is_blind = true AND plays_count > 0     │
-│     - Reason: Trivia is now "revealed" - host has seen questions            │
-│                                                                             │
-│  5. RANDOM → Host PLAYS ✅                                                  │
-│     - Source: random selection from categories                              │
-│     - Reason: Random means unpredictable                                    │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-## Observer Mode Behavior
-
-When host skips a round (Observer mode):
-1. Host sees a special UI showing "შენი კატეგორიაა!" with question progress
-2. Host CANNOT answer questions
-3. Host earns **100 points per player mistake** (incorrect answer or timeout)
-4. Host is included in final leaderboard with observer points
-5. Game flow continues smoothly without host's answers being counted
+Two bugs reported:
+1. **Host and player see DIFFERENT questions** - When playing a geography category, host and player are not seeing the same questions/answers
+2. **Played round shows as "next round"** - After finishing a round, the queue preview still shows the round that was just played instead of the actual next round
 
 ---
 
-## Technical Implementation
+## Bug 1: Different Questions Between Host and Player
 
-### Phase 1: Database Schema Update
+### Root Cause Analysis
 
-**Add `host_observer_id` column to `game_rooms`** to track when the host is in observer mode for the current round:
+The issue is a **race condition and caching problem** in the non-host player's question loading:
 
-```sql
-ALTER TABLE game_rooms ADD COLUMN host_observer_id uuid REFERENCES auth.users(id);
+```text
+Current Flow (BROKEN):
+
+┌─────────────────────────────────────────────────────────────────┐
+│ HOST calls startNextFromQueue():                                │
+│   1. Delete queue item from DB                                  │
+│   2. Fetch NEW questions via getQuestions()                     │
+│   3. Delete old room_questions                                  │
+│   4. Insert NEW questions into room_questions                   │
+│   5. Update game_rooms.status = "playing"                       │
+│   6. Host's local state updated with new questions              │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ NON-HOST receives realtime event:                               │
+│   game_rooms.status changed to "playing"                        │
+│                                                                 │
+│ NON-HOST subscription handler:                                  │
+│   1. Fetch from room_questions WHERE room_id = X                │
+│                                                                 │
+│   PROBLEM: Handler may be using STALE subscription              │
+│   - useEffect dependency on state.phase causes re-subscription  │
+│   - Old subscription may still be active during transition      │
+│   - Query may hit BEFORE new questions are fully committed      │
+│   - Player gets OLD questions or misses the event entirely      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-This column stores the host's user_id when they should observe the current round (null means host plays).
+The specific issues:
+1. **useEffect subscription instability**: Dependencies include `state.phase` which changes during round transitions, causing the subscription to be recreated mid-flow
+2. **No retry/validation**: If the player fetches room_questions too early (before new ones are inserted), they get nothing or old data
+3. **Promise.all timing**: Questions are inserted in parallel, so they might not all be committed when the status update arrives
 
-### Phase 2: Context Changes
+### Solution
+
+1. **Remove `state.phase` from subscription dependencies** - The subscription should be stable and not recreate during phase changes
+2. **Add delay/retry for question fetch** - Wait briefly after receiving "playing" status to ensure questions are committed
+3. **Validate question count** - Ensure we fetched the expected number of questions before transitioning
+
+### Technical Changes
 
 **File: `src/contexts/MultiplayerContextV2.tsx`**
 
-1. **Add `hostIsObserver` to state:**
+**Change 1: Move subscription setup to a separate stable useEffect**
+
+Instead of having subscription inside an effect that depends on `state.phase`, create a stable subscription that handles all status changes:
+
 ```typescript
-interface MultiplayerState {
-  // ... existing fields
-  hostIsObserver: boolean;  // NEW: whether host is in observer mode
-}
+// Lines 209-327 - Refactor subscription to be stable
+useEffect(() => {
+  if (!state.currentRoom?.id) return;
+  
+  const roomId = state.currentRoom.id;
+  const currentPhase = phaseRef.current; // Use ref to track phase without recreating subscription
+  
+  // ...subscription code with stable handler
+  
+  return () => cleanupChannels();
+}, [state.currentRoom?.id, user?.id]); // Remove state.phase from dependencies
 ```
 
-2. **Export `hostIsObserver` from context**
+**Change 2: Add retry logic for question fetch**
 
-3. **Modify `startGame()` and `startNextFromQueue()` to determine observer status:**
-
-```typescript
-// Helper function to check if host should observe
-const shouldHostObserve = async (
-  sourceType: string, 
-  userTriviaId: string | null,
-  hostUserId: string
-): Promise<boolean> => {
-  // Library categories - host plays
-  if (sourceType === "category" || sourceType === "random") {
-    return false;
-  }
-  
-  // User trivia - check ownership and blind status
-  if (sourceType === "user_trivia" && userTriviaId) {
-    const { data: trivia } = await supabase
-      .from("user_quiz_posts")
-      .select("user_id, is_blind, plays_count")
-      .eq("id", userTriviaId)
-      .single();
-    
-    if (!trivia) return false;
-    
-    // Only host's own trivias trigger observer mode
-    if (trivia.user_id !== hostUserId) return false;
-    
-    // Non-blind trivia - host knows answers
-    if (!trivia.is_blind) return true;
-    
-    // Blind trivia with plays > 0 - host has seen it
-    if (trivia.is_blind && (trivia.plays_count || 0) > 0) return true;
-    
-    // Blind trivia with plays = 0 - host can play
-    return false;
-  }
-  
-  return false;
-};
-```
-
-4. **Increment `plays_count` when game starts:**
+When non-host receives "playing" status, add a small delay and retry to ensure questions are committed:
 
 ```typescript
-// In startGame() and startNextFromQueue(), after questions are loaded:
-if (userTriviaId) {
-  await supabase.rpc('increment_quiz_plays', { post_id: userTriviaId });
-}
-```
-
-5. **Update `game_rooms.host_observer_id` when starting:**
-
-```typescript
-await supabase
-  .from("game_rooms")
-  .update({
-    status: "playing",
-    host_observer_id: hostIsObserver ? user.id : null,
-    // ... other fields
-  })
-  .eq("id", roomId);
-```
-
-6. **Load observer status in realtime subscription:**
-
-```typescript
-// When room status changes to "playing", also read host_observer_id
-const isObserver = updated.host_observer_id === user?.id;
-setState(prev => ({ ...prev, hostIsObserver: isObserver }));
-```
-
-### Phase 3: Observer Scoring Logic
-
-**File: `src/contexts/MultiplayerContextV2.tsx`**
-
-Add observer scoring when answers are submitted:
-
-```typescript
-// In the player_answers subscription or after all answers are in:
-// When a player answers incorrectly and host is observer, award bonus
-
-const calculateObserverBonus = async () => {
-  if (!state.currentRoom?.host_observer_id) return;
+if (updated.status === "playing" && !isHost) {
+  // Wait briefly for questions to be fully committed
+  await new Promise(resolve => setTimeout(resolve, 300));
   
-  // Get all answers for current question
-  const { data: answers } = await supabase
-    .from("player_answers")
-    .select("user_id, is_correct")
-    .eq("room_id", state.currentRoom.id)
-    .eq("question_index", state.currentQuestionIndex);
+  // Fetch with retry
+  let attempts = 0;
+  let roomQuestions = null;
   
-  // Count incorrect/missing answers (excluding host)
-  const nonHostParticipants = participants.filter(
-    p => p.user_id !== state.currentRoom?.host_observer_id
-  );
-  
-  const answeredUserIds = new Set(answers?.map(a => a.user_id) || []);
-  let incorrectCount = 0;
-  
-  nonHostParticipants.forEach(p => {
-    const answer = answers?.find(a => a.user_id === p.user_id);
-    if (!answer || !answer.is_correct) {
-      incorrectCount++;
+  while (attempts < 3 && (!roomQuestions || roomQuestions.length === 0)) {
+    const { data } = await supabase
+      .from("room_questions")
+      .select("*")
+      .eq("room_id", roomId)
+      .order("question_index", { ascending: true });
+    
+    roomQuestions = data;
+    
+    if (!roomQuestions || roomQuestions.length === 0) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      attempts++;
     }
-  });
-  
-  if (incorrectCount > 0) {
-    const bonus = incorrectCount * 100;
-    // Update host's score
-    await supabase
-      .from("room_participants")
-      .update({ score: supabase.raw(`score + ${bonus}`) })
-      .eq("room_id", state.currentRoom.id)
-      .eq("user_id", state.currentRoom.host_observer_id);
   }
-};
-```
-
-### Phase 4: Game Screen UI Changes
-
-**File: `src/components/team/MultiplayerGameScreenV2.tsx`**
-
-Add observer UI when host is in observer mode:
-
-```typescript
-const { hostIsObserver, currentRoom, currentQuestionIndex, questions } = useMultiplayerV2();
-const isObserving = hostIsObserver && currentRoom?.host_user_id === user?.id;
-
-// At the start of render:
-if (isObserving) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
-      <div className="text-center">
-        <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-        <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
-        <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები</p>
-        <div className="bg-white/10 rounded-xl p-4 mb-6">
-          <p className="text-white font-semibold text-center text-sm">
-            კითხვა {currentQuestionIndex + 1}/{questions.length}
-          </p>
-        </div>
-        <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3">
-          <p className="text-yellow-300 text-sm font-medium">
-            იღებ ქულებს სხვების შეცდომებზე! 💰
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  
+  if (roomQuestions && roomQuestions.length > 0) {
+    // ... map questions and update state
+  }
 }
 ```
 
-### Phase 5: Queue UI - Allow Any Player to Add
-
-**File: `src/components/team/RoomLobbyV2.tsx`**
-
-Currently the CategoryPickerSection is shown. We need to ensure ANY player (not just host) can add to queue. 
-
-The hook `useRoomCategoryQueue` doesn't restrict by host - any authenticated user in the room can add items. We just need to ensure the UI is visible to all players.
-
-Check and verify that:
-1. The "კატეგორიის დამატება" section is visible to all participants
-2. The `addToQueue` function works for non-hosts
-
-**Required RLS Policy Update:**
-
-```sql
--- Allow any room participant to insert into queue
-CREATE POLICY "Room participants can add to queue"
-ON room_category_queue
-FOR INSERT
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM room_participants 
-    WHERE room_id = room_category_queue.room_id 
-    AND user_id = auth.uid()
-  )
-);
-```
-
-### Phase 6: Results Screen - Add More Rounds Button
-
-**File: `src/components/team/GameResultsScreenV2.tsx`**
-
-The current implementation shows:
-- **Has queue:** "გაგრძელება" button (host only can start)
-- **No queue, host:** "კატეგორიის დამატება" button
-- **No queue, non-host:** "ველოდებით მასპინძელს..." message
-
-Update to allow any player to add rounds:
+**Change 3: Use refs for phase tracking**
 
 ```typescript
-{queue.length > 0 ? (
-  // Has queue - only host can start, others see waiting
-  isHost ? (
-    <ChunkyButton onClick={handlePlayAgain}>
-      გაგრძელება: {nextQueueItem?.category_name}
-    </ChunkyButton>
-  ) : (
-    <div className="text-center py-4 ...">
-      <p className="text-white font-medium">შემდეგი რაუნდი მზადაა</p>
-      <p className="text-white/50 text-sm">ველოდებით მასპინძელს...</p>
-    </div>
-  )
-) : (
-  // No queue - any player can add categories
-  <ChunkyButton onClick={handleBackToRoom} icon={<Plus />}>
-    კატეგორიის დამატება
-  </ChunkyButton>
-)}
+const phaseRef = useRef(state.phase);
+useEffect(() => {
+  phaseRef.current = state.phase;
+}, [state.phase]);
+```
+
+---
+
+## Bug 2: Played Round Shows as "Next Round"
+
+### Root Cause Analysis
+
+The queue display on the results screen shows `queue[0]` as the "next round". The queue item is deleted in `startNextFromQueue()` at the START of the function. However:
+
+1. The `useRoomCategoryQueue` hook fetches queue via realtime subscription
+2. The subscription might not have updated yet when results screen renders
+3. The results screen might show the OLD queue data (before the deletion was processed)
+
+The flow is:
+```text
+1. Host clicks "Continue" → startNextFromQueue() called
+2. Queue item deleted from DB (line 1104-1107)
+3. Realtime event fires → useRoomCategoryQueue fetches new queue
+4. BUT: Results screen already rendered with OLD queue data
+5. Screen shows the just-played category as "next round"
+```
+
+### Solution
+
+1. **Refetch queue when entering results phase** - Force a fresh queue fetch when transitioning to results
+2. **Better timing** - The queue deletion happens when starting a NEW round, but we should ensure results screen always shows the UPCOMING rounds, not the current one
+
+Actually, I realize the flow is different. Looking at the code:
+- Queue item is deleted when `startNextFromQueue()` is called (when clicking "Continue")
+- NOT when entering results screen
+
+So when we're on results screen AFTER playing a round:
+- If we played from queue, the queue item WAS consumed (deleted) by `startNextFromQueue()` BEFORE playing
+- So the queue should already be correct
+
+BUT if the host added items to queue and then started DIRECTLY (not via startNextFromQueue), the flow might be different.
+
+Let me re-examine: When does `startNextFromQueue` get called?
+- Called from `handlePlayAgain` in `GameResultsScreenV2.tsx` when `queue.length > 0`
+- So it's called AFTER results, not before
+
+This means: When viewing results after round 1, the queue still contains the item that was just played (because it wasn't consumed yet). The item only gets consumed when clicking "Continue" which calls `startNextFromQueue()`.
+
+### The Real Issue
+
+The queue item should be consumed at the START of the round, not when continuing to the next. Looking at the code flow:
+
+1. User adds "Geography" to queue
+2. Host clicks "Start" → This should consume the queue item
+3. Players play Geography
+4. Results screen shows → Queue should now be empty (or show next item)
+
+But currently:
+1. User adds "Geography" to queue  
+2. Host clicks "Start" → Calls `startGame()` NOT `startNextFromQueue()`
+3. Players play Geography
+4. Results screen shows → Queue STILL has "Geography" as first item
+5. Preview says "Next round: Geography" → WRONG!
+
+### Solution
+
+When starting a game, if there's a queue item that matches what we're about to play, consume it:
+
+**Option A: Consume queue item when game starts (if it matches)**
+
+In `startGame()`, check if first queue item matches the category being played and delete it.
+
+**Option B: Always use queue for game start**
+
+If queue has items, always use `startNextFromQueue()` logic even for initial game start.
+
+### Technical Changes
+
+**File: `src/contexts/MultiplayerContextV2.tsx`**
+
+**In `startGame()` function - consume matching queue item:**
+
+After starting the game, check if the category just played matches the first queue item and remove it:
+
+```typescript
+const startGame = useCallback(async () => {
+  // ... existing game start logic ...
+  
+  // After game starts successfully, consume matching queue item
+  const categoryIdPlayed = state.currentRoom?.category_id;
+  
+  const { data: queueItems } = await supabase
+    .from("room_category_queue")
+    .select("*")
+    .eq("room_id", roomId)
+    .order("position", { ascending: true })
+    .limit(1);
+  
+  const firstQueueItem = queueItems?.[0];
+  
+  // If first queue item matches what we just played, consume it
+  if (firstQueueItem) {
+    const matchesCategory = firstQueueItem.category_id === categoryIdPlayed;
+    const matchesUserTrivia = firstQueueItem.user_trivia_id === state.currentRoom?.user_trivia_id;
+    
+    if (matchesCategory || matchesUserTrivia) {
+      await supabase
+        .from("room_category_queue")
+        .delete()
+        .eq("id", firstQueueItem.id);
+      
+      // Reorder remaining items
+      // ... reorder logic ...
+    }
+  }
+}, [/* deps */]);
 ```
 
 ---
 
 ## Summary of Changes
 
-| File | Changes |
-|------|---------|
-| `migrations/*.sql` | Add `host_observer_id` column to `game_rooms` |
-| `migrations/*.sql` | Add RLS policy for any participant to add to queue |
-| `MultiplayerContextV2.tsx` | Add `hostIsObserver` state, observer detection logic, observer scoring |
-| `MultiplayerContextV2.tsx` | Increment `plays_count` when blind trivia is played |
-| `MultiplayerGameScreenV2.tsx` | Add observer UI for host when observing |
-| `GameResultsScreenV2.tsx` | Allow any player to add categories, show clearer queue status |
-| `RoomLobbyV2.tsx` | Ensure category picker is visible to all players |
-
----
-
-## Flow Diagrams
-
-### Game Start Flow with Observer Check:
-
-```text
-Host clicks "დაწყება"
-         │
-         ▼
- ┌───────────────────┐
- │ Check source_type │
- └─────────┬─────────┘
-           │
-     ┌─────┴─────┐
-     ▼           ▼
- category    user_trivia
-     │           │
-     │           ▼
-     │    ┌──────────────┐
-     │    │ Is host owner?│
-     │    └──────┬───────┘
-     │           │
-     │      ┌────┴────┐
-     │      ▼         ▼
-     │     YES       NO
-     │      │         │
-     │      │         └─► Host PLAYS
-     │      ▼
-     │  ┌────────────┐
-     │  │ is_blind?  │
-     │  └─────┬──────┘
-     │        │
-     │   ┌────┴────┐
-     │   ▼         ▼
-     │  YES       NO
-     │   │         │
-     │   │         └─► Host SKIPS
-     │   ▼
-     │ ┌─────────────┐
-     │ │plays_count>0│
-     │ └──────┬──────┘
-     │        │
-     │   ┌────┴────┐
-     │   ▼         ▼
-     │  YES       NO
-     │   │         │
-     │   │         └─► Host PLAYS (first time seeing questions)
-     │   └─────────────► Host SKIPS (already seen)
-     │
-     └─────────────────► Host PLAYS (library)
-```
+| File | Change |
+|------|--------|
+| `MultiplayerContextV2.tsx` | Remove `state.phase` from subscription useEffect dependencies |
+| `MultiplayerContextV2.tsx` | Add phase tracking via refs |
+| `MultiplayerContextV2.tsx` | Add retry logic with delay when non-host fetches questions |
+| `MultiplayerContextV2.tsx` | Consume matching queue item when game starts |
+| `MultiplayerContextV2.tsx` | Add validation to ensure correct question count before transitioning |
 
 ---
 
 ## Testing Checklist
 
-1. **Library category:** Create room, pick library category, verify host plays normally
-2. **My Trivia (non-blind):** Create non-blind trivia, pick it in room, verify host sees observer UI
-3. **Blind Trivia (first play):** Create blind trivia, pick it in room, verify host can play
-4. **Blind Trivia (second play):** Same trivia again, verify host now observes
-5. **Observer scoring:** Verify host earns 100 points per player mistake
-6. **Queue additions:** Verify non-host player can add categories to queue
-7. **Continue flow:** Verify "გაგრძელება" button works with queue items
-8. **Add rounds:** Verify "კატეგორიის დამატება" returns to lobby for any player
+1. Create a room with 2 players
+2. Add "Geography" category to queue
+3. Start the game
+4. Verify BOTH players see the SAME geography questions (same text, same answer order)
+5. Complete the round
+6. On results screen, verify queue preview shows NEXT category (not Geography again)
+7. If queue is empty, verify "კატეგორიის დამატება" button appears
+8. Add another category from results screen
+9. Continue and verify sync works for second round
+
