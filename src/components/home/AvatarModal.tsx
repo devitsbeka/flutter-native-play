@@ -27,6 +27,27 @@ const DEFAULT_AVATARS = [
   botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10,
 ];
 
+// Canonical paths that are stable across builds
+// resolveAvatarUrl() converts these to valid bundled URLs at runtime
+const DEFAULT_AVATAR_PATHS = [
+  '/src/assets/avatars/bot-avatar-1.png',
+  '/src/assets/avatars/bot-avatar-2.png',
+  '/src/assets/avatars/bot-avatar-3.png',
+  '/src/assets/avatars/bot-avatar-4.png',
+  '/src/assets/avatars/bot-avatar-5.png',
+  '/src/assets/avatars/bot-avatar-6.png',
+  '/src/assets/avatars/bot-avatar-7.png',
+  '/src/assets/avatars/bot-avatar-8.png',
+  '/src/assets/avatars/bot-avatar-9.png',
+  '/src/assets/avatars/bot-avatar-10.png',
+];
+
+// Map from bundled URL → canonical path for storage
+const BUNDLED_TO_CANONICAL: Record<string, string> = {};
+DEFAULT_AVATARS.forEach((bundledUrl, index) => {
+  BUNDLED_TO_CANONICAL[bundledUrl] = DEFAULT_AVATAR_PATHS[index];
+});
+
 interface AvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -355,14 +376,17 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
   };
 
-  const selectDefaultAvatar = async (avatarPath: string) => {
+  const selectDefaultAvatar = async (avatarBundledUrl: string) => {
     if (!user) return;
     
     setIsLoading(true);
     try {
+      // Convert bundled URL to canonical path for stable storage across builds
+      const canonicalPath = BUNDLED_TO_CANONICAL[avatarBundledUrl] || avatarBundledUrl;
+      
       // Update profile - clear animated_avatar_url since default avatars don't have animations
       const result = await updateProfile({ 
-        avatar_url: avatarPath,
+        avatar_url: canonicalPath,
         animated_avatar_url: null 
       });
       
@@ -653,7 +677,9 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             <p className="text-sm font-medium text-foreground mb-2">{t("avatar.defaultAvatars")}</p>
             <div className="grid grid-cols-5 gap-2">
               {DEFAULT_AVATARS.map((avatar, index) => {
-                const isSelected = profile?.avatar_url === avatar;
+                // Check against both bundled URL and canonical path for selection indicator
+                const canonicalPath = DEFAULT_AVATAR_PATHS[index];
+                const isSelected = profile?.avatar_url === avatar || profile?.avatar_url === canonicalPath;
                 return (
                   <motion.button
                     key={index}
