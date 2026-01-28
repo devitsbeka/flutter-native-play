@@ -830,7 +830,33 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     // Update session: set to countdown with questions loaded
     // CRITICAL: This bypasses lobby and starts game directly
-    // CRITICAL FIX: Include suggester fields to prevent stale data blocking players
+    
+    // CRITICAL FIX: Determine suggester based on source type
+    // - Library categories: NO suggester (anyone can play)
+    // - User trivias (non-blind): Trivia OWNER is suggester (not the person who suggested it)
+    let suggesterUserId: string | null = null;
+    let suggesterNickname: string | null = null;
+    let suggesterAvatarUrl: string | null = null;
+
+    // Only set suggester for non-blind user trivias
+    if (firstSuggestion.source_type === 'trivia' && firstSuggestion.user_trivia_id) {
+      // Get the trivia owner info (already fetched in triviaOwnerMap)
+      const triviaInfo = triviaOwnerMap[firstSuggestion.user_trivia_id];
+      if (triviaInfo && !triviaInfo.is_blind) {
+        suggesterUserId = triviaInfo.user_id;
+        suggesterNickname = triviaInfo.owner_nickname;
+        suggesterAvatarUrl = triviaInfo.owner_avatar;
+      }
+    }
+    // For library categories (source_type === 'category'), suggester stays null
+    
+    console.log('[finalizePollAndStartGame] Suggester logic:', {
+      sourceType: firstSuggestion.source_type,
+      userTriviaId: firstSuggestion.user_trivia_id,
+      suggesterUserId,
+      suggesterNickname,
+    });
+
     const { error } = await supabase
       .from('tv_sessions')
       .update({
@@ -843,10 +869,10 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
         active_player_count: expectedCount,
         category_name: firstSuggestion.category_name,
         category_icon: firstSuggestion.icon_slug || null,
-        // CRITICAL FIX: Set suggester fields so only they see Observer UI
-        current_round_suggester_id: firstSuggestion.user_id || null,
-        current_round_suggester_nickname: firstSuggestion.nickname || null,
-        current_round_suggester_avatar_url: firstSuggestion.avatar_url || null,
+        // Use the correctly determined suggester (null for library categories)
+        current_round_suggester_id: suggesterUserId,
+        current_round_suggester_nickname: suggesterNickname,
+        current_round_suggester_avatar_url: suggesterAvatarUrl,
       })
       .eq('id', sessionId);
 
