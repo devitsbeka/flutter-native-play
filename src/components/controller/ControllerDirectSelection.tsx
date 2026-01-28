@@ -38,7 +38,7 @@ interface ControllerDirectSelectionProps {
   sessionId: string;
   userId: string;
   roomId?: string | null;
-  onStartGame: () => void;
+  onStartGame: (firstQueueItem: { categoryId?: string; userTriviaId?: string }) => void;
   onBack?: () => void;
 }
 
@@ -204,7 +204,13 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
       toast.error('აირჩიე მინიმუმ 1 კატეგორია');
       return;
     }
-    onStartGame();
+    
+    // Pass the first queue item directly to avoid stale state issues in parent
+    const firstQueued = queue[0];
+    onStartGame({
+      categoryId: firstQueued.category_id || undefined,
+      userTriviaId: firstQueued.user_trivia_id || undefined,
+    });
   };
 
   // Category picker modal
