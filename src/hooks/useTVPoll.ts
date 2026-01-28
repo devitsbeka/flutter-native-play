@@ -657,12 +657,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       .filter(s => s.source_type === 'trivia' && s.user_trivia_id)
       .map(s => s.user_trivia_id!);
 
-    let triviaOwnerMap: Record<string, { user_id: string; is_blind: boolean; owner_nickname: string | null; owner_avatar: string | null }> = {};
+    let triviaOwnerMap: Record<string, { user_id: string; is_blind: boolean; plays_count: number; owner_nickname: string | null; owner_avatar: string | null }> = {};
 
     if (triviaIds.length > 0) {
+      // STRICT HOST POLICY: Also fetch plays_count to check if owner has already played
       const { data: triviaData } = await supabase
         .from('user_quiz_posts')
-        .select('id, user_id, is_blind')
+        .select('id, user_id, is_blind, plays_count')
         .in('id', triviaIds);
       
       if (triviaData) {
@@ -683,24 +684,27 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
           acc[t.id] = {
             user_id: t.user_id,
             is_blind: t.is_blind || false,
+            plays_count: t.plays_count || 0,
             owner_nickname: profile?.nickname || null,
             owner_avatar: profile?.avatar_url || null,
           };
           return acc;
-        }, {} as Record<string, { user_id: string; is_blind: boolean; owner_nickname: string | null; owner_avatar: string | null }>);
+        }, {} as Record<string, { user_id: string; is_blind: boolean; plays_count: number; owner_nickname: string | null; owner_avatar: string | null }>);
       }
     }
     
     const queueItems = topSuggestions.map((suggestion, i) => {
       // For library categories: no suggester (anyone can play)
-      // For user trivias: only set owner as suggester if NOT blind
+      // STRICT HOST POLICY: Block owner if non-blind OR (blind but already played)
       let suggester_user_id: string | null = null;
       let suggester_nickname: string | null = null;
       let suggester_avatar_url: string | null = null;
       
       if (suggestion.source_type === 'trivia' && suggestion.user_trivia_id) {
         const triviaInfo = triviaOwnerMap[suggestion.user_trivia_id];
-        if (triviaInfo && !triviaInfo.is_blind) {
+        // Owner knows answers if: non-blind OR (blind but already played)
+        const ownerKnowsAnswers = triviaInfo && (!triviaInfo.is_blind || triviaInfo.plays_count > 0);
+        if (ownerKnowsAnswers) {
           suggester_user_id = triviaInfo.user_id;
           suggester_nickname = triviaInfo.owner_nickname;
           suggester_avatar_url = triviaInfo.owner_avatar;
@@ -838,11 +842,13 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
     let suggesterNickname: string | null = null;
     let suggesterAvatarUrl: string | null = null;
 
-    // Only set suggester for non-blind user trivias
+    // STRICT HOST POLICY: Block owner if non-blind OR (blind but already played)
     if (firstSuggestion.source_type === 'trivia' && firstSuggestion.user_trivia_id) {
       // Get the trivia owner info (already fetched in triviaOwnerMap)
       const triviaInfo = triviaOwnerMap[firstSuggestion.user_trivia_id];
-      if (triviaInfo && !triviaInfo.is_blind) {
+      // Owner knows answers if: non-blind OR (blind but already played)
+      const ownerKnowsAnswers = triviaInfo && (!triviaInfo.is_blind || triviaInfo.plays_count > 0);
+      if (ownerKnowsAnswers) {
         suggesterUserId = triviaInfo.user_id;
         suggesterNickname = triviaInfo.owner_nickname;
         suggesterAvatarUrl = triviaInfo.owner_avatar;
