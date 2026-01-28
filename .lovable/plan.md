@@ -1,199 +1,182 @@
 
+# Plan: Fair Observer Scoring Based on Player Count
 
-# Plan: Implement Consistent Host Observer Scoring System Across All Game Modes
+## Problem
 
-## Current State Analysis
+The current scoring system gives hosts 100 points per incorrect player, which creates unfair advantages:
 
-After analyzing the codebase, here's what I found:
+- **2 players (1 host + 1 guest)**: 1 mistake = 100 points (fair)
+- **10 players (1 host + 9 guests)**: 9 mistakes = 900 points (unfair advantage)
 
-### TV Mode (✅ FULLY IMPLEMENTED)
-The TV game experience has a complete observer system:
+## New Scoring Formula
 
-1. **Observer Detection** (`TVGameContext.tsx`):
-   - Tracks `currentRoundSuggesterId` in session state
-   - Host is marked as suggester when they select their own trivia (non-blind or already played)
+### Rules:
+1. **Small games (2-3 total participants)**: Keep current behavior - 100 points per incorrect player
+2. **Larger games (4+ participants)**: Award 100 points only if **50%+ of players** answered incorrectly or didn't answer
 
-2. **Observer Scoring** (`TVGameContext.tsx` lines 278-337):
-   - When revealing answers, calculates bonus points based on player mistakes
-   - Awards **100 points per incorrect/unanswered player**
-   - Updates observer's score via presence channel
-
-3. **Observer UI** (`TVHostController.tsx` lines 1288-1328):
-   - Shows dedicated observer screen with message: "შენი კატეგორიაა! ამიტომ ამ რაუნდში აკვირდები"
-   - Displays score prominently with "იღებ ქულებს შეცდომებზე" label
-   - Shows question progress and timer
-
-### Regular Multiplayer Rooms (⚠️ PARTIALLY IMPLEMENTED)
-The mobile multiplayer experience has:
-
-1. **Warning Modal** (`RoomLobbyV2.tsx` lines 984-1016):
-   - Shows warning when host selects their own trivia: "შენ იცი პასუხები!"
-   - Mentions they'll get points when others make mistakes: "შენ მაინც მიიღებ ქულებს როცა სხვები შეცდებიან!"
-
-2. **MISSING**: 
-   - ❌ No `hostObserverId` or similar field in `MultiplayerContextV2`
-   - ❌ No observer scoring logic when answers are revealed
-   - ❌ No observer UI on mobile game screen (`MultiplayerGameScreenV2`)
-   - ❌ Host can still answer questions even after seeing the warning
-
-### Friend Invite Experience (⚠️ SAME AS MULTIPLAYER)
-Uses the same `MultiplayerContextV2` and components, so same gaps apply.
-
----
-
-## Required Changes
-
-### 1. Database Schema Update
-
-Add a column to `game_rooms` to track when host is in observer mode:
-
-```sql
-ALTER TABLE game_rooms 
-ADD COLUMN host_is_observer BOOLEAN DEFAULT FALSE;
-```
-
-### 2. MultiplayerContextV2 Updates
-
-**A. Add observer state tracking:**
-
-```typescript
-// In MultiplayerState interface
-hostIsObserver: boolean;
-
-// In initial state
-hostIsObserver: false,
-```
-
-**B. Update startGame to set host observer status:**
-
-When starting the game with host's own trivia:
-1. Check if host owns the trivia AND (not blind OR already played)
-2. Set `host_is_observer = true` in game_rooms
-3. Update local state `hostIsObserver: true`
-
-**C. Implement observer scoring in answer handling:**
-
-When processing answers (in real-time subscription or answer submission):
-1. After all players answer (or time expires)
-2. Count incorrect answers from non-host players
-3. Award host 100 points per incorrect answer
-4. Update host's participant score in database
-
-### 3. Mobile Observer UI (MultiplayerGameScreenV2)
-
-Add conditional rendering for host observer mode:
-
-```tsx
-// If host is observer, show observer screen instead of question UI
-if (isHost && hostIsObserver) {
-  return (
-    <div className="observer-screen">
-      <Star className="w-16 h-16 text-yellow-400" />
-      <h2>შენი ტრივიაა!</h2>
-      <p>ამიტომ ამ რაუნდში აკვირდები</p>
-      
-      {/* Observer score */}
-      <div className="observer-score">
-        <p>შენი ქულა</p>
-        <p className="score">{myScore}</p>
-        <p>იღებ ქულებს შეცდომებზე</p>
-      </div>
-      
-      {/* Question progress */}
-      <p>კითხვა {currentQuestionIndex + 1}/{questions.length}</p>
-      <p>⏱️ {timeRemaining}წ</p>
-      
-      {/* Leaderboard toggle */}
-      ...
-    </div>
-  );
-}
-```
-
-### 4. Observer Scoring Logic
-
-Create a shared utility or implement in context:
-
+### Logic:
 ```typescript
 const calculateObserverBonus = (
   incorrectCount: number, 
-  totalPlayers: number
+  totalPlayers: number  // excludes host
 ): number => {
-  // 100 points per incorrect player
-  return 100 * incorrectCount;
+  // Small games: 1-2 players (host + 1-2 others)
+  if (totalPlayers <= 2) {
+    return incorrectCount * 100;
+  }
+  
+  // Larger games: Only award if 50%+ got it wrong
+  const incorrectPercentage = incorrectCount / totalPlayers;
+  if (incorrectPercentage >= 0.5) {
+    return 100; // Fixed bonus regardless of how many were wrong
+  }
+  
+  return 0; // No bonus if majority got it right
 };
 ```
 
-Trigger scoring:
-- After all players answer or timer expires
-- Count players who answered incorrectly or didn't answer
-- Award bonus to host's score
-- Update participant score in database
-
----
-
-## Visual Comparison: Before vs After
-
-### Mobile Host Observer Screen (NEW)
-
-```text
-┌─────────────────────────┐
-│  ←              Q3/10   │
-│                         │
-│       ⭐                │
-│  შენი ტრივიაა!         │
-│ ამიტომ ამ რაუნდში      │
-│   აკვირდები            │
-│                         │
-│ ┌─────────────────────┐ │
-│ │   შენი ქულა         │ │
-│ │      450            │ │
-│ │ იღებ ქულებს        │ │
-│ │   შეცდომებზე        │ │
-│ └─────────────────────┘ │
-│                         │
-│     ⏱️ 12წ             │
-│                         │
-│  [Show Leaderboard ▲]   │
-│                         │
-└─────────────────────────┘
-```
+### Examples:
+| Players | Incorrect | Percentage | Bonus |
+|---------|-----------|------------|-------|
+| 1 | 1 | 100% | 100 |
+| 2 | 1 | 50% | 100 |
+| 2 | 2 | 100% | 200 |
+| 5 | 2 | 40% | 0 |
+| 5 | 3 | 60% | 100 |
+| 10 | 4 | 40% | 0 |
+| 10 | 6 | 60% | 100 |
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/contexts/MultiplayerContextV2.tsx` | Add `hostIsObserver` state, set it in `startGame`, implement observer scoring after each question |
-| `src/components/team/MultiplayerGameScreenV2.tsx` | Add observer UI for host when `hostIsObserver` is true |
-| `src/components/team/GameResultsScreenV2.tsx` | Ensure observer host is properly ranked with their bonus points |
-| Database migration | Add `host_is_observer` column to `game_rooms` table |
+### 1. MultiplayerObserverScreen.tsx (Mobile)
+
+**Location**: Lines 62-71
+
+**Current code:**
+```typescript
+const incorrectAnswerCount = Object.values(opponentAnswers).filter(ans => !ans.is_correct).length;
+const didNotAnswerCount = players.length - answeredCount;
+const totalIncorrect = incorrectAnswerCount + didNotAnswerCount;
+
+if (totalIncorrect > 0) {
+  const bonus = totalIncorrect * 100;
+  setBonusEarnedThisQuestion(bonus);
+  awardObserverBonus(totalIncorrect);
+}
+```
+
+**Updated code:**
+```typescript
+const incorrectAnswerCount = Object.values(opponentAnswers).filter(ans => !ans.is_correct).length;
+const didNotAnswerCount = players.length - answeredCount;
+const totalIncorrect = incorrectAnswerCount + didNotAnswerCount;
+const totalPlayers = players.length;
+
+if (totalIncorrect > 0) {
+  // Fair scoring: Small games (1-2 players) = 100 per incorrect
+  // Larger games (3+) = 100 only if 50%+ got it wrong
+  let bonus = 0;
+  if (totalPlayers <= 2) {
+    bonus = totalIncorrect * 100;
+  } else if (totalIncorrect / totalPlayers >= 0.5) {
+    bonus = 100; // Fixed bonus for majority wrong
+  }
+  
+  if (bonus > 0) {
+    setBonusEarnedThisQuestion(bonus);
+    // Pass the actual bonus amount, not count
+    awardObserverBonus(bonus, true); // true = bonus is pre-calculated
+  }
+}
+```
+
+### 2. MultiplayerContextV2.tsx
+
+**Location**: Lines 1663-1685 (awardObserverBonus function)
+
+**Current code:**
+```typescript
+const awardObserverBonus = useCallback(async (incorrectCount: number) => {
+  if (!state.currentRoom || !user || !state.hostIsObserver) return;
+  
+  const bonus = incorrectCount * 100; // 100 points per incorrect answer
+  // ...
+}, [...]);
+```
+
+**Updated code:**
+```typescript
+const awardObserverBonus = useCallback(async (bonusAmount: number) => {
+  if (!state.currentRoom || !user || !state.hostIsObserver) return;
+  if (bonusAmount <= 0) return;
+  
+  const newScore = state.myScore + bonusAmount;
+  const newBonusTotal = state.observerBonusThisRound + bonusAmount;
+  
+  // Update participant score in database
+  await supabase
+    .from("room_participants")
+    .update({ score: newScore })
+    .eq("room_id", state.currentRoom.id)
+    .eq("user_id", user.id);
+  
+  setState(prev => ({
+    ...prev,
+    myScore: newScore,
+    observerBonusThisRound: newBonusTotal,
+  }));
+}, [state.currentRoom, state.hostIsObserver, state.myScore, state.observerBonusThisRound, user]);
+```
+
+Also update the interface at line 110:
+```typescript
+awardObserverBonus: (bonusAmount: number) => Promise<void>;
+```
+
+### 3. TVGameContext.tsx (TV Mode)
+
+**Location**: Lines 288-298
+
+**Current code:**
+```typescript
+const totalActive = activePlayers.length;
+if (totalActive > 0 && incorrectCount > 0) {
+  // Observer earns 100 points per incorrect player, proportional to total
+  const observerBonus = Math.round(100 * incorrectCount);
+```
+
+**Updated code:**
+```typescript
+const totalActive = activePlayers.length;
+if (totalActive > 0 && incorrectCount > 0) {
+  // Fair scoring based on player count
+  // Small games (1-2 players): 100 per incorrect
+  // Larger games (3+): 100 only if 50%+ incorrect
+  let observerBonus = 0;
+  if (totalActive <= 2) {
+    observerBonus = 100 * incorrectCount;
+  } else if (incorrectCount / totalActive >= 0.5) {
+    observerBonus = 100; // Fixed bonus for majority wrong
+  }
+  
+  if (observerBonus > 0) {
+    // ... existing bonus award logic
+  }
+}
+```
 
 ---
 
-## Consistency Checklist
+## Summary
 
-| Feature | TV Mode | Multiplayer | Friend Invite |
-|---------|---------|-------------|---------------|
-| Warning modal before game | ✅ | ✅ | ✅ (same code) |
-| Host skips answering | ✅ | ⏳ To implement | ⏳ To implement |
-| Observer UI during game | ✅ | ⏳ To implement | ⏳ To implement |
-| 100 pts per player mistake | ✅ | ⏳ To implement | ⏳ To implement |
-| Observer in leaderboard | ✅ | ⏳ To implement | ⏳ To implement |
+| File | Change |
+|------|--------|
+| `MultiplayerObserverScreen.tsx` | Calculate fair bonus before calling awardObserverBonus |
+| `MultiplayerContextV2.tsx` | Accept pre-calculated bonus amount instead of incorrect count |
+| `TVGameContext.tsx` | Apply same fair scoring formula for TV mode |
 
----
-
-## Technical Notes
-
-1. **Scoring timing**: In TV mode, scoring happens in `advanceToReveal()`. In multiplayer, we need to hook into answer submission flow or create a similar mechanism when all players have answered.
-
-2. **State synchronization**: Use realtime subscriptions to update observer score across all clients when bonus points are awarded.
-
-3. **Edge cases**:
-   - If only host is in room (no other players), no bonus can be earned
-   - If host leaves mid-game, observer logic should be cleaned up
-   - Queue rounds: Each round should re-evaluate if host is observer based on the trivia being played
-
-4. **Reuse from TV mode**: The observer bonus calculation logic (100 pts per incorrect) can be extracted into a shared utility in `src/utils/` for consistency.
-
+This ensures **consistent fair play** across all game modes:
+- Small games remain engaging for hosts with per-mistake rewards
+- Large games prevent unfair point accumulation while still rewarding hosts when the question was genuinely difficult
