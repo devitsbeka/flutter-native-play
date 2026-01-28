@@ -57,10 +57,26 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
   const isLoading = actionLoading === notification.id;
 
-  // Get avatar from notification data
+  // Get avatar and sender info from notification data
   const avatarUrl = notification.data?.sender_avatar as string | undefined;
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
-  const roomInviteSubtitle = senderName ? `${senderName} გიწვევს თამაშში` : 'გიწვევს თამაშში';
+  const roomName = notification.data?.room_name as string | undefined;
+  
+  // Build subtitle based on notification type
+  const getSubtitle = () => {
+    if (isRoomInvite) {
+      return senderName ? `${senderName} გიწვევს თამაშში` : 'გიწვევს თამაშში';
+    }
+    if (isGameStarted && roomName) {
+      return roomName;
+    }
+    if (isFriendRequest && senderName) {
+      return `${senderName} გთხოვს მეგობრობას`;
+    }
+    return null;
+  };
+  
+  const subtitle = getSubtitle();
 
   const handleAccept = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -174,65 +190,41 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              {isRoomInvite ? (
-                <>
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm min-w-0">
-                      <span
-                        className={cn(
-                          "font-bold",
-                          isUnread ? "text-foreground" : "text-muted-foreground"
-                        )}
-                      >
-                        {translateNotificationTitle(
-                          notification.type,
-                          notification.title,
-                          notification.data as Record<string, unknown>
-                        )}
-                      </span>
-                    </p>
-                    <span className="text-xs text-muted-foreground/60 whitespace-nowrap pt-0.5">
-                      {timeAgo}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">
-                    {roomInviteSubtitle}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">
-                        <span
-                          className={cn(
-                            "font-bold",
-                            isUnread ? "text-foreground" : "text-muted-foreground"
-                          )}
-                        >
-                          {translateNotificationTitle(
-                            notification.type,
-                            notification.title,
-                            notification.data as Record<string, unknown>
-                          )}
-                        </span>
-                      </p>
-                      {notification.message && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                          {translateNotificationMessage(
-                            notification.type,
-                            notification.message,
-                            notification.data as Record<string, unknown>
-                          )}
-                        </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm">
+                    <span
+                      className={cn(
+                        "font-bold",
+                        isUnread ? "text-foreground" : "text-muted-foreground"
                       )}
-                    </div>
-                    <span className="text-xs text-muted-foreground/60 whitespace-nowrap pt-0.5">
-                      {timeAgo}
+                    >
+                      {translateNotificationTitle(
+                        notification.type,
+                        notification.title,
+                        notification.data as Record<string, unknown>
+                      )}
                     </span>
-                  </div>
-                </>
-              )}
+                  </p>
+                  {subtitle && (
+                    <p className="text-xs text-muted-foreground/70 mt-0.5">
+                      {subtitle}
+                    </p>
+                  )}
+                  {!subtitle && notification.message && (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {translateNotificationMessage(
+                        notification.type,
+                        notification.message,
+                        notification.data as Record<string, unknown>
+                      )}
+                    </p>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground/60 whitespace-nowrap pt-0.5">
+                  {timeAgo}
+                </span>
+              </div>
             </div>
 
             {/* Unread indicator */}

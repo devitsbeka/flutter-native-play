@@ -361,6 +361,10 @@ export const ru: KaTranslations = {
     newLevels: "НОВОЕ!",
   },
   notifications: {
+    // Dynamic sender-based messages
+    gameStartedBy: "{name} начал игру: {room}",
+    friendRequestFrom: "{name} хочет добавить вас в друзья",
+    friendAcceptedBy: "{name} принял вашу заявку в друзья",
     title: "Уведомления",
     unread: "Непрочитанные",
     all: "Все",

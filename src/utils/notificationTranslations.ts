@@ -56,21 +56,33 @@ export function translateNotificationMessage(
 ): string | null {
   if (!originalMessage) return null;
 
-  // Map notification types to translation keys
+  // Map notification types to translation keys with dynamic content
   const messageMap: Record<string, string> = {
-    'game_started': 'notifications.gameInRoom',
+    'game_started': 'notifications.gameStartedBy',
     'room_invite': 'notifications.invitedYouToPlay',
+    'friend_request': 'notifications.friendRequestFrom',
+    'friend_accepted': 'notifications.friendAcceptedBy',
   };
 
   const translationKey = messageMap[type];
   if (translationKey) {
-    const translation = getTranslation(translationKey);
-    // Replace {name} placeholder with actual sender name
+    let translation = getTranslation(translationKey);
+    
+    // Replace placeholders with actual data
     if (data?.sender_nickname) {
-      return translation.replace('{name}', data.sender_nickname);
+      translation = translation.replace('{name}', data.sender_nickname);
+    } else {
+      translation = translation.replace('{name} ', '').replace('{name}', '');
     }
-    // If no name available, clean up the placeholder
-    return translation.replace('{name} ', '').replace('{name}', '');
+    
+    // Replace room name if present
+    if (data?.room_name) {
+      translation = translation.replace('{room}', data.room_name as string);
+    } else {
+      translation = translation.replace(': {room}', '').replace('{room}', '');
+    }
+    
+    return translation;
   }
 
   return originalMessage;
