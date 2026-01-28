@@ -1,119 +1,118 @@
 
-# Fix: Add Friend Button Click Not Responding
+# Fix: Add Friend Button - Show Pending Status Correctly
 
-## Root Cause Analysis
+## Problem Analysis
 
-After thorough investigation, I identified that the "დამატება" (Add Friend) button in `InviteFriendsModal.tsx` is not triggering click events. The console logs we added are not appearing, confirming the click handler is never called.
+After thorough investigation, I discovered that the "დამატება" button **IS working correctly** - the click handlers fire, the function executes, and database operations complete. The issue is **user experience and visual feedback**:
 
-### Technical Issues Found:
+### What's Actually Happening:
+1. User clicks "დამატება" button
+2. `handleSendRequest(userId)` is called (confirmed via console logs)
+3. `sendFriendRequest(userId)` runs in `useFriends.ts`
+4. The function checks for existing friendship - finds a PENDING request
+5. Returns `false` and shows toast "მოთხოვნა უკვე გაგზავნილია"
 
-1. **Framer Motion `layout` prop causing click issues**: The search result card at line 368-370 uses `motion.div` with `layout` prop combined with `AnimatePresence mode="popLayout"`. This combination can intercept/swallow click events during layout calculations.
-
-2. **Potential z-index stacking context issue**: While decorative elements have `pointer-events-none`, the complex nesting of positioned elements might cause event bubbling issues.
-
-3. **Button needs explicit event handling**: The `motion.button` with `whileHover` and `whileTap` animations may need more explicit event handling.
+### The Real Problems:
+1. **Pending outgoing requests not filtered**: Users to whom you've already sent a request still appear in search results with an active "დამატება" button
+2. **No visual indicator for pending requests**: Users can't see that they've already sent a request to someone
+3. **Button appears to do nothing**: When user already sent a request, clicking shows a toast but button stays the same
 
 ---
 
 ## Solution
 
-### Changes to `src/components/team/InviteFriendsModal.tsx`
+### Track Outgoing Pending Requests
 
-**1. Remove `layout` prop from search result cards (line 370)**
+Modify `InviteFriendsModal` to fetch and display outgoing pending friendship requests, so:
+1. Users with pending outgoing requests show a different button state ("მოლოდინში" / "Pending")
+2. The button is disabled for these users
+3. Users get clear visual feedback
 
-The `layout` prop on the result container causes click event issues with `AnimatePresence mode="popLayout"`.
+### Files to Modify
 
+**src/components/team/InviteFriendsModal.tsx**
+
+1. Add state to track pending outgoing requests
+2. Fetch pending outgoing requests from the `friendships` table
+3. Update button display to show "მოლოდინში" (Pending) for users with existing requests
+
+---
+
+## Technical Implementation
+
+### Step 1: Add Pending Requests State
 ```typescript
-// Before (line 368-374)
-<motion.div
-  key={result.user_id}
-  layout  // REMOVE THIS
-  initial={{ opacity: 0, y: 5 }}
-  ...
-
-// After
-<motion.div
-  key={result.user_id}
-  initial={{ opacity: 0, y: 5 }}
-  ...
+const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
 ```
 
-**2. Change AnimatePresence mode from "popLayout" to "sync" (line 352)**
-
-The `popLayout` mode has known issues with click events during animations.
-
+### Step 2: Fetch Pending Outgoing Requests on Modal Open
 ```typescript
-// Before
-<AnimatePresence mode="popLayout">
-
-// After
-<AnimatePresence mode="sync">
-```
-
-**3. Add explicit onPointerDown handler for touch reliability (line 390-395)**
-
-Mobile Safari and touch devices sometimes need explicit pointer event handling.
-
-```typescript
-// Before
-<motion.button
-  type="button"
-  onClick={() => isRoomInviteMode 
-    ? handleInviteToRoom(result.user_id) 
-    : handleSendRequest(result.user_id)
-  }
-  ...
-
-// After
-<motion.button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    if (isRoomInviteMode) {
-      handleInviteToRoom(result.user_id);
-    } else {
-      handleSendRequest(result.user_id);
+useEffect(() => {
+  const fetchPendingOutgoing = async () => {
+    if (!user?.id || !isOpen) return;
+    
+    const { data } = await supabase
+      .from("friendships")
+      .select("friend_id")
+      .eq("user_id", user.id)
+      .eq("status", "pending");
+    
+    if (data) {
+      setPendingOutgoingIds(new Set(data.map(f => f.friend_id)));
     }
-  }}
-  onPointerDown={(e) => e.stopPropagation()}
-  ...
+  };
+  
+  fetchPendingOutgoing();
+}, [user?.id, isOpen]);
 ```
 
-**4. Add position: relative and z-index to the button (line 397-401)**
-
-Ensure the button is above any animated layers.
-
+### Step 3: Update Button Logic
 ```typescript
-// Add to button className
-className={`relative z-10 flex items-center gap-2 px-4 py-2.5 ...`}
+const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
+
+<motion.button
+  disabled={sentRequests.has(result.user_id) || isPendingOutgoing || invitingUser === result.user_id || sendingRequestTo === result.user_id}
+  // ...
+>
+  {isPendingOutgoing ? (
+    <>
+      <Clock className="w-4 h-4" />
+      მოლოდინში
+    </>
+  ) : (invitingUser === result.user_id || sendingRequestTo === result.user_id) ? (
+    <Loader2 className="w-4 h-4 animate-spin" />
+  ) : sentRequests.has(result.user_id) ? (
+    <>
+      <Check className="w-3 h-3" />
+      გაგზავნილი
+    </>
+  ) : (
+    <>
+      <UserPlus className="w-4 h-4" />
+      {isRoomInviteMode ? "მოწვევა" : "დამატება"}
+    </>
+  )}
+</motion.button>
 ```
 
-**5. Ensure the search results container allows pointer events (line 358)**
-
-Add explicit `pointer-events-auto` to override any inherited values.
-
+### Step 4: Update sentRequests After Successful Send
+When a request is successfully sent, also add to `pendingOutgoingIds`:
 ```typescript
-// Before
-className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 ${narrow}`}
-
-// After  
-className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-auto ${narrow}`}
+if (success) {
+  setSentRequests(prev => new Set([...prev, userId]));
+  setPendingOutgoingIds(prev => new Set([...prev, userId]));
+}
 ```
 
 ---
 
 ## Summary
 
-| Line | Change |
-|------|--------|
-| 352 | Change `AnimatePresence mode="popLayout"` to `mode="sync"` |
-| 358 | Add `pointer-events-auto` to search results container |
-| 370 | Remove `layout` prop from result card |
-| 390-395 | Add `e.stopPropagation()` to onClick and add `onPointerDown` handler |
-| 397 | Add `relative z-10` to button className |
+| Issue | Fix |
+|-------|-----|
+| Button "does nothing" | Actually working, but shows toast that may be missed |
+| No pending status indicator | Add "მოლოდინში" button state with Clock icon |
+| Can click on users with pending requests | Disable button for pending outgoing requests |
+| No visual distinction | Different button styling for pending state |
 
-This multi-layered fix addresses:
-- Animation interference with click events
-- Touch device compatibility  
-- Proper event bubbling
-- Z-index stacking issues
+This fix ensures users get clear feedback about friend request status at all times.
