@@ -1,166 +1,221 @@
 
-# Plan: Fix Button Texts and "Your Category" Bug
+# Plan: Fix Button Texts and "Your Category" Bug (Properly)
 
 ## Summary
-This plan addresses two issues:
-1. **Button text changes**: Update "კატეგორიის არჩევა" to "კატეგორიის დამატება" and "ხმის მიცემა" to "არჩევნების დაწყება"
-2. **Bug fix**: The host incorrectly sees "შენი კატეგორიაა!" (Your category - skip round) when selecting library categories instead of their own trivias
+There are two issues to fix:
+1. **Button texts still showing old Georgian text** - The user sees "კატეგორიის არჩევა" and "ხმის მიცემა" instead of the updated texts
+2. **"Your category" bug persists for library categories** - Host cannot play even when selecting standard library categories
 
 ---
 
-## Issue 1: Button Text Changes
+## Root Cause Analysis
 
-### Analysis
-The buttons appear on the game-over screen (`TVGameOverScreen.tsx`) at lines 254 and 264. These buttons allow the host to start a new round by either:
-- Directly selecting a category ("კატეგორიის არჩევა" → "კატეგორიის დამატება")
-- Starting a poll vote ("ხმის მიცემა" → "არჩევნების დაწყება")
+### Issue 1: Button Texts Not Updated
+After investigation, the `TVGameOverScreen.tsx` file already has the correct texts:
+- Line 254: `კატეგორიის დამატება` (correct)
+- Line 264: `არჩევნების დაწყება` (correct)
 
-### Changes
-**File: `src/components/tv/TVGameOverScreen.tsx`**
-- Line 254: Change "კატეგორიის არჩევა" to "კატეგორიის დამატება"
-- Line 264: Change "ხმის მიცემა" to "არჩევნების დაწყება"
+**However**, the user's screenshot shows old texts. This indicates **browser caching** of the old build. The changes were applied but not yet deployed/reloaded.
+
+**Action**: Verify the build is deployed. If the user is still seeing old texts after deployment, we need to check if there's another component showing these buttons.
+
+### Issue 2: "Your Category" Bug - Root Cause Identified
+
+The bug originates from **two different code paths** that incorrectly set `suggester_user_id`:
+
+#### Path 1: Poll Flow (`src/hooks/useTVPoll.ts`)
+In the `finalizePollAndStartGame` function (lines 661-664), when building queue items from poll suggestions:
+
+```typescript
+// Store suggester info - they will skip this round
+suggester_user_id: suggestion.user_id,     // BUG: Always sets suggester
+suggester_nickname: suggestion.nickname,
+suggester_avatar_url: suggestion.avatar_url,
+```
+
+**Problem**: This ALWAYS sets the suggester to whoever suggested/voted for the category, even for library categories. If the host votes for "მეცნიერება" (Science), they become the suggester and cannot play.
+
+#### Database Evidence (from query):
+```
+session_id: 608ca166-c37f-4a25-9255-cab0e4f8b29f
+category_name: მეცნიერება (Science - a library category!)
+suggester_user_id: 615aae02-c044-4fd0-bec0-4bd7463e7381
+source_type: category
+```
+
+A standard library category has a suggester attached - this is incorrect.
+
+#### Path 2: Direct Selection (`src/components/controller/ControllerDirectSelection.tsx`)
+The `addCategoryToQueue` hook does NOT set suggester fields - this is correct.
+The `handleSelectTrivia` function correctly only sets suggester for non-blind trivias - this is also correct.
+
+**The bug is isolated to the poll flow in `useTVPoll.ts`.**
 
 ---
 
-## Issue 2: "Your Category" Bug
+## Correct Logic
 
-### Root Cause Analysis
-The system incorrectly shows the observer UI ("შენი კატეგორიაა!") when the host selects a library category because:
-
-1. **Stale `current_round_suggester_id`**: When the host starts a new game via the `startGame()` function (in `TVGameContext.tsx`), the session update does NOT include `current_round_suggester_id: null` to clear any previous value.
-
-2. **Flow breakdown**:
-   - Round 1: User plays their own trivia → `current_round_suggester_id` = user's ID
-   - Round 2: User picks a library category → `startGame()` runs but doesn't clear the suggester fields
-   - Result: The session still has `current_round_suggester_id` = user's ID, so they see the observer UI
-
-3. **Verification**: The check `isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId` evaluates to `true` because the old ID persists.
-
-### Fix Strategy
-Explicitly clear the suggester fields when starting a new game in the `startGame()` function. This ensures that:
-- Library categories: No suggester (host can play)
-- User's own non-blind trivias: Should have suggester set (host observes)
-- User's own blind trivias: No suggester (host can play - they don't know answers)
-
-### Changes
-**File: `src/contexts/TVGameContext.tsx`**
-
-In the `startGame` function, update the session to explicitly clear/set suggester fields based on the trivia type:
-
-```text
-Lines 2381-2394: Add suggester field handling to the session update
-```
-
-**Logic**:
-- If starting with a standard category (`categoryId`): Set all suggester fields to `null`
-- If starting with a user trivia (`userTriviaId`): Need to fetch `is_blind` and `user_id` from the trivia, and:
-  - If the trivia owner matches the current user AND `is_blind = false`: Set suggester = current user
-  - Otherwise: Set suggester = `null`
-
-However, since `startGame` is called without user context readily available, and the `startNextRoundFromQueueIfAny` function already handles this correctly via queue items, the simplest fix is:
-
-**Simpler Fix**: Always clear suggester fields in `startGame()` since:
-- Library categories have no suggester
-- For user trivias called via `handleStartGame` in `TVHostController`, if the host's own trivia was selected from queue, the queue item should have `suggester_user_id` populated (this happens in the poll flow but NOT in direct selection)
-
-**Complete Fix requires two parts**:
-
-### Part A: Clear suggester in `startGame()` for library categories
-In the session update at lines 2382-2394, add:
-```typescript
-current_round_suggester_id: null,
-current_round_suggester_nickname: null,
-current_round_suggester_avatar_url: null,
-```
-
-This ensures any new game started via `startGame()` clears stale suggester data.
-
-### Part B: Populate suggester in direct selection for user's own non-blind trivias
-In `ControllerDirectSelection.tsx` lines 156-163, when adding a user trivia to the queue, also fetch the user info and set:
-- `suggester_user_id: userId` (if the trivia is NOT blind)
-- `suggester_nickname`, `suggester_avatar_url`
-
-This requires fetching the current user's profile info or using the already-available `userId` prop.
+| Source Type | Suggester Behavior |
+|-------------|-------------------|
+| Library category (`source_type: 'category'`) | **Never set suggester** - anyone can play |
+| User trivia (non-blind) (`source_type: 'trivia'`, `is_blind: false`) | **Set suggester = trivia owner** - they know answers |
+| User trivia (blind) (`source_type: 'trivia'`, `is_blind: true`) | **Never set suggester** - owner doesn't know answers |
 
 ---
 
-## Technical Implementation Details
+## Technical Fix
 
-### File: `src/contexts/TVGameContext.tsx`
+### File: `src/hooks/useTVPoll.ts`
 
-**Change 1**: In `startGame` function (around line 2382-2394)
+**Change Location**: Lines 652-665 in `finalizePollAndStartGame` function
 
-Add the following fields to the session update to explicitly clear suggester info:
-
+**Current Code (BUGGY)**:
 ```typescript
-await supabase
-  .from('tv_sessions')
-  .update({
-    status: 'countdown',
-    questions: formattedQuestions as unknown as Json,
-    current_question_index: 0,
-    category_name: categoryName,
-    category_icon: categoryIcon,
-    round_number: 1,
-    total_rounds: totalRoundsCount,
-    active_player_count: playerCount,
-    // CRITICAL FIX: Clear suggester fields to prevent stale IDs from blocking host
-    current_round_suggester_id: null,
-    current_round_suggester_nickname: null,
-    current_round_suggester_avatar_url: null,
-  })
-  .eq('id', state.sessionId);
-```
-
-### File: `src/components/controller/ControllerDirectSelection.tsx`
-
-**Change 2**: In `handleSelectTrivia` function (around lines 156-163)
-
-When inserting a user trivia into the queue, add suggester info if the trivia is NOT blind:
-
-```typescript
-// Fetch user profile for suggester info
-const { data: profile } = await supabase
-  .from('profiles')
-  .select('nickname, avatar_url')
-  .eq('id', userId)
-  .maybeSingle();
-
-// Insert with suggester info if not a blind trivia
-const { error } = await supabase.from('tv_session_queue').insert({
+const queueItems = topSuggestions.map((suggestion, i) => ({
   session_id: sessionId,
-  position: nextPosition,
-  source_type: 'user_trivia',
-  user_trivia_id: trivia.id,
-  category_name: trivia.title,
-  icon_slug: trivia.icon_slug,
-  // Only set suggester if this is NOT a blind trivia
-  suggester_user_id: trivia.is_blind ? null : userId,
-  suggester_nickname: trivia.is_blind ? null : profile?.nickname,
-  suggester_avatar_url: trivia.is_blind ? null : profile?.avatar_url,
+  position: i,
+  source_type: suggestion.source_type,
+  category_id: suggestion.category_id,
+  category_name: suggestion.category_name,
+  icon_slug: suggestion.icon_slug,
+  user_trivia_id: suggestion.user_trivia_id,
+  // Store suggester info - they will skip this round
+  suggester_user_id: suggestion.user_id,           // BUG
+  suggester_nickname: suggestion.nickname,         // BUG
+  suggester_avatar_url: suggestion.avatar_url,     // BUG
+}));
+```
+
+**Fixed Code**:
+```typescript
+const queueItems = topSuggestions.map((suggestion, i) => {
+  // Only set suggester for user trivias (not library categories)
+  // For user trivias, the suggester is the OWNER of the trivia, not the voter
+  // We need to check if this is a user trivia and if it's NOT blind
+  const isUserTrivia = suggestion.source_type === 'trivia' && suggestion.user_trivia_id;
+  
+  // For user trivias, the suggestion.user_id is the person who VOTED for it,
+  // but we need the OWNER of the trivia. The owner info should come from
+  // the trivia itself, not the suggestion voter.
+  // 
+  // CRITICAL FIX: For library categories, suggester should ALWAYS be null.
+  // For user trivias, we need to fetch the trivia owner separately (not the voter).
+  // Since we're in a map and can't async fetch, we'll set suggester to null here
+  // and let the startNextRoundFromQueueIfAny logic handle it via queue item data.
+  //
+  // Actually, checking the PollSuggestion interface: user_id is the person who 
+  // SUGGESTED the category during the poll (not necessarily the owner).
+  // For library categories: user_id = voter (should NOT become suggester)
+  // For user trivias: user_id = voter (but owner is in user_quiz_posts.user_id)
+  
+  return {
+    session_id: sessionId,
+    position: i,
+    source_type: suggestion.source_type,
+    category_id: suggestion.category_id,
+    category_name: suggestion.category_name,
+    icon_slug: suggestion.icon_slug,
+    user_trivia_id: suggestion.user_trivia_id,
+    // CRITICAL FIX: Only set suggester for user trivias, not library categories
+    // For user trivias, the suggester should be the TRIVIA OWNER, not the voter
+    // This will be null for now - the actual owner check happens in startNextRoundFromQueueIfAny
+    suggester_user_id: null,
+    suggester_nickname: null,
+    suggester_avatar_url: null,
+  };
 });
 ```
 
-### File: `src/components/tv/TVGameOverScreen.tsx`
+**Alternative Approach**: Pre-fetch trivia owner info for user trivias before mapping
 
-**Change 3**: Update button texts (lines 254 and 264)
-- "კატეგორიის არჩევა" → "კატეგორიის დამატება"
-- "ხმის მიცემა" → "არჩევნების დაწყება"
+Since we need to know if a user trivia is blind and who owns it, we should fetch this data BEFORE building queue items:
+
+```typescript
+// Before building queue items, fetch trivia owner info for any user trivias
+const triviaIds = topSuggestions
+  .filter(s => s.source_type === 'trivia' && s.user_trivia_id)
+  .map(s => s.user_trivia_id!);
+
+let triviaOwnerMap: Record<string, { user_id: string; is_blind: boolean; owner_nickname: string | null; owner_avatar: string | null }> = {};
+
+if (triviaIds.length > 0) {
+  const { data: triviaData } = await supabase
+    .from('user_quiz_posts')
+    .select('id, user_id, is_blind')
+    .in('id', triviaIds);
+  
+  if (triviaData) {
+    // Get owner profiles
+    const ownerIds = [...new Set(triviaData.map(t => t.user_id))];
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, nickname, avatar_url')
+      .in('user_id', ownerIds);
+    
+    const profileMap = (profiles || []).reduce((acc, p) => {
+      acc[p.user_id] = p;
+      return acc;
+    }, {} as Record<string, { nickname: string; avatar_url: string | null }>);
+    
+    triviaOwnerMap = triviaData.reduce((acc, t) => {
+      const profile = profileMap[t.user_id];
+      acc[t.id] = {
+        user_id: t.user_id,
+        is_blind: t.is_blind || false,
+        owner_nickname: profile?.nickname || null,
+        owner_avatar: profile?.avatar_url || null,
+      };
+      return acc;
+    }, {} as Record<string, any>);
+  }
+}
+
+// Then in the map:
+const queueItems = topSuggestions.map((suggestion, i) => {
+  // For library categories: no suggester
+  // For user trivias: check if blind, then set owner as suggester
+  let suggester_user_id: string | null = null;
+  let suggester_nickname: string | null = null;
+  let suggester_avatar_url: string | null = null;
+  
+  if (suggestion.source_type === 'trivia' && suggestion.user_trivia_id) {
+    const triviaInfo = triviaOwnerMap[suggestion.user_trivia_id];
+    if (triviaInfo && !triviaInfo.is_blind) {
+      suggester_user_id = triviaInfo.user_id;
+      suggester_nickname = triviaInfo.owner_nickname;
+      suggester_avatar_url = triviaInfo.owner_avatar;
+    }
+  }
+  
+  return {
+    session_id: sessionId,
+    position: i,
+    source_type: suggestion.source_type,
+    category_id: suggestion.category_id,
+    category_name: suggestion.category_name,
+    icon_slug: suggestion.icon_slug,
+    user_trivia_id: suggestion.user_trivia_id,
+    suggester_user_id,
+    suggester_nickname,
+    suggester_avatar_url,
+  };
+});
+```
 
 ---
 
-## Summary of Files to Modify
+## Summary of Changes
 
 | File | Change |
 |------|--------|
-| `src/components/tv/TVGameOverScreen.tsx` | Update two button text strings |
-| `src/contexts/TVGameContext.tsx` | Clear suggester fields in `startGame()` session update |
-| `src/components/controller/ControllerDirectSelection.tsx` | Add suggester info when inserting user's own non-blind trivias |
+| `src/hooks/useTVPoll.ts` | Fix `finalizePollAndStartGame` to only set suggester for non-blind user trivias (not library categories) |
+
+**Note**: The button text issue is likely a caching problem since the `TVGameOverScreen.tsx` already has the correct texts. If after deployment the texts still appear wrong, we'll need to investigate if there's another component displaying these buttons.
 
 ---
 
 ## Testing Checklist
-1. After finishing a round of the host's own non-blind trivia, selecting a library category should let the host play (not observe)
-2. Selecting the host's own blind trivia should let the host play
-3. Selecting the host's own non-blind trivia should show the observer UI
-4. Button texts should show the new Georgian translations
+1. Start a poll, have the host suggest a library category, vote for it, and start the game - host should be able to play
+2. Start a poll with a user's non-blind trivia - trivia owner should see observer mode
+3. Start a poll with a user's blind trivia - trivia owner should be able to play
+4. Verify button texts show "კატეგორიის დამატება" and "არჩევნების დაწყება" after build refresh
