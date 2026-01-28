@@ -1,131 +1,211 @@
 
-# Plan: Fix Default Avatar Storage and Display
+
+# Plan: Strict Host Participation Policy for TV Mode
 
 ## Problem Summary
 
-Default avatars are broken because when users select one of the 10 default bot avatars from the picker, the **Vite-bundled URL** (e.g., `/assets/bot-avatar-1-BvXs2Ih1.png`) gets saved to the database. These hashed URLs are only valid for a single build and break after the app is redeployed.
+Currently, the game blocks the host from playing trivias where `is_blind = false` (host saw answers during creation). However, there's a gap: if the host creates a "blind" trivia and then plays it (solo or with others), they now know the answers, but the system still considers it "playable" for them.
 
-**Evidence from database:**
-- "Test" user has: `/assets/bot-avatar-1-BvXs2Ih1.png` ← Broken Vite hash
-- "TriviaMaste" user has: proper Supabase storage URL ← Works fine
+The user wants a stricter policy:
+- **Block host** from playing trivias where they KNOW the answers (created non-blind OR already played)
+- **Allow host** to play library categories and truly blind trivias they haven't played yet
 
-## Root Cause
+## Current Architecture
 
-In `AvatarModal.tsx`, when a user clicks on a default avatar:
-
-```typescript
-const DEFAULT_AVATARS = [
-  botAvatar1, botAvatar2, ... // These are Vite-bundled URLs after import
-];
-
-// Line 660
-onClick={() => selectDefaultAvatar(avatar)}
-// ^^ avatar = "/assets/bot-avatar-1-BvXs2Ih1.png" (bundled URL)
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                     Observer Detection Flow                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Queue Item / Poll Suggestion                                    │
+│       │                                                          │
+│       ▼                                                          │
+│  Check: is_blind = false AND source_type = 'trivia'?            │
+│       │                                                          │
+│       ├── YES → Set suggester_user_id = trivia OWNER's user_id  │
+│       │                                                          │
+│       └── NO → suggester_user_id = null (everyone plays)        │
+│                                                                  │
+│  During gameplay:                                                │
+│       │                                                          │
+│       ▼                                                          │
+│  Check: myPlayerId === currentRoundSuggesterId?                 │
+│       │                                                          │
+│       ├── YES → Show observer UI (skip round)                   │
+│       │                                                          │
+│       └── NO → Show question UI (can answer)                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-The bundled URL is stored directly in the database, but it becomes invalid after any app rebuild.
+## Solution: Add "Has Played" Check
 
-## Solution
+Enhance the suggester logic to also check if the trivia owner has **already played** this trivia (via `plays_count > 0` or a dedicated tracking table).
 
-Modify `AvatarModal.tsx` to store **canonical paths** (e.g., `/src/assets/avatars/bot-avatar-1.png`) instead of bundled URLs. The existing `resolveAvatarUrl()` utility already correctly converts canonical paths to valid bundled URLs at runtime.
+### Approach A: Simple plays_count Check (Recommended)
 
-### File: `src/components/home/AvatarModal.tsx`
+If `plays_count > 0` for a user's own blind trivia, treat it as "spoiled" for them.
 
-#### Change 1: Create a reverse mapping from bundled URLs to canonical paths
+**Pros:** No DB schema changes, uses existing data
+**Cons:** Only works for trivias the owner has played at least once
 
-Add after the `DEFAULT_AVATARS` array definition:
+### Approach B: Dedicated Play Tracking Table
 
-```typescript
-// Canonical paths that are stable across builds
-// resolveAvatarUrl() converts these to valid bundled URLs at runtime
-const DEFAULT_AVATAR_PATHS = [
-  '/src/assets/avatars/bot-avatar-1.png',
-  '/src/assets/avatars/bot-avatar-2.png',
-  '/src/assets/avatars/bot-avatar-3.png',
-  '/src/assets/avatars/bot-avatar-4.png',
-  '/src/assets/avatars/bot-avatar-5.png',
-  '/src/assets/avatars/bot-avatar-6.png',
-  '/src/assets/avatars/bot-avatar-7.png',
-  '/src/assets/avatars/bot-avatar-8.png',
-  '/src/assets/avatars/bot-avatar-9.png',
-  '/src/assets/avatars/bot-avatar-10.png',
-];
+Track exactly which users have played which trivias.
 
-// Map from bundled URL → canonical path for storage
-const BUNDLED_TO_CANONICAL: Record<string, string> = {};
-DEFAULT_AVATARS.forEach((bundledUrl, index) => {
-  BUNDLED_TO_CANONICAL[bundledUrl] = DEFAULT_AVATAR_PATHS[index];
-});
-```
-
-#### Change 2: Update `selectDefaultAvatar` to use canonical paths
-
-```typescript
-const selectDefaultAvatar = async (avatarBundledUrl: string) => {
-  if (!user) return;
-  
-  setIsLoading(true);
-  try {
-    // Convert bundled URL to canonical path for stable storage
-    const canonicalPath = BUNDLED_TO_CANONICAL[avatarBundledUrl] || avatarBundledUrl;
-    
-    // Update profile with canonical path
-    const result = await updateProfile({ 
-      avatar_url: canonicalPath,
-      animated_avatar_url: null 
-    });
-    // ... rest unchanged
-  }
-};
-```
-
-#### Change 3: Fix the selection check for default avatars
-
-The current check `profile?.avatar_url === avatar` won't work correctly because the profile stores canonical paths but `avatar` is a bundled URL. Update the grid to handle this:
-
-```typescript
-{DEFAULT_AVATARS.map((avatar, index) => {
-  // Check against both bundled URL and canonical path for selection indicator
-  const canonicalPath = DEFAULT_AVATAR_PATHS[index];
-  const isSelected = profile?.avatar_url === avatar || profile?.avatar_url === canonicalPath;
-  // ... rest unchanged
-})}
-```
-
-### File: `src/utils/avatarUtils.ts`
-
-No changes needed - it already correctly handles canonical paths like `/src/assets/avatars/bot-avatar-1.png`.
+**Pros:** Precise tracking, covers all scenarios
+**Cons:** Requires new table, more complex queries
 
 ---
 
-## Technical Details
+## Recommended Implementation (Approach A)
 
-### Why Canonical Paths Work
+### Change 1: Update `ControllerDirectSelection.tsx`
 
-1. **Storage**: Database stores `/src/assets/avatars/bot-avatar-1.png`
-2. **Display**: `resolveAvatarUrl()` matches the filename (`bot-avatar-1.png`) in `BOT_AVATAR_MAP`
-3. **Result**: Returns the current build's valid bundled URL
+When adding a user trivia to the queue, check:
+- `is_blind = false` → Owner is blocked (current behavior)
+- `is_blind = true` BUT `plays_count > 0` AND trivia belongs to current user → Owner is blocked (new behavior)
 
-This pattern survives app rebuilds because the canonical path is constant, while `resolveAvatarUrl()` dynamically resolves it to whatever the current bundled URL is.
+**Location:** `src/components/controller/ControllerDirectSelection.tsx` lines 155-178
+
+**Current Logic:**
+```typescript
+if (!trivia.is_blind) {
+  // Fetch profile and set suggester
+  suggester_user_id = userId;
+}
+```
+
+**New Logic:**
+```typescript
+// Block host if: non-blind OR (blind but already played by owner)
+const hostKnowsAnswers = !trivia.is_blind || (trivia.is_blind && trivia.plays_count > 0);
+if (hostKnowsAnswers) {
+  suggester_user_id = userId;
+}
+```
+
+---
+
+### Change 2: Update `useTVPoll.ts` - Queue Building
+
+When building the queue from poll suggestions, apply the same logic.
+
+**Location:** `src/hooks/useTVPoll.ts` lines 660-708
+
+**Current Logic:**
+```typescript
+if (triviaInfo && !triviaInfo.is_blind) {
+  suggester_user_id = triviaInfo.user_id;
+}
+```
+
+**New Logic:**
+```typescript
+// Also fetch plays_count to check if owner has already played
+.select('id, user_id, is_blind, plays_count')
+
+// Check: non-blind OR (blind but already played)
+const ownerKnowsAnswers = !triviaInfo.is_blind || (triviaInfo.plays_count > 0);
+if (triviaInfo && ownerKnowsAnswers) {
+  suggester_user_id = triviaInfo.user_id;
+}
+```
+
+---
+
+### Change 3: Update `useTVPoll.ts` - First Round Start
+
+Same logic for the first round when finalizing poll.
+
+**Location:** `src/hooks/useTVPoll.ts` lines 841-850
+
+**Current Logic:**
+```typescript
+if (triviaInfo && !triviaInfo.is_blind) {
+  suggesterUserId = triviaInfo.user_id;
+}
+```
+
+**New Logic:**
+```typescript
+const ownerKnowsAnswers = !triviaInfo.is_blind || (triviaInfo.plays_count > 0);
+if (triviaInfo && ownerKnowsAnswers) {
+  suggesterUserId = triviaInfo.user_id;
+}
+```
+
+---
+
+### Change 4: Update `startNextRoundFromQueueIfAny` in TVGameContext
+
+When starting subsequent rounds from the queue, the suggester info is already stored in `tv_session_queue`. No changes needed here since the queue is populated correctly by Changes 1-3.
+
+---
+
+### Change 5: Update UI Indicators in MyTriviasPickerModal
+
+Show clearer indicators about whether the host can play each trivia.
+
+**Location:** `src/components/team/MyTriviasPickerModal.tsx` lines 262-271
+
+**Current Logic:**
+```typescript
+{trivia.is_blind ? (
+  <span className="...bg-green-500...">ითამაშე</span>
+) : (
+  <span className="...">👀 იცი პასუხები</span>
+)}
+```
+
+**New Logic:**
+```typescript
+{trivia.is_blind && trivia.plays_count === 0 ? (
+  // Truly blind - never played
+  <span className="...bg-green-500...">
+    <Gamepad2 /> ითამაშე
+  </span>
+) : (
+  // Either non-blind or already played
+  <span className="...text-amber-500...">
+    👀 {!trivia.is_blind ? 'იცი პასუხები' : 'უკვე ითამაშე'}
+  </span>
+)}
+```
 
 ---
 
 ## Summary of Changes
 
-| File | Change |
-|------|--------|
-| `src/components/home/AvatarModal.tsx` | Add `DEFAULT_AVATAR_PATHS` and `BUNDLED_TO_CANONICAL` mapping |
-| `src/components/home/AvatarModal.tsx` | Update `selectDefaultAvatar` to store canonical path |
-| `src/components/home/AvatarModal.tsx` | Fix `isSelected` check in default avatar grid |
+| File | Lines | Change |
+|------|-------|--------|
+| `ControllerDirectSelection.tsx` | 155-178 | Add `plays_count` check to suggester logic |
+| `useTVPoll.ts` | 660-708 | Fetch `plays_count`, add to owner block condition |
+| `useTVPoll.ts` | 841-850 | Apply same logic for first round start |
+| `MyTriviasPickerModal.tsx` | 262-271 | Update UI badges to show "already played" state |
+
+---
+
+## Policy Summary
+
+| Scenario | Host Can Play? |
+|----------|----------------|
+| Library category | Yes |
+| Own trivia, created blind, never played | Yes |
+| Own trivia, created blind, already played (plays_count > 0) | No |
+| Own trivia, created non-blind | No |
+| Someone else's blind trivia | Yes |
+| Someone else's non-blind trivia | Yes (only OWNER is blocked) |
 
 ---
 
 ## Testing Checklist
 
-1. Open avatar picker modal
-2. Select a default avatar (e.g., the girl with brown hair)
-3. Verify the avatar displays correctly in the modal
-4. Close modal and verify avatar displays in home screen header
-5. Join a TV game and verify avatar displays correctly on TV lobby screen
-6. Refresh the page and verify avatar still displays correctly
-7. Check database - confirm stored value is canonical path like `/src/assets/avatars/bot-avatar-1.png`
+1. Create a blind trivia (in "play" mode)
+2. Add it to TV game queue - verify host CAN play
+3. Play the game once (increments plays_count)
+4. Start new TV game, add same trivia - verify host is NOW observer
+5. Create a non-blind trivia - verify host is always observer
+6. Add library category - verify host can always play
+7. Have another player suggest YOUR trivia in poll - verify correct blocking
+
