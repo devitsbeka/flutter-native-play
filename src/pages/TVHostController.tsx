@@ -419,22 +419,42 @@ const TVHostController: React.FC = () => {
   };
 
   // P1-2: Start game from queue or selected category
-  const handleStartGame = async () => {
+  // Now accepts optional firstQueueItem from ControllerDirectSelection to avoid stale state issues
+  const handleStartGame = async (firstQueueItem?: { categoryId?: string; userTriviaId?: string }) => {
     if (!sessionId) return;
 
-    tvLog('Host starting game', { sessionId, selectedCategory, hasQueue, queue });
+    tvLog('Host starting game', { sessionId, firstQueueItem, selectedCategory, hasQueue, queueLength: queue.length });
 
     try {
-      // If queue has items, start from the first item
+      // If called from ControllerDirectSelection with fresh queue item, use it directly
+      if (firstQueueItem) {
+        if (firstQueueItem.userTriviaId) {
+          await startGame(undefined, firstQueueItem.userTriviaId);
+        } else if (firstQueueItem.categoryId) {
+          await startGame(firstQueueItem.categoryId);
+        } else {
+          toast.error('არასწორი რაუნდის ტიპი');
+          return;
+        }
+        
+        // Remove from queue after starting (find by matching ID)
+        if (queue.length > 0) {
+          const firstQueued = queue[0];
+          if (!firstQueued.id.startsWith('initial-')) {
+            await removeFromQueue(firstQueued.id);
+          }
+        }
+        return;
+      }
+
+      // Fallback: If queue has items (for other call sites like lobby)
       if (hasQueue && queue.length > 0) {
         const firstQueued = queue[0];
         
         // Handle based on available IDs (more resilient than source_type string matching)
         if (firstQueued.user_trivia_id) {
-          // Start with user trivia questions (handles both 'trivia' and 'user_trivia' source types)
           await startGame(undefined, firstQueued.user_trivia_id);
         } else if (firstQueued.category_id) {
-          // Start with category questions
           await startGame(firstQueued.category_id);
         } else {
           toast.error('არასწორი რაუნდის ტიპი');
