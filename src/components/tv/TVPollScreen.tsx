@@ -139,7 +139,7 @@ export const TVPollScreen: React.FC = () => {
             </motion.div>
           ) : (
             <div className={`grid ${getGridCols()} gap-3 auto-rows-fr`}>
-              <AnimatePresence mode="popLayout">
+            <AnimatePresence mode="sync">
                 {suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
                   <SuggestionCard
                     key={suggestion.id}
@@ -147,6 +147,7 @@ export const TVPollScreen: React.FC = () => {
                     rank={index + 1}
                     isLeader={index === 0 && pollPhase === 'voting'}
                     showVotes={pollPhase === 'voting'}
+                    hasVotes={suggestion.vote_count > 0}
                   />
                 ))}
               </AnimatePresence>
@@ -212,6 +213,7 @@ interface SuggestionCardProps {
   rank: number;
   isLeader: boolean;
   showVotes: boolean;
+  hasVotes?: boolean;
 }
 
 const SuggestionCard: React.FC<SuggestionCardProps> = ({
@@ -219,6 +221,7 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
   rank,
   isLeader,
   showVotes,
+  hasVotes,
 }) => {
   const [previousVotes, setPreviousVotes] = useState(suggestion.vote_count);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -234,18 +237,25 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
 
   return (
     <motion.div
+      layoutId={`tv-suggestion-${suggestion.id}`}
       layout
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ 
         opacity: 1, 
-        scale: isAnimating ? 1.05 : 1,
-        transition: { type: 'spring', stiffness: 500, damping: 30 }
+        scale: isAnimating ? 1.02 : 1,
       }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 transition-all ${
-        isLeader 
-          ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
-          : 'border-white/20'
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{
+        layout: { type: 'spring', stiffness: 350, damping: 40, mass: 1.2 },
+        scale: { duration: 0.2 },
+        opacity: { duration: 0.2 },
+      }}
+      className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 transition-colors duration-300 ${
+        hasVotes && showVotes
+          ? 'border-green-500 shadow-lg shadow-green-500/20'
+          : isLeader 
+            ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
+            : 'border-white/20'
       }`}
     >
       {/* Leader crown */}
