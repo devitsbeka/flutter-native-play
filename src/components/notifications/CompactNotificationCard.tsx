@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { Check, X, ExternalLink, Trash2 } from 'lucide-react';
+import { Trash2, Home, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getNotificationConfig } from '@/config/notificationConfig';
@@ -57,18 +57,22 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
 
   const isLoading = actionLoading === notification.id;
 
-  // Get avatar and sender info from notification data
-  const avatarUrl = notification.data?.sender_avatar as string | undefined;
+  // Get avatar and sender info from notification data (handle both field names for backwards compatibility)
+  const avatarUrl = (notification.data?.sender_avatar || notification.data?.sender_avatar_url) as string | undefined;
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
   const roomName = notification.data?.room_name as string | undefined;
+  const categoryName = notification.data?.category_name as string | undefined;
+  
+  // Check if notification has room context
+  const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite;
   
   // Build subtitle based on notification type
   const getSubtitle = () => {
-    if (isRoomInvite) {
+    if (isRoomInvite || isGameInvite) {
       return senderName ? `${senderName} გიწვევს თამაშში` : 'გიწვევს თამაშში';
     }
-    if (isGameStarted && roomName) {
-      return roomName;
+    if (isGameStarted) {
+      return senderName ? `${senderName} დაიწყო თამაში` : 'თამაში დაიწყო';
     }
     if (isFriendRequest && senderName) {
       return `${senderName} გთხოვს მეგობრობას`;
@@ -219,6 +223,24 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                         notification.data as Record<string, unknown>
                       )}
                     </p>
+                  )}
+                  
+                  {/* Room/Category context card for game-related notifications */}
+                  {hasRoomContext && (roomName || categoryName) && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-muted/50 border border-border/30 space-y-1.5">
+                      {roomName && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <Home className="w-3.5 h-3.5 text-primary/70" />
+                          <span className="font-medium text-foreground">{roomName}</span>
+                        </div>
+                      )}
+                      {categoryName && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Tag className="w-3.5 h-3.5" />
+                          <span>{categoryName}</span>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground/60 whitespace-nowrap pt-0.5">
