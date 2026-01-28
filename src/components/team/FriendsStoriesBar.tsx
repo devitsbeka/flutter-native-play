@@ -49,19 +49,27 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
     <div className="overflow-x-auto -mx-4 px-4 scrollbar-hide">
       <div className="flex gap-4 pt-2 pb-3 pr-4">
         {/* Add Friend Button */}
-        <motion.button
-          onClick={onAddFriendClick}
-          className="flex flex-col items-center gap-2 flex-shrink-0"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onAddFriendClick();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            onAddFriendClick();
+          }}
+          className="flex flex-col items-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
+          style={{ touchAction: 'manipulation' }}
         >
-          <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-dashed border-purple-400 flex items-center justify-center">
+          <div className="relative w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-dashed border-purple-400 flex items-center justify-center">
             <Plus className="w-6 h-6 text-purple-600" />
           </div>
           <span className="text-xs font-medium text-slate-600 truncate max-w-[64px]">
             {t('team.add')}
           </span>
-        </motion.button>
+        </button>
 
         {/* Friends */}
         <AnimatePresence>
