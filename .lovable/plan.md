@@ -1,119 +1,192 @@
 
-# Plan: Fix "Your Category" Observer Bug (Complete Fix)
+# Plan: Smooth TV Poll Category Animation
 
 ## Problem Summary
-The host is still being incorrectly shown as an observer ("შენი კატეგორიაა!") when selecting library categories they didn't create. The previous fix only addressed one code path.
+When categories receive votes during the poll phase on the TV screen, the cards animate in a "dizzy" manner. The user wants:
+1. **Smooth animations** - No jittery or chaotic movement when cards reorder
+2. **Clicked categories slide to top** - Selected items should smoothly move to their new position
+3. **Green border on selection** - Selected/voted categories should have a green stroke
 
-## Root Causes Identified
+## Root Cause Analysis
 
-### 1. `startDirectSelection` doesn't clear suggester fields
-When the host clicks "კატეგორიის დამატება" (Add Category) to start direct category selection, the `startDirectSelection` function updates the session status but **does NOT clear** the `current_round_suggester_*` fields. This means stale suggester data from the previous round persists.
+The current `SuggestionCard` component in `TVPollScreen.tsx` uses:
 
-**Location**: `src/contexts/TVGameContext.tsx`, lines 2952-2962
-
-**Current code** (missing suggester reset):
-```text
-await supabase
-  .from('tv_sessions')
-  .update({
-    status: 'category-select',
-    current_question_index: 0,
-    questions: null,
-    question_start_time: null,
-    round_number: 1,
-    total_rounds: 1,
-    // MISSING: current_round_suggester_id: null,
-    // MISSING: current_round_suggester_nickname: null,
-    // MISSING: current_round_suggester_avatar_url: null,
-  })
-  .eq('id', state.sessionId);
+```typescript
+<motion.div
+  layout                    // ← Causes layout animations on reorder
+  initial={{ opacity: 0, scale: 0.8 }}
+  animate={{ 
+    scale: isAnimating ? 1.05 : 1,
+    transition: { type: 'spring', stiffness: 500, damping: 30 }  // ← Spring is too aggressive
+  }}
+  ...
+/>
 ```
 
-### 2. Old queue items still have incorrect data
-Queue items created before our poll fix still have `suggester_user_id` set for library categories. When `startNextRoundFromQueueIfAny` processes these items, it reads the incorrect data and sets it on the session.
+**Issues identified:**
 
-**Evidence from database**:
-```text
-category_name: სერიალები (a library category)
-source_type: category
-suggester_user_id: 615aae02-c044-4fd0-bec0-4bd7463e7381  <-- INCORRECT!
-```
+| Problem | Cause |
+|---------|-------|
+| "Dizzy" movement | `layout` prop triggers animations on every vote count change, combined with `mode="popLayout"` which repositions elements |
+| Spring too bouncy | `stiffness: 500` with `damping: 30` creates visible oscillation |
+| No green stroke | Border color only checks `isLeader` (yellow) or default (white), no voted/selected state |
+| No smooth slide to top | The reordering happens because suggestions are sorted by `vote_count`, but the animation isn't smooth enough |
 
 ## Solution
 
-### Fix 1: Clear suggester fields in `startDirectSelection`
+### 1. Improve Layout Animation Settings
 
-**File**: `src/contexts/TVGameContext.tsx`
+Replace the aggressive spring animation with a smoother transition:
 
-Add the three suggester fields to the session update in `startDirectSelection`:
-
-```text
-await supabase
-  .from('tv_sessions')
-  .update({
-    status: 'category-select',
-    current_question_index: 0,
-    questions: null,
-    question_start_time: null,
-    round_number: 1,
-    total_rounds: 1,
-    // CRITICAL FIX: Clear suggester fields to prevent stale data
-    current_round_suggester_id: null,
-    current_round_suggester_nickname: null,
-    current_round_suggester_avatar_url: null,
-  })
-  .eq('id', state.sessionId);
-```
-
-### Fix 2: Override incorrect queue data in `startNextRoundFromQueueIfAny`
-
-**File**: `src/contexts/TVGameContext.tsx`
-
-In the `startNextRoundFromQueueIfAny` function, add defensive logic to IGNORE suggester data for library categories (source_type = 'category'), regardless of what's stored in the queue:
-
-**Current code** (lines 967-970):
+**Current (bouncy):**
 ```typescript
-const suggesterUserId = (nextItem as any).suggester_user_id as string | null;
-const suggesterNickname = (nextItem as any).suggester_nickname as string | null;
-const suggesterAvatarUrl = (nextItem as any).suggester_avatar_url as string | null;
+transition: { type: 'spring', stiffness: 500, damping: 30 }
 ```
 
-**Fixed code**:
+**Fixed (smooth):**
 ```typescript
-// CRITICAL: Only honor suggester data for user trivias, not library categories
-// This protects against stale queue items created before the poll fix
-const isLibraryCategory = nextItem.category_id && !nextItem.user_trivia_id;
-const suggesterUserId = isLibraryCategory ? null : (nextItem as any).suggester_user_id as string | null;
-const suggesterNickname = isLibraryCategory ? null : (nextItem as any).suggester_nickname as string | null;
-const suggesterAvatarUrl = isLibraryCategory ? null : (nextItem as any).suggester_avatar_url as string | null;
+layout: { type: 'spring', stiffness: 350, damping: 40, mass: 1.2 }
 ```
 
-This ensures that even if the queue has incorrect data from before the fix, library categories will NEVER have a suggester.
+The lower stiffness + higher damping + added mass creates a smoother, more controlled movement.
+
+### 2. Add `layoutId` for Better Tracking
+
+Use `layoutId` instead of just `layout` for proper element identity tracking during reordering:
+
+```typescript
+<motion.div
+  layoutId={`suggestion-${suggestion.id}`}
+  ...
+/>
+```
+
+### 3. Change AnimatePresence Mode
+
+Replace `mode="popLayout"` with `mode="sync"` to reduce jarring transitions:
+
+```typescript
+<AnimatePresence mode="sync">
+```
+
+### 4. Add Voted/Selected State with Green Border
+
+Pass vote information to the TV's `SuggestionCard` and add green border styling:
+
+```typescript
+// In parent, pass which suggestions have been voted for
+const votedSuggestionIds = new Set(/* from useTVPoll */);
+
+// In SuggestionCard, add isVoted prop
+interface SuggestionCardProps {
+  suggestion: PollSuggestion;
+  rank: number;
+  isLeader: boolean;
+  showVotes: boolean;
+  hasVotes?: boolean;  // NEW: true if this suggestion received any votes
+}
+
+// Border styling
+className={`... border-2 transition-all ${
+  hasVotes && showVotes
+    ? 'border-green-500 shadow-lg shadow-green-500/20'  // Green for voted
+    : isLeader 
+      ? 'border-yellow-500 shadow-lg shadow-yellow-500/20'  // Yellow for leader
+      : 'border-white/20'  // Default
+}`}
+```
+
+### 5. Smoother Scale Animation on Vote
+
+Replace the aggressive scale pop with a gentler pulse:
+
+**Current:**
+```typescript
+scale: isAnimating ? 1.05 : 1,
+```
+
+**Fixed:**
+```typescript
+scale: isAnimating ? 1.02 : 1,  // Subtle scale
+```
+
+---
+
+## Technical Changes
+
+### File: `src/components/tv/TVPollScreen.tsx`
+
+| Line Range | Change |
+|------------|--------|
+| 142-152 | Change `AnimatePresence mode="popLayout"` to `mode="sync"` |
+| 143-150 | Add `hasVotes` prop to `SuggestionCard` based on `suggestion.vote_count > 0` |
+| 210-215 | Add `hasVotes?: boolean` to `SuggestionCardProps` interface |
+| 236-249 | Update motion.div with `layoutId`, smoother layout transition, and green border logic |
+| 241 | Change scale from `1.05` to `1.02` for subtler animation |
+
+---
+
+## Code Preview
+
+### AnimatePresence & Card Rendering (lines 141-152)
+```typescript
+<AnimatePresence mode="sync">
+  {suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
+    <SuggestionCard
+      key={suggestion.id}
+      suggestion={suggestion}
+      rank={index + 1}
+      isLeader={index === 0 && pollPhase === 'voting'}
+      showVotes={pollPhase === 'voting'}
+      hasVotes={suggestion.vote_count > 0}
+    />
+  ))}
+</AnimatePresence>
+```
+
+### SuggestionCard Motion Config (lines 235-250)
+```typescript
+<motion.div
+  layoutId={`tv-suggestion-${suggestion.id}`}
+  layout
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ 
+    opacity: 1, 
+    scale: isAnimating ? 1.02 : 1,
+  }}
+  exit={{ opacity: 0, scale: 0.95 }}
+  transition={{
+    layout: { type: 'spring', stiffness: 350, damping: 40, mass: 1.2 },
+    scale: { duration: 0.2 },
+    opacity: { duration: 0.2 },
+  }}
+  className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 transition-colors duration-300 ${
+    hasVotes && showVotes
+      ? 'border-green-500 shadow-lg shadow-green-500/20'
+      : isLeader 
+        ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
+        : 'border-white/20'
+  }`}
+>
+```
 
 ---
 
 ## Summary of Changes
 
-| File | Location | Change |
-|------|----------|--------|
-| `src/contexts/TVGameContext.tsx` | `startDirectSelection` (lines 2952-2962) | Add `current_round_suggester_*: null` fields to session update |
-| `src/contexts/TVGameContext.tsx` | `startNextRoundFromQueueIfAny` (lines 967-970) | Add defensive check to ignore suggester for library categories |
-
----
-
-## Why Previous Fixes Didn't Work
-
-1. **`startGame` fix** - Only affects the initial round. Subsequent rounds go through `startNextRoundFromQueueIfAny`.
-2. **Poll fix** - Only affects NEW queue items. Old items with incorrect data still exist in the database.
-3. **Missing `startDirectSelection` reset** - Host clicking "Add Category" keeps old suggester data.
-
-This complete fix addresses ALL code paths that set suggester data.
+| Aspect | Before | After |
+|--------|--------|-------|
+| Layout animation | Aggressive spring | Smooth spring with higher damping |
+| AnimatePresence mode | `popLayout` | `sync` |
+| Scale on vote | `1.05` (bouncy) | `1.02` (subtle) |
+| Border for voted items | None | Green glow |
+| Element tracking | `key` only | `layoutId` + `key` |
 
 ---
 
 ## Testing Checklist
-1. Host picks library category via direct selection → Host can play (not observer)
-2. Host picks their own non-blind trivia → Host is observer
-3. Host picks their own blind trivia → Host can play
-4. Old queue items with incorrect suggester data → Host can still play library categories
-5. Button texts show updated Georgian translations after page refresh
+1. Add categories during poll suggest phase - cards appear smoothly
+2. Vote for a category - card moves to new position smoothly (no dizzy jumps)
+3. Voted categories show green border during voting phase
+4. Leader (most votes) still shows yellow border with crown
+5. Multiple rapid votes don't cause jittery animations
