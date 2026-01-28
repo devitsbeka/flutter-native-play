@@ -965,9 +965,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Go to round-intro phase instead of countdown - wait for all players to be ready
       // Extract suggester info from queue item
-      const suggesterUserId = (nextItem as any).suggester_user_id as string | null;
-      const suggesterNickname = (nextItem as any).suggester_nickname as string | null;
-      const suggesterAvatarUrl = (nextItem as any).suggester_avatar_url as string | null;
+      // CRITICAL: Only honor suggester data for user trivias, not library categories
+      // This protects against stale queue items created before the poll fix
+      const isLibraryCategory = nextItem.category_id && !nextItem.user_trivia_id;
+      const suggesterUserId = isLibraryCategory ? null : (nextItem as any).suggester_user_id as string | null;
+      const suggesterNickname = isLibraryCategory ? null : (nextItem as any).suggester_nickname as string | null;
+      const suggesterAvatarUrl = isLibraryCategory ? null : (nextItem as any).suggester_avatar_url as string | null;
 
       // CRITICAL: Use centralized confirmActivePlayers for robust player count verification
       console.log('[startNextRoundFromQueueIfAny] 🔒 Using confirmActivePlayers...');
@@ -2958,6 +2961,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           question_start_time: null,
           round_number: 1,
           total_rounds: 1,
+          // CRITICAL FIX: Clear suggester fields to prevent stale data
+          current_round_suggester_id: null,
+          current_round_suggester_nickname: null,
+          current_round_suggester_avatar_url: null,
         })
         .eq('id', state.sessionId);
 
