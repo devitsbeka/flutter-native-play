@@ -259,14 +259,14 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                                 <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
                               </span>
                             </div>
-                            {/* Spoiler indicator */}
-                            {trivia.is_blind ? (
+                            {/* Spoiler indicator - STRICT HOST POLICY */}
+                            {trivia.is_blind && (trivia.plays_count || 0) === 0 ? (
                               <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
                                 <Gamepad2 className="w-3 h-3" /> ითამაშე
                               </span>
                             ) : (
-                              <span className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                                👀 იცი პასუხები
+                              <span className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                                👀 {!trivia.is_blind ? 'იცი პასუხები' : 'უკვე ითამაშე'}
                               </span>
                             )}
                           </div>

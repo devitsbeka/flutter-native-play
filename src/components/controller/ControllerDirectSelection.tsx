@@ -32,6 +32,7 @@ interface UserTrivia {
   cover_image?: string;
   icon_slug?: string;
   is_blind?: boolean;
+  plays_count?: number;
 }
 
 interface ControllerDirectSelectionProps {
@@ -79,7 +80,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     if (showTriviaPicker && userTrivias.length === 0) {
       supabase
         .from('user_quiz_posts')
-        .select('id, title, cover_image, icon_slug, is_blind')
+        .select('id, title, cover_image, icon_slug, is_blind, plays_count')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .then(({ data }) => {
@@ -152,9 +153,13 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         ? currentQueue[0].position + 1 
         : 0;
 
-      // Fetch user profile for suggester info (only needed for non-blind trivias)
+      // STRICT HOST POLICY: Block host if non-blind OR if blind but already played
+      // Host knows answers in both cases and should skip this round
+      const hostKnowsAnswers = !trivia.is_blind || (trivia.is_blind && (trivia.plays_count || 0) > 0);
+      
+      // Fetch user profile for suggester info (only needed if host knows answers)
       let suggesterInfo: { nickname: string | null; avatar_url: string | null } = { nickname: null, avatar_url: null };
-      if (!trivia.is_blind) {
+      if (hostKnowsAnswers) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('nickname, avatar_url')
@@ -164,7 +169,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
       }
 
       // Insert directly into tv_session_queue for user trivia
-      // Only set suggester if this is NOT a blind trivia (host knows answers)
+      // Set suggester if host knows answers (non-blind OR already played blind trivia)
       const { error } = await supabase.from('tv_session_queue').insert({
         session_id: sessionId,
         position: nextPosition,
@@ -172,9 +177,9 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         user_trivia_id: trivia.id,
         category_name: trivia.title,
         icon_slug: trivia.icon_slug,
-        suggester_user_id: trivia.is_blind ? null : userId,
-        suggester_nickname: trivia.is_blind ? null : suggesterInfo.nickname,
-        suggester_avatar_url: trivia.is_blind ? null : suggesterInfo.avatar_url,
+        suggester_user_id: hostKnowsAnswers ? userId : null,
+        suggester_nickname: hostKnowsAnswers ? suggesterInfo.nickname : null,
+        suggester_avatar_url: hostKnowsAnswers ? suggesterInfo.avatar_url : null,
       });
 
       if (error) throw error;
@@ -316,10 +321,12 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     )}
                     <div className="flex-1 min-w-0">
                       <span className="text-left font-medium text-white block truncate">{trivia.title}</span>
-                      {trivia.is_blind ? (
+                      {trivia.is_blind && (trivia.plays_count || 0) === 0 ? (
                         <span className="text-xs text-green-400">ითამაშე</span>
                       ) : (
-                        <span className="text-xs text-yellow-400">⚠️ გამოტოვებ</span>
+                        <span className="text-xs text-yellow-400">
+                          ⚠️ {!trivia.is_blind ? 'გამოტოვებ' : 'უკვე ითამაშე'}
+                        </span>
                       )}
                     </div>
                     {isSelected ? (
