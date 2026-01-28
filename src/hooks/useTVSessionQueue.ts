@@ -65,20 +65,6 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     setLoading(true);
 
     console.log('[useTVSessionQueue] Fetching queue for sessionId:', currentSessionId, 'roomIdFallback:', currentRoomIdFallback);
-    // In mock mode, use the provided mock queue
-    if (isMockMode) {
-      setQueue(mockQueue || []);
-      setLoading(false);
-      return;
-    }
-
-    if (!sessionId) {
-      setQueue([]);
-      return;
-    }
-    setLoading(true);
-
-    console.log('[useTVSessionQueue] Fetching queue for sessionId:', sessionId, 'roomIdFallback:', roomIdFallback);
 
     // Prefer the TV session queue when present (single source of truth for actual playback)
     const { data: tvData, error: tvError } = await supabase
@@ -145,7 +131,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         roomData.forEach((item, idx) => {
           fullQueue.push({
             id: item.id,
-            session_id: sessionId,
+            session_id: currentSessionId,
             position: fullQueue.length + idx,
             source_type: item.source_type,
             category_id: item.category_id,

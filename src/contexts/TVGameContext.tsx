@@ -1875,6 +1875,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 questionStartedAtRef.current = 0;
                 console.log('[Subscription] Disabled auto-advance timing on countdown');
               }
+              
+              // CRITICAL FIX: When transitioning to category-select or results phases, 
+              // disable auto-advance to prevent stale game state from triggering advances
+              const safePhases = ['category-select', 'results', 'completed', 'poll-suggest', 'poll-voting', 'poll-results', 'round-intro', 'lobby'];
+              if (safePhases.includes(newData.status)) {
+                questionStartedAtRef.current = 0;
+                hasAdvancedRef.current = false;
+                console.log('[Subscription] Disabled auto-advance timing on safe phase:', newData.status);
+              }
             }
 
             // Reset all players to waiting state when new question starts
@@ -2895,6 +2904,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     tvLog('Starting direct category selection', { sessionId: state.sessionId });
 
     try {
+      // CRITICAL: Clear ALL stale answers from previous games in this session
+      // This prevents auto-advance from matching old answers with question_index 0
+      console.log('[startDirectSelection] 🧹 Cleaning stale answers...');
+      const { error: answerCleanupError } = await supabase
+        .from('player_answers')
+        .delete()
+        .eq('tv_session_id', state.sessionId);
+      
+      if (answerCleanupError) {
+        console.warn('[startDirectSelection] ⚠️ Could not clean stale answers:', answerCleanupError);
+      } else {
+        console.log('[startDirectSelection] ✅ Cleared stale answers for fresh game');
+      }
+      
       // Clear old queue
       await supabase
         .from('tv_session_queue')
@@ -2931,6 +2954,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Reset timer initialization tracker
       timerInitializedForQuestionRef.current = null;
       wasInPreQuestionPhaseRef.current = false;
+      
+      // CRITICAL FIX: Reset ALL timing refs to prevent stale values from previous game
+      // Without this, checkAndAdvanceIfAllAnswered can fire on old answers
+      questionStartedAtRef.current = 0;
+      hasAdvancedRef.current = false;
+      console.log('[startDirectSelection] ⏱️ Reset timing refs (auto-advance disabled until next startPlaying)');
       
       // Update local state
       setState(prev => ({
