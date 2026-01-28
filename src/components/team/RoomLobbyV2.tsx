@@ -72,6 +72,7 @@ export function RoomLobbyV2() {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
+  const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
   const prevParticipantsRef = useRef<string[]>([]);
 
   // Detect and redirect to active TV session when host returns to room
@@ -220,6 +221,31 @@ export function RoomLobbyV2() {
   };
 
   const handleStartGame = async () => {
+    // Check if host owns the trivia being played (they know the answers)
+    if (currentRoom?.user_trivia_id && user?.id) {
+      // Fetch the trivia to check ownership
+      const { data: trivia } = await supabase
+        .from("user_quiz_posts")
+        .select("user_id, is_blind, plays_count")
+        .eq("id", currentRoom.user_trivia_id)
+        .single();
+      
+      // Host knows answers if: they own it AND (it's not blind OR they've already played it)
+      const hostKnowsAnswers = trivia?.user_id === user.id && 
+        (!trivia?.is_blind || (trivia?.plays_count || 0) > 0);
+      
+      if (hostKnowsAnswers) {
+        setShowHostObserverWarning(true);
+        return; // Show warning modal first
+      }
+    }
+    
+    // Proceed with starting the game
+    await proceedWithStartGame();
+  };
+
+  const proceedWithStartGame = async () => {
+    setShowHostObserverWarning(false);
     setIsStarting(true);
     playSound("button-click");
     await startGame();
@@ -954,6 +980,40 @@ export function RoomLobbyV2() {
         showQueueOption={true}
         roomGradient={roomGradient?.gradient}
       />
+
+      {/* Host Observer Warning Modal */}
+      <AlertDialog open={showHostObserverWarning} onOpenChange={setShowHostObserverWarning}>
+        <AlertDialogContent className="bg-card border-border rounded-3xl max-w-sm">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
+              <AlertTriangle className="w-7 h-7 text-amber-500" />
+            </div>
+            <AlertDialogTitle className="text-foreground font-display text-xl">
+              შენ იცი პასუხები! 🧠
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-2">
+              <p>
+                ეს შენ მიერ შექმნილი ტრივიაა, ამიტომ თამაშში გამარჯვება არ ჩაითვლება
+                სამართლიანად სხვა მოთამაშეებისთვის.
+              </p>
+              <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                შენ მაინც მიიღებ ქულებს როცა სხვები შეცდებიან! 💡
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col mt-4">
+            <AlertDialogAction
+              onClick={proceedWithStartGame}
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
+            >
+              გასაგებია, დავიწყოთ!
+            </AlertDialogAction>
+            <AlertDialogCancel className="w-full bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 rounded-xl">
+              გაუქმება
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
