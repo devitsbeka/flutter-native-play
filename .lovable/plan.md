@@ -1,92 +1,131 @@
 
-# Add Question Button to My Trivia Party Edit Screen
 
-## Overview
+# Enhanced Notification Cards with Rich Content
 
-When editing a saved My Trivia Party (or any trivia in the `EditRoundModal`), users should be able to add new questions via a "+" button in the top right corner of the questions view.
+## Problem Analysis
+
+Based on the screenshot and database investigation, I found **two main issues**:
+
+### 1. Duplicate Notifications
+When inviting a friend to a game, **two notifications are created**:
+- `room_invite` (from database trigger when adding to `room_participants`)
+- `challenge` (manually created in `useGameInvitations.ts` via `createNotification()`)
+
+### 2. Notifications Look Generic and Repetitive
+Current cards show:
+- Same purple icon for everything
+- Generic title like "ოთახის მოწვევა" 
+- No sender avatar or room name visible
+- No category/room context
 
 ---
 
-## Current State
+## Solution Overview
 
-The `EditRoundModal` component handles editing saved trivias:
-- Shows "კითხვა X / Y" header in questions view mode
-- Has an empty spacer div on the right side of the header: `<div className="w-10" />`
-- Has functions for updating and deleting questions, but **no function to add new questions**
+### Part 1: Fix Duplicate Notifications
+
+Remove the manual `createNotification()` call in `useGameInvitations.ts` since the database trigger already creates `room_invite` notifications.
+
+**File: `src/hooks/useGameInvitations.ts`** (lines 135-151)
+
+Remove the block that calls `createNotification()` - the trigger handles this already.
 
 ---
 
-## Changes Required
+### Part 2: Normalize Data Fields
 
-### File: `src/components/social/EditRoundModal.tsx`
+Update `notify_room_invite` trigger to use consistent field name `sender_avatar` instead of `sender_avatar_url`.
 
-#### 1. Add `addQuestion` Function (after `deleteQuestion` ~line 197)
+**SQL Migration:**
+```sql
+-- Update to use consistent sender_avatar field
+'sender_avatar', sender_profile.avatar_url
+```
 
-Create a new function to add a blank question:
+---
+
+### Part 3: Redesign Notification Card
+
+Transform `CompactNotificationCard.tsx` into a richer, more engaging layout:
+
+**New Layout Structure:**
+```text
+┌─────────────────────────────────────────────────────┐
+│  [Avatar]   ოთახის მოწვევა              ახლა •     │
+│             beka გიწვევს თამაშში                   │
+│                                                     │
+│  ┌─────────────────────────────────────────────┐   │
+│  │  🏠 აღმომჩენთა გილია                        │   │
+│  │  📂 კატეგორია: ჰარი პოტერი                  │   │
+│  └─────────────────────────────────────────────┘   │
+│                                                     │
+│  [ შესვლა ]    [ უარყოფა ]                        │
+└─────────────────────────────────────────────────────┘
+```
+
+**Key Visual Changes:**
+1. **Sender Avatar** - Show the actual sender's avatar (not just type icon)
+2. **Room Info Card** - Add a subtle card showing room name and category
+3. **Category Badge** - Display the trivia category when available
+4. **Visual Hierarchy** - Differentiate title, subtitle, and context
+5. **Action Buttons** - Keep accept/decline buttons prominent
+
+---
+
+### Part 4: Extract and Display Metadata
+
+**File: `src/components/notifications/CompactNotificationCard.tsx`**
+
+Add proper metadata extraction:
 
 ```typescript
-const addQuestion = useCallback(() => {
-  const newQuestion: Question = {
-    question_text: "",
-    correct_answer: "",
-    incorrect_answers: ["", "", ""],
-    icon_slug: undefined,
-  };
-  const newQuestions = [...questions, newQuestion];
-  setQuestions(newQuestions);
-  
-  // Navigate to the new question after a short delay
-  setTimeout(() => {
-    carouselApi?.scrollTo(newQuestions.length - 1);
-  }, 100);
-}, [questions, carouselApi]);
+// Extract rich metadata
+const avatarUrl = notification.data?.sender_avatar || 
+                  notification.data?.sender_avatar_url;
+const senderName = notification.data?.sender_nickname;
+const roomName = notification.data?.room_name;
+const categoryName = notification.data?.category_name;
 ```
 
-#### 2. Replace Empty Spacer with Add Button (line 309)
+**Add Room Info Section (for room_invite, game_started, challenge):**
 
-Replace the empty spacer div with a conditional + button:
-
-**Before:**
 ```tsx
-<div className="w-10" />
-```
-
-**After:**
-```tsx
-{viewMode === "questions" ? (
-  <button
-    onClick={addQuestion}
-    className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors active:scale-95"
-    title="დაამატე კითხვა"
-  >
-    <Plus className="w-5 h-5 text-white" />
-  </button>
-) : (
-  <div className="w-10" />
+{(roomName || categoryName) && (
+  <div className="mt-2 p-2.5 rounded-xl bg-muted/50 space-y-1">
+    {roomName && (
+      <div className="flex items-center gap-2 text-xs">
+        <Home className="w-3.5 h-3.5 text-muted-foreground" />
+        <span className="font-medium text-foreground">{roomName}</span>
+      </div>
+    )}
+    {categoryName && (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Tag className="w-3.5 h-3.5" />
+        <span>{categoryName}</span>
+      </div>
+    )}
+  </div>
 )}
 ```
 
 ---
 
-## Visual Design
+### Part 5: Friend Request Enhancement
 
-The + button will:
-- Appear only in "questions" view mode (when viewing/editing questions carousel)
-- Match the header styling with white icon on purple background
-- Have a circular shape (40x40px) matching the back button style
-- Include hover and active states for feedback
+For `friend_request` type, show the sender prominently:
 
----
-
-## User Flow After Implementation
-
-1. User opens an existing My Trivia Party to edit
-2. User taps "კითხვების ნახვა" to view questions
-3. User sees "კითხვა 1 / 1" header with + button on the right
-4. User taps + button
-5. New blank question is added and carousel navigates to it
-6. User fills in the question and answers
-7. User taps "შენახვა" to save all changes
+```tsx
+{isFriendRequest && senderName && (
+  <div className="flex items-center gap-2 mt-1">
+    <Avatar className="w-6 h-6">
+      <AvatarImage src={avatarUrl} />
+      <AvatarFallback>{senderName[0]}</AvatarFallback>
+    </Avatar>
+    <span className="text-sm font-medium">{senderName}</span>
+    <span className="text-xs text-muted-foreground">გთხოვს მეგობრობას</span>
+  </div>
+)}
+```
 
 ---
 
@@ -94,4 +133,33 @@ The + button will:
 
 | File | Changes |
 |------|---------|
-| `src/components/social/EditRoundModal.tsx` | Add `addQuestion` function, replace spacer with + button in questions view |
+| `src/hooks/useGameInvitations.ts` | Remove duplicate `createNotification()` call |
+| `src/components/notifications/CompactNotificationCard.tsx` | Add room info section, show sender avatar, extract all metadata |
+| **SQL Migration** | Fix `notify_room_invite` to use `sender_avatar` consistently |
+
+---
+
+## Expected Results
+
+| Before | After |
+|--------|-------|
+| Two identical "ოთახის მოწვევა" notifications | Single rich notification |
+| Generic purple icon | Sender's actual avatar |
+| No room/category info visible | Room name + category displayed |
+| All notifications look the same | Type-specific layouts with context |
+
+**Visual Example After Fix:**
+
+```text
+┌─────────────────────────────────────────────────────┐
+│  [beka's    ოთახის მოწვევა              ახლა       │
+│   avatar]   beka გიწვევს თამაშში                   │
+│                                                     │
+│  ┌ 🏠 აღმომჩენთა გილია ─────────────────────────┐ │
+│  │ 📂 ბიზნესის სამყარო                          │ │
+│  └──────────────────────────────────────────────┘  │
+│                                                     │
+│  [🟢 ითამაშე]    [უარყოფა]                        │
+└─────────────────────────────────────────────────────┘
+```
+
