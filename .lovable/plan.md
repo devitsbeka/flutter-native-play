@@ -1,169 +1,197 @@
 
 
-# Plan: Enhance TV Results Screen ("თამაში დასრულდა")
+# Plan: Fix Image Trivia Display on TV and Mobile
 
-## Overview
+## Problem Summary
 
-Improve the TV results screen layout to include the MyTrivia logo, increase avatar/trophy sizes by 20%, and ensure all players are displayed in a well-fitted layout.
+When playing image-type trivia on TV mode, the image is not displayed. This is because the media URLs (`image_url`, `video_url`, `audio_url`) are not being passed through when questions are loaded from the database into the TV context.
 
----
-
-## Current State Analysis
-
-The `TVResultsScreen.tsx` currently has:
-- Header with "თამაში დასრულდა" title
-- Podium section showing top 3 players with trophies and avatars
-- "Other players" grid (4th place and beyond)
-- Status message about host controls
-
-**Issues to address:**
-1. No logo above the title
-2. Avatar and trophy sizes need to increase by 20%
-3. Ensure layout fits on TV screen without scrolling
+Additionally, mobile multiplayer players also don't see images because the multiplayer game screen doesn't pass media URLs to the question card component.
 
 ---
 
-## Proposed Changes
+## Root Cause
 
-### 1. Add MyTrivia Logo Above Title
+In `TVGameContext.tsx`, there are two places where questions are parsed from the database:
 
-Add the same "MyTrivia LIVE" branding used in other TV screens above the "თამაში დასრულდა" title.
+1. **Initial join** (lines 1651-1667): Missing media fields
+2. **Realtime updates** (lines 1819-1835): Missing media fields
 
-**Current header (lines 96-103):**
-```tsx
-<motion.div className="text-center mb-6 flex-shrink-0">
-  <h1 className="text-4xl font-bold text-white">თამაში დასრულდა</h1>
-  <p className="text-purple-300 text-lg">საბოლოო შედეგები</p>
-</motion.div>
+Both locations map questions without including `image_url`, `video_url`, or `audio_url`, even though the `TVQuestion` interface already supports these fields.
+
+---
+
+## Changes Required
+
+### 1. Fix TV Context - Question Parsing (TVGameContext.tsx)
+
+**Location 1: Initial session join (around line 1654)**
+
+Current code only parses basic fields:
+```typescript
+const rawQuestions = session.questions as unknown as Array<{
+  id: string;
+  question_text: string;
+  correct_answer: string;
+  options: string[];
+  icon_slug?: string | null;
+  // MISSING: image_url, video_url, audio_url
+}>;
 ```
 
-**New header with logo:**
-```tsx
-<motion.div className="text-center mb-4 flex-shrink-0">
-  {/* MyTrivia Logo */}
-  <div className="flex items-center justify-center mb-3">
-    <span className="text-3xl font-slackey text-white" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
-      MyTrivia
-    </span>
-    <span className="ml-2 px-2 py-1 rounded-md text-xs font-bold text-white bg-red-500 flex items-center gap-1">
-      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-      LIVE
-    </span>
+**Fix:** Add media fields to the type definition and mapping:
+```typescript
+const rawQuestions = session.questions as unknown as Array<{
+  id: string;
+  question_text: string;
+  correct_answer: string;
+  options: string[];
+  icon_slug?: string | null;
+  image_url?: string | null;
+  video_url?: string | null;
+  audio_url?: string | null;
+}>;
+questions = rawQuestions.map(q => ({
+  id: q.id,
+  question_text: q.question_text,
+  correct_answer: q.correct_answer,
+  options: q.options,
+  icon_slug: q.icon_slug,
+  image_url: q.image_url,   // ADD
+  video_url: q.video_url,   // ADD
+  audio_url: q.audio_url,   // ADD
+}));
+```
+
+**Location 2: Realtime subscription handler (around line 1822)**
+
+Same fix needed - add media fields to type and mapping.
+
+---
+
+### 2. Update Mobile Multiplayer Screen (MultiplayerGameScreenV2.tsx)
+
+The mobile multiplayer game screen needs to pass media URLs to the `QuizQuestionCard` so players see images during gameplay.
+
+**Current code (around line 294):**
+```typescript
+<QuizQuestionCard
+  questionText={currentQuestion.question}
+  progressPercent={progressPercent}
+  state="default"
+  timerSeconds={Math.ceil(timeRemaining)}
+  timerMaxSeconds={timePerQuestion}
+  reserveTopSpace
+/>
+```
+
+**Updated code:**
+```typescript
+<QuizQuestionCard
+  questionText={currentQuestion.question}
+  imageUrl={currentQuestion.imageUrl}
+  videoUrl={currentQuestion.videoUrl}
+  audioUrl={currentQuestion.audioUrl}
+  progressPercent={progressPercent}
+  state="default"
+  timerSeconds={Math.ceil(timeRemaining)}
+  timerMaxSeconds={timePerQuestion}
+  reserveTopSpace={!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl}
+/>
+```
+
+Also update the icon display to hide when there's media (around line 283):
+```typescript
+{!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
+  <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
+    <DynamicIcon ... />
   </div>
-  <h1 className="text-3xl font-bold text-white">თამაში დასრულდა</h1>
-  <p className="text-purple-300 text-base">საბოლოო შედეგები</p>
-</motion.div>
-```
-
-### 2. Increase Avatar Sizes by 20%
-
-**Current sizes → New sizes (20% increase):**
-
-| Element | Current | New |
-|---------|---------|-----|
-| Podium trophies | w-10 h-10 (40px) | w-12 h-12 (48px) |
-| 1st place avatar | w-16 h-16 (64px) | w-20 h-20 (80px) |
-| 2nd/3rd place avatar | w-14 h-14 (56px) | w-[68px] h-[68px] (~68px) |
-| Other players avatar | w-6 h-6 (24px) | w-8 h-8 (32px) |
-
-### 3. Increase Trophy Sizes by 20%
-
-**Podium trophies (lines 126-130):**
-```tsx
-// Current: w-10 h-10
-// New: w-12 h-12
-<img src={...} className="w-12 h-12 object-contain" />
-```
-
-### 4. Optimize Layout for Screen Fit
-
-- Reduce overall padding from `p-6` to `p-4`
-- Reduce margins between sections
-- Adjust podium block heights slightly to accommodate larger avatars
-- Change other players grid from max-width constraint to full-width with better distribution
-- Reduce header margin from `mb-6` to `mb-4`
-- Reduce podium gap from `gap-4` to `gap-3`
-
-### 5. Enhanced "Other Players" Section
-
-Increase visibility and size of other players:
-
-**Current (lines 172-188):**
-```tsx
-<div className="grid grid-cols-2 gap-2">
-  {otherPlayers.map(...)}
-</div>
-```
-
-**New - larger cards with 20% bigger avatars:**
-```tsx
-<div className="grid grid-cols-3 gap-3 max-w-4xl mx-auto">
-  {otherPlayers.map((player, index) => (
-    <div className="bg-white/10 backdrop-blur rounded-xl p-3 flex items-center gap-3">
-      <span className="text-purple-400 font-bold w-6 text-base">{index + 4}</span>
-      <SafeAvatar 
-        avatarUrl={player.avatar_url}
-        fallback={player.nickname}
-        className="w-8 h-8"  {/* Was w-6 h-6 */}
-        fallbackClassName="bg-purple-600 text-white text-sm"
-      />
-      <span className="text-white flex-1 truncate text-base">{player.nickname}</span>
-      <span className="text-purple-300 font-semibold">{player.score}</span>
-    </div>
-  ))}
-</div>
+)}
 ```
 
 ---
 
-## Summary of Changes
+### 3. TV Layout (Already Implemented - No Changes Needed)
 
-| File | Section | Change |
-|------|---------|--------|
-| `TVResultsScreen.tsx` | Header | Add MyTrivia LIVE logo above title |
-| `TVResultsScreen.tsx` | Header | Reduce title size from 4xl to 3xl for balance |
-| `TVResultsScreen.tsx` | Podium trophies | Increase from w-10 to w-12 (20%) |
-| `TVResultsScreen.tsx` | 1st place avatar | Increase from w-16 to w-20 (25%) |
-| `TVResultsScreen.tsx` | 2nd/3rd avatar | Increase from w-14 to w-[68px] (21%) |
-| `TVResultsScreen.tsx` | Other players avatar | Increase from w-6 to w-8 (33%) |
-| `TVResultsScreen.tsx` | Layout | Reduce padding/margins for better fit |
-| `TVResultsScreen.tsx` | Other players grid | Change to 3 columns for better visibility |
+The TV question screen (`TVQuestionScreenV4.tsx`) already has the correct layout for image questions:
+- **50/50 split layout** when `hasImage` is true
+- **Left side**: Question text card + large image below
+- **Right side**: Answer options stacked vertically (one per row)
+
+This layout will automatically work once the media URLs are properly passed through from the context.
 
 ---
 
-## Visual Layout (Approximate)
+## Visual Comparison
 
+### TV Screen - Image Trivia Layout (Existing)
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│                    MyTrivia [LIVE]                              │
-│                  თამაში დასრულდა                                │
-│                  საბოლოო შედეგები                               │
-│                                                                 │
-│     🥈            🥇              🥉                            │
-│   [Avatar]     [Avatar]       [Avatar]                          │
-│    Player2      Player1        Player3                          │
-│   1500 ქულა    2000 ქულა      1200 ქულა                         │
-│    ┌──2──┐     ┌───1───┐      ┌─3─┐                              │
-│    │     │     │       │      │   │                              │
-│    └─────┘     └───────┘      └───┘                              │
-│                                                                 │
-│              დანარჩენი მოთამაშეები                              │
-│  ┌──────────────┬──────────────┬──────────────┐                 │
-│  │ 4 [Av] Name  │ 5 [Av] Name  │ 6 [Av] Name  │                 │
-│  └──────────────┴──────────────┴──────────────┘                 │
-│                                                                 │
-│     მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან       │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│ [Player Avatars Status Bar - Wrong | Waiting | Correct]                 │
+│                                                                         │
+│ 📺 Category Name - რაუნდი 1/3                              ⏱️ 15       │
+│                                                                         │
+│ ┌──────────────────────────┐   ┌────────────────────────────────────┐  │
+│ │    QUESTION TEXT CARD    │   │  ა | Answer Option 1               │  │
+│ │  "რომელი ქვეყანაა ეს?"  │   ├────────────────────────────────────┤  │
+│ └──────────────────────────┘   │  ბ | Answer Option 2               │  │
+│                                 ├────────────────────────────────────┤  │
+│ ┌──────────────────────────┐   │  გ | Answer Option 3               │  │
+│ │                          │   ├────────────────────────────────────┤  │
+│ │      [BIG IMAGE]         │   │  დ | Answer Option 4               │  │
+│ │                          │   └────────────────────────────────────┘  │
+│ │                          │                                           │
+│ └──────────────────────────┘                                           │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Mobile Screen - Standard Image UI (Updated)
+```text
+┌─────────────────────────┐
+│  ←  Question 3/5    ⏱️  │
+│                         │
+│ ┌─────────────────────┐ │
+│ │     [IMAGE]         │ │
+│ │                     │ │
+│ ├─────────────────────┤ │
+│ │  Question text here │ │
+│ │                     │ │
+│ └─────────────────────┘ │
+│                         │
+│ ┌─────────────────────┐ │
+│ │ ა  Answer 1         │ │
+│ └─────────────────────┘ │
+│ ┌─────────────────────┐ │
+│ │ ბ  Answer 2         │ │
+│ └─────────────────────┘ │
+│ ┌─────────────────────┐ │
+│ │ გ  Answer 3         │ │
+│ └─────────────────────┘ │
+│ ┌─────────────────────┐ │
+│ │ დ  Answer 4         │ │
+│ └─────────────────────┘ │
+│                         │
+└─────────────────────────┘
+```
+
+---
+
+## Summary of File Changes
+
+| File | Change |
+|------|--------|
+| `src/contexts/TVGameContext.tsx` | Add `image_url`, `video_url`, `audio_url` to question parsing in 2 locations |
+| `src/components/team/MultiplayerGameScreenV2.tsx` | Pass media URLs to QuizQuestionCard, conditionally hide icon when media present |
 
 ---
 
 ## Technical Notes
 
-- The logo uses `font-slackey` class which is already available in the project (used in `TVPairingScreenV3.tsx`)
-- All size increases are calculated to be approximately 20% larger while using Tailwind's standard spacing values
-- The layout uses flexbox with `flex-shrink-0` on fixed elements to ensure podium takes remaining space
-- Reduced sparkle count and smaller confetti bursts help maintain performance on TV displays
+- The `TVQuestion` interface already includes `image_url`, `video_url`, `audio_url` fields (lines 34-36)
+- The `QuizQuestionCard` component already supports `imageUrl`, `videoUrl`, `audioUrl` props
+- The TV layout in `TVQuestionScreenV4.tsx` already has image-specific 50/50 split layout (lines 218-266)
+- The question service (`questionService.ts`) already returns media URLs from the database
+
+This fix is primarily about ensuring the data flows correctly through the context layer.
 
