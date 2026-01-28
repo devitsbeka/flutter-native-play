@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, UserPlus, X, Loader2, Check } from "lucide-react";
+import { Search, UserPlus, X, Loader2, Check, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { useFriends } from "@/hooks/useFriends";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 
@@ -23,13 +25,34 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
+  const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
   const { searchUsers, sendFriendRequest, friends } = useFriends();
+  const { user } = useAuth();
 
   // Memoize friend IDs to prevent infinite re-renders
   const friendIds = useMemo(
     () => new Set(friends.map(f => f.friendId)),
     [friends]
   );
+  
+  // Fetch pending outgoing friend requests on modal open
+  useEffect(() => {
+    const fetchPendingOutgoing = async () => {
+      if (!user?.id || !isOpen) return;
+      
+      const { data } = await supabase
+        .from("friendships")
+        .select("friend_id")
+        .eq("user_id", user.id)
+        .eq("status", "pending");
+      
+      if (data) {
+        setPendingOutgoingIds(new Set(data.map(f => f.friend_id)));
+      }
+    };
+    
+    fetchPendingOutgoing();
+  }, [user?.id, isOpen]);
 
   // Debounced search - don't include friendIds in deps to avoid re-render loop
   const performSearch = useCallback(async (query: string) => {
@@ -59,6 +82,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
     const success = await sendFriendRequest(userId);
     if (success) {
       setSentRequests(prev => new Set([...prev, userId]));
+      setPendingOutgoingIds(prev => new Set([...prev, userId]));
     }
   };
 
@@ -123,6 +147,7 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
                       result={result}
                       onSendRequest={() => handleSendRequest(result.user_id)}
                       isSent={sentRequests.has(result.user_id)}
+                      isPending={pendingOutgoingIds.has(result.user_id)}
                     />
                   ))
                 );
@@ -139,12 +164,14 @@ interface SearchResultCardProps {
   result: SearchResult;
   onSendRequest: () => void;
   isSent: boolean;
+  isPending: boolean;
 }
 
-function SearchResultCard({ result, onSendRequest, isSent }: SearchResultCardProps) {
+function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchResultCardProps) {
+  const isDisabled = isSent || isPending;
+  
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
@@ -168,16 +195,23 @@ function SearchResultCard({ result, onSendRequest, isSent }: SearchResultCardPro
 
       <motion.button
         onClick={onSendRequest}
-        disabled={isSent}
+        disabled={isDisabled}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
           isSent
             ? "bg-green-500/20 text-green-400 cursor-default"
+            : isPending
+            ? "bg-amber-500/20 text-amber-400 cursor-default"
             : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90"
         }`}
-        whileHover={!isSent ? { scale: 1.02 } : {}}
-        whileTap={!isSent ? { scale: 0.98 } : {}}
+        whileHover={!isDisabled ? { scale: 1.02 } : {}}
+        whileTap={!isDisabled ? { scale: 0.98 } : {}}
       >
-        {isSent ? (
+        {isPending ? (
+          <>
+            <Clock className="w-4 h-4" />
+            მოლოდინში
+          </>
+        ) : isSent ? (
           <>
             <Check className="w-4 h-4" />
             გაგზავნილია
