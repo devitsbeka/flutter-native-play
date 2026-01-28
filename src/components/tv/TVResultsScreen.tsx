@@ -64,7 +64,7 @@ export const TVResultsScreen: React.FC = () => {
   const podiumOrder = [1, 0, 2].map(i => podiumPlayers[i]).filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 overflow-hidden relative flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 overflow-hidden relative flex flex-col">
       {/* Background sparkles - reduced to 10 */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -92,18 +92,31 @@ export const TVResultsScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header with Logo */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6 flex-shrink-0"
+        className="text-center mb-4 flex-shrink-0"
       >
-        <h1 className="text-4xl font-bold text-white font-display mb-1">თამაში დასრულდა</h1>
-        <p className="text-purple-300 text-lg">საბოლოო შედეგები</p>
+        {/* MyTrivia Logo */}
+        <div className="flex items-center justify-center mb-3">
+          <span 
+            className="text-3xl font-slackey text-white"
+            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
+          >
+            MyTrivia
+          </span>
+          <span className="ml-2 px-2 py-1 rounded-md text-xs font-bold text-white bg-red-500 flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            LIVE
+          </span>
+        </div>
+        <h1 className="text-3xl font-bold text-white font-display mb-1">თამაში დასრულდა</h1>
+        <p className="text-purple-300 text-base">საბოლოო შედეგები</p>
       </motion.div>
 
       {/* Podium */}
-      <div className="flex items-end justify-center gap-4 mb-6 flex-1">
+      <div className="flex items-end justify-center gap-3 mb-4 flex-1">
         {podiumOrder.map((player, displayIndex) => {
           if (!player) return null;
           const actualRank = sortedPlayers.indexOf(player);
@@ -116,7 +129,7 @@ export const TVResultsScreen: React.FC = () => {
               transition={{ delay: displayIndex * 0.2 }}
               className="flex flex-col items-center"
             >
-              {/* Medal for podium places */}
+              {/* Medal for podium places - increased 20% */}
               <motion.div
                 initial={{ scale: 0, rotate: -20 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -126,11 +139,11 @@ export const TVResultsScreen: React.FC = () => {
                 <img 
                   src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal}
                   alt={actualRank === 0 ? 'Gold' : actualRank === 1 ? 'Silver' : 'Bronze'}
-                  className="w-10 h-10 object-contain"
+                  className="w-12 h-12 object-contain"
                 />
               </motion.div>
 
-              {/* Player avatar */}
+              {/* Player avatar - increased 20% */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className={`relative mb-2 ${actualRank === 0 ? 'scale-110' : ''}`}
@@ -138,12 +151,12 @@ export const TVResultsScreen: React.FC = () => {
                 <SafeAvatar 
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className={`${actualRank === 0 ? 'w-16 h-16' : 'w-14 h-14'} ring-4 ${
+                  className={`${actualRank === 0 ? 'w-20 h-20' : 'w-[68px] h-[68px]'} ring-4 ${
                     actualRank === 0 ? 'ring-yellow-400' :
                     actualRank === 1 ? 'ring-gray-400' :
                     'ring-orange-400'
                   }`}
-                  fallbackClassName="bg-purple-600 text-white text-lg"
+                  fallbackClassName="bg-purple-600 text-white text-xl"
                 />
               </motion.div>
 
@@ -151,7 +164,7 @@ export const TVResultsScreen: React.FC = () => {
               <p className="text-white font-bold text-lg mb-0.5">{player.nickname}</p>
               <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} ქულა</p>
 
-              {/* Podium block - reduced heights */}
+              {/* Podium block */}
               <div className={`w-24 ${actualRank === 0 ? 'h-28' : actualRank === 1 ? 'h-20' : 'h-14'} bg-gradient-to-t ${getPodiumColor(actualRank)} rounded-t-xl flex items-center justify-center`}>
                 <span className="text-white text-3xl font-bold">{actualRank + 1}</span>
               </div>
@@ -160,30 +173,30 @@ export const TVResultsScreen: React.FC = () => {
         })}
       </div>
 
-      {/* Other players */}
+      {/* Other players - 3 columns with larger avatars */}
       {otherPlayers.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="max-w-2xl mx-auto flex-shrink-0"
+          className="max-w-4xl mx-auto flex-shrink-0"
         >
-          <h3 className="text-purple-300 text-sm mb-2 text-center">დანარჩენი მოთამაშეები</h3>
-          <div className="grid grid-cols-2 gap-2">
+          <h3 className="text-purple-300 text-base mb-3 text-center">დანარჩენი მოთამაშეები</h3>
+          <div className="grid grid-cols-3 gap-3">
             {otherPlayers.map((player, index) => (
               <div
                 key={player.id}
-                className="bg-white/10 backdrop-blur rounded-lg p-2 flex items-center gap-2"
+                className="bg-white/10 backdrop-blur rounded-xl p-3 flex items-center gap-3"
               >
-                <span className="text-purple-400 font-bold w-5 text-sm">{index + 4}</span>
+                <span className="text-purple-400 font-bold w-6 text-base">{index + 4}</span>
                 <SafeAvatar 
                   avatarUrl={player.avatar_url}
                   fallback={player.nickname}
-                  className="w-6 h-6"
-                  fallbackClassName="bg-purple-600 text-white text-xs"
+                  className="w-8 h-8"
+                  fallbackClassName="bg-purple-600 text-white text-sm"
                 />
-                <span className="text-white flex-1 truncate text-sm">{player.nickname}</span>
-                <span className="text-purple-300 text-sm">{player.score}</span>
+                <span className="text-white flex-1 truncate text-base">{player.nickname}</span>
+                <span className="text-purple-300 font-semibold">{player.score}</span>
               </div>
             ))}
           </div>
@@ -195,7 +208,7 @@ export const TVResultsScreen: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
-        className="mt-4 text-center flex-shrink-0"
+        className="mt-3 text-center flex-shrink-0"
       >
         <p className="text-purple-300 text-sm">
           მასპინძელს შეუძლია ახალი რაუნდის დაწყება ტელეფონიდან
