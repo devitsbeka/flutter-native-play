@@ -350,31 +350,38 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log('[confirmActivePlayers] ⚠️ Presence returned 0 players - using existing is_active state from DB');
     }
     
-    // Step 3: Extended delay for DB consistency
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Step 3: Short delay for DB consistency (50ms is sufficient for Supabase writes)
+    await new Promise(resolve => setTimeout(resolve, 50));
     
-    // Step 4: Multi-attempt verification loop (7 attempts, 200ms apart = 1.4s max)
+    // Step 4: Optimized verification loop (3 attempts, 100ms apart = 200ms max)
+    // The 7-attempt loop was overly conservative - players are already connected during lobby
     let verifiedCount = 0;
     const isPaired = stateRef.current.isPaired;
     const minExpected = isPaired ? 2 : 1;
     
-    for (let attempt = 0; attempt < 7; attempt++) {
-      // CRITICAL: Exclude system devices from the count - they don't answer questions!
-      const { count } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', sessionId)
-        .eq('is_active', true)
-        .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
-        .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
-      
-      verifiedCount = count ?? 0;
-      console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/7: ${verifiedCount} active players from DB`);
-      
-      if (verifiedCount >= minExpected) break;
-      
-      if (attempt < 6) {
-        await new Promise(resolve => setTimeout(resolve, 200));
+    // Early exit: If presence already shows enough players, skip DB verification loop
+    if (connectedPlayerIds.length >= minExpected) {
+      console.log('[confirmActivePlayers] ⚡ Early exit: presence already shows', connectedPlayerIds.length, 'players');
+      verifiedCount = connectedPlayerIds.length;
+    } else {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        // CRITICAL: Exclude system devices from the count - they don't answer questions!
+        const { count } = await supabase
+          .from('tv_players')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', sessionId)
+          .eq('is_active', true)
+          .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
+          .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
+        
+        verifiedCount = count ?? 0;
+        console.log(`[confirmActivePlayers] Attempt ${attempt + 1}/3: ${verifiedCount} active players from DB`);
+        
+        if (verifiedCount >= minExpected) break;
+        
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
     }
     
@@ -2347,9 +2354,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           tvLog('Cleared all answers for fresh game start');
         }
         
-        // CRITICAL FIX: Wait 300ms (was 100ms) for DB to fully process deletions
-        // This prevents race conditions where stale answer counts affect auto-advance
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Wait 100ms for DB to process deletions (sufficient for Supabase propagation)
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       // CRITICAL FIX: Reset timing protection refs for the new game
@@ -2475,9 +2481,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       timerInitializedForQuestionRef.current = actualQuestionIndex;
       console.log('[startPlaying] Timer marked as initialized for question', actualQuestionIndex, '(DB source of truth)');
       
-      // CRITICAL: Longer delay to ensure React state and DB fully propagate
-      // This ensures the fallback interval and other checks don't fire prematurely
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Brief delay to ensure React state and DB fully propagate
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       // CRITICAL: Reset timing refs for the new question AFTER the DB transition
       // questionStartedAtRef = Date.now() ENABLES auto-advance checks (was 0 during countdown)
