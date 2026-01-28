@@ -692,6 +692,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               difficulty: q.difficulty || "medium",
               category: state.currentRoom!.category_name || "Custom",
               iconSlug: q.icon_slug || undefined, // Preserve icon from custom questions
+              imageUrl: q.image_url || undefined,
+              videoUrl: q.video_url || undefined,
+              audioUrl: q.audio_url || undefined,
             };
           });
           
@@ -757,6 +760,118 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id || null);
           
           return; // Exit early - custom questions handled
+        }
+        
+        // NO existing room_questions - check if room has user_trivia_id and load from there
+        if (state.currentRoom.user_trivia_id) {
+          console.log('[startGame] No room_questions found but user_trivia_id exists, loading from user_quiz_posts:', state.currentRoom.user_trivia_id);
+          
+          const { data: triviaPost } = await supabase
+            .from("user_quiz_posts")
+            .select("questions, title")
+            .eq("id", state.currentRoom.user_trivia_id)
+            .single();
+          
+          if (triviaPost?.questions) {
+            const customQuestions = triviaPost.questions as any[];
+            const categoryName = triviaPost.title || state.currentRoom.category_name || "Custom";
+            
+            // Clear any stale data
+            await supabase.from("room_questions").delete().eq("room_id", roomId);
+            await supabase.from("player_answers").delete().eq("room_id", roomId);
+            
+            // Build questions with proper format
+            const questions: TriviaQuestion[] = customQuestions.map((q: any, index: number) => {
+              const allAnswers = [q.correct_answer, ...(q.incorrect_answers || [])];
+              const shuffledAnswers = shuffleArray(allAnswers);
+              return {
+                id: `${roomId}-custom-${index}`,
+                question: q.question_text || q.question,
+                correctAnswer: q.correct_answer || q.correctAnswer,
+                incorrectAnswers: q.incorrect_answers || q.incorrectAnswers || [],
+                allAnswers: shuffledAnswers,
+                difficulty: q.difficulty || "medium",
+                category: categoryName,
+                iconSlug: q.icon_slug || undefined,
+                imageUrl: q.image_url || undefined,
+                videoUrl: q.video_url || undefined,
+                audioUrl: q.audio_url || undefined,
+              };
+            });
+            
+            // Store in room_questions for sync
+            await Promise.all(questions.map((q, index) => 
+              supabase.from("room_questions").insert({
+                room_id: roomId,
+                question_index: index,
+                question_text: q.question,
+                correct_answer: q.correctAnswer,
+                incorrect_answers: q.incorrectAnswers,
+                difficulty: q.difficulty,
+                shuffled_answers: q.allAnswers,
+                icon_slug: q.iconSlug || null,
+              })
+            ));
+            
+            // Reset ALL participant scores for fair game start
+            await supabase
+              .from("room_participants")
+              .update({ score: 0, current_question: 0 })
+              .eq("room_id", roomId);
+            
+            // Create room_game record
+            const { data: game } = await supabase
+              .from("room_games")
+              .insert([{
+                room_id: roomId,
+                game_number: 1,
+                questions_data: structuredClone(questions) as unknown as Json,
+              }])
+              .select()
+              .single();
+            
+            // Update room
+            await supabase
+              .from("game_rooms")
+              .update({
+                category_name: categoryName,
+                total_questions: questions.length,
+                status: "playing",
+                started_at: new Date().toISOString(),
+                current_game_id: game?.id,
+              })
+              .eq("id", roomId);
+            
+            // Update state
+            setState(prev => ({
+              ...prev,
+              currentRoom: prev.currentRoom ? {
+                ...prev.currentRoom,
+                category_name: categoryName,
+                total_questions: questions.length,
+              } : null,
+              questions,
+              currentQuestionIndex: 0,
+              myScore: 0,
+              lastQuestionResult: null,
+              opponentAnswers: {},
+              currentGame: game ? {
+                id: game.id,
+                room_id: game.room_id,
+                game_number: game.game_number,
+                started_at: game.started_at,
+                completed_at: game.completed_at,
+                winner_user_id: game.winner_user_id,
+                player_scores: game.player_scores,
+              } : null,
+              phase: "playing",
+            }));
+            
+            // Consume matching queue item
+            await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id);
+            
+            return; // Exit early - trivia loaded from user_quiz_posts
+          }
         }
       }
       
