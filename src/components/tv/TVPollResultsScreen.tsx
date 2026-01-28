@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Crown, Star, Sparkles } from 'lucide-react';
+import { Crown, Star, Sparkles } from 'lucide-react';
 import { useTVGame } from '@/contexts/TVGameContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
@@ -29,10 +29,15 @@ export const TVPollResultsScreen: React.FC = () => {
   const [winningCategories, setWinningCategories] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch winning categories from queue
+  // Fetch winning categories from queue with real-time updates
   useEffect(() => {
+    let isMounted = true;
+
     const fetchWinners = async () => {
       if (!sessionId) return;
+
+      // Small delay to ensure queue insert is committed
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       const { data: queueItems } = await supabase
         .from('tv_session_queue')
@@ -40,13 +45,33 @@ export const TVPollResultsScreen: React.FC = () => {
         .eq('session_id', sessionId)
         .order('position', { ascending: true });
 
-      if (queueItems) {
+      if (queueItems && isMounted) {
         setWinningCategories(queueItems as QueueItem[]);
       }
-      setLoading(false);
+      if (isMounted) setLoading(false);
     };
 
     fetchWinners();
+
+    // Subscribe to queue changes for this session
+    const channel = supabase
+      .channel(`poll-results-queue-${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tv_session_queue',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => fetchWinners()
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
   }, [sessionId]);
 
   // Rank badge colors
@@ -55,9 +80,9 @@ export const TVPollResultsScreen: React.FC = () => {
       case 0:
         return { bg: 'bg-yellow-400', icon: Crown, label: '1' };
       case 1:
-        return { bg: 'bg-gray-300', icon: Trophy, label: '2' };
+        return { bg: 'bg-gray-300', icon: Star, label: '2' };
       case 2:
-        return { bg: 'bg-amber-600', icon: Trophy, label: '3' };
+        return { bg: 'bg-amber-600', icon: Star, label: '3' };
       default:
         return { bg: 'bg-purple-500', icon: Star, label: String(position + 1) };
     }
@@ -89,14 +114,10 @@ export const TVPollResultsScreen: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Trophy className="w-10 h-10 text-yellow-400" />
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
-              გამარჯვებული კატეგორიები
-            </h1>
-            <Trophy className="w-10 h-10 text-yellow-400" />
-          </div>
-          <p className="text-purple-300 text-xl">
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-2">
+            გამარჯვებული კატეგორიები
+          </h1>
+          <p className="text-purple-300 text-lg">
             მომდევნო {winningCategories.length} რაუნდი
           </p>
         </motion.div>
