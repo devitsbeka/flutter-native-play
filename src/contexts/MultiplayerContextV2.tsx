@@ -186,6 +186,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     isHostRef.current = isHost;
   }, [isHost]);
 
+  // Ref for current question index to avoid stale closure in subscriptions
+  const currentQuestionIndexRef = useRef(state.currentQuestionIndex);
+  useEffect(() => {
+    currentQuestionIndexRef.current = state.currentQuestionIndex;
+  }, [state.currentQuestionIndex]);
+
   // Cleanup channels
   const cleanupChannels = useCallback(() => {
     channelsRef.current.forEach(channel => {
@@ -350,7 +356,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         { event: "INSERT", schema: "public", table: "player_answers", filter: `room_id=eq.${roomId}` },
         (payload) => {
           const answer = payload.new as PlayerAnswer;
-          if (answer.user_id !== user?.id && answer.question_index === state.currentQuestionIndex) {
+          // Use ref to get current question index (avoid stale closure)
+          if (answer.user_id !== user?.id && answer.question_index === currentQuestionIndexRef.current) {
             setState(prev => ({
               ...prev,
               opponentAnswers: { ...prev.opponentAnswers, [answer.user_id]: answer },

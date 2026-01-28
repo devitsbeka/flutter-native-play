@@ -35,6 +35,7 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [lastProcessedQuestion, setLastProcessedQuestion] = useState(-1);
   const [canAdvance, setCanAdvance] = useState(false);
+  const [bonusEarnedThisQuestion, setBonusEarnedThisQuestion] = useState(0);
 
   // Get all other players (non-host)
   const players = participants.filter(p => p.user_id !== user?.id);
@@ -64,6 +65,8 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
       const totalIncorrect = incorrectAnswerCount + didNotAnswerCount;
       
       if (totalIncorrect > 0) {
+        const bonus = totalIncorrect * 100;
+        setBonusEarnedThisQuestion(bonus);
         awardObserverBonus(totalIncorrect);
       }
       
@@ -76,10 +79,14 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
   // Reset when question changes
   useEffect(() => {
     setCanAdvance(false);
-    if (currentQuestionIndex < lastProcessedQuestion) {
+    setBonusEarnedThisQuestion(0);
+    // Reset lastProcessedQuestion if we're on a new question that hasn't been processed
+    if (currentQuestionIndex > lastProcessedQuestion) {
+      // Allow the new question to be processed
+    } else if (currentQuestionIndex < lastProcessedQuestion) {
       setLastProcessedQuestion(-1);
     }
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, lastProcessedQuestion]);
 
   const handleNextQuestion = () => {
     playSound("button-click");
@@ -223,13 +230,22 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
             <p className="text-amber-300 text-sm font-medium">
               იღებ ქულებს შეცდომებზე 💡
             </p>
+            {bonusEarnedThisQuestion > 0 && canAdvance && (
+              <motion.p
+                initial={{ opacity: 0, scale: 1.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-green-300 text-sm mt-2 font-bold"
+              >
+                +{bonusEarnedThisQuestion} ამ კითხვაზე! 🎉
+              </motion.p>
+            )}
             {observerBonusThisRound > 0 && (
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-green-300 text-xs mt-2"
+                className="text-white/60 text-xs mt-1"
               >
-                +{observerBonusThisRound} ამ რაუნდში
+                სულ ბონუსი: +{observerBonusThisRound}
               </motion.p>
             )}
           </motion.div>
