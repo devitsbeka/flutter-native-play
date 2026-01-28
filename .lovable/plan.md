@@ -1,197 +1,199 @@
 
 
-# Plan: Fix Image Trivia Display on TV and Mobile
+# Plan: Implement Consistent Host Observer Scoring System Across All Game Modes
 
-## Problem Summary
+## Current State Analysis
 
-When playing image-type trivia on TV mode, the image is not displayed. This is because the media URLs (`image_url`, `video_url`, `audio_url`) are not being passed through when questions are loaded from the database into the TV context.
+After analyzing the codebase, here's what I found:
 
-Additionally, mobile multiplayer players also don't see images because the multiplayer game screen doesn't pass media URLs to the question card component.
+### TV Mode (✅ FULLY IMPLEMENTED)
+The TV game experience has a complete observer system:
 
----
+1. **Observer Detection** (`TVGameContext.tsx`):
+   - Tracks `currentRoundSuggesterId` in session state
+   - Host is marked as suggester when they select their own trivia (non-blind or already played)
 
-## Root Cause
+2. **Observer Scoring** (`TVGameContext.tsx` lines 278-337):
+   - When revealing answers, calculates bonus points based on player mistakes
+   - Awards **100 points per incorrect/unanswered player**
+   - Updates observer's score via presence channel
 
-In `TVGameContext.tsx`, there are two places where questions are parsed from the database:
+3. **Observer UI** (`TVHostController.tsx` lines 1288-1328):
+   - Shows dedicated observer screen with message: "შენი კატეგორიაა! ამიტომ ამ რაუნდში აკვირდები"
+   - Displays score prominently with "იღებ ქულებს შეცდომებზე" label
+   - Shows question progress and timer
 
-1. **Initial join** (lines 1651-1667): Missing media fields
-2. **Realtime updates** (lines 1819-1835): Missing media fields
+### Regular Multiplayer Rooms (⚠️ PARTIALLY IMPLEMENTED)
+The mobile multiplayer experience has:
 
-Both locations map questions without including `image_url`, `video_url`, or `audio_url`, even though the `TVQuestion` interface already supports these fields.
+1. **Warning Modal** (`RoomLobbyV2.tsx` lines 984-1016):
+   - Shows warning when host selects their own trivia: "შენ იცი პასუხები!"
+   - Mentions they'll get points when others make mistakes: "შენ მაინც მიიღებ ქულებს როცა სხვები შეცდებიან!"
 
----
+2. **MISSING**: 
+   - ❌ No `hostObserverId` or similar field in `MultiplayerContextV2`
+   - ❌ No observer scoring logic when answers are revealed
+   - ❌ No observer UI on mobile game screen (`MultiplayerGameScreenV2`)
+   - ❌ Host can still answer questions even after seeing the warning
 
-## Changes Required
-
-### 1. Fix TV Context - Question Parsing (TVGameContext.tsx)
-
-**Location 1: Initial session join (around line 1654)**
-
-Current code only parses basic fields:
-```typescript
-const rawQuestions = session.questions as unknown as Array<{
-  id: string;
-  question_text: string;
-  correct_answer: string;
-  options: string[];
-  icon_slug?: string | null;
-  // MISSING: image_url, video_url, audio_url
-}>;
-```
-
-**Fix:** Add media fields to the type definition and mapping:
-```typescript
-const rawQuestions = session.questions as unknown as Array<{
-  id: string;
-  question_text: string;
-  correct_answer: string;
-  options: string[];
-  icon_slug?: string | null;
-  image_url?: string | null;
-  video_url?: string | null;
-  audio_url?: string | null;
-}>;
-questions = rawQuestions.map(q => ({
-  id: q.id,
-  question_text: q.question_text,
-  correct_answer: q.correct_answer,
-  options: q.options,
-  icon_slug: q.icon_slug,
-  image_url: q.image_url,   // ADD
-  video_url: q.video_url,   // ADD
-  audio_url: q.audio_url,   // ADD
-}));
-```
-
-**Location 2: Realtime subscription handler (around line 1822)**
-
-Same fix needed - add media fields to type and mapping.
+### Friend Invite Experience (⚠️ SAME AS MULTIPLAYER)
+Uses the same `MultiplayerContextV2` and components, so same gaps apply.
 
 ---
 
-### 2. Update Mobile Multiplayer Screen (MultiplayerGameScreenV2.tsx)
+## Required Changes
 
-The mobile multiplayer game screen needs to pass media URLs to the `QuizQuestionCard` so players see images during gameplay.
+### 1. Database Schema Update
 
-**Current code (around line 294):**
-```typescript
-<QuizQuestionCard
-  questionText={currentQuestion.question}
-  progressPercent={progressPercent}
-  state="default"
-  timerSeconds={Math.ceil(timeRemaining)}
-  timerMaxSeconds={timePerQuestion}
-  reserveTopSpace
-/>
+Add a column to `game_rooms` to track when host is in observer mode:
+
+```sql
+ALTER TABLE game_rooms 
+ADD COLUMN host_is_observer BOOLEAN DEFAULT FALSE;
 ```
 
-**Updated code:**
+### 2. MultiplayerContextV2 Updates
+
+**A. Add observer state tracking:**
+
 ```typescript
-<QuizQuestionCard
-  questionText={currentQuestion.question}
-  imageUrl={currentQuestion.imageUrl}
-  videoUrl={currentQuestion.videoUrl}
-  audioUrl={currentQuestion.audioUrl}
-  progressPercent={progressPercent}
-  state="default"
-  timerSeconds={Math.ceil(timeRemaining)}
-  timerMaxSeconds={timePerQuestion}
-  reserveTopSpace={!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl}
-/>
+// In MultiplayerState interface
+hostIsObserver: boolean;
+
+// In initial state
+hostIsObserver: false,
 ```
 
-Also update the icon display to hide when there's media (around line 283):
-```typescript
-{!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
-  <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
-    <DynamicIcon ... />
-  </div>
-)}
+**B. Update startGame to set host observer status:**
+
+When starting the game with host's own trivia:
+1. Check if host owns the trivia AND (not blind OR already played)
+2. Set `host_is_observer = true` in game_rooms
+3. Update local state `hostIsObserver: true`
+
+**C. Implement observer scoring in answer handling:**
+
+When processing answers (in real-time subscription or answer submission):
+1. After all players answer (or time expires)
+2. Count incorrect answers from non-host players
+3. Award host 100 points per incorrect answer
+4. Update host's participant score in database
+
+### 3. Mobile Observer UI (MultiplayerGameScreenV2)
+
+Add conditional rendering for host observer mode:
+
+```tsx
+// If host is observer, show observer screen instead of question UI
+if (isHost && hostIsObserver) {
+  return (
+    <div className="observer-screen">
+      <Star className="w-16 h-16 text-yellow-400" />
+      <h2>შენი ტრივიაა!</h2>
+      <p>ამიტომ ამ რაუნდში აკვირდები</p>
+      
+      {/* Observer score */}
+      <div className="observer-score">
+        <p>შენი ქულა</p>
+        <p className="score">{myScore}</p>
+        <p>იღებ ქულებს შეცდომებზე</p>
+      </div>
+      
+      {/* Question progress */}
+      <p>კითხვა {currentQuestionIndex + 1}/{questions.length}</p>
+      <p>⏱️ {timeRemaining}წ</p>
+      
+      {/* Leaderboard toggle */}
+      ...
+    </div>
+  );
+}
 ```
+
+### 4. Observer Scoring Logic
+
+Create a shared utility or implement in context:
+
+```typescript
+const calculateObserverBonus = (
+  incorrectCount: number, 
+  totalPlayers: number
+): number => {
+  // 100 points per incorrect player
+  return 100 * incorrectCount;
+};
+```
+
+Trigger scoring:
+- After all players answer or timer expires
+- Count players who answered incorrectly or didn't answer
+- Award bonus to host's score
+- Update participant score in database
 
 ---
 
-### 3. TV Layout (Already Implemented - No Changes Needed)
+## Visual Comparison: Before vs After
 
-The TV question screen (`TVQuestionScreenV4.tsx`) already has the correct layout for image questions:
-- **50/50 split layout** when `hasImage` is true
-- **Left side**: Question text card + large image below
-- **Right side**: Answer options stacked vertically (one per row)
+### Mobile Host Observer Screen (NEW)
 
-This layout will automatically work once the media URLs are properly passed through from the context.
-
----
-
-## Visual Comparison
-
-### TV Screen - Image Trivia Layout (Existing)
-```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│ [Player Avatars Status Bar - Wrong | Waiting | Correct]                 │
-│                                                                         │
-│ 📺 Category Name - რაუნდი 1/3                              ⏱️ 15       │
-│                                                                         │
-│ ┌──────────────────────────┐   ┌────────────────────────────────────┐  │
-│ │    QUESTION TEXT CARD    │   │  ა | Answer Option 1               │  │
-│ │  "რომელი ქვეყანაა ეს?"  │   ├────────────────────────────────────┤  │
-│ └──────────────────────────┘   │  ბ | Answer Option 2               │  │
-│                                 ├────────────────────────────────────┤  │
-│ ┌──────────────────────────┐   │  გ | Answer Option 3               │  │
-│ │                          │   ├────────────────────────────────────┤  │
-│ │      [BIG IMAGE]         │   │  დ | Answer Option 4               │  │
-│ │                          │   └────────────────────────────────────┘  │
-│ │                          │                                           │
-│ └──────────────────────────┘                                           │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
-### Mobile Screen - Standard Image UI (Updated)
 ```text
 ┌─────────────────────────┐
-│  ←  Question 3/5    ⏱️  │
+│  ←              Q3/10   │
+│                         │
+│       ⭐                │
+│  შენი ტრივიაა!         │
+│ ამიტომ ამ რაუნდში      │
+│   აკვირდები            │
 │                         │
 │ ┌─────────────────────┐ │
-│ │     [IMAGE]         │ │
-│ │                     │ │
-│ ├─────────────────────┤ │
-│ │  Question text here │ │
-│ │                     │ │
+│ │   შენი ქულა         │ │
+│ │      450            │ │
+│ │ იღებ ქულებს        │ │
+│ │   შეცდომებზე        │ │
 │ └─────────────────────┘ │
 │                         │
-│ ┌─────────────────────┐ │
-│ │ ა  Answer 1         │ │
-│ └─────────────────────┘ │
-│ ┌─────────────────────┐ │
-│ │ ბ  Answer 2         │ │
-│ └─────────────────────┘ │
-│ ┌─────────────────────┐ │
-│ │ გ  Answer 3         │ │
-│ └─────────────────────┘ │
-│ ┌─────────────────────┐ │
-│ │ დ  Answer 4         │ │
-│ └─────────────────────┘ │
+│     ⏱️ 12წ             │
+│                         │
+│  [Show Leaderboard ▲]   │
 │                         │
 └─────────────────────────┘
 ```
 
 ---
 
-## Summary of File Changes
+## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/contexts/TVGameContext.tsx` | Add `image_url`, `video_url`, `audio_url` to question parsing in 2 locations |
-| `src/components/team/MultiplayerGameScreenV2.tsx` | Pass media URLs to QuizQuestionCard, conditionally hide icon when media present |
+| File | Changes |
+|------|---------|
+| `src/contexts/MultiplayerContextV2.tsx` | Add `hostIsObserver` state, set it in `startGame`, implement observer scoring after each question |
+| `src/components/team/MultiplayerGameScreenV2.tsx` | Add observer UI for host when `hostIsObserver` is true |
+| `src/components/team/GameResultsScreenV2.tsx` | Ensure observer host is properly ranked with their bonus points |
+| Database migration | Add `host_is_observer` column to `game_rooms` table |
+
+---
+
+## Consistency Checklist
+
+| Feature | TV Mode | Multiplayer | Friend Invite |
+|---------|---------|-------------|---------------|
+| Warning modal before game | ✅ | ✅ | ✅ (same code) |
+| Host skips answering | ✅ | ⏳ To implement | ⏳ To implement |
+| Observer UI during game | ✅ | ⏳ To implement | ⏳ To implement |
+| 100 pts per player mistake | ✅ | ⏳ To implement | ⏳ To implement |
+| Observer in leaderboard | ✅ | ⏳ To implement | ⏳ To implement |
 
 ---
 
 ## Technical Notes
 
-- The `TVQuestion` interface already includes `image_url`, `video_url`, `audio_url` fields (lines 34-36)
-- The `QuizQuestionCard` component already supports `imageUrl`, `videoUrl`, `audioUrl` props
-- The TV layout in `TVQuestionScreenV4.tsx` already has image-specific 50/50 split layout (lines 218-266)
-- The question service (`questionService.ts`) already returns media URLs from the database
+1. **Scoring timing**: In TV mode, scoring happens in `advanceToReveal()`. In multiplayer, we need to hook into answer submission flow or create a similar mechanism when all players have answered.
 
-This fix is primarily about ensuring the data flows correctly through the context layer.
+2. **State synchronization**: Use realtime subscriptions to update observer score across all clients when bonus points are awarded.
+
+3. **Edge cases**:
+   - If only host is in room (no other players), no bonus can be earned
+   - If host leaves mid-game, observer logic should be cleaned up
+   - Queue rounds: Each round should re-evaluate if host is observer based on the trivia being played
+
+4. **Reuse from TV mode**: The observer bonus calculation logic (100 pts per incorrect) can be extracted into a shared utility in `src/utils/` for consistency.
 
