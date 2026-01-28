@@ -417,27 +417,38 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 const isSent = sentRequests.has(result.user_id);
                                 const isDisabled = isSent || isPendingOutgoing || isLoading;
                                 
+                                const handleButtonAction = () => {
+                                  if (isPendingOutgoing) {
+                                    toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+                                    return;
+                                  }
+                                  if (isDisabled) return;
+                                  if (isRoomInviteMode) {
+                                    handleInviteToRoom(result.user_id);
+                                  } else {
+                                    handleSendRequest(result.user_id);
+                                  }
+                                };
+                                
                                 return (
-                                  <motion.button
+                                  <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      if (isPendingOutgoing) return;
-                                      if (isRoomInviteMode) {
-                                        handleInviteToRoom(result.user_id);
-                                      } else {
-                                        handleSendRequest(result.user_id);
-                                      }
+                                      e.preventDefault();
+                                      handleButtonAction();
                                     }}
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                    disabled={isDisabled}
-                                    className={`relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
+                                    onTouchEnd={(e) => {
+                                      e.stopPropagation();
+                                      handleButtonAction();
+                                    }}
+                                    disabled={isSent || isLoading}
+                                    className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
                                       isSent || isPendingOutgoing
                                         ? "bg-white/15 border-white/20 text-white/70"
                                         : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
                                     }`}
-                                    whileHover={!isDisabled ? { scale: 1.02 } : {}}
-                                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                                    style={{ touchAction: 'manipulation' }}
                                   >
                                     {isLoading ? (
                                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -457,7 +468,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                         {isRoomInviteMode ? "მოწვევა" : "დამატება"}
                                       </>
                                     )}
-                                  </motion.button>
+                                  </button>
                                 );
                               })()}
                             </motion.div>
