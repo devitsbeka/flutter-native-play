@@ -1,92 +1,113 @@
 
-
-# Plan: Fix "დაწყება" Button Not Working in Lobby
+# Plan: Fix Poll Results Screen Showing Empty After Starting New Poll
 
 ## Problem Summary
 
-When clicking the "დაწყება" (Start Game) button in the lobby, nothing happens. The button appears active with correct text ("დაწყება (1 რაუნდი)") but clicking it doesn't start the game.
+When clicking "არჩევნების დაწყება" (Start Poll) after completing several rounds, the controller displays an empty "ხმის მიცემის შედეგები" (Voting Results) screen with "რაუნდების რაოდენობა:" (Number of rounds:) and "დაწყება (3 რაუნდი)" button, but no category suggestions are visible. The host cannot add suggestions because the wrong screen is being rendered.
 
 ## Root Cause
 
-This is a **function signature mismatch** bug introduced by the previous fix for `ControllerDirectSelection`.
-
-The `handleStartGame` function signature was changed to accept an optional object:
+The phase mapping logic in `TVHostController.tsx` has a flawed conditional override:
 
 ```typescript
-const handleStartGame = async (firstQueueItem?: { categoryId?: string; userTriviaId?: string }) => {
+// Line 152-153
+if (pollHook.pollPhase === 'results' && (rawLocalPhase === 'poll-voting' || rawLocalPhase === 'poll-suggest')) {
+  localPhase = 'poll-results';
+}
 ```
 
-But the lobby button still uses:
-```tsx
-onClick={handleStartGame}
+**What happens when `initiatePoll()` is called:**
+
+1. Database status changes to `poll-suggest` ✓
+2. `contextPhase` correctly becomes `poll-suggest` ✓
+3. `rawLocalPhase` correctly becomes `poll-suggest` ✓
+4. `pollHook.pollPhase` is still `'results'` (stale from previous session state)
+5. The condition `pollHook.pollPhase === 'results' && rawLocalPhase === 'poll-suggest'` matches!
+6. `localPhase` is incorrectly overridden to `'poll-results'`
+7. The empty `ControllerPollResults` screen is shown instead of `ControllerPollScreen`
+
+```text
+Expected Flow:
+┌─────────────────┐     ┌─────────────────────┐
+│ initiatePoll()  │────►│ poll-suggest phase  │────► Host adds suggestions
+└─────────────────┘     │ ControllerPollScreen│
+                        └─────────────────────┘
+
+Actual (Buggy) Flow:
+┌─────────────────┐     ┌───────────────────────┐
+│ initiatePoll()  │────►│ poll-results phase    │────► Empty results screen
+└─────────────────┘     │ ControllerPollResults │
+                        └───────────────────────┘
 ```
-
-When a button's onClick fires, React passes the **MouseEvent** as the first argument. So `handleStartGame(event)` is called where `event` is a mouse event object.
-
-Inside `handleStartGame`:
-1. `firstQueueItem` receives the mouse event (which is truthy)
-2. The check `if (firstQueueItem)` passes
-3. `firstQueueItem.userTriviaId` is undefined (mouse events don't have this property)
-4. `firstQueueItem.categoryId` is also undefined
-5. Falls through to `toast.error('არასწორი რაუნდის ტიპი')` and returns early
-
-The toast might be missed by the user, or the click happens so fast they don't see it.
 
 ## Solution
 
-Wrap the onClick handler to call `handleStartGame()` without arguments, ensuring the mouse event is not passed:
+The override logic should only activate when transitioning FROM `poll-voting` TO `poll-results`. It should NOT override when going FROM `completed/results` TO `poll-suggest` (starting a new poll).
 
 ### File: `src/pages/TVHostController.tsx`
 
-**Line 1055 - Change:**
+**Change the conditional logic at lines 152-159:**
 
-```tsx
-// Before
-onClick={handleStartGame}
-
-// After
-onClick={() => handleStartGame()}
+**Before:**
+```typescript
+// Override with poll hook state if we're in poll phases
+// The poll hook subscribes to the same DB but updates its local state immediately after endVoting()
+if (pollHook.pollPhase === 'results' && (rawLocalPhase === 'poll-voting' || rawLocalPhase === 'poll-suggest')) {
+  localPhase = 'poll-results';
+} else if (pollHook.pollPhase === 'voting' && rawLocalPhase !== 'poll-voting' && rawLocalPhase !== 'poll-results') {
+  // If poll is in voting phase but context hasn't caught up, show voting
+  if (contextPhase.includes('poll')) {
+    localPhase = 'poll-voting';
+  }
+}
 ```
 
-This ensures that when the button is clicked:
-1. The arrow function receives the mouse event but ignores it
-2. `handleStartGame()` is called with no arguments
-3. `firstQueueItem` is `undefined`
-4. The fallback logic using `hasQueue && queue.length > 0` is executed correctly
+**After:**
+```typescript
+// Override with poll hook state if we're in poll phases
+// The poll hook subscribes to the same DB but updates its local state immediately after endVoting()
+// CRITICAL: Only override poll-voting → poll-results, NOT poll-suggest → poll-results
+// When starting a new poll (initiatePoll), pollHook.pollPhase may still be 'results' from stale state
+// We must NOT override poll-suggest to poll-results in that case
+if (pollHook.pollPhase === 'results' && rawLocalPhase === 'poll-voting') {
+  // Only override when transitioning from voting to results (endVoting flow)
+  localPhase = 'poll-results';
+} else if (pollHook.pollPhase === 'voting' && rawLocalPhase !== 'poll-voting' && rawLocalPhase !== 'poll-results') {
+  // If poll is in voting phase but context hasn't caught up, show voting
+  if (contextPhase.includes('poll')) {
+    localPhase = 'poll-voting';
+  }
+}
+```
+
+**Key Change:** Remove `rawLocalPhase === 'poll-suggest'` from the first condition. The override from `poll-results` should only happen when the context phase is `poll-voting`, not when it's `poll-suggest`.
 
 ---
 
-## Technical Details
+## Why This Fix Works
 
-The `ChunkyButton` component types `onClick` as `() => void`, but the underlying `motion.button` still passes the event. The function signature mismatch causes the event to be interpreted as the first parameter.
-
-By using an arrow function wrapper `() => handleStartGame()`, we explicitly call the function with zero arguments, bypassing this issue.
+| Scenario | Before | After |
+|----------|--------|-------|
+| Start new poll from completed | `pollHook.pollPhase='results'`, `rawLocalPhase='poll-suggest'` → Shows `poll-results` (WRONG) | Same condition but `poll-suggest` is not matched → Shows `poll-suggest` (CORRECT) |
+| End voting after timer | `pollHook.pollPhase='results'`, `rawLocalPhase='poll-voting'` → Shows `poll-results` (CORRECT) | Same condition still matches → Shows `poll-results` (CORRECT) |
+| During voting phase | Works correctly | Works correctly (no change) |
 
 ---
 
-## Summary of Changes
+## Summary
 
 | File | Line | Change |
 |------|------|--------|
-| `src/pages/TVHostController.tsx` | 1055 | Change `onClick={handleStartGame}` to `onClick={() => handleStartGame()}` |
-
----
-
-## Why This Works Everywhere
-
-After this fix:
-
-1. **Lobby screen**: Button calls `handleStartGame()` → uses fallback logic with `hasQueue && queue.length > 0`
-2. **ControllerDirectSelection**: Calls `onStartGame({ categoryId, userTriviaId })` → uses the passed object directly
-3. **Category-select after round**: Same as DirectSelection
-4. **Room creation flow**: Inherits the fix since it uses the same lobby logic
+| `src/pages/TVHostController.tsx` | 152-153 | Remove `rawLocalPhase === 'poll-suggest'` from the poll-results override condition |
 
 ---
 
 ## Testing Checklist
 
-1. Create new room with 1 category → Click "დაწყება" → Game starts
-2. Complete a round → Add 2 more categories → Click "დაწყება" → Game starts
-3. Use ControllerDirectSelection screen → Add categories → Click start → Game starts
-4. Verify no toast error appears when clicking start button
-
+1. Play several rounds until game completes
+2. Click "არჩევნების დაწყება" (Start Poll) button
+3. Verify the poll suggestion screen appears (host can add categories)
+4. Add some category suggestions
+5. Start voting phase
+6. When voting ends, verify poll results screen shows the added categories
+7. Click "Start Game" - verify game starts correctly
