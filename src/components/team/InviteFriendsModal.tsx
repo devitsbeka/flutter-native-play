@@ -25,6 +25,9 @@ interface InviteFriendsModalProps {
   inviteLink?: string;
   roomId?: string;
   roomCode?: string;
+  // Pre-room selection mode props
+  onFriendSelect?: (friendId: string) => void;
+  selectedFriends?: Set<string>;
 }
 
 interface SearchResult {
@@ -93,7 +96,7 @@ function getCountryFlag(countryCode: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
-export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode }: InviteFriendsModalProps) {
+export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode, onFriendSelect, selectedFriends }: InviteFriendsModalProps) {
   const [isSharing, setIsSharing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -109,7 +112,14 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
     [friends]
   );
   
-  // Determine if we're in room invite mode
+  // Get accepted friends for the grid
+  const acceptedFriends = useMemo(
+    () => friends.filter(f => f.status === 'accepted'),
+    [friends]
+  );
+  
+  // Determine mode: pre-room selection vs room invite vs friend request
+  const isPreRoomMode = Boolean(onFriendSelect);
   const isRoomInviteMode = Boolean(roomId);
   
   const appLink = inviteLink || `${window.location.origin}/team`;
@@ -402,12 +412,64 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </AnimatePresence>
                 </div>
 
-                {/* Divider */}
-                <div className={`flex items-center gap-3 ${narrow}`}>
-                  <div className="flex-1 h-px bg-primary-foreground/25" />
-                  <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
-                  <div className="flex-1 h-px bg-primary-foreground/25" />
-                </div>
+                {/* Friends Grid - Show in pre-room selection mode when not searching */}
+                {isPreRoomMode && acceptedFriends.length > 0 && !searchQuery && (
+                  <div className={`space-y-3 ${narrow}`}>
+                    <p className="text-sm font-medium text-white/80 px-1">შენი მეგობრები</p>
+                    <div className="grid grid-cols-4 gap-2 max-h-[240px] overflow-y-auto">
+                      {acceptedFriends.map((friend) => {
+                        const isSelected = selectedFriends?.has(friend.friendId) || false;
+                        return (
+                          <motion.button
+                            key={friend.friendId}
+                            onClick={() => onFriendSelect?.(friend.friendId)}
+                            className={`flex flex-col items-center p-2.5 rounded-xl transition-all ${
+                              isSelected 
+                                ? "bg-white/25 ring-2 ring-white" 
+                                : "bg-white/10 hover:bg-white/15"
+                            }`}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="relative">
+                              <SafeAvatar
+                                avatarUrl={friend.avatarUrl}
+                                fallback={friend.nickname}
+                                className="w-12 h-12 border border-white/20"
+                                fallbackClassName="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold"
+                              />
+                              {isSelected && (
+                                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-primary" />
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-xs text-white font-medium mt-1.5 max-w-[60px] truncate">
+                              {friend.nickname}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* No friends message in pre-room mode */}
+                {isPreRoomMode && acceptedFriends.length === 0 && !searchQuery && (
+                  <div className={`text-center py-6 ${narrow}`}>
+                    <p className="text-white/70 text-sm mb-2">ჯერ არ გყავს მეგობრები</p>
+                    <p className="text-white/50 text-xs">მოძებნე და დაამატე მეგობრები ზემოთ</p>
+                  </div>
+                )}
+
+                {/* Divider - Only show if not in pre-room mode or if there are friends */}
+                {(!isPreRoomMode || acceptedFriends.length > 0) && (
+                  <div className={`flex items-center gap-3 ${narrow}`}>
+                    <div className="flex-1 h-px bg-primary-foreground/25" />
+                    <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
+                    <div className="flex-1 h-px bg-primary-foreground/25" />
+                  </div>
+                )}
 
                 {/* Import & Connect Section */}
                 <div className={`space-y-2 ${narrow}`}>
