@@ -149,7 +149,11 @@ const TVHostController: React.FC = () => {
   
   // Override with poll hook state if we're in poll phases
   // The poll hook subscribes to the same DB but updates its local state immediately after endVoting()
-  if (pollHook.pollPhase === 'results' && (rawLocalPhase === 'poll-voting' || rawLocalPhase === 'poll-suggest')) {
+  // CRITICAL: Only override poll-voting → poll-results, NOT poll-suggest → poll-results
+  // When starting a new poll (initiatePoll), pollHook.pollPhase may still be 'results' from stale state
+  // We must NOT override poll-suggest to poll-results in that case
+  if (pollHook.pollPhase === 'results' && rawLocalPhase === 'poll-voting') {
+    // Only override when transitioning from voting to results (endVoting flow)
     localPhase = 'poll-results';
   } else if (pollHook.pollPhase === 'voting' && rawLocalPhase !== 'poll-voting' && rawLocalPhase !== 'poll-results') {
     // If poll is in voting phase but context hasn't caught up, show voting
