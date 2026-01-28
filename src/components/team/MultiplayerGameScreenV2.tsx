@@ -278,26 +278,35 @@ export function MultiplayerGameScreenV2() {
       )}
 
       {/* Question Card */}
-      <div className="px-4 flex-shrink-0 mt-16 relative">
-        {/* Category Icon - use question's icon_slug if available (for custom questions) */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
-          <DynamicIcon 
-            slug={currentQuestion?.iconSlug || undefined}
-            categoryId={currentRoom?.category_id || undefined}
-            questionId={currentQuestion?.id}
-            size={112}
-            className="drop-shadow-lg"
-            hideIfEmpty={true}
-          />
-        </div>
+      <div className={cn(
+        "px-4 flex-shrink-0 relative",
+        // Only add top margin for icon when no media present
+        !currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && "mt-16"
+      )}>
+        {/* Category Icon - only show when no media is present */}
+        {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
+          <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
+            <DynamicIcon 
+              slug={currentQuestion?.iconSlug || undefined}
+              categoryId={currentRoom?.category_id || undefined}
+              questionId={currentQuestion?.id}
+              size={112}
+              className="drop-shadow-lg"
+              hideIfEmpty={true}
+            />
+          </div>
+        )}
         
         <QuizQuestionCard
           questionText={currentQuestion.question}
+          imageUrl={currentQuestion.imageUrl}
+          videoUrl={currentQuestion.videoUrl}
+          audioUrl={currentQuestion.audioUrl}
           progressPercent={progressPercent}
           state="default"
           timerSeconds={Math.ceil(timeRemaining)}
           timerMaxSeconds={timePerQuestion}
-           reserveTopSpace
+          reserveTopSpace={!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl}
         />
       </div>
 

@@ -1657,6 +1657,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           correct_answer: string;
           options: string[];
           icon_slug?: string | null;
+          image_url?: string | null;
+          video_url?: string | null;
+          audio_url?: string | null;
         }>;
         questions = rawQuestions.map(q => ({
           id: q.id,
@@ -1664,6 +1667,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           correct_answer: q.correct_answer,
           options: q.options,
           icon_slug: q.icon_slug,
+          image_url: q.image_url,
+          video_url: q.video_url,
+          audio_url: q.audio_url,
         }));
       }
 
@@ -1825,6 +1831,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               correct_answer: string;
               options: string[];
               icon_slug?: string | null;
+              image_url?: string | null;
+              video_url?: string | null;
+              audio_url?: string | null;
             }>;
             questions = rawQuestions.map(q => ({
               id: q.id,
@@ -1832,6 +1841,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               correct_answer: q.correct_answer,
               options: q.options,
               icon_slug: q.icon_slug,
+              image_url: q.image_url,
+              video_url: q.video_url,
+              audio_url: q.audio_url,
             }));
           }
 
