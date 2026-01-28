@@ -1,173 +1,184 @@
 
-# Plan: Smooth TV Poll Category Animation
+
+# Plan: Fix TV Poll Results Screen Display
 
 ## Problem Summary
-When categories receive votes during the poll phase on the TV screen, the cards animate in a "dizzy" manner. The user wants:
-1. **Smooth animations** - No jittery or chaotic movement when cards reorder
-2. **Clicked categories slide to top** - Selected items should smoothly move to their new position
-3. **Green border on selection** - Selected/voted categories should have a green stroke
+
+Based on the screenshot and investigation, there are three issues with `TVPollResultsScreen.tsx`:
+
+1. **Trophy icons in header** - User wants them removed
+2. **Title font too large** - "გამარჯვებული კატეგორიები" should be 60% smaller
+3. **Shows wrong/missing categories** - TV screen shows "საქართველოს ისტორია" but mobile shows "ქართული სამზარეულო". The screen only shows 1 category when multiple rounds were selected
 
 ## Root Cause Analysis
 
-The current `SuggestionCard` component in `TVPollScreen.tsx` uses:
+The `TVPollResultsScreen` component fetches queue items correctly from `tv_session_queue`, but:
 
-```typescript
-<motion.div
-  layout                    // ← Causes layout animations on reorder
-  initial={{ opacity: 0, scale: 0.8 }}
-  animate={{ 
-    scale: isAnimating ? 1.05 : 1,
-    transition: { type: 'spring', stiffness: 500, damping: 30 }  // ← Spring is too aggressive
-  }}
-  ...
-/>
-```
+1. The fetch happens once on mount, and if the queue was just populated by `finalizePollAndStartGame`, there may be a race condition
+2. The component doesn't subscribe to real-time updates, so it may show stale data
+3. The queue data might not yet be committed when this screen renders
 
-**Issues identified:**
-
-| Problem | Cause |
-|---------|-------|
-| "Dizzy" movement | `layout` prop triggers animations on every vote count change, combined with `mode="popLayout"` which repositions elements |
-| Spring too bouncy | `stiffness: 500` with `damping: 30` creates visible oscillation |
-| No green stroke | Border color only checks `isLeader` (yellow) or default (white), no voted/selected state |
-| No smooth slide to top | The reordering happens because suggestions are sorted by `vote_count`, but the animation isn't smooth enough |
+Looking at the database, session `44ed44e8-...` has 2 queue items but shows only 1 on TV. This suggests either:
+- The query returned before all items were inserted
+- The component rendered with old cached state
 
 ## Solution
 
-### 1. Improve Layout Animation Settings
+### 1. Remove Trophy Icons from Header
 
-Replace the aggressive spring animation with a smoother transition:
+Remove the two `Trophy` components flanking the title.
 
-**Current (bouncy):**
-```typescript
-transition: { type: 'spring', stiffness: 500, damping: 30 }
+**Current code (lines 92-98):**
+```tsx
+<div className="flex items-center justify-center gap-3 mb-2">
+  <Trophy className="w-10 h-10 text-yellow-400" />
+  <h1 className="text-4xl md:text-5xl font-bold text-white">
+    გამარჯვებული კატეგორიები
+  </h1>
+  <Trophy className="w-10 h-10 text-yellow-400" />
+</div>
 ```
 
-**Fixed (smooth):**
-```typescript
-layout: { type: 'spring', stiffness: 350, damping: 40, mass: 1.2 }
+**Fixed code:**
+```tsx
+<h1 className="text-xl md:text-2xl font-bold text-white mb-2">
+  გამარჯვებული კატეგორიები
+</h1>
 ```
 
-The lower stiffness + higher damping + added mass creates a smoother, more controlled movement.
+### 2. Reduce Title Font Size by 60%
 
-### 2. Add `layoutId` for Better Tracking
+Change from `text-4xl md:text-5xl` (36px/48px) to approximately `text-xl md:text-2xl` (20px/24px) which is 60% smaller.
 
-Use `layoutId` instead of just `layout` for proper element identity tracking during reordering:
+### 3. Add Real-time Subscription for Queue Updates
 
-```typescript
-<motion.div
-  layoutId={`suggestion-${suggestion.id}`}
-  ...
-/>
-```
+Add a Supabase real-time subscription to ensure the component gets the latest queue data, and add a small delay before the initial fetch to ensure data is committed.
 
-### 3. Change AnimatePresence Mode
+**Add to useEffect:**
+```tsx
+useEffect(() => {
+  const fetchWinners = async () => {
+    if (!sessionId) return;
 
-Replace `mode="popLayout"` with `mode="sync"` to reduce jarring transitions:
+    // Small delay to ensure queue insert is committed
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-```typescript
-<AnimatePresence mode="sync">
-```
+    const { data: queueItems } = await supabase
+      .from('tv_session_queue')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('position', { ascending: true });
 
-### 4. Add Voted/Selected State with Green Border
+    if (queueItems) {
+      setWinningCategories(queueItems as QueueItem[]);
+    }
+    setLoading(false);
+  };
 
-Pass vote information to the TV's `SuggestionCard` and add green border styling:
+  fetchWinners();
 
-```typescript
-// In parent, pass which suggestions have been voted for
-const votedSuggestionIds = new Set(/* from useTVPoll */);
+  // Subscribe to queue changes for this session
+  const channel = supabase
+    .channel(`queue-${sessionId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'tv_session_queue',
+        filter: `session_id=eq.${sessionId}`,
+      },
+      () => {
+        // Refetch on any change
+        fetchWinners();
+      }
+    )
+    .subscribe();
 
-// In SuggestionCard, add isVoted prop
-interface SuggestionCardProps {
-  suggestion: PollSuggestion;
-  rank: number;
-  isLeader: boolean;
-  showVotes: boolean;
-  hasVotes?: boolean;  // NEW: true if this suggestion received any votes
-}
-
-// Border styling
-className={`... border-2 transition-all ${
-  hasVotes && showVotes
-    ? 'border-green-500 shadow-lg shadow-green-500/20'  // Green for voted
-    : isLeader 
-      ? 'border-yellow-500 shadow-lg shadow-yellow-500/20'  // Yellow for leader
-      : 'border-white/20'  // Default
-}`}
-```
-
-### 5. Smoother Scale Animation on Vote
-
-Replace the aggressive scale pop with a gentler pulse:
-
-**Current:**
-```typescript
-scale: isAnimating ? 1.05 : 1,
-```
-
-**Fixed:**
-```typescript
-scale: isAnimating ? 1.02 : 1,  // Subtle scale
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [sessionId]);
 ```
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/tv/TVPollScreen.tsx`
+### File: `src/components/tv/TVPollResultsScreen.tsx`
 
 | Line Range | Change |
 |------------|--------|
-| 142-152 | Change `AnimatePresence mode="popLayout"` to `mode="sync"` |
-| 143-150 | Add `hasVotes` prop to `SuggestionCard` based on `suggestion.vote_count > 0` |
-| 210-215 | Add `hasVotes?: boolean` to `SuggestionCardProps` interface |
-| 236-249 | Update motion.div with `layoutId`, smoother layout transition, and green border logic |
-| 241 | Change scale from `1.05` to `1.02` for subtler animation |
+| 3 | Remove `Trophy` from lucide-react imports |
+| 92-98 | Remove Trophy icons from header, simplify to just h1 |
+| 94 | Change title font size from `text-4xl md:text-5xl` to `text-xl md:text-2xl` |
+| 33-50 | Add 300ms delay before fetch and add real-time subscription |
 
 ---
 
 ## Code Preview
 
-### AnimatePresence & Card Rendering (lines 141-152)
-```typescript
-<AnimatePresence mode="sync">
-  {suggestions.filter(s => s.category_name && s.category_name.trim()).map((suggestion, index) => (
-    <SuggestionCard
-      key={suggestion.id}
-      suggestion={suggestion}
-      rank={index + 1}
-      isLeader={index === 0 && pollPhase === 'voting'}
-      showVotes={pollPhase === 'voting'}
-      hasVotes={suggestion.vote_count > 0}
-    />
-  ))}
-</AnimatePresence>
+### Updated Header (lines 87-102)
+```tsx
+<motion.div
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="text-center mb-8"
+>
+  <h1 className="text-xl md:text-2xl font-bold text-white mb-2">
+    გამარჯვებული კატეგორიები
+  </h1>
+  <p className="text-purple-300 text-lg">
+    მომდევნო {winningCategories.length} რაუნდი
+  </p>
+</motion.div>
 ```
 
-### SuggestionCard Motion Config (lines 235-250)
-```typescript
-<motion.div
-  layoutId={`tv-suggestion-${suggestion.id}`}
-  layout
-  initial={{ opacity: 0, scale: 0.95 }}
-  animate={{ 
-    opacity: 1, 
-    scale: isAnimating ? 1.02 : 1,
-  }}
-  exit={{ opacity: 0, scale: 0.95 }}
-  transition={{
-    layout: { type: 'spring', stiffness: 350, damping: 40, mass: 1.2 },
-    scale: { duration: 0.2 },
-    opacity: { duration: 0.2 },
-  }}
-  className={`relative overflow-visible bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 transition-colors duration-300 ${
-    hasVotes && showVotes
-      ? 'border-green-500 shadow-lg shadow-green-500/20'
-      : isLeader 
-        ? 'border-yellow-500 shadow-lg shadow-yellow-500/20' 
-        : 'border-white/20'
-  }`}
->
+### Updated useEffect with Real-time (lines 32-52)
+```tsx
+useEffect(() => {
+  let isMounted = true;
+  
+  const fetchWinners = async () => {
+    if (!sessionId) return;
+
+    // Small delay to ensure queue insert is committed
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const { data: queueItems } = await supabase
+      .from('tv_session_queue')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('position', { ascending: true });
+
+    if (queueItems && isMounted) {
+      setWinningCategories(queueItems as QueueItem[]);
+    }
+    if (isMounted) setLoading(false);
+  };
+
+  fetchWinners();
+
+  // Subscribe to queue changes for this session
+  const channel = supabase
+    .channel(`poll-results-queue-${sessionId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'tv_session_queue',
+        filter: `session_id=eq.${sessionId}`,
+      },
+      () => fetchWinners()
+    )
+    .subscribe();
+
+  return () => {
+    isMounted = false;
+    supabase.removeChannel(channel);
+  };
+}, [sessionId]);
 ```
 
 ---
@@ -176,17 +187,17 @@ scale: isAnimating ? 1.02 : 1,  // Subtle scale
 
 | Aspect | Before | After |
 |--------|--------|-------|
-| Layout animation | Aggressive spring | Smooth spring with higher damping |
-| AnimatePresence mode | `popLayout` | `sync` |
-| Scale on vote | `1.05` (bouncy) | `1.02` (subtle) |
-| Border for voted items | None | Green glow |
-| Element tracking | `key` only | `layoutId` + `key` |
+| Trophy icons | Two yellow trophies | Removed |
+| Title font | `text-4xl md:text-5xl` (36-48px) | `text-xl md:text-2xl` (20-24px) |
+| Subtitle font | `text-xl` | `text-lg` |
+| Data fetching | Single fetch on mount | Delayed fetch + real-time subscription |
+| Import | `Trophy, Crown, Star, Sparkles` | `Crown, Star, Sparkles` |
 
 ---
 
 ## Testing Checklist
-1. Add categories during poll suggest phase - cards appear smoothly
-2. Vote for a category - card moves to new position smoothly (no dizzy jumps)
-3. Voted categories show green border during voting phase
-4. Leader (most votes) still shows yellow border with crown
-5. Multiple rapid votes don't cause jittery animations
+1. Title appears smaller (60% reduction) without trophy icons
+2. All selected rounds/categories appear on screen (not just 1)
+3. Categories match what host sees on mobile
+4. Real-time updates work if queue changes after screen loads
+
