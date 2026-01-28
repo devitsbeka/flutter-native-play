@@ -222,7 +222,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           setState(prev => ({ ...prev, currentRoom: updated }));
           
           // Handle status changes
-          if (updated.status === "playing" && state.phase === "lobby") {
+          if (updated.status === "playing" && (state.phase === "lobby" || state.phase === "results")) {
             // Non-host: fetch questions when game starts - USE shuffled_answers from DB
             if (!isHost) {
               const { data: roomQuestions } = await supabase
@@ -1169,12 +1169,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             })
           ));
           
-          // Reset participant scores
+          // Reset ALL participant scores for fair game start
           await supabase
             .from("room_participants")
             .update({ score: 0, current_question: 0, status: "playing" })
-            .eq("room_id", roomId)
-            .eq("user_id", user.id);
+            .eq("room_id", roomId);
           
           // Create room_game record
           const { data: game } = await supabase
@@ -1289,12 +1288,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Update used_question_ids
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       
-      // Reset participant
+      // Reset ALL participants for fair game start
       await supabase
         .from("room_participants")
         .update({ score: 0, current_question: 0, status: "playing" })
-        .eq("room_id", roomId)
-        .eq("user_id", user.id);
+        .eq("room_id", roomId);
       
       // Mark questions as seen
       markQuestionsAsSeen(questions.map(q => q.id));
