@@ -2379,6 +2379,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
 
       // Start countdown with questions, category info, persist totalRounds, AND lock player count
+      // CRITICAL: Clear suggester fields to prevent stale IDs from blocking host on library categories
       await supabase
         .from('tv_sessions')
         .update({
@@ -2390,6 +2391,10 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           round_number: 1,
           total_rounds: totalRoundsCount,
           active_player_count: playerCount, // Already locked by confirmActivePlayers
+          // Clear suggester fields - these will be set by startNextRoundFromQueueIfAny if needed
+          current_round_suggester_id: null,
+          current_round_suggester_nickname: null,
+          current_round_suggester_avatar_url: null,
         })
         .eq('id', state.sessionId);
 
