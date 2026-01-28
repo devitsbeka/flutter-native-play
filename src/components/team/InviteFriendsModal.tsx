@@ -349,13 +349,13 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </div>
 
                   {/* Search Results */}
-                  <AnimatePresence mode="popLayout">
+                  <AnimatePresence mode="sync">
                     {searchQuery.length >= 2 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 ${narrow}`}
+                        className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-auto ${narrow}`}
                       >
                         {(() => {
                           const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
@@ -367,11 +367,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                             filteredResults.map((result) => (
                             <motion.div
                               key={result.user_id}
-                              layout
                               initial={{ opacity: 0, y: 5 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, scale: 0.95 }}
-                              className={`flex items-center gap-3 p-3 ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
+                              className={`flex items-center gap-3 p-3 pointer-events-auto ${lobbyGlassRow} hover:bg-white/15 transition-colors`}
                             >
                               <SafeAvatar
                                 avatarUrl={result.avatar_url}
@@ -389,12 +388,17 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
                               <motion.button
                                 type="button"
-                                onClick={() => isRoomInviteMode 
-                                  ? handleInviteToRoom(result.user_id) 
-                                  : handleSendRequest(result.user_id)
-                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isRoomInviteMode) {
+                                    handleInviteToRoom(result.user_id);
+                                  } else {
+                                    handleSendRequest(result.user_id);
+                                  }
+                                }}
+                                onPointerDown={(e) => e.stopPropagation()}
                                 disabled={sentRequests.has(result.user_id) || invitingUser === result.user_id || sendingRequestTo === result.user_id}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
+                                className={`relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition-colors border ${
                                   sentRequests.has(result.user_id)
                                     ? "bg-white/15 border-white/20 text-white/90"
                                     : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
