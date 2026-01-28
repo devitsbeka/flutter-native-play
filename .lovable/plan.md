@@ -1,184 +1,168 @@
 
-# Plan: Fix Room Results Screen - Add Category Option & Proper Flow
+
+# Plan: Fix Category Mismatch Between Host and Players in Multiplayer Rooms
 
 ## Problem Summary
 
-After completing a round in regular (non-TV) multiplayer rooms:
-1. Both host and players see "ახალი რაუნდი" (New Round) button
-2. Clicking it replays the SAME round with same questions (confusing UX)
-3. Host has no way to add more categories/trivias to continue playing with new content
-4. The screen doesn't differentiate between host and player actions
+When the host adds categories to the queue and starts the next round from the results screen, **the host sees the correct new category/questions, but other players see a different (older) category**.
 
-## Current Flow (Broken)
+## Root Cause Analysis
+
+The issue is a **race condition + stale data problem** in the realtime subscription for non-host players.
 
 ```text
-Round Complete
-     │
-     ▼
-Results Screen
-     │
-     ├─► "ახალი რაუნდი" (visible to ALL)
-     │   └─► Replays SAME questions ❌
-     │
-     └─► "ოთახში დაბრუნება"
-         └─► Goes to lobby (but no indication why)
+Current Flow (BROKEN):
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  1. Both players are on RESULTS screen                          │
+│     - Host: phase = "results"                                   │
+│     - Player: phase = "results"                                 │
+│                                                                 │
+│  2. Host clicks "გაგრძელება" (Continue)                          │
+│     └─► Calls startNextFromQueue()                              │
+│         ├─► Fetches queue item (new category)                   │
+│         ├─► Clears old room_questions                           │
+│         ├─► Inserts NEW questions into room_questions           │
+│         ├─► Updates game_rooms.status = "playing"               │
+│         └─► Host's local state updated with NEW questions       │
+│                                                                 │
+│  3. Player receives realtime event (game_rooms UPDATE)          │
+│     └─► status changed to "playing"                             │
+│                                                                 │
+│  4. Player's subscription ONLY triggers if:                     │
+│     state.phase === "lobby" ← THIS IS FALSE!                    │
+│     Player's phase is "results", NOT "lobby"                    │
+│                                                                 │
+│  5. RESULT: Player's subscription handler is SKIPPED            │
+│     - Player never fetches new questions                        │
+│     - Player still has OLD questions in local state             │
+│     - Player sees wrong category/questions                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Proposed Solution
+### The Critical Bug Location
 
-Create a clear flow with proper host/player differentiation:
-
-```text
-Round Complete
-     │
-     ▼
-Results Screen
-     │
-     ├─► [Has Queue Items?]
-     │   ├─► YES: Show "გაგრძელება" with next category preview
-     │   │        └─► Plays next queue item
-     │   │
-     │   └─► NO: Differentiate by role
-     │       │
-     │       ├─► HOST: Show "კატეგორიის დამატება" (Add Category)
-     │       │        └─► Goes to lobby where host can add to queue
-     │       │
-     │       └─► NON-HOST: Show "ველოდებით მასპინძელს..."
-     │                    └─► Either go to lobby or wait
-     │
-     └─► "ოთახში დაბრუნება" (Back to Room)
-         └─► Returns to lobby for everyone
-```
-
----
-
-## Technical Changes
-
-### File 1: `src/components/team/GameResultsScreenV2.tsx`
-
-**Current Logic (lines 211-227):**
+**File:** `src/contexts/MultiplayerContextV2.tsx`
+**Line 225:**
 ```typescript
-const handlePlayAgain = async () => {
-  setIsStartingRematch(true);
-  try {
-    if (queue.length > 0) {
-      await startNextFromQueue();
-    } else {
-      // No queue - repeat same category ← PROBLEM: Same questions!
-      await startNewRound();
-    }
-  } catch (error) {
-    // ...
+if (updated.status === "playing" && state.phase === "lobby") {
+  // Non-host: fetch questions when game starts
+  if (!isHost) {
+    // ... fetch room_questions
   }
-};
+}
 ```
 
-**New Logic:**
-1. When `queue.length > 0`: Show "გაგრძელება" (Continue) button → calls `startNextFromQueue()`
-2. When `queue.length === 0`:
-   - **Host:** Show "კატეგორიის დამატება" (Add Category) → calls `continueInRoom()` to go to lobby
-   - **Non-host:** Either hide the button OR show "ველოდებით" (Waiting) state
-
-**UI Changes:**
-```tsx
-{/* Bottom Section - Modified */}
-{queue.length > 0 ? (
-  // Has queue - show continue button
-  <ChunkyButton
-    variant="mint"
-    onClick={handlePlayAgain}
-    icon={<ChevronRight />}
-  >
-    გაგრძელება: {nextQueueItem.category_name}
-  </ChunkyButton>
-) : isHost ? (
-  // No queue, is host - add category button
-  <ChunkyButton
-    variant="mint"
-    onClick={handleBackToRoom}
-    icon={<Plus />}
-  >
-    კატეგორიის დამატება
-  </ChunkyButton>
-) : (
-  // No queue, not host - waiting indicator
-  <div className="text-center py-4 text-white/70">
-    ველოდებით მასპინძელს...
-  </div>
-)}
-
-<ChunkyButton
-  variant="secondary"
-  onClick={handleBackToRoom}
-  icon={<ArrowLeft />}
->
-  ოთახში დაბრუნება
-</ChunkyButton>
-```
+The condition `state.phase === "lobby"` is **too restrictive**. When players are on the results screen, their phase is `"results"`, not `"lobby"`. So when the host starts a new round directly from results, the player's subscription handler never runs, and they keep their old questions.
 
 ---
 
-### File 2: `src/components/team/RoomLobbyV2.tsx`
+## Solution
 
-**Add visual indicator when coming from results:**
-- Optionally highlight the "კატეგორიის არჩევა" (Category Selection) section
-- Consider showing a subtle hint like "დაამატე კატეგორია შემდეგი რაუნდისთვის" (Add a category for the next round)
+Expand the condition to include players on the results screen. The question-fetching logic should trigger when:
+1. Room status changes to "playing"
+2. Player is NOT the host
+3. Player's current phase is `"lobby"` OR `"results"`
+
+### Technical Changes
+
+**File:** `src/contexts/MultiplayerContextV2.tsx`
+
+**Change at line 225:**
+
+Before:
+```typescript
+if (updated.status === "playing" && state.phase === "lobby") {
+```
+
+After:
+```typescript
+if (updated.status === "playing" && (state.phase === "lobby" || state.phase === "results")) {
+```
+
+This single change ensures that when the host starts a new round from the results screen, non-host players (who are also on results) will properly fetch the new questions from `room_questions`.
 
 ---
 
-### Optional: Keep "Replay Same Round" Option
+## Why This Works
 
-If the user WANTS to replay the same trivia with same questions (for practice), we can add a secondary option:
+1. **Host starts new round** → Updates `game_rooms.status` to "playing"
+2. **Player receives realtime event** → `updated.status === "playing"`
+3. **Player's phase is "results"** → Now passes the condition check
+4. **Player fetches from `room_questions`** → Gets the NEW questions that host just inserted
+5. **Both players now have same questions** → Sync is restored
 
-```tsx
-{/* Only show for user trivias (not library categories) */}
-{!currentRoom?.category_id && isHost && (
-  <ChunkyButton
-    variant="ghost"
-    onClick={handleReplaySame}
-    icon={<RotateCcw />}
-    className="text-white/60"
-  >
-    იგივე ტრივია
-  </ChunkyButton>
-)}
+---
+
+## Edge Cases Handled
+
+| Scenario | Outcome |
+|----------|---------|
+| Host starts from lobby | Works (phase is "lobby") |
+| Host starts from results | Works now (phase is "results") |
+| Player joins mid-game | Still handled by `enterRoom()` function |
+| Player disconnects and rejoins | Handled by existing reconnection logic |
+
+---
+
+## Additional Safety: Reset Participant Scores
+
+There's also a secondary issue: when `startNextFromQueue` resets participant scores, it only resets the caller's score:
+
+**Current (line 1173-1177):**
+```typescript
+await supabase
+  .from("room_participants")
+  .update({ score: 0, current_question: 0, status: "playing" })
+  .eq("room_id", roomId)
+  .eq("user_id", user.id);  // ← Only resets HOST
 ```
+
+This should reset ALL participants for a fair game start. We should remove the `user_id` filter:
+
+**Fixed:**
+```typescript
+await supabase
+  .from("room_participants")
+  .update({ score: 0, current_question: 0, status: "playing" })
+  .eq("room_id", roomId);
+  // Resets ALL participants
+```
+
+This needs to be fixed in multiple places within `startNextFromQueue`.
 
 ---
 
 ## Summary of Changes
 
-| File | Change |
-|------|--------|
-| `GameResultsScreenV2.tsx` | Differentiate actions: host can add categories, non-host waits |
-| `GameResultsScreenV2.tsx` | Remove auto-replay of same questions when no queue |
-| `GameResultsScreenV2.tsx` | Add clear "კატეგორიის დამატება" button for host |
-| `RoomLobbyV2.tsx` | (Optional) Add visual hint for adding next round |
+| File | Line | Change |
+|------|------|--------|
+| `MultiplayerContextV2.tsx` | 225 | Change condition from `phase === "lobby"` to `phase === "lobby" \|\| phase === "results"` |
+| `MultiplayerContextV2.tsx` | 1173-1177 | Remove `.eq("user_id", user.id)` to reset ALL participants |
+| `MultiplayerContextV2.tsx` | 1293-1297 | Same fix - reset ALL participants, not just host |
 
 ---
 
-## User Experience After Fix
+## Host Play Policy Note
 
-### For Host:
-1. Finish round → See results
-2. Click "კატეგორიის დამატება" → Goes to lobby
-3. Add new category/trivia to queue → Click "დაწყება"
-4. New round starts with new content
+Regarding "what host can play / what can't play":
+- This is a **separate feature** implemented in the TV context for observer mode
+- In regular multiplayer rooms (non-TV), there's no observer policy yet
+- The host plays alongside other players in regular rooms
+- The observer/suggester policy from the TV context has NOT been ported to regular multiplayer yet
 
-### For Non-Host:
-1. Finish round → See results  
-2. See "ველოდებით მასპინძელს..." message
-3. Either wait or click "ოთახში დაბრუნება" to go to lobby
-4. When host starts game, automatically joins
+If you want the same "host can't play their own trivias" rule in regular rooms, that would be a separate feature to implement after fixing this sync bug.
 
 ---
 
 ## Testing Checklist
 
-1. Play a round with a user trivia (invited friend flow)
-2. On results, verify host sees "კატეგორიის დამატება" instead of "ახალი რაუნდი"
-3. Verify non-host sees waiting state, not the play button
-4. Verify clicking "კატეგორიის დამატება" goes to lobby
-5. In lobby, verify host can add categories to queue
-6. Verify starting game works with new categories
-7. Test with queue items - verify "გაგრძელება" shows correctly
+1. Create a room with 2 players
+2. Play first round to completion (both on results)
+3. Host adds a new category to queue from lobby
+4. Host goes back to results and clicks "გაგრძელება"
+5. Verify BOTH players see the same new category and questions
+6. Verify both players' scores are reset to 0
+7. Complete the round and verify scoring works correctly
+
