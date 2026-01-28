@@ -107,7 +107,7 @@ interface MultiplayerContextType extends MultiplayerState {
   leaveRoomPermanently: () => Promise<void>;
   deleteRoom: () => Promise<void>;
   resetMultiplayer: () => void;
-  awardObserverBonus: (incorrectCount: number) => Promise<void>; // Award bonus to observer host
+  awardObserverBonus: (bonusAmount: number) => Promise<void>; // Award pre-calculated bonus to observer host
   
   // Modals
   showCreateModal: boolean;
@@ -1661,14 +1661,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   }, [cleanupChannels]);
 
   // Award observer bonus - called when host is observing and players make mistakes
-  const awardObserverBonus = useCallback(async (incorrectCount: number) => {
+  // Accepts pre-calculated bonus amount (fair scoring is calculated by caller)
+  const awardObserverBonus = useCallback(async (bonusAmount: number) => {
     if (!state.currentRoom || !user || !state.hostIsObserver) return;
+    if (bonusAmount <= 0) return;
     
-    const bonus = incorrectCount * 100; // 100 points per incorrect answer
-    if (bonus <= 0) return;
-    
-    const newScore = state.myScore + bonus;
-    const newBonusTotal = state.observerBonusThisRound + bonus;
+    const newScore = state.myScore + bonusAmount;
+    const newBonusTotal = state.observerBonusThisRound + bonusAmount;
     
     // Update participant score in database
     await supabase

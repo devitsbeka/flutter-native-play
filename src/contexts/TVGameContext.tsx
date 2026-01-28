@@ -294,41 +294,51 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         const totalActive = activePlayers.length;
         if (totalActive > 0 && incorrectCount > 0) {
-          // Observer earns 100 points per incorrect player, proportional to total
-          const observerBonus = Math.round(100 * incorrectCount);
+          // Fair scoring based on player count:
+          // Small games (1-2 players): 100 per incorrect
+          // Larger games (3+): 100 only if 50%+ incorrect
+          let observerBonus = 0;
+          if (totalActive <= 2) {
+            observerBonus = 100 * incorrectCount;
+          } else if (incorrectCount / totalActive >= 0.5) {
+            observerBonus = 100; // Fixed bonus for majority wrong
+          }
           
-          console.log('[advanceToReveal] 🏆 OBSERVER BONUS:', {
+          console.log('[advanceToReveal] 🏆 OBSERVER BONUS CALC:', {
             suggesterId: suggesterId.slice(0, 8),
             incorrectCount,
             totalActive,
             bonus: observerBonus,
           });
           
-          // Update the suggester's score in presence (if they're in our player list)
-          const suggesterPlayer = current.players.find(p => p.id === suggesterId);
-          if (suggesterPlayer && presenceChannelRef.current) {
-            const newScore = (suggesterPlayer.score || 0) + observerBonus;
-            
-            // Track the updated score for the observer
-            await presenceChannelRef.current.track({
-              nickname: suggesterPlayer.nickname,
-              avatar_url: suggesterPlayer.avatar_url,
-              score: newScore,
-              hasAnswered: false, // Observer never "answers"
-              lastAnswerCorrect: null,
-              lastAnswer: null,
-              answeredQuestionIndex: undefined,
-              isHost: isHostRef.current,
-              isActive: true,
-              observerBonusEarned: observerBonus, // Track bonus for UI
-            });
-            
-            console.log('[advanceToReveal] ✅ Observer score updated:', {
-              nickname: suggesterPlayer.nickname,
-              oldScore: suggesterPlayer.score || 0,
-              bonus: observerBonus,
-              newScore,
-            });
+          // Only update score if bonus was earned
+          if (observerBonus > 0) {
+            // Update the suggester's score in presence (if they're in our player list)
+            const suggesterPlayer = current.players.find(p => p.id === suggesterId);
+            if (suggesterPlayer && presenceChannelRef.current) {
+              const newScore = (suggesterPlayer.score || 0) + observerBonus;
+              
+              // Track the updated score for the observer
+              await presenceChannelRef.current.track({
+                nickname: suggesterPlayer.nickname,
+                avatar_url: suggesterPlayer.avatar_url,
+                score: newScore,
+                hasAnswered: false, // Observer never "answers"
+                lastAnswerCorrect: null,
+                lastAnswer: null,
+                answeredQuestionIndex: undefined,
+                isHost: isHostRef.current,
+                isActive: true,
+                observerBonusEarned: observerBonus, // Track bonus for UI
+              });
+              
+              console.log('[advanceToReveal] ✅ Observer score updated:', {
+                nickname: suggesterPlayer.nickname,
+                oldScore: suggesterPlayer.score || 0,
+                bonus: observerBonus,
+                newScore,
+              });
+            }
           }
         }
       } catch (err) {

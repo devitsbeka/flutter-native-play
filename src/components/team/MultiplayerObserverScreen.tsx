@@ -63,11 +63,23 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
       const incorrectAnswerCount = Object.values(opponentAnswers).filter(ans => !ans.is_correct).length;
       const didNotAnswerCount = players.length - answeredCount;
       const totalIncorrect = incorrectAnswerCount + didNotAnswerCount;
+      const totalPlayers = players.length;
       
       if (totalIncorrect > 0) {
-        const bonus = totalIncorrect * 100;
-        setBonusEarnedThisQuestion(bonus);
-        awardObserverBonus(totalIncorrect);
+        // Fair scoring based on player count:
+        // Small games (1-2 players): 100 per incorrect
+        // Larger games (3+): 100 only if 50%+ got it wrong
+        let bonus = 0;
+        if (totalPlayers <= 2) {
+          bonus = totalIncorrect * 100;
+        } else if (totalIncorrect / totalPlayers >= 0.5) {
+          bonus = 100; // Fixed bonus for majority wrong
+        }
+        
+        if (bonus > 0) {
+          setBonusEarnedThisQuestion(bonus);
+          awardObserverBonus(bonus);
+        }
       }
       
       // Mark this question as processed and allow advancing
