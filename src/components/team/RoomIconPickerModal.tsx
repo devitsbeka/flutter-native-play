@@ -77,6 +77,7 @@ export function RoomIconPickerModal({
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const hasManuallyEditedName = useRef(false);
 
   // Load recent icons from localStorage
   const loadRecentIcons = useCallback(async () => {
@@ -248,6 +249,7 @@ export function RoomIconPickerModal({
       setSearchQuery("");
       setSearchResults([]);
       setSelectedCategory("all");
+      hasManuallyEditedName.current = false; // Reset on open
     }
   }, [isOpen, fetchRandomIcons, loadRecentIcons, fetchCategoryIcons, currentIconUrl, roomName]);
 
@@ -283,7 +285,11 @@ export function RoomIconPickerModal({
   const handleIconClick = async (icon: IconItem) => {
     setSelectedIcon(icon.icon_url);
     addRecentIcon(icon.slug);
-    await generateNameForIcon(icon.slug);
+    
+    // Only auto-generate name if user hasn't manually edited it
+    if (!hasManuallyEditedName.current) {
+      await generateNameForIcon(icon.slug);
+    }
   };
 
   const handleConfirmClick = () => {
@@ -365,7 +371,10 @@ export function RoomIconPickerModal({
                     <Input
                       ref={nameInputRef}
                       value={editableName}
-                      onChange={(e) => setEditableName(e.target.value)}
+                      onChange={(e) => {
+                        setEditableName(e.target.value);
+                        hasManuallyEditedName.current = true;
+                      }}
                       maxLength={35}
                       className="text-base font-semibold pr-8 bg-background h-12"
                       placeholder="ოთახის სახელი"
