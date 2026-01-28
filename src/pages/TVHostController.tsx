@@ -699,6 +699,10 @@ const TVHostController: React.FC = () => {
   if (localPhase === 'reveal') {
     // CRITICAL FIX: Suggester sees observer reveal, not "Time expired"
     if (isSuggester) {
+      // Find the observer's current score from players list
+      const observerPlayer = players.find(p => p.id === myPlayerId);
+      const observerScore = observerPlayer?.score ?? myScore;
+      
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
           <Star className="w-16 h-16 text-yellow-400 mb-4" />
@@ -712,9 +716,10 @@ const TVHostController: React.FC = () => {
             </div>
           )}
           
-          <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
-            <span className="text-purple-300">შენი ქულა: </span>
-            <span className="text-white text-2xl font-bold">{myScore}</span>
+          {/* Observer score with bonus indicator */}
+          <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
+            <span className="text-yellow-300">შენი ქულა: </span>
+            <span className="text-white text-2xl font-bold">{observerScore}</span>
           </div>
           
           <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
@@ -1281,20 +1286,34 @@ const TVHostController: React.FC = () => {
   // Playing phase - host can answer questions with FULL question UI (like guests)
   // CRITICAL: If host is the suggester, show observer UI instead
   if (isSuggester) {
+    // Find the observer's current score from players list
+    const observerPlayer = players.find(p => p.id === myPlayerId);
+    const observerScore = observerPlayer?.score ?? myScore;
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
         <div className="text-center">
           <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
           <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
           <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები</p>
+          
+          {/* Observer score - prominently displayed */}
+          <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
+            <p className="text-yellow-300 text-sm mb-1">შენი ქულა</p>
+            <p className="text-white text-3xl font-bold">{observerScore}</p>
+            <p className="text-yellow-300/60 text-xs mt-1">იღებ ქულებს შეცდომებზე</p>
+          </div>
+          
           <div className="bg-white/10 rounded-xl p-4 mb-6">
             <p className="text-white font-semibold text-center text-sm">
               კითხვა {currentQuestionIndex + 1}/{totalQuestions}
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
+              <Clock className="w-4 h-4 text-purple-300" />
               <span className="text-purple-300">{timeRemaining}წ</span>
             </div>
           </div>
+          
           <p className="text-purple-300 text-sm mb-6">ტელევიზორზე უყურე...</p>
           
           <ChunkyButton

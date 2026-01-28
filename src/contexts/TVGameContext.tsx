@@ -275,6 +275,68 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     console.log('[advanceToReveal] ✅ ADVANCING TO REVEAL!', { reason });
     tvLogPhase('question', 'reveal', reason);
 
+    // ============================================================================
+    // OBSERVER SCORING: Award points to suggester when players answer incorrectly
+    // ============================================================================
+    // Fair play rule: If the suggester (host who knows answers) is observing,
+    // they earn points when other players fail - this incentivizes fair play
+    // and compensates for skipping the round.
+    // ============================================================================
+    const suggesterId = current.currentRoundSuggesterId;
+    if (suggesterId) {
+      try {
+        // Calculate observer points based on incorrect/unanswered players
+        const activePlayers = current.players.filter(p => p.id !== suggesterId && p.isActive !== false);
+        const incorrectCount = activePlayers.filter(p => {
+          // Player got it wrong or didn't answer
+          return !p.hasAnswered || p.lastAnswerCorrect === false;
+        }).length;
+        
+        const totalActive = activePlayers.length;
+        if (totalActive > 0 && incorrectCount > 0) {
+          // Observer earns 100 points per incorrect player, proportional to total
+          const observerBonus = Math.round(100 * incorrectCount);
+          
+          console.log('[advanceToReveal] 🏆 OBSERVER BONUS:', {
+            suggesterId: suggesterId.slice(0, 8),
+            incorrectCount,
+            totalActive,
+            bonus: observerBonus,
+          });
+          
+          // Update the suggester's score in presence (if they're in our player list)
+          const suggesterPlayer = current.players.find(p => p.id === suggesterId);
+          if (suggesterPlayer && presenceChannelRef.current) {
+            const newScore = (suggesterPlayer.score || 0) + observerBonus;
+            
+            // Track the updated score for the observer
+            await presenceChannelRef.current.track({
+              nickname: suggesterPlayer.nickname,
+              avatar_url: suggesterPlayer.avatar_url,
+              score: newScore,
+              hasAnswered: false, // Observer never "answers"
+              lastAnswerCorrect: null,
+              lastAnswer: null,
+              answeredQuestionIndex: undefined,
+              isHost: isHostRef.current,
+              isActive: true,
+              observerBonusEarned: observerBonus, // Track bonus for UI
+            });
+            
+            console.log('[advanceToReveal] ✅ Observer score updated:', {
+              nickname: suggesterPlayer.nickname,
+              oldScore: suggesterPlayer.score || 0,
+              bonus: observerBonus,
+              newScore,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[advanceToReveal] Failed to calculate observer bonus:', err);
+        // Non-blocking - don't fail the reveal transition
+      }
+    }
+
     await supabase
       .from('tv_sessions')
       .update({
@@ -2150,12 +2212,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // If we start the game with that same category, we must remove it from the queue to avoid:
       //  - totalRounds being off-by-one (e.g., showing 4 when user selected 3)
       //  - the first round repeating after round 2 (because the "next" item is actually the current one)
+      // CRITICAL: Also fetch suggester_* fields to properly block host on first round
       const { data: queueItems } = await supabase
         .from('tv_session_queue')
-        .select('id, category_id, user_trivia_id, position')
+        .select('id, category_id, user_trivia_id, position, suggester_user_id, suggester_nickname, suggester_avatar_url')
         .eq('session_id', state.sessionId);
 
       let queueCount = queueItems?.length || 0;
+
+      // Extract suggester info from first queue item BEFORE consuming it
+      // This ensures host is blocked on first round for trivias they know the answers to
+      let firstRoundSuggesterId: string | null = null;
+      let firstRoundSuggesterNickname: string | null = null;
+      let firstRoundSuggesterAvatarUrl: string | null = null;
 
       // If the current round is already the first item in the queue, consume it now.
       // (This keeps queue = "future rounds" after game starts.)
@@ -2170,6 +2239,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         );
 
         if (firstMatchesCurrent && first?.id) {
+          // CRITICAL: Only honor suggester for user trivias, not library categories
+          // Library categories are always playable by everyone including host
+          const isLibraryCategory = first.category_id && !first.user_trivia_id;
+          if (!isLibraryCategory) {
+            firstRoundSuggesterId = first.suggester_user_id || null;
+            firstRoundSuggesterNickname = first.suggester_nickname || null;
+            firstRoundSuggesterAvatarUrl = first.suggester_avatar_url || null;
+            tvLog('First round suggester extracted from queue', {
+              suggesterId: firstRoundSuggesterId?.slice(0, 8) || 'none',
+              nickname: firstRoundSuggesterNickname,
+            });
+          }
+
           tvLog('Consuming initial queue item (it matches current round)', {
             queueItemId: String(first.id).slice(0, 8),
             categoryId,
@@ -2370,7 +2452,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // CRITICAL: Use centralized confirmActivePlayers utility for robust count locking
       console.log('[startGame] 🔄 Using confirmActivePlayers for robust verification...');
-      const playerCount = await confirmActivePlayers(state.sessionId);
+      let playerCount = await confirmActivePlayers(state.sessionId);
+      
+      // CRITICAL: Adjust for suggester skip rule (they don't answer, so reduce expected count)
+      if (firstRoundSuggesterId) {
+        playerCount = Math.max(1, playerCount - 1);
+        console.log('[startGame] 📉 Adjusted player count for suggester skip:', playerCount, 'suggester:', firstRoundSuggesterId.slice(0, 8));
+      }
       
       console.log('[startGame] ✅ Verified and locked player count:', playerCount);
       
@@ -2391,14 +2479,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           current_question_index: 0,
           category_name: categoryName,
           category_icon: categoryIcon,
-          round_number: 1,
-          total_rounds: totalRoundsCount,
-          active_player_count: playerCount, // Already locked by confirmActivePlayers
-          // Clear suggester fields - these will be set by startNextRoundFromQueueIfAny if needed
-          current_round_suggester_id: null,
-          current_round_suggester_nickname: null,
-          current_round_suggester_avatar_url: null,
-        })
+        round_number: 1,
+        total_rounds: totalRoundsCount,
+        active_player_count: playerCount, // Already locked and adjusted for suggester
+        // CRITICAL FIX: Apply extracted suggester info from queue to block host on first round
+        current_round_suggester_id: firstRoundSuggesterId,
+        current_round_suggester_nickname: firstRoundSuggesterNickname,
+        current_round_suggester_avatar_url: firstRoundSuggesterAvatarUrl,
+      })
         .eq('id', state.sessionId);
 
       // Update local state with round tracking
