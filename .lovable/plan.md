@@ -1,118 +1,106 @@
 
-# Fix: Add Friend Button - Show Pending Status Correctly
+# Fix: Preserve User-Entered Room Name When Changing Icons
 
-## Problem Analysis
+## Problem
 
-After thorough investigation, I discovered that the "დამატება" button **IS working correctly** - the click handlers fire, the function executes, and database operations complete. The issue is **user experience and visual feedback**:
+In the `RoomIconPickerModal`, when the user:
+1. Manually edits the room name in the input field
+2. Then clicks on a new icon
 
-### What's Actually Happening:
-1. User clicks "დამატება" button
-2. `handleSendRequest(userId)` is called (confirmed via console logs)
-3. `sendFriendRequest(userId)` runs in `useFriends.ts`
-4. The function checks for existing friendship - finds a PENDING request
-5. Returns `false` and shows toast "მოთხოვნა უკვე გაგზავნილია"
+The system **always** regenerates the name with AI, overwriting the user's custom name. This is frustrating because the user's input is lost.
 
-### The Real Problems:
-1. **Pending outgoing requests not filtered**: Users to whom you've already sent a request still appear in search results with an active "დამატება" button
-2. **No visual indicator for pending requests**: Users can't see that they've already sent a request to someone
-3. **Button appears to do nothing**: When user already sent a request, clicking shows a toast but button stays the same
+## Root Cause
 
----
+The `handleIconClick` function on line 283-287 unconditionally calls `generateNameForIcon()`:
+
+```typescript
+const handleIconClick = async (icon: IconItem) => {
+  setSelectedIcon(icon.icon_url);
+  addRecentIcon(icon.slug);
+  await generateNameForIcon(icon.slug);  // ← ALWAYS overwrites name!
+};
+```
 
 ## Solution
 
-### Track Outgoing Pending Requests
+Track whether the user has manually modified the name, and only regenerate the name if they haven't:
 
-Modify `InviteFriendsModal` to fetch and display outgoing pending friendship requests, so:
-1. Users with pending outgoing requests show a different button state ("მოლოდინში" / "Pending")
-2. The button is disabled for these users
-3. Users get clear visual feedback
-
-### Files to Modify
-
-**src/components/team/InviteFriendsModal.tsx**
-
-1. Add state to track pending outgoing requests
-2. Fetch pending outgoing requests from the `friendships` table
-3. Update button display to show "მოლოდინში" (Pending) for users with existing requests
+1. Add a `hasManuallyEditedName` ref to track if user typed in the name field
+2. Set it to `true` when user types in the input
+3. Only call `generateNameForIcon()` if `hasManuallyEditedName` is `false`
+4. Reset the flag when the modal opens
 
 ---
 
-## Technical Implementation
+## Implementation
 
-### Step 1: Add Pending Requests State
+### Changes to `src/components/team/RoomIconPickerModal.tsx`
+
+**1. Add a ref to track manual edits (after line 79)**
+
 ```typescript
-const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
+const hasManuallyEditedName = useRef(false);
 ```
 
-### Step 2: Fetch Pending Outgoing Requests on Modal Open
+**2. Update the name input onChange handler (line 368)**
+
+Mark that the user has manually edited when they type:
+
+```typescript
+onChange={(e) => {
+  setEditableName(e.target.value);
+  hasManuallyEditedName.current = true;
+}}
+```
+
+**3. Update `handleIconClick` to check before generating (lines 283-287)**
+
+Only regenerate name if user hasn't manually edited:
+
+```typescript
+const handleIconClick = async (icon: IconItem) => {
+  setSelectedIcon(icon.icon_url);
+  addRecentIcon(icon.slug);
+  
+  // Only auto-generate name if user hasn't manually edited it
+  if (!hasManuallyEditedName.current) {
+    await generateNameForIcon(icon.slug);
+  }
+};
+```
+
+**4. Reset the flag when modal opens (inside the useEffect at lines 241-252)**
+
 ```typescript
 useEffect(() => {
-  const fetchPendingOutgoing = async () => {
-    if (!user?.id || !isOpen) return;
-    
-    const { data } = await supabase
-      .from("friendships")
-      .select("friend_id")
-      .eq("user_id", user.id)
-      .eq("status", "pending");
-    
-    if (data) {
-      setPendingOutgoingIds(new Set(data.map(f => f.friend_id)));
-    }
-  };
-  
-  fetchPendingOutgoing();
-}, [user?.id, isOpen]);
-```
-
-### Step 3: Update Button Logic
-```typescript
-const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
-
-<motion.button
-  disabled={sentRequests.has(result.user_id) || isPendingOutgoing || invitingUser === result.user_id || sendingRequestTo === result.user_id}
-  // ...
->
-  {isPendingOutgoing ? (
-    <>
-      <Clock className="w-4 h-4" />
-      მოლოდინში
-    </>
-  ) : (invitingUser === result.user_id || sendingRequestTo === result.user_id) ? (
-    <Loader2 className="w-4 h-4 animate-spin" />
-  ) : sentRequests.has(result.user_id) ? (
-    <>
-      <Check className="w-3 h-3" />
-      გაგზავნილი
-    </>
-  ) : (
-    <>
-      <UserPlus className="w-4 h-4" />
-      {isRoomInviteMode ? "მოწვევა" : "დამატება"}
-    </>
-  )}
-</motion.button>
-```
-
-### Step 4: Update sentRequests After Successful Send
-When a request is successfully sent, also add to `pendingOutgoingIds`:
-```typescript
-if (success) {
-  setSentRequests(prev => new Set([...prev, userId]));
-  setPendingOutgoingIds(prev => new Set([...prev, userId]));
-}
+  if (isOpen) {
+    fetchRandomIcons();
+    loadRecentIcons();
+    fetchCategoryIcons(null);
+    setSelectedIcon(currentIconUrl);
+    setEditableName(roomName);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedCategory("all");
+    hasManuallyEditedName.current = false;  // Reset on open
+  }
+}, [isOpen, ...]);
 ```
 
 ---
 
-## Summary
+## User Experience After Fix
 
-| Issue | Fix |
-|-------|-----|
-| Button "does nothing" | Actually working, but shows toast that may be missed |
-| No pending status indicator | Add "მოლოდინში" button state with Clock icon |
-| Can click on users with pending requests | Disable button for pending outgoing requests |
-| No visual distinction | Different button styling for pending state |
+| Scenario | Behavior |
+|----------|----------|
+| User opens modal and clicks icon | AI generates new name ✓ |
+| User types custom name, then clicks icon | Custom name preserved ✓ |
+| User opens modal fresh | Name tracking resets ✓ |
 
-This fix ensures users get clear feedback about friend request status at all times.
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/team/RoomIconPickerModal.tsx` | Add `hasManuallyEditedName` ref, update `onChange`, conditional name generation, reset on modal open |
