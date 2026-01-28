@@ -650,19 +650,76 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       .eq('session_id', sessionId);
 
     // OPTIMIZED: Insert all queue items in a single batch operation (was sequential loop)
-    const queueItems = topSuggestions.map((suggestion, i) => ({
-      session_id: sessionId,
-      position: i,
-      source_type: suggestion.source_type,
-      category_id: suggestion.category_id,
-      category_name: suggestion.category_name,
-      icon_slug: suggestion.icon_slug,
-      user_trivia_id: suggestion.user_trivia_id,
-      // Store suggester info - they will skip this round
-      suggester_user_id: suggestion.user_id,
-      suggester_nickname: suggestion.nickname,
-      suggester_avatar_url: suggestion.avatar_url,
-    }));
+    // CRITICAL FIX: Only set suggester for non-blind user trivias, NOT for library categories
+    
+    // Pre-fetch trivia owner info for any user trivias
+    const triviaIds = topSuggestions
+      .filter(s => s.source_type === 'trivia' && s.user_trivia_id)
+      .map(s => s.user_trivia_id!);
+
+    let triviaOwnerMap: Record<string, { user_id: string; is_blind: boolean; owner_nickname: string | null; owner_avatar: string | null }> = {};
+
+    if (triviaIds.length > 0) {
+      const { data: triviaData } = await supabase
+        .from('user_quiz_posts')
+        .select('id, user_id, is_blind')
+        .in('id', triviaIds);
+      
+      if (triviaData) {
+        // Get owner profiles
+        const ownerIds = [...new Set(triviaData.map(t => t.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, nickname, avatar_url')
+          .in('user_id', ownerIds);
+        
+        const profileMap = (profiles || []).reduce((acc, p) => {
+          acc[p.user_id] = p;
+          return acc;
+        }, {} as Record<string, { nickname: string; avatar_url: string | null }>);
+        
+        triviaOwnerMap = triviaData.reduce((acc, t) => {
+          const profile = profileMap[t.user_id];
+          acc[t.id] = {
+            user_id: t.user_id,
+            is_blind: t.is_blind || false,
+            owner_nickname: profile?.nickname || null,
+            owner_avatar: profile?.avatar_url || null,
+          };
+          return acc;
+        }, {} as Record<string, { user_id: string; is_blind: boolean; owner_nickname: string | null; owner_avatar: string | null }>);
+      }
+    }
+    
+    const queueItems = topSuggestions.map((suggestion, i) => {
+      // For library categories: no suggester (anyone can play)
+      // For user trivias: only set owner as suggester if NOT blind
+      let suggester_user_id: string | null = null;
+      let suggester_nickname: string | null = null;
+      let suggester_avatar_url: string | null = null;
+      
+      if (suggestion.source_type === 'trivia' && suggestion.user_trivia_id) {
+        const triviaInfo = triviaOwnerMap[suggestion.user_trivia_id];
+        if (triviaInfo && !triviaInfo.is_blind) {
+          suggester_user_id = triviaInfo.user_id;
+          suggester_nickname = triviaInfo.owner_nickname;
+          suggester_avatar_url = triviaInfo.owner_avatar;
+        }
+      }
+      
+      return {
+        session_id: sessionId,
+        position: i,
+        source_type: suggestion.source_type,
+        category_id: suggestion.category_id,
+        category_name: suggestion.category_name,
+        icon_slug: suggestion.icon_slug,
+        user_trivia_id: suggestion.user_trivia_id,
+        suggester_user_id,
+        suggester_nickname,
+        suggester_avatar_url,
+      };
+    });
     
     // Single batch insert instead of N sequential inserts
     await supabase.from('tv_session_queue').insert(queueItems as any);
