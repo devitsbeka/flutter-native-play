@@ -158,12 +158,17 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   }, [searchQuery, performSearch]);
 
   const handleSendRequest = async (userId: string) => {
+    console.log("[InviteFriendsModal] handleSendRequest called with userId:", userId);
     setSendingRequestTo(userId);
     try {
+      console.log("[InviteFriendsModal] Calling sendFriendRequest...");
       const success = await sendFriendRequest(userId);
+      console.log("[InviteFriendsModal] sendFriendRequest result:", success);
       if (success) {
         setSentRequests(prev => new Set([...prev, userId]));
       }
+    } catch (error) {
+      console.error("[InviteFriendsModal] sendFriendRequest error:", error);
     } finally {
       setSendingRequestTo(null);
     }
