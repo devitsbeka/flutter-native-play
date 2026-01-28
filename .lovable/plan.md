@@ -1,211 +1,218 @@
 
 
-# Plan: Strict Host Participation Policy for TV Mode
+# Plan: Fix Host Observer Policy and Add Observer Points System
 
 ## Problem Summary
 
-Currently, the game blocks the host from playing trivias where `is_blind = false` (host saw answers during creation). However, there's a gap: if the host creates a "blind" trivia and then plays it (solo or with others), they now know the answers, but the system still considers it "playable" for them.
+Two issues need to be fixed:
 
-The user wants a stricter policy:
-- **Block host** from playing trivias where they KNOW the answers (created non-blind OR already played)
-- **Allow host** to play library categories and truly blind trivias they haven't played yet
+1. **Host can still play trivias they created and already played (even though UI shows correct indicators)**
+   - The root cause: `startGame` function fetches queue items but doesn't read `suggester_user_id` from them
+   - The function then clears `current_round_suggester_id` to `null` for the first round
+   - Result: Host is never blocked for the FIRST round, only subsequent rounds
 
-## Current Architecture
+2. **Observer needs points for fairness**
+   - When host skips a round (as observer), they get 0 points even if they "knew" the answers
+   - User wants: If players answer correctly → points go to players; if players can't answer → points go to the observer (host who suggested)
+
+---
+
+## Root Cause Analysis
+
+### Why the first round doesn't block the host:
 
 ```text
+Current Flow (BROKEN):
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Observer Detection Flow                      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Queue Item / Poll Suggestion                                    │
-│       │                                                          │
-│       ▼                                                          │
-│  Check: is_blind = false AND source_type = 'trivia'?            │
-│       │                                                          │
-│       ├── YES → Set suggester_user_id = trivia OWNER's user_id  │
-│       │                                                          │
-│       └── NO → suggester_user_id = null (everyone plays)        │
-│                                                                  │
-│  During gameplay:                                                │
-│       │                                                          │
-│       ▼                                                          │
-│  Check: myPlayerId === currentRoundSuggesterId?                 │
-│       │                                                          │
-│       ├── YES → Show observer UI (skip round)                   │
-│       │                                                          │
-│       └── NO → Show question UI (can answer)                    │
-│                                                                  │
+│                                                                 │
+│  1. Host adds trivia to queue (ControllerDirectSelection)       │
+│     └─► Correctly sets suggester_user_id = userId               │
+│                                                                 │
+│  2. Host clicks "Start Game"                                    │
+│     └─► startGame() is called                                   │
+│                                                                 │
+│  3. startGame() fetches queue:                                  │
+│     .select('id, category_id, user_trivia_id, position')        │
+│     └─► MISSING: suggester_user_id, suggester_nickname, etc.    │
+│                                                                 │
+│  4. startGame() deletes first queue item (consumed)             │
+│     └─► suggester info is LOST forever                          │
+│                                                                 │
+│  5. startGame() sets session fields:                            │
+│     current_round_suggester_id: null  ← ALWAYS NULL!            │
+│                                                                 │
+│  6. Host can play the first round (isSuggester = false)         │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Solution: Add "Has Played" Check
-
-Enhance the suggester logic to also check if the trivia owner has **already played** this trivia (via `plays_count > 0` or a dedicated tracking table).
-
-### Approach A: Simple plays_count Check (Recommended)
-
-If `plays_count > 0` for a user's own blind trivia, treat it as "spoiled" for them.
-
-**Pros:** No DB schema changes, uses existing data
-**Cons:** Only works for trivias the owner has played at least once
-
-### Approach B: Dedicated Play Tracking Table
-
-Track exactly which users have played which trivias.
-
-**Pros:** Precise tracking, covers all scenarios
-**Cons:** Requires new table, more complex queries
-
 ---
 
-## Recommended Implementation (Approach A)
+## Solution Part 1: Fix First Round Suggester Detection
 
-### Change 1: Update `ControllerDirectSelection.tsx`
+### File: `src/contexts/TVGameContext.tsx`
 
-When adding a user trivia to the queue, check:
-- `is_blind = false` → Owner is blocked (current behavior)
-- `is_blind = true` BUT `plays_count > 0` AND trivia belongs to current user → Owner is blocked (new behavior)
+**Change 1: Fetch suggester info with queue items**
 
-**Location:** `src/components/controller/ControllerDirectSelection.tsx` lines 155-178
+Location: Line 2153-2156
 
-**Current Logic:**
+Before:
 ```typescript
-if (!trivia.is_blind) {
-  // Fetch profile and set suggester
-  suggester_user_id = userId;
+const { data: queueItems } = await supabase
+  .from('tv_session_queue')
+  .select('id, category_id, user_trivia_id, position')
+  .eq('session_id', state.sessionId);
+```
+
+After:
+```typescript
+const { data: queueItems } = await supabase
+  .from('tv_session_queue')
+  .select('id, category_id, user_trivia_id, position, suggester_user_id, suggester_nickname, suggester_avatar_url')
+  .eq('session_id', state.sessionId);
+```
+
+**Change 2: Extract suggester info from first queue item**
+
+Location: Around lines 2162-2201
+
+Add after finding `firstMatchesCurrent`:
+```typescript
+// Extract suggester info from first queue item BEFORE consuming it
+let firstRoundSuggesterId: string | null = null;
+let firstRoundSuggesterNickname: string | null = null;
+let firstRoundSuggesterAvatarUrl: string | null = null;
+
+if (firstMatchesCurrent && first?.id) {
+  // Only honor suggester for user trivias, not library categories
+  const isLibraryCategory = first.category_id && !first.user_trivia_id;
+  if (!isLibraryCategory) {
+    firstRoundSuggesterId = first.suggester_user_id || null;
+    firstRoundSuggesterNickname = first.suggester_nickname || null;
+    firstRoundSuggesterAvatarUrl = first.suggester_avatar_url || null;
+  }
+  
+  // ... existing consume logic
 }
 ```
 
-**New Logic:**
+**Change 3: Use extracted suggester info in session update**
+
+Location: Lines 2396-2400
+
+Before:
 ```typescript
-// Block host if: non-blind OR (blind but already played by owner)
-const hostKnowsAnswers = !trivia.is_blind || (trivia.is_blind && trivia.plays_count > 0);
-if (hostKnowsAnswers) {
-  suggester_user_id = userId;
-}
+current_round_suggester_id: null,
+current_round_suggester_nickname: null,
+current_round_suggester_avatar_url: null,
 ```
 
----
-
-### Change 2: Update `useTVPoll.ts` - Queue Building
-
-When building the queue from poll suggestions, apply the same logic.
-
-**Location:** `src/hooks/useTVPoll.ts` lines 660-708
-
-**Current Logic:**
+After:
 ```typescript
-if (triviaInfo && !triviaInfo.is_blind) {
-  suggester_user_id = triviaInfo.user_id;
-}
+current_round_suggester_id: firstRoundSuggesterId,
+current_round_suggester_nickname: firstRoundSuggesterNickname,
+current_round_suggester_avatar_url: firstRoundSuggesterAvatarUrl,
 ```
 
-**New Logic:**
+**Change 4: Adjust player count for suggester skip**
+
+Add after confirmActivePlayers call (around line 2375):
 ```typescript
-// Also fetch plays_count to check if owner has already played
-.select('id, user_id, is_blind, plays_count')
-
-// Check: non-blind OR (blind but already played)
-const ownerKnowsAnswers = !triviaInfo.is_blind || (triviaInfo.plays_count > 0);
-if (triviaInfo && ownerKnowsAnswers) {
-  suggester_user_id = triviaInfo.user_id;
-}
-```
-
----
-
-### Change 3: Update `useTVPoll.ts` - First Round Start
-
-Same logic for the first round when finalizing poll.
-
-**Location:** `src/hooks/useTVPoll.ts` lines 841-850
-
-**Current Logic:**
-```typescript
-if (triviaInfo && !triviaInfo.is_blind) {
-  suggesterUserId = triviaInfo.user_id;
-}
-```
-
-**New Logic:**
-```typescript
-const ownerKnowsAnswers = !triviaInfo.is_blind || (triviaInfo.plays_count > 0);
-if (triviaInfo && ownerKnowsAnswers) {
-  suggesterUserId = triviaInfo.user_id;
+// Adjust for suggester skip rule (if suggester is playing, they won't answer)
+if (firstRoundSuggesterId) {
+  playerCount = Math.max(1, playerCount - 1);
+  console.log('[startGame] Adjusted player count for suggester:', playerCount);
 }
 ```
 
 ---
 
-### Change 4: Update `startNextRoundFromQueueIfAny` in TVGameContext
+## Solution Part 2: Observer Points System (Fair Play)
 
-When starting subsequent rounds from the queue, the suggester info is already stored in `tv_session_queue`. No changes needed here since the queue is populated correctly by Changes 1-3.
+When the observer (host who knows answers) skips a round, they should earn points based on how many players answered incorrectly.
 
----
+### Scoring Logic:
+```text
+For each question:
+- If player answers CORRECTLY → player gets points
+- If player answers INCORRECTLY → observer gets points (they "knew" it)
+- If player doesn't answer (timeout) → observer gets points
 
-### Change 5: Update UI Indicators in MyTriviasPickerModal
-
-Show clearer indicators about whether the host can play each trivia.
-
-**Location:** `src/components/team/MyTriviasPickerModal.tsx` lines 262-271
-
-**Current Logic:**
-```typescript
-{trivia.is_blind ? (
-  <span className="...bg-green-500...">ითამაშე</span>
-) : (
-  <span className="...">👀 იცი პასუხები</span>
-)}
+Observer points per question = 100 * (incorrect_count / total_players)
 ```
 
-**New Logic:**
+### Files to Modify:
+
+**File: `src/contexts/TVGameContext.tsx`**
+
+Update the `advanceToReveal` or `advanceToNextQuestion` function to calculate and award observer points.
+
+Location: Around the reveal/scoring logic
+
+Add logic to track and update observer score:
 ```typescript
-{trivia.is_blind && trivia.plays_count === 0 ? (
-  // Truly blind - never played
-  <span className="...bg-green-500...">
-    <Gamepad2 /> ითამაშე
-  </span>
-) : (
-  // Either non-blind or already played
-  <span className="...text-amber-500...">
-    👀 {!trivia.is_blind ? 'იცი პასუხები' : 'უკვე ითამაშე'}
-  </span>
-)}
+// Calculate observer bonus points from incorrect answers
+if (state.currentRoundSuggesterId) {
+  const activePlayers = state.players.filter(p => p.id !== state.currentRoundSuggesterId);
+  const incorrectCount = activePlayers.filter(p => {
+    // Check if this player answered incorrectly or didn't answer
+    const answered = // ... check from presence or player_answers
+    return !answered || answered !== currentQuestion.correct_answer;
+  }).length;
+  
+  const observerBonus = Math.round(100 * (incorrectCount / activePlayers.length));
+  // Award bonus to observer
+}
 ```
+
+### UI Updates for Observer Points:
+
+**File: `src/pages/TVHostController.tsx`**
+
+In the observer UI (isSuggester block), show the accumulated observer points:
+- Display "თქვენი ქულა: X" (Your score: X) with points earned from wrong answers
+- Show a tooltip: "იღებთ ქულებს მოთამაშეების შეცდომებზე" (You earn points from player mistakes)
+
+**File: `src/components/tv/TVQuestionScreenV4.tsx`**
+
+Show observer in the leaderboard with their accumulated points and a special "Observer" badge.
 
 ---
 
 ## Summary of Changes
 
-| File | Lines | Change |
-|------|-------|--------|
-| `ControllerDirectSelection.tsx` | 155-178 | Add `plays_count` check to suggester logic |
-| `useTVPoll.ts` | 660-708 | Fetch `plays_count`, add to owner block condition |
-| `useTVPoll.ts` | 841-850 | Apply same logic for first round start |
-| `MyTriviasPickerModal.tsx` | 262-271 | Update UI badges to show "already played" state |
+| File | Change | Purpose |
+|------|--------|---------|
+| `src/contexts/TVGameContext.tsx` | Fetch `suggester_*` fields in queue query | Get suggester info for first round |
+| `src/contexts/TVGameContext.tsx` | Extract suggester from first queue item | Preserve info before consuming |
+| `src/contexts/TVGameContext.tsx` | Use suggester in session update | Block host on first round |
+| `src/contexts/TVGameContext.tsx` | Adjust player count for suggester | Correct answer count expectation |
+| `src/contexts/TVGameContext.tsx` | Add observer scoring logic | Award points for player mistakes |
+| `src/pages/TVHostController.tsx` | Show observer points in UI | Display earned points to observer |
+| `src/components/tv/TVQuestionScreenV4.tsx` | Show observer in leaderboard | Include observer in TV display |
 
 ---
 
-## Policy Summary
+## UI Indicator Fix
 
-| Scenario | Host Can Play? |
-|----------|----------------|
-| Library category | Yes |
-| Own trivia, created blind, never played | Yes |
-| Own trivia, created blind, already played (plays_count > 0) | No |
-| Own trivia, created non-blind | No |
-| Someone else's blind trivia | Yes |
-| Someone else's non-blind trivia | Yes (only OWNER is blocked) |
+The current UI indicators (lines 262-271 in `MyTriviasPickerModal.tsx`) are already correct:
+- Green "ითამაშე" for blind trivias with plays_count=0 (truly playable)
+- Amber "უკვე ითამაშე" for blind trivias with plays_count>0 (already played)
+- Amber "იცი პასუხები" for non-blind trivias (saw answers during creation)
+
+No changes needed to the picker UI.
 
 ---
 
 ## Testing Checklist
 
 1. Create a blind trivia (in "play" mode)
-2. Add it to TV game queue - verify host CAN play
-3. Play the game once (increments plays_count)
-4. Start new TV game, add same trivia - verify host is NOW observer
-5. Create a non-blind trivia - verify host is always observer
-6. Add library category - verify host can always play
-7. Have another player suggest YOUR trivia in poll - verify correct blocking
+2. Don't play it (plays_count = 0)
+3. Add to TV game as host → Verify host CAN play (green badge in picker)
+4. Play solo once (increments plays_count to 1)
+5. Add same trivia to TV game → Verify host sees OBSERVER UI
+6. When players answer wrong → Verify host earns points
+7. Check leaderboard includes observer with their points
+8. Create non-blind trivia → Verify host is ALWAYS observer
+9. Library category → Verify host can ALWAYS play
 
