@@ -48,6 +48,7 @@ export interface GameRoom {
   is_permanent: boolean;
   current_game_id: string | null;
   created_at: string;
+  started_at?: string | null; // When game was started (for question freshness validation)
   used_question_ids?: string[];
   background_gradient?: string | null;
   tv_session_id?: string | null;
@@ -268,14 +269,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentRoom: updated, // Sync room state immediately
               }));
               
+              // Get expected game_id from room update for validation
+              const expectedGameId = updated.current_game_id;
+              const expectedStartedAt = updated.started_at;
+              
+              console.log(`[MP] Non-host waiting for questions with game_id: ${expectedGameId}`);
+              
               // Wait briefly for questions to be fully committed by host
-              await new Promise(resolve => setTimeout(resolve, 300));
+              await new Promise(resolve => setTimeout(resolve, 500));
               
-              // Fetch with retry logic to handle race conditions
+              // Fetch with retry logic AND game_id validation to handle race conditions
               let attempts = 0;
+              const MAX_ATTEMPTS = 5;
+              const RETRY_DELAY = 400;
               let roomQuestions: any[] | null = null;
+              let validQuestionsFound = false;
               
-              while (attempts < 3) {
+              while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
                 const { data } = await supabase
                   .from("room_questions")
                   .select("*")
@@ -285,15 +295,38 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 roomQuestions = data;
                 
                 if (roomQuestions && roomQuestions.length > 0) {
-                  break; // Success - got questions
+                  const firstQuestion = roomQuestions[0];
+                  
+                  // PRIMARY VALIDATION: Check game_id matches expected game
+                  if (expectedGameId && firstQuestion.game_id === expectedGameId) {
+                    console.log(`[MP] Questions validated by game_id match: ${expectedGameId}`);
+                    validQuestionsFound = true;
+                    break;
+                  }
+                  
+                  // FALLBACK VALIDATION: Check created_at is within 10s of game start
+                  if (expectedStartedAt && firstQuestion.created_at) {
+                    const startedAtTime = new Date(expectedStartedAt).getTime();
+                    const questionCreatedAt = new Date(firstQuestion.created_at).getTime();
+                    const timeDiff = Math.abs(questionCreatedAt - startedAtTime);
+                    
+                    if (timeDiff < 10000) { // 10 second window
+                      console.log(`[MP] Questions validated by timestamp (diff: ${timeDiff}ms)`);
+                      validQuestionsFound = true;
+                      break;
+                    }
+                  }
+                  
+                  console.log(`[MP] Questions found but validation failed - stale data? (attempt ${attempts + 1}/${MAX_ATTEMPTS})`);
                 }
                 
                 // Wait and retry
-                await new Promise(resolve => setTimeout(resolve, 200));
+                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
                 attempts++;
+                console.log(`[MP] Waiting for fresh questions (attempt ${attempts}/${MAX_ATTEMPTS})`);
               }
               
-              if (roomQuestions && roomQuestions.length > 0) {
+              if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
                 const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
                   id: `${roomId}-${q.question_index}`,
                   question: q.question_text,
@@ -308,6 +341,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   iconSlug: q.icon_slug || undefined, // Include icon for custom questions
                 }));
                 
+                console.log(`[MP] Non-host loaded ${questions.length} validated questions`);
+                
                 setState(prev => ({
                   ...prev,
                   questions,
@@ -317,7 +352,32 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   currentRoom: updated, // Ensure room state is synced
                 }));
               } else {
-                console.error("Failed to fetch questions after retries");
+                console.error("[MP] Failed to fetch valid questions after retries - game_id mismatch or timeout");
+                // Still try to proceed with whatever we have as last resort
+                if (roomQuestions && roomQuestions.length > 0) {
+                  console.warn("[MP] Using unvalidated questions as fallback");
+                  const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
+                    id: `${roomId}-${q.question_index}`,
+                    question: q.question_text,
+                    correctAnswer: q.correct_answer,
+                    incorrectAnswers: q.incorrect_answers,
+                    allAnswers: q.shuffled_answers && q.shuffled_answers.length > 0 
+                      ? q.shuffled_answers 
+                      : [...q.incorrect_answers, q.correct_answer],
+                    difficulty: q.difficulty || "medium",
+                    category: updated.category_name || "General",
+                    iconSlug: q.icon_slug || undefined,
+                  }));
+                  
+                  setState(prev => ({
+                    ...prev,
+                    questions,
+                    currentQuestionIndex: 0,
+                    myScore: 0,
+                    phase: "playing",
+                    currentRoom: updated,
+                  }));
+                }
               }
             }
           } else if (updated.status === "completed") {
@@ -851,7 +911,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               };
             });
             
-            // Store in room_questions for sync
+            // Create room_game record FIRST to get game_id
+            const { data: game } = await supabase
+              .from("room_games")
+              .insert([{
+                room_id: roomId,
+                game_number: 1,
+                questions_data: structuredClone(questions) as unknown as Json,
+              }])
+              .select()
+              .single();
+            
+            // Store in room_questions for sync WITH game_id for validation
             await Promise.all(questions.map((q, index) => 
               supabase.from("room_questions").insert({
                 room_id: roomId,
@@ -862,6 +933,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 difficulty: q.difficulty,
                 shuffled_answers: q.allAnswers,
                 icon_slug: q.iconSlug || null,
+                game_id: game?.id, // CRITICAL: Link to current game for non-host validation
               })
             ));
             
@@ -870,17 +942,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               .from("room_participants")
               .update({ score: 0, current_question: 0 })
               .eq("room_id", roomId);
-            
-            // Create room_game record
-            const { data: game } = await supabase
-              .from("room_games")
-              .insert([{
-                room_id: roomId,
-                game_number: 1,
-                questions_data: structuredClone(questions) as unknown as Json,
-              }])
-              .select()
-              .single();
             
             // Update room
             await supabase
@@ -991,7 +1052,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     await supabase.from("room_questions").delete().eq("room_id", roomId);
     await supabase.from("player_answers").delete().eq("room_id", roomId);
     
-    // Store questions in parallel WITH shuffled_answers for sync
+    // Create room_game record FIRST to get game_id
+    const { data: game } = await supabase
+      .from("room_games")
+      .insert([{
+        room_id: roomId,
+        game_number: 1,
+        questions_data: structuredClone(questions) as unknown as Json,
+      }])
+      .select()
+      .single();
+    
+    // Store questions in parallel WITH shuffled_answers for sync AND game_id for validation
     await Promise.all(questions.map((q, index) => 
       supabase.from("room_questions").insert({
         room_id: roomId,
@@ -1002,6 +1074,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         shuffled_answers: q.allAnswers, // Store pre-shuffled order for all players
         difficulty: q.difficulty,
         icon_slug: q.iconSlug, // Store icon for display
+        game_id: game?.id, // CRITICAL: Link to current game for non-host validation
       })
     ));
     
@@ -1010,17 +1083,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .from("room_participants")
       .update({ score: 0, current_question: 0 })
       .eq("room_id", roomId);
-    
-    // Create room_game record
-    const { data: game } = await supabase
-      .from("room_games")
-      .insert([{
-        room_id: roomId,
-        game_number: 1,
-        questions_data: structuredClone(questions) as unknown as Json,
-      }])
-      .select()
-      .single();
     
     // Update room status
     await supabase
@@ -1312,20 +1374,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       await supabase.from("room_questions").delete().eq("room_id", roomId);
       await supabase.from("player_answers").delete().eq("room_id", roomId);
       
-      // Store questions WITH shuffled_answers and icon_slug
-      await Promise.all(questions.map((q, index) => 
-        supabase.from("room_questions").insert({
-          room_id: roomId,
-          question_index: index,
-          question_text: q.question,
-          correct_answer: q.correctAnswer,
-          incorrect_answers: q.incorrectAnswers,
-          shuffled_answers: q.allAnswers,
-          difficulty: q.difficulty,
-          icon_slug: q.iconSlug || null,
-        })
-      ));
-      
       // Update used_question_ids on game_rooms
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       await supabase
@@ -1343,7 +1391,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .eq("room_id", roomId)
         .eq("user_id", user.id);
       
-      // Create room_game record
+      // Create room_game record FIRST to get game_id
       const { data: game } = await supabase
         .from("room_games")
         .insert([{
@@ -1353,6 +1401,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }])
         .select()
         .single();
+      
+      // Store questions WITH shuffled_answers, icon_slug, AND game_id for validation
+      await Promise.all(questions.map((q, index) => 
+        supabase.from("room_questions").insert({
+          room_id: roomId,
+          question_index: index,
+          question_text: q.question,
+          correct_answer: q.correctAnswer,
+          incorrect_answers: q.incorrectAnswers,
+          shuffled_answers: q.allAnswers,
+          difficulty: q.difficulty,
+          icon_slug: q.iconSlug || null,
+          game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+        })
+      ));
       
       // Update room status
       await supabase
@@ -1468,7 +1531,24 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             };
           });
           
-          // Store in room_questions
+          // Reset ALL participant scores for fair game start
+          await supabase
+            .from("room_participants")
+            .update({ score: 0, current_question: 0, status: "playing" })
+            .eq("room_id", roomId);
+          
+          // Create room_game record FIRST to get game_id
+          const { data: game } = await supabase
+            .from("room_games")
+            .insert([{
+              room_id: roomId,
+              game_number: 1,
+              questions_data: structuredClone(questions) as unknown as Json,
+            }])
+            .select()
+            .single();
+          
+          // Store in room_questions WITH game_id for validation
           await Promise.all(questions.map((q, index) => 
             supabase.from("room_questions").insert({
               room_id: roomId,
@@ -1479,25 +1559,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               difficulty: q.difficulty,
               shuffled_answers: q.allAnswers,
               icon_slug: q.iconSlug || null,
+              game_id: game?.id, // CRITICAL: Link to current game for non-host validation
             })
           ));
-          
-          // Reset ALL participant scores for fair game start
-          await supabase
-            .from("room_participants")
-            .update({ score: 0, current_question: 0, status: "playing" })
-            .eq("room_id", roomId);
-          
-          // Create room_game record
-          const { data: game } = await supabase
-            .from("room_games")
-            .insert([{
-              room_id: roomId,
-              game_number: 1,
-              questions_data: structuredClone(questions) as unknown as Json,
-            }])
-            .select()
-            .single();
           
           // Update room
           await supabase
@@ -1589,20 +1653,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       await supabase.from("room_questions").delete().eq("room_id", roomId);
       await supabase.from("player_answers").delete().eq("room_id", roomId);
       
-      // Store questions with icon_slug
-      await Promise.all(questions.map((q, index) => 
-        supabase.from("room_questions").insert({
-          room_id: roomId,
-          question_index: index,
-          question_text: q.question,
-          correct_answer: q.correctAnswer,
-          incorrect_answers: q.incorrectAnswers,
-          shuffled_answers: q.allAnswers,
-          difficulty: q.difficulty,
-          icon_slug: q.iconSlug || null,
-        })
-      ));
-      
       // Update used_question_ids
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
       
@@ -1615,7 +1665,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Mark questions as seen
       markQuestionsAsSeen(questions.map(q => q.id));
       
-      // Create room_game record
+      // Create room_game record FIRST to get game_id
       const { data: game } = await supabase
         .from("room_games")
         .insert([{
@@ -1625,6 +1675,21 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }])
         .select()
         .single();
+      
+      // Store questions with icon_slug AND game_id for validation
+      await Promise.all(questions.map((q, index) => 
+        supabase.from("room_questions").insert({
+          room_id: roomId,
+          question_index: index,
+          question_text: q.question,
+          correct_answer: q.correctAnswer,
+          incorrect_answers: q.incorrectAnswers,
+          shuffled_answers: q.allAnswers,
+          difficulty: q.difficulty,
+          icon_slug: q.iconSlug || null,
+          game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+        })
+      ));
       
       // Update room with new category and game info
       await supabase

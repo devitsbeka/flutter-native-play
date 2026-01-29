@@ -2016,6 +2016,7 @@ export type Database = {
           correct_answer: string
           created_at: string | null
           difficulty: string | null
+          game_id: string | null
           icon_slug: string | null
           id: string
           incorrect_answers: Json
@@ -2028,6 +2029,7 @@ export type Database = {
           correct_answer: string
           created_at?: string | null
           difficulty?: string | null
+          game_id?: string | null
           icon_slug?: string | null
           id?: string
           incorrect_answers: Json
@@ -2040,6 +2042,7 @@ export type Database = {
           correct_answer?: string
           created_at?: string | null
           difficulty?: string | null
+          game_id?: string | null
           icon_slug?: string | null
           id?: string
           incorrect_answers?: Json
@@ -2049,6 +2052,13 @@ export type Database = {
           shuffled_answers?: string[] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "room_questions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "room_games"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "room_questions_room_id_fkey"
             columns: ["room_id"]
