@@ -1,93 +1,110 @@
 
-# გეგმა: "კატეგორიის დამატება" - ნათამაშები რაუნდის წაშლა ლობიდან
+# გეგმა: ნათამაშები ტრივიის ხელახლა არჩევის აღკვეთა
 
 ## პრობლემის აღწერა
 
-როდესაც მომხმარებელი თამაშის შემდეგ აჭერს "კატეგორიის დამატება"-ს:
-- **მოსალოდნელი:** ლობიში უნდა ჩანდეს "აირჩიე კატეგორია" ცარიელი რიგით
-- **რეალური:** ჩანს ნათამაშები კატეგორია ("1 ტიქტოკი") როგორც მიმდინარე
+მომხმარებელი ჩივის რომ:
+1. თამაშის შემდეგ "კატეგორიის დამატება"-ზე ჯერ კიდევ ჩანს ძველი კატეგორია
+2. შეუძლიათ იგივე ტრივიის ხელახლა არჩევა - რაც არასწორია რადგან უკვე იციან პასუხები
 
-ეს ხდება იმიტომ, რომ `continueInRoom()` ფუნქცია არ ასუფთავებს `category_id`/`category_name` მნიშვნელობებს `game_rooms` ცხრილიდან.
+**მთავარი პრინციპი:** "ჩვენ გვინდა ახალი რაუნდები ახალი კითხვებით, არა იგივე კითხვები რაც ახლახან ვუპასუხეთ"
+
+---
 
 ## გადაწყვეტა
 
-### შესაცვლელი ფაილი
+### 1. ნათამაშები ტრივიების ფილტრაცია პიკერში
 
-`src/contexts/MultiplayerContextV2.tsx`
+**ფაილი:** `src/components/team/CategoryPickerModal.tsx`
 
-### ცვლილება
-
-`continueInRoom` ფუნქციაში (lines 1101-1120), დავამატოთ:
-1. რიგის შემოწმება - არის თუ არა ახალი კატეგორიები
-2. თუ რიგი ცარიელია, გავასუფთაოთ `category_id`, `category_name`, და `user_trivia_id`
+ჩემი ტრივიების სიაში არ ჩანდეს ის ტრივია, რომელიც ახლახანს ითამაშეს (room-ში არსებული `user_trivia_id`).
 
 ```typescript
-// Continue in room after results (go back to lobby)
-const continueInRoom = useCallback(async () => {
-  if (!state.currentRoom) return;
+// CategoryPickerModal.tsx - props-ში დავამატოთ:
+interface CategoryPickerModalProps {
+  // ... არსებული props
+  excludeTriviaId?: string | null; // ტრივია რომელიც ახლახანს ითამაშეს
+}
+
+// filteredTrivias-ში დავამატოთ ფილტრი:
+const filteredTrivias = useMemo(() => {
+  let result = myTrivias;
   
-  const roomId = state.currentRoom.id;
+  // Exclude the trivia that was just played
+  if (excludeTriviaId) {
+    result = result.filter(t => t.id !== excludeTriviaId);
+  }
   
-  // Check if queue is empty - if so, clear current category to prompt new selection
-  const { data: queueItems } = await supabase
-    .from("room_category_queue")
-    .select("id")
-    .eq("room_id", roomId)
-    .limit(1);
-  
-  const hasQueueItems = queueItems && queueItems.length > 0;
-  
-  // Reset room status to waiting
-  // If queue is empty, clear category so lobby shows "აირჩიე კატეგორია"
-  await supabase
-    .from("game_rooms")
-    .update({ 
-      status: "waiting",
-      // Clear category data only if queue is empty (forces new selection)
-      ...(hasQueueItems ? {} : {
-        category_id: null,
-        category_name: null,
-        user_trivia_id: null,
-      }),
-    })
-    .eq("id", state.currentRoom.id);
-  
-  setState(prev => ({
-    ...prev,
-    phase: "lobby",
-    questions: [],
-    currentQuestionIndex: 0,
-    myScore: 0,
-    lastQuestionResult: null,
-    opponentAnswers: {},
-    // Also clear in local state if queue is empty
-    ...(hasQueueItems ? {} : {
-      currentRoom: prev.currentRoom ? {
-        ...prev.currentRoom,
-        category_id: null,
-        category_name: null,
-        user_trivia_id: null,
-      } : null,
-    }),
-  }));
-}, [state.currentRoom]);
+  if (!search.trim()) return result;
+  const searchLower = search.toLowerCase();
+  return result.filter((t) =>
+    t.title.toLowerCase().includes(searchLower)
+  );
+}, [myTrivias, search, excludeTriviaId]);
+```
+
+### 2. RoomLobbyV2-დან გადაცემა
+
+**ფაილი:** `src/components/team/RoomLobbyV2.tsx`
+
+```typescript
+<CategoryPickerModal
+  isOpen={showCategoryPicker}
+  onClose={() => setShowCategoryPicker(false)}
+  onSelectCategory={handleSelectCategory}
+  onSelectRandom={handleSelectRandom}
+  onSelectTrivia={handleSelectTrivia}
+  onAddToQueue={handleAddToQueue}
+  showQueueOption={true}
+  roomGradient={roomGradient}
+  excludeTriviaId={currentRoom?.user_trivia_id} // ახლახანს ნათამაშები
+/>
 ```
 
 ---
 
-## ლოგიკის ნაკადი
+## ალტერნატიული ვარიანტი: უკვე ნათამაშები კატეგორიების მთლიანი ისტორია
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│              GAME ENDS → "კატეგორიის დამატება"              │
-├─────────────────────────────────────────────────────────────┤
-│ 1. continueInRoom() გამოძახება                              │
-│ 2. შემოწმება: არის რიგში კატეგორიები?                       │
-│    ├── დიახ → შენახე მიმდინარე კატეგორია (მომავალი რაუნდი) │
-│    └── არა → გაასუფთავე category_id/category_name          │
-│ 3. ლობის დაბრუნება                                          │
-└─────────────────────────────────────────────────────────────┘
+თუ გვინდა მთელი სესიის განმავლობაში ნათამაშები ტრივიების გამორიცხვა:
+
+### Room-ის ცხრილში ახალი სვეტი
+
+```sql
+ALTER TABLE game_rooms ADD COLUMN played_trivia_ids UUID[] DEFAULT '{}';
 ```
+
+### ლოგიკა
+
+თამაშის დასრულებისას დავამატოთ `user_trivia_id` მასივში:
+
+```typescript
+// continueInRoom-ში:
+if (state.currentRoom.user_trivia_id) {
+  await supabase
+    .from("game_rooms")
+    .update({ 
+      played_trivia_ids: [...(state.currentRoom.played_trivia_ids || []), state.currentRoom.user_trivia_id]
+    })
+    .eq("id", roomId);
+}
+```
+
+---
+
+## რეკომენდებული მიდგომა: უბრალო გადაწყვეტა
+
+პირველ ეტაპზე უფრო მარტივი გზით:
+- **მხოლოდ ბოლო ნათამაშები ტრივიის ფილტრაცია** (`excludeTriviaId`)
+- მომავალში, თუ საჭირო იქნება, შეგვიძლია `played_trivia_ids` მასივის დამატება
+
+---
+
+## შესაცვლელი ფაილები
+
+| ფაილი | ცვლილება |
+|-------|----------|
+| `src/components/team/CategoryPickerModal.tsx` | `excludeTriviaId` prop-ის დამატება და ფილტრაცია |
+| `src/components/team/RoomLobbyV2.tsx` | `excludeTriviaId={currentRoom?.user_trivia_id}` გადაცემა |
 
 ---
 
@@ -95,15 +112,29 @@ const continueInRoom = useCallback(async () => {
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| რიგი ცარიელი | ნათამაშები კატეგორია ჩანს | "აირჩიე კატეგორია" |
-| რიგში არის კატეგორიები | შემდეგი კატეგორია ჩანს | იგივე (სწორია) |
+| ნათამაშები ტრივია სიაში | ✓ ჩანს | ✗ არ ჩანს |
+| სხვა ტრივიები | ✓ ჩანს | ✓ ჩანს |
+| ბიბლიოთეკის კატეგორიები | ✓ ჩანს | ✓ ჩანს |
 
 ---
 
-## ტექნიკური დეტალები
+## ბონუსი: ვიზუალური მინიშნება
 
-### რატომ ასე?
+ალტერნატიულად, შეგვიძლია ტრივია აჩვენოთ მაგრამ disabled სტილით "ახლახანს ითამაშე" ბეჯით:
 
-- თუ რიგში არის კატეგორიები, პირველი ავტომატურად გახდება "მიმდინარე" და ეს სწორია
-- თუ რიგი ცარიელია, მომხმარებელმა უნდა აირჩიოს ახალი - ამიტომ ველი უნდა გასუფთავდეს
-- ეს ლოგიკა თანმიმდევრულია `startNextFromQueue`-თან, რომელიც რიგიდან იღებს შემდეგს
+```typescript
+const wasJustPlayed = trivia.id === excludeTriviaId;
+
+<motion.button
+  disabled={wasJustPlayed}
+  className={`... ${wasJustPlayed ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
+  {wasJustPlayed && (
+    <span className="absolute top-2 right-2 text-xs bg-orange-500/80 px-2 py-0.5 rounded-full">
+      ახლახანს ითამაშე
+    </span>
+  )}
+</motion.button>
+```
+
+ეს უკეთესი UX-ია რადგან მომხმარებელი ხედავს **რატომ** ვერ ირჩევს, ვიდრე უბრალოდ გაქრება სიიდან.
