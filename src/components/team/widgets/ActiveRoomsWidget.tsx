@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Layers, ChevronRight, Tv } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useMyRooms, isActiveTVSession } from "@/hooks/useMyRooms";
+import { useMyRooms, isActiveTVSession, isLiveTVSession } from "@/hooks/useMyRooms";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
@@ -20,9 +20,9 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
   const activeRooms = rooms
     .filter(r => r.has_unread_activity || r.status === "waiting" || r.status === "playing" || isActiveTVSession(r.tv_status) || r.has_others_online)
     .sort((a, b) => {
-      // Others online or LIVE sessions first
-      const aLive = isActiveTVSession(a.tv_status) || a.has_others_online;
-      const bLive = isActiveTVSession(b.tv_status) || b.has_others_online;
+      // True LIVE sessions (playing with players) first, then others online
+      const aLive = (isLiveTVSession(a.tv_status) && a.tv_active_players > 0) || a.has_others_online;
+      const bLive = (isLiveTVSession(b.tv_status) && b.tv_active_players > 0) || b.has_others_online;
       if (aLive && !bLive) return -1;
       if (bLive && !aLive) return 1;
       return 0;
@@ -43,7 +43,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         <span className="text-sm font-bold tracking-wide">
           აქტიური ოთახები
         </span>
-        {activeRooms.some(r => r.has_unread_activity || isActiveTVSession(r.tv_status) || r.has_others_online) && (
+        {activeRooms.some(r => r.has_unread_activity || (isLiveTVSession(r.tv_status) && r.tv_active_players > 0) || r.has_others_online) && (
           <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
         )}
       </div>
@@ -52,9 +52,10 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         <div className="divide-y divide-border/50">
           {activeRooms.map((room) => {
             const hasTVSession = isActiveTVSession(room.tv_status);
+            const isTVLive = isLiveTVSession(room.tv_status) && room.tv_active_players > 0;
             const isPlaying = room.status === "playing";
             const hasOthersOnline = room.has_others_online;
-            const showLiveBadge = isPlaying || hasTVSession || hasOthersOnline;
+            const showLiveBadge = isPlaying || isTVLive || hasOthersOnline;
             
             const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
               ? room.tv_active_players 
@@ -91,7 +92,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                     <div className="absolute -top-1 -right-1 flex items-center gap-0.5">
                       <div className="px-1.5 py-0.5 bg-red-500 rounded text-[10px] font-bold text-white flex items-center gap-0.5">
                         LIVE
-                        {hasTVSession && <Tv className="w-2.5 h-2.5" />}
+                        {isTVLive && <Tv className="w-2.5 h-2.5" />}
                       </div>
                     </div>
                   )}

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession, isLiveTVSession } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -133,9 +133,9 @@ export function MyRoomsSection({
         .eq("room_id", room.id);
     }
     
-    // OPTIMIZATION: Skip RoomLobbyV2 for active TV sessions
-    // Navigate directly to TV mode instead of going through enterRoom
-    if (room.tv_session_id && isActiveTVSession(room.tv_status)) {
+    // OPTIMIZATION: Skip RoomLobbyV2 for active TV sessions WITH active players
+    // Only navigate directly to TV mode if there are actually players in the session
+    if (room.tv_session_id && isActiveTVSession(room.tv_status) && room.tv_active_players > 0) {
       if (room.is_host) {
         // Host goes directly to TV host controller
         navigate(`/tv/host/${room.tv_session_id}`);
@@ -146,7 +146,7 @@ export function MyRoomsSection({
       return;
     }
     
-    // Standard room join for non-TV rooms
+    // Standard room join for non-TV rooms or TV rooms without active players
     enterRoom(room.room_code);
   };
 
@@ -256,7 +256,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
   const hasOthersOnline = room.has_others_online;
+  
+  // TV session is "truly live" only if it's in an active game phase AND has players
   const hasTVSession = isActiveTVSession(room.tv_status);
+  const isTVLive = isLiveTVSession(room.tv_status) && room.tv_active_players > 0;
   
   // For display: use TV active players if there's an active TV session with players
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -405,10 +408,10 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {(isPlaying || hasTVSession || hasOthersOnline) ? (
+                  {(isPlaying || isTVLive || hasOthersOnline) ? (
                     <div className="flex items-center">
                       <LiveBadge />
-                      {hasTVSession && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
+                      {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
                     </div>
                   ) : isCompleted ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
@@ -538,6 +541,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
   const hasTVSession = isActiveTVSession(room.tv_status);
+  const isTVLive = isLiveTVSession(room.tv_status) && room.tv_active_players > 0;
   const hasOthersOnline = room.has_others_online;
   
   // For display: use TV active players if there's an active TV session
@@ -653,10 +657,10 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {(isPlaying || hasTVSession || hasOthersOnline) ? (
+              {(isPlaying || isTVLive || hasOthersOnline) ? (
                 <div className="flex items-center">
                   <LiveBadge />
-                  {hasTVSession && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
+                  {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
                 </div>
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">

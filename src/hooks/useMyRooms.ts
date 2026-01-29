@@ -50,8 +50,19 @@ export interface MyRoom {
 // Active TV session statuses that indicate a "LIVE" game - paired means TV is connected and waiting for host
 const ACTIVE_TV_STATUSES = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'];
 
+// Statuses that are truly "live" - game is in progress, not just waiting
+const LIVE_TV_STATUSES = ['countdown', 'question', 'playing', 'reveal', 'round-intro'];
+
 export function isActiveTVSession(tvStatus: string | null): boolean {
   return tvStatus !== null && ACTIVE_TV_STATUSES.includes(tvStatus);
+}
+
+/**
+ * Check if TV session is truly "live" (game in progress, not just waiting/paired)
+ * Used for LIVE badge display - only shows when there's actual gameplay happening
+ */
+export function isLiveTVSession(tvStatus: string | null): boolean {
+  return tvStatus !== null && LIVE_TV_STATUSES.includes(tvStatus);
 }
 
 interface UseMyRoomsOptions {
