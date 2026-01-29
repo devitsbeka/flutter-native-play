@@ -196,19 +196,12 @@ export default function Notifications() {
         break;
       case 'trivia_liked':
       case 'trivia_saved':
-        // Navigate to view trivia (collection preview) instead of playing
-        if (data?.post_id) {
-          navigate(`/collection/${data.post_id}`);
-        } else {
-          navigate('/explore?tab=my-trivia');
-        }
-        break;
       case 'trivia_played':
-        // Keep play behavior for "played" notifications
+        // Navigate to trivia lobby page to view the trivia details
         if (data?.post_id) {
-          navigate(`/team?playTrivia=${data.post_id}`);
+          navigate(`/trivia/${data.post_id}`);
         } else {
-          navigate('/explore?tab=my-trivia');
+          navigate('/discover?tab=my-trivia');
         }
         break;
       case 'reward':
