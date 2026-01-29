@@ -464,14 +464,28 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     }
   };
 
-  const hasValidSelection = selectionMode !== null && (selectionMode === "random" || selectionMode === "library" || selectionMode === "create" || selectionMode === "my-trivias") && (selectedCategory !== null || selectionMode === "create" || (selectionMode === "my-trivias" && challengeTrivia !== null));
-
   // State for custom trivia questions
   const [customTriviaQuestions, setCustomTriviaQuestions] = useState<GeneratedQuestion[] | null>(null);
   const [customTriviaTitle, setCustomTriviaTitle] = useState("");
   const [customTriviaSubject, setCustomTriviaSubject] = useState("");
   const [isPersonalTrivia, setIsPersonalTrivia] = useState(false);
   const [createdTriviaId, setCreatedTriviaId] = useState<string | null>(null);
+
+  // Simplified validation logic using switch/case (moved after state declarations)
+  const hasValidSelection = useMemo(() => {
+    switch (selectionMode) {
+      case "random":
+        return true; // Random always valid
+      case "library":
+        return selectedCategory !== null;
+      case "create":
+        return customTriviaQuestions !== null && customTriviaQuestions.length > 0;
+      case "my-trivias":
+        return challengeTrivia !== null;
+      default:
+        return false;
+    }
+  }, [selectionMode, selectedCategory, customTriviaQuestions, challengeTrivia]);
 
   // Handle blind trivia creation - questions are hidden from creator
   // IMPORTANT: This now persists the trivia to user_quiz_posts so it appears in "My Trivia"
@@ -547,6 +561,15 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
   const handleCreate = async () => {
     if (!user) return;
     if (!hasValidSelection) return;
+    
+    // Guard: Prevent room creation while name is still generating
+    if (roomName === "იტვირთება..." || isGeneratingName) {
+      toast({
+        title: "მოიცადეთ",
+        description: "ოთახის სახელი გენერირდება...",
+      });
+      return;
+    }
     
     // Store friends to invite before creating room
     friendsToInviteRef.current = new Set(selectedFriends);

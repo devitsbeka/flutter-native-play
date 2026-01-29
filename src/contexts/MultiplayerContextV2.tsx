@@ -88,6 +88,7 @@ interface MultiplayerState {
   hostIsObserver: boolean; // Host can't answer but earns points from player mistakes
   observerBonusThisRound: number; // Accumulated observer bonus for current round
   lastPlayedTriviaId: string | null; // Track the last played trivia ID for "already played" indicator
+  justReturnedFromResults: boolean; // True when returning from results to lobby, false when game starts or new category picked
 }
 
 interface MultiplayerContextType extends MultiplayerState {
@@ -130,6 +131,7 @@ const initialState: MultiplayerState = {
   hostIsObserver: false,
   observerBonusThisRound: 0,
   lastPlayedTriviaId: null,
+  justReturnedFromResults: false,
 };
 
 // NOTE: We use a non-undefined default value to avoid hard crashes (blank screen)
@@ -780,6 +782,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             opponentAnswers: {},
             hostIsObserver: hostShouldObserve,
             observerBonusThisRound: 0,
+            justReturnedFromResults: false, // Reset when game starts
             currentGame: game ? {
               id: game.id,
               room_id: game.room_id,
@@ -901,6 +904,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               opponentAnswers: {},
               hostIsObserver: hostShouldObserve,
               observerBonusThisRound: 0,
+              justReturnedFromResults: false, // Reset when game starts
               currentGame: game ? {
                 id: game.id,
                 room_id: game.room_id,
@@ -1153,6 +1157,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       lastQuestionResult: null,
       opponentAnswers: {},
       lastPlayedTriviaId: justPlayedTriviaId || null, // Store for "already played" indicator
+      justReturnedFromResults: true, // Flag to show "Continue Playing" button
       // Also clear in local state if queue is empty
       ...(hasQueueItems ? {} : {
         currentRoom: prev.currentRoom ? {
