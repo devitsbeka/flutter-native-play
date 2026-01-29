@@ -1,101 +1,192 @@
 
-# გეგმა: ნათამაშები ტრივიის ხელახლა არჩევის აღკვეთა
+# გეგმა: ორი კრიტიკული პრობლემის გადაწყვეტა
 
-## პრობლემის აღწერა
+## პრობლემები
 
-მომხმარებელი ჩივის რომ:
-1. თამაშის შემდეგ "კატეგორიის დამატება"-ზე ჯერ კიდევ ჩანს ძველი კატეგორია
-2. შეუძლიათ იგივე ტრივიის ხელახლა არჩევა - რაც არასწორია რადგან უკვე იციან პასუხები
+### პრობლემა 1: ლობიში ჩანს პირველი რაუნდის სათაური "თამაშის დაწყება" ღილაკით
 
-**მთავარი პრინციპი:** "ჩვენ გვინდა ახალი რაუნდები ახალი კითხვებით, არა იგივე კითხვები რაც ახლახან ვუპასუხეთ"
+თამაშის დასრულების შემდეგ ლობი აჩვენებს:
+- ძველი კატეგორიის სახელი (მაგ. "ბროლის ორაკული") 
+- "თამაშის დაწყება" ღილაკი
+
+**მოსალოდნელი ქცევა:**
+- "უკვე ითამაშე" ინდიკატორი ძველ კატეგორიაზე
+- "გააგრძელე თამაში" ღილაკი რომელიც ხსნის კატეგორიის არჩევის მოდალს
+
+### პრობლემა 2: მეორე მოთამაშე თამაშობს ძველ კითხვებს
+
+როდესაც ჰოსტი ირჩევს ახალ კატეგორიას და იწყებს თამაშს:
+- ჰოსტი ხედავს ახალ კითხვებს
+- მეორე მოთამაშე ჯერ კიდევ ხედავს ძველ კითხვებს!
+
+**მიზეზი:** `room_questions` ცხრილი განახლდება, მაგრამ მეორე მოთამაშის ლოკალური `questions` state არ იცლება.
 
 ---
 
 ## გადაწყვეტა
 
-### 1. ნათამაშები ტრივიების ფილტრაცია პიკერში
+### 1. "უკვე ითამაშე" ინდიკატორი + "გააგრძელე" ღილაკი
 
-**ფაილი:** `src/components/team/CategoryPickerModal.tsx`
+**ფაილები:**
+- `src/components/team/CategoryPickerSection.tsx` - ახალი prop `isAlreadyPlayed`
+- `src/components/team/RoomLobbyV2.tsx` - ლოგიკა და ღილაკის ცვლილება
 
-ჩემი ტრივიების სიაში არ ჩანდეს ის ტრივია, რომელიც ახლახანს ითამაშეს (room-ში არსებული `user_trivia_id`).
+**ცვლილებები:**
 
 ```typescript
-// CategoryPickerModal.tsx - props-ში დავამატოთ:
-interface CategoryPickerModalProps {
+// CategoryPickerSection.tsx - ახალი prop
+interface CategoryPickerSectionProps {
   // ... არსებული props
-  excludeTriviaId?: string | null; // ტრივია რომელიც ახლახანს ითამაშეს
+  isAlreadyPlayed?: boolean; // true = ეს კატეგორია უკვე ითამაშა
 }
 
-// filteredTrivias-ში დავამატოთ ფილტრი:
-const filteredTrivias = useMemo(() => {
-  let result = myTrivias;
-  
-  // Exclude the trivia that was just played
-  if (excludeTriviaId) {
-    result = result.filter(t => t.id !== excludeTriviaId);
+// Main category display-ში:
+{isAlreadyPlayed && (
+  <span className="ml-2 px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
+    უკვე ითამაშე
+  </span>
+)}
+
+<p className="text-white/60 text-[14px] leading-snug">
+  {isAlreadyPlayed 
+    ? "აირჩიე ახალი კატეგორია" 
+    : hasCategory 
+      ? "მიმდინარე კატეგორია" 
+      : "დააჭირე არჩევისთვის"}
+</p>
+```
+
+```typescript
+// RoomLobbyV2.tsx - ღილაკის ლოგიკა
+// State-ში დავამატოთ:
+const [lastPlayedTriviaId, setLastPlayedTriviaId] = useState<string | null>(null);
+
+// თამაშის დასრულების შემდეგ შევინახოთ
+// (ან context-იდან გამოვიყენოთ currentRoom.user_trivia_id რომელიც ითამაშეს)
+
+// ღილაკი:
+const isAlreadyPlayed = !!currentRoom?.user_trivia_id && queue.length === 0;
+
+{isHost ? (
+  isAlreadyPlayed ? (
+    // "უკვე ითამაშე" - აჩვენოს "გააგრძელე" რომელიც ხსნის picker-ს
+    <ChunkyButton
+      variant="white"
+      size="xl"
+      className="w-full"
+      onClick={() => setShowCategoryPicker(true)}
+      icon={<Plus className="w-5 h-5" />}
+    >
+      გააგრძელე თამაში
+    </ChunkyButton>
+  ) : (
+    // ნორმალური "თამაშის დაწყება"
+    <ChunkyButton
+      variant="white"
+      size="xl"
+      className="w-full"
+      onClick={handleStartGame}
+      disabled={!canStartGame || isStarting || loading}
+      icon={<Play className="w-5 h-5" />}
+    >
+      {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
+    </ChunkyButton>
+  )
+) : (...)}
+```
+
+### 2. მეორე მოთამაშის კითხვების სინქრონიზაცია
+
+**ფაილი:** `src/contexts/MultiplayerContextV2.tsx`
+
+**პრობლემა:** როდესაც non-host მიიღებს room status → "playing" მოვლენას, ის ფეჩავს `room_questions`-ს მაგრამ ლოკალურ state-ში ძველი `questions` მასივი რჩება თუ ახალი ფეჩი ვერ მოხერხდა.
+
+**გადაწყვეტა:** Subscription handler-ში (lines 252-305) **ჯერ გავასუფთაოთ ლოკალური questions** სანამ ახალს ჩავტვირთავთ:
+
+```typescript
+// Line ~252 - room status change handler
+if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results")) {
+  if (!currentIsHost) {
+    // CRITICAL: Clear local questions first to prevent stale data
+    setState(prev => ({
+      ...prev,
+      questions: [], // Clear old questions
+      currentQuestionIndex: 0,
+      myScore: 0,
+      opponentAnswers: {},
+    }));
+    
+    // Wait briefly for questions to be fully committed by host
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Fetch with retry logic...
+    // (existing code)
   }
-  
-  if (!search.trim()) return result;
-  const searchLower = search.toLowerCase();
-  return result.filter((t) =>
-    t.title.toLowerCase().includes(searchLower)
-  );
-}, [myTrivias, search, excludeTriviaId]);
-```
-
-### 2. RoomLobbyV2-დან გადაცემა
-
-**ფაილი:** `src/components/team/RoomLobbyV2.tsx`
-
-```typescript
-<CategoryPickerModal
-  isOpen={showCategoryPicker}
-  onClose={() => setShowCategoryPicker(false)}
-  onSelectCategory={handleSelectCategory}
-  onSelectRandom={handleSelectRandom}
-  onSelectTrivia={handleSelectTrivia}
-  onAddToQueue={handleAddToQueue}
-  showQueueOption={true}
-  roomGradient={roomGradient}
-  excludeTriviaId={currentRoom?.user_trivia_id} // ახლახანს ნათამაშები
-/>
-```
-
----
-
-## ალტერნატიული ვარიანტი: უკვე ნათამაშები კატეგორიების მთლიანი ისტორია
-
-თუ გვინდა მთელი სესიის განმავლობაში ნათამაშები ტრივიების გამორიცხვა:
-
-### Room-ის ცხრილში ახალი სვეტი
-
-```sql
-ALTER TABLE game_rooms ADD COLUMN played_trivia_ids UUID[] DEFAULT '{}';
-```
-
-### ლოგიკა
-
-თამაშის დასრულებისას დავამატოთ `user_trivia_id` მასივში:
-
-```typescript
-// continueInRoom-ში:
-if (state.currentRoom.user_trivia_id) {
-  await supabase
-    .from("game_rooms")
-    .update({ 
-      played_trivia_ids: [...(state.currentRoom.played_trivia_ids || []), state.currentRoom.user_trivia_id]
-    })
-    .eq("id", roomId);
 }
 ```
 
----
+**დამატებითი გარანტია:** კითხვების ფეჩის შემდეგ შევამოწმოთ რომ მართლაც ახალია:
 
-## რეკომენდებული მიდგომა: უბრალო გადაწყვეტა
+```typescript
+// After successful fetch, verify questions match expected count
+if (roomQuestions && roomQuestions.length > 0) {
+  // Additional check: if category changed, verify we have fresh questions
+  const expectedCategory = updated.category_name;
+  
+  const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
+    // ... mapping code
+    category: expectedCategory || updated.category_name || "General",
+  }));
+  
+  setState(prev => ({
+    ...prev,
+    questions,
+    currentQuestionIndex: 0,
+    myScore: 0, // Reset score for new round
+    phase: "playing",
+    // Ensure room state is also synced
+    currentRoom: updated,
+  }));
+}
+```
 
-პირველ ეტაპზე უფრო მარტივი გზით:
-- **მხოლოდ ბოლო ნათამაშები ტრივიის ფილტრაცია** (`excludeTriviaId`)
-- მომავალში, თუ საჭირო იქნება, შეგვიძლია `played_trivia_ids` მასივის დამატება
+### 3. `continueInRoom` - ბოლო ნათამაშები ტრივიის ID-ის შენახვა
+
+რომ ვიცოდეთ რომელი ტრივია ახლახან ითამაშეს და "უკვე ითამაშე" ინდიკატორი ვაჩვენოთ:
+
+```typescript
+// MultiplayerContextV2.tsx - state-ში ახალი ველი
+interface MultiplayerState {
+  // ... არსებული
+  lastPlayedTriviaId: string | null; // ID of trivia that was just played
+}
+
+// continueInRoom-ში, სანამ გავასუფთავებთ, შევინახოთ:
+const continueInRoom = useCallback(async () => {
+  if (!state.currentRoom) return;
+  
+  const roomId = state.currentRoom.id;
+  const justPlayedTriviaId = state.currentRoom.user_trivia_id; // Remember what was played
+  
+  // ... existing queue check logic ...
+  
+  setState(prev => ({
+    ...prev,
+    phase: "lobby",
+    questions: [],
+    // ... other resets
+    lastPlayedTriviaId: justPlayedTriviaId || null, // Store for "already played" indicator
+    ...(hasQueueItems ? {} : {
+      currentRoom: prev.currentRoom ? {
+        ...prev.currentRoom,
+        category_id: null,
+        category_name: null,
+        user_trivia_id: null,
+      } : null,
+    }),
+  }));
+}, [state.currentRoom]);
+```
 
 ---
 
@@ -103,8 +194,9 @@ if (state.currentRoom.user_trivia_id) {
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `src/components/team/CategoryPickerModal.tsx` | `excludeTriviaId` prop-ის დამატება და ფილტრაცია |
-| `src/components/team/RoomLobbyV2.tsx` | `excludeTriviaId={currentRoom?.user_trivia_id}` გადაცემა |
+| `src/contexts/MultiplayerContextV2.tsx` | კითხვების სინქრონიზაციის ფიქსი + `lastPlayedTriviaId` |
+| `src/components/team/CategoryPickerSection.tsx` | `isAlreadyPlayed` prop და ინდიკატორი |
+| `src/components/team/RoomLobbyV2.tsx` | "გააგრძელე თამაში" ღილაკი + `isAlreadyPlayed` ლოგიკა |
 
 ---
 
@@ -112,29 +204,6 @@ if (state.currentRoom.user_trivia_id) {
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| ნათამაშები ტრივია სიაში | ✓ ჩანს | ✗ არ ჩანს |
-| სხვა ტრივიები | ✓ ჩანს | ✓ ჩანს |
-| ბიბლიოთეკის კატეგორიები | ✓ ჩანს | ✓ ჩანს |
-
----
-
-## ბონუსი: ვიზუალური მინიშნება
-
-ალტერნატიულად, შეგვიძლია ტრივია აჩვენოთ მაგრამ disabled სტილით "ახლახანს ითამაშე" ბეჯით:
-
-```typescript
-const wasJustPlayed = trivia.id === excludeTriviaId;
-
-<motion.button
-  disabled={wasJustPlayed}
-  className={`... ${wasJustPlayed ? 'opacity-50 cursor-not-allowed' : ''}`}
->
-  {wasJustPlayed && (
-    <span className="absolute top-2 right-2 text-xs bg-orange-500/80 px-2 py-0.5 rounded-full">
-      ახლახანს ითამაშე
-    </span>
-  )}
-</motion.button>
-```
-
-ეს უკეთესი UX-ია რადგან მომხმარებელი ხედავს **რატომ** ვერ ირჩევს, ვიდრე უბრალოდ გაქრება სიიდან.
+| თამაშის შემდეგ ლობი | ძველი კატეგორია + "თამაშის დაწყება" | "უკვე ითამაშე" + "გააგრძელე თამაში" |
+| ახალი კატეგორიის დაწყება | მეორე მოთამაშე ხედავს ძველს | ორივე ხედავს ახალ კითხვებს |
+| რიგში კატეგორიები | მუშაობს | იგივე |
