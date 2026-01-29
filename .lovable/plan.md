@@ -1,104 +1,121 @@
 
-# Fix: "+" Button Not Responding on Android Mobile
+# Close Modal After Room Invite
 
-## Root Cause Analysis
+## Problem
 
-After investigating the complete flow, I identified the core problem:
-
-### The Issue
-The "+" button in `FriendsStoriesBar.tsx` uses `motion.button` with `whileHover` and `whileTap` from Framer Motion. This causes touch event handling issues on Android devices - the same problem we fixed in the modal buttons earlier.
-
-### The Flow
-1. User taps "+" button in `FriendsStoriesBar` -> should call `setShowAddFriendModal(true)`
-2. This opens `InviteFriendsModal` (NOT `AddFriendModal`)
-3. User searches for friend -> taps "დამატება" -> should send friend request
-
-The modal buttons were fixed, but the **initial "+" button was not**.
+When clicking "მოწვევა" (invite) to invite a friend to a room, the modal stays open showing "გაგზავნილი" (sent). The user expects the modal to close automatically so they can see the lobby with the newly invited player.
 
 ---
 
-## Files to Fix
+## Solution
 
-| File | Problem | Fix |
-|------|---------|-----|
-| `src/components/team/FriendsStoriesBar.tsx` | "+" button uses `motion.button` with `whileHover`/`whileTap` that interferes with touch events on Android | Replace with regular `button`, add `onTouchEnd` fallback, increase touch target |
+Add an optional `onInviteSuccess` callback prop and call it (along with closing the modal) after a successful room invitation.
 
 ---
 
-## Detailed Fix
+## Files to Modify
 
-### File: `src/components/team/FriendsStoriesBar.tsx`
+| File | Changes |
+|------|---------|
+| `src/components/team/InviteFriendsModal.tsx` | Add `onInviteSuccess` prop; auto-close modal after successful invite |
+| `src/components/team/RoomLobbyV2.tsx` | (Optional) Pass `onInviteSuccess` for any additional handling |
 
-**Current Code (lines 52-64):**
-```tsx
-<motion.button
-  onClick={onAddFriendClick}
-  className="flex flex-col items-center gap-2 flex-shrink-0"
-  whileHover={{ scale: 1.05 }}
-  whileTap={{ scale: 0.95 }}
->
-  <div className="relative w-16 h-16 rounded-full ...">
-    <Plus className="w-6 h-6 text-purple-600" />
-  </div>
-  <span className="text-xs font-medium ...">
-    {t('team.add')}
-  </span>
-</motion.button>
+---
+
+## Implementation Details
+
+### File: `src/components/team/InviteFriendsModal.tsx`
+
+#### 1. Update Props Interface (line 25-34)
+
+Add `onInviteSuccess` callback:
+
+```typescript
+interface InviteFriendsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  inviteLink?: string;
+  roomId?: string;
+  roomCode?: string;
+  onFriendSelect?: (friendId: string) => void;
+  selectedFriends?: Set<string>;
+  onInviteSuccess?: () => void;  // NEW
+}
 ```
 
-**Fixed Code:**
-```tsx
-<button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onAddFriendClick();
-  }}
-  onTouchEnd={(e) => {
-    e.stopPropagation();
-    onAddFriendClick();
-  }}
-  className="flex flex-col items-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
-  style={{ touchAction: 'manipulation' }}
->
-  <div className="relative w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-dashed border-purple-400 flex items-center justify-center">
-    <Plus className="w-6 h-6 text-purple-600" />
-  </div>
-  <span className="text-xs font-medium text-slate-600 truncate max-w-[64px]">
-    {t('team.add')}
-  </span>
-</button>
+#### 2. Update Component Signature (line 102)
+
+Destructure the new prop:
+
+```typescript
+export function InviteFriendsModal({ 
+  isOpen, 
+  onClose, 
+  inviteLink, 
+  roomId, 
+  roomCode, 
+  onFriendSelect, 
+  selectedFriends,
+  onInviteSuccess  // NEW
+}: InviteFriendsModalProps)
+```
+
+#### 3. Update `handleInviteToRoom` (lines 202-259)
+
+After successful invitation, show brief success feedback then close:
+
+```typescript
+const handleInviteToRoom = async (userId: string) => {
+  if (!roomId) return;
+  
+  setInvitingUser(userId);
+  try {
+    // ... existing invite logic ...
+    
+    setSentRequests(prev => new Set([...prev, userId]));
+    toast.success("მოწვევა გაიგზავნა!");
+    
+    // NEW: Close modal after brief delay for feedback
+    setTimeout(() => {
+      handleClose();
+      onInviteSuccess?.();
+    }, 600);
+    
+  } catch (error) {
+    console.error("Invite error:", error);
+    toast.error("მოწვევა ვერ მოხერხდა");
+  } finally {
+    setInvitingUser(null);
+  }
+};
 ```
 
 ---
 
-## Key Changes
+## User Flow After Fix
 
-1. **Replace `motion.button` with standard `button`**
-   - Framer Motion's `whileHover` and `whileTap` can interfere with touch events on some mobile browsers
-
-2. **Add `onTouchEnd` handler**
-   - Fallback for Android devices where `onClick` may not fire consistently
-
-3. **Add `touchAction: 'manipulation'`**
-   - Prevents double-tap zoom delays and improves touch responsiveness
-
-4. **Add `active:scale-95`**
-   - Lightweight touch feedback using CSS instead of Framer Motion
-
-5. **Add `e.stopPropagation()` and `e.preventDefault()`**
-   - Prevents event bubbling that could be causing issues
-
-6. **Add `min-w-[64px] min-h-[64px]`**
-   - Ensures the touch target meets the 48px minimum guideline
+1. User is in room lobby (e.g., "ტიტანთა კლუბი")
+2. Clicks "+" to invite friends → InviteFriendsModal opens
+3. Searches for "TriviaMaste" 
+4. Taps "მოწვევა" → Button shows loading spinner
+5. On success:
+   - Button shows "✓ გაგზავნილი" briefly
+   - Toast: "მოწვევა გაიგზავნა!"
+   - Modal auto-closes after 600ms
+6. User sees room lobby with the invited player visible in participants list (showing "invited" status)
 
 ---
 
-## Expected Results
+## Visual Feedback Timeline
 
-| Before | After |
-|--------|-------|
-| Tapping "+" on Android = no response | Tapping "+" opens InviteFriendsModal |
-| Touch events sometimes don't register | Reliable touch handling with fallback |
-| Framer Motion `whileTap` interferes | CSS-based feedback is more reliable |
+```text
+0ms    - User taps "მოწვევა"
+0-300ms - Button shows Loader2 spinner
+300ms  - Invitation completes
+300ms  - Button shows "✓ გაგზავნილი"
+300ms  - Toast appears: "მოწვევა გაიგზავნა!"
+900ms  - Modal closes automatically
+900ms  - User sees lobby with invited player
+```
+
+This provides clear visual confirmation that the invite was sent while keeping the UX fluid.
