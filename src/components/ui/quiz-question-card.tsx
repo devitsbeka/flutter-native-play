@@ -36,6 +36,10 @@ interface QuizQuestionCardProps {
    * icon never covers the question text.
    */
   reserveTopSpace?: boolean;
+  /**
+   * Hide question text - useful for image-only trivia where image speaks for itself
+   */
+  hideQuestionText?: boolean;
 }
 
 // Dynamic font sizing based on question length
@@ -66,6 +70,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       videoUrl,
       audioUrl,
       reserveTopSpace = false,
+      hideQuestionText = false,
     },
     ref
   ) => {
@@ -212,32 +217,34 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           </div>
         )}
 
-        {/* Question Text */}
-        <div className={cn(
-          "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
-          // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon
-          // Reduce top padding if we have media (no need for icon space)
-          hasMedia && "pt-4",
-          !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14",
-          !hasMedia && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16",
-          !hasMedia && !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10"
-        )}>
-          {isLoading ? (
-            <div className="space-y-2 w-full">
-              <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
-              <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mx-auto" />
-            </div>
-          ) : (
-            <p
-              className="text-center font-semibold leading-snug text-[#2A2550]"
-              style={{
-                fontSize: questionStyles.fontSize,
-              }}
-            >
-              {questionText}
-            </p>
-          )}
-        </div>
+        {/* Question Text - hide for image-only mode */}
+        {!hideQuestionText && (
+          <div className={cn(
+            "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
+            // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon
+            // Reduce top padding if we have media (no need for icon space)
+            hasMedia && "pt-4",
+            !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14",
+            !hasMedia && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16",
+            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10"
+          )}>
+            {isLoading ? (
+              <div className="space-y-2 w-full">
+                <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
+                <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse mx-auto" />
+              </div>
+            ) : (
+              <p
+                className="text-center font-semibold leading-snug text-[#2A2550]"
+                style={{
+                  fontSize: questionStyles.fontSize,
+                }}
+              >
+                {questionText}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Progress bar at bottom */}
         <div className="h-2 bg-gray-200 w-full">
