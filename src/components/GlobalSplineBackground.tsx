@@ -9,7 +9,7 @@ const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile"
 const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-ups"];
 
 // Pages where the white radial mask should be hidden (they have their own solid background)
-const NO_RADIAL_MASK_PAGES = ["/game", "/category"];
+const NO_RADIAL_MASK_PAGES = ["/game", "/category", "/power-ups"];
 
 // White sparkle particle with glow effect
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
