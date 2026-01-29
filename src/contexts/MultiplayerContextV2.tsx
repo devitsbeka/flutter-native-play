@@ -9,6 +9,7 @@ import { getRandomGradient } from "@/config/roomGradients";
 import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
+import { useUserPresence } from "@/hooks/useUserPresence";
 
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
@@ -170,6 +171,7 @@ const PRODUCTION_DOMAIN = "https://mytrivia.io";
 
 export function MultiplayerProviderV2({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
+  const { setRoomPresence } = useUserPresence();
   const [state, setState] = useState<MultiplayerState>(initialState);
   const [participants, setParticipants] = useState<RoomParticipant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -626,6 +628,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         
         setState(prev => ({ ...prev, phase: "lobby", currentRoom: room as GameRoom }));
       }
+      
+      // Set room presence when successfully entering a room
+      setRoomPresence(room.id);
       
       setShowJoinModal(false);
       return true;
@@ -1113,9 +1118,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
 
   // Exit room (UI only - stay as participant)
   const exitRoom = useCallback(() => {
+    // Clear room presence when exiting
+    setRoomPresence(null);
     cleanupChannels();
     setState(initialState);
-  }, [cleanupChannels]);
+  }, [cleanupChannels, setRoomPresence]);
 
   // Continue in room after results (go back to lobby)
   const continueInRoom = useCallback(async () => {

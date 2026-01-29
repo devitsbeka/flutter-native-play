@@ -37,13 +37,20 @@ export interface MyRoom {
     avatar_url: string | null;
     is_host: boolean;
   }[];
-  // Online presence data
+  // Online presence data (online in app, not necessarily in this room)
   online_participants: {
     user_id: string;
     nickname: string;
     avatar_url: string | null;
   }[];
   has_others_online: boolean;
+  // Players actually INSIDE this room (current_page = /room/<id>)
+  in_room_participants: {
+    user_id: string;
+    nickname: string;
+    avatar_url: string | null;
+  }[];
+  has_players_in_room: boolean;
 }
 
 // Active TV session statuses that indicate a "LIVE" game
@@ -160,20 +167,27 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
       if (allPartError) throw allPartError;
 
-      // Fetch online presence for all participants
+      // Fetch online presence for all participants with current_page
       const allParticipantUserIds = [...new Set((allParticipants || []).map(p => p.user_id))];
       let onlineUserIds = new Set<string>();
+      // Map of user_id -> current_page for checking if they're IN a specific room
+      let presencePageMap = new Map<string, string>();
       
       if (allParticipantUserIds.length > 0) {
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
         const { data: presenceData } = await supabase
           .from("user_presence")
-          .select("user_id, status, last_seen")
+          .select("user_id, status, last_seen, current_page")
           .in("user_id", allParticipantUserIds)
           .eq("status", "online")
           .gte("last_seen", twoMinutesAgo);
         
-        presenceData?.forEach(p => onlineUserIds.add(p.user_id));
+        presenceData?.forEach(p => {
+          onlineUserIds.add(p.user_id);
+          if (p.current_page) {
+            presencePageMap.set(p.user_id, p.current_page);
+          }
+        });
       }
 
       // Fetch TV session data for rooms that have tv_session_id
@@ -228,9 +242,24 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
         const participants = participantsByRoom.get(room.id) || [];
         const tvData = room.tv_session_id ? tvSessionMap.get(room.tv_session_id) : null;
         
-        // Calculate online participants (excluding current user)
+        // Calculate online participants (excluding current user) - just online in app
         const onlineParticipants = participants
           .filter(p => onlineUserIds.has(p.user_id) && p.user_id !== user.id)
+          .map(p => ({
+            user_id: p.user_id,
+            nickname: p.nickname,
+            avatar_url: p.avatar_url,
+          }));
+        
+        // NEW: Calculate participants who are INSIDE this specific room (not just online)
+        // Check if their current_page matches /room/<room_id>
+        const roomPath = `/room/${room.id}`;
+        const inRoomParticipants = participants
+          .filter(p => {
+            if (p.user_id === user.id) return false; // Exclude self
+            const currentPage = presencePageMap.get(p.user_id);
+            return currentPage === roomPath;
+          })
           .map(p => ({
             user_id: p.user_id,
             nickname: p.nickname,
@@ -269,6 +298,9 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           })),
           online_participants: onlineParticipants,
           has_others_online: onlineParticipants.length > 0,
+          // NEW: Players actually inside this room
+          in_room_participants: inRoomParticipants,
+          has_players_in_room: inRoomParticipants.length > 0,
         };
       });
 

@@ -57,12 +57,14 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
 
       <div className="rounded-2xl bg-muted/50 border border-border/50 overflow-hidden">
         <div className="divide-y divide-border/50">
-          {activeRooms.map((room) => {
+        {activeRooms.map((room) => {
             const hasTVSession = isActiveTVSession(room.tv_status);
-            const isPlaying = room.status === "playing";
-            const hasOthersOnline = room.has_others_online;
-            // Show LIVE badge only for non-TV rooms that are playing or have others online
-            const showLiveBadge = !hasTVSession && (isPlaying || hasOthersOnline);
+            // NEW: Use has_players_in_room for accurate "someone is in room" detection
+            const hasPlayersInRoom = room.has_players_in_room;
+            
+            // Badge logic: TV badge if players + TV, LIVE if players without TV
+            const showTVBadge = hasPlayersInRoom && hasTVSession;
+            const showLiveBadge = hasPlayersInRoom && !hasTVSession;
             
             const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
               ? room.tv_active_players 
@@ -95,8 +97,8 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                       {room.room_icon || "🎮"}
                     </div>
                   )}
-                  {/* TV mode: show only TV icon from library */}
-                  {hasTVSession ? (
+                  {/* TV mode: show TV icon from library */}
+                  {showTVBadge ? (
                     <div className="absolute -top-1 -right-1 w-5 h-5 rounded bg-white/90 flex items-center justify-center">
                       <QuizCategoryIcon iconSlug="retro-tv" size={16} className="w-4 h-4" />
                     </div>

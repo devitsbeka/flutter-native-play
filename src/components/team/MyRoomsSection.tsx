@@ -254,13 +254,19 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   
   // Display name: only room_name, no fallback to code
   const displayName = room.room_name || "თამაშის ოთახი";
-  const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
-  const hasOthersOnline = room.has_others_online;
   
-  // TV session is "truly live" only if it's in an active game phase AND has players
+  // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
+  const hasPlayersInRoom = room.has_players_in_room;
+  
+  // TV session is active (TV connected)
   const hasTVSession = isActiveTVSession(room.tv_status);
-  const isTVLive = isLiveTVSession(room.tv_status) && room.tv_active_players > 0;
+  
+  // Badge logic:
+  // TV badge: Players in room + TV connected
+  // LIVE badge: Players in room, no TV
+  const showTVBadge = hasPlayersInRoom && hasTVSession;
+  const showLiveBadge = hasPlayersInRoom && !hasTVSession;
   
   // For display: use TV active players if there's an active TV session with players
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -409,12 +415,12 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {/* TV mode: show only TV icon without LIVE badge */}
-                  {hasTVSession ? (
+                  {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
+                  {showTVBadge ? (
                     <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                       <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                     </div>
-                  ) : (isPlaying || hasOthersOnline) ? (
+                  ) : showLiveBadge ? (
                     <LiveBadge />
                   ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
@@ -547,11 +553,15 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const isSwiping = useRef(false);
   
   const displayName = room.room_name || "თამაშის ოთახი";
-  const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
+  
+  // NEW LOGIC: has_players_in_room = someone is actually INSIDE this room
+  const hasPlayersInRoom = room.has_players_in_room;
   const hasTVSession = isActiveTVSession(room.tv_status);
-  const isTVLive = isLiveTVSession(room.tv_status) && room.tv_active_players > 0;
-  const hasOthersOnline = room.has_others_online;
+  
+  // Badge logic: TV badge if players in room + TV connected, LIVE if players in room without TV
+  const showTVBadge = hasPlayersInRoom && hasTVSession;
+  const showLiveBadge = hasPlayersInRoom && !hasTVSession;
   
   // For display: use TV active players if there's an active TV session
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -666,12 +676,12 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {/* TV mode: show only TV icon without LIVE badge */}
-              {hasTVSession ? (
+              {/* Badge priority: TV > LIVE > New > Completed > Waiting */}
+              {showTVBadge ? (
                 <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                 </div>
-              ) : (isPlaying || hasOthersOnline) ? (
+              ) : showLiveBadge ? (
                 <LiveBadge />
               ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">

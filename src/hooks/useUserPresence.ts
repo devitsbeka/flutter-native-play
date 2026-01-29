@@ -91,6 +91,7 @@ export const useUserPresence = () => {
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
   const countryCodeRef = useRef<string | null>(null);
   const isUpdatingRef = useRef(false);
+  const currentRoomIdRef = useRef<string | null>(null);
 
   // Check if we can make authenticated requests
   const canMakeRequest = useCallback((): boolean => {
@@ -120,12 +121,17 @@ export const useUserPresence = () => {
     isUpdatingRef.current = true;
 
     try {
+      // Use room-specific path if user is in a room
+      const pagePath = currentRoomIdRef.current 
+        ? `/room/${currentRoomIdRef.current}` 
+        : (currentPage || location.pathname);
+
       const { error } = await supabase
         .from('user_presence')
         .upsert({
           user_id: userId,
           status,
-          current_page: currentPage || location.pathname,
+          current_page: pagePath,
           last_seen: new Date().toISOString(),
           country_code: countryCode,
         }, {
@@ -135,6 +141,40 @@ export const useUserPresence = () => {
       if (error) {
         // Silent fail - don't spam console
         logger.debug('Presence update failed:', error.message);
+      }
+    } catch {
+      // Silent fail
+    } finally {
+      isUpdatingRef.current = false;
+    }
+  }, [user?.id, location.pathname, canMakeRequest]);
+
+  // Set room-specific presence (called when entering/exiting a room)
+  const setRoomPresence = useCallback(async (roomId: string | null) => {
+    currentRoomIdRef.current = roomId;
+    
+    if (!canMakeRequest() || isUpdatingRef.current) return;
+    
+    const userId = user?.id || getGuestSessionId();
+    isUpdatingRef.current = true;
+
+    try {
+      const pagePath = roomId ? `/room/${roomId}` : location.pathname;
+      
+      const { error } = await supabase
+        .from('user_presence')
+        .upsert({
+          user_id: userId,
+          status: 'online',
+          current_page: pagePath,
+          last_seen: new Date().toISOString(),
+          country_code: countryCodeRef.current,
+        }, {
+          onConflict: 'user_id',
+        });
+
+      if (error) {
+        logger.debug('Room presence update failed:', error.message);
       }
     } catch {
       // Silent fail
@@ -158,7 +198,7 @@ export const useUserPresence = () => {
     // Heartbeat every 60 seconds (reduced from 30s)
     heartbeatInterval.current = setInterval(() => {
       if (canMakeRequest()) {
-        updatePresence('online', location.pathname);
+        updatePresence('online');
       }
     }, 60000);
 
@@ -169,7 +209,7 @@ export const useUserPresence = () => {
       if (document.hidden) {
         updatePresence('away');
       } else {
-        updatePresence('online', location.pathname);
+        updatePresence('online');
       }
     };
 
@@ -193,12 +233,12 @@ export const useUserPresence = () => {
     };
   }, [user?.id, updatePresence, location.pathname, canMakeRequest]);
 
-  // Update page on route change
+  // Update page on route change (but respect room override)
   useEffect(() => {
-    if (canMakeRequest()) {
+    if (canMakeRequest() && !currentRoomIdRef.current) {
       updatePresence('online', location.pathname);
     }
   }, [location.pathname, updatePresence, canMakeRequest]);
 
-  return { updatePresence };
+  return { updatePresence, setRoomPresence };
 };
