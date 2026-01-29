@@ -1170,6 +1170,13 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setState(prev => ({
         ...prev,
         roundNumber: newRoundNumber,
+        // ✅ CRITICAL FIX: Sync new questions locally to prevent stale round data
+        // Realtime updates may not include JSONB questions field
+        questions: formattedQuestions,
+        currentQuestionIndex: 0,
+        categoryName: nextCategoryName,
+        categoryIcon: nextCategoryIcon,
+        phase: 'round-intro',
         // CRITICAL: Sync suggester state from DB update
         currentRoundSuggesterId: suggesterUserId,
         currentRoundSuggesterNickname: suggesterNickname,
@@ -2010,6 +2017,24 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 questionStartedAtRef.current = 0;
                 hasAdvancedRef.current = false;
                 console.log('[Subscription] Disabled auto-advance timing on safe phase:', newData.status);
+              }
+              
+              // ✅ CRITICAL FIX: Force refetch when round number changes with no questions
+              // Supabase Realtime often omits JSONB fields in UPDATE payloads
+              const prevRoundNumber = prev.roundNumber;
+              const newRoundNumber = newData.round_number ?? prev.roundNumber;
+              const isNewRound = newRoundNumber !== prevRoundNumber && newRoundNumber > 0;
+
+              if (isNewRound) {
+                console.log('[Subscription] 🔄 New round detected:', { from: prevRoundNumber, to: newRoundNumber });
+                
+                // If questions in update are empty but this is a new round, we MUST refetch
+                if (questions.length === 0) {
+                  console.log('[Subscription] ⚠️ New round but NO questions in update - forcing refetch');
+                  setTimeout(() => {
+                    refetchSessionData(sessionId);
+                  }, 200);
+                }
               }
             }
 
