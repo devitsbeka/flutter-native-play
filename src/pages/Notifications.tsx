@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellOff, ChevronDown, Trash2, X } from 'lucide-react';
+import { Bell, BellOff, ChevronDown, Trash2, X, Gamepad2, Users, Sparkles } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,8 +41,28 @@ export default function Notifications() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [displayLimit, setDisplayLimit] = useState(20);
   const [clearingAll, setClearingAll] = useState(false);
+  const [activeTab, setActiveTab] = useState<'games' | 'social' | 'trivia'>('games');
 
   const dateLocale = language === 'ka' ? ka : enUS;
+
+  // Tab category mapping
+  const TAB_TYPES: Record<'games' | 'social' | 'trivia', string[]> = {
+    games: ['room_invite', 'game_started', 'challenge', 'game_result'],
+    social: ['friend_request', 'friend_accepted'],
+    trivia: ['trivia_liked', 'trivia_saved', 'trivia_played'],
+  };
+
+  // Filter notifications by active tab
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(n => TAB_TYPES[activeTab].includes(n.type));
+  }, [notifications, activeTab]);
+
+  // Get unread count per tab
+  const getUnreadCount = (tab: 'games' | 'social' | 'trivia') => {
+    return notifications.filter(n => 
+      TAB_TYPES[tab].includes(n.type) && !n.read_at
+    ).length;
+  };
 
   // Mark all as read when page loads
   useEffect(() => {
@@ -52,52 +73,10 @@ export default function Notifications() {
     }
   }, [unreadCount, loading, markAllAsRead]);
 
-  const displayedNotifications = notifications.slice(0, displayLimit);
-  const hasMore = notifications.length > displayLimit;
+  const displayedNotifications = filteredNotifications.slice(0, displayLimit);
+  const hasMore = filteredNotifications.length > displayLimit;
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
-
-  const sectionedNotifications = useMemo(() => {
-    const groups: Record<string, Notification[]> = {};
-    const getSectionTitle = (type: Notification['type']) => {
-      switch (type) {
-        case 'friend_request':
-        case 'friend_accepted':
-          return 'მეგობრები';
-        case 'room_invite':
-        case 'game_started':
-        case 'challenge':
-        case 'game_result':
-          return 'თამაშები';
-        case 'trivia_liked':
-        case 'trivia_saved':
-        case 'trivia_played':
-          return 'ტრივია';
-        case 'reward':
-        case 'daily_reward':
-        case 'streak':
-        case 'level_up':
-        case 'achievement':
-          return 'პროგრესი';
-        case 'billing':
-        case 'subscription':
-          return 'გადახდები';
-        default:
-          return 'სხვა';
-      }
-    };
-
-    for (const n of displayedNotifications) {
-      const title = getSectionTitle(n.type);
-      if (!groups[title]) groups[title] = [];
-      groups[title].push(n);
-    }
-
-    // stable ordering
-    const order = ['მეგობრები', 'თამაშები', 'ტრივია', 'პროგრესი', 'გადახდები', 'სხვა'];
-    return order
-      .filter((k) => (groups[k]?.length ?? 0) > 0)
-      .map((k) => ({ title: k, items: groups[k] }));
-  }, [displayedNotifications]);
+  const hasTabContent = filteredNotifications.length > 0;
 
   const handleAcceptFriend = async (friendshipId: string, notificationId: string) => {
     setActionLoading(notificationId);
@@ -286,6 +265,41 @@ export default function Notifications() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="relative z-10 px-4 pt-3 max-w-[700px] md:max-w-[600px] mx-auto">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'games' | 'social' | 'trivia')} className="w-full">
+          <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
+            <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
+              <Gamepad2 className="w-3.5 h-3.5" />
+              <span>თამაშები</span>
+              {getUnreadCount('games') > 0 && (
+                <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                  {getUnreadCount('games')}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="social" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
+              <Users className="w-3.5 h-3.5" />
+              <span>მეგობრები</span>
+              {getUnreadCount('social') > 0 && (
+                <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                  {getUnreadCount('social')}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>ტრივია</span>
+              {getUnreadCount('trivia') > 0 && (
+                <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
+                  {getUnreadCount('trivia')}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       {/* Content - full width, hidden scroll */}
       <div className="relative z-10 px-0 overflow-y-auto scrollbar-hide max-w-[700px] md:max-w-[600px] mx-auto">
         {loading ? (
@@ -301,10 +315,21 @@ export default function Notifications() {
               შეტყობინებები არ არის
             </p>
           </div>
+        ) : !hasTabContent ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <BellOff className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground text-center">
+              {activeTab === 'games' && 'თამაშების შეტყობინებები არ არის'}
+              {activeTab === 'social' && 'მეგობრების შეტყობინებები არ არის'}
+              {activeTab === 'trivia' && 'ტრივიის შეტყობინებები არ არის'}
+            </p>
+          </div>
         ) : (
-          <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden pb-2">
-            {/* Generation Notifications */}
-            {generationNotifications.length > 0 && (
+          <div className="bg-card/60 backdrop-blur-sm rounded-none overflow-hidden pb-2 mt-3">
+            {/* Generation Notifications - only show in games tab */}
+            {activeTab === 'games' && generationNotifications.length > 0 && (
               <>
                 <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
                   AI გენერაცია
@@ -319,35 +344,25 @@ export default function Notifications() {
               </>
             )}
 
-            {/* Regular Notifications */}
+            {/* Filtered Notifications */}
             <AnimatePresence mode="popLayout">
-              {sectionedNotifications.map((section) => (
-                <div
-                  key={section.title}
-                  className="border-t border-border/30 first:border-t-0"
-                >
-                  <div className="px-4 py-2 text-xs font-semibold text-muted-foreground bg-background/40 border-b border-border/30">
-                    {section.title}
-                  </div>
-                  {section.items.map((notification) => (
-                    <CompactNotificationCard
-                      key={notification.id}
-                      notification={notification}
-                      onMarkRead={markAsRead}
-                      onNavigate={handleNavigate}
-                      onAcceptFriend={handleAcceptFriend}
-                      onDeclineFriend={handleDeclineFriend}
-                      onAcceptInvite={handleAcceptInvite}
-                      onDeclineInvite={handleDeclineInvite}
-                      onDismiss={deleteNotification}
-                      actionLoading={actionLoading}
-                      timeAgo={formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: false,
-                        locale: dateLocale,
-                      })}
-                    />
-                  ))}
-                </div>
+              {displayedNotifications.map((notification) => (
+                <CompactNotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  onMarkRead={markAsRead}
+                  onNavigate={handleNavigate}
+                  onAcceptFriend={handleAcceptFriend}
+                  onDeclineFriend={handleDeclineFriend}
+                  onAcceptInvite={handleAcceptInvite}
+                  onDeclineInvite={handleDeclineInvite}
+                  onDismiss={deleteNotification}
+                  actionLoading={actionLoading}
+                  timeAgo={formatDistanceToNow(new Date(notification.created_at), {
+                    addSuffix: false,
+                    locale: dateLocale,
+                  })}
+                />
               ))}
             </AnimatePresence>
           </div>
