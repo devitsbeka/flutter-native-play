@@ -267,7 +267,7 @@ export function MultiplayerGameScreenV2() {
                   <span className="flex-1 text-white text-sm truncate">
                     {p.user_id === user?.id ? t("game.you") : p.nickname}
                   </span>
-                  <span className="text-white font-bold text-sm">{p.score || 0}</span>
+                  <span className="text-white font-bold text-sm">{Math.round(p.score || 0)}</span>
                 </div>
               ))}
             </div>

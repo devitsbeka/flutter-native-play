@@ -66,7 +66,8 @@ export function GameResultsScreenV2() {
     }));
 
   const myParticipant = rankedParticipants.find(p => p.isMe);
-  const myScore = myParticipant?.score ?? localMyScore;
+  // Use Math.max to handle race condition where DB score hasn't propagated yet
+  const myScore = Math.round(Math.max(myParticipant?.score || 0, localMyScore));
   const myRank = myParticipant?.rank ?? rankedParticipants.length;
 
   const isWin = myRank === 1;

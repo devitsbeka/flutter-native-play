@@ -1070,8 +1070,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       points_earned: points,
     });
     
-    // Update participant score
-    const newScore = state.myScore + points;
+    // Update participant score (round to prevent floating point accumulation)
+    const newScore = Math.round(state.myScore + points);
     await supabase
       .from("room_participants")
       .update({ score: newScore, current_question: state.currentQuestionIndex + 1 })
@@ -1086,7 +1086,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   }, [state.currentRoom, state.questions, state.currentQuestionIndex, state.myScore, user]);
 
   // Next question
-  const nextQuestion = useCallback(() => {
+  const nextQuestion = useCallback(async () => {
     const isLastQuestion = state.currentQuestionIndex >= state.questions.length - 1;
     
     if (isLastQuestion) {
@@ -1098,6 +1098,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("id", state.currentRoom.id);
       }
       
+      // Wait briefly for score to propagate to realtime subscription before transitioning
+      await new Promise(resolve => setTimeout(resolve, 200));
       setState(prev => ({ ...prev, phase: "results" }));
     } else {
       setState(prev => ({
