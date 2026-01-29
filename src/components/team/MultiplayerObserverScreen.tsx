@@ -76,6 +76,10 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     setBonusEarnedThisQuestion(0);
   }, [currentQuestionIndex]);
 
+  // Sync mode: 1-2 players = instant reveal when all answer
+  // Async mode: 3+ players = wait for timer
+  const isSyncMode = players.length <= 2;
+
   // Award bonus points when all players have answered OR timer expired
   useEffect(() => {
     // Only process if we haven't already processed this question
@@ -84,8 +88,14 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     const allAnswered = players.length > 0 && answeredCount === players.length;
     const timerExpired = localTimeRemaining <= 0;
     
-    // Check if all players have answered or timer ran out
-    if (allAnswered || timerExpired) {
+    // In sync mode (1-2 players), reveal immediately when all players answer
+    // In async/multi mode (3+ players), wait for timer to expire
+    const shouldProcess = isSyncMode 
+      ? (allAnswered || timerExpired)
+      : timerExpired;
+    
+    // Check if we should process this question
+    if (shouldProcess) {
       // Count incorrect answers (and players who didn't answer = incorrect)
       const incorrectAnswerCount = Object.values(opponentAnswers).filter(ans => !ans.is_correct).length;
       const didNotAnswerCount = players.length - answeredCount;
@@ -122,7 +132,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
       setLastProcessedQuestion(currentQuestionIndex);
       setCanAdvance(true);
     }
-  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining]);
+  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining, isSyncMode]);
 
   // Edge case: if no players in the room, allow immediate advance
   useEffect(() => {
@@ -320,30 +330,34 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             )}
           </motion.div>
 
-          {/* Players Status */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-4"
-          >
-            <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-white/10">
-              <span className="text-white/80 text-sm">
-                {answeredCount}/{players.length} უპასუხეს
-              </span>
-            </div>
-          </motion.div>
+          {/* Players Status - only show in sync mode */}
+          {isSyncMode && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-4"
+            >
+              <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-white/10">
+                <span className="text-white/80 text-sm">
+                  {answeredCount}/{players.length} უპასუხეს
+                </span>
+              </div>
+            </motion.div>
+          )}
 
-          {/* Timer */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-4 flex items-center gap-2 text-white/60"
-          >
-            <span className="text-2xl">⏱️</span>
-            <span className="text-2xl font-bold text-white">{Math.ceil(localTimeRemaining)}წ</span>
-          </motion.div>
+          {/* Timer - hide in sync mode when all players answered */}
+          {!(isSyncMode && answeredCount === players.length && players.length > 0) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-4 flex items-center gap-2 text-white/60"
+            >
+              <span className="text-2xl">⏱️</span>
+              <span className="text-2xl font-bold text-white">{Math.ceil(localTimeRemaining)}წ</span>
+            </motion.div>
+          )}
         </div>
 
         {/* Bottom Area - Next Button */}
