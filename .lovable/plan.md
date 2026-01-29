@@ -1,15 +1,68 @@
 
-# Close Modal After Room Invite
+# Fix Host Observer Policy for Multiplayer Games
 
-## Problem
+## Problem Identified
 
-When clicking "მოწვევა" (invite) to invite a friend to a room, the modal stays open showing "გაგზავნილი" (sent). The user expects the modal to close automatically so they can see the lobby with the newly invited player.
+When playing a multiplayer game with a user-created trivia ("My Trivia"), the `plays_count` is never incremented. This breaks the host-observer policy for blind trivias:
+
+1. **Expected Behavior**: Host can play their blind trivia ONCE (first play when `plays_count = 0`). After that, `plays_count` becomes 1, and the host is forced into Observer mode on subsequent plays.
+
+2. **Actual Behavior**: `plays_count` never increments in multiplayer, so the host can play their own trivia unlimited times.
+
+## Root Cause
+
+The `increment_quiz_plays` RPC is only called from `QuizPlayModal.tsx` (solo play from social feed), but it's **NOT** called from `MultiplayerContextV2.tsx` when starting a multiplayer game.
 
 ---
 
-## Solution
+## Technical Solution
 
-Add an optional `onInviteSuccess` callback prop and call it (along with closing the modal) after a successful room invitation.
+### File: `src/contexts/MultiplayerContextV2.tsx`
+
+Add a call to `increment_quiz_plays` when starting a game with a `user_trivia_id`.
+
+**Location 1** (around line 784): After successfully starting a game with existing room questions for a user trivia:
+
+```typescript
+// Increment plays_count for user trivia (enables host-observer policy after first play)
+if (state.currentRoom.user_trivia_id) {
+  await supabase.rpc('increment_quiz_plays', { 
+    post_id: state.currentRoom.user_trivia_id 
+  });
+}
+```
+
+**Location 2** (around line 897): After loading questions from `user_quiz_posts` and starting the game:
+
+```typescript
+// Increment plays_count for user trivia (enables host-observer policy after first play)
+await supabase.rpc('increment_quiz_plays', { 
+  post_id: state.currentRoom.user_trivia_id 
+});
+```
+
+**Location 3** - `startNextFromQueue`: When starting a game from the queue with a user trivia, also increment plays count.
+
+---
+
+## Expected Behavior After Fix
+
+| Scenario | Before Fix | After Fix |
+|----------|------------|-----------|
+| Host plays own blind trivia (1st time) | Can play normally | Can play normally ✓ |
+| Host plays own blind trivia (2nd+ time) | Can play normally (BUG) | Forced to Observer mode ✓ |
+| Host plays own non-blind trivia | Forced to Observer | Forced to Observer ✓ |
+| Other players play host's trivia | Can play normally | Can play normally ✓ |
+
+---
+
+## Observer Bonus Scoring (Already Implemented)
+
+When in Observer mode, the host earns points based on player mistakes:
+- **1-2 players**: 100 points per incorrect answer
+- **3+ players**: 100 points if 50%+ of players fail
+
+This is already working correctly in `MultiplayerObserverScreen.tsx`.
 
 ---
 
@@ -17,105 +70,13 @@ Add an optional `onInviteSuccess` callback prop and call it (along with closing 
 
 | File | Changes |
 |------|---------|
-| `src/components/team/InviteFriendsModal.tsx` | Add `onInviteSuccess` prop; auto-close modal after successful invite |
-| `src/components/team/RoomLobbyV2.tsx` | (Optional) Pass `onInviteSuccess` for any additional handling |
+| `src/contexts/MultiplayerContextV2.tsx` | Call `increment_quiz_plays` RPC when starting game with user trivia |
 
 ---
 
-## Implementation Details
+## Testing Steps
 
-### File: `src/components/team/InviteFriendsModal.tsx`
-
-#### 1. Update Props Interface (line 25-34)
-
-Add `onInviteSuccess` callback:
-
-```typescript
-interface InviteFriendsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  inviteLink?: string;
-  roomId?: string;
-  roomCode?: string;
-  onFriendSelect?: (friendId: string) => void;
-  selectedFriends?: Set<string>;
-  onInviteSuccess?: () => void;  // NEW
-}
-```
-
-#### 2. Update Component Signature (line 102)
-
-Destructure the new prop:
-
-```typescript
-export function InviteFriendsModal({ 
-  isOpen, 
-  onClose, 
-  inviteLink, 
-  roomId, 
-  roomCode, 
-  onFriendSelect, 
-  selectedFriends,
-  onInviteSuccess  // NEW
-}: InviteFriendsModalProps)
-```
-
-#### 3. Update `handleInviteToRoom` (lines 202-259)
-
-After successful invitation, show brief success feedback then close:
-
-```typescript
-const handleInviteToRoom = async (userId: string) => {
-  if (!roomId) return;
-  
-  setInvitingUser(userId);
-  try {
-    // ... existing invite logic ...
-    
-    setSentRequests(prev => new Set([...prev, userId]));
-    toast.success("მოწვევა გაიგზავნა!");
-    
-    // NEW: Close modal after brief delay for feedback
-    setTimeout(() => {
-      handleClose();
-      onInviteSuccess?.();
-    }, 600);
-    
-  } catch (error) {
-    console.error("Invite error:", error);
-    toast.error("მოწვევა ვერ მოხერხდა");
-  } finally {
-    setInvitingUser(null);
-  }
-};
-```
-
----
-
-## User Flow After Fix
-
-1. User is in room lobby (e.g., "ტიტანთა კლუბი")
-2. Clicks "+" to invite friends → InviteFriendsModal opens
-3. Searches for "TriviaMaste" 
-4. Taps "მოწვევა" → Button shows loading spinner
-5. On success:
-   - Button shows "✓ გაგზავნილი" briefly
-   - Toast: "მოწვევა გაიგზავნა!"
-   - Modal auto-closes after 600ms
-6. User sees room lobby with the invited player visible in participants list (showing "invited" status)
-
----
-
-## Visual Feedback Timeline
-
-```text
-0ms    - User taps "მოწვევა"
-0-300ms - Button shows Loader2 spinner
-300ms  - Invitation completes
-300ms  - Button shows "✓ გაგზავნილი"
-300ms  - Toast appears: "მოწვევა გაიგზავნა!"
-900ms  - Modal closes automatically
-900ms  - User sees lobby with invited player
-```
-
-This provides clear visual confirmation that the invite was sent while keeping the UX fluid.
+1. Create a new **blind** trivia (it will have `plays_count = 0`)
+2. Start a multiplayer game with this trivia → Host should be able to play
+3. After game finishes, check database: `plays_count` should be `1`
+4. Start another game with same trivia → Host should see "შენ იცი პასუხები!" warning and be forced to Observer mode
