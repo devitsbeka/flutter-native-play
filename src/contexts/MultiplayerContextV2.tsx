@@ -783,6 +783,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // For custom rooms, we need to check by user_trivia_id from room
           await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id || null);
           
+          // Increment plays_count for user trivia (enables host-observer policy after first play)
+          if (state.currentRoom.user_trivia_id) {
+            await supabase.rpc('increment_quiz_plays', { 
+              post_id: state.currentRoom.user_trivia_id 
+            });
+          }
+          
           return; // Exit early - custom questions handled
         }
         
@@ -895,6 +902,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             
             // Consume matching queue item
             await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id);
+            
+            // Increment plays_count for user trivia (enables host-observer policy after first play)
+            await supabase.rpc('increment_quiz_plays', { 
+              post_id: state.currentRoom.user_trivia_id 
+            });
             
             return; // Exit early - trivia loaded from user_quiz_posts
           }
@@ -1465,6 +1477,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             } : null,
             phase: "playing",
           }));
+          
+          // Increment plays_count for user trivia (enables host-observer policy after first play)
+          await supabase.rpc('increment_quiz_plays', { 
+            post_id: nextItem.user_trivia_id 
+          });
           
           return; // Done with custom trivia
         }
