@@ -11,6 +11,7 @@ interface CategoryPickerSectionProps {
   onOpenPicker: () => void;
   onRemoveQueueItem?: (itemId: string) => void;
   onReorderQueue?: (newOrder: QueueItem[]) => void;
+  isAlreadyPlayed?: boolean; // True if this category was just played
 }
 
 export function CategoryPickerSection({
@@ -22,6 +23,7 @@ export function CategoryPickerSection({
   onOpenPicker,
   onRemoveQueueItem,
   onReorderQueue,
+  isAlreadyPlayed,
 }: CategoryPickerSectionProps) {
   const hasCategory = !!categoryName;
   const showQueuePreview = hasCategory || queue.length > 0;
@@ -55,11 +57,22 @@ export function CategoryPickerSection({
             )}
           </div>
           <div>
-            <p className="text-white font-semibold text-[18px] leading-tight">
-              {hasCategory ? categoryName : "აირჩიე კატეგორია"}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-white font-semibold text-[18px] leading-tight">
+                {hasCategory ? categoryName : "აირჩიე კატეგორია"}
+              </p>
+              {isAlreadyPlayed && hasCategory && (
+                <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
+                  უკვე ითამაშე
+                </span>
+              )}
+            </div>
             <p className="text-white/60 text-[14px] leading-snug">
-              {hasCategory ? "მიმდინარე კატეგორია" : "დააჭირე არჩევისთვის"}
+              {isAlreadyPlayed && hasCategory
+                ? "აირჩიე ახალი კატეგორია"
+                : hasCategory 
+                  ? "მიმდინარე კატეგორია" 
+                  : "დააჭირე არჩევისთვის"}
             </p>
           </div>
         </div>
