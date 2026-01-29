@@ -1,82 +1,124 @@
 
-# გეგმა: მეგობრის წაშლის ღილაკის გამოსწორება
+# გეგმა: მეგობრის წაშლის დიალოგის z-index გამოსწორება
 
 ## პრობლემა
 
-`DropdownMenu`-დან `AlertDialog`-ის გახსნა იწვევს კონფლიქტს. როცა მომხმარებელი დაკლიკავს "წაშლა" ღილაკს:
-1. `setShowDeleteConfirm(true)` გამოიძახება
-2. მაგრამ `DropdownMenu` იხურება და ფოკუსს "იპარავს"
-3. `AlertDialog` ვერ იხსნება სწორად
-
-ეს არის ცნობილი პრობლემა Radix UI-ში, როცა `DropdownMenu`-დან `Dialog/AlertDialog`-ს ხსნი.
+AlertDialog არ ჩანს რადგან **z-index კონფლიქტია**:
+- `PlayerProfileModal` იყენებს `z-[100]`
+- `AlertDialogOverlay` და `AlertDialogContent` იყენებენ `z-50`
+- შედეგად AlertDialog ჩნდება modal-ის **უკან** და მომხმარებელი ვერ ხედავს/ვერ დაკლიკავს
 
 ## გადაწყვეტა
 
-### მიდგომა: `onSelect` + timing delay
+`AlertDialogContent`-ს უნდა მივცეთ უფრო მაღალი z-index (`z-[150]` ან მეტი) რომ modal-ის ზემოთ გამოჩნდეს.
 
-`onClick`-ის ნაცვლად გამოვიყენოთ `onSelect` და დავამატოთ მცირე delay, რომ dropdown-მა მოასწროს დახურვა:
+## ცვლილება
 
-```typescript
-<DropdownMenuItem 
-  onSelect={(e) => {
-    e.preventDefault(); // Prevent default selection behavior
-    // Small delay to let dropdown close first
-    setTimeout(() => {
-      setShowDeleteConfirm(true);
-    }, 100);
-  }}
-  className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
->
-  <UserMinus className="w-4 h-4" />
-  წაშლა
-</DropdownMenuItem>
-```
+### ფაილი: `src/components/profile/PlayerProfileModal.tsx`
 
-### ცვლილება ფაილში: `src/components/profile/PlayerProfileModal.tsx`
-
-**ხაზები 206-216:**
+**ხაზი 521:**
 
 მანამდე:
 ```typescript
-<DropdownMenuItem 
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowDeleteConfirm(true);
-  }}
-  className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
->
-  <UserMinus className="w-4 h-4" />
-  წაშლა
-</DropdownMenuItem>
+<AlertDialogContent>
 ```
 
 შემდეგ:
 ```typescript
-<DropdownMenuItem 
-  onSelect={(e) => {
-    e.preventDefault();
-    // Delay to allow dropdown to close before opening AlertDialog
-    setTimeout(() => {
-      setShowDeleteConfirm(true);
-    }, 100);
-  }}
-  className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
->
-  <UserMinus className="w-4 h-4" />
-  წაშლა
-</DropdownMenuItem>
+<AlertDialogContent className="z-[150]">
+```
+
+**ასევე** უნდა დავამატოთ overlay-ს მაღალი z-index. Radix AlertDialog საშუალებას გვაძლევს გამოვიყენოთ `AlertDialogPortal` და `AlertDialogOverlay` ცალ-ცალკე მაღალი z-index-ით.
+
+### სრული ცვლილება (ხაზები 519-542):
+
+მანამდე:
+```typescript
+{/* Delete Friend Confirmation Dialog */}
+<AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
+      <AlertDialogDescription>
+        ნამდვილად გსურთ {data?.profile?.nickname}-ის მეგობრებიდან წაშლა?
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
+      <AlertDialogAction
+        onClick={(e) => {
+          e.preventDefault();
+          handleDeleteFriend();
+        }}
+        disabled={deletingFriend}
+        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+      >
+        {deletingFriend ? "იშლება..." : "წაშლა"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+შემდეგ:
+```typescript
+{/* Delete Friend Confirmation Dialog */}
+<AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+  <AlertDialogPortal>
+    <AlertDialogOverlay className="z-[140]" />
+    <AlertDialogContent className="z-[150]">
+      <AlertDialogHeader>
+        <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
+        <AlertDialogDescription>
+          ნამდვილად გსურთ {data?.profile?.nickname}-ის მეგობრებიდან წაშლა?
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
+        <AlertDialogAction
+          onClick={(e) => {
+            e.preventDefault();
+            handleDeleteFriend();
+          }}
+          disabled={deletingFriend}
+          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        >
+          {deletingFriend ? "იშლება..." : "წაშლა"}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialogPortal>
+</AlertDialog>
+```
+
+**ასევე import-ებში დავამატებთ:**
+```typescript
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogPortal,    // ← დამატება
+  AlertDialogOverlay,   // ← დამატება
+} from "@/components/ui/alert-dialog";
 ```
 
 ## რატომ მუშაობს
 
-1. `onSelect` არის Radix-ის სწორი event handler `DropdownMenuItem`-ისთვის
-2. `e.preventDefault()` აჩერებს dropdown-ის default დახურვის behavior-ს
-3. `setTimeout(..., 100)` აძლევს dropdown-ს დროს რომ სრულად დაიხუროს და ფოკუსი გაათავისუფლოს
-4. შემდეგ `AlertDialog` იხსნება უპრობლემოდ
+| კომპონენტი | ახლა | ახალი |
+|------------|------|-------|
+| PlayerProfileModal | z-[100] | z-[100] (უცვლელი) |
+| AlertDialogOverlay | z-50 | z-[140] |
+| AlertDialogContent | z-50 | z-[150] |
 
-## ტექნიკური შენიშვნები
+ახლა AlertDialog გამოჩნდება modal-ის **ზემოთ** და მომხმარებელს შეეძლება ინტერაქცია.
 
-- Radix UI-ში `onClick` არ არის რეკომენდირებული `DropdownMenuItem`-ზე - `onSelect` უფრო სანდოა
-- `modal` prop dropdown-ზე ასევე შეიძლება დაეხმაროს, მაგრამ timing approach უფრო მარტივია
-- `100ms` delay საკმარისია ანიმაციისთვის და ფოკუსის გადასვლისთვის
+## ტექნიკური შენიშვნა
+
+`AlertDialogContent` კომპონენტი default-ად render-ს `AlertDialogPortal`-ს და `AlertDialogOverlay`-ს შიგნით (alert-dialog.tsx ხაზები 31-42). ჩვენ ხელით ვიყენებთ `AlertDialogPortal` და `AlertDialogOverlay` ცალ-ცალკე, რომ თითოეულს მივცეთ სწორი z-index.
+
+ალტერნატიულად შეგვიძლია შევცვალოთ alert-dialog.tsx-ში default z-index, მაგრამ ეს სხვა ადგილებზეც იმოქმედებს. ამიტომ **inline className override** უფრო უსაფრთხოა.
