@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { Layers, ChevronRight } from "lucide-react";
+import { Layers, ChevronRight, Tv } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMyRooms, isActiveTVSession } from "@/hooks/useMyRooms";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
+import { LiveBadge } from "@/components/social/LiveBadge";
 
 interface ActiveRoomsWidgetProps {
   onViewAll: () => void;
@@ -15,13 +16,13 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
   const navigate = useNavigate();
   const { rooms, loading } = useMyRooms();
   
-  // Filter for active rooms or rooms with unread activity, prioritize LIVE sessions first, limit to 3
+  // Filter for active rooms or rooms with unread activity or others online, prioritize LIVE sessions first, limit to 3
   const activeRooms = rooms
-    .filter(r => r.has_unread_activity || r.status === "waiting" || r.status === "playing" || isActiveTVSession(r.tv_status))
+    .filter(r => r.has_unread_activity || r.status === "waiting" || r.status === "playing" || isActiveTVSession(r.tv_status) || r.has_others_online)
     .sort((a, b) => {
-      // LIVE sessions first
-      const aLive = isActiveTVSession(a.tv_status);
-      const bLive = isActiveTVSession(b.tv_status);
+      // Others online or LIVE sessions first
+      const aLive = isActiveTVSession(a.tv_status) || a.has_others_online;
+      const bLive = isActiveTVSession(b.tv_status) || b.has_others_online;
       if (aLive && !bLive) return -1;
       if (bLive && !aLive) return 1;
       return 0;
@@ -42,7 +43,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         <span className="text-sm font-bold tracking-wide">
           აქტიური ოთახები
         </span>
-        {activeRooms.some(r => r.has_unread_activity || isActiveTVSession(r.tv_status)) && (
+        {activeRooms.some(r => r.has_unread_activity || isActiveTVSession(r.tv_status) || r.has_others_online) && (
           <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
         )}
       </div>
@@ -51,6 +52,10 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         <div className="divide-y divide-border/50">
           {activeRooms.map((room) => {
             const hasTVSession = isActiveTVSession(room.tv_status);
+            const isPlaying = room.status === "playing";
+            const hasOthersOnline = room.has_others_online;
+            const showLiveBadge = isPlaying || hasTVSession || hasOthersOnline;
+            
             const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
               ? room.tv_active_players 
               : room.participants.length;
@@ -82,12 +87,15 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                       {room.room_icon || "🎮"}
                     </div>
                   )}
-                  {(room.status === "playing" || hasTVSession) && (
-                    <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 rounded text-[10px] font-bold text-white">
-                      LIVE
+                  {showLiveBadge && (
+                    <div className="absolute -top-1 -right-1 flex items-center gap-0.5">
+                      <div className="px-1.5 py-0.5 bg-red-500 rounded text-[10px] font-bold text-white flex items-center gap-0.5">
+                        LIVE
+                        {hasTVSession && <Tv className="w-2.5 h-2.5" />}
+                      </div>
                     </div>
                   )}
-                  {room.has_unread_activity && !hasTVSession && room.status !== "playing" && (
+                  {room.has_unread_activity && !showLiveBadge && (
                     <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-background" />
                   )}
                 </div>
