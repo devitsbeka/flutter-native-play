@@ -178,8 +178,12 @@ export function UniversalBottomNav({
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/leaderboards")) {
+                  // Leaderboards has its own scroll container on mobile
+                  const leaderboardEl = document.getElementById("leaderboard-scroll-container");
                   const mainEl = document.getElementById("main-scroll-container");
-                  if (mainEl) {
+                  if (leaderboardEl) {
+                    leaderboardEl.scrollTo({ top: 0, behavior: "smooth" });
+                  } else if (mainEl) {
                     mainEl.scrollTo({ top: 0, behavior: "smooth" });
                   } else {
                     window.scrollTo({ top: 0, behavior: "smooth" });

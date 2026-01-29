@@ -152,7 +152,7 @@ export default function Leaderboards() {
       </div>
 
       {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
-      <div className="lg:hidden h-[calc(100vh-56px)] overflow-y-auto">
+      <div id="leaderboard-scroll-container" className="lg:hidden h-[calc(100vh-56px)] overflow-y-auto">
         {/* Background Hero - fixed height, shows trophy */}
         <LeaderboardHeroBackground 
           isMobile 
