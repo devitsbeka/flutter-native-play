@@ -18,25 +18,33 @@ export function useNavigationPrefetch() {
   useEffect(() => {
     if (idlePrefetchDone.current) return;
 
-    const idleCallback = 'requestIdleCallback' in window
-      ? (window as any).requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 2000);
+    let handle: number | ReturnType<typeof setTimeout>;
+    
+    if ('requestIdleCallback' in window) {
+      handle = (window as any).requestIdleCallback(() => {
+        if (idlePrefetchDone.current) return;
+        idlePrefetchDone.current = true;
+        prefetchAllTiers();
+        prefetchShopData();
+        prefetchExploreData();
+      }, { timeout: 10000 });
+    } else {
+      handle = setTimeout(() => {
+        if (idlePrefetchDone.current) return;
+        idlePrefetchDone.current = true;
+        prefetchAllTiers();
+        prefetchShopData();
+        prefetchExploreData();
+      }, 2000);
+    }
 
-    const cancelCallback = 'cancelIdleCallback' in window
-      ? (window as any).cancelIdleCallback
-      : clearTimeout;
-
-    const handle = idleCallback(() => {
-      if (idlePrefetchDone.current) return;
-      idlePrefetchDone.current = true;
-      
-      // Prefetch all route data in background
-      prefetchAllTiers();
-      prefetchShopData();
-      prefetchExploreData();
-    }, { timeout: 10000 });
-
-    return () => cancelCallback(handle);
+    return () => {
+      if ('cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(handle);
+      } else {
+        clearTimeout(handle as ReturnType<typeof setTimeout>);
+      }
+    };
   }, [prefetchAllTiers, prefetchShopData, prefetchExploreData]);
 
   const prefetchRoute = useCallback(
