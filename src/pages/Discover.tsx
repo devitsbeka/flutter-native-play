@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -39,6 +39,14 @@ export default function Discover() {
   const { favorites, toggleFavorite } = useFavorites();
   const { ranks: leaderboardRanks } = useUserCategoryRanks();
   const { newLevelCategories } = useNewLevels();
+
+  // Preload CategoryPage chunk when Discover mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      import("@/pages/CategoryPage");
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Transform progress to simple number map
   const progressMap = useMemo(() => {

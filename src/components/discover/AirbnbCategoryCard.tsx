@@ -139,6 +139,10 @@ export function AirbnbCategoryCard({
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
+      onPointerEnter={() => {
+        // Preload CategoryPage on hover for instant navigation
+        import("@/pages/CategoryPage");
+      }}
       className="flex-shrink-0 w-full text-left"
       style={buttonStyle}
     >
