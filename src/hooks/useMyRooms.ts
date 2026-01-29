@@ -432,7 +432,8 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
         name: r.room_name,
         tv_status: r.tv_status,
         tv_active_players: r.tv_active_players,
-        isActiveTv: isActiveTVSession(r.tv_status)
+        isActiveTv: isActiveTVSession(r.tv_status),
+        isMyNew: r.is_host && r.status === "waiting" && isNewlyCreated(r.created_at)
       })));
     }
 
