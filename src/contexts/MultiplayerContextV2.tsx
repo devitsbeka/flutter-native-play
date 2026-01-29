@@ -87,6 +87,7 @@ interface MultiplayerState {
   opponentAnswers: Record<string, PlayerAnswer>;
   hostIsObserver: boolean; // Host can't answer but earns points from player mistakes
   observerBonusThisRound: number; // Accumulated observer bonus for current round
+  lastPlayedTriviaId: string | null; // Track the last played trivia ID for "already played" indicator
 }
 
 interface MultiplayerContextType extends MultiplayerState {
@@ -128,6 +129,7 @@ const initialState: MultiplayerState = {
   opponentAnswers: {},
   hostIsObserver: false,
   observerBonusThisRound: 0,
+  lastPlayedTriviaId: null,
 };
 
 // NOTE: We use a non-undefined default value to avoid hard crashes (blank screen)
@@ -252,6 +254,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           if (updated.status === "playing" && (currentPhase === "lobby" || currentPhase === "results")) {
             // Non-host: fetch questions when game starts - USE shuffled_answers from DB
             if (!currentIsHost) {
+              // CRITICAL: Clear local questions FIRST to prevent stale data showing
+              setState(prev => ({
+                ...prev,
+                questions: [], // Clear old questions immediately
+                currentQuestionIndex: 0,
+                myScore: 0,
+                opponentAnswers: {},
+                currentRoom: updated, // Sync room state immediately
+              }));
+              
               // Wait briefly for questions to be fully committed by host
               await new Promise(resolve => setTimeout(resolve, 300));
               
@@ -298,6 +310,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   currentQuestionIndex: 0,
                   myScore: 0,
                   phase: "playing",
+                  currentRoom: updated, // Ensure room state is synced
                 }));
               } else {
                 console.error("Failed to fetch questions after retries");
@@ -1104,6 +1117,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     const roomId = state.currentRoom.id;
     
+    // Remember what was just played for "already played" indicator
+    const justPlayedTriviaId = state.currentRoom.user_trivia_id;
+    
     // Check if queue is empty - if so, clear current category to prompt new selection
     const { data: queueItems } = await supabase
       .from("room_category_queue")
@@ -1136,6 +1152,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       myScore: 0,
       lastQuestionResult: null,
       opponentAnswers: {},
+      lastPlayedTriviaId: justPlayedTriviaId || null, // Store for "already played" indicator
       // Also clear in local state if queue is empty
       ...(hasQueueItems ? {} : {
         currentRoom: prev.currentRoom ? {
