@@ -1,120 +1,127 @@
 
 
-# გეგმა: სურათიანი კითხვების გამარტივება და პასუხების სივრცის გაზრდა
+# პრობლემა: განსხვავებული აიქონები ერთ რაუნდში
 
-## რას შევცვლით
+## აღმოჩენა
 
-1. **სურათიანი კითხვები** - კითხვის ტექსტის დამალვა, მხოლოდ სურათი და პასუხები
-2. **ყველა კითხვის ტიპი** - პასუხებს შორის უფრო მეტი სივრცე
+თქვენ და სხვა მოთამაშე ერთსა და იმავე კითხვაზე **განსხვავებულ აიქონებს** ხედავთ. ეს ხდება იმიტომ, რომ:
 
----
-
-## ცვლილება 1: QuizQuestionCard - კითხვის ტექსტის დამალვა სურათისთვის
-
-**ფაილი:** `src/components/ui/quiz-question-card.tsx`
-
-ახალი prop დაემატება `hideQuestionText` რომელიც ავტომატურად `true` იქნება როცა სურათია:
-
-```diff
-interface QuizQuestionCardProps {
-  ...
-+ /**
-+  * Hide question text - useful for image-only trivia where image speaks for itself
-+  */
-+ hideQuestionText?: boolean;
-}
-```
-
-კითხვის ტექსტის სექცია:
-```diff
-- {/* Question Text */}
-- <div className={cn(...)}>
--   {isLoading ? (...) : (
--     <p className="...">{questionText}</p>
--   )}
-- </div>
-+ {/* Question Text - hide for image-only mode */}
-+ {!hideQuestionText && (
-+   <div className={cn(...)}>
-+     {isLoading ? (...) : (
-+       <p className="...">{questionText}</p>
-+     )}
-+   </div>
-+ )}
-```
-
----
-
-## ცვლილება 2: QuizGameScreenProd - სურათისთვის hideQuestionText + gap გაზრდა
-
-**ფაილი:** `src/components/game/QuizGameScreenProd.tsx`
-
-სურათიანი კითხვისთვის:
-```diff
-<QuizQuestionCard
-  questionText={currentQuestion.question}
-  imageUrl={currentQuestion.imageUrl}
-+ hideQuestionText={!!currentQuestion.imageUrl}
-  ...
-/>
-```
-
-პასუხებს შორის სივრცე (ხაზი 436):
-```diff
-- <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-visible min-h-0 pb-2">
-+ <div className="flex-1 px-4 mt-0 flex flex-col gap-4 [@media(max-height:700px)]:gap-2.5 overflow-visible min-h-0 pb-2">
-```
-
----
-
-## ცვლილება 3: MultiplayerGameScreenV2 - იგივე ლოგიკა
-
-**ფაილი:** `src/components/team/MultiplayerGameScreenV2.tsx`
-
-სურათისთვის hideQuestionText:
-```diff
-<QuizQuestionCard
-  questionText={currentQuestion.question}
-  imageUrl={currentQuestion.imageUrl}
-+ hideQuestionText={!!currentQuestion.imageUrl}
-  ...
-/>
-```
-
-პასუხებს შორის სივრცე (ხაზი 364):
-```diff
-- <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
-+ <div className="flex-1 px-4 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-hidden min-h-0">
-```
-
----
-
-## ვიზუალური შედარება
-
-### სურათიანი კითხვა
-
-| მანამდე | შემდეგ |
-|---------|--------|
-| სურათი | სურათი |
-| "ვინ/რა არის ეს?" | ~~(წაშლილი)~~ |
-| პროგრეს ბარი | პროგრეს ბარი |
-| პასუხები (gap-3) | პასუხები (gap-4) |
-
-### კლასიკური კითხვა
-
-| მანამდე | შემდეგ |
-|---------|--------|
-| აიკონი | აიკონი |
-| კითხვის ტექსტი | კითხვის ტექსტი |
-| პასუხები (gap-1.5) | პასუხები (gap-3) |
-
----
+1. **უმეტესობა კითხვებს არ აქვს `icon_slug` შენახული ბაზაში**
+2. როცა `icon_slug` არ არსებობს, `DynamicIcon` კომპონენტი იყენებს **კლიენტ-სპეციფიკურ fallback-ს**
+3. ეს fallback (`getRandomIconForCategory`) ირჩევს აიქონს კატეგორიიდან `seed`-ის გამოყენებით
+4. **პრობლემა**: თითოეულ კლიენტზე აიქონების ბიბლიოთეკა შეიძლება სხვადასხვა თანმიმდევრობით ჩაიტვირთოს, რაც განსხვავებულ შედეგს იძლევა
 
 ## ტექნიკური დეტალები
 
+```text
+მომხმარებელი A:              მომხმარებელი B:
+iconIndex = [🎮, 🎬, 🎭]     iconIndex = [🎬, 🎭, 🎮]
+seed = 5                      seed = 5
+5 % 3 = 2 → 🎭               5 % 3 = 2 → 🎮  ← განსხვავებული!
+```
+
+`DynamicIcon.tsx` ხაზი 109:
+```typescript
+const fallbackUrl = getRandomIconForCategory(categoryId || 'general', stableSeed);
+```
+
+`useIconLibrary.ts` ხაზი 554-555:
+```typescript
+const index = Math.abs(seed) % matchingIcons.length;
+return getIconUrl(matchingIcons[index].file_name);
+```
+
+---
+
+## გადაწყვეტა
+
+**აიქონი უნდა გენერირდეს სერვერზე და შეინახოს `room_questions.icon_slug`-ში** - არა კლიენტზე.
+
+### მიდგომა 1: სერვერ-საიდ აიქონის გენერაცია (რეკომენდებული)
+
+თამაშის დაწყებისას, ჰოსტის კლიენტი:
+1. თითოეული კითხვისთვის გამოიანგარიშოს აიქონის slug
+2. შეინახოს `room_questions.icon_slug`-ში
+3. ყველა მოთამაშე წაიკითხავს ერთსა და იმავე slug-ს
+
+**ცვლილებები:**
+
 | ფაილი | ცვლილება |
 |-------|----------|
-| `quiz-question-card.tsx` | `hideQuestionText` prop + conditional rendering |
-| `QuizGameScreenProd.tsx` | `hideQuestionText` for images + gap `3→4` |
-| `MultiplayerGameScreenV2.tsx` | `hideQuestionText` for images + gap `1.5→3` |
+| `MultiplayerContextV2.tsx` | თამაშის დაწყებისას - თუ კითხვას არ აქვს `iconSlug`, დავაგენერიროთ და შევინახოთ |
+| `useIconLibrary.ts` | ახალი ფუნქცია `getStableIconSlugForCategory(categoryId, questionText)` - რომელიც დაბრუნებს იგივე slug-ს ერთი და იგივე input-ისთვის |
+
+### მიდგომა 2: Deterministic Hash (მარტივი fix)
+
+შევცვალოთ `getRandomIconForCategory` რომ იყენებდეს **slug-ების sorted array**-ს და **კითხვის ტექსტის hash**-ს:
+
+```typescript
+// ახლანდელი (არასტაბილური):
+const index = Math.abs(seed) % matchingIcons.length;
+
+// ახალი (სტაბილური):
+const sortedIcons = [...matchingIcons].sort((a, b) => a.slug.localeCompare(b.slug));
+const index = Math.abs(seed) % sortedIcons.length;
+```
+
+**უპირატესობა**: მინიმალური ცვლილება, იგივე array თანმიმდევრობა ყველა კლიენტზე.
+
+---
+
+## რეკომენდაცია: მიდგომა 2 (Deterministic Hash)
+
+1. **სწრაფი fix**: `useIconLibrary.ts`-ში დავახარისხოთ აიქონები სტაბილური თანმიმდევრობით
+2. **Seed-ის გაუმჯობესება**: seed-ისთვის გამოვიყენოთ კითხვის ტექსტის hash (არა მხოლოდ questionId)
+
+### შესაცვლელი ფაილები:
+
+| ფაილი | ცვლილება |
+|-------|----------|
+| `src/hooks/useIconLibrary.ts` | `getRandomIconForCategory` - დავახარისხოთ icons ალფავიტურად seed-ის გამოყენებამდე |
+| `src/components/shared/DynamicIcon.tsx` | stableSeed-ისთვის გამოვიყენოთ questionId + categoryId combo hash |
+
+### კოდის ცვლილება:
+
+**useIconLibrary.ts - getRandomIconForCategory:**
+```typescript
+const getRandomIconForCategory = useCallback((categoryId: string, seed: number = 0): string | null => {
+  if (iconIndex.length === 0) return null;
+  
+  const categoryKey = categoryId.toLowerCase();
+  const categoryKeywords = CATEGORY_ICON_MAP[categoryKey] || [];
+  
+  if (categoryKeywords.length > 0) {
+    const matchingIcons = iconIndex.filter(icon => {
+      const slugMatch = categoryKeywords.some(kw => icon.slug.includes(kw));
+      const tagMatch = icon.tags.some(tag => 
+        categoryKeywords.some(kw => tag.toLowerCase().includes(kw))
+      );
+      return slugMatch || tagMatch;
+    });
+    
+    if (matchingIcons.length > 0) {
+      // SORT ALPHABETICALLY for consistent order across all clients
+      const sortedIcons = [...matchingIcons].sort((a, b) => 
+        a.slug.localeCompare(b.slug)
+      );
+      const index = Math.abs(seed) % sortedIcons.length;
+      return getIconUrl(sortedIcons[index].file_name);
+    }
+  }
+  
+  // Fallback: ALSO sort before picking
+  const sortedAll = [...iconIndex].sort((a, b) => a.slug.localeCompare(b.slug));
+  const index = Math.abs((seed * 137) % sortedAll.length);
+  return getIconUrl(sortedAll[index].file_name);
+}, [iconIndex]);
+```
+
+---
+
+## შედეგი
+
+| სცენარი | მანამდე | შემდეგ |
+|---------|---------|--------|
+| კითხვას აქვს icon_slug | ✅ იგივე აიქონი | ✅ იგივე აიქონი |
+| კითხვას არ აქვს icon_slug | ❌ სხვადასხვა აიქონი | ✅ იგივე აიქონი |
 
