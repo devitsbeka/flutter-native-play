@@ -136,7 +136,7 @@ export function ShopItemCard({
             ? "0 3px 0 hsl(var(--border))"
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
-          opacity: !canAfford && !isPurchased ? 0.6 : 1,
+          // Removed opacity reduction for unaffordable items - keep full visibility
         }}
         whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
         whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
