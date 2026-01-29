@@ -52,7 +52,9 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
   const isTriviaPlayed = notification.type === 'trivia_played';
 
-  const hasDualActions = (isFriendRequest || isGameInvite) && isUnread;
+  // Friend requests and game invites ALWAYS show action buttons (accept/decline) until acted upon
+  // The buttons should remain visible even after marking as read
+  const hasDualActions = isFriendRequest || isGameInvite;
   const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved || isTriviaPlayed) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
