@@ -25,6 +25,22 @@ export const calculatePoints = (isCorrect: boolean, timeRemaining: number): numb
 };
 
 /**
+ * Calculate observer bonus when a player answers incorrectly or times out
+ * The bonus is inversely proportional to how quickly the player failed
+ * This creates fair scoring: fast wrong = low bonus, timeout = max bonus (175)
+ * 
+ * @param timeWhenAnswered - Seconds remaining when wrong answer was given (0 for timeout)
+ * @returns Bonus points for observer (100-175 range, matching player point range)
+ */
+export const calculateObserverBonus = (timeWhenAnswered: number): number => {
+  // If player answered wrong quickly (14s left), observer gets less (105)
+  // If player timed out (0s left), observer gets max (175)
+  const clampedTime = Math.max(0, Math.min(timeWhenAnswered, QUESTION_TIME_SECONDS));
+  const timeUsed = QUESTION_TIME_SECONDS - clampedTime;
+  return BASE_POINTS + (timeUsed * TIME_BONUS_MULTIPLIER);
+};
+
+/**
  * Calculate time remaining from server start time
  * @param questionStartTime - ISO string of when question started
  * @param totalTime - Total seconds for the question (default: 15)
