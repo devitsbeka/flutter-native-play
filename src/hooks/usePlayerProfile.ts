@@ -61,6 +61,7 @@ export interface PlayerProfileData {
   };
   isFriend: boolean;
   friendshipStatus: 'none' | 'pending' | 'accepted' | 'sent';
+  friendshipId: string | null;
   isCurrentUser: boolean;
 }
 
@@ -120,6 +121,7 @@ export function usePlayerProfile(userId: string | null) {
 
         // Check friendship status
         let friendshipStatus: 'none' | 'pending' | 'accepted' | 'sent' = 'none';
+        let friendshipId: string | null = null;
         let isFriend = false;
 
         if (user && user.id !== userId) {
@@ -130,6 +132,7 @@ export function usePlayerProfile(userId: string | null) {
             .maybeSingle();
 
           if (friendship) {
+            friendshipId = friendship.id;
             if (friendship.status === 'accepted') {
               friendshipStatus = 'accepted';
               isFriend = true;
@@ -220,6 +223,7 @@ export function usePlayerProfile(userId: string | null) {
           },
           isFriend,
           friendshipStatus,
+          friendshipId,
           isCurrentUser: user?.id === userId,
         });
       } catch (err) {
