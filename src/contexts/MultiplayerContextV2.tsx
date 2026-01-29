@@ -1102,11 +1102,31 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   const continueInRoom = useCallback(async () => {
     if (!state.currentRoom) return;
     
-    // Reset room status to waiting if all players finished
+    const roomId = state.currentRoom.id;
+    
+    // Check if queue is empty - if so, clear current category to prompt new selection
+    const { data: queueItems } = await supabase
+      .from("room_category_queue")
+      .select("id")
+      .eq("room_id", roomId)
+      .limit(1);
+    
+    const hasQueueItems = queueItems && queueItems.length > 0;
+    
+    // Reset room status to waiting
+    // If queue is empty, clear category so lobby shows "აირჩიე კატეგორია"
     await supabase
       .from("game_rooms")
-      .update({ status: "waiting" })
-      .eq("id", state.currentRoom.id);
+      .update({ 
+        status: "waiting",
+        // Clear category data only if queue is empty (forces new selection)
+        ...(hasQueueItems ? {} : {
+          category_id: null,
+          category_name: null,
+          user_trivia_id: null,
+        }),
+      })
+      .eq("id", roomId);
     
     setState(prev => ({
       ...prev,
@@ -1116,6 +1136,15 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       myScore: 0,
       lastQuestionResult: null,
       opponentAnswers: {},
+      // Also clear in local state if queue is empty
+      ...(hasQueueItems ? {} : {
+        currentRoom: prev.currentRoom ? {
+          ...prev.currentRoom,
+          category_id: null,
+          category_name: null,
+          user_trivia_id: null,
+        } : null,
+      }),
     }));
   }, [state.currentRoom]);
 
