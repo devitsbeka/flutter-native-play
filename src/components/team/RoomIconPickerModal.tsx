@@ -167,7 +167,7 @@ export function RoomIconPickerModal({
 
       if (data) {
         const shuffled = [...data].sort(() => Math.random() - 0.5);
-        setSuggestedIcons(shuffled.slice(0, 12) as IconItem[]);
+        setSuggestedIcons(shuffled.slice(0, 4) as IconItem[]); // Only 4 suggestions (1 row)
       }
     } catch (e) {
       console.error("Failed to fetch icons:", e);
@@ -346,8 +346,56 @@ export function RoomIconPickerModal({
             </div>
           </div>
 
-          {/* Scrollable Content */}
-          <div className="h-full overflow-y-auto pt-[60px] pb-24 safe-top">
+          {/* Sticky Search Section - Below header */}
+          <div className="fixed top-[60px] left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/20">
+            <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="მოძებნე აიკონი..."
+                  className="pl-10 pr-10 h-12 bg-muted/50 border-border rounded-xl"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Category filters - horizontal scrollable */}
+              {!searchQuery.trim() && (
+                <div 
+                  ref={categoryScrollRef}
+                  className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {ICON_CATEGORIES.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category.id)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                        selectedCategory === category.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span>{category.emoji}</span>
+                      <span>{category.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Scrollable Content - Adjusted padding for sticky search */}
+          <div className="h-full overflow-y-auto pt-[140px] pb-24 safe-top">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <div className="p-4 space-y-4">
               {/* Current icon preview with editable name */}
@@ -391,49 +439,6 @@ export function RoomIconPickerModal({
                   </p>
                 </div>
               </div>
-
-              {/* Search input */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="მოძებნე აიკონი..."
-                  className="pl-10 pr-10 h-12 bg-muted/50 border-border rounded-xl"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={clearSearch}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {/* Category filters - horizontal scrollable */}
-              {!searchQuery.trim() && (
-                <div 
-                  ref={categoryScrollRef}
-                  className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {ICON_CATEGORIES.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategorySelect(category.id)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
-                        selectedCategory === category.id
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <span>{category.emoji}</span>
-                      <span>{category.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
 
               {/* Recent icons section - only show if there are recent icons and not searching */}
               {!searchQuery.trim() && selectedCategory === "all" && recentIcons.length > 0 && (
@@ -512,16 +517,16 @@ export function RoomIconPickerModal({
                 )}
               </div>
 
-              {/* Icons grid - 4x3 */}
-              <div className="grid grid-cols-4 gap-3">
-                <AnimatePresence mode="popLayout">
+              {/* Icons grid - 4 columns with minimum height to prevent jumping */}
+              <div className="grid grid-cols-4 gap-3 min-h-[80px]">
+                <AnimatePresence mode="sync">
                   {isDisplayLoading ? (
-                    Array.from({ length: 12 }).map((_, i) => (
+                    Array.from({ length: 4 }).map((_, i) => (
                       <motion.div
                         key={`skeleton-${i}`}
-                        initial={{ opacity: 0 }}
+                        initial={{ opacity: 0.5 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        exit={{ opacity: 0.5 }}
                         className="aspect-square rounded-xl bg-muted animate-pulse"
                       />
                     ))
