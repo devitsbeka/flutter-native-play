@@ -1,57 +1,82 @@
 
-# გამარტივება: გამოწვევის ღილაკი პირდაპირ ოთახის შექმნაზე
+
+# გასწორება: ბიბლიოთეკის/შემთხვევითი კატეგორიებისთვის Observer-ად არასწორი ჩვენება
 
 ## პრობლემა
 
-"გამოწვევა" ღილაკზე დაჭერისას ჩნდება შუალედური ეკრანი (ChallengeTypeModal) სხვადასხვა ვარიანტებით. თქვენ გსურთ ამ ეკრანის გამოტოვება და პირდაპირ ოთახის შექმნის გვერდზე გადასვლა, სადაც არჩეული მეგობარი უკვე იქნება მოწვევაში.
+როდესაც ჰოსტი ირჩევს ბიბლიოთეკის კატეგორიას ან შემთხვევით კატეგორიას (არა თავისი შექმნილი blind trivia-ს 0 plays-ით), მაინც ეჩვენება Observer-ის ეკრანი და ვერ თამაშობს. ეს ხდება მხოლოდ ჰოსტის მოწყობილობაზე.
+
+---
+
+## პრობლემის მიზეზი
+
+`startGame` ფუნქციაში (TVGameContext.tsx):
+
+1. ბიბლიოთეკის კატეგორიებისთვის `firstRoundSuggesterId` სწორად არის `null`
+2. მონაცემთა ბაზა სწორად განახლდება: `current_round_suggester_id: null`
+3. **პრობლემა**: ლოკალური state-ის განახლება (`setState`) **არ აახლებს** `currentRoundSuggesterId` ველს - ის რჩება წინა თამაშის მონაცემებით
+
+შედეგად, `isSuggester` შემოწმება იყენებს ძველ მონაცემებს და ჰოსტს Observer-ად აჩვენებს.
 
 ---
 
 ## გადაწყვეტა
 
-შევცვლით `PlayerProfileModal.tsx`-ში `handleChallenge` ფუნქციას, რომ:
+`startGame` ფუნქციაში, ლოკალური state-ის განახლებას უნდა დავამატოთ suggester-ის ველები:
 
-1. დახუროს პროფილის მოდალი
-2. პირდაპირ გადაამისამართოს `/team?challenge={userId}&type=create-room` URL-ზე (გვერდს გვერდის ავლით ChallengeTypeModal-ს)
-
-ეს ავტომატურად გახსნის CreateRoomPage-ს, სადაც გამოწვეული მეგობარი უკვე იქნება მოწვევის სიაში.
+```typescript
+// სტრიქონები 2527-2532
+setState(prev => ({
+  ...prev,
+  roundNumber: 1,
+  totalRounds: totalRoundsCount,
+  // დამატება: Suggester-ის ინფორმაციის სინქრონიზაცია
+  currentRoundSuggesterId: firstRoundSuggesterId,
+  currentRoundSuggesterNickname: firstRoundSuggesterNickname,
+  currentRoundSuggesterAvatarUrl: firstRoundSuggesterAvatarUrl,
+}));
+```
 
 ---
 
 ## ტექნიკური ცვლილება
 
-### ფაილი: `src/components/profile/PlayerProfileModal.tsx`
+### ფაილი: `src/contexts/TVGameContext.tsx`
 
-**ამჟამინდელი კოდი (სტრიქონები 105-107):**
+**ადგილი**: სტრიქონები 2527-2532
+
+**ამჟამინდელი კოდი**:
 ```typescript
-const handleChallenge = () => {
-  setChallengeModalOpen(true);
-};
+setState(prev => ({
+  ...prev,
+  roundNumber: 1,
+  totalRounds: totalRoundsCount,
+}));
 ```
 
-**ახალი კოდი:**
+**ახალი კოდი**:
 ```typescript
-const handleChallenge = () => {
-  onClose();
-  navigate(`/team?challenge=${userId}&type=create-room`);
-};
+setState(prev => ({
+  ...prev,
+  roundNumber: 1,
+  totalRounds: totalRoundsCount,
+  // CRITICAL: Sync suggester state locally to prevent stale isSuggester checks
+  currentRoundSuggesterId: firstRoundSuggesterId,
+  currentRoundSuggesterNickname: firstRoundSuggesterNickname,
+  currentRoundSuggesterAvatarUrl: firstRoundSuggesterAvatarUrl,
+}));
 ```
-
-### დამატებით წასაშლელი კოდი:
-
-1. წავშლით `challengeModalOpen` state-ს (სტრიქონი 59)
-2. წავშლით `ChallengeTypeModal` იმპორტს (სტრიქონი 17)
-3. წავშლით `ChallengeTypeModal` კომპონენტს JSX-დან (სტრიქონები 437-451)
 
 ---
 
 ## შედეგი
 
-```text
-მოქმედება: "გამოწვევა" ღილაკზე დაჭერა
-შედეგი:   პირდაპირ გახსნის ოთახის შექმნის გვერდს
-          მეგობარი ავტომატურად არჩეულია მოწვევაში
-```
+| სცენარი | მანამდე | შემდეგ |
+|---------|---------|--------|
+| ბიბლიოთეკის კატეგორია | Observer ეკრანი | მოთამაშე ეკრანი |
+| შემთხვევითი კატეგორია | Observer ეკრანი | მოთამაშე ეკრანი |
+| ჩემი Trivia (blind, 0 plays) | მოთამაშე ეკრანი | მოთამაშე ეკრანი |
+| ჩემი Trivia (non-blind ან plays>0) | Observer ეკრანი | Observer ეკრანი |
 
 ---
 
@@ -59,4 +84,5 @@ const handleChallenge = () => {
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `src/components/profile/PlayerProfileModal.tsx` | handleChallenge → navigate პირდაპირ; ChallengeTypeModal-ის წაშლა |
+| `src/contexts/TVGameContext.tsx` | setState-ში suggester ველების დამატება |
+
