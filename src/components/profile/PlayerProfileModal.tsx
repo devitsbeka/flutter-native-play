@@ -14,7 +14,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
-import { ChallengeTypeModal } from "@/components/challenge/ChallengeTypeModal";
 
 // Custom time formatter for Georgian (no "დაახლოებით")
 const formatTimeAgo = (date: Date) => {
@@ -56,7 +55,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const { data, loading, refetch } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
 
   // Non-friends can only see avatar, name, add friend button, and public content
   const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
@@ -103,7 +101,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   };
 
   const handleChallenge = () => {
-    setChallengeModalOpen(true);
+    onClose();
+    navigate(`/team?challenge=${userId}&type=create-room`);
   };
 
   const handleMessage = () => {
@@ -434,21 +433,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
         />
       )}
 
-      {/* Challenge Modal */}
-      <ChallengeTypeModal
-        isOpen={challengeModalOpen}
-        onClose={() => setChallengeModalOpen(false)}
-        onChallengeStart={() => {
-          setChallengeModalOpen(false);
-          onClose();
-        }}
-        targetUserId={userId || undefined}
-        targetUserProfile={data?.profile ? {
-          nickname: data.profile.nickname,
-          avatar_url: data.profile.avatar_url || "",
-          animated_avatar_url: data.profile.animated_avatar_url || "",
-        } : undefined}
-      />
     </>
   );
 }
