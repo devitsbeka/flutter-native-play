@@ -1009,6 +1009,7 @@ export function RoomLobbyV2() {
         onAddToQueue={handleAddToQueue}
         showQueueOption={true}
         roomGradient={roomGradient?.gradient}
+        excludeTriviaId={currentRoom?.user_trivia_id}
       />
 
       {/* Host Observer Warning Modal */}
