@@ -129,8 +129,10 @@ const TVHostController: React.FC = () => {
       'lobby': 'lobby', // Show lobby UI instead of waiting
       'countdown': 'countdown',
       'question': 'playing',
+      'playing': 'playing', // Also handle 'playing' directly (DB status alias)
       'reveal': 'reveal',
       'results': 'completed',
+      'completed': 'completed', // Also handle 'completed' directly
       'round-intro': 'round-intro',
       'poll-suggest': 'poll-suggest',
       'poll-voting': 'poll-voting',
@@ -163,15 +165,17 @@ const TVHostController: React.FC = () => {
   }
   
   // Debug logging for phase issues
-  console.log('[TVHostController] Phase debug:', { 
+  console.log('[TVHostController] 🎮 Render state:', { 
     contextPhase, 
     localPhase,
     pollHookPhase: pollHook.pollPhase,
     questionsLength: questions.length,
     currentQuestionIndex,
+    timeRemaining,
     playersCount: players.length,
     // CRITICAL: Log suggester state to debug round 2 blocking issue
     isSuggester,
+    hasAnswered,
     myPlayerId: myPlayerId ? myPlayerId.substring(0, 8) + '...' : 'NULL',
     currentRoundSuggesterId: currentRoundSuggesterId ? currentRoundSuggesterId.substring(0, 8) + '...' : 'NULL',
   });
@@ -703,8 +707,12 @@ const TVHostController: React.FC = () => {
       const observerPlayer = players.find(p => p.id === myPlayerId);
       const observerScore = observerPlayer?.score ?? myScore;
       
+      // CRITICAL: Use key to force re-render when question changes
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center">
+        <div 
+          key={`observer-reveal-${currentQuestionIndex}`}
+          className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center"
+        >
           <Star className="w-16 h-16 text-yellow-400 mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">შენი კატეგორიაა!</h2>
           <p className="text-purple-300 mb-4">ამ რაუნდში აკვირდები</p>
@@ -1291,8 +1299,12 @@ const TVHostController: React.FC = () => {
     const observerPlayer = players.find(p => p.id === myPlayerId);
     const observerScore = observerPlayer?.score ?? myScore;
     
+    // CRITICAL: Use key to force re-render when question changes
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center">
+      <div 
+        key={`observer-playing-${currentQuestionIndex}`}
+        className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center"
+      >
         <div className="text-center">
           <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
           <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
