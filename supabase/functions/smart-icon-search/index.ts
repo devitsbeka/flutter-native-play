@@ -582,7 +582,7 @@ serve(async (req) => {
         searchTerms.add(fullTransliteration);
       }
     } else {
-      // For non-Georgian (English) queries, add synonyms and Georgian equivalents for better results
+      // For non-Georgian (English/Latin) queries, add synonyms and Georgian equivalents for better results
       const queryLower = query.toLowerCase();
       searchTerms.add(queryLower);
       
@@ -602,6 +602,64 @@ serve(async (req) => {
             getPhoneticVariants(transliterated).forEach(v => searchTerms.add(v));
           }
         });
+      }
+      
+      // NEW: Reverse transliteration - convert Latin input to Georgian and lookup semantic meanings
+      // This handles cases like "zvigeni" -> "ზვიგენი" -> ["shark", "fish"]
+      const LATIN_TO_GEORGIAN: Record<string, string> = {
+        'a': 'ა', 'b': 'ბ', 'g': 'გ', 'd': 'დ', 'e': 'ე',
+        'v': 'ვ', 'z': 'ზ', 't': 'თ', 'i': 'ი', 'k': 'კ',
+        'l': 'ლ', 'm': 'მ', 'n': 'ნ', 'o': 'ო', 'p': 'პ',
+        'r': 'რ', 's': 'ს', 'u': 'უ', 'f': 'ფ', 'q': 'ყ',
+        'j': 'ჯ', 'h': 'ჰ', 'c': 'ც', 'w': 'წ', 'x': 'ხ'
+      };
+      
+      // Transliterate Latin to Georgian
+      const transliterateLatinToGeorgian = (text: string): string => {
+        let result = '';
+        let i = 0;
+        while (i < text.length) {
+          // Handle common digraphs
+          const twoChar = text.substring(i, i + 2).toLowerCase();
+          if (twoChar === 'sh') { result += 'შ'; i += 2; continue; }
+          if (twoChar === 'ch') { result += 'ჩ'; i += 2; continue; }
+          if (twoChar === 'ts') { result += 'ც'; i += 2; continue; }
+          if (twoChar === 'dz') { result += 'ძ'; i += 2; continue; }
+          if (twoChar === 'kh') { result += 'ხ'; i += 2; continue; }
+          if (twoChar === 'gh') { result += 'ღ'; i += 2; continue; }
+          if (twoChar === 'zh') { result += 'ჟ'; i += 2; continue; }
+          
+          const char = text[i].toLowerCase();
+          result += LATIN_TO_GEORGIAN[char] || char;
+          i++;
+        }
+        return result;
+      };
+      
+      // Try converting Latin query to Georgian and look up in GEORGIAN_TO_ENGLISH
+      const potentialGeorgian = transliterateLatinToGeorgian(queryLower);
+      console.log(`Latin "${queryLower}" -> Georgian "${potentialGeorgian}"`);
+      
+      // Look for exact or partial matches in Georgian dictionary
+      for (const [geoWord, translations] of Object.entries(GEORGIAN_TO_ENGLISH)) {
+        // Check if the converted Georgian matches or is contained in dictionary words
+        if (potentialGeorgian === geoWord || 
+            potentialGeorgian.includes(geoWord) || 
+            geoWord.includes(potentialGeorgian)) {
+          translations.forEach(t => searchTerms.add(t));
+          console.log(`Found Georgian match: "${geoWord}" -> ${translations.join(', ')}`);
+        }
+        
+        // Also check with common suffix variations stripped (ი ending)
+        const potentialWithoutSuffix = potentialGeorgian.replace(/ი$/, '');
+        const geoWordWithoutSuffix = geoWord.replace(/ი$/, '');
+        if (potentialWithoutSuffix.length >= 3 && geoWordWithoutSuffix.length >= 3) {
+          if (potentialWithoutSuffix === geoWordWithoutSuffix || 
+              potentialWithoutSuffix.includes(geoWordWithoutSuffix) || 
+              geoWordWithoutSuffix.includes(potentialWithoutSuffix)) {
+            translations.forEach(t => searchTerms.add(t));
+          }
+        }
       }
       
       // Also check for partial matches in synonym keys
