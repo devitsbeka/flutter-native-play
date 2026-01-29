@@ -65,6 +65,15 @@ export function isLiveTVSession(tvStatus: string | null): boolean {
   return tvStatus !== null && LIVE_TV_STATUSES.includes(tvStatus);
 }
 
+/**
+ * Check if a room was created recently (within 5 minutes)
+ * Used to prioritize newly created rooms in sorting and show "ახალი" badge
+ */
+export function isNewlyCreated(createdAt: string): boolean {
+  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+  return new Date(createdAt).getTime() > fiveMinutesAgo;
+}
+
 interface UseMyRoomsOptions {
   filter?: RoomFilter;
   sort?: RoomSort;
@@ -378,36 +387,40 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       );
     }
 
-    // Sort: Active TV sessions first (LIVE), then playing, then waiting, then unread, then by activity
+    // Sort: My new rooms first, then LIVE, then playing, then waiting, then unread, then by activity
     result = [...result].sort((a, b) => {
-      // Priority 1: Active TV sessions first (LIVE badge) - these are the most important
-      const aHasActiveTv = isActiveTVSession(a.tv_status);
-      const bHasActiveTv = isActiveTVSession(b.tv_status);
+      const now = Date.now();
+      const fiveMinutesAgo = now - 5 * 60 * 1000;
       
-      // LIVE rooms with active players should be at the very top
-      const aIsLiveWithPlayers = aHasActiveTv && a.tv_active_players > 0;
-      const bIsLiveWithPlayers = bHasActiveTv && b.tv_active_players > 0;
+      // Priority 0: MY recently created rooms (within 5 min) - HIGHEST PRIORITY
+      const aIsMyNew = a.is_host && a.status === "waiting" && 
+        new Date(a.created_at).getTime() > fiveMinutesAgo;
+      const bIsMyNew = b.is_host && b.status === "waiting" && 
+        new Date(b.created_at).getTime() > fiveMinutesAgo;
       
-      if (aIsLiveWithPlayers && !bIsLiveWithPlayers) return -1;
-      if (bIsLiveWithPlayers && !aIsLiveWithPlayers) return 1;
+      if (aIsMyNew && !bIsMyNew) return -1;
+      if (bIsMyNew && !aIsMyNew) return 1;
       
-      // Then any active TV session
-      if (aHasActiveTv && !bHasActiveTv) return -1;
-      if (bHasActiveTv && !aHasActiveTv) return 1;
+      // Priority 1: LIVE rooms (playing or active TV with players or others online)
+      const aIsLive = a.status === "playing" || 
+        (isLiveTVSession(a.tv_status) && a.tv_active_players > 0) || 
+        a.has_others_online;
+      const bIsLive = b.status === "playing" || 
+        (isLiveTVSession(b.tv_status) && b.tv_active_players > 0) || 
+        b.has_others_online;
       
-      // Priority 2: Playing rooms next
-      if (a.status === "playing" && b.status !== "playing") return -1;
-      if (b.status === "playing" && a.status !== "playing") return 1;
+      if (aIsLive && !bIsLive) return -1;
+      if (bIsLive && !aIsLive) return 1;
       
-      // Priority 3: Waiting/active rooms over completed
-      if (a.status === "waiting" && b.status === "completed") return -1;
-      if (b.status === "waiting" && a.status === "completed") return 1;
-      
-      // Priority 4: Rooms with unread activity
+      // Priority 2: Rooms with unread activity
       if (a.has_unread_activity && !b.has_unread_activity) return -1;
       if (b.has_unread_activity && !a.has_unread_activity) return 1;
       
-      // Priority 5: By last activity (most recent first)
+      // Priority 3: Waiting rooms over completed
+      if (a.status === "waiting" && b.status === "completed") return -1;
+      if (b.status === "waiting" && a.status === "completed") return 1;
+      
+      // Priority 4: By last activity (most recent first)
       const aTime = new Date(a.last_activity_at || a.created_at).getTime();
       const bTime = new Date(b.last_activity_at || b.created_at).getTime();
       return bTime - aTime;

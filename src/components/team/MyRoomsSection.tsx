@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession, isLiveTVSession } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -413,12 +413,18 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
                       <LiveBadge />
                       {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
                     </div>
+                  ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      ახალი
+                    </span>
                   ) : isCompleted ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                       დასრულდა
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                       მოლოდინი
                     </span>
                   )}
@@ -662,6 +668,11 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
                   <LiveBadge />
                   {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
                 </div>
+              ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  ახალი
+                </span>
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                   დასრულდა
