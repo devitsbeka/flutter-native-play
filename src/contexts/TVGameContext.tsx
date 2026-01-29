@@ -1287,6 +1287,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             .from('tv_sessions')
             .update({ status: 'completed', reveal_start_time: null })
             .eq('id', state.sessionId);
+          // CRITICAL FIX: Update local state immediately for host
+          setState(prev => ({ ...prev, phase: 'results' }));
+          console.log('[Game End] 📱 Host local state updated to results (final round)');
           return;
         }
 
@@ -1296,6 +1299,9 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             .from('tv_sessions')
             .update({ status: 'completed', reveal_start_time: null })
             .eq('id', state.sessionId);
+          // CRITICAL FIX: Update local state immediately for host
+          setState(prev => ({ ...prev, phase: 'results' }));
+          console.log('[Game End] 📱 Host local state updated to results (no more queue)');
         }
       } else {
         // Reset answers via local state + presence track; presence sync will update everyone.
@@ -1337,8 +1343,15 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         questionStartedAtRef.current = Date.now();
         console.log('[Next Question] ⏱️ Timing ref set AFTER DB transition:', questionStartedAtRef.current);
         
-        // CRITICAL: Reset timer for next question to ensure all clients start at QUESTION_TIME
-        setState(prev => ({ ...prev, timeRemaining: QUESTION_TIME }));
+        // CRITICAL FIX: Update local state IMMEDIATELY for host to prevent "stuck" UI
+        // The realtime subscription may have delays, so we update locally first
+        setState(prev => ({ 
+          ...prev, 
+          phase: 'question', // Map to 'question' phase (matches mapDbStatusToPhase)
+          currentQuestionIndex: nextIndex,
+          timeRemaining: QUESTION_TIME,
+        }));
+        console.log('[Next Question] 📱 Host local state updated to question', nextIndex);
         
         // CRITICAL FIX: Mark timer as initialized for this question index
         // This prevents the realtime subscription from overwriting our 15s timer
