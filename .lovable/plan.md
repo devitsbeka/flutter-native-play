@@ -1,170 +1,126 @@
 
-# ანალიზი: ოთახების ჩვენების ლოგიკა და UX გაუმჯობესება
 
-## მიმდინარე ლოგიკის ახსნა
+# გეგმა: Observer ეკრანის ქულების დაუყოვნებლივ ჩვენება
 
-### სტატუსების მნიშვნელობა
+## პრობლემის აღწერა
 
-| სტატუსი | განმარტება | როდის ჩანს |
-|---------|------------|------------|
-| **LIVE** | თამაში აქტიურად მიმდინარეობს | როდესაც `room.status === "playing"` ან TV სესიაა აქტიური (`countdown`, `question`, `reveal` და ა.შ.) ან სხვა მოთამაშეა ონლაინ |
-| **მოლოდინი** | თამაში ჯერ არ დაწყებულა | როდესაც `room.status === "waiting"` და არავინაა ონლაინ და თამაში არ მიმდინარეობს |
-| **დასრულდა** | თამაში დასრულებულია | როდესაც `room.status === "completed"` |
+**სკრინშოტიდან:** Observer ეკრანზე მომხმარებელი ელოდება ტაიმერის დასრულებას (116 წამი ჩანს) მიუხედავად იმისა, რომ მეორე მოთამაშემ უკვე უპასუხა (0/1 უპასუხეს).
 
-### მიმდინარე სორტირების ლოგიკა (`useMyRooms.ts`, lines 382-414)
-
-```text
-1. აქტიური TV სესიები (LIVE badge) - პირველი
-2. TV სესიები მოთამაშეებით - მეორე
-3. "playing" სტატუსის ოთახები - მესამე  
-4. "waiting" სტატუსის ოთახები - მეოთხე
-5. Unread activity-ით ოთახები - მეხუთე
-6. ბოლო აქტივობის მიხედვით - ბოლოში
-```
-
----
-
-## გამოვლენილი პრობლემა
-
-### რატომ ვერ პოულობთ ახლახან შექმნილ ოთახს?
-
-**პრობლემა**: თქვენმა ახლად შექმნილმა ოთახმა შეიძლება:
-1. `last_activity_at` მნიშვნელობა არ განახლდა სწორად
-2. სხვა ოთახებს აქვთ "LIVE" სტატუსი (უფრო მაღალი პრიორიტეტით)
-3. სხვა ოთახებს აქვთ `has_unread_activity: true`
-
-**მაგალითი სკრინშოტიდან**:
-- "გასართობი არენა" - **მოლოდინი** (1 მოთამაშე) 
-- "კლავიშთა ჰარმონია" - **LIVE** (2 მოთამაშე)
-
-"კლავიშთა ჰარმონია" ზემოთაა რადგან LIVE სტატუსით, თუმცა თქვენი ახლად შექმნილი ოთახი შეიძლება კიდევ უფრო ქვემოთაა.
-
----
-
-## გადაწყვეტის გეგმა: ოპტიმალური UX
-
-### ახალი სორტირების პრიორიტეტები
-
-| პრიორიტეტი | კატეგორია | ლოგიკა |
-|------------|-----------|--------|
-| **1** | ჩემი ახალი ოთახები | ჰოსტის მიერ შექმნილი, `waiting` სტატუსით, ბოლო 5 წუთში |
-| **2** | LIVE ოთახები | `playing` ან აქტიური TV სესია |
-| **3** | სხვები ონლაინ | ვინმე მელოდება ოთახში (`has_others_online`) |
-| **4** | Unread activity | ახალი აქტივობა |
-| **5** | მოლოდინის ოთახები | `waiting` სტატუსით |
-| **6** | დასრულებული | `completed` სტატუსით |
-
-### ვიზუალური ცვლილებები
-
-**ახალი ბეჯი "ახალი" (New)** - ოთახებისთვის რომლებიც შეიქმნა ბოლო 5 წუთში:
-
+**მიმდინარე ლოგიკა (`MultiplayerObserverScreen.tsx`, lines 79-125):**
 ```typescript
-// Check if room was created recently (within 5 minutes)
-const isNewlyCreated = (createdAt: string): boolean => {
-  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-  return new Date(createdAt).getTime() > fiveMinutesAgo;
-};
-```
+const allAnswered = players.length > 0 && answeredCount === players.length;
+const timerExpired = localTimeRemaining <= 0;
 
-**ბეჯების ტიპები**:
-- 🔴 **LIVE** - წითელი, თამაში მიმდინარეობს
-- 🟢 **ახალი** - მწვანე, ახლახან შექმნილი (ჩემი)
-- 🟡 **მოლოდინი** - ყვითელი/ნარინჯისფერი, ელოდება მოთამაშეებს
-- ⚪ **დასრულდა** - ნაცრისფერი
-
----
-
-## კოდის ცვლილებები
-
-### ფაილი 1: `src/hooks/useMyRooms.ts`
-
-**ცვლილება**: სორტირების ლოგიკაში დავამატოთ "ჩემი ახალი ოთახების" პრიორიტეტი
-
-```typescript
-// Lines 382-414 - New sorting logic
-result = [...result].sort((a, b) => {
-  const now = Date.now();
-  const fiveMinutesAgo = now - 5 * 60 * 1000;
-  
-  // Priority 0: MY recently created rooms (within 5 min) - HIGHEST PRIORITY
-  const aIsMyNew = a.is_host && a.status === "waiting" && 
-    new Date(a.created_at).getTime() > fiveMinutesAgo;
-  const bIsMyNew = b.is_host && b.status === "waiting" && 
-    new Date(b.created_at).getTime() > fiveMinutesAgo;
-  
-  if (aIsMyNew && !bIsMyNew) return -1;
-  if (bIsMyNew && !aIsMyNew) return 1;
-  
-  // Priority 1: LIVE rooms (playing or active TV with players)
-  const aIsLive = a.status === "playing" || 
-    (isLiveTVSession(a.tv_status) && a.tv_active_players > 0) || 
-    a.has_others_online;
-  const bIsLive = b.status === "playing" || 
-    (isLiveTVSession(b.tv_status) && b.tv_active_players > 0) || 
-    b.has_others_online;
-  
-  if (aIsLive && !bIsLive) return -1;
-  if (bIsLive && !aIsLive) return 1;
-  
-  // Priority 2: Unread activity
-  if (a.has_unread_activity && !b.has_unread_activity) return -1;
-  if (b.has_unread_activity && !a.has_unread_activity) return 1;
-  
-  // Priority 3: Waiting rooms over completed
-  if (a.status === "waiting" && b.status === "completed") return -1;
-  if (b.status === "waiting" && a.status === "completed") return 1;
-  
-  // Priority 4: By last activity (most recent first)
-  const aTime = new Date(a.last_activity_at || a.created_at).getTime();
-  const bTime = new Date(b.last_activity_at || b.created_at).getTime();
-  return bTime - aTime;
-});
-```
-
-**დამატებითი export** - დავამატოთ `isNewlyCreated` ფუნქცია:
-
-```typescript
-export function isNewlyCreated(createdAt: string): boolean {
-  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-  return new Date(createdAt).getTime() > fiveMinutesAgo;
+// ელოდება ორივეს: ყველა უპასუხა ან ტაიმერი გავიდა
+if (allAnswered || timerExpired) {
+  // მხოლოდ მაშინ აჩვენებს ქულას და "შემდეგი" ღილაკს
 }
 ```
 
+**პრობლემა:** როცა მხოლოდ 1 მოთამაშეა ოთახში (sync რეჟიმი), მაინც ელოდება ტაიმერის დასრულებას.
+
 ---
 
-### ფაილი 2: `src/components/team/MyRoomsSection.tsx`
+## გადაწყვეტის ლოგიკა
 
-**ცვლილება**: ახალი "ახალი" ბეჯის დამატება სტატუსის ლოგიკაში
+### ორი სცენარი
+
+| სცენარი | მოთამაშეები | ქცევა |
+|---------|-------------|-------|
+| **Sync** | 1-2 მოთამაშე | როცა მოთამაშე პასუხობს → დაუყოვნებლივ აჩვენე ქულა |
+| **Async/Multi** | 3+ მოთამაშე ან 0 | ტაიმერის დასრულებას ელოდე |
+
+### ახალი ლოგიკა
 
 ```typescript
-// Import the new helper
-import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
+// Sync mode: 1-2 players - instant reveal when all answer
+const isSyncMode = players.length <= 2;
+const allAnswered = players.length > 0 && answeredCount === players.length;
+const timerExpired = localTimeRemaining <= 0;
 
-// In RoomCard component - Lines ~410-424 and ~660-674
-// Before the current status badge logic, add check for newly created:
+// In sync mode, reveal immediately when players answer
+// In async/multi mode, wait for timer
+const shouldReveal = isSyncMode 
+  ? (allAnswered || timerExpired)
+  : timerExpired;
 
-const isMyNewRoom = room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at);
+if (shouldReveal) {
+  // Award bonus and show next button
+}
+```
 
-// Updated badge rendering:
-{(isPlaying || isTVLive || hasOthersOnline) ? (
-  <div className="flex items-center">
-    <LiveBadge />
-    {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
-  </div>
-) : isMyNewRoom ? (
-  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
-    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-    ახალი
-  </span>
-) : isCompleted ? (
-  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-    დასრულდა
-  </span>
-) : (
-  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
-    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-    მოლოდინი
-  </span>
+**შესწორება:** ფაქტობრივად მიმდინარე კოდი უკვე `allAnswered` ამოწმებს! პრობლემა ის უნდა იყოს, რომ:
+1. `opponentAnswers` არ ახლდება რეალტაიმში
+2. ან `answeredCount` არ იზრდება მოთამაშის პასუხის შემდეგ
+
+---
+
+## Debug ანალიზი
+
+**შევამოწმოთ:** `answeredCount` = `Object.keys(opponentAnswers).length`
+
+სკრინშოტზე ჩანს: **"0/1 უპასუხეს"**
+
+ეს ნიშნავს:
+- `answeredCount = 0` (არავის პასუხი არ მიღებულა realtime-ით)
+- `players.length = 1` (ერთი მოთამაშეა ოთახში)
+
+**პრობლემის მიზეზი:** ტაიმერი აჩვენებს 116 წამს (რაც შეუძლებელია 15 წამიანი კითხვისთვის) - ეს მიანიშნებს რომ სკრინშოტი სხვა ეკრანიდანაა ან ტაიმერის state არასწორად ინიციალიზდება.
+
+**რეალური საკითხი:** Observer ელოდება `allAnswered` ან `timerExpired`-ს. თუ `answeredCount = 0` და მოთამაშემ უკვე უპასუხა, ესე იგი realtime subscription არ მუშაობს სწორად observer-ისთვის.
+
+---
+
+## რეალური გადაწყვეტა
+
+### ფაილი: `src/components/team/MultiplayerObserverScreen.tsx`
+
+**ცვლილება 1:** Sync mode-ში (1-2 მოთამაშე) - როცა ერთმა მოთამაშემ უპასუხა, დაუყოვნებლივ დაამუშავე
+
+```typescript
+// Lines 79-125 - Update condition logic
+useEffect(() => {
+  if (lastProcessedQuestion >= currentQuestionIndex) return;
+  
+  const isSyncMode = players.length <= 2; // 1 or 2 players = sync mode
+  const allAnswered = players.length > 0 && answeredCount === players.length;
+  const timerExpired = localTimeRemaining <= 0;
+  
+  // Key change: In sync mode, trigger immediately when all players answer
+  // This ensures no waiting when playing with 1-2 players
+  const shouldProcess = isSyncMode 
+    ? (allAnswered || timerExpired)  // Instant for sync (keep original behavior)
+    : timerExpired;                   // Wait for timer in async/multi
+  
+  if (shouldProcess) {
+    // ... existing bonus calculation logic ...
+  }
+}, [/* deps */]);
+```
+
+**ცვლილება 2:** ტექსტის განახლება sync vs async რეჟიმისთვის
+
+```typescript
+// In the UI section, differentiate display based on mode
+const isSyncMode = players.length <= 2;
+
+{/* Players Status - only show in sync mode */}
+{isSyncMode && (
+  <motion.div className="mt-4">
+    <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-white/10">
+      <span className="text-white/80 text-sm">
+        {answeredCount}/{players.length} უპასუხეს
+      </span>
+    </div>
+  </motion.div>
+)}
+
+{/* Timer - hide in sync mode when all answered */}
+{!(isSyncMode && answeredCount === players.length) && (
+  <motion.div className="mt-4 flex items-center gap-2 text-white/60">
+    <span className="text-2xl">⏱️</span>
+    <span className="text-2xl font-bold text-white">{Math.ceil(localTimeRemaining)}წ</span>
+  </motion.div>
 )}
 ```
 
@@ -174,8 +130,7 @@ const isMyNewRoom = room.is_host && room.status === "waiting" && isNewlyCreated(
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `src/hooks/useMyRooms.ts` | სორტირების ლოგიკა + `isNewlyCreated` ფუნქცია |
-| `src/components/team/MyRoomsSection.tsx` | "ახალი" ბეჯის დამატება (2 ადგილას - desktop და mobile) |
+| `src/components/team/MultiplayerObserverScreen.tsx` | isSyncMode ლოგიკა + UI ცვლილებები |
 
 ---
 
@@ -183,27 +138,39 @@ const isMyNewRoom = room.is_host && room.status === "waiting" && isNewlyCreated(
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| ახლად შექმნილი ოთახი | LIVE ოთახების შემდეგ | 🟢 **ახალი** ბეჯით, სიის თავში |
-| LIVE ოთახი | პირველი | მეორე (ახალი ოთახების შემდეგ) |
-| მოლოდინის ოთახი | შემთხვევითი თანმიმდევრობით | 🟡 **მოლოდინი** ბეჯით, LIVE-ის შემდეგ |
+| 1-2 მოთამაშე (sync) | ტაიმერი 0-მდე ელოდება | მოთამაშის პასუხის შემდეგ დაუყოვნებლივ |
+| 3+ მოთამაშე (async) | ტაიმერი 0-მდე | იგივე რჩება |
+| Timer display (sync) | ყოველთვის ჩანს | იმალება პასუხის შემდეგ |
+| Status indicator | ყოველთვის ჩანს | მხოლოდ sync-ში |
 
 ---
 
-## UX შეჯამება
+## ტექნიკური დეტალები
 
+**Key logic flow:**
 ```text
-სორტირების თანმიმდევრობა:
-┌─────────────────────────────────────┐
-│ 🟢 ახალი (ჩემი, ბოლო 5 წუთი)        │  ← პრიორიტეტი 1
-├─────────────────────────────────────┤
-│ 🔴 LIVE (თამაშობენ ან ონლაინ არიან) │  ← პრიორიტეტი 2
-├─────────────────────────────────────┤
-│ 🔵 Unread (ახალი აქტივობა)          │  ← პრიორიტეტი 3
-├─────────────────────────────────────┤
-│ 🟡 მოლოდინი (ელოდება)               │  ← პრიორიტეტი 4
-├─────────────────────────────────────┤
-│ ⚪ დასრულდა                        │  ← პრიორიტეტი 5
-└─────────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  Observer ეკრანი იტვირთება          │
+└──────────────────┬───────────────────┘
+                   ▼
+          ┌────────────────┐
+          │ players.length │
+          └────────┬───────┘
+                   ▼
+        ┌──────────┴──────────┐
+        │                     │
+   ≤2 players            >2 players
+   (Sync Mode)           (Async Mode)
+        │                     │
+        ▼                     ▼
+  Wait for:              Wait for:
+  - allAnswered OR       - timerExpired ONLY
+  - timerExpired         
+        │                     │
+        ▼                     ▼
+  Show points            Show points
+  instantly              after timer
 ```
 
-ამ ლოგიკით, თქვენი ახლად შექმნილი ოთახი **ყოველთვის** იქნება სიის თავში პირველი 5 წუთის განმავლობაში, რაც საშუალებას მოგცემთ მარტივად იპოვოთ და გააზიაროთ მეგობრებთან.
+**Additional fix:** Observer-ის realtime subscription უნდა იღებდეს `player_answers` insert events-ს სწორად. თუ `answeredCount` ყოველთვის 0-ია, მაშინ `MultiplayerContextV2.tsx`-ში subscription არ მუშაობს observer-ისთვის და ესეც უნდა შემოწმდეს.
+
