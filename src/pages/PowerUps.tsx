@@ -236,19 +236,20 @@ export default function PowerUps() {
 
   return (
     <MainLayout showPlayButton={false}>
-      {/* Flex wrapper for main content + right sidebar (matching TeamV2 layout) */}
-      <div className="min-h-screen flex flex-col">
-        {/* Full-width unified header */}
-        <ShopHeader
-          onHelpClick={() => setShowTutorialModal(true)}
-          onCurrencyPlusClick={handleCurrencyPlusClick}
-        />
+      {/* Main scrollable container */}
+      <div className="min-h-full flex flex-col">
+        {/* Sticky header - works within MainLayout's scrollable main */}
+        <div className="sticky top-0 z-30">
+          <ShopHeader
+            onHelpClick={() => setShowTutorialModal(true)}
+            onCurrencyPlusClick={handleCurrencyPlusClick}
+          />
+        </div>
 
         <div className="flex flex-1">
           {/* Main Content Area */}
           <div className="flex-1 relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
             <GlobalSplineBackground />
-
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
             <div className="pt-4">

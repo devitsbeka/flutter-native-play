@@ -108,7 +108,12 @@ export function UniversalBottomNav({
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/discover")) {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  const mainEl = document.getElementById("main-scroll-container");
+                  if (mainEl) {
+                    mainEl.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
                 } else {
                   navigate("/discover");
                 }
@@ -128,7 +133,12 @@ export function UniversalBottomNav({
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/power-ups")) {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  const mainEl = document.getElementById("main-scroll-container");
+                  if (mainEl) {
+                    mainEl.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
                 } else {
                   navigate("/power-ups");
                 }
@@ -168,7 +178,12 @@ export function UniversalBottomNav({
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/leaderboards")) {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  const mainEl = document.getElementById("main-scroll-container");
+                  if (mainEl) {
+                    mainEl.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
                 } else {
                   navigate("/leaderboards");
                 }
