@@ -1,198 +1,173 @@
 
-# Observer Screen Timer Fix და Game Flow გაუმჯობესება
+
+# Library Category Playability Fix
 
 ## პრობლემის Root Cause
 
-მომხმარებელი იჭედება Observer Screen-ზე კითხვა 2/5-ზე. ანალიზის შედეგად გამოვლინდა:
-
-### პრობლემა: გაყინული Timer
+როცა მომხმარებელი ოთახში ჯერ ირჩევს "ჩემი ტრივია"-ს და შემდეგ გადაერთვება ბიბლიოთეკის კატეგორიაზე, ძველი მონაცემები რჩება:
 
 ```text
-MultiplayerGameScreenV2.tsx (ხაზი 117-132):
-┌──────────────────────────────────────────────────┐
-│ Timer useEffect:                                 │
-│ if (answerRevealed || (isHost && hostIsObserver))│
-│   return; ← Timer საერთოდ არ მუშაობს!           │
-└──────────────────────────────────────────────────┘
-                     │
-                     ▼ 
-┌──────────────────────────────────────────────────┐
-│ MultiplayerObserverScreen receives:              │
-│ timeRemaining={15} ← გაყინული მნიშვნელობა!       │
-└──────────────────────────────────────────────────┘
-                     │
-                     ▼
-┌──────────────────────────────────────────────────┐
-│ Observer advancement logic:                       │
-│ const timerExpired = timeRemaining <= 0; ← false │
-│ if (timerExpired || allAnswered) canAdvance=true │
-│ ← ვერასოდეს ხდება true!                           │
-└──────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│ 1. მომხმარებელი ირჩევს "ჩემი ტრივია"                           │
+│    → user_trivia_id = "abc-123"                                │
+│    → room_questions ივსება ტრივიის კითხვებით                   │
+│    → category_id = null                                        │
+└────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────┐
+│ 2. მომხმარებელი გადაერთვება ბიბლიოთეკის კატეგორიაზე            │
+│    → category_id = "def-456" (განახლდა)                       │
+│    → category_name = "გეოგრაფია" (განახლდა)                    │
+│    → user_trivia_id = "abc-123" (არ გასუფთავდა!)              │
+│    → room_questions = ძველი კითხვები (არ გასუფთავდა!)          │
+└────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌────────────────────────────────────────────────────────────────┐
+│ 3. startGame() ცდილობს ახალი კითხვების ჩამატებას               │
+│    → saveQuestionsAndStartGame() calls DELETE + INSERT        │
+│    → Postgres error: duplicate key violation!                  │
+│      (race condition ან DELETE არ დასრულებულა დროზე)          │
+└────────────────────────────────────────────────────────────────┘
 ```
-
-### რატომ არ მუშაობს?
-
-1. **Parent timer disabled**: `MultiplayerGameScreenV2`-ში timer უბრალოდ არ მუშაობს observer-ისთვის
-2. **Prop არასოდეს იცვლება**: `timeRemaining={15}` რჩება გაყინული
-3. **canAdvance logic ვერ triggers**: `timerExpired` ყოველთვის `false`-ია
-4. **Safety timeout 20s**: ძალიან დიდი ლოდინია, მომხმარებელი დაბნეულია
 
 ---
 
 ## გადაწყვეტა
 
-### 1. Observer Screen-ს საჭიროა საკუთარი Timer
-
-`MultiplayerObserverScreen.tsx`-ში დავამატოთ **internal timer** რომელიც არ დამოკიდებულია parent-ის prop-ზე:
-
-```typescript
-// Internal timer for observer - independent from parent
-const [localTimeRemaining, setLocalTimeRemaining] = useState(timePerQuestion);
-
-// Run timer countdown for observer
-useEffect(() => {
-  if (canAdvance) return; // Stop when can advance
-  
-  const timer = setInterval(() => {
-    setLocalTimeRemaining((prev) => {
-      if (prev <= 0.1) {
-        return 0;
-      }
-      return prev - 0.1;
-    });
-  }, 100);
-
-  return () => clearInterval(timer);
-}, [currentQuestionIndex, canAdvance]);
-
-// Reset on question change
-useEffect(() => {
-  setLocalTimeRemaining(timePerQuestion);
-}, [currentQuestionIndex, timePerQuestion]);
-```
-
-### 2. Timer Sync Logic-ის გაუმჯობესება
-
-გამოვიყენოთ `localTimeRemaining` ნაცვლად `timeRemaining` prop-ისა:
-
-```typescript
-useEffect(() => {
-  if (lastProcessedQuestion >= currentQuestionIndex) return;
-  
-  const allAnswered = players.length > 0 && answeredCount === players.length;
-  const timerExpired = localTimeRemaining <= 0; // ახლა მუშაობს!
-  
-  if (allAnswered || timerExpired) {
-    // ... bonus logic
-    setCanAdvance(true);
-  }
-}, [answeredCount, players.length, localTimeRemaining, ...]);
-```
-
-### 3. Safety Timeout-ის შემცირება
-
-20 წამი ძალიან ბევრია. შევამციროთ **15 წამზე** (timer-ის ტოლი):
-
-```typescript
-useEffect(() => {
-  const safetyTimeout = setTimeout(() => {
-    if (!canAdvance) {
-      console.log('[Observer] Safety timeout - allowing advance');
-      setCanAdvance(true);
-    }
-  }, 15000); // 15 seconds instead of 20
-  return () => clearTimeout(safetyTimeout);
-}, [currentQuestionIndex]);
-```
+`handleSelectCategory` და `handleSelectRandom` ფუნქციებში დაემატება:
+1. `user_trivia_id: null` - გასუფთავდეს ძველი ტრივიის ID
+2. `room_questions` DELETE - გასუფთავდეს ძველი კითხვები
 
 ---
 
-## შესაცვლელი ფაილები
+## შესაცვლელი ფაილი
 
-| ფაილი | ცვლილება |
-|-------|----------|
-| `src/components/team/MultiplayerObserverScreen.tsx` | საკუთარი internal timer, fixed advancement logic |
+**src/components/team/RoomLobbyV2.tsx**
 
 ---
 
 ## ტექნიკური ცვლილებები
 
-### MultiplayerObserverScreen.tsx
+### 1. handleSelectCategory (ხაზები 373-390)
 
-**ახალი imports და state:**
+მანამდე:
 ```typescript
-const { timePerQuestion } = useMultiplayerV2(); // Need this!
-
-// Internal timer - observer runs its own countdown
-const [localTimeRemaining, setLocalTimeRemaining] = useState(timePerQuestion);
-```
-
-**ახალი timer useEffect:**
-```typescript
-// Observer's own timer countdown (parent timer is disabled)
-useEffect(() => {
-  if (canAdvance) return;
+const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
+  if (!currentRoom) return;
   
-  const timer = setInterval(() => {
-    setLocalTimeRemaining((prev) => {
-      if (prev <= 0.1) return 0;
-      return prev - 0.1;
-    });
-  }, 100);
-
-  return () => clearInterval(timer);
-}, [currentQuestionIndex, canAdvance]);
-
-// Reset timer on question change
-useEffect(() => {
-  setLocalTimeRemaining(timePerQuestion);
-  setCanAdvance(false);
-  setBonusEarnedThisQuestion(0);
-}, [currentQuestionIndex, timePerQuestion]);
-```
-
-**განახლებული advancement logic:**
-```typescript
-useEffect(() => {
-  if (lastProcessedQuestion >= currentQuestionIndex) return;
-  
-  const allAnswered = players.length > 0 && answeredCount === players.length;
-  const timerExpired = localTimeRemaining <= 0; // Use LOCAL timer!
-  
-  if (allAnswered || timerExpired) {
-    // ... existing bonus logic
-    setLastProcessedQuestion(currentQuestionIndex);
-    setCanAdvance(true);
+  try {
+    await supabase
+      .from("game_rooms")
+      .update({ 
+        category_id: category.id, 
+        category_name: category.name 
+      })
+      .eq("id", currentRoom.id);
+    
+    toast.success("კატეგორია შეიცვალა");
+  } catch (error) {
+    console.error("Error updating category:", error);
+    toast.error("კატეგორიის შეცვლა ვერ მოხერხდა");
   }
-}, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, 
-    lastProcessedQuestion, awardObserverBonus, localTimeRemaining]); // Added localTimeRemaining
+};
 ```
 
-**UI-ში გამოჩნდეს local timer:**
-```tsx
-{/* Timer - use local time */}
-<span className="text-2xl font-bold text-white">
-  {Math.ceil(localTimeRemaining)}წ
-</span>
+შემდეგ:
+```typescript
+const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
+  if (!currentRoom) return;
+  
+  try {
+    // Clear any existing room_questions from previous trivia selection
+    await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+    
+    // Update room with new category and clear user_trivia_id
+    await supabase
+      .from("game_rooms")
+      .update({ 
+        category_id: category.id, 
+        category_name: category.name,
+        user_trivia_id: null, // Clear any previously selected user trivia
+      })
+      .eq("id", currentRoom.id);
+    
+    toast.success("კატეგორია შეიცვალა");
+  } catch (error) {
+    console.error("Error updating category:", error);
+    toast.error("კატეგორიის შეცვლა ვერ მოხერხდა");
+  }
+};
+```
+
+### 2. handleSelectRandom (ხაზები 392-408)
+
+მანამდე:
+```typescript
+const handleSelectRandom = async () => {
+  if (!currentRoom) return;
+  
+  try {
+    await supabase
+      .from("game_rooms")
+      .update({ 
+        category_id: null, 
+        category_name: "შემთხვევითი" 
+      })
+      .eq("id", currentRoom.id);
+    
+    toast.success("შემთხვევითი კატეგორია");
+  } catch (error) {
+    console.error("Error setting random:", error);
+  }
+};
+```
+
+შემდეგ:
+```typescript
+const handleSelectRandom = async () => {
+  if (!currentRoom) return;
+  
+  try {
+    // Clear any existing room_questions from previous trivia selection
+    await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+    
+    // Update room with random category and clear user_trivia_id
+    await supabase
+      .from("game_rooms")
+      .update({ 
+        category_id: null, 
+        category_name: "შემთხვევითი",
+        user_trivia_id: null, // Clear any previously selected user trivia
+      })
+      .eq("id", currentRoom.id);
+    
+    toast.success("შემთხვევითი კატეგორია");
+  } catch (error) {
+    console.error("Error setting random:", error);
+  }
+};
 ```
 
 ---
 
-## მოსალოდნელი შედეგი
+## რატომ მუშაობს ეს გადაწყვეტა?
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| Timer countdown | გაყინული 15წ | მუშაობს 15→0 |
-| canAdvance trigger | ვერასოდეს | Timer expires ან allAnswered |
-| Button appearance | 20+ წამში | მაქსიმუმ 15 წამში |
-| Next question | Stuck | სწორად გადადის |
-| Game end | Stuck | Results screen |
+| ტრივია → ბიბლიოთეკა | `user_trivia_id` რჩება, `room_questions` კონფლიქტი | სუფთა slate |
+| ტრივია → შემთხვევითი | იგივე პრობლემა | სუფთა slate |
+| ბიბლიოთეკა → ბიბლიოთეკა | მუშაობს (არ იყო პრობლემა) | მუშაობს |
+| ბიბლიოთეკა → ტრივია | მუშაობს | მუშაობს |
 
 ---
 
-## Game Flow შემდეგ
+## დამატებითი უპირატესობა
 
-1. **Observer ხედავს კითხვას** და countdown-ს
-2. **Timer expires ან მოთამაშეები პასუხობენ** → "შემდეგი კითხვა" ღილაკი ჩნდება
-3. **ბოლო კითხვის შემდეგ** → Results Screen
-4. **Results Screen-ზე** → Host-ს შეუძლია "კატეგორიის დამატება" ან Queue-დან გაგრძელება
+ეს ცვლილება ასევე აფიქსირებს postgres-ის `duplicate key` შეცდომებს, რომლებიც ლოგებში ჩანდა:
+
+```text
+duplicate key value violates unique constraint "room_questions_room_id_question_index_key"
+```
+
