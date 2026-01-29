@@ -387,12 +387,19 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       );
     }
 
-    // Sort: My new rooms first, then LIVE, then playing, then waiting, then unread, then by activity
+    // Sort: TV sessions first, then my new rooms, then LIVE, then playing, then waiting, then unread, then by activity
     result = [...result].sort((a, b) => {
       const now = Date.now();
       const fiveMinutesAgo = now - 5 * 60 * 1000;
       
-      // Priority 0: MY recently created rooms (within 5 min) - HIGHEST PRIORITY
+      // Priority 0: Active TV sessions - HIGHEST PRIORITY (always show first)
+      const aHasTV = isActiveTVSession(a.tv_status);
+      const bHasTV = isActiveTVSession(b.tv_status);
+      
+      if (aHasTV && !bHasTV) return -1;
+      if (bHasTV && !aHasTV) return 1;
+      
+      // Priority 1: MY recently created rooms (within 5 min)
       const aIsMyNew = a.is_host && a.status === "waiting" && 
         new Date(a.created_at).getTime() > fiveMinutesAgo;
       const bIsMyNew = b.is_host && b.status === "waiting" && 
@@ -401,13 +408,9 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       if (aIsMyNew && !bIsMyNew) return -1;
       if (bIsMyNew && !aIsMyNew) return 1;
       
-      // Priority 1: LIVE rooms (playing or active TV with players or others online)
-      const aIsLive = a.status === "playing" || 
-        (isLiveTVSession(a.tv_status) && a.tv_active_players > 0) || 
-        a.has_others_online;
-      const bIsLive = b.status === "playing" || 
-        (isLiveTVSession(b.tv_status) && b.tv_active_players > 0) || 
-        b.has_others_online;
+      // Priority 2: LIVE rooms (playing or others online)
+      const aIsLive = a.status === "playing" || a.has_others_online;
+      const bIsLive = b.status === "playing" || b.has_others_online;
       
       if (aIsLive && !bIsLive) return -1;
       if (bIsLive && !aIsLive) return 1;

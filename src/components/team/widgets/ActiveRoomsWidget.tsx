@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Layers, ChevronRight, Tv } from "lucide-react";
+import { Layers, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMyRooms, isActiveTVSession, isLiveTVSession } from "@/hooks/useMyRooms";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { LiveBadge } from "@/components/social/LiveBadge";
+import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 
 interface ActiveRoomsWidgetProps {
   onViewAll: () => void;
@@ -16,13 +17,19 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
   const navigate = useNavigate();
   const { rooms, loading } = useMyRooms();
   
-  // Filter for active rooms or rooms with unread activity or others online, prioritize LIVE sessions first, limit to 3
+  // Filter for active rooms or rooms with unread activity or others online, prioritize TV sessions first, limit to 3
   const activeRooms = rooms
     .filter(r => r.has_unread_activity || r.status === "waiting" || r.status === "playing" || isActiveTVSession(r.tv_status) || r.has_others_online)
     .sort((a, b) => {
-      // True LIVE sessions (playing with players) first, then others online
-      const aLive = (isLiveTVSession(a.tv_status) && a.tv_active_players > 0) || a.has_others_online;
-      const bLive = (isLiveTVSession(b.tv_status) && b.tv_active_players > 0) || b.has_others_online;
+      // Priority 0: Active TV sessions always first
+      const aHasTV = isActiveTVSession(a.tv_status);
+      const bHasTV = isActiveTVSession(b.tv_status);
+      if (aHasTV && !bHasTV) return -1;
+      if (bHasTV && !aHasTV) return 1;
+      
+      // Priority 1: LIVE sessions (playing with players) or others online
+      const aLive = a.status === "playing" || a.has_others_online;
+      const bLive = b.status === "playing" || b.has_others_online;
       if (aLive && !bLive) return -1;
       if (bLive && !aLive) return 1;
       return 0;
@@ -43,7 +50,7 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         <span className="text-sm font-bold tracking-wide">
           აქტიური ოთახები
         </span>
-        {activeRooms.some(r => r.has_unread_activity || (isLiveTVSession(r.tv_status) && r.tv_active_players > 0) || r.has_others_online) && (
+        {activeRooms.some(r => r.has_unread_activity || isActiveTVSession(r.tv_status) || r.has_others_online) && (
           <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
         )}
       </div>
@@ -52,10 +59,10 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
         <div className="divide-y divide-border/50">
           {activeRooms.map((room) => {
             const hasTVSession = isActiveTVSession(room.tv_status);
-            const isTVLive = isLiveTVSession(room.tv_status) && room.tv_active_players > 0;
             const isPlaying = room.status === "playing";
             const hasOthersOnline = room.has_others_online;
-            const showLiveBadge = isPlaying || isTVLive || hasOthersOnline;
+            // Show LIVE badge only for non-TV rooms that are playing or have others online
+            const showLiveBadge = !hasTVSession && (isPlaying || hasOthersOnline);
             
             const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
               ? room.tv_active_players 
@@ -88,17 +95,20 @@ export function ActiveRoomsWidget({ onViewAll, onJoinRoom }: ActiveRoomsWidgetPr
                       {room.room_icon || "🎮"}
                     </div>
                   )}
-                  {showLiveBadge && (
-                    <div className="absolute -top-1 -right-1 flex items-center gap-0.5">
-                      <div className="px-1.5 py-0.5 bg-red-500 rounded text-[10px] font-bold text-white flex items-center gap-0.5">
+                  {/* TV mode: show only TV icon from library */}
+                  {hasTVSession ? (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded bg-white/90 flex items-center justify-center">
+                      <QuizCategoryIcon iconSlug="retro-tv" size={16} className="w-4 h-4" />
+                    </div>
+                  ) : showLiveBadge ? (
+                    <div className="absolute -top-1 -right-1">
+                      <div className="px-1.5 py-0.5 bg-red-500 rounded text-[10px] font-bold text-white">
                         LIVE
-                        {isTVLive && <Tv className="w-2.5 h-2.5" />}
                       </div>
                     </div>
-                  )}
-                  {room.has_unread_activity && !showLiveBadge && (
+                  ) : room.has_unread_activity ? (
                     <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-background" />
-                  )}
+                  ) : null}
                 </div>
                 
                 {/* Room Info */}

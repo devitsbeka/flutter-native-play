@@ -8,6 +8,7 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
 import { supabase } from "@/integrations/supabase/client";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { Capacitor } from "@capacitor/core";
@@ -408,11 +409,13 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {(isPlaying || isTVLive || hasOthersOnline) ? (
-                    <div className="flex items-center">
-                      <LiveBadge />
-                      {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
+                  {/* TV mode: show only TV icon without LIVE badge */}
+                  {hasTVSession ? (
+                    <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                     </div>
+                  ) : (isPlaying || hasOthersOnline) ? (
+                    <LiveBadge />
                   ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
@@ -663,11 +666,13 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {(isPlaying || isTVLive || hasOthersOnline) ? (
-                <div className="flex items-center">
-                  <LiveBadge />
-                  {isTVLive && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
+              {/* TV mode: show only TV icon without LIVE badge */}
+              {hasTVSession ? (
+                <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <QuizCategoryIcon iconSlug="retro-tv" size={24} className="w-6 h-6" />
                 </div>
+              ) : (isPlaying || hasOthersOnline) ? (
+                <LiveBadge />
               ) : room.is_host && room.status === "waiting" && isNewlyCreated(room.created_at) ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/80 text-white font-bold text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
