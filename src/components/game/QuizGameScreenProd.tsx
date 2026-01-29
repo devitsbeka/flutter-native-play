@@ -365,7 +365,8 @@ export function QuizGameScreenProd() {
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
             <DynamicIcon 
               slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
-              categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? undefined : currentQuestion.categoryId}
+              // Only use categoryId for fallback if we have an explicit icon slug - prevent random different icons
+              categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? currentQuestion.categoryId : undefined}
               questionId={currentQuestion.id}
               size={opponent ? 80 : 64}
               className="drop-shadow-lg"

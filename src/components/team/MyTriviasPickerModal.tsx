@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Play, ChevronLeft, Lock, Globe, Plus, Gamepad2 } from "lucide-react";
+import { Heart, Play, ChevronLeft, Lock, Globe, Plus, Gamepad2, AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +20,7 @@ interface Trivia {
   is_public: boolean;
   is_blind: boolean;
   subject?: string;
+  questions?: { icon_slug?: string | null }[] | null;
 }
 
 interface Collection {
@@ -65,7 +66,7 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
 
       const { data, error } = await supabase
         .from("user_quiz_posts")
-        .select("id, title, cover_image, plays_count, likes_count, is_public, is_blind, subject")
+        .select("id, title, cover_image, plays_count, likes_count, is_public, is_blind, subject, questions")
         .eq("user_id", user.id)
         .is("collection_id", null)
         .neq("subject", "personal")
@@ -219,59 +220,73 @@ export function MyTriviasPickerModal({ open, onOpenChange, onSelect, onCreateTri
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {filteredTrivias.map((trivia, index) => (
-                        <motion.button
-                          key={trivia.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          onClick={() => handleSelect({ id: trivia.id, title: trivia.title, type: "trivia" })}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                            {trivia.cover_image ? (
-                              <img
-                                src={trivia.cover_image}
-                                alt=""
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <img src={triviaBuzzerIcon} alt="" className="w-7 h-7 object-contain" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className="font-medium text-foreground truncate">
-                                {trivia.title}
-                              </p>
-                              {trivia.is_public === false ? (
-                                <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      {filteredTrivias.map((trivia, index) => {
+                        // Count questions missing icon_slug
+                        const missingIconCount = Array.isArray(trivia.questions)
+                          ? trivia.questions.filter((q: any) => !q.icon_slug).length
+                          : 0;
+                        
+                        return (
+                          <motion.button
+                            key={trivia.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.03 }}
+                            onClick={() => handleSelect({ id: trivia.id, title: trivia.title, type: "trivia" })}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                              {trivia.cover_image ? (
+                                <img
+                                  src={trivia.cover_image}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
-                                <Globe className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                <img src={triviaBuzzerIcon} alt="" className="w-7 h-7 object-contain" />
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Play className="w-3 h-3" /> {trivia.plays_count || 0}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
-                              </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="font-medium text-foreground truncate">
+                                  {trivia.title}
+                                </p>
+                                {trivia.is_public === false ? (
+                                  <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                ) : (
+                                  <Globe className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Play className="w-3 h-3" /> {trivia.plays_count || 0}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Heart className="w-3 h-3" /> {trivia.likes_count || 0}
+                                </span>
+                              </div>
+                              {/* Missing icons warning */}
+                              {missingIconCount > 0 && (
+                                <span className="text-xs text-amber-500 flex items-center gap-1 mt-0.5">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  {missingIconCount} კითხვას აკლია აიქონი
+                                </span>
+                              )}
+                              {/* Spoiler indicator - STRICT HOST POLICY */}
+                              {trivia.is_blind && (trivia.plays_count || 0) === 0 ? (
+                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
+                                  <Gamepad2 className="w-3 h-3" /> ითამაშე
+                                </span>
+                              ) : (
+                                <span className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                                  👀 {!trivia.is_blind ? 'იცი პასუხები' : 'უკვე ითამაშე'}
+                                </span>
+                              )}
                             </div>
-                            {/* Spoiler indicator - STRICT HOST POLICY */}
-                            {trivia.is_blind && (trivia.plays_count || 0) === 0 ? (
-                              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 mt-1 rounded-full bg-green-500/20 text-green-500 font-medium">
-                                <Gamepad2 className="w-3 h-3" /> ითამაშე
-                              </span>
-                            ) : (
-                              <span className="text-xs text-amber-500 mt-1 flex items-center gap-1">
-                                👀 {!trivia.is_blind ? 'იცი პასუხები' : 'უკვე ითამაშე'}
-                              </span>
-                            )}
-                          </div>
-                        </motion.button>
-                      ))}
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   )}
 

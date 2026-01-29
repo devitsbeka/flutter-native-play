@@ -296,12 +296,13 @@ export function MultiplayerGameScreenV2() {
         // Only add top margin for icon when no media present
         !currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && "mt-16"
       )}>
-        {/* Category Icon - only show when no media is present */}
+        {/* Category Icon - only show when no media is present AND icon_slug exists */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-14 z-20 w-28 h-28">
             <DynamicIcon 
               slug={currentQuestion?.iconSlug || undefined}
-              categoryId={currentRoom?.category_id || undefined}
+              // Only use categoryId for fallback if we have an explicit iconSlug
+              categoryId={currentQuestion?.iconSlug ? currentRoom?.category_id : undefined}
               questionId={currentQuestion?.id}
               size={112}
               className="drop-shadow-lg"
