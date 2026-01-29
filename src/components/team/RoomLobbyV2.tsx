@@ -880,13 +880,13 @@ export function RoomLobbyV2() {
       <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
         <div className="max-w-[520px] mx-auto">
           {isHost ? (
-            // Show "Continue Playing" only if returned from results AND no content selected
             // Content is selected if: queue has items OR room has category/trivia selected
             (() => {
               const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
-              const showPickerButton = justReturnedFromResults && !hasContent;
               
-              return showPickerButton ? (
+              // No content selected → show picker button with "გააგრძელე"
+              // Content selected → show start button with "თამაშის დაწყება"
+              return !hasContent ? (
                 <ChunkyButton
                   variant="white"
                   size="xl"
@@ -894,7 +894,7 @@ export function RoomLobbyV2() {
                   onClick={() => setShowCategoryPicker(true)}
                   icon={<Plus className="w-5 h-5" />}
                 >
-                  გააგრძელე თამაში
+                  გააგრძელე
                 </ChunkyButton>
               ) : (
                 <ChunkyButton
