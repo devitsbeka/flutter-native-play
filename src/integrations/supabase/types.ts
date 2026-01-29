@@ -2732,31 +2732,40 @@ export type Database = {
       }
       user_daily_plays: {
         Row: {
+          ads_watched_today: number | null
           created_at: string
           id: string
           last_ad_watched_at: string | null
+          last_regen_at: string | null
           play_date: string
           plays_from_ads: number
+          plays_regenerated: number | null
           plays_used: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          ads_watched_today?: number | null
           created_at?: string
           id?: string
           last_ad_watched_at?: string | null
+          last_regen_at?: string | null
           play_date?: string
           plays_from_ads?: number
+          plays_regenerated?: number | null
           plays_used?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          ads_watched_today?: number | null
           created_at?: string
           id?: string
           last_ad_watched_at?: string | null
+          last_regen_at?: string | null
           play_date?: string
           plays_from_ads?: number
+          plays_regenerated?: number | null
           plays_used?: number
           updated_at?: string
           user_id?: string
