@@ -1,87 +1,60 @@
 
-# გატეხილი ავატარების პრობლემის გადაჭრა
+# გეგმა: კატეგორიის გვერდის ჩატვირთვის დაყოვნების გადაჭრა
 
 ## პრობლემის აღწერა
 
-სკრინშოტზე ჩანს "TE" ტექსტი ავატარის ნაცვლად - ეს ნიშნავს რომ ავატარის URL გატეხილია და fallback ჩანს.
+როდესაც მომხმარებელი Discover-ზე კატეგორიას აჭერს, ხედავს თეთრ ეკრანს skeleton-ებით დაახლოებით 1 წამის განმავლობაში. ეს ხდება იმიტომ, რომ:
 
-## მიზეზის ანალიზი
-
-მონაცემთა ბაზაში აღმოვაჩინე **2 მომხმარებელი** გატეხილი ავატარებით:
-
-| მომხმარებელი | გატეხილი URL |
-|-------------|---------------|
-| Hgghn | `/assets/bot-avatar-1-BvXs2Ih1.png` |
-| Mako | `/assets/bot-avatar-1-BvXs2Ih1.png` |
-
-### რატომ არის გატეხილი?
-
-ეს არის **Vite-ის build-დროინდელი hashed path** (`-BvXs2Ih1`), რომელიც:
-- მხოლოდ იმ კონკრეტულ build-ში მუშაობდა
-- ახალ build-ებში hash იცვლება
-- შესაბამისად, ძველი hash-ით URL-ები აღარ მუშაობს
-
-### რა აკეთებს სისტემა ახლა?
-
-`avatarUtils.ts` უკვე ამოიცნობს ამ გატეხილ URL-ებს:
-```typescript
-const VITE_HASHED_ASSET_PATTERN = /^\/assets\/.*-[a-zA-Z0-9]{8}\.(png|jpg|jpeg|webp|gif|svg)$/;
-```
-
-და აბრუნებს `undefined`-ს, რაც იწვევს fallback-ის ჩვენებას ("TE").
-
----
+1. **CategoryPage არის lazy-loaded** - კოდი იტვირთება მხოლოდ ნავიგაციის დროს
+2. **არ ხდება preloading** - განსხვავებით სხვა გვერდებისგან (Leaderboards, PowerUps), CategoryPage არ იტვირთება წინასწარ
+3. **PageSkeleton ჩანს** - Suspense-ის fallback არის თეთრი ფონით, რაც იწვევს visual flash-ს
 
 ## გადაწყვეტა
 
-### ნაწილი 1: მონაცემთა ბაზაში გატეხილი URL-ების გასწორება
+### ნაწილი 1: CategoryPage-ის წინასწარი ჩატვირთვა Discover-ზე
 
-გავასწორებთ 2 გატეხილ ჩანაწერს სწორ canonical path-ზე:
-
-```sql
-UPDATE profiles 
-SET avatar_url = '/src/assets/avatars/bot-avatar-1.png',
-    updated_at = NOW()
-WHERE avatar_url LIKE '/assets/bot-avatar-%-%.png';
-```
-
-### ნაწილი 2: ავტომატური გასწორება მომავლისთვის
-
-`resolveAvatarUrl` ფუნქციაში დავამატებთ ლოგიკას რომელიც გატეხილ Vite hash URL-ებს ავტომატურად გარდაქმნის სწორ ავატარზე:
+Discover გვერდის ჩატვირთვისას დავიწყოთ CategoryPage-ის preloading:
 
 ```typescript
-// avatarUtils.ts
-if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
-  // Try to extract the base avatar name and map to a valid one
-  const match = avatarUrl.match(/bot-avatar-(\d+)/);
-  if (match && match[1]) {
-    const avatarNum = match[1];
-    const filename = `bot-avatar-${avatarNum}.png`;
-    if (BOT_AVATAR_MAP[filename]) {
-      return BOT_AVATAR_MAP[filename];
-    }
-  }
-  console.warn('Invalid Vite-hashed avatar path:', avatarUrl);
-  return undefined;
+// src/pages/Discover.tsx - დავამატოთ useEffect
+useEffect(() => {
+  // Eagerly preload CategoryPage chunk when Discover mounts
+  const timer = setTimeout(() => {
+    import("@/pages/CategoryPage");
+  }, 500);
+  return () => clearTimeout(timer);
+}, []);
+```
+
+### ნაწილი 2: Category Card-ზე hover/touch-ზე preload
+
+AirbnbCategoryCard-ს დავამატოთ onPointerEnter/onTouchStart:
+
+```typescript
+// src/components/discover/AirbnbCategoryCard.tsx
+<motion.button
+  onClick={onClick}
+  onPointerEnter={() => {
+    import("@/pages/CategoryPage");
+  }}
+  // ...
+>
+```
+
+### ნაწილი 3: PageSkeleton-ის გაუმჯობესება
+
+შევცვალოთ PageSkeleton რომ უფრო invisible იყოს:
+
+```typescript
+// src/components/PageSkeleton.tsx
+export function PageSkeleton() {
+  return (
+    <div className="min-h-screen bg-transparent" />
+  );
 }
 ```
 
-### ნაწილი 3: რეალურ დროში გასწორება (Optional Enhancement)
-
-როცა აღმოვაჩენთ გატეხილ URL-ს, შეგვიძლია ავტომატურად შევცვალოთ მონაცემთა ბაზაში:
-
-```typescript
-// SmartAvatar.tsx or SafeAvatar.tsx
-useEffect(() => {
-  if (avatarUrl && VITE_HASHED_ASSET_PATTERN.test(avatarUrl) && userId) {
-    // Auto-fix broken avatar in DB
-    const fixedPath = extractCanonicalPath(avatarUrl);
-    if (fixedPath) {
-      supabase.from('profiles').update({ avatar_url: fixedPath }).eq('user_id', userId);
-    }
-  }
-}, [avatarUrl, userId]);
-```
+ან უფრო დახვეწილი: გადავიტანოთ background-ი main app background-ზე რომ არ ჩანდეს flash.
 
 ---
 
@@ -91,30 +64,52 @@ useEffect(() => {
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `src/utils/avatarUtils.ts` | Vite hash URL-ების ავტომატური გარდაქმნა |
-| Database migration | 2 გატეხილი ჩანაწერის გასწორება |
+| `src/pages/Discover.tsx` | useEffect-ით CategoryPage preloading |
+| `src/components/discover/AirbnbCategoryCard.tsx` | onPointerEnter-ზე preload |
+| `src/components/PageSkeleton.tsx` | transparent ან minimal skeleton |
 
-### avatarUtils.ts - განახლებული ლოგიკა
+### Discover.tsx - დამატებული კოდი
 
 ```typescript
-export function resolveAvatarUrl(avatarUrl: string | null | undefined): string | undefined {
-  if (!avatarUrl) return undefined;
-  
-  // Try to recover Vite-hashed asset paths by extracting avatar number
-  if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
-    const match = avatarUrl.match(/bot-avatar-(\d+)/);
-    if (match && match[1]) {
-      const filename = `bot-avatar-${match[1]}.png`;
-      if (BOT_AVATAR_MAP[filename]) {
-        console.info('Recovered broken Vite-hashed avatar:', avatarUrl, '→', filename);
-        return BOT_AVATAR_MAP[filename];
-      }
-    }
-    console.warn('Unrecoverable Vite-hashed avatar path:', avatarUrl);
-    return undefined;
-  }
-  
-  // ... rest of existing logic
+// Import-ების შემდეგ
+import { useState, useMemo, useEffect } from "react";
+
+// Component-ის შიგნით, სხვა useEffect-ების გვერდით
+useEffect(() => {
+  // Preload CategoryPage when user lands on Discover
+  // This ensures the chunk is ready before they click any category
+  const timer = setTimeout(() => {
+    import("@/pages/CategoryPage");
+  }, 500);
+  return () => clearTimeout(timer);
+}, []);
+```
+
+### AirbnbCategoryCard.tsx - დამატებული კოდი
+
+```typescript
+// motion.button-ს დავამატოთ
+<motion.button
+  onClick={onClick}
+  onPointerEnter={() => {
+    // Start preloading CategoryPage on hover
+    import("@/pages/CategoryPage");
+  }}
+  whileHover={{ scale: 1.015 }}
+  // ... დანარჩენი props
+>
+```
+
+### PageSkeleton.tsx - შეცვლილი კოდი
+
+```typescript
+export function PageSkeleton() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-transparent">
+      {/* Minimal loading indicator instead of jarring skeleton */}
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
 }
 ```
 
@@ -124,22 +119,19 @@ export function resolveAvatarUrl(avatarUrl: string | null | undefined): string |
 
 | მანამდე | შემდეგ |
 |---------|--------|
-| "TE" fallback ტექსტი | bot-avatar-1 სურათი |
-| 2 გატეხილი ჩანაწერი DB-ში | 0 გატეხილი ჩანაწერი |
-| მომავალი გატეხილი URL-ები → fallback | მომავალი გატეხილი URL-ები → ავტომატურად recover |
+| თეთრი skeleton ეკრანი ~1წმ | უხილავი ან მინიმალური გადასვლა |
+| CategoryPage იტვირთება click-ზე | CategoryPage უკვე ჩატვირთული იქნება |
+| Jarring visual flash | Smooth transition |
 
 ---
 
-## URL ტიპების სტატისტიკა (ამჟამად)
+## ალტერნატივა: CategoryPage-ის eager loading
 
-```text
-┌─────────────────────┬───────┐
-│ URL ტიპი            │ რაოდ. │
-├─────────────────────┼───────┤
-│ valid_url (https)   │ 15    │
-│ canonical_path      │ 4     │
-│ broken_vite_hash ⚠️ │ 2     │
-└─────────────────────┴───────┘
+თუ გვსურს სრულად თავიდან ავიცილოთ ეს პრობლემა, შეგვიძლია CategoryPage App.tsx-ში eager-ად ჩავტვირთოთ:
+
+```typescript
+// App.tsx - ამოვიღოთ lazy-დან
+import CategoryPage from "./pages/CategoryPage"; // Eager load
 ```
 
-გასწორების შემდეგ `broken_vite_hash` იქნება 0.
+მაგრამ ეს გაზრდის initial bundle size-ს. უკეთესი მიდგომაა preloading-ის გამოყენება.
