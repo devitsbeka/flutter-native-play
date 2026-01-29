@@ -74,6 +74,7 @@ export function RoomLobbyV2() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
   const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
+  const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
   const prevParticipantsRef = useRef<string[]>([]);
 
   // Detect and redirect to active TV session when host returns to room
@@ -157,6 +158,37 @@ export function RoomLobbyV2() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Pre-calculate if host will be observer for current trivia selection
+  // This enables UI indicators before game start
+  useEffect(() => {
+    const checkObserverStatus = async () => {
+      // Only check for user trivias (not library/random) and only for host
+      if (!currentRoom?.user_trivia_id || !user?.id || !isHost) {
+        setWillBeObserver(false);
+        return;
+      }
+      
+      try {
+        const { data: trivia } = await supabase
+          .from("user_quiz_posts")
+          .select("user_id, is_blind, plays_count")
+          .eq("id", currentRoom.user_trivia_id)
+          .maybeSingle();
+        
+        // Host knows answers if: they own it AND (it's not blind OR they've already played it)
+        const hostKnowsAnswers = trivia?.user_id === user.id && 
+          (!trivia?.is_blind || (trivia?.plays_count || 0) > 0);
+        
+        setWillBeObserver(hostKnowsAnswers);
+      } catch (error) {
+        console.error("Error checking observer status:", error);
+        setWillBeObserver(false);
+      }
+    };
+    
+    checkObserverStatus();
+  }, [currentRoom?.user_trivia_id, user?.id, isHost]);
 
   const handleShare = async () => {
     if (!currentRoom) return;
@@ -775,6 +807,7 @@ export function RoomLobbyV2() {
           onRemoveQueueItem={removeFromQueue}
           onReorderQueue={reorderQueue}
           isAlreadyPlayed={!!lastPlayedTriviaId && lastPlayedTriviaId === currentRoom.user_trivia_id}
+          willBeObserver={willBeObserver}
         />
 
         {/* TV Mode Toggle - Host only */}
@@ -846,8 +879,11 @@ export function RoomLobbyV2() {
       <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
         <div className="max-w-[520px] mx-auto">
           {isHost ? (
-            // Check if we just played a trivia and queue is empty - show "Continue" button
-            lastPlayedTriviaId && queue.length === 0 ? (
+            // Show "Continue Playing" if:
+            // 1. Queue is empty AND no category selected (user needs to pick new one)
+            // 2. OR trivia was just played and it's same as current (already played indicator)
+            (queue.length === 0 && !currentRoom.category_id && !currentRoom.category_name) ||
+            (lastPlayedTriviaId && lastPlayedTriviaId === currentRoom.user_trivia_id && queue.length === 0) ? (
               <ChunkyButton
                 variant="white"
                 size="xl"

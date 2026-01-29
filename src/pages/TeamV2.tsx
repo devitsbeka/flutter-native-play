@@ -111,7 +111,8 @@ function TeamContentV2() {
     }
   }, [location.state, navigate, setShowCreateModal]);
 
-  // Challenge context from URL
+  // Challenge context from URL - supports all types from ChallengeTypeModal
+  type ChallengeType = "random" | "library" | "my-trivias" | "create" | "create-room" | "trivia" | "collection" | null;
   const [challengeContext, setChallengeContext] = useState<{
     targetUserId: string;
     challengeType: "random" | "library" | "my-trivias" | "create";
@@ -280,16 +281,23 @@ function TeamContentV2() {
     }
   }, [searchParams, user, phase, enterRoom, setSearchParams]);
 
-  // Handle challenge context from URL
+  // Handle challenge context from URL - maps all types from ChallengeTypeModal
   useEffect(() => {
     const challengeUserId = searchParams.get("challenge");
-    const challengeType = searchParams.get("type") as "random" | "library" | "my-trivias" | "create" | null;
+    const rawChallengeType = searchParams.get("type") as ChallengeType;
     
-    if (challengeUserId && challengeType && user) {
+    if (challengeUserId && rawChallengeType && user) {
+      // Map specialized types to internal categories:
+      // - "create-room" -> "create" (standard room creation)
+      // - "trivia" / "collection" -> "my-trivias" (open trivia picker)
+      const mappedType = rawChallengeType === "create-room" ? "create" 
+        : (rawChallengeType === "trivia" || rawChallengeType === "collection") ? "my-trivias"
+        : rawChallengeType as "random" | "library" | "my-trivias" | "create";
+      
       // Store challenge context and open create modal
       setChallengeContext({
         targetUserId: challengeUserId,
-        challengeType: challengeType,
+        challengeType: mappedType,
       });
       setShowCreateModal(true);
       
