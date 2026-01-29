@@ -42,6 +42,7 @@ interface CategoryPickerModalProps {
   }) => void;
   showQueueOption?: boolean;
   roomGradient?: string;
+  excludeTriviaId?: string | null; // Trivia that was just played - should be hidden
 }
 
 export function CategoryPickerModal({
@@ -53,6 +54,7 @@ export function CategoryPickerModal({
   onAddToQueue,
   showQueueOption = true,
   roomGradient,
+  excludeTriviaId,
 }: CategoryPickerModalProps) {
   const { user } = useAuth();
   const [view, setView] = useState<ViewState>("main");
@@ -114,14 +116,21 @@ export function CategoryPickerModal({
     );
   }, [categories, search]);
 
-  // Filter trivias
+  // Filter trivias - exclude the trivia that was just played
   const filteredTrivias = useMemo(() => {
-    if (!search.trim()) return myTrivias;
+    let result = myTrivias;
+    
+    // Exclude the trivia that was just played (user already knows the answers)
+    if (excludeTriviaId) {
+      result = result.filter(t => t.id !== excludeTriviaId);
+    }
+    
+    if (!search.trim()) return result;
     const searchLower = search.toLowerCase();
-    return myTrivias.filter((t) =>
+    return result.filter((t) =>
       t.title.toLowerCase().includes(searchLower)
     );
-  }, [myTrivias, search]);
+  }, [myTrivias, search, excludeTriviaId]);
 
   const handleBack = () => {
     setView("main");
