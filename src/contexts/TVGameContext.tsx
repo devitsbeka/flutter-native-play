@@ -2525,10 +2525,14 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('id', state.sessionId);
 
       // Update local state with round tracking
+      // CRITICAL: Sync suggester state locally to prevent stale isSuggester checks
       setState(prev => ({
         ...prev,
         roundNumber: 1,
         totalRounds: totalRoundsCount,
+        currentRoundSuggesterId: firstRoundSuggesterId,
+        currentRoundSuggesterNickname: firstRoundSuggesterNickname,
+        currentRoundSuggesterAvatarUrl: firstRoundSuggesterAvatarUrl,
       }));
 
       tvLogPhase('lobby', 'countdown', 'startGame');
