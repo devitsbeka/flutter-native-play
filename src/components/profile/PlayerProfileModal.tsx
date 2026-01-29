@@ -181,18 +181,27 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                 {data?.friendshipStatus === 'accepted' && !data?.isCurrentUser ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <motion.button
-                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                      <button
+                        type="button"
+                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center active:scale-95 transition-transform"
+                        style={{ touchAction: 'manipulation' }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <MoreVertical className="w-5 h-5 text-foreground" />
-                      </motion.button>
+                      </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="min-w-[160px]">
+                    <DropdownMenuContent 
+                      align="end" 
+                      className="min-w-[160px] z-[200] bg-popover border border-border shadow-lg"
+                      sideOffset={5}
+                    >
                       <DropdownMenuItem 
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="text-destructive focus:text-destructive gap-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
                       >
                         <UserMinus className="w-4 h-4" />
                         წაშლა
