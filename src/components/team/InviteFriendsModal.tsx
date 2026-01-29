@@ -31,6 +31,7 @@ interface InviteFriendsModalProps {
   // Pre-room selection mode props
   onFriendSelect?: (friendId: string) => void;
   selectedFriends?: Set<string>;
+  onInviteSuccess?: () => void;
 }
 
 interface SearchResult {
@@ -99,7 +100,7 @@ function getCountryFlag(countryCode: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
-export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode, onFriendSelect, selectedFriends }: InviteFriendsModalProps) {
+export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCode, onFriendSelect, selectedFriends, onInviteSuccess }: InviteFriendsModalProps) {
   const [isSharing, setIsSharing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -250,6 +251,12 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
       
       setSentRequests(prev => new Set([...prev, userId]));
       toast.success("მოწვევა გაიგზავნა!");
+      
+      // Auto-close modal after brief delay for visual feedback
+      setTimeout(() => {
+        handleClose();
+        onInviteSuccess?.();
+      }, 600);
     } catch (error) {
       console.error("Invite error:", error);
       toast.error("მოწვევა ვერ მოხერხდა");
