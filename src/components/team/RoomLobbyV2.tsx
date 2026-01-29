@@ -221,9 +221,15 @@ export function RoomLobbyV2() {
   };
 
   const handleStartGame = async () => {
-    // Check if host owns the trivia being played (they know the answers)
+    // CRITICAL: Host-Observer policy for multiplayer rooms
+    // - Library categories (category_id without user_trivia_id): Host ALWAYS plays
+    // - Random categories (no category_id, no user_trivia_id): Host ALWAYS plays
+    // - Open trivia (ღია): Host OBSERVES if they own it
+    // - Closed trivia (დახურული): Host PLAYS if never played (plays_count=0), OBSERVES if already played
+    
+    // Only check for observer mode if playing a user trivia (not library/random)
     if (currentRoom?.user_trivia_id && user?.id) {
-      // Fetch the trivia to check ownership
+      // Fetch the trivia to check ownership and play status
       const { data: trivia } = await supabase
         .from("user_quiz_posts")
         .select("user_id, is_blind, plays_count")
@@ -231,6 +237,8 @@ export function RoomLobbyV2() {
         .single();
       
       // Host knows answers if: they own it AND (it's not blind OR they've already played it)
+      // - Open (ღია) trivia: is_blind = false → always show warning
+      // - Closed (დახურული) trivia: is_blind = true → show warning only if plays_count > 0
       const hostKnowsAnswers = trivia?.user_id === user.id && 
         (!trivia?.is_blind || (trivia?.plays_count || 0) > 0);
       
@@ -240,6 +248,7 @@ export function RoomLobbyV2() {
       }
     }
     
+    // For library categories, random selection, or blind trivias not yet played:
     // Proceed with starting the game (host can participate normally)
     await proceedWithStartGame(false);
   };

@@ -1151,9 +1151,20 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .update({ round_number: newRoundNumber })
         .eq('id', state.sessionId);
       
+      // CRITICAL: Sync suggester state locally (DB already updated above)
+      // This prevents stale isSuggester checks before realtime handler catches up
+      console.log('[startNextRoundFromQueueIfAny] 🔄 Syncing suggester state locally:', {
+        suggesterId: suggesterUserId?.slice(0, 8) || 'null (library category)',
+        isLibraryCategory,
+      });
+      
       setState(prev => ({
         ...prev,
         roundNumber: newRoundNumber,
+        // CRITICAL: Sync suggester state from DB update
+        currentRoundSuggesterId: suggesterUserId,
+        currentRoundSuggesterNickname: suggesterNickname,
+        currentRoundSuggesterAvatarUrl: suggesterAvatarUrl,
       }));
       
       // CRITICAL FIX: Reset timer and advance refs for new round

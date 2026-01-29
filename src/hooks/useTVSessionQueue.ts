@@ -222,6 +222,9 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
     };
   }, [sessionId, roomIdFallback, refetch]);
 
+  // IMPORTANT: Library categories added via addCategoryToQueue should NEVER have suggester metadata.
+  // This ensures hosts can always play library categories without being marked as "observer".
+  // Only user trivias (added via addToQueue with user_trivia_id) can have suggester info.
   const addCategoryToQueue = useCallback(
     async (category: { id: string; name: string; icon_slug?: string | null }) => {
       if (!sessionId) return;
@@ -247,6 +250,8 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
       // Optimistic update
       setQueue(prev => [...prev, optimisticItem]);
       
+      // NOTE: No suggester fields are set for library categories.
+      // This is intentional - the host should ALWAYS play library categories.
       const { error } = await supabase.from("tv_session_queue").insert({
         session_id: sessionId,
         position: nextPos,
@@ -254,6 +259,7 @@ export function useTVSessionQueue(sessionId: string | null, roomIdFallback?: str
         category_id: category.id,
         category_name: category.name,
         icon_slug: category.icon_slug || null,
+        // No suggester_user_id, suggester_nickname, or suggester_avatar_url
       });
       
       if (error) {

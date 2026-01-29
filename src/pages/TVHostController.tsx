@@ -73,7 +73,16 @@ const TVHostController: React.FC = () => {
   } = useTVGame();
   
   // CRITICAL: Check if host is the suggester for this round (they can only observe)
+  // This only applies to user trivias - library categories should NEVER trigger observer mode
+  // The currentRoundSuggesterId should be null for library categories (set in startGame/startNextRound)
   const isSuggester = myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
+  
+  // Debug logging for observer state
+  console.log('[HostObserver] 🎯 Suggester check:', {
+    myPlayerId: myPlayerId?.slice(0, 8) || 'null',
+    currentRoundSuggesterId: currentRoundSuggesterId?.slice(0, 8) || 'null',
+    isSuggester,
+  });
 
   // Room ID for queue fallback
   const [roomId, setRoomId] = useState<string | null>(null);
