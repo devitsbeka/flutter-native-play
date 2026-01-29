@@ -1,260 +1,212 @@
 
-# გეგმა: მულტიპლეერში რაუნდების სინქრონიზაციის სრული გამოსწორება
+# გეგმა: TV რეჟიმში რაუნდების სინქრონიზაციის გამოსწორება
 
-## ძირეული პრობლემა
+## პრობლემა
 
-კატეგორიის არჩევისას ხდება **race condition**:
+TV რეჟიმში მეორე რაუნდის დაწყებისას მოთამაშეები (ან TV ეკრანი) კვლავ ხედავენ წინა რაუნდის კითხვებს ("ვამპირები"), მიუხედავად იმისა რომ ახალი რაუნდი აირჩია.
 
+## ძირეული მიზეზი
+
+**subscription handler-ში (ხაზი 2033)** არის ეს ლოგიკა:
+
+```typescript
+questions: questions.length > 0 ? questions : prev.questions,
 ```
-1. მომხმარებელი ირჩევს "Geography"
-2. handleSelectCategory ანახლებს DB-ს (category_id = "geography")
-3. 100ms შემდეგ startAfterPick triggers handleStartGame()
-4. startGame კითხულობს state.currentRoom.category_id ← ჯერ ძველია!
-5. კითხვები იტვირთება ძველი კატეგორიიდან
+
+**პრობლემა:** თუ `newData.questions` არ მოვიდა realtime update-ში (Supabase ზოგჯერ არ აგზავნის JSONB ველებს განახლებისას), მაშინ `questions.length === 0` და ძველი კითხვები რჩება!
+
+**სცენარი:**
+```text
+1. Round 1: ვამპირები (კითხვები state-ში)
+2. Host clicks "Next Round" → startNextRoundFromQueueIfAny()
+3. DB updates: questions = [new questions], status = 'round-intro'
+4. Realtime subscription triggers, BUT newData.questions is undefined/null
+5. questions.length === 0 → prev.questions KEPT (ვამპირების კითხვები!)
+6. Players see old questions despite new round
 ```
 
-**Realtime subscription** არ ასწრებს `currentRoom` state-ს განახლებას 100ms-ში.
+**რატომ ხდება ეს:**
+- Supabase Realtime არ აბრუნებს ყველა ველს UPDATE-ზე - მხოლოდ შეცვლილებს
+- JSONB ველები (როგორიც არის `questions`) ზოგჯერ არ იგზავნება
+- ეს განსაკუთრებით ხშირია როცა სხვა ველებიც იცვლება (status, category_name და ა.შ.)
 
 ---
 
-## გადაწყვეტა
+## გადაწყვეტა: Fresh Questions Fetch
 
-### ძირითადი მიდგომა: Fresh Room Data Fetch
+### მიდგომა 1: Force refetch on round transition (რეკომენდირებული)
 
-`startGame` ფუნქციამ უნდა **თავად მოითხოვოს ახალი room data** ნაცვლად იმისა, რომ დაეყრდნოს stale state-ს.
-
-### ცვლილება 1: `startGame`-ში Fresh Fetch
-
-**ფაილი:** `src/contexts/MultiplayerContextV2.tsx`
+როცა `round_number` იცვლება ან `status` გადადის `round-intro`/`countdown`-ზე, **აუცილებლად** უნდა მოხდეს fresh fetch:
 
 ```typescript
-// მანამდე (ხაზი ~762-764):
-const roomId = state.currentRoom.id;
-const questionCount = state.currentRoom.total_questions || 5;
-const usedIds = state.currentRoom.used_question_ids || [];
+// subscription handler-ში
+const isNewRound = newData.round_number !== prev.roundNumber;
+const isRoundTransition = ['round-intro', 'countdown'].includes(newData.status) && 
+                          !['round-intro', 'countdown'].includes(prev.phase);
 
-// შემდეგ:
-const roomId = state.currentRoom.id;
-
-// CRITICAL: Re-fetch fresh room data to avoid stale category after selection
-const { data: freshRoom } = await supabase
-  .from("game_rooms")
-  .select("*")
-  .eq("id", roomId)
-  .single();
-
-if (!freshRoom) {
-  toast.error("ოთახი ვერ მოიძებნა");
-  return;
+if (isNewRound || isRoundTransition) {
+  // Questions in realtime update might be stale - trigger refetch
+  console.log('[Subscription] 🔄 Round transition detected - scheduling refetch');
+  setTimeout(() => {
+    refetchSessionData(sessionId);
+  }, 200);
 }
-
-const questionCount = freshRoom.total_questions || 5;
-const usedIds = freshRoom.used_question_ids || [];
 ```
 
-### ცვლილება 2: Category-based branch-ში fresh data
+### მიდგომა 2: Explicit questions validation
+
+შევამოწმოთ რომ კითხვები შეესაბამება ახალ რაუნდს:
 
 ```typescript
-// მანამდე (ხაზი ~1000-1002):
-const result = await getQuestions({
-  mode: 'vs',
-  categorySlug: state.currentRoom.category_id || undefined, // ← STALE!
-  ...
-});
-
-// შემდეგ:
-const result = await getQuestions({
-  mode: 'vs',
-  categorySlug: freshRoom.category_id || undefined, // ← FRESH!
-  ...
-});
+// subscription handler-ში, questions parsing-ის შემდეგ
+if (questions.length > 0) {
+  // Validate questions match new category
+  const firstQuestionId = questions[0]?.id || '';
+  const expectedPrefix = newData.category_name ? '' : 'ut-'; // user trivia prefix
+  
+  // If questions don't seem fresh (e.g., IDs don't match pattern), force refetch
+  // This is a heuristic but catches most cases
+}
 ```
 
-### ცვლილება 3: Category name mapping
+### მიდგომა 3: Host-side local state sync (სწრაფი fix)
+
+Host-მა `startNextRoundFromQueueIfAny`-ში უკვე აქვს ახალი კითხვები - მან უნდა დაასინქროს ლოკალური state:
 
 ```typescript
-// მანამდე (ხაზი ~1020):
-category: state.currentRoom!.category_name || q.category || "General",
-
-// შემდეგ:
-category: freshRoom.category_name || q.category || "General",
-```
-
-### ცვლილება 4: Trivia branch-ში fresh data check
-
-```typescript
-// მანამდე (ხაზი ~776):
-if (!state.currentRoom.category_id) {
-
-// შემდეგ:
-if (!freshRoom.category_id) {
-```
-
-და ყველა `state.currentRoom` reference ამ ფუნქციაში შეიცვალოს `freshRoom`-ით.
-
----
-
-## სხვა Fix-ები იმავე პრობლემის მოსაგვარებლად
-
-### Fix 5: `startNewRound`-ში fresh fetch
-
-```typescript
-// startNewRound-ის დასაწყისში (ხაზი ~1246):
-const roomId = state.currentRoom.id;
-
-// დავამატოთ:
-const { data: freshRoom } = await supabase
-  .from("game_rooms")
-  .select("*")
-  .eq("id", roomId)
-  .single();
-
-if (!freshRoom) return;
-```
-
-### Fix 6: Lobby subscription handler-ის გაძლიერება
-
-Non-host-ისთვის კითხვების validation გაუმჯობესებულია (უკვე გაკეთდა), მაგრამ დავამატოთ ლოგი დებაგისთვის:
-
-```typescript
-// ხაზი ~344:
-console.log(`[MP] Non-host loaded ${questions.length} validated questions for category: ${updated.category_name}`);
+// startNextRoundFromQueueIfAny-ში, DB update-ის შემდეგ
+setState(prev => ({
+  ...prev,
+  roundNumber: newRoundNumber,
+  questions: formattedQuestions, // ← დამატება!
+  currentQuestionIndex: 0,       // ← დამატება!
+  categoryName: nextCategoryName,
+  categoryIcon: nextCategoryIcon,
+  // ... existing suggester fields
+}));
 ```
 
 ---
 
-## ალტერნატიული მიდგომა (უფრო სუფთა)
+## შესასრულებელი ცვლილებები
 
-### Option A: Pass fresh room to startGame
+### ფაილი: `src/contexts/TVGameContext.tsx`
 
-`handleSelectCategory`-ში refresh room და გადაეცი:
+#### ცვლილება 1: `startNextRoundFromQueueIfAny` - Host-ის local state sync (ხაზი ~1170)
 
+**მანამდე:**
 ```typescript
-// RoomLobbyV2.tsx - handleSelectCategory
-if (startAfterPick) {
-  setStartAfterPick(false);
-  setShowCategoryPicker(false);
+setState(prev => ({
+  ...prev,
+  roundNumber: newRoundNumber,
+  currentRoundSuggesterId: suggesterUserId,
+  currentRoundSuggesterNickname: suggesterNickname,
+  currentRoundSuggesterAvatarUrl: suggesterAvatarUrl,
+}));
+```
+
+**შემდეგ:**
+```typescript
+setState(prev => ({
+  ...prev,
+  roundNumber: newRoundNumber,
+  questions: formattedQuestions, // ✅ CRITICAL: Sync new questions locally
+  currentQuestionIndex: 0,       // ✅ Reset to first question
+  categoryName: nextCategoryName,
+  categoryIcon: nextCategoryIcon,
+  phase: 'round-intro',          // ✅ Sync phase locally
+  currentRoundSuggesterId: suggesterUserId,
+  currentRoundSuggesterNickname: suggesterNickname,
+  currentRoundSuggesterAvatarUrl: suggesterAvatarUrl,
+}));
+```
+
+#### ცვლილება 2: Subscription handler - refetch on round transition (ხაზი ~1983-2010)
+
+**დასამატებელი ლოგიკა (phase transition logic-ის შემდეგ):**
+```typescript
+// CRITICAL FIX: Force refetch when round number changes
+// Realtime updates may not include JSONB questions field
+const prevRoundNumber = prev.roundNumber;
+const newRoundNumber = newData.round_number ?? prev.roundNumber;
+const isNewRound = newRoundNumber !== prevRoundNumber && newRoundNumber > 0;
+
+if (isNewRound) {
+  console.log('[Subscription] 🔄 New round detected:', { from: prevRoundNumber, to: newRoundNumber });
   
-  // Wait for DB update to propagate, then fetch fresh
-  await new Promise(resolve => setTimeout(resolve, 200));
-  
-  // Manually refresh room state before starting
-  const { data: fresh } = await supabase
-    .from("game_rooms")
-    .select("*")
-    .eq("id", currentRoom.id)
-    .single();
-    
-  if (fresh) {
-    // Trigger context update
-    await handleStartGame();
+  // If questions in update are empty but this is a new round, we MUST refetch
+  if (questions.length === 0) {
+    console.log('[Subscription] ⚠️ New round but NO questions in update - forcing refetch');
+    setTimeout(() => {
+      refetchSessionData(sessionId);
+    }, 200);
   }
 }
 ```
 
-**მაგრამ:** ეს გაართულებს lobby კოდს და შეიძლება კვლავ ჰქონდეს race condition.
+#### ცვლილება 3: refetchSessionData improvements (ხაზი ~587-657)
 
-### Option B (Recommended): startGame fetches fresh data
-
-უბრალოდ `startGame` თავად იღებს fresh data-ს - ეს ყველაზე მტკიცე გადაწყვეტაა.
-
----
-
-## შესაცვლელი ფაილები
-
-| ფაილი | ცვლილება |
-|-------|----------|
-| `MultiplayerContextV2.tsx` | `startGame`: Fresh room fetch at start, use `freshRoom` everywhere |
-| `MultiplayerContextV2.tsx` | `startNewRound`: Fresh room fetch at start |
-| `MultiplayerContextV2.tsx` | Update all `state.currentRoom` references to `freshRoom` in these functions |
-
----
-
-## მოსალოდნელი Flow შემდეგ
-
-```
-1. მომხმარებელი ირჩევს "Geography"
-2. handleSelectCategory ანახლებს DB-ს ← ✓
-3. 100ms შემდეგ startGame გამოიძახება
-4. startGame: const { data: freshRoom } = await supabase.from("game_rooms").select("*")...
-5. freshRoom.category_id === "geography" ← სწორი!
-6. კითხვები იტვირთება Geography კატეგორიიდან ← ✓
-7. Non-host validation-ით იღებს სწორ კითხვებს ← ✓
-```
-
----
-
-## ტექნიკური დეტალები
-
-### startGame ფუნქციის სრული ცვლილება
+დავრწმუნდეთ რომ `refetchSessionData` სწორად ასინქრონებს round-ის მონაცემებს:
 
 ```typescript
-const startGame = useCallback(async (hostShouldObserve: boolean = false) => {
-  if (!state.currentRoom || !isHost) return;
-  
-  const roomId = state.currentRoom.id;
-  
-  // ✅ CRITICAL FIX: Fetch fresh room data to avoid stale category
-  const { data: freshRoom, error: roomError } = await supabase
-    .from("game_rooms")
-    .select("*")
-    .eq("id", roomId)
-    .single();
-    
-  if (roomError || !freshRoom) {
-    console.error("[startGame] Failed to fetch fresh room:", roomError);
-    toast.error("ოთახის მონაცემები ვერ მოიძებნა");
-    return;
-  }
-  
-  console.log(`[startGame] Using fresh room data - category: ${freshRoom.category_name}, id: ${freshRoom.category_id}`);
-  
-  const questionCount = freshRoom.total_questions || 5;
-  const usedIds = freshRoom.used_question_ids || [];
-  
-  // Set host_is_observer in database
-  if (hostShouldObserve) {
-    await supabase
-      .from("game_rooms")
-      .update({ host_is_observer: true })
-      .eq("id", roomId);
-  }
-  
-  try {
-    // CHECK: For custom MyTrivia rooms (no category_id), use existing custom questions
-    if (!freshRoom.category_id) {
-      // ... existing custom trivia logic, but use freshRoom instead of state.currentRoom
-    }
-    
-    // Standard category-based room: fetch from database
-    const result = await getQuestions({
-      mode: 'vs',
-      categorySlug: freshRoom.category_id || undefined, // ✅ FRESH
-      count: questionCount,
-      excludeIds: usedIds,
-    });
-    
-    // ... rest of function with freshRoom references
-  }
-}, [state.currentRoom, isHost]);
+// refetchSessionData-ში, setState-ში
+setState(prev => ({
+  ...prev,
+  sessionId,
+  phase: mapDbStatusToPhase(session.status),
+  questions, // ← უკვე არის
+  currentQuestionIndex: session.current_question_index || 0,
+  categoryName: session.category_name || null,
+  categoryIcon: session.category_icon || null,
+  roomName: session.room_name || null,
+  roundNumber: session.round_number ?? prev.roundNumber, // ← დასამატებელი
+  totalRounds: session.total_rounds ?? prev.totalRounds, // ← დასამატებელი
+  // ... და suggester fields
+}));
 ```
 
 ---
 
-## სადიაგნოსტიკო ლოგები
+## ვალიდაციის Flow
 
-დავამატოთ debug logs რომ გავიგოთ რა ხდება:
-
-```typescript
-// startGame დასაწყისში:
-console.log('[startGame] State room category:', state.currentRoom.category_id, state.currentRoom.category_name);
-console.log('[startGame] Fresh room category:', freshRoom.category_id, freshRoom.category_name);
-
-// handleSelectCategory-ში:
-console.log('[handleSelectCategory] Updated DB with:', category.id, category.name);
-
-// startAfterPick trigger-ზე:
-console.log('[startAfterPick] Starting game 100ms after category selection');
+```text
+Host clicks "Next Round" → startNextRoundFromQueueIfAny()
+    │
+    ├─► Fetches fresh queue item from DB
+    ├─► Generates formattedQuestions for new category
+    ├─► Updates tv_sessions with new questions, status='round-intro'
+    ├─► Local setState with questions, phase, categoryName ← NEW!
+    │
+    │   (Realtime subscription fires for all clients)
+    │
+Non-Host/TV receives UPDATE
+    │
+    ├─► Detects round_number changed
+    ├─► Checks: questions in update?
+    │     │
+    │     ├─ YES → Use them directly
+    │     └─ NO  → Force refetch from DB ← NEW!
+    │
+    └─► All clients see correct new questions
 ```
 
-ეს დაგვეხმარება გავიგოთ არის თუ არა სხვა პრობლემები.
+---
+
+## ტექნიკური შეჯამება
+
+| ცვლილება | მდებარეობა | მიზანი |
+|----------|------------|--------|
+| Host local sync | `startNextRoundFromQueueIfAny` ხაზი ~1170 | Host დაუყოვნებლივ ხედავს ახალ კითხვებს |
+| Round change detection | Subscription handler ხაზი ~2000 | აღმოაჩინოს რაუნდის ცვლილება |
+| Auto-refetch on empty questions | Subscription handler | Fallback თუ realtime-მა არ მოიტანა კითხვები |
+| refetchSessionData improvements | ხაზი ~650 | სრული round metadata sync |
+
+---
+
+## მოსალოდნელი შედეგი
+
+| სცენარი | მანამდე | შემდეგ |
+|---------|---------|--------|
+| Host იწყებს round 2 | Host ხედავს ახალს, non-host ძველს | ყველა ხედავს ახალ კითხვებს |
+| Realtime-მა არ მოიტანა questions | ძველი კითხვები რჩება | Auto-refetch ჩატვირთავს სწორ კითხვებს |
+| TV ეკრანი round transition-ზე | შეიძლება ძველი კითხვები | სწორი კითხვები (host sync ან refetch) |
