@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
@@ -14,6 +14,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
 import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Custom time formatter for Georgian (no "დაახლოებით")
 const formatTimeAgo = (date: Date) => {
@@ -55,6 +71,8 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const { data, loading, refetch } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingFriend, setDeletingFriend] = useState(false);
 
   // Non-friends can only see avatar, name, add friend button, and public content
   const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
@@ -109,6 +127,28 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
     setChatOpen(true);
   };
 
+  const handleDeleteFriend = async () => {
+    if (!data?.friendshipId) return;
+    
+    setDeletingFriend(true);
+    try {
+      const { error } = await supabase
+        .from("friendships")
+        .delete()
+        .eq("id", data.friendshipId);
+
+      if (error) throw error;
+      
+      toast.success("მეგობარი წაიშალა");
+      setShowDeleteConfirm(false);
+      refetch();
+    } catch (err) {
+      toast.error("წაშლა ვერ მოხერხდა");
+    } finally {
+      setDeletingFriend(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -137,7 +177,31 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                   პროფილი
                 </h1>
                 
-                <div className="w-10" />
+                {/* Three-dots menu for friends */}
+                {data?.friendshipStatus === 'accepted' && !data?.isCurrentUser ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <motion.button
+                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <MoreVertical className="w-5 h-5 text-foreground" />
+                      </motion.button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="min-w-[160px]">
+                      <DropdownMenuItem 
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="text-destructive focus:text-destructive gap-2"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                        წაშლა
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div className="w-10" />
+                )}
               </div>
             </div>
 
@@ -432,6 +496,28 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           }}
         />
       )}
+
+      {/* Delete Friend Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
+            <AlertDialogDescription>
+              ნამდვილად გსურთ {data?.profile?.nickname}-ის მეგობრებიდან წაშლა?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteFriend}
+              disabled={deletingFriend}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingFriend ? "იშლება..." : "წაშლა"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </>
   );
