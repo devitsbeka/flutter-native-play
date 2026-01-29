@@ -1,114 +1,108 @@
 
-# Observer Screen Bug Fix და გაუმჯობესება
+# Observer Screen Timer Fix და Game Flow გაუმჯობესება
 
-## პრობლემის აღწერა
+## პრობლემის Root Cause
 
-1. **Observer Stuck Bug**: მასპინძელი ობსერვერ რეჟიმში იჭედება პირველ კითხვაზე
-2. **Timer Sync Issue**: `canAdvance` სტატუსი არასოდეს ხდება `true`
-3. **Observer UX**: ობსერვერს სურს ნახოს კითხვები და რა ქულები მიიღო/დაკარგა
+მომხმარებელი იჭედება Observer Screen-ზე კითხვა 2/5-ზე. ანალიზის შედეგად გამოვლინდა:
 
----
+### პრობლემა: გაყინული Timer
 
-## Root Cause ანალიზი
-
-### პრობლემა 1: Timer-ის სინქრონიზაცია
-
-`MultiplayerObserverScreen`-ში `canAdvance` ხდება true როცა:
-```typescript
-const allAnswered = players.length > 0 && answeredCount === players.length;
-const timerExpired = timeRemaining <= 0;
-if (allAnswered || timerExpired) { ... setCanAdvance(true); }
+```text
+MultiplayerGameScreenV2.tsx (ხაზი 117-132):
+┌──────────────────────────────────────────────────┐
+│ Timer useEffect:                                 │
+│ if (answerRevealed || (isHost && hostIsObserver))│
+│   return; ← Timer საერთოდ არ მუშაობს!           │
+└──────────────────────────────────────────────────┘
+                     │
+                     ▼ 
+┌──────────────────────────────────────────────────┐
+│ MultiplayerObserverScreen receives:              │
+│ timeRemaining={15} ← გაყინული მნიშვნელობა!       │
+└──────────────────────────────────────────────────┘
+                     │
+                     ▼
+┌──────────────────────────────────────────────────┐
+│ Observer advancement logic:                       │
+│ const timerExpired = timeRemaining <= 0; ← false │
+│ if (timerExpired || allAnswered) canAdvance=true │
+│ ← ვერასოდეს ხდება true!                           │
+└──────────────────────────────────────────────────┘
 ```
 
-**პრობლემები:**
-- თუ `players.length === 0` (მხოლოდ ჰოსტი არის ოთახში), პირობა ვერასოდეს შესრულდება
-- თუ მოთამაშეებმა timeout-ზე ვერ უპასუხეს, `opponentAnswers` ცარიელია და `answeredCount === 0`
+### რატომ არ მუშაობს?
 
-### პრობლემა 2: handleAnswer გამოძახება
-
-`MultiplayerGameScreenV2.tsx` ხაზი 124:
-```typescript
-if (prev <= 0.1) {
-  handleAnswer("");  // ეს მხოლოდ მოთამაშეებისთვისაა!
-  return 0;
-}
-```
-
-ეს observer-ისთვის არ მუშაობს, რადგან observer-ს `handleAnswer` არ უნდა!
+1. **Parent timer disabled**: `MultiplayerGameScreenV2`-ში timer უბრალოდ არ მუშაობს observer-ისთვის
+2. **Prop არასოდეს იცვლება**: `timeRemaining={15}` რჩება გაყინული
+3. **canAdvance logic ვერ triggers**: `timerExpired` ყოველთვის `false`-ია
+4. **Safety timeout 20s**: ძალიან დიდი ლოდინია, მომხმარებელი დაბნეულია
 
 ---
 
 ## გადაწყვეტა
 
-### 1. MultiplayerObserverScreen.tsx - Timer და Edge Cases
+### 1. Observer Screen-ს საჭიროა საკუთარი Timer
 
-**დაემატება:**
-- Edge case: თუ `players.length === 0`, დაუყოვნებლივ `canAdvance = true`
-- Safety timeout: თუ 20 წამში ვერაფერი მოხდა, ავტომატურად `canAdvance = true`
-- Real question display: ობსერვერს ვაჩვენოთ მიმდინარე კითხვა
+`MultiplayerObserverScreen.tsx`-ში დავამატოთ **internal timer** რომელიც არ დამოკიდებულია parent-ის prop-ზე:
 
 ```typescript
-// Edge case: no players = immediately allow advance
+// Internal timer for observer - independent from parent
+const [localTimeRemaining, setLocalTimeRemaining] = useState(timePerQuestion);
+
+// Run timer countdown for observer
 useEffect(() => {
-  if (players.length === 0) {
+  if (canAdvance) return; // Stop when can advance
+  
+  const timer = setInterval(() => {
+    setLocalTimeRemaining((prev) => {
+      if (prev <= 0.1) {
+        return 0;
+      }
+      return prev - 0.1;
+    });
+  }, 100);
+
+  return () => clearInterval(timer);
+}, [currentQuestionIndex, canAdvance]);
+
+// Reset on question change
+useEffect(() => {
+  setLocalTimeRemaining(timePerQuestion);
+}, [currentQuestionIndex, timePerQuestion]);
+```
+
+### 2. Timer Sync Logic-ის გაუმჯობესება
+
+გამოვიყენოთ `localTimeRemaining` ნაცვლად `timeRemaining` prop-ისა:
+
+```typescript
+useEffect(() => {
+  if (lastProcessedQuestion >= currentQuestionIndex) return;
+  
+  const allAnswered = players.length > 0 && answeredCount === players.length;
+  const timerExpired = localTimeRemaining <= 0; // ახლა მუშაობს!
+  
+  if (allAnswered || timerExpired) {
+    // ... bonus logic
     setCanAdvance(true);
   }
-}, [players.length]);
+}, [answeredCount, players.length, localTimeRemaining, ...]);
+```
 
-// Safety timeout: if nothing happens in 20s, allow advance
+### 3. Safety Timeout-ის შემცირება
+
+20 წამი ძალიან ბევრია. შევამციროთ **15 წამზე** (timer-ის ტოლი):
+
+```typescript
 useEffect(() => {
   const safetyTimeout = setTimeout(() => {
     if (!canAdvance) {
       console.log('[Observer] Safety timeout - allowing advance');
       setCanAdvance(true);
     }
-  }, 20000);
+  }, 15000); // 15 seconds instead of 20
   return () => clearTimeout(safetyTimeout);
-}, [currentQuestionIndex, canAdvance]);
-```
-
-### 2. Observer Screen UI გაუმჯობესება
-
-ობსერვერმა უნდა ნახოს:
-- **კითხვის ტექსტი** (რა კითხვას უპასუხეს მოთამაშეებმა)
-- **ბონუს ქულები** თითოეულ კითხვაზე
-- **მოთამაშეების პროგრესი** რეალ-ტაიმში
-
-```text
-┌─────────────────────────────────────┐
-│ ← [Back]     1/3     [👤👤] ↓     │
-├─────────────────────────────────────┤
-│                                     │
-│        [⭐] შენი ტრივიაა!          │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ კითხვა: რომელია უდიდესი        │ │
-│ │ ოკეანე?                        │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │ შენი ქულა: 100                 │ │
-│ │ +100 ამ კითხვაზე! 🎉           │ │
-│ └─────────────────────────────────┘ │
-│                                     │
-│    [1/2 უპასუხეს]    ⏱️ 06წ       │
-│                                     │
-│ ┌─────────────────────────────────┐ │
-│ │     [შემდეგი კითხვა]           │ │
-│ └─────────────────────────────────┘ │
-└─────────────────────────────────────┘
-```
-
-### 3. Timer Logic Fix
-
-`MultiplayerGameScreenV2.tsx`-ში observer-ისთვის timer არ უნდა იძახებდეს `handleAnswer`:
-
-```typescript
-// Timer - only call handleAnswer for non-observers
-useEffect(() => {
-  if (answerRevealed || (isHost && hostIsObserver)) return;
-  // ... timer logic
-}, [answerRevealed, handleAnswer, isHost, hostIsObserver]);
+}, [currentQuestionIndex]);
 ```
 
 ---
@@ -117,8 +111,7 @@ useEffect(() => {
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `src/components/team/MultiplayerObserverScreen.tsx` | Edge cases, safety timeout, question display |
-| `src/components/team/MultiplayerGameScreenV2.tsx` | Timer logic fix for observer |
+| `src/components/team/MultiplayerObserverScreen.tsx` | საკუთარი internal timer, fixed advancement logic |
 
 ---
 
@@ -126,77 +119,80 @@ useEffect(() => {
 
 ### MultiplayerObserverScreen.tsx
 
-1. **Edge case handling:**
+**ახალი imports და state:**
 ```typescript
-// If no players, allow immediate advance
-useEffect(() => {
-  if (players.length === 0 && !canAdvance) {
-    setCanAdvance(true);
-  }
-}, [players.length, canAdvance]);
+const { timePerQuestion } = useMultiplayerV2(); // Need this!
+
+// Internal timer - observer runs its own countdown
+const [localTimeRemaining, setLocalTimeRemaining] = useState(timePerQuestion);
 ```
 
-2. **Safety timeout:**
+**ახალი timer useEffect:**
 ```typescript
+// Observer's own timer countdown (parent timer is disabled)
 useEffect(() => {
-  const safety = setTimeout(() => {
-    if (!canAdvance) setCanAdvance(true);
-  }, 20000);
-  return () => clearTimeout(safety);
-}, [currentQuestionIndex]);
-```
-
-3. **Question display in UI:**
-```tsx
-{/* Show current question text for context */}
-{currentQuestion && (
-  <div className="bg-white/10 rounded-xl p-4 mb-4 mx-4">
-    <p className="text-white/60 text-xs mb-1">მიმდინარე კითხვა:</p>
-    <p className="text-white font-medium text-center">
-      {currentQuestion.question}
-    </p>
-  </div>
-)}
-```
-
-### MultiplayerGameScreenV2.tsx
-
-**Timer hook fix:**
-```typescript
-useEffect(() => {
-  // Skip timer countdown for observers - they don't need to submit answers
-  if (answerRevealed || (isHost && hostIsObserver)) return;
+  if (canAdvance) return;
   
   const timer = setInterval(() => {
-    setTimeRemaining((prev) => {
-      if (prev <= 0.1) {
-        handleAnswer("");
-        return 0;
-      }
+    setLocalTimeRemaining((prev) => {
+      if (prev <= 0.1) return 0;
       return prev - 0.1;
     });
   }, 100);
 
   return () => clearInterval(timer);
-}, [answerRevealed, handleAnswer, isHost, hostIsObserver]);
+}, [currentQuestionIndex, canAdvance]);
+
+// Reset timer on question change
+useEffect(() => {
+  setLocalTimeRemaining(timePerQuestion);
+  setCanAdvance(false);
+  setBonusEarnedThisQuestion(0);
+}, [currentQuestionIndex, timePerQuestion]);
+```
+
+**განახლებული advancement logic:**
+```typescript
+useEffect(() => {
+  if (lastProcessedQuestion >= currentQuestionIndex) return;
+  
+  const allAnswered = players.length > 0 && answeredCount === players.length;
+  const timerExpired = localTimeRemaining <= 0; // Use LOCAL timer!
+  
+  if (allAnswered || timerExpired) {
+    // ... existing bonus logic
+    setLastProcessedQuestion(currentQuestionIndex);
+    setCanAdvance(true);
+  }
+}, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, 
+    lastProcessedQuestion, awardObserverBonus, localTimeRemaining]); // Added localTimeRemaining
+```
+
+**UI-ში გამოჩნდეს local timer:**
+```tsx
+{/* Timer - use local time */}
+<span className="text-2xl font-bold text-white">
+  {Math.ceil(localTimeRemaining)}წ
+</span>
 ```
 
 ---
 
-## შედეგი
+## მოსალოდნელი შედეგი
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| ჰოსტი მარტოა (0 მოთამაშე) | Stuck | canAdvance = true დაუყოვნებლივ |
-| მოთამაშეები timeout-ზე | Stuck | Timer expires → canAdvance = true |
-| Safety fallback | არ არსებობს | 20წ შემდეგ ავტომატურად |
-| კითხვის ნახვა | არ ჩანს | ჩანს observer screen-ზე |
+| Timer countdown | გაყინული 15წ | მუშაობს 15→0 |
+| canAdvance trigger | ვერასოდეს | Timer expires ან allAnswered |
+| Button appearance | 20+ წამში | მაქსიმუმ 15 წამში |
+| Next question | Stuck | სწორად გადადის |
+| Game end | Stuck | Results screen |
 
 ---
 
-## დამატებითი შენიშვნები
+## Game Flow შემდეგ
 
-- Results screen-ზე "კატეგორიის დამატება" ღილაკი უკვე მუშაობს (host-ისთვის)
-- მეორე მოთამაშეებს "ველოდებით მასპინძელს..." ჩანს
-- Queue-დან შემდეგი რაუნდი ავტომატურად იწყება
-
+1. **Observer ხედავს კითხვას** და countdown-ს
+2. **Timer expires ან მოთამაშეები პასუხობენ** → "შემდეგი კითხვა" ღილაკი ჩნდება
+3. **ბოლო კითხვის შემდეგ** → Results Screen
+4. **Results Screen-ზე** → Host-ს შეუძლია "კატეგორიის დამატება" ან Queue-დან გაგრძელება
