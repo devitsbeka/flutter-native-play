@@ -40,11 +40,14 @@ export function MainLayout({
       />
 
       {/* Main Content Area */}
-      <main className={`flex-1 relative bg-transparent scroll-smooth scrollbar-hide overflow-x-hidden ${
-        disableScroll 
-          ? 'h-[100dvh] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
-          : 'h-screen overflow-y-auto pb-24 md:pb-0'
-      }`}>
+      <main 
+        id="main-scroll-container"
+        className={`flex-1 relative bg-transparent scroll-smooth scrollbar-hide overflow-x-hidden ${
+          disableScroll 
+            ? 'h-[100dvh] overflow-hidden md:h-screen md:overflow-y-auto md:pb-0' 
+            : 'h-screen overflow-y-auto pb-24 md:pb-0'
+        }`}
+      >
         {children}
       </main>
 

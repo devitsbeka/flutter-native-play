@@ -188,7 +188,7 @@ export function UniversalBottomNav({
             <NavButton
               onClick={isGuest ? handleLockedNavClick : () => {
                 if (isActive("/team")) {
-                  const mainEl = document.getElementById("team-main-content");
+                  const mainEl = document.getElementById("main-scroll-container");
                   if (mainEl) {
                     mainEl.scrollTo({ top: 0, behavior: "smooth" });
                   } else {
