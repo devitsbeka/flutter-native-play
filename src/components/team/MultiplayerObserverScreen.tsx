@@ -1,22 +1,22 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronUp, ChevronDown, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useMultiplayerV2, RoomParticipant } from "@/contexts/MultiplayerContextV2";
+import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSound } from "@/contexts/SoundContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
 
 interface MultiplayerObserverScreenProps {
   timeRemaining: number;
   onExit: () => void;
 }
 
-export function MultiplayerObserverScreen({ timeRemaining, onExit }: MultiplayerObserverScreenProps) {
-  const navigate = useNavigate();
+const TIME_PER_QUESTION = 15;
+
+export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const { playSound, vibrate } = useSound();
@@ -29,13 +29,15 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
     opponentAnswers,
     awardObserverBonus,
     nextQuestion,
-    currentRoom,
   } = useMultiplayerV2();
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [lastProcessedQuestion, setLastProcessedQuestion] = useState(-1);
   const [canAdvance, setCanAdvance] = useState(false);
   const [bonusEarnedThisQuestion, setBonusEarnedThisQuestion] = useState(0);
+  
+  // Internal timer - observer runs its own countdown (parent timer is disabled for observers)
+  const [localTimeRemaining, setLocalTimeRemaining] = useState(TIME_PER_QUESTION);
 
   // Get current question for display
   const currentQuestion = questions[currentQuestionIndex];
@@ -52,13 +54,34 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
   // Check if this is the last question
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
+  // Observer's own timer countdown (parent timer is disabled for observers)
+  useEffect(() => {
+    if (canAdvance) return;
+    
+    const timer = setInterval(() => {
+      setLocalTimeRemaining((prev) => {
+        if (prev <= 0.1) return 0;
+        return prev - 0.1;
+      });
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [currentQuestionIndex, canAdvance]);
+
+  // Reset timer and state on question change
+  useEffect(() => {
+    setLocalTimeRemaining(TIME_PER_QUESTION);
+    setCanAdvance(false);
+    setBonusEarnedThisQuestion(0);
+  }, [currentQuestionIndex]);
+
   // Award bonus points when all players have answered OR timer expired
   useEffect(() => {
     // Only process if we haven't already processed this question
     if (lastProcessedQuestion >= currentQuestionIndex) return;
     
     const allAnswered = players.length > 0 && answeredCount === players.length;
-    const timerExpired = timeRemaining <= 0;
+    const timerExpired = localTimeRemaining <= 0;
     
     // Check if all players have answered or timer ran out
     if (allAnswered || timerExpired) {
@@ -89,19 +112,7 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
       setLastProcessedQuestion(currentQuestionIndex);
       setCanAdvance(true);
     }
-  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, timeRemaining]);
-
-  // Reset when question changes
-  useEffect(() => {
-    setCanAdvance(false);
-    setBonusEarnedThisQuestion(0);
-    // Reset lastProcessedQuestion if we're on a new question that hasn't been processed
-    if (currentQuestionIndex > lastProcessedQuestion) {
-      // Allow the new question to be processed
-    } else if (currentQuestionIndex < lastProcessedQuestion) {
-      setLastProcessedQuestion(-1);
-    }
-  }, [currentQuestionIndex, lastProcessedQuestion]);
+  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining]);
 
   // Edge case: if no players in the room, allow immediate advance
   useEffect(() => {
@@ -111,16 +122,16 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
     }
   }, [players.length, canAdvance]);
 
-  // Safety timeout: if nothing happens in 20 seconds, allow advance anyway
+  // Safety timeout: if nothing happens in 15 seconds, allow advance anyway
   useEffect(() => {
     const safetyTimeout = setTimeout(() => {
       if (!canAdvance) {
-        console.log('[Observer] Safety timeout - allowing advance after 20s');
+        console.log('[Observer] Safety timeout - allowing advance after 15s');
         setCanAdvance(true);
       }
-    }, 20000);
+    }, 15000);
     return () => clearTimeout(safetyTimeout);
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, canAdvance]);
 
   const handleNextQuestion = () => {
     playSound("button-click");
@@ -321,7 +332,7 @@ export function MultiplayerObserverScreen({ timeRemaining, onExit }: Multiplayer
             className="mt-4 flex items-center gap-2 text-white/60"
           >
             <span className="text-2xl">⏱️</span>
-            <span className="text-2xl font-bold text-white">{Math.ceil(timeRemaining)}წ</span>
+            <span className="text-2xl font-bold text-white">{Math.ceil(localTimeRemaining)}წ</span>
           </motion.div>
         </div>
 
