@@ -1075,15 +1075,11 @@ export function RoomLobbyV2() {
               <AlertTriangle className="w-7 h-7 text-amber-500" />
             </div>
             <AlertDialogTitle className="text-foreground font-display text-xl">
-              შენ იცი პასუხები! 🧠
+              ამ რაუნდს გამოტოვებ, რადგან პასუხები იცი!
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground space-y-2">
-              <p>
-                ეს შენ მიერ შექმნილი ტრივიაა, ამიტომ თამაშში გამარჯვება არ ჩაითვლება
-                სამართლიანად სხვა მოთამაშეებისთვის.
-              </p>
+            <AlertDialogDescription className="text-muted-foreground">
               <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
-                შენ მაინც მიიღებ ქულებს როცა სხვები შეცდებიან! 💡
+                ქულებს მიიღებ, თუ სხვას პასუხი შეეშლება. 💡
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
