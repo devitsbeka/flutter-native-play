@@ -271,7 +271,7 @@ export function useFriends() {
       // Check if friendship already exists
       const { data: existing } = await supabase
         .from("friendships")
-        .select("id, status")
+        .select("id, status, user_id")
         .or(`and(user_id.eq.${user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user.id})`)
         .maybeSingle();
 
@@ -279,7 +279,30 @@ export function useFriends() {
         if (existing.status === "accepted") {
           toast.info("უკვე მეგობრები ხართ");
         } else if (existing.status === "pending") {
-          toast.info("მოთხოვნა უკვე გაგზავნილია");
+          // Check if they sent us a request - if so, accept it automatically
+          if (existing.user_id === friendId) {
+            // They sent us a request, auto-accept it
+            const { error: acceptError } = await supabase
+              .from("friendships")
+              .update({ 
+                status: "accepted",
+                accepted_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id);
+            
+            if (acceptError) {
+              console.error("Error auto-accepting friend request:", acceptError);
+              toast.error("მოთხოვნის მიღება ვერ მოხერხდა");
+              return false;
+            }
+            
+            toast.success("მეგობარი დაემატა! 🎉");
+            await fetchFriends();
+            return true;
+          } else {
+            // We already sent them a request
+            toast.info("მოთხოვნა უკვე გაგზავნილია");
+          }
         }
         return false;
       }
