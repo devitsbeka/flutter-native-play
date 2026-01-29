@@ -1,70 +1,89 @@
 
 
-# გასწორება: ბიბლიოთეკის/შემთხვევითი კატეგორიებისთვის Observer-ად არასწორი ჩვენება
+# LIVE Badge გაუმჯობესება: ონლაინ მონაწილეების ჩვენება
 
-## პრობლემა
+## მიმოხილვა
 
-როდესაც ჰოსტი ირჩევს ბიბლიოთეკის კატეგორიას ან შემთხვევით კატეგორიას (არა თავისი შექმნილი blind trivia-ს 0 plays-ით), მაინც ეჩვენება Observer-ის ეკრანი და ვერ თამაშობს. ეს ხდება მხოლოდ ჰოსტის მოწყობილობაზე.
+გაუმჯობესდება LIVE badge-ის ჩვენების ლოგიკა ოთახის ბარათებზე:
 
----
-
-## პრობლემის მიზეზი
-
-`startGame` ფუნქციაში (TVGameContext.tsx):
-
-1. ბიბლიოთეკის კატეგორიებისთვის `firstRoundSuggesterId` სწორად არის `null`
-2. მონაცემთა ბაზა სწორად განახლდება: `current_round_suggester_id: null`
-3. **პრობლემა**: ლოკალური state-ის განახლება (`setState`) **არ აახლებს** `currentRoundSuggesterId` ველს - ის რჩება წინა თამაშის მონაცემებით
-
-შედეგად, `isSuggester` შემოწმება იყენებს ძველ მონაცემებს და ჰოსტს Observer-ად აჩვენებს.
+1. **LIVE badge ჩანს როცა**: სხვა მომხმარებელი (გარდა ჩემი) ონლაინ არის ამ ოთახში
+2. **LIVE + TV იკონი ჩანს როცა**: ზემოთ აღწერილი პირობა + TV რეჟიმი ჩართულია
+3. **სორტირება**: ოთახები დალაგდება ბოლო აქტივობის მიხედვით
 
 ---
 
-## გადაწყვეტა
+## ტექნიკური გადაწყვეტა
 
-`startGame` ფუნქციაში, ლოკალური state-ის განახლებას უნდა დავამატოთ suggester-ის ველები:
+### 1. useMyRooms.ts - ონლაინ მომხმარებლების მონაცემების დამატება
 
-```typescript
-// სტრიქონები 2527-2532
-setState(prev => ({
-  ...prev,
-  roundNumber: 1,
-  totalRounds: totalRoundsCount,
-  // დამატება: Suggester-ის ინფორმაციის სინქრონიზაცია
-  currentRoundSuggesterId: firstRoundSuggesterId,
-  currentRoundSuggesterNickname: firstRoundSuggesterNickname,
-  currentRoundSuggesterAvatarUrl: firstRoundSuggesterAvatarUrl,
-}));
+მოხდება room-ების fetch-ის დროს `user_presence` ცხრილთან cross-reference, რომ დადგინდეს ოთახის მონაწილეებიდან ვინ არის ონლაინ:
+
+```text
++------------------+       +------------------+       +------------------+
+| game_rooms       |       | room_participants|       | user_presence    |
++------------------+       +------------------+       +------------------+
+| id               |<----->| room_id          |       | user_id          |
+| room_name        |       | user_id          |<----->| status           |
+| status           |       | nickname         |       | last_seen        |
+| tv_session_id    |       | avatar_url       |       | current_page     |
++------------------+       +------------------+       +------------------+
 ```
 
----
+**MyRoom interface-ში დაემატება:**
+- `online_participants: { user_id, nickname, avatar_url }[]` - ონლაინ მონაწილეების სია
+- `has_others_online: boolean` - არის თუ არა სხვა ონლაინ მომხმარებელი
 
-## ტექნიკური ცვლილება
+### 2. MyRoomsSection.tsx - LIVE Badge ლოგიკის განახლება
 
-### ფაილი: `src/contexts/TVGameContext.tsx`
-
-**ადგილი**: სტრიქონები 2527-2532
-
-**ამჟამინდელი კოდი**:
+**ამჟამინდელი ლოგიკა:**
 ```typescript
-setState(prev => ({
-  ...prev,
-  roundNumber: 1,
-  totalRounds: totalRoundsCount,
-}));
+{(isPlaying || hasTVSession) ? (
+  <LiveBadge />
+) : ...}
 ```
 
-**ახალი კოდი**:
+**ახალი ლოგიკა:**
 ```typescript
-setState(prev => ({
-  ...prev,
-  roundNumber: 1,
-  totalRounds: totalRoundsCount,
-  // CRITICAL: Sync suggester state locally to prevent stale isSuggester checks
-  currentRoundSuggesterId: firstRoundSuggesterId,
-  currentRoundSuggesterNickname: firstRoundSuggesterNickname,
-  currentRoundSuggesterAvatarUrl: firstRoundSuggesterAvatarUrl,
-}));
+{(isPlaying || hasTVSession || hasOthersOnline) ? (
+  <div className="flex items-center gap-1">
+    <LiveBadge />
+    {hasTVSession && <TvIcon className="w-4 h-4 text-white" />}
+  </div>
+) : ...}
+```
+
+### 3. LiveBadge.tsx - TV იკონის მხარდაჭერა (optional prop)
+
+`LiveBadge` კომპონენტს შეიძლება დაემატოს `showTVIcon` prop ან TV იკონი გარედან დაემატება.
+
+---
+
+## ფაილების ცვლილებები
+
+| ფაილი | ცვლილება |
+|-------|----------|
+| `src/hooks/useMyRooms.ts` | `user_presence`-თან join, ონლაინ მომხმარებლების დათვლა |
+| `src/components/team/MyRoomsSection.tsx` | LIVE badge ლოგიკის განახლება, TV იკონის დამატება |
+| `src/components/team/widgets/ActiveRoomsWidget.tsx` | იგივე ლოგიკა widget-ისთვის |
+
+---
+
+## მონაცემთა ბაზის Query
+
+```sql
+-- ონლაინ მონაწილეების მოძიება (last_seen ბოლო 2 წუთში)
+SELECT 
+  rp.room_id,
+  rp.user_id,
+  rp.nickname,
+  rp.avatar_url,
+  up.status,
+  up.last_seen
+FROM room_participants rp
+JOIN user_presence up ON rp.user_id::text = up.user_id::text
+WHERE rp.room_id IN (...)
+  AND up.status = 'online'
+  AND up.last_seen > NOW() - INTERVAL '2 minutes'
 ```
 
 ---
@@ -73,16 +92,22 @@ setState(prev => ({
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| ბიბლიოთეკის კატეგორია | Observer ეკრანი | მოთამაშე ეკრანი |
-| შემთხვევითი კატეგორია | Observer ეკრანი | მოთამაშე ეკრანი |
-| ჩემი Trivia (blind, 0 plays) | მოთამაშე ეკრანი | მოთამაშე ეკრანი |
-| ჩემი Trivia (non-blind ან plays>0) | Observer ეკრანი | Observer ეკრანი |
+| სხვა ონლაინ არის ოთახში | ბეჯი არ ჩანს | LIVE ბეჯი ჩანს |
+| სხვა ონლაინ + TV ჩართული | LIVE ბეჯი | LIVE ბეჯი + TV იკონი |
+| მხოლოდ TV ჩართული | LIVE ბეჯი | LIVE ბეჯი + TV იკონი |
+| მხოლოდ მე ვარ ოთახში | ბეჯი არ ჩანს | ბეჯი არ ჩანს |
+| თამაში მიმდინარეობს | LIVE ბეჯი | LIVE ბეჯი |
 
 ---
 
-## შესაცვლელი ფაილები
+## რეალტაიმ განახლება
 
-| ფაილი | ცვლილება |
-|-------|----------|
-| `src/contexts/TVGameContext.tsx` | setState-ში suggester ველების დამატება |
+`useMyRooms` უკვე უსმენს:
+- `game_rooms` ცვლილებებს
+- `room_participants` ცვლილებებს
+- `tv_sessions` ცვლილებებს
+- `tv_players` ცვლილებებს
+
+**დაემატება:**
+- `user_presence` ცვლილებების subscription - ოთახის მონაწილეების ონლაინ სტატუსის განახლება
 
