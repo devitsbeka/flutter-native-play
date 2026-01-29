@@ -300,6 +300,9 @@ const ENGLISH_SYNONYMS: Record<string, string[]> = {
   'dog': ['puppy', 'canine', 'pet'],
   'cat': ['kitten', 'feline', 'pet'],
   'bird': ['avian', 'flying', 'wing'],
+  'shark': ['fish', 'predator', 'ocean', 'sea'],
+  'whale': ['ocean', 'sea', 'mammal'],
+  'dolphin': ['ocean', 'sea', 'mammal'],
   
   // People
   'actor': ['actress', 'performer', 'star'],
@@ -330,6 +333,76 @@ const ENGLISH_SYNONYMS: Record<string, string[]> = {
   'love': ['heart', 'romance', 'affection'],
   'money': ['cash', 'currency', 'dollar', 'coin'],
   'time': ['clock', 'watch', 'hour'],
+};
+
+// English to Georgian semantic mapping (for reverse lookups when searching in English)
+const ENGLISH_TO_GEORGIAN: Record<string, string[]> = {
+  // Animals
+  'shark': ['ზვიგენ', 'ზვიგენი'],
+  'whale': ['ვეშაპ', 'ვეშაპი'],
+  'dolphin': ['დელფინ', 'დელფინი'],
+  'dog': ['ძაღლ', 'ძაღლი'],
+  'cat': ['კატ', 'კატა'],
+  'bird': ['ფრინველ', 'ფრინველი', 'ჩიტ', 'ჩიტი'],
+  'fish': ['თევზ', 'თევზი'],
+  'lion': ['ლომ', 'ლომი'],
+  'bear': ['დათვ', 'დათვი'],
+  'horse': ['ცხენ', 'ცხენი'],
+  'elephant': ['სპილ', 'სპილო'],
+  'snake': ['გველ', 'გველი'],
+  'wolf': ['მგელ', 'მგელი'],
+  'eagle': ['არწივ', 'არწივი'],
+  
+  // Nature
+  'sun': ['მზ', 'მზე'],
+  'moon': ['მთვარ', 'მთვარე'],
+  'star': ['ვარსკვლავ', 'ვარსკვლავი'],
+  'mountain': ['მთ', 'მთა'],
+  'sea': ['ზღვ', 'ზღვა'],
+  'ocean': ['ოკეან', 'ოკეანე'],
+  'river': ['მდინარ', 'მდინარე'],
+  'forest': ['ტყ', 'ტყე'],
+  'tree': ['ხ', 'ხე'],
+  'flower': ['ყვავილ', 'ყვავილი'],
+  
+  // Geography
+  'city': ['ქალაქ', 'ქალაქი'],
+  'country': ['ქვეყან', 'ქვეყანა'],
+  'georgia': ['საქართველ', 'საქართველო'],
+  
+  // People
+  'writer': ['მწერალ', 'მწერალი'],
+  'poet': ['პოეტ', 'პოეტი'],
+  'artist': ['მხატვარ', 'მხატვარი'],
+  'scientist': ['მეცნიერ', 'მეცნიერი'],
+  'king': ['მეფ', 'მეფე'],
+  'queen': ['დედოფალ', 'დედოფალი'],
+  
+  // Sports
+  'football': ['ფეხბურთ', 'ფეხბურთი'],
+  'basketball': ['კალათბურთ', 'კალათბურთი'],
+  'sport': ['სპორტ', 'სპორტი'],
+  
+  // Food
+  'food': ['საჭმელ', 'საჭმელი', 'საკვებ', 'საკვები'],
+  'wine': ['ღვინ', 'ღვინო'],
+  'bread': ['პურ', 'პური'],
+  
+  // Technology
+  'computer': ['კომპიუტერ', 'კომპიუტერი'],
+  'phone': ['ტელეფონ', 'ტელეფონი'],
+  'internet': ['ინტერნეტ', 'ინტერნეტი'],
+  
+  // Transport
+  'car': ['მანქან', 'მანქანა'],
+  'plane': ['თვითმფრინავ', 'თვითმფრინავი'],
+  'ship': ['გემ', 'გემი'],
+  
+  // Culture
+  'music': ['მუსიკ', 'მუსიკა'],
+  'history': ['ისტორი', 'ისტორია'],
+  'culture': ['კულტურ', 'კულტურა'],
+  'war': ['ომ', 'ომი'],
 };
 
 // Context patterns - phrases that suggest specific icon categories
@@ -509,7 +582,7 @@ serve(async (req) => {
         searchTerms.add(fullTransliteration);
       }
     } else {
-      // For non-Georgian (English) queries, add synonyms for better results
+      // For non-Georgian (English) queries, add synonyms and Georgian equivalents for better results
       const queryLower = query.toLowerCase();
       searchTerms.add(queryLower);
       
@@ -519,11 +592,35 @@ serve(async (req) => {
         synonyms.forEach(s => searchTerms.add(s));
       }
       
+      // Add Georgian equivalents for English terms (enables bilingual search)
+      const georgianEquivalents = ENGLISH_TO_GEORGIAN[queryLower];
+      if (georgianEquivalents) {
+        // Transliterate Georgian to Latin for icon matching
+        georgianEquivalents.forEach(geo => {
+          const transliterated = transliterateGeorgian(geo);
+          if (transliterated.length >= 2) {
+            getPhoneticVariants(transliterated).forEach(v => searchTerms.add(v));
+          }
+        });
+      }
+      
       // Also check for partial matches in synonym keys
       for (const [word, syns] of Object.entries(ENGLISH_SYNONYMS)) {
         if (queryLower.includes(word) || word.includes(queryLower)) {
           syns.forEach(s => searchTerms.add(s));
           searchTerms.add(word);
+        }
+      }
+      
+      // Check for partial matches in English to Georgian mapping
+      for (const [engWord, geoWords] of Object.entries(ENGLISH_TO_GEORGIAN)) {
+        if (queryLower.includes(engWord) || engWord.includes(queryLower)) {
+          geoWords.forEach(geo => {
+            const transliterated = transliterateGeorgian(geo);
+            if (transliterated.length >= 2) {
+              searchTerms.add(transliterated);
+            }
+          });
         }
       }
     }

@@ -9,6 +9,17 @@ const LATIN_TO_GEORGIAN: Record<string, string> = {
   'zh': 'ჟ', 'th': 'თ'
 };
 
+// Georgian to Latin phonetic map (reverse transliteration)
+const GEORGIAN_TO_LATIN: Record<string, string> = {
+  'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e',
+  'ვ': 'v', 'ზ': 'z', 'თ': 't', 'ი': 'i', 'კ': 'k',
+  'ლ': 'l', 'მ': 'm', 'ნ': 'n', 'ო': 'o', 'პ': 'p',
+  'ჟ': 'zh', 'რ': 'r', 'ს': 's', 'ტ': 't', 'უ': 'u',
+  'ფ': 'f', 'ქ': 'k', 'ღ': 'gh', 'ყ': 'q', 'შ': 'sh',
+  'ჩ': 'ch', 'ც': 'ts', 'ძ': 'dz', 'წ': 'ts', 'ჭ': 'ch',
+  'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
+};
+
 // Common English to Georgian word mappings for semantic search
 const ENGLISH_TO_GEORGIAN: Record<string, string[]> = {
   // Animals
@@ -34,6 +45,7 @@ const ENGLISH_TO_GEORGIAN: Record<string, string[]> = {
   'fox': ['მელა', 'მელის'],
   'eagle': ['არწივი', 'არწივის'],
   'owl': ['ბუ', 'ბუს'],
+  'shark': ['ზვიგენი', 'ზვიგენის'],
   
   // Nature
   'water': ['წყალი', 'წყლის'],
@@ -113,6 +125,7 @@ const ENGLISH_TO_GEORGIAN: Record<string, string[]> = {
   'fruit': ['ხილი', 'ხილის'],
   'apple': ['ვაშლი', 'ვაშლის'],
   'grape': ['ყურძენი', 'ყურძნის'],
+  'food': ['საჭმელი', 'საკვები'],
   
   // Colors
   'red': ['წითელი', 'წითელ'],
@@ -152,7 +165,178 @@ const ENGLISH_TO_GEORGIAN: Record<string, string[]> = {
   'eye': ['თვალი', 'თვალის'],
   'hand': ['ხელი', 'ხელის'],
   'blood': ['სისხლი', 'სისხლის'],
+  
+  // Sports
+  'football': ['ფეხბურთი', 'ფეხბურთის'],
+  'basketball': ['კალათბურთი', 'კალათბურთის'],
+  'tennis': ['ჩოგბურთი', 'ჩოგბურთის'],
+  'sport': ['სპორტი', 'სპორტის'],
+  
+  // Technology
+  'computer': ['კომპიუტერი', 'კომპიუტერის'],
+  'phone': ['ტელეფონი', 'ტელეფონის'],
+  'internet': ['ინტერნეტი', 'ინტერნეტის'],
+  
+  // Transport
+  'car': ['მანქანა', 'მანქანის'],
+  'plane': ['თვითმფრინავი', 'თვითმფრინავის'],
+  'ship': ['გემი', 'გემის'],
+  'train': ['მატარებელი', 'მატარებლის'],
 };
+
+// Georgian to English semantic map (reverse mapping)
+const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
+  // Animals
+  'ზვიგენ': ['shark', 'fish'],
+  'ზვიგენი': ['shark', 'fish'],
+  'ძაღლ': ['dog', 'puppy', 'pet'],
+  'ძაღლი': ['dog', 'puppy', 'pet'],
+  'კატ': ['cat', 'kitten', 'pet'],
+  'კატა': ['cat', 'kitten', 'pet'],
+  'ფრინველ': ['bird', 'avian'],
+  'ფრინველი': ['bird', 'avian'],
+  'თევზ': ['fish', 'aquatic'],
+  'თევზი': ['fish', 'aquatic'],
+  'ლომ': ['lion', 'cat', 'wild'],
+  'ლომი': ['lion', 'cat', 'wild'],
+  'დათვ': ['bear', 'wild'],
+  'დათვი': ['bear', 'wild'],
+  'ცხენ': ['horse', 'equine'],
+  'ცხენი': ['horse', 'equine'],
+  'სპილ': ['elephant', 'trunk'],
+  'სპილო': ['elephant', 'trunk'],
+  'გველ': ['snake', 'serpent'],
+  'გველი': ['snake', 'serpent'],
+  'მგელ': ['wolf', 'canine'],
+  'მგელი': ['wolf', 'canine'],
+  'ვეშაპ': ['whale', 'ocean'],
+  'ვეშაპი': ['whale', 'ocean'],
+  'დელფინ': ['dolphin', 'ocean'],
+  'დელფინი': ['dolphin', 'ocean'],
+  'არწივ': ['eagle', 'bird'],
+  'არწივი': ['eagle', 'bird'],
+  
+  // Nature
+  'მზ': ['sun', 'solar'],
+  'მზე': ['sun', 'solar'],
+  'მთვარ': ['moon', 'lunar'],
+  'მთვარე': ['moon', 'lunar'],
+  'ვარსკვლავ': ['star', 'stellar'],
+  'ვარსკვლავი': ['star', 'stellar'],
+  'მთ': ['mountain', 'peak'],
+  'მთა': ['mountain', 'peak'],
+  'ზღვ': ['sea', 'ocean'],
+  'ზღვა': ['sea', 'ocean'],
+  'მდინარ': ['river', 'stream'],
+  'მდინარე': ['river', 'stream'],
+  'ტყ': ['forest', 'tree'],
+  'ტყე': ['forest', 'tree'],
+  'ყვავილ': ['flower', 'bloom'],
+  'ყვავილი': ['flower', 'bloom'],
+  
+  // Geography
+  'ქალაქ': ['city', 'town', 'urban'],
+  'ქალაქი': ['city', 'town', 'urban'],
+  'ქვეყან': ['country', 'nation'],
+  'ქვეყანა': ['country', 'nation'],
+  'საქართველ': ['georgia', 'country'],
+  'საქართველო': ['georgia', 'country'],
+  'თბილის': ['tbilisi', 'capital'],
+  'თბილისი': ['tbilisi', 'capital'],
+  
+  // People
+  'მწერალ': ['writer', 'author', 'pen'],
+  'მწერალი': ['writer', 'author', 'pen'],
+  'პოეტ': ['poet', 'poetry', 'quill'],
+  'პოეტი': ['poet', 'poetry', 'quill'],
+  'მხატვარ': ['artist', 'painter', 'brush'],
+  'მხატვარი': ['artist', 'painter', 'brush'],
+  'მეცნიერ': ['scientist', 'research', 'lab'],
+  'მეცნიერი': ['scientist', 'research', 'lab'],
+  'მეფ': ['king', 'crown', 'royal'],
+  'მეფე': ['king', 'crown', 'royal'],
+  'დედოფალ': ['queen', 'crown', 'royal'],
+  'დედოფალი': ['queen', 'crown', 'royal'],
+  
+  // Sports
+  'ფეხბურთ': ['football', 'soccer', 'ball'],
+  'ფეხბურთი': ['football', 'soccer', 'ball'],
+  'კალათბურთ': ['basketball', 'ball', 'hoop'],
+  'კალათბურთი': ['basketball', 'ball', 'hoop'],
+  'სპორტ': ['sport', 'athletics', 'game'],
+  'სპორტი': ['sport', 'athletics', 'game'],
+  
+  // Food
+  'საჭმელ': ['food', 'meal', 'dish'],
+  'საჭმელი': ['food', 'meal', 'dish'],
+  'ღვინ': ['wine', 'grape', 'drink'],
+  'ღვინო': ['wine', 'grape', 'drink'],
+  'პურ': ['bread', 'bakery', 'food'],
+  'პური': ['bread', 'bakery', 'food'],
+  'ხაჭაპურ': ['khachapuri', 'cheese', 'bread'],
+  'ხაჭაპური': ['khachapuri', 'cheese', 'bread'],
+  'ხინკალ': ['khinkali', 'dumpling', 'food'],
+  'ხინკალი': ['khinkali', 'dumpling', 'food'],
+  
+  // Technology
+  'კომპიუტერ': ['computer', 'laptop', 'tech'],
+  'კომპიუტერი': ['computer', 'laptop', 'tech'],
+  'ტელეფონ': ['phone', 'mobile', 'call'],
+  'ტელეფონი': ['phone', 'mobile', 'call'],
+  'ინტერნეტ': ['internet', 'web', 'online'],
+  'ინტერნეტი': ['internet', 'web', 'online'],
+  
+  // Transport
+  'მანქან': ['car', 'vehicle', 'auto'],
+  'მანქანა': ['car', 'vehicle', 'auto'],
+  'თვითმფრინავ': ['airplane', 'plane', 'flight'],
+  'თვითმფრინავი': ['airplane', 'plane', 'flight'],
+  'გემ': ['ship', 'boat', 'vessel'],
+  'გემი': ['ship', 'boat', 'vessel'],
+  
+  // History/Culture
+  'ისტორი': ['history', 'past', 'ancient'],
+  'ისტორია': ['history', 'past', 'ancient'],
+  'კულტურ': ['culture', 'art', 'tradition'],
+  'კულტურა': ['culture', 'art', 'tradition'],
+  'ომ': ['war', 'battle', 'military'],
+  'ომი': ['war', 'battle', 'military'],
+  
+  // Music
+  'მუსიკ': ['music', 'song', 'melody'],
+  'მუსიკა': ['music', 'song', 'melody'],
+  'სიმღერ': ['song', 'music', 'singing'],
+  'სიმღერა': ['song', 'music', 'singing'],
+  
+  // Colors
+  'წითელ': ['red', 'color', 'crimson'],
+  'წითელი': ['red', 'color', 'crimson'],
+  'ლურჯ': ['blue', 'color', 'azure'],
+  'ლურჯი': ['blue', 'color', 'azure'],
+  'მწვან': ['green', 'color', 'nature'],
+  'მწვანე': ['green', 'color', 'nature'],
+  'ყვითელ': ['yellow', 'color', 'gold'],
+  'ყვითელი': ['yellow', 'color', 'gold'],
+  'შავ': ['black', 'color', 'dark'],
+  'შავი': ['black', 'color', 'dark'],
+  'თეთრ': ['white', 'color', 'light'],
+  'თეთრი': ['white', 'color', 'light'],
+};
+
+// Common Georgian grammatical suffixes to strip for better matching
+const GEORGIAN_SUFFIXES = ['ი', 'მა', 'ს', 'ით', 'ად', 'ში', 'ზე', 'თან', 'დან', 'ისა', 'ებ', 'ის'];
+
+/**
+ * Strip Georgian grammatical suffixes for better matching
+ */
+function stripGeorgianSuffixes(word: string): string {
+  for (const suffix of GEORGIAN_SUFFIXES) {
+    if (word.endsWith(suffix) && word.length > suffix.length + 2) {
+      return word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
 
 /**
  * Transliterate Latin text to Georgian phonetically
@@ -178,11 +362,49 @@ export function transliterateLatin(text: string): string {
 }
 
 /**
+ * Transliterate Georgian text to Latin phonetically
+ */
+export function transliterateGeorgian(text: string): string {
+  let output = '';
+  for (const char of text) {
+    output += GEORGIAN_TO_LATIN[char] || char;
+  }
+  return output.toLowerCase();
+}
+
+/**
  * Get Georgian equivalents for an English word
  */
 export function getGeorgianEquivalents(englishWord: string): string[] {
   const normalized = englishWord.toLowerCase().trim();
   return ENGLISH_TO_GEORGIAN[normalized] || [];
+}
+
+/**
+ * Get English equivalents for a Georgian word
+ */
+export function getEnglishEquivalents(georgianWord: string): string[] {
+  const normalized = georgianWord.toLowerCase().trim();
+  
+  // Try exact match first
+  if (GEORGIAN_TO_ENGLISH[normalized]) {
+    return GEORGIAN_TO_ENGLISH[normalized];
+  }
+  
+  // Try with stripped suffixes
+  const stripped = stripGeorgianSuffixes(normalized);
+  if (GEORGIAN_TO_ENGLISH[stripped]) {
+    return GEORGIAN_TO_ENGLISH[stripped];
+  }
+  
+  // Try partial match (prefix)
+  for (const [key, values] of Object.entries(GEORGIAN_TO_ENGLISH)) {
+    if (normalized.startsWith(key) || key.startsWith(normalized)) {
+      return values;
+    }
+  }
+  
+  return [];
 }
 
 /**
@@ -196,7 +418,17 @@ export function isLatinScript(text: string): boolean {
 }
 
 /**
+ * Check if text contains primarily Georgian characters
+ */
+export function isGeorgianScript(text: string): boolean {
+  if (!text) return false;
+  const georgianChars = text.match(/[\u10A0-\u10FF]/g) || [];
+  return georgianChars.length > 0;
+}
+
+/**
  * Build search terms array from input (handles both Latin and Georgian)
+ * This is the legacy function for backward compatibility
  */
 export function buildSearchTerms(input: string): string[] {
   if (!input || input.trim().length === 0) return [];
@@ -221,4 +453,76 @@ export function buildSearchTerms(input: string): string[] {
   
   // Remove duplicates
   return [...new Set(terms)];
+}
+
+/**
+ * Build bilingual search terms array from input
+ * Handles Georgian, Latin transliteration, and semantic equivalents in both directions
+ * 
+ * Examples:
+ * - "ზვიგენი" → ["ზვიგენი", "zvigeni", "shark", "fish"]
+ * - "shark" → ["shark", "შარკ", "ზვიგენი", "ზვიგენის"]
+ * - "zvigeni" → ["zvigeni", "ზვიგენი", "shark"]
+ */
+export function buildBilingualSearchTerms(input: string): string[] {
+  if (!input || input.trim().length === 0) return [];
+  
+  const terms: string[] = [];
+  const normalized = input.trim().toLowerCase();
+  
+  // Always include original input
+  terms.push(normalized);
+  
+  if (isGeorgianScript(input)) {
+    // Georgian input
+    // 1. Transliterate to Latin: ზვიგენი → zvigeni
+    const transliterated = transliterateGeorgian(normalized);
+    if (transliterated !== normalized) {
+      terms.push(transliterated);
+    }
+    
+    // 2. Get English semantic equivalents: ზვიგენი → shark
+    const englishWords = getEnglishEquivalents(normalized);
+    terms.push(...englishWords);
+    
+    // 3. Also try with stripped suffixes
+    const stripped = stripGeorgianSuffixes(normalized);
+    if (stripped !== normalized) {
+      terms.push(stripped);
+      const strippedTransliterated = transliterateGeorgian(stripped);
+      terms.push(strippedTransliterated);
+      terms.push(...getEnglishEquivalents(stripped));
+    }
+  } else if (isLatinScript(input)) {
+    // Latin/English input
+    // 1. Transliterate to Georgian: zvigeni → ზვიგენი
+    const transliterated = transliterateLatin(normalized);
+    if (transliterated !== normalized) {
+      terms.push(transliterated);
+    }
+    
+    // 2. Get Georgian semantic equivalents: shark → ზვიგენი
+    const georgianWords = getGeorgianEquivalents(normalized);
+    terms.push(...georgianWords);
+    
+    // 3. Also get English synonyms that might have Georgian mappings
+    // For example, if user types "film", also try "movie"
+    const synonymMappings: Record<string, string[]> = {
+      'movie': ['film', 'cinema'],
+      'film': ['movie', 'cinema'],
+      'car': ['auto', 'vehicle'],
+      'phone': ['mobile', 'telephone'],
+      'football': ['soccer'],
+      'soccer': ['football'],
+    };
+    
+    const synonyms = synonymMappings[normalized] || [];
+    for (const syn of synonyms) {
+      const synGeorgian = getGeorgianEquivalents(syn);
+      terms.push(...synGeorgian);
+    }
+  }
+  
+  // Remove duplicates and filter short terms
+  return [...new Set(terms)].filter(t => t.length >= 2);
 }

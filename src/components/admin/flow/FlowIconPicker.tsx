@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { buildBilingualSearchTerms } from '@/utils/transliteration';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
 const RECENT_ICONS_KEY = 'flow_recent_icons';
@@ -131,13 +132,45 @@ export function FlowIconPicker({ currentIconSlug, onSelect, suggestedSlugs = [],
 
   const searchIcons = async () => {
     setIsLoading(true);
+    
+    // Build bilingual search terms from user input
+    const searchTerms = buildBilingualSearchTerms(searchQuery);
+    
+    // Build OR conditions for all terms
+    const orConditions = searchTerms.flatMap(term => [
+      `title.ilike.%${term}%`,
+      `slug.ilike.%${term}%`,
+      `tags.cs.{${term}}`
+    ]).join(',');
+    
     const { data } = await supabase
       .from('icon_library')
       .select('id, slug, title, icon_url')
-      .or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
+      .or(orConditions)
       .limit(50);
     
-    setIcons(data || []);
+    // Score and sort results - prioritize exact matches
+    const scored = (data || []).map(icon => {
+      let score = 0;
+      const queryLower = searchQuery.toLowerCase();
+      
+      // Exact slug match = highest priority
+      if (icon.slug.toLowerCase() === queryLower) score += 100;
+      // Slug starts with query
+      else if (icon.slug.toLowerCase().startsWith(queryLower)) score += 50;
+      // Slug contains query
+      else if (icon.slug.toLowerCase().includes(queryLower)) score += 25;
+      
+      // Title matches
+      if (icon.title.toLowerCase().includes(queryLower)) score += 10;
+      
+      return { ...icon, score };
+    });
+    
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+    
+    setIcons(scored);
     setIsLoading(false);
   };
 

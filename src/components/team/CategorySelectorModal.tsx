@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { GameModal } from "@/components/ui/game-modal";
+import { buildBilingualSearchTerms } from "@/utils/transliteration";
 
 interface Category {
   id: string;
@@ -50,10 +51,19 @@ export function CategorySelectorModal({
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return categories;
-    const query = searchQuery.toLowerCase();
-    return categories.filter((cat) =>
-      cat.name.toLowerCase().includes(query)
-    );
+    
+    // Build bilingual search terms for better matching
+    const searchTerms = buildBilingualSearchTerms(searchQuery);
+    
+    return categories.filter((cat) => {
+      const catName = cat.name.toLowerCase();
+      const catId = cat.category_id.toLowerCase();
+      
+      // Check if any search term matches category name or id
+      return searchTerms.some(term => 
+        catName.includes(term) || catId.includes(term)
+      );
+    });
   }, [categories, searchQuery]);
 
   const handleSelect = (category: Category) => {
