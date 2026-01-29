@@ -114,9 +114,9 @@ export function MultiplayerGameScreenV2() {
     navigate("/team");
   };
 
-  // Timer
+  // Timer - skip for observers (they don't need to submit answers)
   useEffect(() => {
-    if (answerRevealed) return;
+    if (answerRevealed || (isHost && hostIsObserver)) return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -129,7 +129,7 @@ export function MultiplayerGameScreenV2() {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [answerRevealed, handleAnswer]);
+  }, [answerRevealed, handleAnswer, isHost, hostIsObserver]);
 
   // Get answer button state
   const getAnswerState = useCallback(
