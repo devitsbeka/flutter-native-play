@@ -146,12 +146,12 @@ export function useSocialFeed() {
         const [postResult, senderResult] = await Promise.all([
           supabase
             .from("user_quiz_posts")
-            .select("user_id, title")
+            .select("user_id, title, cover_image, icon_slug")
             .eq("id", postId)
             .single(),
           supabase
             .from("profiles")
-            .select("nickname")
+            .select("nickname, avatar_url")
             .eq("user_id", user.id)
             .single()
         ]);
@@ -165,7 +165,15 @@ export function useSocialFeed() {
             "trivia_liked",
             `${senderProfile?.nickname || "ვიღაცამ"} მოიწონა შენი ტრივია`,
             postData.title || undefined,
-            { post_id: postId, sender_id: user.id }
+            { 
+              post_id: postId, 
+              sender_id: user.id,
+              sender_nickname: senderProfile?.nickname,
+              sender_avatar: senderProfile?.avatar_url,
+              trivia_title: postData.title,
+              trivia_cover: postData.cover_image,
+              trivia_icon_slug: postData.icon_slug,
+            }
           );
         }
       }
@@ -193,26 +201,38 @@ export function useSocialFeed() {
         // Add save - trigger handles count automatically
         await supabase.from("quiz_post_saves").insert({ post_id: postId, user_id: user.id });
         
-        // Send notification to trivia creator
-        const { data: postData } = await supabase
-          .from("user_quiz_posts")
-          .select("user_id, title")
-          .eq("id", postId)
-          .single();
+        // Send notification to trivia creator - parallelize queries
+        const [postResult, senderResult] = await Promise.all([
+          supabase
+            .from("user_quiz_posts")
+            .select("user_id, title, cover_image, icon_slug")
+            .eq("id", postId)
+            .single(),
+          supabase
+            .from("profiles")
+            .select("nickname, avatar_url")
+            .eq("user_id", user.id)
+            .single()
+        ]);
+        
+        const postData = postResult.data;
+        const senderProfile = senderResult.data;
         
         if (postData && postData.user_id !== user.id) {
-          const { data: senderProfile } = await supabase
-            .from("profiles")
-            .select("nickname")
-            .eq("user_id", user.id)
-            .single();
-          
           await createNotification(
             postData.user_id,
             "trivia_saved",
             `${senderProfile?.nickname || "ვიღაცამ"} შეინახა შენი ტრივია`,
             postData.title || undefined,
-            { post_id: postId, sender_id: user.id }
+            { 
+              post_id: postId, 
+              sender_id: user.id,
+              sender_nickname: senderProfile?.nickname,
+              sender_avatar: senderProfile?.avatar_url,
+              trivia_title: postData.title,
+              trivia_cover: postData.cover_image,
+              trivia_icon_slug: postData.icon_slug,
+            }
           );
         }
       }

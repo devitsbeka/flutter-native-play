@@ -1,8 +1,9 @@
-import { memo, useState } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Trash2, Home, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { getNotificationConfig } from '@/config/notificationConfig';
 import { Notification } from '@/hooks/useNotifications';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
@@ -64,9 +65,35 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const senderName = notification.data?.sender_nickname as string || notification.data?.sender_name as string || '';
   const roomName = notification.data?.room_name as string | undefined;
   const categoryName = notification.data?.category_name as string | undefined;
+  const roomIcon = notification.data?.room_icon as string | undefined;
+  const triviaCover = notification.data?.trivia_cover as string | undefined;
+  const triviaIconSlug = notification.data?.trivia_icon_slug as string | undefined;
   
   // Check if notification has room context
   const hasRoomContext = isRoomInvite || isGameStarted || isGameInvite;
+
+  // Determine avatar content based on notification type
+  const avatarContent = useMemo(() => {
+    // 1. Trivia notifications - show trivia cover or icon
+    if (isTriviaLikedOrSaved || isTriviaPlayed) {
+      if (triviaCover) {
+        return { type: 'image' as const, src: triviaCover };
+      }
+      if (triviaIconSlug) {
+        return { type: 'icon_slug' as const, slug: triviaIconSlug };
+      }
+    }
+    
+    // 2. Game notifications - show room icon if available
+    if (isRoomInvite || isGameStarted || isGameInvite) {
+      if (roomIcon) {
+        return { type: 'image' as const, src: roomIcon };
+      }
+    }
+    
+    // 3. Default - sender avatar
+    return { type: 'avatar' as const, src: avatarUrl };
+  }, [notification.type, triviaCover, triviaIconSlug, roomIcon, avatarUrl, isTriviaLikedOrSaved, isTriviaPlayed, isRoomInvite, isGameStarted, isGameInvite]);
   
   // Build subtitle based on notification type
   const getSubtitle = () => {
@@ -171,17 +198,34 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
       >
         {/* Avatar with type indicator badge */}
         <div className="relative flex-shrink-0">
-          <Avatar className="w-11 h-11">
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback 
-              className="text-sm font-bold text-primary-foreground"
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
-              }}
-            >
-              {senderName ? senderName.charAt(0).toUpperCase() : <Icon className="w-5 h-5" />}
-            </AvatarFallback>
-          </Avatar>
+          {avatarContent.type === 'icon_slug' ? (
+            <div className="w-11 h-11 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
+              <QuizCategoryIcon 
+                iconSlug={avatarContent.slug} 
+                size={36} 
+              />
+            </div>
+          ) : avatarContent.type === 'image' && avatarContent.src ? (
+            <div className="w-11 h-11 rounded-xl overflow-hidden bg-muted">
+              <img 
+                src={avatarContent.src} 
+                alt="" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <Avatar className="w-11 h-11">
+              <AvatarImage src={avatarUrl} />
+              <AvatarFallback 
+                className="text-sm font-bold text-primary-foreground"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
+                }}
+              >
+                {senderName ? senderName.charAt(0).toUpperCase() : <Icon className="w-5 h-5" />}
+              </AvatarFallback>
+            </Avatar>
+          )}
           
           {/* Type indicator badge - solid background for visibility */}
           <div className={cn(
