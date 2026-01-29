@@ -1,137 +1,161 @@
 
-# გეგმა: კატეგორიის გვერდის ჩატვირთვის დაყოვნების გადაჭრა
+
+# გეგმა: Host-Observer პოლისის აუდიტი და გასწორება
 
 ## პრობლემის აღწერა
 
-როდესაც მომხმარებელი Discover-ზე კატეგორიას აჭერს, ხედავს თეთრ ეკრანს skeleton-ებით დაახლოებით 1 წამის განმავლობაში. ეს ხდება იმიტომ, რომ:
+მომხმარებელმა შენიშნა, რომ "შენ იცი პასუხები!" გაფრთხილება ჩნდება მაშინაც კი, როდესაც ბიბლიოთეკიდან აირჩევენ კატეგორიას. ეს არასწორია - ბიბლიოთეკის კატეგორიებზე ჰოსტი ყოველთვის უნდა თამაშობდეს.
 
-1. **CategoryPage არის lazy-loaded** - კოდი იტვირთება მხოლოდ ნავიგაციის დროს
-2. **არ ხდება preloading** - განსხვავებით სხვა გვერდებისგან (Leaderboards, PowerUps), CategoryPage არ იტვირთება წინასწარ
-3. **PageSkeleton ჩანს** - Suspense-ის fallback არის თეთრი ფონით, რაც იწვევს visual flash-ს
+## სწორი პოლისი (როგორც უნდა მუშაობდეს)
 
-## გადაწყვეტა
+| ტრივიის ტიპი | პირობა | ჰოსტის სტატუსი |
+|-------------|--------|----------------|
+| ბიბლიოთეკა | - | ყოველთვის თამაშობს |
+| შემთხვევითი | - | ყოველთვის თამაშობს |
+| ღია ტრივია | ჰოსტის შექმნილი | გამოტოვებს (Observer) |
+| დახურული ტრივია | არასდროს ითამაშა (plays_count = 0) | თამაშობს |
+| დახურული ტრივია | უკვე ითამაშა (plays_count > 0) | გამოტოვებს (Observer) |
 
-### ნაწილი 1: CategoryPage-ის წინასწარი ჩატვირთვა Discover-ზე
+## კოდბაზის ანალიზი
 
-Discover გვერდის ჩატვირთვისას დავიწყოთ CategoryPage-ის preloading:
+აუდიტმა აჩვენა, რომ ძირითადი ლოგიკა სწორია, მაგრამ პრობლემა შეიძლება იყოს:
 
-```typescript
-// src/pages/Discover.tsx - დავამატოთ useEffect
-useEffect(() => {
-  // Eagerly preload CategoryPage chunk when Discover mounts
-  const timer = setTimeout(() => {
-    import("@/pages/CategoryPage");
-  }, 500);
-  return () => clearTimeout(timer);
-}, []);
-```
+### 1. სტალ Suggester მონაცემები
+თუ წინა რაუნდში ჰოსტი იყო observer, და შემდეგ ბიბლიოთეკის კატეგორია აირჩიეს, `currentRoundSuggesterId` შეიძლება არ განულდეს.
 
-### ნაწილი 2: Category Card-ზე hover/touch-ზე preload
+### 2. რეალურდროული სინქრონიზაციის პრობლემა
+React state-ში `currentRoundSuggesterId` შეიძლება stale იყოს DB-ის მონაცემებთან შედარებით.
 
-AirbnbCategoryCard-ს დავამატოთ onPointerEnter/onTouchStart:
+---
 
-```typescript
-// src/components/discover/AirbnbCategoryCard.tsx
-<motion.button
-  onClick={onClick}
-  onPointerEnter={() => {
-    import("@/pages/CategoryPage");
-  }}
-  // ...
->
-```
+## შესაცვლელი ფაილები და ცვლილებები
 
-### ნაწილი 3: PageSkeleton-ის გაუმჯობესება
+### 1. `src/hooks/useTVSessionQueue.ts`
+**პრობლემა**: `addCategoryToQueue` არ ასუფთავებს suggester-ს - ეს სწორია.
 
-შევცვალოთ PageSkeleton რომ უფრო invisible იყოს:
+**დამატება**: კომენტარი გარკვევისთვის, რომ library categories-ზე suggester არ უნდა დაისეტოს.
+
+### 2. `src/contexts/TVGameContext.tsx`
+**პრობლემა**: `startNextRoundFromQueueIfAny`-ში არსებული დაცვა (lines 1040-1045) სწორია, მაგრამ უნდა დავრწმუნდეთ რომ state-იც სწორად განახლდეს.
+
+**ცვლილება**: დავამატოთ explicit logging და defensive null-setting ლოკალურ state-ში.
 
 ```typescript
-// src/components/PageSkeleton.tsx
-export function PageSkeleton() {
-  return (
-    <div className="min-h-screen bg-transparent" />
-  );
-}
+// startNextRoundFromQueueIfAny - around line 1154
+setState(prev => ({
+  ...prev,
+  roundNumber: newRoundNumber,
+  // CRITICAL: Sync suggester state locally (DB already updated)
+  currentRoundSuggesterId: suggesterUserId,
+  currentRoundSuggesterNickname: suggesterNickname,
+  currentRoundSuggesterAvatarUrl: suggesterAvatarUrl,
+}));
 ```
 
-ან უფრო დახვეწილი: გადავიტანოთ background-ი main app background-ზე რომ არ ჩანდეს flash.
+### 3. `src/components/team/RoomLobbyV2.tsx`
+**პრობლემა**: `handleStartGame` მხოლოდ ამოწმებს `user_trivia_id`-ს, მაგრამ არ ითვალისწინებს ბიბლიოთეკის კატეგორიის case-ს explicit-ად.
+
+**ცვლილება**: გავაძლიეროთ პირობა და დავამატოთ კომენტარი:
+
+```typescript
+// handleStartGame - around line 223
+const handleStartGame = async () => {
+  // CRITICAL: Library categories and random selection should NEVER trigger observer mode
+  // Only check for user-owned trivias
+  if (currentRoom?.user_trivia_id && user?.id) {
+    // ... existing logic for user trivias
+  }
+  
+  // If NOT a user trivia, proceed directly without warning
+  // This covers: library categories, random selection
+  await proceedWithStartGame(false);
+};
+```
+
+### 4. `src/pages/TVHostController.tsx`
+**პრობლემა**: `isSuggester` ითვლება state-დან, რომელიც შეიძლება stale იყოს.
+
+**ცვლილება**: დავამატოთ defensive check:
+
+```typescript
+// line 76 - enhance with source type awareness
+const isSuggester = useMemo(() => {
+  // Never show observer UI for library categories
+  // The suggester should only be set for user trivias
+  return myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
+}, [myPlayerId, currentRoundSuggesterId]);
+```
+
+### 5. Realtime Sync გაუმჯობესება
+**პრობლემა**: Realtime subscription-ში `currentRoundSuggesterId` უნდა პირდაპირ მიიღოს DB-დან.
+
+**ცვლილება**: `TVGameContext.tsx`-ში realtime handler-ში:
+
+```typescript
+// Existing realtime handler - ensure explicit null handling
+currentRoundSuggesterId: 'current_round_suggester_id' in (newData as any) 
+  ? (newData as any).current_round_suggester_id  // null or valid ID
+  : prev.currentRoundSuggesterId,
+```
 
 ---
 
 ## ტექნიკური დეტალები
 
-### შესაცვლელი ფაილები
+### სწორი ლოგიკის ნაკადი
 
-| ფაილი | ცვლილება |
-|-------|----------|
-| `src/pages/Discover.tsx` | useEffect-ით CategoryPage preloading |
-| `src/components/discover/AirbnbCategoryCard.tsx` | onPointerEnter-ზე preload |
-| `src/components/PageSkeleton.tsx` | transparent ან minimal skeleton |
-
-### Discover.tsx - დამატებული კოდი
-
-```typescript
-// Import-ების შემდეგ
-import { useState, useMemo, useEffect } from "react";
-
-// Component-ის შიგნით, სხვა useEffect-ების გვერდით
-useEffect(() => {
-  // Preload CategoryPage when user lands on Discover
-  // This ensures the chunk is ready before they click any category
-  const timer = setTimeout(() => {
-    import("@/pages/CategoryPage");
-  }, 500);
-  return () => clearTimeout(timer);
-}, []);
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    TRIVIA SELECTION                          │
+├──────────────────┬──────────────────────────────────────────┤
+│ Library/Random   │ → suggester = null → Host PLAYS          │
+├──────────────────┼──────────────────────────────────────────┤
+│ ღია (Open)       │ → suggester = owner → Owner OBSERVES     │
+├──────────────────┼──────────────────────────────────────────┤
+│ დახურული (Blind) │                                          │
+│  plays_count=0   │ → suggester = null → Owner PLAYS         │
+│  plays_count>0   │ → suggester = owner → Owner OBSERVES     │
+└──────────────────┴──────────────────────────────────────────┘
 ```
 
-### AirbnbCategoryCard.tsx - დამატებული კოდი
+### შემოწმების ადგილები
+
+1. **Queue Item Creation** - `addCategoryToQueue`, `addToQueue`
+2. **Game Start** - `startGame`, `finalizePollAndStartGame`
+3. **Next Round** - `startNextRoundFromQueueIfAny`
+4. **UI Display** - `isSuggester` calculation in TVHostController
+
+---
+
+## იმპლემენტაციის თანმიმდევრობა
+
+1. **TVGameContext.tsx** - დავამატოთ explicit state sync `startNextRoundFromQueueIfAny`-ში
+2. **TVHostController.tsx** - defensive logging დავამატოთ
+3. **RoomLobbyV2.tsx** - კომენტარები გარკვევისთვის
+4. **useTVSessionQueue.ts** - კომენტარები
+
+---
+
+## დებაგ ლოგინგი
+
+ყველა ცვლილებას თან დაყვება console.log რომ debug-ში დაგვეხმაროს:
 
 ```typescript
-// motion.button-ს დავამატოთ
-<motion.button
-  onClick={onClick}
-  onPointerEnter={() => {
-    // Start preloading CategoryPage on hover
-    import("@/pages/CategoryPage");
-  }}
-  whileHover={{ scale: 1.015 }}
-  // ... დანარჩენი props
->
-```
-
-### PageSkeleton.tsx - შეცვლილი კოდი
-
-```typescript
-export function PageSkeleton() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent">
-      {/* Minimal loading indicator instead of jarring skeleton */}
-      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-    </div>
-  );
-}
+console.log('[HostObserver] Source type check:', {
+  isLibraryCategory,
+  suggesterId: suggesterUserId?.slice(0, 8) || 'null',
+  willObserve: !!suggesterUserId && suggesterUserId === myPlayerId,
+});
 ```
 
 ---
 
-## მოსალოდნელი შედეგი
+## ტესტირების სცენარები
 
-| მანამდე | შემდეგ |
-|---------|--------|
-| თეთრი skeleton ეკრანი ~1წმ | უხილავი ან მინიმალური გადასვლა |
-| CategoryPage იტვირთება click-ზე | CategoryPage უკვე ჩატვირთული იქნება |
-| Jarring visual flash | Smooth transition |
+1. ბიბლიოთეკიდან კატეგორიის არჩევა → ჰოსტი თამაშობს ✓
+2. შემთხვევითი კატეგორია → ჰოსტი თამაშობს ✓  
+3. ჰოსტის ღია ტრივია → ჰოსტი აკვირდება ✓
+4. ჰოსტის დახურული ტრივია (არ ითამაშა) → ჰოსტი თამაშობს ✓
+5. ჰოსტის დახურული ტრივია (უკვე ითამაშა) → ჰოსტი აკვირდება ✓
+6. სხვისი ტრივია → ჰოსტი თამაშობს ✓
 
----
-
-## ალტერნატივა: CategoryPage-ის eager loading
-
-თუ გვსურს სრულად თავიდან ავიცილოთ ეს პრობლემა, შეგვიძლია CategoryPage App.tsx-ში eager-ად ჩავტვირთოთ:
-
-```typescript
-// App.tsx - ამოვიღოთ lazy-დან
-import CategoryPage from "./pages/CategoryPage"; // Eager load
-```
-
-მაგრამ ეს გაზრდის initial bundle size-ს. უკეთესი მიდგომაა preloading-ის გამოყენება.
