@@ -76,10 +76,6 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     setBonusEarnedThisQuestion(0);
   }, [currentQuestionIndex]);
 
-  // Sync mode: 1-2 players = instant reveal when all answer
-  // Async mode: 3+ players = wait for timer
-  const isSyncMode = players.length <= 2;
-
   // Award bonus points when all players have answered OR timer expired
   useEffect(() => {
     // Only process if we haven't already processed this question
@@ -88,11 +84,9 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     const allAnswered = players.length > 0 && answeredCount === players.length;
     const timerExpired = localTimeRemaining <= 0;
     
-    // In sync mode (1-2 players), reveal immediately when all players answer
-    // In async/multi mode (3+ players), wait for timer to expire
-    const shouldProcess = isSyncMode 
-      ? (allAnswered || timerExpired)
-      : timerExpired;
+    // Always advance immediately when all players have answered
+    // No more waiting for timer in any mode
+    const shouldProcess = allAnswered || timerExpired;
     
     // Check if we should process this question
     if (shouldProcess) {
@@ -132,7 +126,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
       setLastProcessedQuestion(currentQuestionIndex);
       setCanAdvance(true);
     }
-  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining, isSyncMode]);
+  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining]);
 
   // Edge case: if no players in the room, allow immediate advance
   useEffect(() => {
@@ -330,8 +324,8 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             )}
           </motion.div>
 
-          {/* Players Status - only show in sync mode */}
-          {isSyncMode && (
+          {/* Players Status - always show */}
+          {players.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -346,8 +340,8 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             </motion.div>
           )}
 
-          {/* Timer - hide in sync mode when all players answered */}
-          {!(isSyncMode && answeredCount === players.length && players.length > 0) && (
+          {/* Timer - hide when all players answered */}
+          {!(answeredCount === players.length && players.length > 0) && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
