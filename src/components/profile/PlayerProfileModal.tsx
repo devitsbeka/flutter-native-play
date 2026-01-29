@@ -128,7 +128,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   };
 
   const handleDeleteFriend = async () => {
-    if (!data?.friendshipId) return;
+    console.log('[handleDeleteFriend] Called, friendshipId:', data?.friendshipId);
+    
+    if (!data?.friendshipId) {
+      console.error('[handleDeleteFriend] No friendshipId available!');
+      toast.error("მეგობრობის ID ვერ მოიძებნა");
+      setShowDeleteConfirm(false);
+      return;
+    }
     
     setDeletingFriend(true);
     try {
@@ -143,6 +150,7 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       setShowDeleteConfirm(false);
       refetch();
     } catch (err) {
+      console.error('[handleDeleteFriend] Error:', err);
       toast.error("წაშლა ვერ მოხერხდა");
     } finally {
       setDeletingFriend(false);
