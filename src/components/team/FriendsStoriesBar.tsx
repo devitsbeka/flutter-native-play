@@ -58,6 +58,7 @@ export function FriendsStoriesBar({ onAddFriendClick, onFriendClick, onShowAllFr
           }}
           onTouchEnd={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             onAddFriendClick();
           }}
           className="flex flex-col items-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
