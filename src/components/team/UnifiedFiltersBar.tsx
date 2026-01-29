@@ -52,8 +52,8 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
   const currentSortLabel = sortOptions?.find((opt) => opt.value === sort)?.label;
 
   return (
-    <div className="px-4 py-2 w-full max-w-full overflow-hidden box-border">
-      <div className="flex items-center gap-1.5 w-full max-w-full overflow-hidden">
+    <div className="px-4 py-2 w-full max-w-full overflow-visible box-border">
+      <div className="flex items-center gap-1.5 w-full max-w-full">
         {/* Search button - left side */}
         <div className={isSearchOpen ? "flex-1" : "flex-shrink-0"}>
           <AnimatePresence mode="wait">
