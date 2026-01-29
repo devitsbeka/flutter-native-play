@@ -21,7 +21,8 @@ export const calculatePoints = (isCorrect: boolean, timeRemaining: number): numb
   // Ensure timeRemaining is within valid range
   const clampedTime = Math.max(0, Math.min(timeRemaining, QUESTION_TIME_SECONDS));
   
-  return BASE_POINTS + (clampedTime * TIME_BONUS_MULTIPLIER);
+  // Math.round to prevent floating point precision issues from timer decrements
+  return Math.round(BASE_POINTS + (clampedTime * TIME_BONUS_MULTIPLIER));
 };
 
 /**
@@ -37,7 +38,8 @@ export const calculateObserverBonus = (timeWhenAnswered: number): number => {
   // If player timed out (0s left), observer gets max (175)
   const clampedTime = Math.max(0, Math.min(timeWhenAnswered, QUESTION_TIME_SECONDS));
   const timeUsed = QUESTION_TIME_SECONDS - clampedTime;
-  return BASE_POINTS + (timeUsed * TIME_BONUS_MULTIPLIER);
+  // Math.round to prevent floating point precision issues
+  return Math.round(BASE_POINTS + (timeUsed * TIME_BONUS_MULTIPLIER));
 };
 
 /**

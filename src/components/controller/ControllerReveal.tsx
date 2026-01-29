@@ -53,10 +53,10 @@ export const ControllerReveal: React.FC = () => {
           <Loader2 className="w-12 h-12 animate-spin text-purple-300 mx-auto mb-4" />
           <p className="text-white text-lg font-semibold mb-2">შედეგები იტვირთება...</p>
           <p className="text-purple-300 text-sm mb-2">დაელოდე შემდეგ კითხვას</p>
-          <div className="bg-white/10 rounded-xl px-6 py-3 mt-4 mb-4">
-            <span className="text-purple-300">შენი ქულა: </span>
-            <span className="text-white text-2xl font-bold">{myScore}</span>
-          </div>
+        <div className="bg-white/10 rounded-xl px-6 py-3 mt-4 mb-4">
+          <span className="text-purple-300">შენი ქულა: </span>
+          <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
+        </div>
           <ChunkyButton
             variant="secondary"
             size="sm"
@@ -87,7 +87,7 @@ export const ControllerReveal: React.FC = () => {
         
         <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
           <span className="text-purple-300">შენი ქულა: </span>
-          <span className="text-white text-2xl font-bold">{myScore}</span>
+          <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
         </div>
         
         <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
@@ -111,7 +111,7 @@ export const ControllerReveal: React.FC = () => {
           <p className="text-white text-lg font-semibold mb-2">მოწმდება...</p>
           <div className="bg-white/10 rounded-xl px-6 py-3 mt-4">
             <span className="text-purple-300">შენი ქულა: </span>
-            <span className="text-white text-2xl font-bold">{myScore}</span>
+            <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
           </div>
         </div>
       </div>
@@ -137,7 +137,7 @@ export const ControllerReveal: React.FC = () => {
       
       <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
         <span className="text-purple-300">შენი ქულა: </span>
-        <span className="text-white text-2xl font-bold">{myScore}</span>
+        <span className="text-white text-2xl font-bold">{Math.round(myScore)}</span>
       </div>
       
       <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
