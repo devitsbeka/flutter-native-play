@@ -1,113 +1,238 @@
 
 
-# LIVE Badge გაუმჯობესება: ონლაინ მონაწილეების ჩვენება
+# ორენოვანი ძებნის სისტემა (Bilingual Search)
 
 ## მიმოხილვა
 
-გაუმჯობესდება LIVE badge-ის ჩვენების ლოგიკა ოთახის ბარათებზე:
-
-1. **LIVE badge ჩანს როცა**: სხვა მომხმარებელი (გარდა ჩემი) ონლაინ არის ამ ოთახში
-2. **LIVE + TV იკონი ჩანს როცა**: ზემოთ აღწერილი პირობა + TV რეჟიმი ჩართულია
-3. **სორტირება**: ოთახები დალაგდება ბოლო აქტივობის მიხედვით
+მომხმარებელმა შეძლოს ზვიგენი, zvigeni, სჰარკ, shark - ნებისმიერი ამ ვარიანტით მოძებნოს და მიიღოს ერთნაირი შედეგები.
 
 ---
 
-## ტექნიკური გადაწყვეტა
+## არსებული ინფრასტრუქტურა
 
-### 1. useMyRooms.ts - ონლაინ მომხმარებლების მონაცემების დამატება
+აპლიკაციაში უკვე არსებობს ნაწილობრივი ორენოვანი ძებნის მხარდაჭერა:
 
-მოხდება room-ების fetch-ის დროს `user_presence` ცხრილთან cross-reference, რომ დადგინდეს ოთახის მონაწილეებიდან ვინ არის ონლაინ:
+| კომპონენტი | ფუნქცია | ორენოვანი მხარდაჭერა |
+|------------|---------|----------------------|
+| `src/utils/transliteration.ts` | Latin→Georgian transliteration + სემანტიკური მაპინგი | English→Georgian მხოლოდ |
+| `smart-icon-search` edge function | აიკონების ძებნა | Georgian→English სრული |
+| `iconAnswerValidation.ts` | პასუხის ვალიდაცია | ორმხრივი მაპინგი |
+| `QuestionIconPicker.tsx` | აიკონების არჩევა | იყენებს smart-icon-search |
+| `FlowIconPicker.tsx` | ადმინ აიკონების არჩევა | მხოლოდ .ilike() ძებნა |
+
+---
+
+## პრობლემა
+
+1. **FlowIconPicker** და სხვა კომპონენტები იყენებენ მარტივ `.ilike()` ძებნას:
+```typescript
+.or(`title.ilike.%${searchQuery}%,slug.ilike.%${searchQuery}%,tags.cs.{${searchQuery}}`)
+```
+
+2. **icon_library** ცხრილი შეიცავს მხოლოდ ინგლისურ tags-ებს:
+```
+slug: "shark", title: "Shark", tags: ["animal", "ocean", "predator"]
+```
+არ არის Georgian tags: "ზვიგენი", "zvigeni"
+
+3. **transliteration.ts** არ მხარს უჭერს Georgian→English მიმართულებას (მხოლოდ English→Georgian)
+
+---
+
+## გადაწყვეტა: ცენტრალიზებული ორენოვანი ძებნის უტილიტი
+
+### 1. გაფართოებული transliteration.ts
+
+დაემატება:
+- `GEORGIAN_TO_LATIN` მაპი (უკუ transliteration)
+- `GEORGIAN_TO_ENGLISH` სემანტიკური მაპი 
+- `buildBilingualSearchTerms()` ფუნქცია რომელიც:
+  - ზვიგენი → ["ზვიგენი", "zvigeni", "shark"]
+  - shark → ["shark", "შარკ", "ზვიგენი"]
+  - zvigeni → ["zvigeni", "ზვიგენი", "shark"]
 
 ```text
-+------------------+       +------------------+       +------------------+
-| game_rooms       |       | room_participants|       | user_presence    |
-+------------------+       +------------------+       +------------------+
-| id               |<----->| room_id          |       | user_id          |
-| room_name        |       | user_id          |<----->| status           |
-| status           |       | nickname         |       | last_seen        |
-| tv_session_id    |       | avatar_url       |       | current_page     |
-+------------------+       +------------------+       +------------------+
++-------------------+
+|  მომხმარებლის     |
+|  შეყვანა          |
++--------+----------+
+         |
+         v
++--------+----------+
+| buildBilingual-   |
+| SearchTerms()     |
++--------+----------+
+         |
+         v
++--------+----------+-------+--------+
+| ორიგინალი | ტრანსლიტ. | სემანტიკ. |
+| "ზვიგენი" | "zvigeni" | "shark"   |
++-----------+-----------+-----------+
 ```
 
-**MyRoom interface-ში დაემატება:**
-- `online_participants: { user_id, nickname, avatar_url }[]` - ონლაინ მონაწილეების სია
-- `has_others_online: boolean` - არის თუ არა სხვა ონლაინ მომხმარებელი
+### 2. კომპონენტების განახლება
 
-### 2. MyRoomsSection.tsx - LIVE Badge ლოგიკის განახლება
+| კომპონენტი | ცვლილება |
+|------------|----------|
+| `FlowIconPicker.tsx` | buildBilingualSearchTerms()-ის გამოყენება .or() query-სთვის |
+| `CategorySelectorModal.tsx` | კატეგორიების ფილტრაციისთვის ორენოვანი matching |
+| `FeedFiltersBar.tsx` + related | თუ საჭიროა - content search-ში |
 
-**ამჟამინდელი ლოგიკა:**
-```typescript
-{(isPlaying || hasTVSession) ? (
-  <LiveBadge />
-) : ...}
-```
+### 3. smart-icon-search გაფართოება
 
-**ახალი ლოგიკა:**
-```typescript
-{(isPlaying || hasTVSession || hasOthersOnline) ? (
-  <div className="flex items-center gap-1">
-    <LiveBadge />
-    {hasTVSession && <TvIcon className="w-4 h-4 text-white" />}
-  </div>
-) : ...}
-```
-
-### 3. LiveBadge.tsx - TV იკონის მხარდაჭერა (optional prop)
-
-`LiveBadge` კომპონენტს შეიძლება დაემატოს `showTVIcon` prop ან TV იკონი გარედან დაემატება.
+Edge function უკვე კარგად მუშაობს Georgian→English-ზე. დაემატება:
+- English→Georgian სემანტიკური lookup (shark → ზვიგენი)
+- რათა ინგლისურით ძებნისას Georgian keywords-ც აღმოაჩინოს
 
 ---
 
-## ფაილების ცვლილებები
+## ტექნიკური ცვლილებები
+
+### ფაილი 1: `src/utils/transliteration.ts`
+
+**დაემატება:**
+
+```typescript
+// Georgian to Latin phonetic map (reverse)
+const GEORGIAN_TO_LATIN: Record<string, string> = {
+  'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e',
+  // ... სრული მაპი
+};
+
+// Georgian to English semantic map
+const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
+  'ზვიგენ': ['shark', 'fish'],
+  'ვეშაპ': ['whale'],
+  'დელფინ': ['dolphin'],
+  // ... 100+ სიტყვა (გადმოყვანა smart-icon-search-დან)
+};
+
+// Transliterate Georgian to Latin
+export function transliterateGeorgian(text: string): string;
+
+// Check if text is Georgian
+export function isGeorgianScript(text: string): boolean;
+
+// Build bilingual search terms (main function)
+export function buildBilingualSearchTerms(input: string): string[];
+```
+
+**buildBilingualSearchTerms ლოგიკა:**
+
+```typescript
+export function buildBilingualSearchTerms(input: string): string[] {
+  const terms: string[] = [input.toLowerCase().trim()];
+  
+  if (isGeorgianScript(input)) {
+    // Georgian input
+    // 1. Transliterate to Latin: ზვიგენი → zvigeni
+    terms.push(transliterateGeorgian(input));
+    
+    // 2. Get English semantic: ზვიგენი → shark
+    const englishWords = getEnglishEquivalents(input);
+    terms.push(...englishWords);
+  } else if (isLatinScript(input)) {
+    // Latin/English input
+    // 1. Transliterate to Georgian: zvigeni → ზვიგენი
+    terms.push(transliterateLatin(input));
+    
+    // 2. Get Georgian semantic: shark → ზვიგენი
+    const georgianWords = getGeorgianEquivalents(input);
+    terms.push(...georgianWords);
+  }
+  
+  return [...new Set(terms)].filter(t => t.length >= 2);
+}
+```
+
+### ფაილი 2: `src/components/admin/flow/FlowIconPicker.tsx`
+
+**ცვლილება searchIcons ფუნქციაში:**
+
+```typescript
+import { buildBilingualSearchTerms } from '@/utils/transliteration';
+
+const searchIcons = async () => {
+  // Build all search terms from user input
+  const searchTerms = buildBilingualSearchTerms(searchQuery);
+  
+  // Build OR conditions for all terms
+  const orConditions = searchTerms.flatMap(term => [
+    `title.ilike.%${term}%`,
+    `slug.ilike.%${term}%`,
+    `tags.cs.{${term}}`
+  ]).join(',');
+  
+  const { data, error } = await supabase
+    .from('icon_library')
+    .select('id, slug, title, icon_url')
+    .or(orConditions)
+    .limit(50);
+  
+  // Score and sort results...
+};
+```
+
+### ფაილი 3: `src/components/team/CategorySelectorModal.tsx`
+
+**ცვლილება filteredCategories-ში:**
+
+```typescript
+import { buildBilingualSearchTerms } from '@/utils/transliteration';
+
+const filteredCategories = useMemo(() => {
+  if (!searchQuery.trim()) return categories;
+  
+  const searchTerms = buildBilingualSearchTerms(searchQuery);
+  
+  return categories.filter((cat) => {
+    const catName = cat.name.toLowerCase();
+    return searchTerms.some(term => catName.includes(term));
+  });
+}, [categories, searchQuery]);
+```
+
+### ფაილი 4: `supabase/functions/smart-icon-search/index.ts`
+
+**დაემატება ENGLISH_TO_GEORGIAN მაპი:**
+
+```typescript
+const ENGLISH_TO_GEORGIAN: Record<string, string[]> = {
+  'shark': ['ზვიგენ', 'ზვიგენი'],
+  'whale': ['ვეშაპ', 'ვეშაპი'],
+  'dolphin': ['დელფინ', 'დელფინი'],
+  // ... reverse mapping
+};
+```
+
+---
+
+## შესაცვლელი ფაილები
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `src/hooks/useMyRooms.ts` | `user_presence`-თან join, ონლაინ მომხმარებლების დათვლა |
-| `src/components/team/MyRoomsSection.tsx` | LIVE badge ლოგიკის განახლება, TV იკონის დამატება |
-| `src/components/team/widgets/ActiveRoomsWidget.tsx` | იგივე ლოგიკა widget-ისთვის |
-
----
-
-## მონაცემთა ბაზის Query
-
-```sql
--- ონლაინ მონაწილეების მოძიება (last_seen ბოლო 2 წუთში)
-SELECT 
-  rp.room_id,
-  rp.user_id,
-  rp.nickname,
-  rp.avatar_url,
-  up.status,
-  up.last_seen
-FROM room_participants rp
-JOIN user_presence up ON rp.user_id::text = up.user_id::text
-WHERE rp.room_id IN (...)
-  AND up.status = 'online'
-  AND up.last_seen > NOW() - INTERVAL '2 minutes'
-```
+| `src/utils/transliteration.ts` | GEORGIAN_TO_LATIN, GEORGIAN_TO_ENGLISH, buildBilingualSearchTerms() |
+| `src/components/admin/flow/FlowIconPicker.tsx` | ორენოვანი search terms-ის გენერაცია |
+| `src/components/team/CategorySelectorModal.tsx` | ორენოვანი ფილტრაცია |
+| `supabase/functions/smart-icon-search/index.ts` | ENGLISH_TO_GEORGIAN დამატება |
 
 ---
 
 ## შედეგი
 
-| სცენარი | მანამდე | შემდეგ |
-|---------|---------|--------|
-| სხვა ონლაინ არის ოთახში | ბეჯი არ ჩანს | LIVE ბეჯი ჩანს |
-| სხვა ონლაინ + TV ჩართული | LIVE ბეჯი | LIVE ბეჯი + TV იკონი |
-| მხოლოდ TV ჩართული | LIVE ბეჯი | LIVE ბეჯი + TV იკონი |
-| მხოლოდ მე ვარ ოთახში | ბეჯი არ ჩანს | ბეჯი არ ჩანს |
-| თამაში მიმდინარეობს | LIVE ბეჯი | LIVE ბეჯი |
+| ძებნის input | მოიძებნება |
+|--------------|------------|
+| ზვიგენი | shark, zvigeni-დან |
+| zvigeni | shark, ზვიგენი-დან |
+| სჰარკ | shark (transliteration) |
+| shark | shark, ზვიგენი, შარკ |
 
 ---
 
-## რეალტაიმ განახლება
+## ტესტირება
 
-`useMyRooms` უკვე უსმენს:
-- `game_rooms` ცვლილებებს
-- `room_participants` ცვლილებებს
-- `tv_sessions` ცვლილებებს
-- `tv_players` ცვლილებებს
-
-**დაემატება:**
-- `user_presence` ცვლილებების subscription - ოთახის მონაწილეების ონლაინ სტატუსის განახლება
+ძებნის ტესტები:
+1. აიკონების ძებნა (QuestionIconPicker) - "ზვიგენი" → shark icons
+2. ადმინ აიკონების ძებნა (FlowIconPicker) - "shark" → მოძებნის shark-ს
+3. კატეგორიების ძებნა - "sports" → სპორტი კატეგორია
 
