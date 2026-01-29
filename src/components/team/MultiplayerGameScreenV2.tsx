@@ -320,6 +320,7 @@ export function MultiplayerGameScreenV2() {
           timerSeconds={Math.ceil(timeRemaining)}
           timerMaxSeconds={timePerQuestion}
           reserveTopSpace={!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl}
+          hideQuestionText={!!currentQuestion.imageUrl}
         />
       </div>
 
@@ -361,7 +362,7 @@ export function MultiplayerGameScreenV2() {
         </div>
       ) : (
         /* Regular 4-answer layout */
-        <div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
+        <div className="flex-1 px-4 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-hidden min-h-0">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               // Find opponents who chose this answer (only show when revealed)

@@ -390,6 +390,7 @@ export function QuizGameScreenProd() {
               timerMaxSeconds={timePerQuestion + playerTimerBonus}
               freezeTimeLeft={!opponent ? freezeTimeLeft : undefined}
               reserveTopSpace={!hasMedia}
+              hideQuestionText={!!currentQuestion.imageUrl}
             />
           );
         })()}
@@ -433,7 +434,7 @@ export function QuizGameScreenProd() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-visible min-h-0 pb-2">
+        <div className="flex-1 px-4 mt-0 flex flex-col gap-4 [@media(max-height:700px)]:gap-2.5 overflow-visible min-h-0 pb-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isHidden = hiddenAnswers.includes(answer);
