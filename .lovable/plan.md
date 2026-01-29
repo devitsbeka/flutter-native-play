@@ -1,118 +1,92 @@
 
-# გეგმა: ძიებაში მეგობრებისა და არამეგობრების ჩვენება
+
+# გეგმა: Observer-ის მყისიერი შედეგების ჩვენება
 
 ## პრობლემა
 
-ამჟამად `InviteFriendsModal`-ში ძიების შედეგებიდან მეგობრები ფილტრდება (ხაზი 387):
+ახლა `MultiplayerObserverScreen`-ში observer-ი უნდა დაელოდოს ტაიმერის გასვლას, თუ 3+ მოთამაშეა. მომხმარებელს სურს მყისიერი შედეგები როცა ყველა უპასუხებს.
+
+## ახლანდელი ლოგიკა (ხაზი 79-95)
 
 ```typescript
-const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
+// Sync mode: 1-2 players = instant reveal when all answer
+// Async mode: 3+ players = wait for timer
+const isSyncMode = players.length <= 2;
+
+const shouldProcess = isSyncMode 
+  ? (allAnswered || timerExpired)
+  : timerExpired;  // 3+ მოთამაშეზე მხოლოდ ტაიმერი
 ```
-
-მომხმარებელს სურს ორივეს ნახვა სხვადასხვა ინდიკატორებით:
-- **მეგობრები:** "მოწვევა" ღილაკი
-- **არამეგობრები:** "+ დამატება" ღილაკი
-
----
 
 ## გადაწყვეტა
 
-### ფაილი: `src/components/team/InviteFriendsModal.tsx`
-
-**ცვლილება 1:** ფილტრის მოხსნა (ხაზი 387)
-
-```diff
-- const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
-+ // Show all search results - both friends and non-friends
-+ const filteredResults = searchResults;
-```
-
-**ცვლილება 2:** ღილაკის ტექსტის განახლება მეგობარი/არამეგობარის მიხედვით (ხაზები 467-471)
-
-ამჟამად:
-```typescript
-<>
-  <UserPlus className="w-4 h-4" />
-  {isRoomInviteMode ? "მოწვევა" : "დამატება"}
-</>
-```
-
-ახალი ლოგიკა:
-```typescript
-const isFriend = friendIds.has(result.user_id);
-
-// Button text logic:
-// - If user is already a friend → "მოწვევა" (Invite)
-// - If not a friend → "+ დამატება" (Add Friend)
-{isFriend ? (
-  <>
-    <UserPlus className="w-4 h-4" />
-    მოწვევა
-  </>
-) : (
-  <>
-    <UserPlus className="w-4 h-4" />
-    + დამატება
-  </>
-)}
-```
-
-**ცვლილება 3:** ღილაკზე დაჭერის ლოგიკის განახლება
-
-```typescript
-const handleButtonAction = () => {
-  const isFriend = friendIds.has(result.user_id);
-  
-  if (isFriend) {
-    // For friends - send room invite
-    handleInviteToRoom(result.user_id);
-  } else {
-    // For non-friends - send friend request
-    if (isPendingOutgoing) {
-      toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
-      return;
-    }
-    handleSendRequest(result.user_id);
-  }
-};
-```
+ყოველთვის გავაგრძელოთ როცა ყველა უპასუხებს, მოთამაშეების რაოდენობის მიუხედავად.
 
 ---
 
-## ლოგიკის ნაკადი
+## ცვლილებები
 
-```text
-┌─────────────────────────────────────┐
-│  მომხმარებელი ძებნას იწყებს       │
-└────────────────┬────────────────────┘
-                 ▼
-┌─────────────────────────────────────┐
-│  searchResults - ყველა მომხმარებელი │
-│  (ფილტრი აღარ არის!)               │
-└────────────────┬────────────────────┘
-                 ▼
-       ┌─────────┴─────────┐
-       │                   │
-   isFriend?          !isFriend?
-       │                   │
-       ▼                   ▼
-  "მოწვევა"          "+ დამატება"
-  (room invite)      (friend request)
+### ფაილი: `src/components/team/MultiplayerObserverScreen.tsx`
+
+**ხაზი 79-95:** გამარტივება - ყოველთვის allAnswered || timerExpired
+
+```diff
+- // Sync mode: 1-2 players = instant reveal when all answer
+- // Async mode: 3+ players = wait for timer
+- const isSyncMode = players.length <= 2;
+
++ // Player count check for UI purposes only (showing "X/Y answered")
++ const showAnsweredCount = players.length <= 2;
+```
+
+**ხაზი 91-95:**
+
+```diff
+- // In sync mode (1-2 players), reveal immediately when all players answer
+- // In async/multi mode (3+ players), wait for timer to expire
+- const shouldProcess = isSyncMode 
+-   ? (allAnswered || timerExpired)
+-   : timerExpired;
++ // Always advance immediately when all players have answered
++ // No more waiting for timer in any mode
++ const shouldProcess = allAnswered || timerExpired;
+```
+
+**ხაზი 135:** useEffect dependencies - `isSyncMode`-ის მოხსნა
+
+```diff
+- }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining, isSyncMode]);
++ }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining]);
+```
+
+**ხაზი 333-347:** UI - answered count-ის ჩვენების ლოგიკის განახლება
+
+```diff
+- {/* Players Status - only show in sync mode */}
+- {isSyncMode && (
++ {/* Players Status - always show */}
++ {players.length > 0 && (
 ```
 
 ---
 
 ## შედეგი
 
-| მომხმარებლის ტიპი | მანამდე | შემდეგ |
-|-------------------|---------|--------|
-| მეგობარი | არ ჩანს ძიებაში | ჩანს + "მოწვევა" ღილაკი |
-| არამეგობარი | ჩანს + "დამატება" | ჩანს + "+ დამატება" ღილაკი |
+| სიტუაცია | მანამდე | შემდეგ |
+|----------|---------|--------|
+| 2 მოთამაშე + ორივემ უპასუხა | მყისიერი | მყისიერი |
+| 4 მოთამაშე + ყველამ უპასუხა | ელოდება ტაიმერს | მყისიერი |
+| ტაიმერი გავიდა | გაგრძელება | გაგრძელება |
 
 ---
 
-## შესაცვლელი ფაილები
+## ტექნიკური დეტალები
 
-| ფაილი | ცვლილებები |
-|-------|------------|
-| `src/components/team/InviteFriendsModal.tsx` | ფილტრის მოხსნა + ღილაკის ლოგიკის განახლება |
+**შესაცვლელი ფაილი:** `src/components/team/MultiplayerObserverScreen.tsx`
+
+**ცვლილებების რაოდენობა:** 4 ადგილი
+- ხაზი 79-81: `isSyncMode` ცვლადის მოხსნა/გადარქმევა
+- ხაზი 91-95: `shouldProcess` ლოგიკის გამარტივება
+- ხაზი 135: useEffect dependency array
+- ხაზი 334: UI condition
+
