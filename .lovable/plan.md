@@ -1,303 +1,277 @@
 
-# თამაშის ეკონომიკის სრული ალგორითმი
+# შეტყობინებების ტაბ-სისტემა და Avatar/Icon გაუმჯობესება
 
 ## მიმოხილვა
 
-მიმდინარე სისტემის ანალიზის შემდეგ შევიმუშავე ბალანსირებული ეკონომიკის ალგორითმი, რომელიც უზრუნველყოფს:
-- მომხმარებლის ჩართულობას ლოგიკური ჯილდოებით
-- თამაშის გაგრძელების მოტივაციას
-- გადახდების სტიმულს (არა იძულებას)
+შეტყობინებების გვერდზე დაემატება 3 ტაბი ფილტრაციისთვის და გაუმჯობესდება avatar-ების ჩვენება - ოთახის/ტრივიის იკონების გამოყენებით.
 
 ---
 
-## მიმდინარე პრობლემები
+## მიმდინარე სტრუქტურა
 
-| პრობლემა | აღწერა |
-|----------|--------|
-| ზედმეტი ჯილდოები | Daily rewards-ით 7 დღეში 3,150 მონეტა = 6+ უფასო თამაში |
-| ძვირი/იაფი ფასები | Power-ups 100-120 coins vs თამაში 500 coins - არათანაბარი |
-| თამაშის ლიმიტი | 5 უფასო თამაში/დღე, მაგრამ VIP-ს unlimited |
-| Ad reward | 1000 coins/ad = 2 უფასო თამაში - ძალიან ბევრი |
+ახლა Notifications.tsx-ში შეტყობინებები იყოფა სექციებად (მეგობრები, თამაშები, ტრივია და ა.შ.) და ყველა ერთად ჩნდება. CompactNotificationCard-ში avatar-ად ნაჩვენებია `sender_avatar` პროფილიდან.
 
 ---
 
-## ახალი ბალანსირებული ალგორითმი
-
-### 1. სავალუტო საფუძველი
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ 💎 1 Gem = 50 Coins (უცვლელი)                              │
-│ 🎮 1 თამაში = 500 Coins stake                               │
-│ 🏆 მოგება = 1000 Coins (stake × 2)                          │
-│ 🤝 ფრე = 250 Coins (stake × 0.5)                            │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 2. ახალი მომხმარებლის საწყისი ბალანსი
-
-| პარამეტრი | მიმდინარე | ახალი | მიზეზი |
-|-----------|-----------|-------|--------|
-| Coins | 2000 | 1500 | 3 თამაში საცდელად (არა 4) |
-| Gems | 10 | 5 | საკმარისი 1 პატარა შეძენისთვის |
-
-### 3. თამაშის ლიმიტის სისტემა (Lives)
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ 🆓 FREE USERS                                               │
-├─────────────────────────────────────────────────────────────┤
-│ • 5 უფასო თამაში/დღე (12:00AM-ზე განახლება)                │
-│ • ლიმიტის ამოწურვის შემდეგ:                                 │
-│   ├─ ⏰ 4 საათი = +1 თამაში (მაქსიმუმ 3 დაგროვებული)       │
-│   ├─ 📺 რეკლამა = +1 თამაში (დღეში მაქს 5 რეკლამა)          │
-│   ├─ 💰 500 coins = 1 თამაში (stake სისტემით)              │
-│   └─ 💎 3 gems = +2 თამაში (გადაუდებელი)                   │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│ 👑 VIP USERS                                                │
-├─────────────────────────────────────────────────────────────┤
-│ • Unlimited თამაშები                                        │
-│ • No stake required (რისკი მხოლოდ free-სთვის)              │
-│ • 2x XP ყველა თამაშზე                                       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 4. ყოველდღიური ჯილდოების ახალი ბალანსი
-
-| დღე | მიმდინარე Coins | ახალი Coins | მიმდინარე Gems | ახალი Gems |
-|-----|-----------------|-------------|----------------|------------|
-| 1 | 150 | 100 | 1 | 0 |
-| 2 | 200 | 150 | 1 | 0 |
-| 3 | 300 | 200 | 2 | 1 |
-| 4 | 400 | 250 | 1 | 0 |
-| 5 | 500 | 350 | 2 | 1 |
-| 6 | 600 | 450 | 2 | 1 |
-| 7 | 1000 | 500 | 5 | 2 |
-| **სულ** | **3150** | **2000** | **14** | **5** |
-
-**შედეგი**: 7 დღეში = 4 უფასო თამაში (არა 6+)
-
-### 5. სხვა ჯილდოების ბალანსი
-
-| ჯილდო | მიმდინარე | ახალი | განმარტება |
-|-------|-----------|-------|------------|
-| Chest (6სთ) | 200 coins + 3 gems | 100 coins + 1 gem | 6 საათში = დღეში 4× = 400 coins |
-| Ad Watch | 1000 coins | +1 თამაში | მონეტების ნაცვლად თამაში |
-| Spin (max) | 500 coins | 300 coins | დაბალანსება |
-| Level Up | 100 coins/level | 75 coins/level | ოდნავ შემცირება |
-
-### 6. მაღაზიის ფასების ოპტიმიზაცია
-
-**Power-ups (gems-ით):**
-| Item | მიმდინარე | ახალი | თანაფარდობა |
-|------|-----------|-------|-------------|
-| 50/50 ×3 | 8 gems | 6 gems | 2 gems/power = 100 coins |
-| Freeze ×3 | 8 gems | 6 gems | |
-| Replace ×3 | 8 gems | 6 gems | |
-| All Powers ×3 | 28 gems | 20 gems | -30% bundle |
-
-**Coins ყიდვა (gems-ით):**
-| Package | მიმდინარე | ახალი | Value |
-|---------|-----------|-------|-------|
-| 100 coins | 2 gems | 2 gems | 1:50 |
-| 500 coins | 8 gems | 10 gems | 1:50 |
-| 1500 coins | 20 gems | 28 gems | +7% bonus |
-| 5000 coins | 60 gems | 90 gems | +11% bonus |
-
-### 7. VIP ფასების ოპტიმიზაცია
-
-| Plan | მიმდინარე | ახალი | რეალური ღირებულება |
-|------|-----------|-------|-------------------|
-| Day | 3 gems | 5 gems | ₾0.50 |
-| Week | 12 gems | 20 gems | ₾2.00 |
-| Month | 35 gems | 50 gems | ₾5.00 |
-
----
-
-## ეკონომიკის ბალანსის მოდელი
-
-### აქტიური მოთამაშის დღიური ციკლი:
+## ახალი ტაბების სტრუქტურა
 
 ```text
 ┌───────────────────────────────────────────────────────────────┐
-│ 📅 FREE USER - დღიური ბალანსი                                │
+│ 🎮 თამაშები │ 👥 სოციალური │ 🎯 ტრივია                        │
 ├───────────────────────────────────────────────────────────────┤
-│ შემოსავალი:                                                  │
-│   • Daily login: ~200 coins (საშუალო)                        │
-│   • Chest ×4: 400 coins                                      │
-│   • Missions: ~150 coins                                     │
-│   • Wins (50% win rate, 5 games): +500 coins net profit      │
-│   ─────────────────────────────────────────                  │
-│   სულ: ~1250 coins/day                                       │
-│                                                               │
-│ ხარჯი:                                                        │
-│   • 5 თამაში stake: 2500 coins (გადახდილი წინასწარ)          │
-│   • Win back (50%): -1250 coins                              │
-│   ─────────────────────────────────────────                  │
-│   Net stake cost: ~1250 coins/day                            │
-│                                                               │
-│ ბალანსი: ~0 (ნეიტრალური)                                     │
-│                                                               │
-│ 💡 თუ უნდა მეტი თამაში:                                      │
-│   • უყურე რეკლამას: +1 თამაში                                │
-│   • დაელოდე 4სთ: +1 თამაში                                   │
-│   • იყიდე gems: გადაუდებელი                                  │
-└───────────────────────────────────────────────────────────────┘
-```
-
-### VIP მოთამაშის უპირატესობა:
-
-```text
-┌───────────────────────────────────────────────────────────────┐
-│ 👑 VIP USER - დღიური ბალანსი                                 │
+│ თამაშები:                                                     │
+│   - room_invite (ოთახის მოწვევა)                              │
+│   - game_started (თამაში დაიწყო)                              │
+│   - challenge (გამოწვევა)                                      │
+│   - game_result (თამაშის შედეგი)                              │
 ├───────────────────────────────────────────────────────────────┤
-│ შემოსავალი:                                                  │
-│   • Daily login: ~200 coins                                  │
-│   • Chest ×4: 400 coins                                      │
-│   • Missions: ~150 coins                                     │
-│   • Unlimited plays - No stake needed!                       │
-│   ─────────────────────────────────────────                  │
-│   სულ: ~750 coins + XP bonus                                 │
-│                                                               │
-│ ხარჯი: 0 (no stake for VIP)                                  │
-│                                                               │
-│ ბალანსი: +750 coins/day pure profit                          │
-│                                                               │
-│ 💎 VIP ღირებულება: 50 gems/month = ₾5                       │
-│    ROI: 30 days × 750 = 22,500 coins = 450 gems value       │
-│    Net gain: 400 gems value/month!                           │
+│ სოციალური:                                                    │
+│   - friend_request (მეგობრობის მოთხოვნა)                      │
+│   - friend_accepted (მეგობარი დაემატა)                        │
+├───────────────────────────────────────────────────────────────┤
+│ ტრივია:                                                        │
+│   - trivia_liked (მოიწონა ტრივია)                              │
+│   - trivia_saved (შეინახა ტრივია)                              │
+│   - trivia_played (ითამაშა ტრივია)                            │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## შესასრულებელი ცვლილებები
+## Avatar/Icon გაუმჯობესებები
 
-### ფაილი 1: `src/config/rewardConfig.ts`
+### 1. თამაშის შეტყობინებები - ოთახის იკონი
+
+თუ შეტყობინებას აქვს `room_icon` data-ში:
+```text
+┌─────────────────────────────────┐
+│  🏠 [room_icon image]           │
+│  ────────────────────           │
+│  ოთახის მოწვევა                 │
+│  beka გიწვევს თამაშში           │
+└─────────────────────────────────┘
+```
+
+### 2. ტრივია შეტყობინებები - ტრივიის cover ან icon
+
+თუ შეტყობინებას აქვს `trivia_cover` ან `trivia_icon_slug`:
+```text
+┌─────────────────────────────────┐
+│  ❤️ [trivia_icon/cover]         │  ← ტრივიის cover ან icon_slug
+│  ────────────────────           │
+│  Test მოიწონა შენი ტრივია       │
+│  ქვიზ კინოს სამყაროზე           │
+└─────────────────────────────────┘
+```
+
+---
+
+## შესაცვლელი ფაილები
+
+| ფაილი | ცვლილება |
+|-------|----------|
+| `src/pages/Notifications.tsx` | ტაბების დამატება, ფილტრაციის ლოგიკა |
+| `src/components/notifications/CompactNotificationCard.tsx` | Avatar/icon ლოგიკის გაუმჯობესება |
+| `src/hooks/useSocialFeed.ts` | ტრივიის icon/cover-ის დამატება notification data-ში |
+| `src/components/social/QuizPlayModal.tsx` | ტრივიის icon/cover-ის დამატება notification data-ში |
+
+---
+
+## ტექნიკური ცვლილებები
+
+### 1. Notifications.tsx - ტაბების დამატება
 
 ```typescript
-export const REWARDS = {
-  // Stakes - unchanged
-  GAME_STAKE: 500,
-  GAME_WIN_REWARD: 1000,
-  GAME_DRAW_REFUND: 250,
-  GAME_LOSE_REWARD: 0,
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Gamepad2, Users, Sparkles } from "lucide-react";
 
-  // NEW: Play regeneration
-  PLAY_REGEN_HOURS: 4,           // 1 play every 4 hours
-  PLAY_REGEN_MAX: 3,             // Max stored regenerated plays
-  PLAYS_PER_AD: 1,               // 1 play per ad (not 2)
-  MAX_ADS_PER_DAY: 5,            // Limit ad watching
-  GEMS_FOR_PLAYS: 3,             // 3 gems = 2 instant plays
-  GEMS_PLAYS_AMOUNT: 2,
+// ტაბის კატეგორიები
+type NotificationTab = 'games' | 'social' | 'trivia';
 
-  // Daily Rewards - REDUCED
-  DAILY_REWARDS: [
-    { day: 1, coins: 100, gems: 0 },
-    { day: 2, coins: 150, gems: 0 },
-    { day: 3, coins: 200, gems: 1 },
-    { day: 4, coins: 250, gems: 0 },
-    { day: 5, coins: 350, gems: 1 },
-    { day: 6, coins: 450, gems: 1 },
-    { day: 7, coins: 500, gems: 2 },
-  ],
+const TAB_TYPES: Record<NotificationTab, string[]> = {
+  games: ['room_invite', 'game_started', 'challenge', 'game_result'],
+  social: ['friend_request', 'friend_accepted'],
+  trivia: ['trivia_liked', 'trivia_saved', 'trivia_played'],
+};
 
-  // Chest - REDUCED
-  CHEST_COINS: 100,              // was 200
-  CHEST_GEMS: 1,                 // was 3
-  CHEST_COOLDOWN_HOURS: 6,       // was 4
+// ფილტრაცია აქტიური ტაბის მიხედვით
+const [activeTab, setActiveTab] = useState<NotificationTab>('games');
 
-  // Spin - REDUCED
-  SPIN_REWARDS: [
-    { type: "coins", value: 50, label: "50 მონეტა" },
-    { type: "coins", value: 100, label: "100 მონეტა" },
-    { type: "coins", value: 200, label: "200 მონეტა" },
-    { type: "coins", value: 300, label: "300 მონეტა" },
-    { type: "gems", value: 1, label: "1 ალმასი" },
-    { type: "gems", value: 2, label: "2 ალმასი" },
-    { type: "coins", value: 75, label: "75 მონეტა" },
-    { type: "powerup", value: 1, label: "ძალა" },
-  ],
+const filteredNotifications = useMemo(() => {
+  return notifications.filter(n => TAB_TYPES[activeTab].includes(n.type));
+}, [notifications, activeTab]);
 
-  // Ad Watch - CHANGED
-  AD_WATCH_PLAYS: 1,             // Give plays, not coins
-
-  // New Player - REDUCED
-  NEW_PLAYER_COINS: 1500,        // was 2000
-  NEW_PLAYER_GEMS: 5,            // was 10
-
-  // Level Up - REDUCED
-  LEVEL_UP_COINS_PER_LEVEL: 75,  // was 100
+// Unread count per tab
+const getUnreadCount = (tab: NotificationTab) => {
+  return notifications.filter(n => 
+    TAB_TYPES[tab].includes(n.type) && !n.read_at
+  ).length;
 };
 ```
 
-### ფაილი 2: `src/hooks/useDailyPlays.ts`
-
-ახალი ლოგიკა play regeneration-ისთვის:
+### 2. CompactNotificationCard.tsx - Avatar Logic
 
 ```typescript
-const MAX_FREE_PLAYS = 5;
-const PLAYS_PER_AD = 1;              // Reduced from 2
-const PLAY_REGEN_HOURS = 4;          // New: regenerate 1 play every 4 hours
-const PLAY_REGEN_MAX = 3;            // New: max regenerated plays
-const MAX_ADS_PER_DAY = 5;           // New: limit ads
-
-interface DailyPlaysData {
-  plays_used: number;
-  plays_from_ads: number;
-  plays_regenerated: number;         // New field
-  last_regen_at: string | null;      // New field
-  ads_watched_today: number;         // New field
-}
+// Determine what to show as the main avatar
+const getAvatarContent = () => {
+  const data = notification.data as Record<string, unknown>;
+  
+  // 1. Trivia notifications - show trivia cover or icon
+  if (['trivia_liked', 'trivia_saved', 'trivia_played'].includes(notification.type)) {
+    const triviaCover = data.trivia_cover as string | undefined;
+    const triviaIconSlug = data.trivia_icon_slug as string | undefined;
+    
+    if (triviaCover) {
+      return { type: 'image', src: triviaCover };
+    }
+    if (triviaIconSlug) {
+      return { type: 'icon_slug', slug: triviaIconSlug };
+    }
+  }
+  
+  // 2. Game notifications - show room icon if available
+  if (['room_invite', 'game_started', 'challenge'].includes(notification.type)) {
+    const roomIcon = data.room_icon as string | undefined;
+    if (roomIcon) {
+      return { type: 'image', src: roomIcon };
+    }
+  }
+  
+  // 3. Default - sender avatar
+  return { type: 'avatar', src: avatarUrl };
+};
 ```
 
-### ფაილი 3: `src/hooks/useShopData.tsx`
+### 3. useSocialFeed.ts - Notification Data Enhancement
 
-ფასების განახლება VIP და power-ups-ისთვის.
+Like mutation:
+```typescript
+// Get trivia cover and icon for notification
+const { data: postData } = await supabase
+  .from("user_quiz_posts")
+  .select("user_id, title, cover_image, icon_slug")
+  .eq("id", postId)
+  .single();
 
----
+await createNotification(
+  postData.user_id,
+  "trivia_liked",
+  `${senderProfile?.nickname || "ვიღაცამ"} მოიწონა შენი ტრივია`,
+  postData.title || undefined,
+  { 
+    post_id: postId, 
+    sender_id: user.id,
+    sender_nickname: senderProfile?.nickname,
+    sender_avatar: senderProfile?.avatar_url,
+    trivia_title: postData.title,
+    trivia_cover: postData.cover_image,
+    trivia_icon_slug: postData.icon_slug,
+  }
+);
+```
 
-## მონაცემთა ბაზის ცვლილებები
+### 4. DB Trigger Enhancement (notify_room_invite)
 
-### ახალი სვეტები `user_daily_plays` ცხრილში:
+ოთახის იკონის დამატება room_invite შეტყობინებაში:
 
 ```sql
-ALTER TABLE user_daily_plays 
-ADD COLUMN plays_regenerated INTEGER DEFAULT 0,
-ADD COLUMN last_regen_at TIMESTAMPTZ,
-ADD COLUMN ads_watched_today INTEGER DEFAULT 0;
-```
-
-### `economy_config` ცხრილის განახლება:
-
-```sql
-UPDATE economy_config SET value = 100 WHERE id = 'daily_reward_day_1';
-UPDATE economy_config SET value = 150 WHERE id = 'daily_reward_day_2';
-UPDATE economy_config SET value = 200 WHERE id = 'daily_reward_day_3';
--- ... და ა.შ.
+-- Update trigger to include room_icon
+jsonb_build_object(
+  'room_id', NEW.room_id,
+  'room_code', room_record.room_code,
+  'room_name', room_record.room_name,
+  'room_icon', room_record.room_icon,  -- NEW
+  'category_name', room_record.category_name,
+  ...
+)
 ```
 
 ---
 
-## მოსალოდნელი შედეგები
+## UI დიზაინი
 
-| მეტრიკა | მანამდე | შემდეგ |
-|---------|---------|--------|
-| უფასო თამაშები/კვირა | 35+ (5×7 + rewards) | ~45 (5×7 + regen + ads) |
-| უფასო მონეტები/კვირა | ~5000+ | ~2500 |
-| VIP value proposition | საშუალო | მაღალი (stake-free) |
-| Shop conversion | დაბალი | მაღალი (საჭიროება) |
-| Retention hook | სუსტი | ძლიერი (regen timer) |
+### ტაბების სტილი
+
+```tsx
+<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+  <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1">
+    <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs">
+      <Gamepad2 className="w-3.5 h-3.5" />
+      თამაშები
+      {getUnreadCount('games') > 0 && (
+        <span className="ml-1 w-4 h-4 rounded-full bg-primary text-[10px] flex items-center justify-center">
+          {getUnreadCount('games')}
+        </span>
+      )}
+    </TabsTrigger>
+    <TabsTrigger value="social" className="flex items-center gap-1.5 text-xs">
+      <Users className="w-3.5 h-3.5" />
+      მეგობრები
+      {getUnreadCount('social') > 0 && ...}
+    </TabsTrigger>
+    <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs">
+      <Sparkles className="w-3.5 h-3.5" />
+      ტრივია
+      {getUnreadCount('trivia') > 0 && ...}
+    </TabsTrigger>
+  </TabsList>
+</Tabs>
+```
+
+### Avatar რენდერინგი
+
+```tsx
+{avatarContent.type === 'icon_slug' ? (
+  <QuizCategoryIcon 
+    iconSlug={avatarContent.slug} 
+    size={44} 
+    className="rounded-full"
+  />
+) : avatarContent.type === 'image' ? (
+  <Avatar className="w-11 h-11">
+    <AvatarImage src={avatarContent.src} />
+    <AvatarFallback>
+      <Icon className="w-5 h-5" />
+    </AvatarFallback>
+  </Avatar>
+) : (
+  <Avatar className="w-11 h-11">
+    <AvatarImage src={avatarUrl} />
+    <AvatarFallback>{senderName.charAt(0)}</AvatarFallback>
+  </Avatar>
+)}
+```
 
 ---
 
-## რეზიუმე
+## მოსალოდნელი შედეგი
 
-ეს ალგორითმი:
-1. ✅ ამცირებს უფასო მონეტებს რომ shop-ს აზრი ჰქონდეს
-2. ✅ ამატებს play regeneration-ს engagement-ისთვის
-3. ✅ VIP-ს აძლევს რეალურ უპირატესობას (stake-free)
-4. ✅ რეკლამას აქცევს თამაშად (არა მონეტებად)
-5. ✅ ბალანსირებს missions და daily rewards-ს
+| ფუნქცია | აღწერა |
+|---------|--------|
+| 3 ტაბი | თამაშები / მეგობრები / ტრივია - მარტივი ნავიგაცია |
+| Unread badges | თითოეულ ტაბზე წაუკითხავების რაოდენობა |
+| Room icon | თამაშის მოწვევაზე ოთახის იკონი (თუ არსებობს) |
+| Trivia icon | ტრივია like/save/play-ზე ტრივიის cover ან icon |
+| Sender overlay | პატარა badge sender-ის ავატარით overlay-ად |
+
+---
+
+## მინიმალური Screenshot რეფერენსის მიხედვით
+
+```text
+┌───────────────────────────────────────┐
+│  🔔 აქტივობა                     ✕    │
+├───────────────────────────────────────┤
+│ [თამაშები] [მეგობრები] [ტრივია•3]    │
+├───────────────────────────────────────┤
+│  ❤️ 💜                                │
+│  ├──○ Test მოიწონა შენი ტრივია       │
+│  │    ქვიზ კინოს სამყაროზე    2 დღე  │
+│  │    [ნახვა]                         │
+│                                       │
+│  📑 💜                                │
+│  ├──○ Test შეინახა შენი ტრივია       │
+│  │    ქვიზ კინოს სამყაროზე    2 დღე  │
+│  │    [ნახვა]                         │
+└───────────────────────────────────────┘
+```
