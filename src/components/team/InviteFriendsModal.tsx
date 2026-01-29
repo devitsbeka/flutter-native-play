@@ -240,14 +240,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
         is_host: false,
       });
       
-      // Send notification
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        type: "room_invite",
-        title: "მოგიწვიეს თამაშზე!",
-        message: "შემოგვიერთდი ტრივიას ოთახში!",
-        data: { room_id: roomId, room_code: roomCode },
-      });
+      // Notification is automatically created by database trigger (notify_room_invite)
+      // when participant is added to room_participants table
       
       setSentRequests(prev => new Set([...prev, userId]));
       toast.success("მოწვევა გაიგზავნა!");

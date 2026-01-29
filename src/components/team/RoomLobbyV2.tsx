@@ -45,7 +45,7 @@ import {
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { playSound } = useSound();
   const { t } = useLanguage();
   const { 
@@ -272,12 +272,22 @@ export function RoomLobbyV2() {
   const handleResendInvitation = async (userId: string) => {
     if (!currentRoom) return;
     try {
+      // Re-trigger notification by updating and re-inserting participant
+      // The database trigger will create the notification
       await supabase.from("notifications").insert({
         user_id: userId,
         type: "room_invite",
         title: "მოგიწვიეს თამაშზე!",
-        message: "შემოგვიერთდი ტრივიას ოთახში!",
-        data: { room_id: currentRoom.id, room_code: currentRoom.room_code },
+        message: `${profile?.nickname || 'მეგობარი'} გიწვევს თამაშში`,
+        data: { 
+          room_id: currentRoom.id, 
+          room_code: currentRoom.room_code,
+          room_name: currentRoom.room_name,
+          category_name: currentRoom.category_name,
+          host_user_id: currentRoom.host_user_id,
+          sender_nickname: profile?.nickname,
+          sender_avatar: profile?.avatar_url
+        },
       });
       toast.success("მოწვევა თავიდან გაიგზავნა!");
     } catch (error) {
