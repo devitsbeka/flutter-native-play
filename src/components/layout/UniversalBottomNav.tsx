@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
@@ -8,6 +8,13 @@ import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { toast } from "sonner";
 
+// Eager preload main route chunks for instant navigation
+const preloadRouteChunks = () => {
+  import("@/pages/Discover");
+  import("@/pages/PowerUps");
+  import("@/pages/Leaderboards");
+  import("@/pages/TeamV2");
+};
 interface UniversalBottomNavProps {
   onPlayClick?: () => void;
   onTeamClick?: () => void;
@@ -44,6 +51,12 @@ export function UniversalBottomNav({
   const isHome = location.pathname === "/";
   const isTeam = location.pathname === "/team";
   const isActive = (path: string) => location.pathname === path;
+
+  // Eager preload all main route chunks after initial render
+  useEffect(() => {
+    const timer = setTimeout(preloadRouteChunks, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Prefetch route data and code on touch start (mobile)
   const handleRouteTouchStart = useCallback((path: string) => {
@@ -247,11 +260,9 @@ function NavButton({
   isLocked?: boolean;
 }) {
   return (
-    <motion.button
+    <button
       onClick={onClick}
-      className="relative flex flex-col items-center justify-center w-14 h-12 flex-shrink-0 gap-1"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      className="relative flex flex-col items-center justify-center w-14 h-12 flex-shrink-0 gap-1 active:scale-95 transition-transform duration-75"
     >
       <div className="relative" style={{ opacity: isLocked ? 0.35 : isActive ? 1 : 0.5 }}>
         {/* Icon */}
@@ -261,9 +272,7 @@ function NavButton({
         
         {/* Lock indicator for guests */}
         {isLocked && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <div
             className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
             style={{
               background: "linear-gradient(180deg, #6B7280 0%, #4B5563 100%)",
@@ -271,14 +280,12 @@ function NavButton({
             }}
           >
             <Lock className="w-2.5 h-2.5 text-white" />
-          </motion.div>
+          </div>
         )}
         
         {/* Badge count (for Team challenges) */}
         {!isLocked && badgeCount > 0 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <div
             className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
             style={{
               background: "linear-gradient(180deg, #FF6B6B 0%, #EF4444 100%)",
@@ -288,14 +295,12 @@ function NavButton({
             <span className="text-[9px] font-bold text-white">
               {badgeCount > 9 ? "9+" : badgeCount}
             </span>
-          </motion.div>
+          </div>
         )}
         
         {/* Purple "new content" indicator dot */}
         {!isLocked && hasNewContent && badgeCount === 0 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <div
             className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full"
             style={{
               background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
@@ -307,21 +312,15 @@ function NavButton({
       
       {/* Active indicator dot */}
       {!isLocked && (
-        <motion.div
-          initial={false}
-          animate={{ 
-            scale: isActive ? 1 : 0,
-            opacity: isActive ? 1 : 0 
-          }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="w-1 h-1 rounded-full"
+        <div
+          className={`w-1 h-1 rounded-full transition-all duration-150 ${isActive ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}
           style={{
             background: "linear-gradient(180deg, #5EE8B5 0%, #3FC99A 100%)",
             boxShadow: "0 0 4px rgba(94, 232, 181, 0.6)",
           }}
         />
       )}
-    </motion.button>
+    </button>
   );
 }
 
