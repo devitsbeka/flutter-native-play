@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Shuffle, Library, Sparkles, ArrowLeft, Search, Plus, Check } from "lucide-react";
+import { X, Shuffle, Library, Sparkles, ArrowLeft, Search, Plus, Check, AlertTriangle } from "lucide-react";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -387,6 +387,10 @@ export function CategoryPickerModal({
                 <div className="space-y-3">
                   {filteredTrivias.map((trivia, index) => {
                     const questionCount = Array.isArray(trivia.questions) ? trivia.questions.length : 0;
+                    // Count questions missing icon_slug
+                    const missingIconCount = Array.isArray(trivia.questions)
+                      ? trivia.questions.filter((q: any) => !q.icon_slug).length
+                      : 0;
                     // Host will be observer if: it's NOT blind OR they've already played it
                     const willBeObserver = trivia.user_id === user?.id && 
                       (!trivia.is_blind || (trivia.plays_count || 0) > 0);
@@ -429,7 +433,7 @@ export function CategoryPickerModal({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-white truncate">{trivia.title}</p>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <p className="text-white/50 text-xs">
                                 {questionCount} კითხვა • {trivia.plays_count || 0} თამაში
                               </p>
@@ -439,6 +443,13 @@ export function CategoryPickerModal({
                                 </span>
                               )}
                             </div>
+                            {/* Missing icons warning */}
+                            {missingIconCount > 0 && (
+                              <span className="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+                                <AlertTriangle className="w-3 h-3" />
+                                {missingIconCount} კითხვას აკლია აიქონი
+                              </span>
+                            )}
                           </div>
                           {selectedItem?.type === "trivia" && selectedItem.id === trivia.id && (
                             <Check className="w-5 h-5 text-white flex-shrink-0" />
