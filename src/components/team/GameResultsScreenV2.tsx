@@ -423,10 +423,7 @@ export function GameResultsScreenV2() {
             disabled={isStartingRematch}
             icon={<ChevronRight className="w-5 h-5" />}
           >
-            {isStartingRematch 
-              ? t("game.starting") 
-              : `გაგრძელება: ${nextQueueItem?.source_type === "random" ? "შემთხვევითი" : (nextQueueItem?.category_name || "კატეგორია")}`
-            }
+            {isStartingRematch ? t("game.starting") : "გაგრძელება"}
           </ChunkyButton>
         ) : isHost ? (
           // No queue, is host - add category button
