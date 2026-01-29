@@ -22,6 +22,22 @@ const RELATIVE_ASSET_PATTERN = /^src\/assets\//;
 // These paths are only valid during the build that created them
 const VITE_HASHED_ASSET_PATTERN = /^\/assets\/.*-[a-zA-Z0-9]{8}\.(png|jpg|jpeg|webp|gif|svg)$/;
 
+/**
+ * Attempts to recover a broken Vite-hashed avatar URL by extracting the avatar number
+ * and mapping it to the correct imported asset
+ */
+function recoverViteHashedAvatar(avatarUrl: string): string | undefined {
+  const match = avatarUrl.match(/bot-avatar-(\d+)/);
+  if (match && match[1]) {
+    const filename = `bot-avatar-${match[1]}.png`;
+    if (BOT_AVATAR_MAP[filename]) {
+      console.info('Recovered broken Vite-hashed avatar:', avatarUrl, '→', filename);
+      return BOT_AVATAR_MAP[filename];
+    }
+  }
+  return undefined;
+}
+
 // Map local paths to imported assets
 const BOT_AVATAR_MAP: Record<string, string> = {
   'bot-avatar-1.png': botAvatar1,
@@ -46,9 +62,13 @@ const BOT_AVATAR_MAP: Record<string, string> = {
 export function resolveAvatarUrl(avatarUrl: string | null | undefined): string | undefined {
   if (!avatarUrl) return undefined;
   
-  // Reject Vite-hashed asset paths - they won't work
+  // Try to recover Vite-hashed asset paths by extracting avatar number
   if (VITE_HASHED_ASSET_PATTERN.test(avatarUrl)) {
-    console.warn('Invalid Vite-hashed avatar path:', avatarUrl);
+    const recovered = recoverViteHashedAvatar(avatarUrl);
+    if (recovered) {
+      return recovered;
+    }
+    console.warn('Unrecoverable Vite-hashed avatar path:', avatarUrl);
     return undefined;
   }
   
