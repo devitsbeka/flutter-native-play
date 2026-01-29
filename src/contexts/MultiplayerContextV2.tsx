@@ -760,8 +760,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!state.currentRoom || !isHost) return;
     
     const roomId = state.currentRoom.id;
-    const questionCount = state.currentRoom.total_questions || 5;
-    const usedIds = state.currentRoom.used_question_ids || [];
+    
+    // CRITICAL FIX: Always fetch fresh room data to avoid stale category after selection
+    // The realtime subscription may not have updated state.currentRoom yet when startAfterPick triggers
+    const { data: freshRoom, error: roomError } = await supabase
+      .from("game_rooms")
+      .select("*")
+      .eq("id", roomId)
+      .single();
+    
+    if (roomError || !freshRoom) {
+      console.error("[startGame] Failed to fetch fresh room:", roomError);
+      toast.error("ოთახის მონაცემები ვერ მოიძებნა");
+      return;
+    }
+    
+    console.log('[startGame] State category:', state.currentRoom.category_id, '| Fresh category:', freshRoom.category_id, freshRoom.category_name);
+    
+    const questionCount = freshRoom.total_questions || 5;
+    const usedIds = (freshRoom.used_question_ids as string[]) || [];
     
     // Set host_is_observer in database
     if (hostShouldObserve) {
@@ -773,7 +790,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), use existing custom questions
-      if (!state.currentRoom.category_id) {
+      if (!freshRoom.category_id) {
         const { data: existingQuestions } = await supabase
           .from("room_questions")
           .select("*")
@@ -792,7 +809,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               incorrectAnswers: q.incorrect_answers,
               allAnswers: shuffledAnswers,
               difficulty: q.difficulty || "medium",
-              category: state.currentRoom!.category_name || "Custom",
+              category: freshRoom.category_name || "Custom",
               iconSlug: q.icon_slug || undefined, // Preserve icon from custom questions
               imageUrl: q.image_url || undefined,
               videoUrl: q.video_url || undefined,
@@ -862,12 +879,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           
           // Consume matching queue item for custom trivia
           // For custom rooms, we need to check by user_trivia_id from room
-          await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id || null);
+          await consumeMatchingQueueItem(roomId, null, freshRoom.user_trivia_id || null);
           
           // Increment plays_count for user trivia (enables host-observer policy after first play)
-          if (state.currentRoom.user_trivia_id) {
+          if (freshRoom.user_trivia_id) {
             await supabase.rpc('increment_quiz_plays', { 
-              post_id: state.currentRoom.user_trivia_id 
+              post_id: freshRoom.user_trivia_id 
             });
           }
           
@@ -875,18 +892,18 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
         
         // NO existing room_questions - check if room has user_trivia_id and load from there
-        if (state.currentRoom.user_trivia_id) {
-          console.log('[startGame] No room_questions found but user_trivia_id exists, loading from user_quiz_posts:', state.currentRoom.user_trivia_id);
+        if (freshRoom.user_trivia_id) {
+          console.log('[startGame] No room_questions found but user_trivia_id exists, loading from user_quiz_posts:', freshRoom.user_trivia_id);
           
           const { data: triviaPost } = await supabase
             .from("user_quiz_posts")
             .select("questions, title")
-            .eq("id", state.currentRoom.user_trivia_id)
+            .eq("id", freshRoom.user_trivia_id)
             .single();
           
           if (triviaPost?.questions) {
             const customQuestions = triviaPost.questions as any[];
-            const categoryName = triviaPost.title || state.currentRoom.category_name || "Custom";
+            const categoryName = triviaPost.title || freshRoom.category_name || "Custom";
             
             // Clear any stale data
             await supabase.from("room_questions").delete().eq("room_id", roomId);
@@ -984,11 +1001,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             }));
             
             // Consume matching queue item
-            await consumeMatchingQueueItem(roomId, null, state.currentRoom.user_trivia_id);
+            await consumeMatchingQueueItem(roomId, null, freshRoom.user_trivia_id);
             
             // Increment plays_count for user trivia (enables host-observer policy after first play)
             await supabase.rpc('increment_quiz_plays', { 
-              post_id: state.currentRoom.user_trivia_id 
+              post_id: freshRoom.user_trivia_id 
             });
             
             return; // Exit early - trivia loaded from user_quiz_posts
@@ -996,10 +1013,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
       }
       
-      // Standard category-based room: fetch from database
+      // Standard category-based room: fetch from database using FRESH data
+      console.log('[startGame] Fetching questions for category:', freshRoom.category_id, freshRoom.category_name);
       const result = await getQuestions({
         mode: 'vs',
-        categorySlug: state.currentRoom.category_id || undefined,
+        categorySlug: freshRoom.category_id || undefined,
         count: questionCount,
         excludeIds: usedIds,
       });
@@ -1009,7 +1027,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         return;
       }
       
-      // Map to TriviaQuestion format
+      // Map to TriviaQuestion format using FRESH category name
       const questions: TriviaQuestion[] = result.questions.map(q => ({
         id: q.id,
         question: q.question,
@@ -1017,7 +1035,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         incorrectAnswers: q.incorrectAnswers,
         allAnswers: q.allAnswers,
         difficulty: q.difficulty,
-        category: state.currentRoom!.category_name || q.category || "General",
+        category: freshRoom.category_name || q.category || "General",
         iconSlug: q.iconSlug,
       }));
       
@@ -1034,7 +1052,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       await saveQuestionsAndStartGame(roomId, questions, hostShouldObserve);
       
       // Consume matching queue item if it exists (prevents "next round" showing played category)
-      await consumeMatchingQueueItem(roomId, state.currentRoom.category_id, null);
+      await consumeMatchingQueueItem(roomId, freshRoom.category_id, null);
       
     } catch (error) {
       console.error("Error starting game:", error);
@@ -1246,11 +1264,26 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!state.currentRoom || !user) return;
     
     const roomId = state.currentRoom.id;
-    const questionCount = state.currentRoom.total_questions || 5;
+    
+    // CRITICAL FIX: Fetch fresh room data to get current category after selection
+    const { data: freshRoom, error: roomError } = await supabase
+      .from("game_rooms")
+      .select("*")
+      .eq("id", roomId)
+      .single();
+    
+    if (roomError || !freshRoom) {
+      console.error("[startNewRound] Failed to fetch fresh room:", roomError);
+      return;
+    }
+    
+    console.log('[startNewRound] Fresh category:', freshRoom.category_id, freshRoom.category_name);
+    
+    const questionCount = freshRoom.total_questions || 5;
     
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), reuse existing custom questions
-      if (!state.currentRoom.category_id) {
+      if (!freshRoom.category_id) {
         const { data: existingQuestions } = await supabase
           .from("room_questions")
           .select("*")
@@ -1269,7 +1302,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               incorrectAnswers: q.incorrect_answers,
               allAnswers: shuffledAnswers,
               difficulty: q.difficulty || "medium",
-              category: state.currentRoom!.category_name || "Custom",
+              category: freshRoom.category_name || "Custom",
               iconSlug: q.icon_slug || undefined,
             };
           });
@@ -1336,19 +1369,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         }
       }
       
-      // Standard category room: Get fresh room data
-      const { data: freshRoom } = await supabase
-        .from("game_rooms")
-        .select("used_question_ids")
-        .eq("id", roomId)
-        .single();
+      // Standard category room: use freshRoom already fetched above
+      const usedIds = (freshRoom.used_question_ids as string[]) || [];
       
-      const usedIds = (freshRoom?.used_question_ids as string[]) || [];
-      
-      // Fetch new questions from database
+      // Fetch new questions from database using FRESH category
+      console.log('[startNewRound] Fetching questions for category:', freshRoom.category_id);
       const result = await getQuestions({
         mode: 'vs',
-        categorySlug: state.currentRoom.category_id || undefined,
+        categorySlug: freshRoom.category_id || undefined,
         count: questionCount,
         excludeIds: usedIds,
       });
@@ -1358,7 +1386,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         return;
       }
       
-      // Map to TriviaQuestion format (include iconSlug!)
+      // Map to TriviaQuestion format using FRESH category name
       const questions: TriviaQuestion[] = result.questions.map(q => ({
         id: q.id,
         question: q.question,
@@ -1366,7 +1394,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         incorrectAnswers: q.incorrectAnswers,
         allAnswers: q.allAnswers,
         difficulty: q.difficulty,
-        category: state.currentRoom!.category_name || q.category || "General",
+        category: freshRoom.category_name || q.category || "General",
         iconSlug: q.iconSlug,
       }));
       
