@@ -1,119 +1,170 @@
 
+# გეგმა: ტრივიის აიქონების თანმიმდევრულობის გაუმჯობესება
 
-# პრობლემა: განსხვავებული აიქონები ერთ რაუნდში
+## პრობლემა
 
-## აღმოჩენა
+როცა მომხმარებლის მიერ შექმნილ ტრივიაში ზოგიერთ კითხვას არ აქვს `icon_slug` მინიჭებული:
 
-თქვენ და სხვა მოთამაშე ერთსა და იმავე კითხვაზე **განსხვავებულ აიქონებს** ხედავთ. ეს ხდება იმიტომ, რომ:
-
-1. **უმეტესობა კითხვებს არ აქვს `icon_slug` შენახული ბაზაში**
-2. როცა `icon_slug` არ არსებობს, `DynamicIcon` კომპონენტი იყენებს **კლიენტ-სპეციფიკურ fallback-ს**
-3. ეს fallback (`getRandomIconForCategory`) ირჩევს აიქონს კატეგორიიდან `seed`-ის გამოყენებით
-4. **პრობლემა**: თითოეულ კლიენტზე აიქონების ბიბლიოთეკა შეიძლება სხვადასხვა თანმიმდევრობით ჩაიტვირთოს, რაც განსხვავებულ შედეგს იძლევა
-
-## ტექნიკური დეტალები
-
-```text
-მომხმარებელი A:              მომხმარებელი B:
-iconIndex = [🎮, 🎬, 🎭]     iconIndex = [🎬, 🎭, 🎮]
-seed = 5                      seed = 5
-5 % 3 = 2 → 🎭               5 % 3 = 2 → 🎮  ← განსხვავებული!
-```
-
-`DynamicIcon.tsx` ხაზი 109:
-```typescript
-const fallbackUrl = getRandomIconForCategory(categoryId || 'general', stableSeed);
-```
-
-`useIconLibrary.ts` ხაზი 554-555:
-```typescript
-const index = Math.abs(seed) % matchingIcons.length;
-return getIconUrl(matchingIcons[index].file_name);
-```
-
----
+1. **თამაშისას** - სხვადასხვა მოთამაშე ხედავს სხვადასხვა აიქონს (fallback random icons)
+2. **ტრივიის არჩევისას** - ჰოსტმა არ იცის რომელ ტრივიას აქვს არასრული აიქონები
 
 ## გადაწყვეტა
 
-**აიქონი უნდა გენერირდეს სერვერზე და შეინახოს `room_questions.icon_slug`-ში** - არა კლიენტზე.
+### ნაწილი 1: თამაშის ეკრანზე - აიქონის დამალვა თუ არ არის მინიჭებული
 
-### მიდგომა 1: სერვერ-საიდ აიქონის გენერაცია (რეკომენდებული)
+**პრინციპი**: თუ კითხვას არ აქვს პირდაპირ `iconSlug` მინიჭებული, **არ** ვაჩვენოთ აიქონი (უკეთესია რომ არ იყოს ვიდრე სხვადასხვა მოთამაშეს სხვადასხვა ვაჩვენოთ).
 
-თამაშის დაწყებისას, ჰოსტის კლიენტი:
-1. თითოეული კითხვისთვის გამოიანგარიშოს აიქონის slug
-2. შეინახოს `room_questions.icon_slug`-ში
-3. ყველა მოთამაშე წაიკითხავს ერთსა და იმავე slug-ს
-
-**ცვლილებები:**
+**შესაცვლელი ფაილები:**
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `MultiplayerContextV2.tsx` | თამაშის დაწყებისას - თუ კითხვას არ აქვს `iconSlug`, დავაგენერიროთ და შევინახოთ |
-| `useIconLibrary.ts` | ახალი ფუნქცია `getStableIconSlugForCategory(categoryId, questionText)` - რომელიც დაბრუნებს იგივე slug-ს ერთი და იგივე input-ისთვის |
+| `QuizGameScreenProd.tsx` | თუ `iconSlug` null-ია, არ გადავცეთ `categoryId` (რაც fallback-ს იწვევს) |
+| `MultiplayerGameScreenV2.tsx` | იგივე ლოგიკა |
+| `ControllerQuestion.tsx` | იგივე ლოგიკა (თუ აქვს აიქონის ჩვენება) |
 
-### მიდგომა 2: Deterministic Hash (მარტივი fix)
+**ლოგიკის ცვლილება:**
 
-შევცვალოთ `getRandomIconForCategory` რომ იყენებდეს **slug-ების sorted array**-ს და **კითხვის ტექსტის hash**-ს:
+```text
+მანამდე:
+<DynamicIcon 
+  slug={currentQuestion.iconSlug}
+  categoryId={currentQuestion.categoryId}  ← fallback-ს იწვევს
+  hideIfEmpty={true}
+/>
 
-```typescript
-// ახლანდელი (არასტაბილური):
-const index = Math.abs(seed) % matchingIcons.length;
-
-// ახალი (სტაბილური):
-const sortedIcons = [...matchingIcons].sort((a, b) => a.slug.localeCompare(b.slug));
-const index = Math.abs(seed) % sortedIcons.length;
+შემდეგ:
+<DynamicIcon 
+  slug={currentQuestion.iconSlug || undefined}
+  categoryId={currentQuestion.iconSlug ? currentQuestion.categoryId : undefined}  ← არ აძლევს fallback-ის საშუალებას
+  hideIfEmpty={true}
+/>
 ```
 
-**უპირატესობა**: მინიმალური ცვლილება, იგივე array თანმიმდევრობა ყველა კლიენტზე.
+### ნაწილი 2: ტრივიის სიაში - გაფრთხილების ინდიკატორი
+
+**პრინციპი**: როცა ჰოსტი ირჩევს ტრივიას, ვაჩვენოთ რამდენ კითხვას აკლია აიქონი.
+
+**ვიზუალური დიზაინი:**
+
+```text
+┌──────────────────────────────────────┐
+│ [cover]  ოფისი: ტრივია              │
+│          5 კითხვა • 3 თამაში         │
+│          ⚠️ 5 კითხვას აკლია აიქონი   │  ← ახალი ინდიკატორი
+└──────────────────────────────────────┘
+```
+
+**შესაცვლელი ფაილები:**
+
+| ფაილი | ცვლილება |
+|-------|----------|
+| `CategoryPickerModal.tsx` | კითხვების სიაში დაამატე `questions` field-ის წაკითხვა და missing icons count |
+| `MyTriviasPickerModal.tsx` | კითხვების სიაში დაამატე `questions` field-ის წაკითხვა და missing icons count |
+
+**ახალი Trivia ინტერფეისი:**
+
+```typescript
+interface Trivia {
+  id: string;
+  title: string;
+  cover_image: string | null;
+  plays_count: number;
+  likes_count: number;
+  is_public: boolean;
+  is_blind: boolean;
+  subject?: string;
+  questions: { icon_slug: string | null }[] | null;  // ← ახალი
+}
+```
+
+**Missing Icon Count ლოგიკა:**
+
+```typescript
+const missingIconCount = Array.isArray(trivia.questions)
+  ? trivia.questions.filter(q => !q.icon_slug).length
+  : 0;
+```
+
+**UI კომპონენტი:**
+
+```typescript
+{missingIconCount > 0 && (
+  <span className="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+    <AlertTriangle className="w-3 h-3" />
+    {missingIconCount} კითხვას აკლია აიქონი
+  </span>
+)}
+```
 
 ---
 
-## რეკომენდაცია: მიდგომა 2 (Deterministic Hash)
+## დეტალური ცვლილებები
 
-1. **სწრაფი fix**: `useIconLibrary.ts`-ში დავახარისხოთ აიქონები სტაბილური თანმიმდევრობით
-2. **Seed-ის გაუმჯობესება**: seed-ისთვის გამოვიყენოთ კითხვის ტექსტის hash (არა მხოლოდ questionId)
+### 1. CategoryPickerModal.tsx
 
-### შესაცვლელი ფაილები:
+**ხაზი ~95-107** - დაამატე `questions` select-ში (უკვე არის, მაგრამ interface-ში არ არის აღწერილი)
 
-| ფაილი | ცვლილება |
-|-------|----------|
-| `src/hooks/useIconLibrary.ts` | `getRandomIconForCategory` - დავახარისხოთ icons ალფავიტურად seed-ის გამოყენებამდე |
-| `src/components/shared/DynamicIcon.tsx` | stableSeed-ისთვის გამოვიყენოთ questionId + categoryId combo hash |
-
-### კოდის ცვლილება:
-
-**useIconLibrary.ts - getRandomIconForCategory:**
+Query უკვე აქვს `questions` field:
 ```typescript
-const getRandomIconForCategory = useCallback((categoryId: string, seed: number = 0): string | null => {
-  if (iconIndex.length === 0) return null;
-  
-  const categoryKey = categoryId.toLowerCase();
-  const categoryKeywords = CATEGORY_ICON_MAP[categoryKey] || [];
-  
-  if (categoryKeywords.length > 0) {
-    const matchingIcons = iconIndex.filter(icon => {
-      const slugMatch = categoryKeywords.some(kw => icon.slug.includes(kw));
-      const tagMatch = icon.tags.some(tag => 
-        categoryKeywords.some(kw => tag.toLowerCase().includes(kw))
-      );
-      return slugMatch || tagMatch;
-    });
-    
-    if (matchingIcons.length > 0) {
-      // SORT ALPHABETICALLY for consistent order across all clients
-      const sortedIcons = [...matchingIcons].sort((a, b) => 
-        a.slug.localeCompare(b.slug)
-      );
-      const index = Math.abs(seed) % sortedIcons.length;
-      return getIconUrl(sortedIcons[index].file_name);
-    }
-  }
-  
-  // Fallback: ALSO sort before picking
-  const sortedAll = [...iconIndex].sort((a, b) => a.slug.localeCompare(b.slug));
-  const index = Math.abs((seed * 137) % sortedAll.length);
-  return getIconUrl(sortedAll[index].file_name);
-}, [iconIndex]);
+.select("id, title, cover_image, cover_gradient, plays_count, questions, is_blind, user_id")
+```
+
+**ხაზი ~388-441** - დაამატე missing icons warning:
+
+```typescript
+const missingIconCount = Array.isArray(trivia.questions)
+  ? trivia.questions.filter((q: any) => !q.icon_slug).length
+  : 0;
+
+// UI-ში:
+{missingIconCount > 0 && (
+  <span className="text-xs text-amber-400 flex items-center gap-1">
+    <AlertTriangle className="w-3 h-3" />
+    {missingIconCount} კითხვას აკლია აიქონი
+  </span>
+)}
+```
+
+### 2. MyTriviasPickerModal.tsx
+
+**ხაზი ~61-78** - დაამატე `questions` select-ში:
+
+```typescript
+.select("id, title, cover_image, plays_count, likes_count, is_public, is_blind, subject, questions")
+```
+
+**ხაზი ~220-274** - დაამატე missing icons warning
+
+### 3. QuizGameScreenProd.tsx
+
+**ხაზი ~366-374** - შეცვალე DynamicIcon props:
+
+```typescript
+<DynamicIcon 
+  slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
+  // Only use categoryId for fallback if we have an explicit icon slug
+  categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? currentQuestion.categoryId : undefined}
+  questionId={currentQuestion.id}
+  size={opponent ? 80 : 64}
+  className="drop-shadow-lg"
+  hideIfEmpty={true}
+/>
+```
+
+### 4. MultiplayerGameScreenV2.tsx
+
+**ხაზი ~300-311** - შეცვალე DynamicIcon props:
+
+```typescript
+<DynamicIcon 
+  slug={currentQuestion.iconSlug || undefined}
+  // Only use categoryId if we have an explicit iconSlug
+  categoryId={currentQuestion.iconSlug ? currentRoom?.category_id : undefined}
+  questionId={currentQuestion.id}
+  size={112}
+  className="drop-shadow-lg"
+  hideIfEmpty={true}
+/>
 ```
 
 ---
@@ -122,6 +173,17 @@ const getRandomIconForCategory = useCallback((categoryId: string, seed: number =
 
 | სცენარი | მანამდე | შემდეგ |
 |---------|---------|--------|
-| კითხვას აქვს icon_slug | ✅ იგივე აიქონი | ✅ იგივე აიქონი |
-| კითხვას არ აქვს icon_slug | ❌ სხვადასხვა აიქონი | ✅ იგივე აიქონი |
+| კითხვას აქვს icon_slug | ✅ აიქონი ჩანს | ✅ აიქონი ჩანს |
+| კითხვას არ აქვს icon_slug | ❌ სხვადასხვა random აიქონი | ✅ აიქონი არ ჩანს |
+| ტრივიის არჩევისას | ❓ ჰოსტმა არ იცის | ✅ გაფრთხილება ჩანს |
 
+---
+
+## ტექნიკური შეჯამება
+
+| ფაილი | ცვლილების ტიპი |
+|-------|----------------|
+| `QuizGameScreenProd.tsx` | DynamicIcon categoryId logic |
+| `MultiplayerGameScreenV2.tsx` | DynamicIcon categoryId logic |
+| `CategoryPickerModal.tsx` | Warning indicator + import AlertTriangle |
+| `MyTriviasPickerModal.tsx` | Query update + warning indicator + import AlertTriangle |
