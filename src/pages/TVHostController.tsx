@@ -1285,7 +1285,8 @@ const TVHostController: React.FC = () => {
 
   // Playing phase - host can answer questions with FULL question UI (like guests)
   // CRITICAL: If host is the suggester, show observer UI instead
-  if (isSuggester) {
+  // IMPORTANT: Only show during 'playing' phase - other phases have their own handlers
+  if (isSuggester && localPhase === 'playing') {
     // Find the observer's current score from players list
     const observerPlayer = players.find(p => p.id === myPlayerId);
     const observerScore = observerPlayer?.score ?? myScore;
