@@ -31,7 +31,7 @@ export interface EconomyConfig {
   spinRewards: number[];
   
   // Ads
-  adWatchCoins: number;
+  adWatchPlays: number;
   
   // Ratios
   gemToCoinsRate: number;
@@ -56,34 +56,49 @@ export interface EconomyConfig {
   
   // XP
   feedTriviaXpPerCorrect: number;
+  
+  // Play Regeneration
+  playRegenHours: number;
+  playRegenMax: number;
+  playsPerAd: number;
+  maxAdsPerDay: number;
+  gemsForPlays: number;
+  gemsPlaysAmount: number;
 }
 
 // Default values (fallback if database is unavailable)
 const DEFAULT_CONFIG: EconomyConfig = {
   gameStake: 500,
   gameWinReward: 1000,
-  gameDrawRefund: 500,
-  levelUpCoinsPerLevel: 50,
-  dailyRewards: [100, 150, 200, 250, 350, 500, 1000],
-  chestCoinsMin: 50,
-  chestCoinsMax: 200,
-  chestCooldownHours: 4,
-  spinRewards: [50, 100, 200, 500, 1000],
-  adWatchCoins: 50,
+  gameDrawRefund: 250,
+  levelUpCoinsPerLevel: 75,
+  dailyRewards: [100, 150, 200, 250, 350, 450, 500],
+  chestCoinsMin: 100,
+  chestCoinsMax: 150,
+  chestCooldownHours: 6,
+  spinRewards: [50, 100, 200, 300, 75],
+  adWatchPlays: 1,
   gemToCoinsRate: 50,
-  newPlayerCoins: 1000,
-  newPlayerGems: 10,
+  newPlayerCoins: 1500,
+  newPlayerGems: 5,
   powerupPrices: {
     "5050": 100,
-    freeze: 150,
-    replace: 200,
+    freeze: 120,
+    replace: 80,
   },
   vipPrices: {
-    day: 10,
-    week: 50,
-    month: 150,
+    day: 5,
+    week: 20,
+    month: 50,
   },
   feedTriviaXpPerCorrect: 5,
+  // Play Regeneration
+  playRegenHours: 4,
+  playRegenMax: 3,
+  playsPerAd: 1,
+  maxAdsPerDay: 5,
+  gemsForPlays: 3,
+  gemsPlaysAmount: 2,
 };
 
 function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
@@ -103,8 +118,8 @@ function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
       getVal("daily_reward_day_3", 200),
       getVal("daily_reward_day_4", 250),
       getVal("daily_reward_day_5", 350),
-      getVal("daily_reward_day_6", 500),
-      getVal("daily_reward_day_7", 1000),
+      getVal("daily_reward_day_6", 450),
+      getVal("daily_reward_day_7", 500),
     ],
     chestCoinsMin: getVal("chest_coins_min", DEFAULT_CONFIG.chestCoinsMin),
     chestCoinsMax: getVal("chest_coins_max", DEFAULT_CONFIG.chestCoinsMax),
@@ -113,10 +128,10 @@ function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
       getVal("spin_reward_1", 50),
       getVal("spin_reward_2", 100),
       getVal("spin_reward_3", 200),
-      getVal("spin_reward_4", 500),
-      getVal("spin_reward_5", 1000),
+      getVal("spin_reward_4", 300),
+      getVal("spin_reward_5", 75),
     ],
-    adWatchCoins: getVal("ad_watch_coins", DEFAULT_CONFIG.adWatchCoins),
+    adWatchPlays: getVal("plays_per_ad", DEFAULT_CONFIG.adWatchPlays),
     gemToCoinsRate: getVal("gem_to_coins_rate", DEFAULT_CONFIG.gemToCoinsRate),
     newPlayerCoins: getVal("new_player_coins", DEFAULT_CONFIG.newPlayerCoins),
     newPlayerGems: getVal("new_player_gems", DEFAULT_CONFIG.newPlayerGems),
@@ -131,6 +146,13 @@ function parseConfigItems(items: EconomyConfigItem[]): EconomyConfig {
       month: getVal("vip_price_month", DEFAULT_CONFIG.vipPrices.month),
     },
     feedTriviaXpPerCorrect: getVal("feed_trivia_xp_per_correct", DEFAULT_CONFIG.feedTriviaXpPerCorrect),
+    // Play Regeneration
+    playRegenHours: getVal("play_regen_hours", DEFAULT_CONFIG.playRegenHours),
+    playRegenMax: getVal("play_regen_max", DEFAULT_CONFIG.playRegenMax),
+    playsPerAd: getVal("plays_per_ad", DEFAULT_CONFIG.playsPerAd),
+    maxAdsPerDay: getVal("max_ads_per_day", DEFAULT_CONFIG.maxAdsPerDay),
+    gemsForPlays: getVal("gems_for_plays", DEFAULT_CONFIG.gemsForPlays),
+    gemsPlaysAmount: getVal("gems_plays_amount", DEFAULT_CONFIG.gemsPlaysAmount),
   };
 }
 
