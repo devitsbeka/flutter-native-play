@@ -23,6 +23,8 @@ interface UserTrivia {
   cover_gradient: string;
   plays_count: number;
   questions: any;
+  is_blind?: boolean;
+  user_id: string;
 }
 
 type ViewState = "main" | "library" | "my-trivias";
@@ -89,7 +91,7 @@ export function CategoryPickerModal({
     enabled: isOpen && view === "library",
   });
 
-  // Fetch user's trivias
+  // Fetch user's trivias with is_blind for observer indicator
   const { data: myTrivias = [], isLoading: loadingTrivias } = useQuery<UserTrivia[]>({
     queryKey: ["my-trivias-picker", user?.id],
     queryFn: async (): Promise<UserTrivia[]> => {
@@ -97,7 +99,7 @@ export function CategoryPickerModal({
       
       const result = await supabase
         .from("user_quiz_posts")
-        .select("id, title, cover_image, cover_gradient, plays_count, questions")
+        .select("id, title, cover_image, cover_gradient, plays_count, questions, is_blind, user_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -385,6 +387,9 @@ export function CategoryPickerModal({
                 <div className="space-y-3">
                   {filteredTrivias.map((trivia, index) => {
                     const questionCount = Array.isArray(trivia.questions) ? trivia.questions.length : 0;
+                    // Host will be observer if: it's NOT blind OR they've already played it
+                    const willBeObserver = trivia.user_id === user?.id && 
+                      (!trivia.is_blind || (trivia.plays_count || 0) > 0);
                     
                     return (
                       <motion.button
@@ -397,12 +402,18 @@ export function CategoryPickerModal({
                           id: trivia.id,
                           name: trivia.title,
                         })}
-                        className={`w-full p-3 rounded-xl backdrop-blur-sm transition-all text-left ${
+                        className={`w-full p-3 rounded-xl backdrop-blur-sm transition-all text-left relative ${
                           selectedItem?.type === "trivia" && selectedItem.id === trivia.id
                             ? "bg-white/20 border-2 border-white/50"
                             : "bg-white/10 border border-white/20 hover:bg-white/15"
                         }`}
                       >
+                        {/* Observer badge */}
+                        {willBeObserver && (
+                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/80 text-white text-[10px] font-medium">
+                            👁️ Observer
+                          </span>
+                        )}
                         <div className="flex items-center gap-3">
                           <div 
                             className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0"
@@ -418,9 +429,16 @@ export function CategoryPickerModal({
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-white truncate">{trivia.title}</p>
-                            <p className="text-white/50 text-xs">
-                              {questionCount} კითხვა • {trivia.plays_count || 0} თამაში
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-white/50 text-xs">
+                                {questionCount} კითხვა • {trivia.plays_count || 0} თამაში
+                              </p>
+                              {trivia.is_blind && (trivia.plays_count || 0) === 0 && (
+                                <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-300 text-[10px] font-medium">
+                                  დახურული
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {selectedItem?.type === "trivia" && selectedItem.id === trivia.id && (
                             <Check className="w-5 h-5 text-white flex-shrink-0" />

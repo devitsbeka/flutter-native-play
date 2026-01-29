@@ -12,6 +12,7 @@ interface CategoryPickerSectionProps {
   onRemoveQueueItem?: (itemId: string) => void;
   onReorderQueue?: (newOrder: QueueItem[]) => void;
   isAlreadyPlayed?: boolean; // True if this category was just played
+  willBeObserver?: boolean; // Host will be observer for this trivia
 }
 
 export function CategoryPickerSection({
@@ -24,6 +25,7 @@ export function CategoryPickerSection({
   onRemoveQueueItem,
   onReorderQueue,
   isAlreadyPlayed,
+  willBeObserver,
 }: CategoryPickerSectionProps) {
   const hasCategory = !!categoryName;
   const showQueuePreview = hasCategory || queue.length > 0;
@@ -57,13 +59,18 @@ export function CategoryPickerSection({
             )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className="text-white font-semibold text-[18px] leading-tight">
                 {hasCategory ? categoryName : "აირჩიე კატეგორია"}
               </p>
               {isAlreadyPlayed && hasCategory && (
                 <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
                   უკვე ითამაშე
+                </span>
+              )}
+              {willBeObserver && hasCategory && !isAlreadyPlayed && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-medium">
+                  👁️ დამკვირვებელი
                 </span>
               )}
             </div>
