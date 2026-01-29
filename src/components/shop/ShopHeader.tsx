@@ -17,7 +17,7 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
   const { coins, gems } = useCurrency();
 
   return (
-    <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-purple-900/10">
+    <div className="bg-white/80 backdrop-blur-md border-b border-purple-900/10">
       <div className="px-[15px] pt-4 pb-3">
         {/* Full width row: Title + Wallet on left, Actions on far right */}
         <div className="flex items-center justify-between">
