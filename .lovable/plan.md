@@ -1,205 +1,149 @@
 
-# გეგმა: RoomIconPickerModal-ის გაუმჯობესება
+# გეგმა: ლობის ღილაკის ლოგიკის გამოსწორება
 
-## პრობლემები
+## პრობლემა
 
-1. **ბილინგვური ძებნა არ მუშაობს "zvigeni"-სთვის** - თუ ქართულად ვწერთ "ზვიგენი" - მუშაობს, მაგრამ ლათინურად "zvigeni" - არა
-2. **ბევრი შემოთავაზებული** - ახლა 8 აიკონია (2 რიგი), საჭიროა 4 (1 რიგი)
-3. **Search და Refresh ღილაკი არ არის sticky** - სქროლზე იმალება
-4. **აიკონები "ხტიან" refresh-ზე** - ვიზუალური glitch
+1. **ახლა**: თუ კატეგორია არ არის არჩეული, ჩანს "გააგრძელე" ღილაკი
+2. **საჭირო**: ყოველთვის უნდა ჩანდეს "თამაშის დაწყება" ღილაკი
+
+## ახალი ლოგიკა
+
+```text
+"თამაშის დაწყება" ღილაკზე დაჭერა:
+├── თუ კონტენტი არჩეულია (queue > 0 ან category ან trivia)
+│   └── დაიწყოს თამაში
+└── თუ კონტენტი არ არის არჩეული
+    └── გაიხსნას CategoryPicker 
+        └── როცა მომხმარებელი აირჩევს → ავტომატურად დაიწყოს თამაში
+```
+
+## ვიზუალური ცვლილება
+
+**მანამდე:**
+| სიტუაცია | ღილაკი |
+|----------|--------|
+| კატეგორია არ არის | გააგრძელე (პიკერი) |
+| კატეგორია არის | თამაშის დაწყება |
+
+**შემდეგ:**
+| სიტუაცია | ღილაკი | მოქმედება |
+|----------|--------|-----------|
+| ყველა შემთხვევაში | თამაშის დაწყება | თუ არ არის კატეგორია → პიკერი → თამაშის დაწყება |
 
 ---
 
-## გადაწყვეტა
+## ტექნიკური ცვლილებები
 
-### 1. ბილინგვური ძებნის გაუმჯობესება (Edge Function)
+### 1. ფაილი: `src/components/team/RoomLobbyV2.tsx`
 
-**ფაილი:** `supabase/functions/smart-icon-search/index.ts`
-
-პრობლემა: ლათინური ტრანსლიტერაცია "zvigeni" არ იპოვნის "shark"-ს, რადგან:
-- კოდი ამოწმებს `ENGLISH_SYNONYMS["zvigeni"]` - არ არსებობს
-- კოდი ამოწმებს `ENGLISH_TO_GEORGIAN["zvigeni"]` - არ არსებობს
-
-**გადაწყვეტა:** დავამატოთ ლოგიკა, რომელიც ლათინურ input-ს გარდაქმნის ქართულად და შემდეგ ეძებს შესაბამისობას:
-
+#### ახალი state - "start after pick" flag
 ```typescript
-// NEW: Latin-to-Georgian transliteration + semantic lookup
-// For "zvigeni" -> try to match Georgian words in GEORGIAN_TO_ENGLISH
-const latinToGeorgian: Record<string, string> = {
-  'a': 'ა', 'b': 'ბ', 'g': 'გ', 'd': 'დ', 'e': 'ე', 'v': 'ვ', 'z': 'ზ',
-  't': 'თ', 'i': 'ი', 'k': 'კ', 'l': 'ლ', 'm': 'მ', 'n': 'ნ', 'o': 'ო',
-  'p': 'პ', 'r': 'რ', 's': 'ს', 'u': 'უ', 'f': 'ფ', 'q': 'ყ', 'j': 'ჯ', 'h': 'ჰ'
+const [startAfterPick, setStartAfterPick] = useState(false);
+```
+
+#### ღილაკის ლოგიკა (ხაზი ~882-911)
+
+**მანამდე:**
+```typescript
+return !hasContent ? (
+  <ChunkyButton onClick={() => setShowCategoryPicker(true)}>
+    გააგრძელე
+  </ChunkyButton>
+) : (
+  <ChunkyButton onClick={handleStartGame}>
+    თამაშის დაწყება
+  </ChunkyButton>
+);
+```
+
+**შემდეგ:**
+```typescript
+// ყოველთვის "თამაშის დაწყება" ღილაკი
+const handleStartOrPick = () => {
+  const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
+  
+  if (hasContent) {
+    // კონტენტი არის - დაიწყოს თამაში
+    handleStartGame();
+  } else {
+    // კონტენტი არ არის - გახსენი პიკერი და დაიმახსოვრე რომ შემდეგ დაიწყოს
+    setStartAfterPick(true);
+    setShowCategoryPicker(true);
+  }
 };
 
-// When query is Latin (not Georgian), try reverse transliteration
-if (!isGeorgian(query)) {
-  const potentialGeorgian = transliterateLatin(queryLower);
-  // Now look for this in GEORGIAN_TO_ENGLISH
-  for (const [geoWord, translations] of Object.entries(GEORGIAN_TO_ENGLISH)) {
-    if (potentialGeorgian.includes(geoWord) || geoWord.includes(potentialGeorgian)) {
-      translations.forEach(t => searchTerms.add(t));
-    }
+return (
+  <ChunkyButton
+    onClick={handleStartOrPick}
+    disabled={!canStartGame || isStarting || loading}
+    icon={<Play className="w-5 h-5" />}
+  >
+    {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${min - count} მოთამაშეს`}
+  </ChunkyButton>
+);
+```
+
+#### კატეგორიის არჩევის handler-ები
+
+**handleSelectCategory-ში:**
+```typescript
+const handleSelectCategory = async (category) => {
+  // არსებული ლოგიკა...
+  
+  // თუ startAfterPick = true, დახურე პიკერი და დაიწყე თამაში
+  if (startAfterPick) {
+    setStartAfterPick(false);
+    setShowCategoryPicker(false);
+    setTimeout(() => handleStartGame(), 100); // დაელოდე state-ის განახლებას
   }
-}
+};
 ```
 
-### 2. მაქსიმუმ 4 შემოთავაზება (1 რიგი)
+იგივე ლოგიკა დაემატება:
+- `handleSelectRandom`
+- `handleSelectTrivia`
 
-**ფაილი:** `src/components/team/RoomIconPickerModal.tsx`
+---
 
-ცვლილება ხაზზე ~170:
-```typescript
-// მანამდე:
-setSuggestedIcons(shuffled.slice(0, 12) as IconItem[]);
+## ალტერნატიული მიდგომა
 
-// შემდეგ:
-setSuggestedIcons(shuffled.slice(0, 4) as IconItem[]);
-```
+CategoryPickerModal-ს შეიძლება გადაეცეს `onSelectAndStart` callback, რომელიც:
+1. აირჩევს კატეგორიას/ტრივიას
+2. ავტომატურად იწყებს თამაშს
 
-### 3. Sticky Header Search-ისა და Refresh ღილაკისთვის
-
-**ფაილი:** `src/components/team/RoomIconPickerModal.tsx`
-
-ახლანდელი სტრუქტურა:
-```
-Fixed Header (back + title)
-Scrollable Content:
-  - Preview + Name Input
-  - Search Input          ← ეს უნდა გახდეს sticky
-  - Category filters
-  - Recent icons
-  - Suggested header + refresh  ← refresh ღილაკი აქაა
-  - Icons grid
-Fixed Footer (button)
-```
-
-**ახალი სტრუქტურა:**
-```
-Fixed Header (back + title)
-Sticky Search Section:     ← ახალი sticky კონტეინერი
-  - Search Input
-  - Category filters (optional)
-Scrollable Content:
-  - Preview + Name Input
-  - Recent icons
-  - Suggested header + refresh
-  - Icons grid
-Fixed Footer (button)
-```
-
-კოდის ცვლილება:
-- Search Input-ს გავიტანთ scrollable content-იდან ცალკე div-ში
-- დავამატებთ `sticky top-[60px]` კლასს (60px = header-ის სიმაღლე)
-
-### 4. აიკონების "ხტომის" გამოსწორება
-
-**ფაილი:** `src/components/team/RoomIconPickerModal.tsx`
-
-პრობლემა: `AnimatePresence mode="popLayout"` იწვევს layout shift-ს
-
-**გადაწყვეტა:** 
-1. შევცვალოთ `mode="popLayout"` → `mode="wait"` ან მოვხსნათ
-2. დავამატოთ `min-height` გრიდს რომ არ იცვლებოდეს ზომა
-3. skeleton-ების რაოდენობა გავუტოლოთ რეალური აიკონების რაოდენობას
+ეს უფრო სუფთა იქნება:
 
 ```typescript
-// მანამდე:
-<AnimatePresence mode="popLayout">
-
-// შემდეგ:
-<AnimatePresence mode="sync">
-```
-
-ან:
-```typescript
-// გრიდს დავამატებთ მინიმალურ სიმაღლეს
-<div className="grid grid-cols-4 gap-3 min-h-[300px]">
+<CategoryPickerModal
+  isOpen={showCategoryPicker}
+  onClose={() => {
+    setShowCategoryPicker(false);
+    setStartAfterPick(false);
+  }}
+  // ... სხვა props
+  autoStartAfterSelect={startAfterPick} // ← ახალი prop
+  onAutoStart={() => {
+    setStartAfterPick(false);
+    handleStartGame();
+  }}
+/>
 ```
 
 ---
 
-## შესაცვლელი ფაილები
+## საბოლოო სტრუქტურა
 
 | ფაილი | ცვლილება |
 |-------|----------|
-| `supabase/functions/smart-icon-search/index.ts` | Latin→Georgian reverse transliteration + GEORGIAN_TO_ENGLISH lookup |
-| `src/components/team/RoomIconPickerModal.tsx` | - შემოთავაზებული: 12 → 4<br>- Search Input sticky<br>- AnimatePresence mode fix<br>- Grid min-height |
+| `RoomLobbyV2.tsx` | - ახალი `startAfterPick` state<br>- ერთიანი `handleStartOrPick` ფუნქცია<br>- ღილაკი ყოველთვის "თამაშის დაწყება"<br>- კატეგორიის არჩევის შემდეგ ავტო-დაწყება |
 
 ---
 
-## ვიზუალური შედარება
+## მოსალოდნელი შედეგი
 
-### მანამდე
-```
-┌─────────────────────────┐
-│ ← შეცვალე აიკონი       │ ← Fixed header
-├─────────────────────────┤
-│ [icon] სახელი          │
-│ 🔍 მოძებნე...          │ ← სქროლდება!
-│ ყველა│ცხოველები│საჭმელი│
-│ ბოლოს გამოყენებული     │
-│ ○ ○ ○ ○                │
-│ შემოთავაზებული [↻]     │
-│ ○ ○ ○ ○                │
-│ ○ ○ ○ ○  ← 8 აიკონი   │
-│ ...                    │
-└─────────────────────────┘
-```
+**მომხმარებლის flow:**
 
-### შემდეგ
-```
-┌─────────────────────────┐
-│ ← შეცვალე აიკონი       │ ← Fixed header
-├─────────────────────────┤
-│ 🔍 მოძებნე...          │ ← Sticky!
-│ ყველა│ცხოველები│საჭმელი│ ← Sticky!
-├ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┤
-│ [icon] სახელი          │ ← სქროლდება
-│ ბოლოს გამოყენებული     │
-│ ○ ○ ○ ○                │
-│ შემოთავაზებული [↻]     │
-│ ○ ○ ○ ○  ← 4 აიკონი   │
-│ ბიბლიოთეკა [↻]         │
-│ ...                    │
-└─────────────────────────┘
-```
-
----
-
-## ტექნიკური დეტალები
-
-### Bilingual Search Flow (შემდეგ):
-
-```
-User types: "zvigeni"
-         ↓
-isGeorgian? → NO (Latin chars)
-         ↓
-transliterateLatin("zvigeni") → "ზვიგენი"
-         ↓
-Lookup GEORGIAN_TO_ENGLISH["ზვიგენი"] → ["shark", "fish"]
-         ↓
-searchTerms: ["zvigeni", "shark", "fish"]
-         ↓
-Search icons for "shark" → ✓ Found!
-```
-
-### Sticky Implementation:
-
-```tsx
-{/* Fixed Search Section - After header */}
-<div className="fixed top-[60px] left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/20 safe-top">
-  <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
-    {/* Search Input */}
-    <div className="relative">...</div>
-    
-    {/* Category filters */}
-    {!searchQuery.trim() && <div className="flex gap-2 overflow-x-auto ...">...</div>}
-  </div>
-</div>
-
-{/* Scrollable Content - Adjust top padding */}
-<div className="h-full overflow-y-auto pt-[140px] pb-24 safe-top">
-  ...
-</div>
-```
+1. ✅ თამაშის შემდეგ ბრუნდება ლობიში
+2. ✅ ხედავს "თამაშის დაწყება" ღილაკს (არა "გააგრძელე")
+3. ✅ დაჭერისას იხსნება კატეგორიის პიკერი
+4. ✅ კატეგორიის არჩევის შემდეგ ავტომატურად იწყება თამაში
