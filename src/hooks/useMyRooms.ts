@@ -37,6 +37,13 @@ export interface MyRoom {
     avatar_url: string | null;
     is_host: boolean;
   }[];
+  // Online presence data
+  online_participants: {
+    user_id: string;
+    nickname: string;
+    avatar_url: string | null;
+  }[];
+  has_others_online: boolean;
 }
 
 // Active TV session statuses that indicate a "LIVE" game
@@ -133,6 +140,22 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
       if (allPartError) throw allPartError;
 
+      // Fetch online presence for all participants
+      const allParticipantUserIds = [...new Set((allParticipants || []).map(p => p.user_id))];
+      let onlineUserIds = new Set<string>();
+      
+      if (allParticipantUserIds.length > 0) {
+        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+        const { data: presenceData } = await supabase
+          .from("user_presence")
+          .select("user_id, status, last_seen")
+          .in("user_id", allParticipantUserIds)
+          .eq("status", "online")
+          .gte("last_seen", twoMinutesAgo);
+        
+        presenceData?.forEach(p => onlineUserIds.add(p.user_id));
+      }
+
       // Fetch TV session data for rooms that have tv_session_id
       const tvSessionIds = (roomsData || [])
         .map((r) => r.tv_session_id)
@@ -184,6 +207,15 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       const myRooms: MyRoom[] = (roomsData || []).map((room: any) => {
         const participants = participantsByRoom.get(room.id) || [];
         const tvData = room.tv_session_id ? tvSessionMap.get(room.tv_session_id) : null;
+        
+        // Calculate online participants (excluding current user)
+        const onlineParticipants = participants
+          .filter(p => onlineUserIds.has(p.user_id) && p.user_id !== user.id)
+          .map(p => ({
+            user_id: p.user_id,
+            nickname: p.nickname,
+            avatar_url: p.avatar_url,
+          }));
 
         return {
           id: room.id,
@@ -215,6 +247,8 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
             avatar_url: p.avatar_url,
             is_host: p.is_host || false,
           })),
+          online_participants: onlineParticipants,
+          has_others_online: onlineParticipants.length > 0,
         };
       });
 
@@ -275,6 +309,17 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           event: "*",
           schema: "public",
           table: "tv_players",
+        },
+        () => {
+          fetchMyRooms();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_presence",
         },
         () => {
           fetchMyRooms();

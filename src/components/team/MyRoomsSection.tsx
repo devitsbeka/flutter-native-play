@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal } from "lucide-react";
+import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
 import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -255,6 +255,7 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
   const displayName = room.room_name || "თამაშის ოთახი";
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
+  const hasOthersOnline = room.has_others_online;
   const hasTVSession = isActiveTVSession(room.tv_status);
   
   // For display: use TV active players if there's an active TV session with players
@@ -404,8 +405,11 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
 
                 {/* Top right - Status badge + menu (desktop/tablet) */}
                 <div className="flex items-center gap-2">
-                  {(isPlaying || hasTVSession) ? (
-                    <LiveBadge />
+                  {(isPlaying || hasTVSession || hasOthersOnline) ? (
+                    <div className="flex items-center">
+                      <LiveBadge />
+                      {hasTVSession && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
+                    </div>
                   ) : isCompleted ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                       დასრულდა
@@ -534,6 +538,7 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
   const isPlaying = room.status === "playing";
   const isCompleted = room.status === "completed";
   const hasTVSession = isActiveTVSession(room.tv_status);
+  const hasOthersOnline = room.has_others_online;
   
   // For display: use TV active players if there's an active TV session
   const displayPlayerCount = hasTVSession && room.tv_active_players > 0 
@@ -648,8 +653,11 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
             
             {/* Top Row: Status Badge + Menu */}
             <div className="relative z-10 flex items-start justify-between">
-              {(isPlaying || hasTVSession) ? (
-                <LiveBadge />
+              {(isPlaying || hasTVSession || hasOthersOnline) ? (
+                <div className="flex items-center">
+                  <LiveBadge />
+                  {hasTVSession && <Tv className="w-3.5 h-3.5 text-white ml-1" />}
+                </div>
               ) : isCompleted ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-xs">
                   დასრულდა
