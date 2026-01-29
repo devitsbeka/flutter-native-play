@@ -1,161 +1,187 @@
 
 
-# გეგმა: Host-Observer პოლისის აუდიტი და გასწორება
+# გეგმა: Observer-ის სამართლიანი ქულების სისტემა
 
 ## პრობლემის აღწერა
 
-მომხმარებელმა შენიშნა, რომ "შენ იცი პასუხები!" გაფრთხილება ჩნდება მაშინაც კი, როდესაც ბიბლიოთეკიდან აირჩევენ კატეგორიას. ეს არასწორია - ბიბლიოთეკის კატეგორიებზე ჰოსტი ყოველთვის უნდა თამაშობდეს.
+მიმდინარე სცენარი (სკრინშოტიდან):
+- **Test (მოთამაშე):** 194 ქულა (1 სწორი + 1 არასწორი პასუხი)
+- **შენ (Observer/ჰოსტი):** 100 ქულა
 
-## სწორი პოლისი (როგორც უნდა მუშაობდეს)
+2 კითხვაზე: 1 სწორი, 1 არასწორი - შედეგი უნდა იყოს თითქმის ფრე, მაგრამ ახლა 94 ქულით განსხვავდება.
 
-| ტრივიის ტიპი | პირობა | ჰოსტის სტატუსი |
-|-------------|--------|----------------|
-| ბიბლიოთეკა | - | ყოველთვის თამაშობს |
-| შემთხვევითი | - | ყოველთვის თამაშობს |
-| ღია ტრივია | ჰოსტის შექმნილი | გამოტოვებს (Observer) |
-| დახურული ტრივია | არასდროს ითამაშა (plays_count = 0) | თამაშობს |
-| დახურული ტრივია | უკვე ითამაშა (plays_count > 0) | გამოტოვებს (Observer) |
+## მიმდინარე ფორმულები
 
-## კოდბაზის ანალიზი
+| ტიპი | ფორმულა | დიაპაზონი |
+|------|---------|-----------|
+| სწორი პასუხი | `100 + (დარჩენილი_წამი × 5)` | 100-175 ქულა |
+| არასწორი პასუხი | 0 | 0 ქულა |
+| Observer ბონუსი | 100 (ფლატ) | 100 ქულა |
 
-აუდიტმა აჩვენა, რომ ძირითადი ლოგიკა სწორია, მაგრამ პრობლემა შეიძლება იყოს:
+**პრობლემა:** Observer-ის ბონუსი (100) ნაკლებია ვიდრე მოთამაშის მაქსიმალური სარგებელი (175).
 
-### 1. სტალ Suggester მონაცემები
-თუ წინა რაუნდში ჰოსტი იყო observer, და შემდეგ ბიბლიოთეკის კატეგორია აირჩიეს, `currentRoundSuggesterId` შეიძლება არ განულდეს.
+## სამართლიანი გადაწყვეტა
 
-### 2. რეალურდროული სინქრონიზაციის პრობლემა
-React state-ში `currentRoundSuggesterId` შეიძლება stale იყოს DB-ის მონაცემებთან შედარებით.
+### ახალი ლოგიკა
+
+Observer-მა უნდა მიიღოს **საპირისპირო** ქულები - რაც უფრო ნელა უპასუხა მოთამაშემ არასწორად, მით მეტი მიიღოს Observer-მა.
+
+```
+Observer ბონუსი = BASE_POINTS + (QUESTION_TIME - timeWhenAnswered) × TIME_BONUS_MULTIPLIER
+```
+
+ანუ თუ მოთამაშემ არასწორად უპასუხა:
+- სწრაფად (14 წამი დარჩა) → Observer იღებს: 100 + (15-14)×5 = 105
+- ნელა (2 წამი დარჩა) → Observer იღებს: 100 + (15-2)×5 = 165
+- Timeout (0 წამი) → Observer იღებს: 100 + 15×5 = 175 (მაქსიმუმი)
+
+### ახალი ფორმულის უპირატესობები
+
+1. **სამართლიანობა:** Observer-ის მაქსიმალური ბონუსი = მოთამაშის მაქსიმალური ქულა
+2. **ბალანსი:** თუ მოთამაშე 1 კითხვას სწრაფად უპასუხებს სწორად (175) და 1-ს timeout-ზე (0), Observer მიიღებს 175-ს timeout-ზე = ფრე
+3. **ინცენტივი:** ნელი არასწორი პასუხები Observer-ს მეტს აძლევს
 
 ---
 
-## შესაცვლელი ფაილები და ცვლილებები
+## შესაცვლელი ფაილები
 
-### 1. `src/hooks/useTVSessionQueue.ts`
-**პრობლემა**: `addCategoryToQueue` არ ასუფთავებს suggester-ს - ეს სწორია.
-
-**დამატება**: კომენტარი გარკვევისთვის, რომ library categories-ზე suggester არ უნდა დაისეტოს.
-
-### 2. `src/contexts/TVGameContext.tsx`
-**პრობლემა**: `startNextRoundFromQueueIfAny`-ში არსებული დაცვა (lines 1040-1045) სწორია, მაგრამ უნდა დავრწმუნდეთ რომ state-იც სწორად განახლდეს.
-
-**ცვლილება**: დავამატოთ explicit logging და defensive null-setting ლოკალურ state-ში.
+### 1. `src/utils/tvScoring.ts`
+ახალი ფუნქციის დამატება:
 
 ```typescript
-// startNextRoundFromQueueIfAny - around line 1154
-setState(prev => ({
-  ...prev,
-  roundNumber: newRoundNumber,
-  // CRITICAL: Sync suggester state locally (DB already updated)
-  currentRoundSuggesterId: suggesterUserId,
-  currentRoundSuggesterNickname: suggesterNickname,
-  currentRoundSuggesterAvatarUrl: suggesterAvatarUrl,
-}));
-```
-
-### 3. `src/components/team/RoomLobbyV2.tsx`
-**პრობლემა**: `handleStartGame` მხოლოდ ამოწმებს `user_trivia_id`-ს, მაგრამ არ ითვალისწინებს ბიბლიოთეკის კატეგორიის case-ს explicit-ად.
-
-**ცვლილება**: გავაძლიეროთ პირობა და დავამატოთ კომენტარი:
-
-```typescript
-// handleStartGame - around line 223
-const handleStartGame = async () => {
-  // CRITICAL: Library categories and random selection should NEVER trigger observer mode
-  // Only check for user-owned trivias
-  if (currentRoom?.user_trivia_id && user?.id) {
-    // ... existing logic for user trivias
-  }
-  
-  // If NOT a user trivia, proceed directly without warning
-  // This covers: library categories, random selection
-  await proceedWithStartGame(false);
+/**
+ * Calculate observer bonus when a player answers incorrectly or times out
+ * The bonus is inversely proportional to how quickly the player failed
+ * 
+ * @param timeWhenAnswered - Seconds remaining when wrong answer was given (0 for timeout)
+ * @returns Bonus points for observer (100-175 range)
+ */
+export const calculateObserverBonus = (timeWhenAnswered: number): number => {
+  // If player answered wrong quickly, observer gets less
+  // If player timed out or answered wrong slowly, observer gets more
+  const timeUsed = QUESTION_TIME_SECONDS - Math.max(0, Math.min(timeWhenAnswered, QUESTION_TIME_SECONDS));
+  return BASE_POINTS + (timeUsed * TIME_BONUS_MULTIPLIER);
 };
 ```
 
-### 4. `src/pages/TVHostController.tsx`
-**პრობლემა**: `isSuggester` ითვლება state-დან, რომელიც შეიძლება stale იყოს.
-
-**ცვლილება**: დავამატოთ defensive check:
+### 2. `src/contexts/TVGameContext.tsx`
+`advanceToReveal` ფუნქციაში ცვლილება (lines ~296-305):
 
 ```typescript
-// line 76 - enhance with source type awareness
-const isSuggester = useMemo(() => {
-  // Never show observer UI for library categories
-  // The suggester should only be set for user trivias
-  return myPlayerId && currentRoundSuggesterId && myPlayerId === currentRoundSuggesterId;
-}, [myPlayerId, currentRoundSuggesterId]);
+// ძველი:
+let observerBonus = 0;
+if (totalActive <= 2) {
+  observerBonus = 100 * incorrectCount;
+} else if (incorrectCount / totalActive >= 0.5) {
+  observerBonus = 100;
+}
+
+// ახალი:
+import { calculateObserverBonus } from '@/utils/tvScoring';
+
+let observerBonus = 0;
+if (totalActive <= 2) {
+  // Calculate time-based bonus for each incorrect answer
+  const incorrectPlayers = activePlayers.filter(p => 
+    !p.hasAnswered || p.lastAnswerCorrect === false
+  );
+  for (const player of incorrectPlayers) {
+    // Use player's answer time if available, otherwise assume timeout (0)
+    const timeRemaining = player.answeredAt 
+      ? calculateTimeRemaining(questionStartedAtRef.current, QUESTION_TIME)
+      : 0;
+    observerBonus += calculateObserverBonus(timeRemaining);
+  }
+} else if (incorrectCount / totalActive >= 0.5) {
+  // For larger games, use average of incorrect times
+  observerBonus = calculateObserverBonus(0); // Use timeout value for simplicity
+}
 ```
 
-### 5. Realtime Sync გაუმჯობესება
-**პრობლემა**: Realtime subscription-ში `currentRoundSuggesterId` უნდა პირდაპირ მიიღოს DB-დან.
-
-**ცვლილება**: `TVGameContext.tsx`-ში realtime handler-ში:
+### 3. `src/components/team/MultiplayerObserverScreen.tsx`
+იგივე ლოგიკა multiplayer-ისთვის (lines ~94-108):
 
 ```typescript
-// Existing realtime handler - ensure explicit null handling
-currentRoundSuggesterId: 'current_round_suggester_id' in (newData as any) 
-  ? (newData as any).current_round_suggester_id  // null or valid ID
-  : prev.currentRoundSuggesterId,
+import { calculateObserverBonus, calculateTimeRemaining } from '@/utils/tvScoring';
+
+// ახალი:
+let bonus = 0;
+if (totalPlayers <= 2) {
+  // Calculate fair bonus based on when incorrect answers were given
+  for (const [playerId, answer] of Object.entries(opponentAnswers)) {
+    if (!answer.is_correct) {
+      // Use answer timestamp if available
+      const timeRemaining = answer.answered_at 
+        ? calculateTimeRemaining(/* question start */, 15) 
+        : 0;
+      bonus += calculateObserverBonus(timeRemaining);
+    }
+  }
+  // Add timeout bonus for players who didn't answer
+  bonus += didNotAnswerCount * calculateObserverBonus(0);
+} else if (totalIncorrect / totalPlayers >= 0.5) {
+  bonus = calculateObserverBonus(0);
+}
 ```
+
+---
+
+## ქულების შედარება
+
+### ძველი სისტემა (2 კითხვა, 1 სწორი/1 არასწორი)
+
+| მოთამაშე | კითხვა 1 (სწორი, 12წმ) | კითხვა 2 (არასწორი) | სულ |
+|----------|-------------------------|---------------------|------|
+| Test | 100 + 12×5 = 160 | 0 | **160** |
+| Observer | 0 | 100 | **100** |
+
+**სხვაობა:** 60 ქულა
+
+### ახალი სისტემა (2 კითხვა, 1 სწორი/1 არასწორი)
+
+| მოთამაშე | კითხვა 1 (სწორი, 12წმ) | კითხვა 2 (არასწორი, 5წმ) | სულ |
+|----------|-------------------------|---------------------------|------|
+| Test | 100 + 12×5 = 160 | 0 | **160** |
+| Observer | 0 | 100 + 10×5 = 150 | **150** |
+
+**სხვაობა:** 10 ქულა ✅ უფრო სამართლიანი!
+
+### Timeout-ის შემთხვევა
+
+| მოთამაშე | კითხვა 1 (სწორი, 15წმ) | კითხვა 2 (timeout) | სულ |
+|----------|-------------------------|---------------------|------|
+| Test | 100 + 15×5 = 175 | 0 | **175** |
+| Observer | 0 | 100 + 15×5 = 175 | **175** |
+
+**სხვაობა:** 0 ქულა = ფრე ✅
 
 ---
 
 ## ტექნიკური დეტალები
 
-### სწორი ლოგიკის ნაკადი
+### Player State-ში საჭირო ინფორმაცია
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                    TRIVIA SELECTION                          │
-├──────────────────┬──────────────────────────────────────────┤
-│ Library/Random   │ → suggester = null → Host PLAYS          │
-├──────────────────┼──────────────────────────────────────────┤
-│ ღია (Open)       │ → suggester = owner → Owner OBSERVES     │
-├──────────────────┼──────────────────────────────────────────┤
-│ დახურული (Blind) │                                          │
-│  plays_count=0   │ → suggester = null → Owner PLAYS         │
-│  plays_count>0   │ → suggester = owner → Owner OBSERVES     │
-└──────────────────┴──────────────────────────────────────────┘
-```
-
-### შემოწმების ადგილები
-
-1. **Queue Item Creation** - `addCategoryToQueue`, `addToQueue`
-2. **Game Start** - `startGame`, `finalizePollAndStartGame`
-3. **Next Round** - `startNextRoundFromQueueIfAny`
-4. **UI Display** - `isSuggester` calculation in TVHostController
-
----
-
-## იმპლემენტაციის თანმიმდევრობა
-
-1. **TVGameContext.tsx** - დავამატოთ explicit state sync `startNextRoundFromQueueIfAny`-ში
-2. **TVHostController.tsx** - defensive logging დავამატოთ
-3. **RoomLobbyV2.tsx** - კომენტარები გარკვევისთვის
-4. **useTVSessionQueue.ts** - კომენტარები
-
----
-
-## დებაგ ლოგინგი
-
-ყველა ცვლილებას თან დაყვება console.log რომ debug-ში დაგვეხმაროს:
+TV Game-ში `player.answeredQuestionIndex` და presence state-ში არის დრო. მაგრამ უნდა დავამატოთ:
 
 ```typescript
-console.log('[HostObserver] Source type check:', {
-  isLibraryCategory,
-  suggesterId: suggesterUserId?.slice(0, 8) || 'null',
-  willObserve: !!suggesterUserId && suggesterUserId === myPlayerId,
-});
+// TVGameContext player presence state-ში
+answeredTimeRemaining?: number; // დრო რომელიც დარჩა პასუხის გაცემისას
 ```
+
+### შესაცვლელი ფაილების სია
+
+| ფაილი | ცვლილება |
+|-------|----------|
+| `src/utils/tvScoring.ts` | `calculateObserverBonus` ფუნქციის დამატება |
+| `src/contexts/TVGameContext.tsx` | Observer bonus ლოგიკის განახლება |
+| `src/components/team/MultiplayerObserverScreen.tsx` | Multiplayer observer ლოგიკის განახლება |
 
 ---
 
-## ტესტირების სცენარები
+## შეჯამება
 
-1. ბიბლიოთეკიდან კატეგორიის არჩევა → ჰოსტი თამაშობს ✓
-2. შემთხვევითი კატეგორია → ჰოსტი თამაშობს ✓  
-3. ჰოსტის ღია ტრივია → ჰოსტი აკვირდება ✓
-4. ჰოსტის დახურული ტრივია (არ ითამაშა) → ჰოსტი თამაშობს ✓
-5. ჰოსტის დახურული ტრივია (უკვე ითამაშა) → ჰოსტი აკვირდება ✓
-6. სხვისი ტრივია → ჰოსტი თამაშობს ✓
+ახალი სისტემა უზრუნველყოფს:
+1. **სამართლიან ბალანსს** - Observer-ის მაქსიმალური ბონუსი = მოთამაშის მაქსიმალური ქულა
+2. **დინამიურ ქულებს** - დრო ითვალისწინება ორივე მხარისთვის
+3. **ფრეს შესაძლებლობას** - თუ 50/50, შედეგი ახლოს იქნება ფრესთან
 
