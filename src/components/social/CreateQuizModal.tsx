@@ -542,7 +542,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     <Edit3 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-base">რედაქტირებით</h4>
+                    <h4 className="font-bold text-white text-base">ღია</h4>
                     <p className="text-white/60 text-xs mt-1">ნახე კითხვები/პასუხები, შეასწორე, გამოაქვეყნე</p>
                   </div>
                 </motion.button>
@@ -558,7 +558,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-base">სათამაშოდ</h4>
+                    <h4 className="font-bold text-white text-base">დახურული</h4>
                     <p className="text-white/60 text-xs mt-1">არ ნახო კითხვები/პასუხები და ითამაშე მეგობრებთან ერთად</p>
                   </div>
                 </motion.button>
