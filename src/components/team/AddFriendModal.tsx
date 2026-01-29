@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, UserPlus, X, Loader2, Check, Clock } from "lucide-react";
+import { Search, UserPlus, Loader2, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
@@ -146,7 +146,9 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
                     <SearchResultCard
                       key={result.user_id}
                       result={result}
-                      onSendRequest={() => handleSendRequest(result.user_id)}
+                      onSendRequest={async () => {
+                        await handleSendRequest(result.user_id);
+                      }}
                       isSent={sentRequests.has(result.user_id)}
                       isPending={pendingOutgoingIds.has(result.user_id)}
                     />
@@ -163,20 +165,32 @@ export function AddFriendModal({ isOpen, onClose }: AddFriendModalProps) {
 
 interface SearchResultCardProps {
   result: SearchResult;
-  onSendRequest: () => void;
+  onSendRequest: () => Promise<void>;
   isSent: boolean;
   isPending: boolean;
 }
 
 function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchResultCardProps) {
-  const handleButtonAction = () => {
-    if (isPending) {
-      toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+  const [isSending, setIsSending] = useState(false);
+  
+  const handleButtonAction = async () => {
+    if (isPending || isSent || isSending) {
+      if (isPending || isSent) {
+        toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+      }
       return;
     }
-    if (isSent) return;
-    onSendRequest();
+    
+    setIsSending(true);
+    try {
+      await onSendRequest();
+    } finally {
+      setIsSending(false);
+    }
   };
+  
+  // Show pending state after sending OR if already pending
+  const showPendingState = isPending || isSent;
   
   return (
     <motion.div
@@ -213,25 +227,25 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
           e.preventDefault();
           handleButtonAction();
         }}
-        disabled={isSent}
+        disabled={showPendingState || isSending}
         className={`flex items-center gap-1.5 px-5 py-3 min-h-[48px] rounded-xl text-sm font-medium transition-colors active:scale-95 ${
-          isSent
-            ? "bg-green-500/20 text-green-400 cursor-default"
-            : isPending
-            ? "bg-amber-500/20 text-amber-400 cursor-default"
+          showPendingState
+            ? "bg-muted/50 text-muted-foreground cursor-default"
+            : isSending
+            ? "bg-muted/30 text-muted-foreground cursor-wait"
             : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90"
         }`}
         style={{ touchAction: 'manipulation' }}
       >
-        {isPending ? (
+        {isSending ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            იგზავნება...
+          </>
+        ) : showPendingState ? (
           <>
             <Clock className="w-4 h-4" />
             მოლოდინში
-          </>
-        ) : isSent ? (
-          <>
-            <Check className="w-4 h-4" />
-            გაგზავნილია
           </>
         ) : (
           <>
