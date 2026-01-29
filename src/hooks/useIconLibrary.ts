@@ -531,6 +531,8 @@ export function useIconLibrary() {
   }, [iconIndex]);
 
   // Get a random icon from the category (used as fallback when main icon fails)
+  // IMPORTANT: Icons are sorted alphabetically by slug to ensure consistent order
+  // across all clients - this guarantees the same seed produces the same icon everywhere
   const getRandomIconForCategory = useCallback((categoryId: string, seed: number = 0): string | null => {
     // If no icons loaded, return null
     if (iconIndex.length === 0) return null;
@@ -550,15 +552,19 @@ export function useIconLibrary() {
       });
       
       if (matchingIcons.length > 0) {
-        // Use seed to get different icon each retry
-        const index = Math.abs(seed) % matchingIcons.length;
-        return getIconUrl(matchingIcons[index].file_name);
+        // SORT ALPHABETICALLY for consistent order across all clients
+        const sortedIcons = [...matchingIcons].sort((a, b) => 
+          a.slug.localeCompare(b.slug)
+        );
+        const index = Math.abs(seed) % sortedIcons.length;
+        return getIconUrl(sortedIcons[index].file_name);
       }
     }
     
-    // Fallback: pick any icon based on seed (ALWAYS returns something)
-    const index = Math.abs((seed * 137) % iconIndex.length); // 137 is prime for better distribution
-    return getIconUrl(iconIndex[index].file_name);
+    // Fallback: ALSO sort before picking to ensure consistency
+    const sortedAll = [...iconIndex].sort((a, b) => a.slug.localeCompare(b.slug));
+    const index = Math.abs((seed * 137) % sortedAll.length); // 137 is prime for better distribution
+    return getIconUrl(sortedAll[index].file_name);
   }, [iconIndex]);
 
   return { 
