@@ -1,61 +1,118 @@
 
-
-# გეგმა: Search Bar Border/Stroke Clipping Fix
+# გეგმა: ძიებაში მეგობრებისა და არამეგობრების ჩვენება
 
 ## პრობლემა
 
-სკრინშოტზე ჩანს, რომ search input-ის მარცხენა border ჭრილია (cropped). ეს ხდება იმიტომ, რომ:
+ამჟამად `InviteFriendsModal`-ში ძიების შედეგებიდან მეგობრები ფილტრდება (ხაზი 387):
 
-1. გარე div-ს აქვს `overflow-hidden`
-2. შიდა div-საც აქვს `overflow-hidden`  
-3. Input-ის border და focus ring იჭრება
+```typescript
+const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
+```
+
+მომხმარებელს სურს ორივეს ნახვა სხვადასხვა ინდიკატორებით:
+- **მეგობრები:** "მოწვევა" ღილაკი
+- **არამეგობრები:** "+ დამატება" ღილაკი
+
+---
 
 ## გადაწყვეტა
 
-`overflow-hidden`-ის მოხსნა გარე კონტეინერიდან და Input-ისთვის მცირე padding-ის დამატება, რომ border-ს ჰქონდეს "breathing room".
+### ფაილი: `src/components/team/InviteFriendsModal.tsx`
 
-## ცვლილებები
-
-### ფაილი 1: `src/components/team/RoomFiltersBar.tsx`
-
-**ხაზი 59:** `overflow-hidden` → `overflow-visible`
+**ცვლილება 1:** ფილტრის მოხსნა (ხაზი 387)
 
 ```diff
-- <div className="px-4 py-2 w-full max-w-[100vw] overflow-hidden box-border">
-+ <div className="px-4 py-2 w-full max-w-[100vw] overflow-visible box-border">
+- const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
++ // Show all search results - both friends and non-friends
++ const filteredResults = searchResults;
 ```
 
-**ხაზი 60:** შიდა div-დანაც მოვხსნათ `overflow-hidden`
+**ცვლილება 2:** ღილაკის ტექსტის განახლება მეგობარი/არამეგობარის მიხედვით (ხაზები 467-471)
 
-```diff
-- <div className="flex items-center gap-1.5 w-full max-w-full overflow-hidden">
-+ <div className="flex items-center gap-1.5 w-full max-w-full">
+ამჟამად:
+```typescript
+<>
+  <UserPlus className="w-4 h-4" />
+  {isRoomInviteMode ? "მოწვევა" : "დამატება"}
+</>
+```
+
+ახალი ლოგიკა:
+```typescript
+const isFriend = friendIds.has(result.user_id);
+
+// Button text logic:
+// - If user is already a friend → "მოწვევა" (Invite)
+// - If not a friend → "+ დამატება" (Add Friend)
+{isFriend ? (
+  <>
+    <UserPlus className="w-4 h-4" />
+    მოწვევა
+  </>
+) : (
+  <>
+    <UserPlus className="w-4 h-4" />
+    + დამატება
+  </>
+)}
+```
+
+**ცვლილება 3:** ღილაკზე დაჭერის ლოგიკის განახლება
+
+```typescript
+const handleButtonAction = () => {
+  const isFriend = friendIds.has(result.user_id);
+  
+  if (isFriend) {
+    // For friends - send room invite
+    handleInviteToRoom(result.user_id);
+  } else {
+    // For non-friends - send friend request
+    if (isPendingOutgoing) {
+      toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+      return;
+    }
+    handleSendRequest(result.user_id);
+  }
+};
 ```
 
 ---
 
-### ფაილი 2: `src/components/team/UnifiedFiltersBar.tsx`
+## ლოგიკის ნაკადი
 
-**ხაზი 55:** `overflow-hidden` → `overflow-visible`
-
-```diff
-- <div className="px-4 py-2 w-full max-w-full overflow-hidden box-border">
-+ <div className="px-4 py-2 w-full max-w-full overflow-visible box-border">
-```
-
-**ხაზი 56:** შიდა div-დანაც მოვხსნათ `overflow-hidden`
-
-```diff
-- <div className="flex items-center gap-1.5 w-full max-w-full overflow-hidden">
-+ <div className="flex items-center gap-1.5 w-full max-w-full">
+```text
+┌─────────────────────────────────────┐
+│  მომხმარებელი ძებნას იწყებს       │
+└────────────────┬────────────────────┘
+                 ▼
+┌─────────────────────────────────────┐
+│  searchResults - ყველა მომხმარებელი │
+│  (ფილტრი აღარ არის!)               │
+└────────────────┬────────────────────┘
+                 ▼
+       ┌─────────┴─────────┐
+       │                   │
+   isFriend?          !isFriend?
+       │                   │
+       ▼                   ▼
+  "მოწვევა"          "+ დამატება"
+  (room invite)      (friend request)
 ```
 
 ---
 
 ## შედეგი
 
-| მანამდე | შემდეგ |
-|---------|--------|
-| Border მარცხნიდან ჭრილია | Border სრულად ჩანს |
-| Focus ring-იც იჭრება | Focus ring სწორად ჩანს |
+| მომხმარებლის ტიპი | მანამდე | შემდეგ |
+|-------------------|---------|--------|
+| მეგობარი | არ ჩანს ძიებაში | ჩანს + "მოწვევა" ღილაკი |
+| არამეგობარი | ჩანს + "დამატება" | ჩანს + "+ დამატება" ღილაკი |
 
+---
+
+## შესაცვლელი ფაილები
+
+| ფაილი | ცვლილებები |
+|-------|------------|
+| `src/components/team/InviteFriendsModal.tsx` | ფილტრის მოხსნა + ღილაკის ლოგიკის განახლება |
