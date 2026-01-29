@@ -384,7 +384,8 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                         className={`mt-2 max-h-[180px] overflow-y-auto space-y-1.5 pointer-events-auto ${narrow}`}
                       >
                         {(() => {
-                          const filteredResults = searchResults.filter(r => !friendIds.has(r.user_id));
+                          // Show all search results - both friends and non-friends
+                          const filteredResults = searchResults;
                           return filteredResults.length === 0 && !searching ? (
                             <p className="text-center py-6 text-primary-foreground/80 text-sm">
                               მომხმარებელი ვერ მოიძებნა
@@ -413,23 +414,28 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                               </div>
 
                               {(() => {
+                                const isFriend = friendIds.has(result.user_id);
                                 const isPendingOutgoing = pendingOutgoingIds.has(result.user_id);
                                 const isLoading = invitingUser === result.user_id || sendingRequestTo === result.user_id;
                                 const isSent = sentRequests.has(result.user_id);
-                                const isDisabled = isSent || isPendingOutgoing || isLoading;
                                 
                                 const handleButtonAction = () => {
-                                  if (isPendingOutgoing) {
-                                    toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
-                                    return;
-                                  }
-                                  if (isDisabled) return;
-                                  if (isRoomInviteMode) {
+                                  if (isFriend) {
+                                    // For friends - send room invite
+                                    if (isSent || isLoading) return;
                                     handleInviteToRoom(result.user_id);
                                   } else {
+                                    // For non-friends - send friend request
+                                    if (isPendingOutgoing) {
+                                      toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
+                                      return;
+                                    }
+                                    if (isSent || isLoading) return;
                                     handleSendRequest(result.user_id);
                                   }
                                 };
+                                
+                                const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
                                 
                                 return (
                                   <button
@@ -444,17 +450,19 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                       e.preventDefault();
                                       handleButtonAction();
                                     }}
-                                    disabled={isSent || isLoading}
+                                    disabled={isDisabled}
                                     className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
-                                      isSent || isPendingOutgoing
+                                      isSent || (!isFriend && isPendingOutgoing)
                                         ? "bg-white/15 border-white/20 text-white/70"
+                                        : isFriend
+                                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-400/30 text-white hover:opacity-90"
                                         : "bg-white/10 border-white/15 text-white/90 hover:bg-white/15"
                                     }`}
                                     style={{ touchAction: 'manipulation' }}
                                   >
                                     {isLoading ? (
                                       <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : isPendingOutgoing ? (
+                                    ) : !isFriend && isPendingOutgoing ? (
                                       <>
                                         <Clock className="w-4 h-4" />
                                         მოლოდინში
@@ -464,10 +472,15 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                         <Check className="w-3 h-3" />
                                         გაგზავნილი
                                       </>
+                                    ) : isFriend ? (
+                                      <>
+                                        <UserPlus className="w-4 h-4" />
+                                        მოწვევა
+                                      </>
                                     ) : (
                                       <>
                                         <UserPlus className="w-4 h-4" />
-                                        {isRoomInviteMode ? "მოწვევა" : "დამატება"}
+                                        + დამატება
                                       </>
                                     )}
                                   </button>
