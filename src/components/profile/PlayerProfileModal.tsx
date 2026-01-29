@@ -29,6 +29,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogPortal,
+  AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
 
 // Custom time formatter for Georgian (no "დაახლოებით")
@@ -518,27 +520,30 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
       {/* Delete Friend Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
-            <AlertDialogDescription>
-              ნამდვილად გსურთ {data?.profile?.nickname}-ის მეგობრებიდან წაშლა?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleDeleteFriend();
-              }}
-              disabled={deletingFriend}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deletingFriend ? "იშლება..." : "წაშლა"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+        <AlertDialogPortal>
+          <AlertDialogOverlay className="z-[140]" />
+          <AlertDialogContent className="z-[150]">
+            <AlertDialogHeader>
+              <AlertDialogTitle>მეგობრის წაშლა</AlertDialogTitle>
+              <AlertDialogDescription>
+                ნამდვილად გსურთ {data?.profile?.nickname}-ის მეგობრებიდან წაშლა?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteFriend();
+                }}
+                disabled={deletingFriend}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deletingFriend ? "იშლება..." : "წაშლა"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogPortal>
       </AlertDialog>
 
     </>
