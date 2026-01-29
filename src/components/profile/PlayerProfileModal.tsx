@@ -204,10 +204,12 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       sideOffset={5}
                     >
                       <DropdownMenuItem 
-                        onClick={(e) => {
+                        onSelect={(e) => {
                           e.preventDefault();
-                          e.stopPropagation();
-                          setShowDeleteConfirm(true);
+                          // Delay to allow dropdown to close before opening AlertDialog
+                          setTimeout(() => {
+                            setShowDeleteConfirm(true);
+                          }, 100);
                         }}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer"
                       >
