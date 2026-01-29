@@ -1,92 +1,113 @@
 
-
-# გეგმა: Observer-ის მყისიერი შედეგების ჩვენება
+# გეგმა: Lobby ღილაკის ლოგიკის გასწორება
 
 ## პრობლემა
 
-ახლა `MultiplayerObserverScreen`-ში observer-ი უნდა დაელოდოს ტაიმერის გასვლას, თუ 3+ მოთამაშეა. მომხმარებელს სურს მყისიერი შედეგები როცა ყველა უპასუხებს.
-
-## ახლანდელი ლოგიკა (ხაზი 79-95)
+ამჟამად ღილაკის ლოგიკა ასეთია (ხაზი 885-910):
 
 ```typescript
-// Sync mode: 1-2 players = instant reveal when all answer
-// Async mode: 3+ players = wait for timer
-const isSyncMode = players.length <= 2;
-
-const shouldProcess = isSyncMode 
-  ? (allAnswered || timerExpired)
-  : timerExpired;  // 3+ მოთამაშეზე მხოლოდ ტაიმერი
+const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
+const showPickerButton = justReturnedFromResults && !hasContent;
 ```
 
-## გადაწყვეტა
+ეს ნიშნავს:
+- "გააგრძელე თამაში" ჩანს მხოლოდ თუ `justReturnedFromResults === true` **და** კატეგორია არ არის არჩეული
+- სხვა შემთხვევაში ყოველთვის "თამაშის დაწყება" ჩანს - მაშინაც კი, როცა არაფერია არჩეული!
 
-ყოველთვის გავაგრძელოთ როცა ყველა უპასუხებს, მოთამაშეების რაოდენობის მიუხედავად.
+**მომხმარებლის მოთხოვნა:**
+| სცენარი | ღილაკის ტექსტი | მოქმედება |
+|---------|----------------|-----------|
+| არაფერია არჩეული | "გააგრძელე" | იხსნება category picker |
+| რაუნდი არჩეულია | "თამაშის დაწყება" | იწყება თამაში |
 
 ---
 
-## ცვლილებები
+## გადაწყვეტა
 
-### ფაილი: `src/components/team/MultiplayerObserverScreen.tsx`
+`justReturnedFromResults`-ის მოხსნა და ღილაკის ლოგიკის გამარტივება - მხოლოდ `hasContent`-ის მიხედვით:
 
-**ხაზი 79-95:** გამარტივება - ყოველთვის allAnswered || timerExpired
+### ფაილი: `src/components/team/RoomLobbyV2.tsx`
+
+**ხაზები 885-910:** ახალი ლოგიკა
 
 ```diff
-- // Sync mode: 1-2 players = instant reveal when all answer
-- // Async mode: 3+ players = wait for timer
-- const isSyncMode = players.length <= 2;
-
-+ // Player count check for UI purposes only (showing "X/Y answered")
-+ const showAnsweredCount = players.length <= 2;
+  {isHost ? (
+-   // Show "Continue Playing" only if returned from results AND no content selected
+-   // Content is selected if: queue has items OR room has category/trivia selected
+    (() => {
++     // Content is selected if: queue has items OR room has category/trivia selected
+      const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
+-     const showPickerButton = justReturnedFromResults && !hasContent;
+      
+-     return showPickerButton ? (
++     // No content selected → show picker button with "გააგრძელე"
++     // Content selected → show start button with "თამაშის დაწყება"
++     return !hasContent ? (
+        <ChunkyButton
+          variant="white"
+          size="xl"
+          className="w-full"
+          onClick={() => setShowCategoryPicker(true)}
+          icon={<Plus className="w-5 h-5" />}
+        >
+-         გააგრძელე თამაში
++         გააგრძელე
+        </ChunkyButton>
+      ) : (
+        <ChunkyButton
+          variant="white"
+          size="xl"
+          className="w-full"
+          onClick={handleStartGame}
+          disabled={!canStartGame || isStarting || loading}
+          icon={<Play className="w-5 h-5" />}
+        >
+          {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
+        </ChunkyButton>
+      );
+    })()
+  ) : (
 ```
 
-**ხაზი 91-95:**
+---
 
-```diff
-- // In sync mode (1-2 players), reveal immediately when all players answer
-- // In async/multi mode (3+ players), wait for timer to expire
-- const shouldProcess = isSyncMode 
--   ? (allAnswered || timerExpired)
--   : timerExpired;
-+ // Always advance immediately when all players have answered
-+ // No more waiting for timer in any mode
-+ const shouldProcess = allAnswered || timerExpired;
-```
+## ლოგიკის ნაკადი
 
-**ხაზი 135:** useEffect dependencies - `isSyncMode`-ის მოხსნა
-
-```diff
-- }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining, isSyncMode]);
-+ }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining]);
-```
-
-**ხაზი 333-347:** UI - answered count-ის ჩვენების ლოგიკის განახლება
-
-```diff
-- {/* Players Status - only show in sync mode */}
-- {isSyncMode && (
-+ {/* Players Status - always show */}
-+ {players.length > 0 && (
+```text
+┌─────────────────────────────────────┐
+│   Host-ი lobby-შია                 │
+└────────────────┬────────────────────┘
+                 ▼
+        hasContent?
+       (queue || category_id 
+        || user_trivia_id)
+                 │
+      ┌──────────┴──────────┐
+      │                     │
+   false                  true
+      │                     │
+      ▼                     ▼
+ "გააგრძელე"          "თამაშის დაწყება"
+ → opens picker       → starts game
 ```
 
 ---
 
 ## შედეგი
 
-| სიტუაცია | მანამდე | შემდეგ |
-|----------|---------|--------|
-| 2 მოთამაშე + ორივემ უპასუხა | მყისიერი | მყისიერი |
-| 4 მოთამაშე + ყველამ უპასუხა | ელოდება ტაიმერს | მყისიერი |
-| ტაიმერი გავიდა | გაგრძელება | გაგრძელება |
+| მდგომარეობა | მანამდე | შემდეგ |
+|-------------|---------|--------|
+| არაფერი არჩეული + NOT justReturned | "თამაშის დაწყება" (შეცდომა!) | "გააგრძელე" ✓ |
+| არაფერი არჩეული + justReturned | "გააგრძელე თამაში" | "გააგრძელე" ✓ |
+| რაუნდი არჩეული | "თამაშის დაწყება" | "თამაშის დაწყება" ✓ |
 
 ---
 
 ## ტექნიკური დეტალები
 
-**შესაცვლელი ფაილი:** `src/components/team/MultiplayerObserverScreen.tsx`
+**შესაცვლელი ფაილი:** `src/components/team/RoomLobbyV2.tsx`
 
-**ცვლილებების რაოდენობა:** 4 ადგილი
-- ხაზი 79-81: `isSyncMode` ცვლადის მოხსნა/გადარქმევა
-- ხაზი 91-95: `shouldProcess` ლოგიკის გამარტივება
-- ხაზი 135: useEffect dependency array
-- ხაზი 334: UI condition
-
+**ცვლილებები:**
+- ხაზი 887: `showPickerButton` ცვლადის მოხსნა
+- ხაზი 889: კონდიცია `showPickerButton` → `!hasContent`
+- ხაზი 897: ტექსტი "გააგრძელე თამაში" → "გააგრძელე"
