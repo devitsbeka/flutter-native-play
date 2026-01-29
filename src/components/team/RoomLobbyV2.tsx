@@ -374,11 +374,16 @@ export function RoomLobbyV2() {
     if (!currentRoom) return;
     
     try {
+      // Clear any existing room_questions from previous trivia selection
+      await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+      
+      // Update room with new category and clear user_trivia_id
       await supabase
         .from("game_rooms")
         .update({ 
           category_id: category.id, 
-          category_name: category.name 
+          category_name: category.name,
+          user_trivia_id: null, // Clear any previously selected user trivia
         })
         .eq("id", currentRoom.id);
       
@@ -393,11 +398,16 @@ export function RoomLobbyV2() {
     if (!currentRoom) return;
     
     try {
+      // Clear any existing room_questions from previous trivia selection
+      await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+      
+      // Update room with random category and clear user_trivia_id
       await supabase
         .from("game_rooms")
         .update({ 
           category_id: null, 
-          category_name: "შემთხვევითი" 
+          category_name: "შემთხვევითი",
+          user_trivia_id: null, // Clear any previously selected user trivia
         })
         .eq("id", currentRoom.id);
       
