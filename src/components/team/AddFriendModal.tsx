@@ -210,6 +210,7 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
         }}
         onTouchEnd={(e) => {
           e.stopPropagation();
+          e.preventDefault();
           handleButtonAction();
         }}
         disabled={isSent}

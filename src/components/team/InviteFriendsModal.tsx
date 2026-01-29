@@ -447,6 +447,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                     }}
                                     onTouchEnd={(e) => {
                                       e.stopPropagation();
+                                      e.preventDefault();
                                       handleButtonAction();
                                     }}
                                     disabled={isSent || isLoading}
