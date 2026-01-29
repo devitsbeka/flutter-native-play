@@ -518,7 +518,10 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deletingFriend}>გაუქმება</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteFriend}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteFriend();
+              }}
               disabled={deletingFriend}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
