@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSound } from "@/contexts/SoundContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
+import { calculateObserverBonus } from "@/utils/tvScoring";
 
 interface MultiplayerObserverScreenProps {
   timeRemaining: number;
@@ -92,14 +93,23 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
       const totalPlayers = players.length;
       
       if (totalIncorrect > 0) {
-        // Fair scoring based on player count:
-        // Small games (1-2 players): 100 per incorrect
-        // Larger games (3+): 100 only if 50%+ got it wrong
+        // Fair time-based scoring: observer bonus mirrors player scoring
+        // Faster wrong = less bonus, timeout = max bonus (175)
         let bonus = 0;
         if (totalPlayers <= 2) {
-          bonus = totalIncorrect * 100;
+          // Calculate time-based bonus for each incorrect answer
+          for (const [, answer] of Object.entries(opponentAnswers)) {
+            if (!answer.is_correct) {
+              // Use time_remaining from answer if available, otherwise assume timeout
+              const timeRemaining = answer.time_remaining ?? 0;
+              bonus += calculateObserverBonus(timeRemaining);
+            }
+          }
+          // Players who didn't answer = timeout = max bonus
+          bonus += didNotAnswerCount * calculateObserverBonus(0);
         } else if (totalIncorrect / totalPlayers >= 0.5) {
-          bonus = 100; // Fixed bonus for majority wrong
+          // For larger games, use timeout value for max bonus
+          bonus = calculateObserverBonus(0);
         }
         
         if (bonus > 0) {

@@ -4,7 +4,8 @@ import { Json } from '@/integrations/supabase/types';
 import { tvLog, tvLogPhase, tvLogPlayer, tvLogError, tvLogPresence, tvLogTimer } from '@/utils/tvDebug';
 import { 
   calculatePoints, 
-  calculateTimeRemaining, 
+  calculateTimeRemaining,
+  calculateObserverBonus,
   getQuestionTime, 
   getSessionBinding, 
   setSessionBinding,
@@ -23,6 +24,7 @@ export interface TVPlayer {
   isHost: boolean;
   isActive?: boolean; // Tracks whether the player is currently connected
   isReadyForNextRound?: boolean;
+  answeredTimeRemaining?: number; // Time remaining when answer was given (for observer bonus)
 }
 
 export interface TVQuestion {
@@ -294,14 +296,21 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         const totalActive = activePlayers.length;
         if (totalActive > 0 && incorrectCount > 0) {
-          // Fair scoring based on player count:
-          // Small games (1-2 players): 100 per incorrect
-          // Larger games (3+): 100 only if 50%+ incorrect
+          // Fair scoring based on player count with time-based bonuses
+          // Observer bonus mirrors player scoring: faster wrong = less bonus, timeout = max bonus
           let observerBonus = 0;
           if (totalActive <= 2) {
-            observerBonus = 100 * incorrectCount;
+            // Calculate time-based bonus for each incorrect/unanswered player
+            for (const player of activePlayers) {
+              if (!player.hasAnswered || player.lastAnswerCorrect === false) {
+                // Use player's answeredTimeRemaining if tracked, otherwise assume timeout (0)
+                const timeRemaining = player.answeredTimeRemaining ?? 0;
+                observerBonus += calculateObserverBonus(timeRemaining);
+              }
+            }
           } else if (incorrectCount / totalActive >= 0.5) {
-            observerBonus = 100; // Fixed bonus for majority wrong
+            // For larger games with 50%+ wrong, use timeout value for fair max bonus
+            observerBonus = calculateObserverBonus(0);
           }
           
           console.log('[advanceToReveal] 🏆 OBSERVER BONUS CALC:', {
@@ -2108,6 +2117,8 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               // This prevents invited/offline players from blocking auto-advance.
               isActive: rawPresence.isActive === true,
               isReadyForNextRound: (rawPresence.isReadyForNextRound as boolean) || false,
+              // Track time remaining when answer was given (for observer bonus calculation)
+              answeredTimeRemaining: isCurrentQuestionAnswer ? (rawPresence.answeredTimeRemaining as number | undefined) : undefined,
             });
           }
         });
@@ -2693,6 +2704,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           lastAnswerCorrect: isCorrect,
           lastAnswer: answer,
           answeredQuestionIndex: state.currentQuestionIndex, // Track which question this answer is for
+          answeredTimeRemaining: state.timeRemaining, // Track time for observer bonus calculation
           isHost,
           isActive: true,
         });
