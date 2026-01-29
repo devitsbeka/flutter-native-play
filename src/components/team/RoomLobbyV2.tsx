@@ -73,6 +73,7 @@ export function RoomLobbyV2() {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [startAfterPick, setStartAfterPick] = useState(false); // Flag to auto-start game after category pick
   const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
   const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
@@ -431,6 +432,13 @@ export function RoomLobbyV2() {
         .eq("id", currentRoom.id);
       
       toast.success("კატეგორია შეიცვალა");
+      
+      // Auto-start game if startAfterPick is true
+      if (startAfterPick) {
+        setStartAfterPick(false);
+        setShowCategoryPicker(false);
+        setTimeout(() => handleStartGame(), 100);
+      }
     } catch (error) {
       console.error("Error updating category:", error);
       toast.error("კატეგორიის შეცვლა ვერ მოხერხდა");
@@ -455,6 +463,13 @@ export function RoomLobbyV2() {
         .eq("id", currentRoom.id);
       
       toast.success("შემთხვევითი კატეგორია");
+      
+      // Auto-start game if startAfterPick is true
+      if (startAfterPick) {
+        setStartAfterPick(false);
+        setShowCategoryPicker(false);
+        setTimeout(() => handleStartGame(), 100);
+      }
     } catch (error) {
       console.error("Error setting random:", error);
     }
@@ -507,6 +522,13 @@ export function RoomLobbyV2() {
         .eq("id", currentRoom.id);
       
       toast.success("ტრივია დაემატა");
+      
+      // Auto-start game if startAfterPick is true
+      if (startAfterPick) {
+        setStartAfterPick(false);
+        setShowCategoryPicker(false);
+        setTimeout(() => handleStartGame(), 100);
+      }
     } catch (error) {
       console.error("Error setting trivia:", error);
       toast.error("ტრივიის დამატება ვერ მოხერხდა");
@@ -880,28 +902,27 @@ export function RoomLobbyV2() {
       <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
         <div className="max-w-[520px] mx-auto">
           {isHost ? (
-            // Content is selected if: queue has items OR room has category/trivia selected
+            // Always show "თამაშის დაწყება" button - opens picker if no content selected
             (() => {
               const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
               
-              // No content selected → show picker button with "გააგრძელე"
-              // Content selected → show start button with "თამაშის დაწყება"
-              return !hasContent ? (
+              const handleStartOrPick = () => {
+                if (hasContent) {
+                  // Content selected - start the game
+                  handleStartGame();
+                } else {
+                  // No content - open picker and set flag to auto-start after selection
+                  setStartAfterPick(true);
+                  setShowCategoryPicker(true);
+                }
+              };
+              
+              return (
                 <ChunkyButton
                   variant="white"
                   size="xl"
                   className="w-full"
-                  onClick={() => setShowCategoryPicker(true)}
-                  icon={<Plus className="w-5 h-5" />}
-                >
-                  გააგრძელე
-                </ChunkyButton>
-              ) : (
-                <ChunkyButton
-                  variant="white"
-                  size="xl"
-                  className="w-full"
-                  onClick={handleStartGame}
+                  onClick={handleStartOrPick}
                   disabled={!canStartGame || isStarting || loading}
                   icon={<Play className="w-5 h-5" />}
                 >
@@ -1057,7 +1078,10 @@ export function RoomLobbyV2() {
       {/* Category Picker Modal */}
       <CategoryPickerModal
         isOpen={showCategoryPicker}
-        onClose={() => setShowCategoryPicker(false)}
+        onClose={() => {
+          setShowCategoryPicker(false);
+          setStartAfterPick(false); // Reset auto-start flag when modal is closed manually
+        }}
         onSelectCategory={handleSelectCategory}
         onSelectRandom={handleSelectRandom}
         onSelectTrivia={handleSelectTrivia}
