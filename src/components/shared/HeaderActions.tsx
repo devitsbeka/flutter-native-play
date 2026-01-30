@@ -51,8 +51,8 @@ export function HeaderActions({ className = "" }: HeaderActionsProps) {
           )}
         </motion.button>
 
-        {/* Messages icon - minimal style like overview page */}
-        <motion.button
+        {/* Messages icon - TEMPORARILY HIDDEN */}
+        {/* <motion.button
           className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
@@ -74,7 +74,7 @@ export function HeaderActions({ className = "" }: HeaderActionsProps) {
               </span>
             </motion.div>
           )}
-        </motion.button>
+        </motion.button> */}
       </div>
 
       {/* Panels */}
@@ -82,10 +82,11 @@ export function HeaderActions({ className = "" }: HeaderActionsProps) {
         isOpen={showNotificationsPanel}
         onClose={() => setShowNotificationsPanel(false)}
       />
-      <RoomChatsPanel
+      {/* TEMPORARILY HIDDEN */}
+      {/* <RoomChatsPanel
         isOpen={showRoomChatsPanel}
         onClose={() => setShowRoomChatsPanel(false)}
-      />
+      /> */}
     </>
   );
 }
