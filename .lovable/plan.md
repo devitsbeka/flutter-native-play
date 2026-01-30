@@ -1,99 +1,133 @@
 
-# გეგმა: Observer-ის ლოდინის პრობლემის გამოსწორება
+# გეგმა: Observer-ის ბონუსის გამოსწორება - გამოტოვებული კითხვების დაჭერა
 
 ## პრობლემა
 
-როცა შენი ტრივიაა და ოთახში თამაშობ, აუცილებელია ელოდო:
-1. მოთამაშემ უპასუხა **ან**
-2. 15 წამი გავიდა
+როცა Observer სწრაფად გადადის შემდეგ კითხვაზე (1.5 წამში), მოთამაშის პასუხი აღარ იჭერება:
 
-თუ მეგობარი ფიქრობს ან დაყოვნებს, შენ (observer) იძულებული ხარ დაელოდო მთელი 15 წამი! ეს მოსაბეზრებელია.
+```text
+Timeline:
+┌─────────────────────────────────────────────────────────┐
+│ 0s    Observer sees Q1                                  │
+│ 1.5s  Observer clicks "Next" → currentQuestionIndex = 2 │
+│ 5s    Player answers Q1 WRONG                           │
+│       ↓                                                 │
+│       Subscription receives answer for Q1               │
+│       BUT: currentQuestionIndex = 2, so answer ignored! │
+│       Observer gets 0 bonus 😢                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**კოდის პრობლემა** (MultiplayerContextV2.tsx, line 437):
+```typescript
+// Only processes answers for CURRENT question
+if (answer.question_index === currentQuestionIndexRef.current) {
+  // ...
+}
+```
+
+Observer-მა როცა გადავიდა Q2-ზე, Q1-ის პასუხები უკვე იგნორირდება.
 
 ## გადაწყვეტა
 
-**Observer-ს შეეძლოს მაშინვე გადასვლა შემდეგ კითხვაზე** - ლოდინის გარეშე.
+შევქმნათ **ცალკე subscription/polling** Observer-ისთვის რომელიც ყველა კითხვის პასუხებს იჭერს და real-time ბონუსს ითვლის.
 
-### ლოგიკა:
-1. Observer-ს აჩვენე "შემდეგი კითხვა" ღილაკი **1-2 წამში** (რომ მოასწროს კითხვის წაკითხვა)
-2. თუ observer სწრაფად გადავიდა და მოთამაშეს ჯერ არ უპასუხია - ბონუსი არ მიენიჭება ამ კითხვაზე
-3. თუ observer დაელოდა და მოთამაშემ არასწორად უპასუხა - ბონუსი მიენიჭება
-4. Observer-ის გადასვლა არ აფექტებს მოთამაშის თამაშს - ყველას თავისი local state აქვს
+### მიდგომა 1: Observer-ში Polling (რეკომენდებული)
+
+`MultiplayerObserverScreen`-ში დავამატოთ polling რომელიც:
+1. ყოველ 2-3 წამში ამოწმებს `player_answers` ტაბლაში ყველა არასწორ პასუხს
+2. თვლის ბონუსს იმ პასუხებზე რაც ჯერ არ დაუთვლია
+3. ინახავს "დათვლილი პასუხების" IDs
 
 ### ცვლილებები ფაილში: `src/components/team/MultiplayerObserverScreen.tsx`
 
-#### 1. დავამატოთ ახალი state მინიმალური delay-სთვის
-```typescript
-const [minDelayPassed, setMinDelayPassed] = useState(false);
-```
+#### 1. დავამატოთ polling effect:
 
-#### 2. 1.5 წამიანი minimum delay effect (რომ observer-მა წაიკითხოს კითხვა)
 ```typescript
+// Poll for ALL incorrect answers across ALL questions (catches skipped ones)
 useEffect(() => {
-  setMinDelayPassed(false);
-  const minDelay = setTimeout(() => {
-    setMinDelayPassed(true);
-  }, 1500); // 1.5 წამი = საკმარისია კითხვის წასაკითხად
-  return () => clearTimeout(minDelay);
-}, [currentQuestionIndex]);
+  if (!state.currentRoom || players.length === 0) return;
+  
+  const pollAnswers = async () => {
+    const { data: allAnswers } = await supabase
+      .from("player_answers")
+      .select("*")
+      .eq("room_id", state.currentRoom!.id)
+      .eq("is_correct", false); // Only incorrect answers
+    
+    if (!allAnswers) return;
+    
+    let newBonus = 0;
+    const newProcessedIds = new Set(processedAnswerIds);
+    
+    for (const answer of allAnswers) {
+      const answerId = `${answer.user_id}-${answer.question_index}`;
+      if (processedAnswerIds.has(answerId)) continue;
+      
+      const timeRemaining = answer.time_remaining ?? 0;
+      const bonus = calculateObserverBonus(timeRemaining);
+      newBonus += bonus;
+      newProcessedIds.add(answerId);
+    }
+    
+    if (newBonus > 0) {
+      setBonusEarnedThisQuestion(prev => prev + newBonus);
+      awardObserverBonus(newBonus);
+      setProcessedAnswerIds(newProcessedIds);
+    }
+  };
+  
+  // Poll every 2 seconds
+  const interval = setInterval(pollAnswers, 2000);
+  pollAnswers(); // Initial poll
+  
+  return () => clearInterval(interval);
+}, [state.currentRoom?.id, players.length, processedAnswerIds, awardObserverBonus]);
 ```
 
-#### 3. შევცვალოთ canAdvance ლოგიკა
-**მანამდე** (ხაზები 79-129):
+#### 2. შევცვალოთ `processedAnswerIds` key format:
+
+**მანამდე** (ხაზი 85):
 ```typescript
-const allAnswered = players.length > 0 && answeredCount === players.length;
-const timerExpired = localTimeRemaining <= 0;
-const shouldProcess = allAnswered || timerExpired;
+for (const [odavidwserId, answer] of Object.entries(opponentAnswers)) {
+  if (processedAnswerIds.has(odavidwserId)) continue;
 ```
 
 **შემდეგ**:
 ```typescript
-const allAnswered = players.length > 0 && answeredCount === players.length;
-const timerExpired = localTimeRemaining <= 0;
-
-// Observer-ს შეუძლია გადავიდეს მაშინვე minimum delay-ს შემდეგ
-// ან დაელოდოს ბონუსის მისაღებად თუ მოთამაშე შეცდება
-const canAdvanceNow = minDelayPassed && (allAnswered || timerExpired);
-
-// თუ observer-ს სურს ახლავე გადასვლა, ეს ნებისმიერ დროს შეუძლია min delay-ს შემდეგ
-const shouldEnableAdvance = minDelayPassed;
+// Use compound key: {userId}-{questionIndex} to track per-question answers
+const answerId = `${answer.user_id}-${answer.question_index}`;
+if (processedAnswerIds.has(answerId)) continue;
 ```
 
-#### 4. განვაცალკევოთ "ბონუსის დათვლა" და "გადასვლის უფლება"
-- `canAdvance` = `minDelayPassed` (1.5 წამის შემდეგ ყოველთვის true)
-- ბონუსი ითვლება ცალკე - მხოლოდ თუ observer დაელოდა და მოთამაშემ შეცდომა დაუშვა
+#### 3. წავშალოთ ძველი real-time effect (ხაზები 75-104):
 
-#### 5. ბონუსის ლოგიკის გამარტივება
-```typescript
-// ბონუსი მიენიჭება რეალ-დროში როცა მოთამაშე პასუხობს
-// Observer-ს არ სჭირდება ლოდინი ბონუსისთვის
-useEffect(() => {
-  // როცა ახალი არასწორი პასუხი მოვიდა, დაამატე ბონუსი
-  const incorrectAnswers = Object.values(opponentAnswers).filter(a => !a.is_correct);
-  // ... ბონუსის გამოთვლა და დამატება
-}, [opponentAnswers]);
-```
-
-## UI ცვლილებები
-
-1. **Timer** - დავმალოთ სრულად Observer-ისთვის (არ აინტერესებს დრო)
-2. **"შემდეგი კითხვა" ღილაკი** - გამოჩნდეს 1.5 წამში (არა 15 წამში)
-3. **"X/Y უპასუხეს"** - დარჩეს ინფორმაციისთვის
+ძველი effect იყენებდა `opponentAnswers`-ს რომელიც არ მუშაობს Observer-ისთვის. ამის ნაცვლად polling-ით ვჭერთ ყველა პასუხს.
 
 ## რატომ მუშაობს
 
-- Observer-ის გადასვლა **არ აფექტებს** მოთამაშეების თამაშს
-- ყველას თავისი local `currentQuestionIndex` აქვს  
-- `nextQuestion()` მხოლოდ ლოკალურად ცვლის state-ს
-- Observer-ს შეუძლია იყოს კითხვა #5-ზე მაშინ როცა მოთამაშე ჯერ #3-ზეა
+| სცენარი | მანამდე | შემდეგ |
+|---------|---------|--------|
+| Observer Q2-ზეა, Player Q1-ზე პასუხობს | ❌ იგნორირდება | ✅ Polling იჭერს |
+| Observer Q5-ზეა, Player Q3-ზე პასუხობს | ❌ იგნორირდება | ✅ Polling იჭერს |
+| Player სწორად პასუხობს | ✅ ბონუსი 0 | ✅ ბონუსი 0 |
+| Player არასწორად პასუხობს | ❌ 0 (თუ Observer გადავიდა) | ✅ ბონუსი ~100-175 |
 
 ## ტექნიკური დეტალები
 
-### გასაცვლელი ფაილი:
-- `src/components/team/MultiplayerObserverScreen.tsx`
+- **Polling interval**: 2 წამი (საკმარისი real-time ეფექტისთვის)
+- **Key format**: `{userId}-{questionIndex}` - უნიკალური თითოეული პასუხისთვის
+- **Query**: მხოლოდ `is_correct=false` - ოპტიმიზებული
+- **Memory**: `processedAnswerIds` Set შეინახავს დათვლილ პასუხებს
 
-### მთავარი ცვლილებები:
-1. დაამატე `minDelayPassed` state
-2. დაამატე 1.5 წამიანი timeout effect  
-3. შეცვალე `canAdvance` ლოგიკა - `minDelayPassed`-ზე დაფუძნებული
-4. ბონუსი ითვლება real-time როცა პასუხები მოდის, არა მხოლოდ shouldProcess-ზე
-5. Timer UI-ს შეგვიძლია დავმალოთ ან შევამციროთ რადგან observer-ს აღარ სჭირდება ლოდინი
+## დამატებით
+
+Import-ებში დაგვჭირდება `supabase`:
+```typescript
+import { supabase } from "@/integrations/supabase/client";
+```
+
+და `useMultiplayerV2`-დან `currentRoom`:
+```typescript
+const { currentRoom, ... } = useMultiplayerV2();
+```
