@@ -11,6 +11,7 @@ import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -156,15 +157,17 @@ export default function Auth() {
   const handleAppleSignIn = async () => {
     setLoading(true);
     try {
-      const { error } = await signInWithApple();
-      if (error) {
-        if (!error.message?.includes('cancelled')) {
-          notify.error(t("common.error"), { description: error.message });
-        }
-      } else {
-        notify.success(t("common.welcome"), { description: t("auth.signIn"), icon: "🍎" });
-        navigate(returnTo ? decodeURIComponent(returnTo) : "/");
+      // Store returnTo for OAuth redirect
+      if (returnTo) {
+        localStorage.setItem('authReturnTo', returnTo);
       }
+      const { error } = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        notify.error(t("common.error"), { description: error.message });
+      }
+      // OAuth will redirect, so no need to navigate manually
     } catch (err) {
       notify.error(t("common.error"), { description: t("errors.generic") });
     } finally {
@@ -355,20 +358,18 @@ export default function Auth() {
             {isSignUp ? t("auth.signUpWithGoogle") : t("auth.signInWithGoogle")}
           </ChunkyButton>
 
-          {/* Sign in with Apple - iOS only */}
-          {isIOS && (
-            <ChunkyButton
-              type="button"
-              variant="secondary"
-              size="lg"
-              className="w-full mt-2 bg-foreground text-background hover:bg-foreground/90"
-              onClick={handleAppleSignIn}
-              disabled={loading}
-            >
-              <Apple className="w-5 h-5 mr-2" />
-              {isSignUp ? t("auth.signUpWithApple") : t("auth.signInWithApple")}
-            </ChunkyButton>
-          )}
+          {/* Sign in with Apple */}
+          <ChunkyButton
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="w-full mt-2 bg-foreground text-background hover:bg-foreground/90"
+            onClick={handleAppleSignIn}
+            disabled={loading}
+          >
+            <Apple className="w-5 h-5 mr-2" />
+            {isSignUp ? t("auth.signUpWithApple") : t("auth.signInWithApple")}
+          </ChunkyButton>
         </motion.form>
 
         {/* Toggle */}
