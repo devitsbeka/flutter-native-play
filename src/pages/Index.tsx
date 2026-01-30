@@ -6,6 +6,7 @@ import { Bell, Check, Clock, Menu, MessageCircle } from "lucide-react";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import SpotlightSearch from "@/components/search/SpotlightSearch";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
@@ -345,8 +346,8 @@ export default function Index() {
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
         <header className="relative z-20 px-4 py-3 safe-top border-b border-purple-900/10">
           <div className="flex items-center justify-between gap-3">
-            {/* Left side: Burger menu (mobile only) + Search */}
-            <div className="flex items-center gap-2 flex-1">
+            {/* Left side: Burger menu (mobile only) */}
+            <div className="flex items-center gap-2">
               {/* Burger Menu - Mobile Only */}
               <motion.button
                 className="md:hidden p-2 rounded-full hover:bg-white/30 transition-colors"
@@ -356,7 +357,11 @@ export default function Index() {
               >
                 <Menu className="w-6 h-6 text-gray-600" />
               </motion.button>
-              
+            </div>
+            
+            {/* Center: Logo */}
+            <div className="flex-1 flex justify-center md:justify-start">
+              <MyTriviaLiveLogo size="md" className="md:hidden" />
               {/* Spotlight Search Bar - Hidden on mobile */}
               <div className="hidden md:flex flex-1">
                 <SpotlightSearch />
