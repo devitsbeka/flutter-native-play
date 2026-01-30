@@ -538,7 +538,8 @@ function TeamContentV2() {
                       )}
                     </motion.button>
 
-                    <motion.button
+                    {/* Messages button - TEMPORARILY HIDDEN */}
+                    {/* <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setShowRoomChatsPanel(true)}
@@ -551,7 +552,7 @@ function TeamContentV2() {
                           {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
                         </span>
                       )}
-                    </motion.button>
+                    </motion.button> */}
                   </div>
                 </div>
 
@@ -852,10 +853,11 @@ function TeamContentV2() {
         isOpen={showNotificationsPanel}
         onClose={() => setShowNotificationsPanel(false)}
       />
-      <RoomChatsPanel
+      {/* TEMPORARILY HIDDEN */}
+      {/* <RoomChatsPanel
         isOpen={showRoomChatsPanel}
         onClose={() => setShowRoomChatsPanel(false)}
-      />
+      /> */}
       <CreateTriviaTypeModal
         open={showCreateTypeModal}
         onOpenChange={setShowCreateTypeModal}

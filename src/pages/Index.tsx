@@ -400,8 +400,8 @@ export default function Index() {
                 )}
               </motion.button>
               
-              {/* Messages icon with unread badge */}
-              <motion.button
+              {/* Messages icon with unread badge - TEMPORARILY HIDDEN */}
+              {/* <motion.button
                 className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -423,7 +423,7 @@ export default function Index() {
                     </span>
                   </motion.div>
                 )}
-              </motion.button>
+              </motion.button> */}
             </div>
           </div>
         </header>
@@ -973,11 +973,11 @@ export default function Index() {
         </div>
       </MainLayout>
       
-      {/* Room Chats Panel */}
-      <RoomChatsPanel
+      {/* Room Chats Panel - TEMPORARILY HIDDEN */}
+      {/* <RoomChatsPanel
         isOpen={showRoomChatsPanel}
         onClose={() => setShowRoomChatsPanel(false)}
-      />
+      /> */}
     </>
   );
 }

@@ -132,8 +132,8 @@ export function TeamRightSidebar({
           </div>
         </motion.div>
 
-        {/* Friends Online Widget - Facebook Style */}
-        <motion.div
+        {/* Friends Online Widget - TEMPORARILY HIDDEN */}
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -180,7 +180,7 @@ export function TeamRightSidebar({
               </div>
             )}
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </aside>
   );
