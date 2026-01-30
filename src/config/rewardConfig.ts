@@ -1,10 +1,14 @@
 // Centralized reward configuration for the entire app
-// Balanced economy: 1 Gem ≈ 50 Coins
-// Game stake system: 500 coins to play, winner takes all (1000 coins)
+// 
+// ECONOMY BALANCE:
+// - 1 Gem = 500 Coins
+// - Game stake: 500 coins (win = 1000, lose = 0, draw = 250)
+// - 30 gems = 15,000 coins = 1 day VIP = 3 GEL
+// - New player gets 1500 coins (3 free games) + 3 gems (1500 coins value)
 
 export const REWARDS = {
   // ===== GAME STAKE SYSTEM =====
-  GAME_STAKE: 500,           // Entry fee per game
+  GAME_STAKE: 500,           // Entry fee per game (1 gem value)
   GAME_WIN_REWARD: 1000,     // Winner gets stake × 2
   GAME_DRAW_REFUND: 250,     // Half stake back on draw
   GAME_LOSE_REWARD: 0,       // Loser already paid stake
@@ -12,73 +16,77 @@ export const REWARDS = {
   // ===== PLAY REGENERATION SYSTEM =====
   PLAY_REGEN_HOURS: 4,       // 1 play every 4 hours after daily limit
   PLAY_REGEN_MAX: 3,         // Max stored regenerated plays
-  PLAYS_PER_AD: 1,           // 1 play per ad (not coins)
+  PLAYS_PER_AD: 1,           // 1 play per ad
   MAX_ADS_PER_DAY: 5,        // Limit ad watching per day
-  GEMS_FOR_PLAYS: 3,         // 3 gems = instant plays
+  GEMS_FOR_PLAYS: 2,         // 2 gems = instant plays (1000 coins value)
   GEMS_PLAYS_AMOUNT: 2,      // Number of plays for gems
 
   // ===== LEVEL UP REWARDS =====
-  LEVEL_UP_COINS_PER_LEVEL: 75,  // Reduced from 100
-  LEVEL_UP_GEMS_THRESHOLD: 5,    // Every 5 levels
+  LEVEL_UP_COINS_PER_LEVEL: 100,  // 20% of a game stake per level
+  LEVEL_UP_GEMS_THRESHOLD: 5,     // Every 5 levels get 1 gem
 
-  // ===== DAILY REWARDS - Balanced for sustainable economy =====
+  // ===== DAILY REWARDS - 7-day cycle =====
+  // Total week value: ~6,750 coins worth (13.5 games)
   DAILY_REWARDS: [
-    { day: 1, coins: 100, gems: 0 },
-    { day: 2, coins: 150, gems: 0 },
-    { day: 3, coins: 200, gems: 1 },
-    { day: 4, coins: 250, gems: 0 },
-    { day: 5, coins: 350, gems: 1 },
-    { day: 6, coins: 450, gems: 1 },
-    { day: 7, coins: 500, gems: 2 },
+    { day: 1, coins: 200, gems: 0 },   // 200 coins (40% of stake)
+    { day: 2, coins: 300, gems: 0 },   // 300 coins (60% of stake)
+    { day: 3, coins: 400, gems: 0 },   // 400 coins (80% of stake)
+    { day: 4, coins: 500, gems: 0 },   // 500 coins (1 free game!)
+    { day: 5, coins: 750, gems: 0 },   // 750 coins (1.5 games)
+    { day: 6, coins: 1000, gems: 0 },  // 1000 coins (2 games)
+    { day: 7, coins: 1500, gems: 1 },  // 1500 + 500 = 2000 value (4 games)
   ],
 
   // ===== CHEST REWARDS (every 6 hours) =====
-  CHEST_COINS: 100,          // Reduced from 200
-  CHEST_GEMS: 1,             // Reduced from 3
-  CHEST_COOLDOWN_HOURS: 6,   // Increased from 4
-  CHEST_XP: 0,               // No more XP
+  CHEST_COINS: 250,          // Half a game stake
+  CHEST_GEMS: 0,             // No free gems from chest (keep gems valuable)
+  CHEST_COOLDOWN_HOURS: 6,   // 4x per day max
+  CHEST_XP: 0,               // No XP system
 
   // ===== LUCKY SPIN REWARDS - Balanced =====
   SPIN_REWARDS: [
-    { type: "coins", value: 50, label: "50 მონეტა" },
     { type: "coins", value: 100, label: "100 მონეტა" },
     { type: "coins", value: 200, label: "200 მონეტა" },
     { type: "coins", value: 300, label: "300 მონეტა" },
-    { type: "gems", value: 1, label: "1 ალმასი" },
-    { type: "gems", value: 2, label: "2 ალმასი" },
-    { type: "coins", value: 75, label: "75 მონეტა" },
+    { type: "coins", value: 500, label: "500 მონეტა" },   // 1 game!
+    { type: "coins", value: 150, label: "150 მონეტა" },
+    { type: "coins", value: 250, label: "250 მონეტა" },
+    { type: "gems", value: 1, label: "1 ალმასი" },        // Rare: 500 coin value
     { type: "powerup", value: 1, label: "ძალა" },
   ],
 
-  // ===== WATCH AD REWARD - Now gives plays, not coins =====
+  // ===== WATCH AD REWARD =====
   AD_WATCH_PLAYS: 1,         // 1 play per ad
   AD_WATCH_COINS: 0,         // Deprecated - use AD_WATCH_PLAYS
-  AD_WATCH_EXTRA_SPINS: 3,   // Reduced from 5
+  AD_WATCH_EXTRA_SPINS: 2,   // Extra spins from ad
 
   // ===== GEM EXCHANGE =====
-  GEM_TO_COINS_RATE: 50,     // 1 gem = 50 coins
+  GEM_TO_COINS_RATE: 500,    // 1 gem = 500 coins
 
-  // ===== NEW PLAYER STARTING BALANCE - Reduced =====
-  NEW_PLAYER_COINS: 1500,    // 3 free games to learn (was 2000)
-  NEW_PLAYER_GEMS: 5,        // Reduced from 10
+  // ===== NEW PLAYER STARTING BALANCE =====
+  NEW_PLAYER_COINS: 1500,    // 3 free games to learn
+  NEW_PLAYER_GEMS: 3,        // 1500 coins value (3 more games)
 
   // ===== POWER-UP PRICES (coins) =====
+  // Priced relative to 500 coin game stake
   POWER_UP_PRICES: {
-    "5050": 100,
-    "freeze": 120,
-    "replace": 80,
-    "time-drain": 100,
+    "5050": 150,         // 30% of stake - powerful ability
+    "freeze": 100,       // 20% of stake
+    "replace": 75,       // 15% of stake
+    "time-drain": 100,   // 20% of stake
   } as Record<string, number>,
 
   // ===== VIP PRICES (gems) =====
+  // 1 day = 30 gems = 3 GEL
+  // Longer periods get better value
   VIP_PRICES: {
-    day: 5,      // Increased from 3
-    week: 20,    // Increased from 12
-    month: 50,   // Increased from 35
+    day: 30,      // 30 gems = 3 GEL (base rate)
+    week: 100,    // 100 gems = 10 GEL (52% discount vs daily)
+    month: 250,   // 250 gems = 25 GEL (72% discount vs daily)
   },
 
   // ===== MULTIPLAYER STAKE REWARDS =====
-  MULTIPLAYER_1ST_COINS: 1000,  // Winner takes all
+  MULTIPLAYER_1ST_COINS: 1000,  // Winner takes all (stake × 2)
   MULTIPLAYER_2ND_COINS: 0,
   MULTIPLAYER_3RD_COINS: 0,
   MULTIPLAYER_PARTICIPATION_COINS: 0,
@@ -86,9 +94,9 @@ export const REWARDS = {
   // ===== FEED TRIVIA REWARDS (casual play from social feed) =====
   FEED_TRIVIA_XP_PER_CORRECT: 5,
   FEED_TRIVIA_PERFECT_XP_BONUS: 10,
-  FEED_TRIVIA_COINS_PER_CORRECT: 2,
-  FEED_TRIVIA_PERFECT_COINS_BONUS: 10,
-  FEED_COLLECTION_COMPLETE_COINS: 15,
+  FEED_TRIVIA_COINS_PER_CORRECT: 5,      // Small coin drip
+  FEED_TRIVIA_PERFECT_COINS_BONUS: 25,   // Bonus for perfect
+  FEED_COLLECTION_COMPLETE_COINS: 50,    // Complete a collection
 
   // ===== DEPRECATED - Kept for backwards compatibility =====
   GAME_WIN_BASE_COINS: 0,
