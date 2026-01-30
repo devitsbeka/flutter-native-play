@@ -44,6 +44,7 @@ import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import {
   UnifiedFiltersBar,
@@ -506,9 +507,7 @@ function TeamContentV2() {
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
-                      ონლაინ თამაში
-                    </h1>
+                    <MyTriviaLiveLogo size="md" />
                   </div>
 
                   <div className="flex items-center gap-2">
