@@ -61,13 +61,19 @@ export function useShopData() {
   const { t } = useLanguage();
 
   return useMemo(() => {
+    // ECONOMY CONSTANTS (from rewardConfig)
+    // 1 GEL = 10 gems, 1 gem = 500 coins
+    // VIP: day=30, week=100, month=250 gems
+    
     // Hot Deals - Starter Pack Section
+    // Value calculation: 1 power-up ≈ 1 gem (based on 500 coin game stake)
+    // 2x all powers = 8 power-ups = ~8 gems value
     const STARTER_PACK_ITEMS: ShopItem[] = [
       {
         id: "starter_bundle",
         name: t("shop.starterPack"),
-        description: `2x ${t("shop.allPowers")} + 200 ${t("shop.coin")}`,
-        price: 6,
+        description: `2x ${t("shop.allPowers")} + 500 ${t("shop.coin")}`,
+        price: 10,  // 8 powers + 1 gem worth of coins = 9, sell for 10 (slight premium for convenience)
         currency: "gems",
         icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
@@ -76,43 +82,44 @@ export function useShopData() {
       {
         id: "starter_bundle_medium",
         name: t("shop.mediumPackage"),
-        description: `5x ${t("shop.allPowers")} + 500 ${t("shop.coin")}`,
-        price: 12,
+        description: `5x ${t("shop.allPowers")} + 1000 ${t("shop.coin")}`,
+        price: 20,  // 20 powers (20 gems) + 2 gems coins = 22, sell for 20 = 9% discount
         currency: "gems",
         icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
-        savings: 20,
+        savings: 10,
       },
       {
         id: "starter_bundle_large",
         name: t("shop.largePackage"),
-        description: `10x ${t("shop.allPowers")} + 1000 ${t("shop.coin")}`,
-        price: 22,
+        description: `10x ${t("shop.allPowers")} + 2500 ${t("shop.coin")}`,
+        price: 35,  // 40 powers (40 gems) + 5 gems coins = 45, sell for 35 = 22% discount
         currency: "gems",
         icon: <img src={iconStarterPack} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
-        savings: 30,
+        savings: 22,
       },
     ];
 
-    // Hot Deals - Mega Powers Section
+    // Hot Deals - Mega Powers Section (powers only, no coins)
     const MEGA_POWERS_ITEMS: ShopItem[] = [
       {
         id: "power_bundle_small",
         name: t("shop.smallPackage"),
         description: `2x ${t("shop.allPowers")}`,
-        price: 5,
+        price: 7,  // 8 powers worth 8 gems, sell for 7 = 12% discount
         currency: "gems",
         icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
+        savings: 12,
       },
       {
         id: "mega_power_bundle",
         name: t("shop.mediumPackage"),
         description: `5x ${t("shop.allPowers")}`,
-        price: 10,
+        price: 16,  // 20 powers worth 20 gems, sell for 16 = 20% discount
         currency: "gems",
         icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
@@ -123,7 +130,7 @@ export function useShopData() {
         id: "power_bundle_large",
         name: t("shop.largePackage"),
         description: `10x ${t("shop.allPowers")}`,
-        price: 18,
+        price: 28,  // 40 powers worth 40 gems, sell for 28 = 30% discount
         currency: "gems",
         icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
@@ -132,13 +139,13 @@ export function useShopData() {
       },
     ];
 
-    // VIP Section
+    // VIP Section - aligned with rewardConfig.ts VIP_PRICES
     const VIP_PROMO_ITEMS: ShopItem[] = [
       {
         id: "vip_day",
         name: t("shop.vipDay"),
         description: t("shop.vipBenefitsDay"),
-        price: 3,
+        price: 30,  // 30 gems = 3 GEL
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
@@ -148,35 +155,36 @@ export function useShopData() {
         id: "vip_week_deal",
         name: t("shop.vipWeek"),
         description: t("shop.vipBenefitsWeek"),
-        price: 12,
+        price: 100,  // 100 gems = 10 GEL (vs 210 for 7 days = 52% savings)
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
-        savings: 25,
+        savings: 52,
         vipDuration: "week",
       },
       {
         id: "vip_month",
         name: t("shop.vipMonth"),
         description: t("shop.vipBenefitsMonth"),
-        price: 35,
+        price: 250,  // 250 gems = 25 GEL (vs 900 for 30 days = 72% savings)
         currency: "gems",
         icon: <img src={iconVipCrown} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
-        savings: 30,
+        savings: 72,
         vipDuration: "month",
       },
     ];
 
-    // Powers Section
+    // Powers Section - Individual power-ups
+    // Base: 1 power = 1 gem (equivalent to 500 coins game stake)
     const POWERS_ITEMS: ShopItem[] = [
       {
         id: "power_5050_3",
         name: `${t("powerups.fiftyFifty.name")} ×3`,
         description: t("shop.deletesWrongAnswers"),
-        price: 8,
+        price: 3,  // 3 gems for 3 powers = 1 gem each (no discount for small qty)
         currency: "gems",
         icon: <img src={fiftyFiftyIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(350 80% 60%) 0%, hsl(330 75% 55%) 100%)",
@@ -187,7 +195,7 @@ export function useShopData() {
         id: "power_freeze_3",
         name: `${t("powerups.freeze.name")} ×3`,
         description: t("shop.freezesTime"),
-        price: 8,
+        price: 3,
         currency: "gems",
         icon: <img src={freezeIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(190 90% 55%) 0%, hsl(210 80% 55%) 100%)",
@@ -198,7 +206,7 @@ export function useShopData() {
         id: "power_replace_3",
         name: `${t("powerups.replace.name")} ×3`,
         description: t("shop.replacesQuestion"),
-        price: 8,
+        price: 3,
         currency: "gems",
         icon: <img src={replaceIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(150 75% 50%) 0%, hsl(140 70% 45%) 100%)",
@@ -209,24 +217,24 @@ export function useShopData() {
         id: "power_timedrain_3",
         name: `${t("powerups.timeDrain.name")} ×3`,
         description: t("shop.addsTime"),
-        price: 8,
+        price: 3,
         currency: "gems",
         icon: <img src={timeDrainIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(280 65% 55%) 100%)",
         powerType: "time-drain",
         amount: 3,
       },
-      // Power Combo Bundle - all 4 powers at a discount
+      // Power Combo Bundle - all 4 powers ×3 at a discount
       {
         id: "power_combo_bundle",
         name: t("shop.allPowers"),
         description: `3× ${t("shop.eachPower")}`,
-        price: 28,
+        price: 10,  // 12 powers worth 12 gems, sell for 10 = 17% discount
         currency: "gems",
         icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "linear-gradient(135deg, hsl(280 80% 60%) 0%, hsl(340 75% 55%) 100%)",
         badge: "popular",
-        savings: 12,
+        savings: 17,
       },
     ];
 
@@ -243,98 +251,100 @@ export function useShopData() {
       badge: index === 0 ? "new" as const : index === 1 ? "popular" as const : frame.rarity === "legendary" ? "best-value" as const : null,
     }));
 
-    // Coins Section
+    // Coins Section - 1 gem = 500 coins base rate
     const COINS_ITEMS: ShopItem[] = [
-      {
-        id: "coins_100",
-        name: `100 ${t("shop.coin")}`,
-        description: t("shop.smallPackage"),
-        price: 2,
-        currency: "gems",
-        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
-        value: 100,
-      },
       {
         id: "coins_500",
         name: `500 ${t("shop.coin")}`,
-        description: t("shop.mediumPackage"),
-        price: 8,
+        description: t("shop.smallPackage"),
+        price: 1,  // Exact rate: 500 coins = 1 gem
         currency: "gems",
         icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
+        gradient: "linear-gradient(135deg, hsl(45 90% 60%) 0%, hsl(40 85% 50%) 100%)",
         value: 500,
       },
       {
         id: "coins_1500",
         name: `1500 ${t("shop.coin")}`,
-        description: `${t("shop.largePackage")} +20%`,
-        price: 20,
+        description: `${t("shop.mediumPackage")}`,
+        price: 3,  // 1500 coins = 3 gems (exact rate)
         currency: "gems",
         icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
-        gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
+        gradient: "linear-gradient(135deg, hsl(40 90% 55%) 0%, hsl(35 85% 48%) 100%)",
         value: 1500,
-        badge: "popular",
-        savings: 20,
       },
       {
         id: "coins_5000",
         name: `5000 ${t("shop.coin")}`,
-        description: `${t("shop.megaPackage")} +40%`,
-        price: 60,
+        description: `${t("shop.largePackage")} +10%`,
+        price: 9,  // 5000 coins = 10 gems, sell for 9 = 10% bonus
+        currency: "gems",
+        icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
+        gradient: "linear-gradient(135deg, hsl(35 90% 52%) 0%, hsl(25 85% 45%) 100%)",
+        value: 5000,
+        badge: "popular",
+        savings: 10,
+      },
+      {
+        id: "coins_15000",
+        name: `15000 ${t("shop.coin")}`,
+        description: `${t("shop.megaPackage")} +20%`,
+        price: 24,  // 15000 coins = 30 gems, sell for 24 = 20% bonus
         currency: "gems",
         icon: <img src={coinIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(25 90% 50%) 0%, hsl(15 85% 45%) 100%)",
-        value: 5000,
+        value: 15000,
         badge: "best-value",
-        savings: 40,
+        savings: 20,
       },
     ];
 
-    // Gems Section (Real Money - Lari)
+    // Gems Section (Real Money - Lari) - 1 GEL = 10 gems, minimum 3 GEL
     const GEMS_ITEMS: ShopItem[] = [
       {
-        id: "gems_100",
-        name: "100",
+        id: "gems_30",
+        name: "30",
         description: t("shop.smallPackage"),
-        price: 2,
+        price: 3,  // Base rate: 10 gems/GEL
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(270 80% 60%) 0%, hsl(290 75% 55%) 100%)",
-        value: 100,
+        value: 30,
       },
       {
-        id: "gems_500",
-        name: "500",
-        description: t("shop.mediumPackage"),
-        price: 8,
+        id: "gems_100",
+        name: "100 +11",
+        description: `${t("shop.mediumPackage")} +11%`,
+        price: 9,  // 90 gems at base + 11% bonus = 100
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(275 80% 58%) 0%, hsl(295 75% 52%) 100%)",
-        value: 500,
+        value: 100,
+        badge: "popular",
+        savings: 11,
+        bonusPercentage: 11,
       },
       {
-        id: "gems_1500",
-        name: "1500",
+        id: "gems_300",
+        name: "300 +60",
         description: `${t("shop.largePackage")} +20%`,
-        price: 20,
+        price: 25,  // 250 gems at base + 20% bonus = 300
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(280 82% 55%) 0%, hsl(300 78% 50%) 100%)",
-        value: 1500,
-        badge: "popular",
+        value: 300,
         savings: 20,
         bonusPercentage: 20,
       },
       {
-        id: "gems_5000",
-        name: "5000",
+        id: "gems_700",
+        name: "700 +200",
         description: `${t("shop.megaPackage")} +40%`,
-        price: 60,
+        price: 50,  // 500 gems at base + 40% bonus = 700
         currency: "lari",
         icon: <img src={gemIcon} alt="" className="w-8 h-8" />,
         gradient: "linear-gradient(135deg, hsl(285 85% 52%) 0%, hsl(310 80% 48%) 100%)",
-        value: 5000,
+        value: 700,
         badge: "best-value",
         savings: 40,
         bonusPercentage: 40,

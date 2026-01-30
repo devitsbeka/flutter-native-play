@@ -27,7 +27,7 @@ const FEATURED_DEALS: FeaturedDeal[] = [
     subtitleKey: "starterPackDesc",
     badgeKey: "badgeNew",
     badgeColor: "hsl(200 80% 50%)",
-    price: 8,
+    price: 10,  // Aligned with useShopData starter_bundle
     icon: iconStarterPack,
     videoSrc: "/videos/promo-starter-pack.mp4",
     targetTab: "hot",
@@ -38,8 +38,8 @@ const FEATURED_DEALS: FeaturedDeal[] = [
     subtitleKey: "megaPowersDesc",
     badgeKey: "badgePopular",
     badgeColor: "hsl(340 80% 55%)",
-    originalPrice: 25,
-    price: 15,
+    originalPrice: 20,
+    price: 16,  // Aligned with useShopData mega_power_bundle (5x all powers)
     icon: iconPowersBottle,
     videoSrc: "/videos/promo-mega-powers.mp4",
     targetTab: "powers",
@@ -50,8 +50,8 @@ const FEATURED_DEALS: FeaturedDeal[] = [
     subtitleKey: "vipWeekDesc",
     badgeKey: "badgeBestPrice",
     badgeColor: "hsl(45 90% 50%)",
-    originalPrice: 20,
-    price: 15,
+    originalPrice: 210,  // 7 days × 30 gems
+    price: 100,  // Aligned with rewardConfig VIP_PRICES.week
     icon: iconVipCrown,
     videoSrc: "/videos/promo-vip-week.mp4",
     targetTab: "vip",
