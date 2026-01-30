@@ -74,6 +74,7 @@ export function RoomLobbyV2() {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [startAfterPick, setStartAfterPick] = useState(false); // Flag to auto-start game after category pick
+  const [madeNewSelection, setMadeNewSelection] = useState(false); // Track if user made a new selection after returning from results
   const [hasCheckedTVSession, setHasCheckedTVSession] = useState(false);
   const [showHostObserverWarning, setShowHostObserverWarning] = useState(false);
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
@@ -432,6 +433,7 @@ export function RoomLobbyV2() {
         .eq("id", currentRoom.id);
       
       toast.success("კატეგორია შეიცვალა");
+      setMadeNewSelection(true); // Mark that user made a new selection
       
       // Auto-start game if startAfterPick is true
       if (startAfterPick) {
@@ -463,6 +465,7 @@ export function RoomLobbyV2() {
         .eq("id", currentRoom.id);
       
       toast.success("შემთხვევითი კატეგორია");
+      setMadeNewSelection(true); // Mark that user made a new selection
       
       // Auto-start game if startAfterPick is true
       if (startAfterPick) {
@@ -522,6 +525,7 @@ export function RoomLobbyV2() {
         .eq("id", currentRoom.id);
       
       toast.success("ტრივია დაემატა");
+      setMadeNewSelection(true); // Mark that user made a new selection
       
       // Auto-start game if startAfterPick is true
       if (startAfterPick) {
@@ -810,16 +814,17 @@ export function RoomLobbyV2() {
         <CategoryPickerSection
           categoryName={
             // Don't show room name as category - only show actual category selections
-            justReturnedFromResults ? null : (
+            // Once user makes a new selection, show the current category again
+            (justReturnedFromResults && !madeNewSelection) ? null : (
               currentRoom.category_name ??
               (((currentRoom as any).game_mode?.startsWith('trivia:') || (currentRoom as any).game_mode?.startsWith('collection:'))
                 ? null  // Don't use room_name as category fallback
                 : null)
             )
           }
-          categoryId={justReturnedFromResults ? null : currentRoom.category_id}
+          categoryId={(justReturnedFromResults && !madeNewSelection) ? null : currentRoom.category_id}
           iconSlug={
-            justReturnedFromResults ? null : (
+            (justReturnedFromResults && !madeNewSelection) ? null : (
               currentRoom.category_name === "შემთხვევითი" 
                 ? null
                 : currentRoom.category_id 
@@ -830,7 +835,7 @@ export function RoomLobbyV2() {
             )
           }
           isHost={isHost}
-          queue={justReturnedFromResults ? [] : queue}  // Hide queue when returned from game
+          queue={(justReturnedFromResults && !madeNewSelection) ? [] : queue}  // Hide queue when returned from game until new selection
           onOpenPicker={() => setShowCategoryPicker(true)}
           onRemoveQueueItem={removeFromQueue}
           onReorderQueue={reorderQueue}
@@ -910,8 +915,8 @@ export function RoomLobbyV2() {
             // Show different button based on context
             (() => {
               const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
-              // When returned from game results, show "აირჩიე კატეგორია" instead of "თამაშის დაწყება"
-              const needsCategorySelection = justReturnedFromResults || !hasContent;
+              // When returned from game results AND haven't made a new selection, show "აირჩიე კატეგორია"
+              const needsCategorySelection = (justReturnedFromResults && !madeNewSelection) || !hasContent;
               
               const handleStartOrPick = () => {
                 if (needsCategorySelection) {
