@@ -809,23 +809,28 @@ export function RoomLobbyV2() {
         {/* Category Picker Section */}
         <CategoryPickerSection
           categoryName={
-            currentRoom.category_name ??
-            (((currentRoom as any).game_mode?.startsWith('trivia:') || (currentRoom as any).game_mode?.startsWith('collection:'))
-              ? currentRoom.room_name
-              : null)
+            // Don't show room name as category - only show actual category selections
+            justReturnedFromResults ? null : (
+              currentRoom.category_name ??
+              (((currentRoom as any).game_mode?.startsWith('trivia:') || (currentRoom as any).game_mode?.startsWith('collection:'))
+                ? null  // Don't use room_name as category fallback
+                : null)
+            )
           }
-          categoryId={currentRoom.category_id}
+          categoryId={justReturnedFromResults ? null : currentRoom.category_id}
           iconSlug={
-            currentRoom.category_name === "შემთხვევითი" 
-              ? null
-              : currentRoom.category_id 
-                ? getCategoryIconSlug(currentRoom.category_id) 
-                : currentRoom.category_name 
-                  ? getCategoryIconSlug(currentRoom.category_name)
-                  : null
+            justReturnedFromResults ? null : (
+              currentRoom.category_name === "შემთხვევითი" 
+                ? null
+                : currentRoom.category_id 
+                  ? getCategoryIconSlug(currentRoom.category_id) 
+                  : currentRoom.category_name 
+                    ? getCategoryIconSlug(currentRoom.category_name)
+                    : null
+            )
           }
           isHost={isHost}
-          queue={queue}
+          queue={justReturnedFromResults ? [] : queue}  // Hide queue when returned from game
           onOpenPicker={() => setShowCategoryPicker(true)}
           onRemoveQueueItem={removeFromQueue}
           onReorderQueue={reorderQueue}
@@ -902,18 +907,20 @@ export function RoomLobbyV2() {
       <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-4 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
         <div className="max-w-[520px] mx-auto">
           {isHost ? (
-            // Always show "თამაშის დაწყება" button - opens picker if no content selected
+            // Show different button based on context
             (() => {
               const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
+              // When returned from game results, show "აირჩიე კატეგორია" instead of "თამაშის დაწყება"
+              const needsCategorySelection = justReturnedFromResults || !hasContent;
               
               const handleStartOrPick = () => {
-                if (hasContent) {
+                if (needsCategorySelection) {
+                  // No content or returned from game - just open picker (no auto-start)
+                  setStartAfterPick(false);
+                  setShowCategoryPicker(true);
+                } else {
                   // Content selected - start the game
                   handleStartGame();
-                } else {
-                  // No content - open picker and set flag to auto-start after selection
-                  setStartAfterPick(true);
-                  setShowCategoryPicker(true);
                 }
               };
               
@@ -924,9 +931,16 @@ export function RoomLobbyV2() {
                   className="w-full"
                   onClick={handleStartOrPick}
                   disabled={!canStartGame || isStarting || loading}
-                  icon={<Play className="w-5 h-5" />}
+                  icon={needsCategorySelection ? <Plus className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                 >
-                  {isStarting ? "იწყება..." : canStartGame ? "თამაშის დაწყება" : `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`}
+                  {isStarting 
+                    ? "იწყება..." 
+                    : !canStartGame 
+                      ? `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`
+                      : needsCategorySelection 
+                        ? "აირჩიე კატეგორია" 
+                        : "თამაშის დაწყება"
+                  }
                 </ChunkyButton>
               );
             })()
