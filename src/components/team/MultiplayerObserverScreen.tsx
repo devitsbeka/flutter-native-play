@@ -34,11 +34,11 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [lastProcessedQuestion, setLastProcessedQuestion] = useState(-1);
-  const [canAdvance, setCanAdvance] = useState(false);
   const [bonusEarnedThisQuestion, setBonusEarnedThisQuestion] = useState(0);
+  const [processedAnswerIds, setProcessedAnswerIds] = useState<Set<string>>(new Set());
   
-  // Internal timer - observer runs its own countdown (parent timer is disabled for observers)
-  const [localTimeRemaining, setLocalTimeRemaining] = useState(TIME_PER_QUESTION);
+  // Minimum delay before observer can advance (to read the question)
+  const [minDelayPassed, setMinDelayPassed] = useState(false);
 
   // Get current question for display
   const currentQuestion = questions[currentQuestionIndex];
@@ -55,97 +55,58 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
   // Check if this is the last question
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
-  // Observer's own timer countdown (parent timer is disabled for observers)
-  useEffect(() => {
-    if (canAdvance) return;
-    
-    const timer = setInterval(() => {
-      setLocalTimeRemaining((prev) => {
-        if (prev <= 0.1) return 0;
-        return prev - 0.1;
-      });
-    }, 100);
+  // Observer can advance after minimum delay (1.5s to read question)
+  // No need to wait for players or timer!
+  const canAdvance = minDelayPassed;
 
-    return () => clearInterval(timer);
-  }, [currentQuestionIndex, canAdvance]);
-
-  // Reset timer and state on question change
+  // Minimum delay effect - allows observer to read the question before advancing
   useEffect(() => {
-    setLocalTimeRemaining(TIME_PER_QUESTION);
-    setCanAdvance(false);
+    setMinDelayPassed(false);
     setBonusEarnedThisQuestion(0);
+    setProcessedAnswerIds(new Set());
+    
+    const minDelay = setTimeout(() => {
+      setMinDelayPassed(true);
+    }, 1500); // 1.5 seconds to read the question
+    
+    return () => clearTimeout(minDelay);
   }, [currentQuestionIndex]);
 
-  // Award bonus points when all players have answered OR timer expired
+  // Award bonus points in real-time as incorrect answers come in
   useEffect(() => {
-    // Only process if we haven't already processed this question
+    // Skip if already processed this question's final state
     if (lastProcessedQuestion >= currentQuestionIndex) return;
+    if (players.length === 0) return;
+
+    // Process each new incorrect answer as it arrives
+    let newBonus = 0;
+    const newProcessedIds = new Set(processedAnswerIds);
     
-    const allAnswered = players.length > 0 && answeredCount === players.length;
-    const timerExpired = localTimeRemaining <= 0;
-    
-    // Always advance immediately when all players have answered
-    // No more waiting for timer in any mode
-    const shouldProcess = allAnswered || timerExpired;
-    
-    // Check if we should process this question
-    if (shouldProcess) {
-      // Count incorrect answers (and players who didn't answer = incorrect)
-      const incorrectAnswerCount = Object.values(opponentAnswers).filter(ans => !ans.is_correct).length;
-      const didNotAnswerCount = players.length - answeredCount;
-      const totalIncorrect = incorrectAnswerCount + didNotAnswerCount;
-      const totalPlayers = players.length;
+    for (const [odavidwserId, answer] of Object.entries(opponentAnswers)) {
+      // Skip if already processed this answer
+      if (processedAnswerIds.has(odavidwserId)) continue;
       
-      if (totalIncorrect > 0) {
-        // Fair time-based scoring: observer bonus mirrors player scoring
-        // Faster wrong = less bonus, timeout = max bonus (175)
-        let bonus = 0;
-        if (totalPlayers <= 2) {
-          // Calculate time-based bonus for each incorrect answer
-          for (const [, answer] of Object.entries(opponentAnswers)) {
-            if (!answer.is_correct) {
-              // Use time_remaining from answer if available, otherwise assume timeout
-              const timeRemaining = answer.time_remaining ?? 0;
-              bonus += calculateObserverBonus(timeRemaining);
-            }
-          }
-          // Players who didn't answer = timeout = max bonus
-          bonus += didNotAnswerCount * calculateObserverBonus(0);
-        } else if (totalIncorrect / totalPlayers >= 0.5) {
-          // For larger games, use timeout value for max bonus
-          bonus = calculateObserverBonus(0);
-        }
-        
-        if (bonus > 0) {
-          setBonusEarnedThisQuestion(bonus);
-          awardObserverBonus(bonus);
-        }
+      if (!answer.is_correct) {
+        // Calculate time-based bonus for this incorrect answer
+        const timeRemaining = answer.time_remaining ?? 0;
+        const bonus = calculateObserverBonus(timeRemaining);
+        newBonus += bonus;
       }
       
-      // Mark this question as processed and allow advancing
-      setLastProcessedQuestion(currentQuestionIndex);
-      setCanAdvance(true);
+      newProcessedIds.add(odavidwserId);
     }
-  }, [answeredCount, players.length, opponentAnswers, currentQuestionIndex, lastProcessedQuestion, awardObserverBonus, localTimeRemaining]);
-
-  // Edge case: if no players in the room, allow immediate advance
-  useEffect(() => {
-    if (players.length === 0 && !canAdvance) {
-      console.log('[Observer] No players in room - allowing immediate advance');
-      setCanAdvance(true);
+    
+    if (newBonus > 0) {
+      setBonusEarnedThisQuestion(prev => prev + newBonus);
+      awardObserverBonus(newBonus);
+      setProcessedAnswerIds(newProcessedIds);
     }
-  }, [players.length, canAdvance]);
+  }, [opponentAnswers, players.length, currentQuestionIndex, lastProcessedQuestion, processedAnswerIds, awardObserverBonus]);
 
-  // Safety timeout: if nothing happens in 15 seconds, allow advance anyway
-  useEffect(() => {
-    const safetyTimeout = setTimeout(() => {
-      if (!canAdvance) {
-        console.log('[Observer] Safety timeout - allowing advance after 15s');
-        setCanAdvance(true);
-      }
-    }, 15000);
-    return () => clearTimeout(safetyTimeout);
-  }, [currentQuestionIndex, canAdvance]);
+  // Mark question as processed when all players answered or observer advances
+  const markQuestionProcessed = () => {
+    setLastProcessedQuestion(currentQuestionIndex);
+  };
 
   const handleNextQuestion = () => {
     playSound("button-click");
@@ -340,16 +301,15 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             </motion.div>
           )}
 
-          {/* Timer - hide when all players answered */}
-          {!(answeredCount === players.length && players.length > 0) && (
+          {/* Waiting indicator - only show while waiting for min delay */}
+          {!minDelayPassed && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.3 }}
               className="mt-4 flex items-center gap-2 text-white/60"
             >
-              <span className="text-2xl">⏱️</span>
-              <span className="text-2xl font-bold text-white">{Math.ceil(localTimeRemaining)}წ</span>
+              <span className="text-sm">კითხვის წაკითხვა...</span>
             </motion.div>
           )}
         </div>
