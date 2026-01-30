@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronUp, ChevronDown, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 import { calculateObserverBonus } from "@/utils/tvScoring";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MultiplayerObserverScreenProps {
   timeRemaining: number;
@@ -27,15 +28,14 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     myScore,
     observerBonusThisRound,
     participants,
-    opponentAnswers,
     awardObserverBonus,
     nextQuestion,
+    currentRoom,
   } = useMultiplayerV2();
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [lastProcessedQuestion, setLastProcessedQuestion] = useState(-1);
-  const [bonusEarnedThisQuestion, setBonusEarnedThisQuestion] = useState(0);
-  const [processedAnswerIds, setProcessedAnswerIds] = useState<Set<string>>(new Set());
+  const [bonusEarnedThisRound, setBonusEarnedThisRound] = useState(0);
+  const processedAnswerIdsRef = useRef<Set<string>>(new Set());
   
   // Minimum delay before observer can advance (to read the question)
   const [minDelayPassed, setMinDelayPassed] = useState(false);
@@ -49,9 +49,6 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
   // Sort participants by score for leaderboard (include host)
   const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
 
-  // Count answered players
-  const answeredCount = Object.keys(opponentAnswers).length;
-  
   // Check if this is the last question
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
@@ -62,8 +59,6 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
   // Minimum delay effect - allows observer to read the question before advancing
   useEffect(() => {
     setMinDelayPassed(false);
-    setBonusEarnedThisQuestion(0);
-    setProcessedAnswerIds(new Set());
     
     const minDelay = setTimeout(() => {
       setMinDelayPassed(true);
@@ -72,41 +67,45 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     return () => clearTimeout(minDelay);
   }, [currentQuestionIndex]);
 
-  // Award bonus points in real-time as incorrect answers come in
+  // Poll for ALL incorrect answers across ALL questions (catches skipped ones)
   useEffect(() => {
-    // Skip if already processed this question's final state
-    if (lastProcessedQuestion >= currentQuestionIndex) return;
-    if (players.length === 0) return;
-
-    // Process each new incorrect answer as it arrives
-    let newBonus = 0;
-    const newProcessedIds = new Set(processedAnswerIds);
+    const roomId = currentRoom?.id;
+    if (!roomId || players.length === 0) return;
     
-    for (const [odavidwserId, answer] of Object.entries(opponentAnswers)) {
-      // Skip if already processed this answer
-      if (processedAnswerIds.has(odavidwserId)) continue;
+    const pollAnswers = async () => {
+      const { data: allAnswers } = await supabase
+        .from("player_answers")
+        .select("user_id, question_index, time_remaining, is_correct")
+        .eq("room_id", roomId)
+        .eq("is_correct", false);
       
-      if (!answer.is_correct) {
-        // Calculate time-based bonus for this incorrect answer
+      if (!allAnswers || allAnswers.length === 0) return;
+      
+      let newBonus = 0;
+      
+      for (const answer of allAnswers) {
+        const answerId = `${answer.user_id}-${answer.question_index}`;
+        if (processedAnswerIdsRef.current.has(answerId)) continue;
+        
         const timeRemaining = answer.time_remaining ?? 0;
         const bonus = calculateObserverBonus(timeRemaining);
         newBonus += bonus;
+        processedAnswerIdsRef.current.add(answerId);
       }
       
-      newProcessedIds.add(odavidwserId);
-    }
+      if (newBonus > 0) {
+        setBonusEarnedThisRound(prev => prev + newBonus);
+        awardObserverBonus(newBonus);
+      }
+    };
     
-    if (newBonus > 0) {
-      setBonusEarnedThisQuestion(prev => prev + newBonus);
-      awardObserverBonus(newBonus);
-      setProcessedAnswerIds(newProcessedIds);
-    }
-  }, [opponentAnswers, players.length, currentQuestionIndex, lastProcessedQuestion, processedAnswerIds, awardObserverBonus]);
+    // Poll every 2 seconds
+    const interval = setInterval(pollAnswers, 2000);
+    pollAnswers(); // Initial poll
+    
+    return () => clearInterval(interval);
+  }, [currentRoom?.id, players.length, awardObserverBonus]);
 
-  // Mark question as processed when all players answered or observer advances
-  const markQuestionProcessed = () => {
-    setLastProcessedQuestion(currentQuestionIndex);
-  };
 
   const handleNextQuestion = () => {
     playSound("button-click");
@@ -265,27 +264,19 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             <p className="text-amber-300 text-sm font-medium">
               იღებ ქულებს შეცდომებზე 💡
             </p>
-            {bonusEarnedThisQuestion > 0 && canAdvance && (
+            {bonusEarnedThisRound > 0 && (
               <motion.p
+                key={bonusEarnedThisRound}
                 initial={{ opacity: 0, scale: 1.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-green-300 text-sm mt-2 font-bold"
               >
-                +{bonusEarnedThisQuestion} ამ კითხვაზე! 🎉
-              </motion.p>
-            )}
-            {observerBonusThisRound > 0 && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-white/60 text-xs mt-1"
-              >
-                სულ ბონუსი: +{observerBonusThisRound}
+                +{bonusEarnedThisRound} ბონუსი! 🎉
               </motion.p>
             )}
           </motion.div>
 
-          {/* Players Status - always show */}
+          {/* Players count */}
           {players.length > 0 && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -295,7 +286,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             >
               <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-white/10">
                 <span className="text-white/80 text-sm">
-                  {answeredCount}/{players.length} უპასუხეს
+                  {players.length} მოთამაშე
                 </span>
               </div>
             </motion.div>
