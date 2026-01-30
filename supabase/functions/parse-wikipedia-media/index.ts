@@ -32,7 +32,7 @@ serve(async (req) => {
       formats.push("links");
     }
 
-    // Scrape the URL using Firecrawl
+    // Scrape the URL using Firecrawl with extended timeout
     const firecrawlResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
@@ -43,6 +43,7 @@ serve(async (req) => {
         url,
         formats,
         onlyMainContent: true,
+        timeout: 60000, // 60 seconds timeout for slow pages
       }),
     });
 
