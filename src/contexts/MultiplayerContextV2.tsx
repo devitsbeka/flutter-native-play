@@ -817,10 +817,24 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             };
           });
           
-          // Update shuffled_answers in DB for sync across players
+          // Create room_game record FIRST to get game_id
+          const { data: game } = await supabase
+            .from("room_games")
+            .insert([{
+              room_id: roomId,
+              game_number: 1,
+              questions_data: structuredClone(questions) as unknown as Json,
+            }])
+            .select()
+            .single();
+          
+          // Update shuffled_answers AND game_id in DB for sync across players
           await Promise.all(questions.map((q, index) => 
             supabase.from("room_questions")
-              .update({ shuffled_answers: q.allAnswers })
+              .update({ 
+                shuffled_answers: q.allAnswers,
+                game_id: game?.id, // CRITICAL: Update game_id for non-host validation
+              })
               .eq("room_id", roomId)
               .eq("question_index", index)
           ));
@@ -834,18 +848,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .update({ score: 0, current_question: 0 })
             .eq("room_id", roomId);
           
-          // Create room_game record
-          const { data: game } = await supabase
-            .from("room_games")
-            .insert([{
-              room_id: roomId,
-              game_number: 1,
-              questions_data: structuredClone(questions) as unknown as Json,
-            }])
-            .select()
-            .single();
-          
-          // Update room status
+          // Update room status (game already created above)
           await supabase
             .from("game_rooms")
             .update({
