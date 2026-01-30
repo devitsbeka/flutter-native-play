@@ -46,12 +46,34 @@ serve(async (req) => {
       }),
     });
 
-    const firecrawlData = await firecrawlResponse.json();
+    // Check response status first before parsing JSON
+    if (!firecrawlResponse.ok) {
+      const errorText = await firecrawlResponse.text();
+      console.error("Firecrawl HTTP error:", firecrawlResponse.status, errorText);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Firecrawl error (${firecrawlResponse.status}): ${firecrawlResponse.statusText}` 
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    if (!firecrawlResponse.ok || !firecrawlData.success) {
+    let firecrawlData;
+    try {
+      firecrawlData = await firecrawlResponse.json();
+    } catch (parseError) {
+      console.error("Failed to parse Firecrawl response:", parseError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid response from scraping service" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!firecrawlData.success) {
       console.error("Firecrawl error:", firecrawlData);
       return new Response(
-        JSON.stringify({ success: false, error: "Failed to scrape URL" }),
+        JSON.stringify({ success: false, error: firecrawlData.error || "Failed to scrape URL" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
