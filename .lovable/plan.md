@@ -1,57 +1,119 @@
 
-# Shop Page Scroll & Sticky Header Fix
+# Fix True/False Trivia: Icons Not Visible & Cards Positioned Too Low
 
-## Problems Identified
-
-### 1. Cannot Scroll All The Way Down
-The bottom padding is applied in multiple nested places with mismatched breakpoints:
-- `MainLayout` applies `pb-24 md:pb-0` to the main scroll container
-- `PowerUps.tsx` inner content has `pb-24 lg:pb-0` (different breakpoint than MainLayout!)
-- `ShopStandardLayout` adds `pb-8`
-
-The bottom nav hides at `md:hidden` but padding changes at `lg:pb-0` - this mismatch means on tablets (md-lg), there's no bottom nav but also no padding, causing content to be cut off.
-
-### 2. Header Not Sticky/Visible
-The sticky header wrapper lacks iOS safe-area padding (`safe-top`), and the header's `bg-white/80` transparency makes it hard to see over the colorful gradient background.
+## Summary
+The user created a True/False trivia and assigned icons to all questions, but two issues are present:
+1. **Icons are not visible** on the game screen
+2. **True/False answer cards are positioned too far down** from the question card instead of being close to it
 
 ---
 
-## Solution
+## Problem Analysis
 
-### File: `src/pages/PowerUps.tsx`
+### Issue 1: Icons Not Visible
 
-**Change 1: Add safe-area padding to sticky header container**
+**Root Cause:** The icon positioning in `QuizPlayModal.tsx` uses `top-0 -translate-y-1/2` which places the icon at the top edge of the question container and translates it UP by half its height. However, the parent container also has `mt-10` (40px margin-top) which may not leave enough visible space above for the icon to appear within the viewport's safe area.
+
+Looking at the current code (lines 614-621):
 ```tsx
-// Line 242: Update the sticky header wrapper
-<div className="sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
+<div className="mt-10 mb-2 relative">
+  {currentQuestion?.icon_slug && (
+    <div
+      className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20"
+      style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.25))" }}
+    >
+      <DynamicIcon slug={currentQuestion.icon_slug} size={84} hideIfEmpty={true} />
+    </div>
+  )}
 ```
 
-**Change 2: Fix mismatched bottom padding breakpoint**
+The issue is that `top-0 -translate-y-1/2` positions the icon OUTSIDE the container's bounds (above it), but with only `mt-10` (40px) margin and an 84px icon, the icon center would be at `40px - 42px = -2px` - essentially at the very top of the content area, potentially clipped or overlapping with the header.
+
+**Solution:** Change the icon positioning to use `-top-12` (similar to `QuizGameScreenProd.tsx` line 365) instead of `top-0 -translate-y-1/2`. This gives more predictable positioning that's proven to work.
+
+### Issue 2: True/False Cards Too Far From Question
+
+**Root Cause:** In `QuizPlayModal.tsx` line 644:
 ```tsx
-// Line 251: Change lg:pb-0 to md:pb-0 to match MainLayout
-<div className="flex-1 relative pb-24 md:pb-0 bg-transparent...">
+<div className="flex-1 flex gap-3 items-center justify-center">
 ```
-This aligns with MainLayout which uses `md:pb-0` and bottom nav which hides at `md:hidden`.
 
-### File: `src/components/shop/ShopHeader.tsx`
+The `flex-1` class makes this container expand to fill ALL remaining vertical space in the flex column. Combined with `items-center justify-center`, this centers the buttons in the middle of that expanded space, pushing them far down from the question.
 
-**Change 3: Improve header visibility over gradient backgrounds**
-Replace the transparent white background with a more opaque, visible background that works over gradients:
+Compare to regular 4-answer mode (line 666):
 ```tsx
-// Line 20: Update container background
-<div className="bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
+<div className="space-y-3 flex-1">
+```
+This also uses `flex-1` but doesn't center vertically, so buttons appear at the top of the space.
+
+**Solution:** Remove `flex-1 items-center justify-center` and use `mt-4` or similar to keep buttons close to the progress dots while still allowing them to be horizontally centered.
+
+---
+
+## Files to Modify
+
+### 1. `src/components/social/QuizPlayModal.tsx`
+
+**Change A: Fix icon positioning (line 617)**
+- FROM: `className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20"`
+- TO: `className="absolute left-1/2 -translate-x-1/2 -top-12 z-20"`
+
+This matches the positioning used in `QuizGameScreenProd.tsx` for consistency.
+
+**Change B: Fix True/False button container (line 644)**
+- FROM: `<div className="flex-1 flex gap-3 items-center justify-center">`
+- TO: `<div className="flex gap-3 mt-2">`
+
+Removes vertical expansion and centering, adds small top margin for spacing.
+
+---
+
+## Visual Comparison
+
+### Before:
+```text
+┌─────────────────────┐
+│      Header         │
+├─────────────────────┤
+│                     │  ← mt-10 margin (icon gets cut off above)
+│  [Question Card]    │
+│                     │
+│     · · · · ·       │  ← Progress dots
+│                     │
+│                     │  ← Large empty space (flex-1)
+│                     │
+│  ┌───────┐ ┌───────┐│  ← True/False centered in expanded space
+│  │ FALSE │ │ TRUE  ││
+│  └───────┘ └───────┘│
+│                     │
+└─────────────────────┘
+```
+
+### After:
+```text
+┌─────────────────────┐
+│      Header         │
+├─────────────────────┤
+│       [🎯]          │  ← Icon overlaps card (visible above card)
+│  [Question Card]    │
+│                     │
+│     · · · · ·       │  ← Progress dots
+│                     │
+│  ┌───────┐ ┌───────┐│  ← True/False close to question
+│  │ FALSE │ │ TRUE  ││
+│  └───────┘ └───────┘│
+│                     │
+│                     │  ← Natural remaining space
+└─────────────────────┘
 ```
 
 ---
 
 ## Technical Details
 
-| Issue | Root Cause | Fix |
-|-------|------------|-----|
-| Can't scroll to bottom | `lg:pb-0` vs `md:hidden` breakpoint mismatch | Change to `md:pb-0` |
-| Header not visible | `bg-white/80` too transparent on gradients | Use `bg-background/95` |
-| Header cut off on iOS | Missing safe-area-inset-top | Add `pt-[env(safe-area-inset-top)]` |
+| Issue | Location | Change |
+|-------|----------|--------|
+| Icon not visible | Line 617 | Replace `top-0 -translate-y-1/2` with `-top-12` |
+| Buttons too far down | Line 644 | Replace `flex-1 flex gap-3 items-center justify-center` with `flex gap-3 mt-2` |
 
-## Files to Modify
-1. `src/pages/PowerUps.tsx` - Fix sticky header padding and bottom padding breakpoint
-2. `src/components/shop/ShopHeader.tsx` - Improve background visibility
+Both changes align `QuizPlayModal.tsx` with the patterns used in `QuizGameScreenProd.tsx`, ensuring visual consistency across all quiz modes.
