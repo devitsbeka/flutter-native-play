@@ -239,7 +239,7 @@ export default function PowerUps() {
       {/* Main scrollable container */}
       <div className="min-h-full flex flex-col">
         {/* Sticky header - works within MainLayout's scrollable main */}
-        <div className="sticky top-0 z-30">
+        <div className="sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
           <ShopHeader
             onHelpClick={() => setShowTutorialModal(true)}
             onCurrencyPlusClick={handleCurrencyPlusClick}
@@ -248,7 +248,7 @@ export default function PowerUps() {
 
         <div className="flex flex-1">
           {/* Main Content Area */}
-          <div className="flex-1 relative pb-24 lg:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
+          <div className="flex-1 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
             <GlobalSplineBackground />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
