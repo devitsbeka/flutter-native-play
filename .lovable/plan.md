@@ -1,119 +1,80 @@
 
-# Fix True/False Trivia: Icons Not Visible & Cards Positioned Too Low
+# Fix Broken Avatar Display in Trivia Cards
 
-## Summary
-The user created a True/False trivia and assigned icons to all questions, but two issues are present:
-1. **Icons are not visible** on the game screen
-2. **True/False answer cards are positioned too far down** from the question card instead of being close to it
+## Problem
+In the "My Trivia" section, avatar images show as broken when the URL is expired or invalid. The cards display a broken image icon with alt text "Avat" instead of a proper fallback.
+
+## Root Cause
+The `PersonalTriviaCard` and `StandaloneQuizCard` components in `MyTriviaTab.tsx` use raw `<img>` tags with only a null check (`profile?.avatar_url`), but don't handle cases where the URL exists but the image fails to load.
+
+Current code pattern:
+```tsx
+{profile?.avatar_url ? (
+  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+) : (
+  <span className="text-lg">👤</span>
+)}
+```
+
+## Solution
+Replace the raw `<img>` usage with the `SafeAvatarImage` component, which:
+- Uses `resolveAvatarUrl()` to handle various URL formats
+- Has an `onError` handler to show fallback when images fail to load
+- Provides a gradient background with initials as fallback
 
 ---
 
-## Problem Analysis
+## File to Modify
 
-### Issue 1: Icons Not Visible
+### `src/components/social/MyTriviaTab.tsx`
 
-**Root Cause:** The icon positioning in `QuizPlayModal.tsx` uses `top-0 -translate-y-1/2` which places the icon at the top edge of the question container and translates it UP by half its height. However, the parent container also has `mt-10` (40px margin-top) which may not leave enough visible space above for the icon to appear within the viewport's safe area.
-
-Looking at the current code (lines 614-621):
+**Change 1**: Add import for `SafeAvatarImage`
 ```tsx
-<div className="mt-10 mb-2 relative">
-  {currentQuestion?.icon_slug && (
-    <div
-      className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20"
-      style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.25))" }}
-    >
-      <DynamicIcon slug={currentQuestion.icon_slug} size={84} hideIfEmpty={true} />
-    </div>
+import { SafeAvatarImage } from '@/components/shared/SafeAvatar';
+```
+
+**Change 2**: Update `PersonalTriviaCard` avatar (lines 497-502)
+
+Replace:
+```tsx
+<div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
+  {profile?.avatar_url ? (
+    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+  ) : (
+    <span className="text-lg">👤</span>
   )}
+</div>
 ```
 
-The issue is that `top-0 -translate-y-1/2` positions the icon OUTSIDE the container's bounds (above it), but with only `mt-10` (40px) margin and an 84px icon, the icon center would be at `40px - 42px = -2px` - essentially at the very top of the content area, potentially clipped or overlapping with the header.
-
-**Solution:** Change the icon positioning to use `-top-12` (similar to `QuizGameScreenProd.tsx` line 365) instead of `top-0 -translate-y-1/2`. This gives more predictable positioning that's proven to work.
-
-### Issue 2: True/False Cards Too Far From Question
-
-**Root Cause:** In `QuizPlayModal.tsx` line 644:
+With:
 ```tsx
-<div className="flex-1 flex gap-3 items-center justify-center">
+<div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
+  <SafeAvatarImage 
+    avatarUrl={profile?.avatar_url}
+    fallback={profile?.nickname || 'U'}
+    containerClassName="w-full h-full"
+  />
+</div>
 ```
 
-The `flex-1` class makes this container expand to fill ALL remaining vertical space in the flex column. Combined with `items-center justify-center`, this centers the buttons in the middle of that expanded space, pushing them far down from the question.
+**Change 3**: Update `StandaloneQuizCard` avatar (lines 610-617)
 
-Compare to regular 4-answer mode (line 666):
-```tsx
-<div className="space-y-3 flex-1">
-```
-This also uses `flex-1` but doesn't center vertically, so buttons appear at the top of the space.
-
-**Solution:** Remove `flex-1 items-center justify-center` and use `mt-4` or similar to keep buttons close to the progress dots while still allowing them to be horizontally centered.
+Same replacement pattern as above.
 
 ---
 
-## Files to Modify
+## Visual Result
 
-### 1. `src/components/social/QuizPlayModal.tsx`
-
-**Change A: Fix icon positioning (line 617)**
-- FROM: `className="absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 z-20"`
-- TO: `className="absolute left-1/2 -translate-x-1/2 -top-12 z-20"`
-
-This matches the positioning used in `QuizGameScreenProd.tsx` for consistency.
-
-**Change B: Fix True/False button container (line 644)**
-- FROM: `<div className="flex-1 flex gap-3 items-center justify-center">`
-- TO: `<div className="flex gap-3 mt-2">`
-
-Removes vertical expansion and centering, adds small top margin for spacing.
-
----
-
-## Visual Comparison
-
-### Before:
-```text
-┌─────────────────────┐
-│      Header         │
-├─────────────────────┤
-│                     │  ← mt-10 margin (icon gets cut off above)
-│  [Question Card]    │
-│                     │
-│     · · · · ·       │  ← Progress dots
-│                     │
-│                     │  ← Large empty space (flex-1)
-│                     │
-│  ┌───────┐ ┌───────┐│  ← True/False centered in expanded space
-│  │ FALSE │ │ TRUE  ││
-│  └───────┘ └───────┘│
-│                     │
-└─────────────────────┘
-```
-
-### After:
-```text
-┌─────────────────────┐
-│      Header         │
-├─────────────────────┤
-│       [🎯]          │  ← Icon overlaps card (visible above card)
-│  [Question Card]    │
-│                     │
-│     · · · · ·       │  ← Progress dots
-│                     │
-│  ┌───────┐ ┌───────┐│  ← True/False close to question
-│  │ FALSE │ │ TRUE  ││
-│  └───────┘ └───────┘│
-│                     │
-│                     │  ← Natural remaining space
-└─────────────────────┘
-```
+| Before | After |
+|--------|-------|
+| Broken image icon with "Avat" text | Gradient background with user's initial |
+| Poor user experience | Clean fallback matching app design |
 
 ---
 
 ## Technical Details
 
-| Issue | Location | Change |
-|-------|----------|--------|
-| Icon not visible | Line 617 | Replace `top-0 -translate-y-1/2` with `-top-12` |
-| Buttons too far down | Line 644 | Replace `flex-1 flex gap-3 items-center justify-center` with `flex gap-3 mt-2` |
-
-Both changes align `QuizPlayModal.tsx` with the patterns used in `QuizGameScreenProd.tsx`, ensuring visual consistency across all quiz modes.
+The `SafeAvatarImage` component:
+1. Resolves avatar URLs using `resolveAvatarUrl()` (handles Vite hashes, local paths)
+2. Tracks `hasError` state via `onError` callback
+3. Shows gradient fallback with initials when URL is null or fails to load
