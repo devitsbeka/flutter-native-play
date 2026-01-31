@@ -709,6 +709,8 @@ export const en: KaTranslations = {
     active: "Active",
     daysRemaining: "{days} days remaining",
     popular: "Popular",
+    bestValue: "Best Value",
+    gem: "gem",
     tabAll: "All",
     tabCoins: "Coins",
     tabPowers: "Powers",
