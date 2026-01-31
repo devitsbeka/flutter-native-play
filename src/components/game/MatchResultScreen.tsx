@@ -242,6 +242,7 @@ export function MatchResultScreen() {
 
   // Level up detection
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [awardedPowerUp, setAwardedPowerUp] = useState<string | undefined>(undefined);
   
   const [newLevel, setNewLevel] = useState(0);
   const [previousLevel, setPreviousLevel] = useState(0);
@@ -309,15 +310,31 @@ export function MatchResultScreen() {
           setCoinChange(-netLoss); // -500 (already paid)
         }
 
-        // Calculate level-up rewards upfront (instead of in modal)
+        // Simplified level-up rewards: 150 coins + 1 random power-up
         let levelUpCoins = 0;
-        let levelUpGems = 0;
+        let randomPowerUp: string | undefined;
+        
         if (newLevelInfo.level > oldLevelInfo.level) {
-          const { LEVEL_UP_COINS_PER_LEVEL, LEVEL_UP_GEMS_THRESHOLD } = REWARDS;
-          levelUpCoins = newLevelInfo.level * LEVEL_UP_COINS_PER_LEVEL;
-          levelUpGems = newLevelInfo.level >= LEVEL_UP_GEMS_THRESHOLD && newLevelInfo.level % LEVEL_UP_GEMS_THRESHOLD === 0 
-            ? Math.floor(newLevelInfo.level / LEVEL_UP_GEMS_THRESHOLD) 
-            : 0;
+          levelUpCoins = REWARDS.LEVEL_UP_COINS;
+          const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
+          randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+          setAwardedPowerUp(randomPowerUp);
+          
+          // Credit the random power-up to database
+          if (randomPowerUp) {
+            const { data: existingPowerUp } = await supabase
+              .from("user_power_ups")
+              .select("quantity")
+              .eq("user_id", currentUser.id)
+              .eq("power_up_type", randomPowerUp)
+              .maybeSingle();
+            
+            await supabase.from("user_power_ups").upsert({
+              user_id: currentUser.id,
+              power_up_type: randomPowerUp,
+              quantity: (existingPowerUp?.quantity || 0) + 1,
+            });
+          }
         }
 
         await updateProfile({
@@ -328,9 +345,8 @@ export function MatchResultScreen() {
           best_streak: isWin 
             ? Math.max(currentProfile.best_streak || 0, (currentProfile.current_streak || 0) + 1)
             : currentProfile.best_streak,
-          // Add level-up rewards here in a single transaction
+          // Add simplified level-up coins (no gems)
           coins: (currentProfile.coins || 0) + levelUpCoins,
-          gems: (currentProfile.gems || 0) + levelUpGems,
         });
 
         await supabase.from("game_sessions").insert({
@@ -427,6 +443,7 @@ export function MatchResultScreen() {
         onClose={() => setShowLevelUp(false)}
         newLevel={newLevel}
         previousLevel={previousLevel}
+        awardedPowerUp={awardedPowerUp}
       />
 
       
