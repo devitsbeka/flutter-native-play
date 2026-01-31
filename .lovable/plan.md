@@ -1,133 +1,57 @@
 
-# გეგმა: Observer-ის ბონუსის გამოსწორება - გამოტოვებული კითხვების დაჭერა
+# Shop Page Scroll & Sticky Header Fix
 
-## პრობლემა
+## Problems Identified
 
-როცა Observer სწრაფად გადადის შემდეგ კითხვაზე (1.5 წამში), მოთამაშის პასუხი აღარ იჭერება:
+### 1. Cannot Scroll All The Way Down
+The bottom padding is applied in multiple nested places with mismatched breakpoints:
+- `MainLayout` applies `pb-24 md:pb-0` to the main scroll container
+- `PowerUps.tsx` inner content has `pb-24 lg:pb-0` (different breakpoint than MainLayout!)
+- `ShopStandardLayout` adds `pb-8`
 
-```text
-Timeline:
-┌─────────────────────────────────────────────────────────┐
-│ 0s    Observer sees Q1                                  │
-│ 1.5s  Observer clicks "Next" → currentQuestionIndex = 2 │
-│ 5s    Player answers Q1 WRONG                           │
-│       ↓                                                 │
-│       Subscription receives answer for Q1               │
-│       BUT: currentQuestionIndex = 2, so answer ignored! │
-│       Observer gets 0 bonus 😢                          │
-└─────────────────────────────────────────────────────────┘
+The bottom nav hides at `md:hidden` but padding changes at `lg:pb-0` - this mismatch means on tablets (md-lg), there's no bottom nav but also no padding, causing content to be cut off.
+
+### 2. Header Not Sticky/Visible
+The sticky header wrapper lacks iOS safe-area padding (`safe-top`), and the header's `bg-white/80` transparency makes it hard to see over the colorful gradient background.
+
+---
+
+## Solution
+
+### File: `src/pages/PowerUps.tsx`
+
+**Change 1: Add safe-area padding to sticky header container**
+```tsx
+// Line 242: Update the sticky header wrapper
+<div className="sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
 ```
 
-**კოდის პრობლემა** (MultiplayerContextV2.tsx, line 437):
-```typescript
-// Only processes answers for CURRENT question
-if (answer.question_index === currentQuestionIndexRef.current) {
-  // ...
-}
+**Change 2: Fix mismatched bottom padding breakpoint**
+```tsx
+// Line 251: Change lg:pb-0 to md:pb-0 to match MainLayout
+<div className="flex-1 relative pb-24 md:pb-0 bg-transparent...">
+```
+This aligns with MainLayout which uses `md:pb-0` and bottom nav which hides at `md:hidden`.
+
+### File: `src/components/shop/ShopHeader.tsx`
+
+**Change 3: Improve header visibility over gradient backgrounds**
+Replace the transparent white background with a more opaque, visible background that works over gradients:
+```tsx
+// Line 20: Update container background
+<div className="bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
 ```
 
-Observer-მა როცა გადავიდა Q2-ზე, Q1-ის პასუხები უკვე იგნორირდება.
+---
 
-## გადაწყვეტა
+## Technical Details
 
-შევქმნათ **ცალკე subscription/polling** Observer-ისთვის რომელიც ყველა კითხვის პასუხებს იჭერს და real-time ბონუსს ითვლის.
+| Issue | Root Cause | Fix |
+|-------|------------|-----|
+| Can't scroll to bottom | `lg:pb-0` vs `md:hidden` breakpoint mismatch | Change to `md:pb-0` |
+| Header not visible | `bg-white/80` too transparent on gradients | Use `bg-background/95` |
+| Header cut off on iOS | Missing safe-area-inset-top | Add `pt-[env(safe-area-inset-top)]` |
 
-### მიდგომა 1: Observer-ში Polling (რეკომენდებული)
-
-`MultiplayerObserverScreen`-ში დავამატოთ polling რომელიც:
-1. ყოველ 2-3 წამში ამოწმებს `player_answers` ტაბლაში ყველა არასწორ პასუხს
-2. თვლის ბონუსს იმ პასუხებზე რაც ჯერ არ დაუთვლია
-3. ინახავს "დათვლილი პასუხების" IDs
-
-### ცვლილებები ფაილში: `src/components/team/MultiplayerObserverScreen.tsx`
-
-#### 1. დავამატოთ polling effect:
-
-```typescript
-// Poll for ALL incorrect answers across ALL questions (catches skipped ones)
-useEffect(() => {
-  if (!state.currentRoom || players.length === 0) return;
-  
-  const pollAnswers = async () => {
-    const { data: allAnswers } = await supabase
-      .from("player_answers")
-      .select("*")
-      .eq("room_id", state.currentRoom!.id)
-      .eq("is_correct", false); // Only incorrect answers
-    
-    if (!allAnswers) return;
-    
-    let newBonus = 0;
-    const newProcessedIds = new Set(processedAnswerIds);
-    
-    for (const answer of allAnswers) {
-      const answerId = `${answer.user_id}-${answer.question_index}`;
-      if (processedAnswerIds.has(answerId)) continue;
-      
-      const timeRemaining = answer.time_remaining ?? 0;
-      const bonus = calculateObserverBonus(timeRemaining);
-      newBonus += bonus;
-      newProcessedIds.add(answerId);
-    }
-    
-    if (newBonus > 0) {
-      setBonusEarnedThisQuestion(prev => prev + newBonus);
-      awardObserverBonus(newBonus);
-      setProcessedAnswerIds(newProcessedIds);
-    }
-  };
-  
-  // Poll every 2 seconds
-  const interval = setInterval(pollAnswers, 2000);
-  pollAnswers(); // Initial poll
-  
-  return () => clearInterval(interval);
-}, [state.currentRoom?.id, players.length, processedAnswerIds, awardObserverBonus]);
-```
-
-#### 2. შევცვალოთ `processedAnswerIds` key format:
-
-**მანამდე** (ხაზი 85):
-```typescript
-for (const [odavidwserId, answer] of Object.entries(opponentAnswers)) {
-  if (processedAnswerIds.has(odavidwserId)) continue;
-```
-
-**შემდეგ**:
-```typescript
-// Use compound key: {userId}-{questionIndex} to track per-question answers
-const answerId = `${answer.user_id}-${answer.question_index}`;
-if (processedAnswerIds.has(answerId)) continue;
-```
-
-#### 3. წავშალოთ ძველი real-time effect (ხაზები 75-104):
-
-ძველი effect იყენებდა `opponentAnswers`-ს რომელიც არ მუშაობს Observer-ისთვის. ამის ნაცვლად polling-ით ვჭერთ ყველა პასუხს.
-
-## რატომ მუშაობს
-
-| სცენარი | მანამდე | შემდეგ |
-|---------|---------|--------|
-| Observer Q2-ზეა, Player Q1-ზე პასუხობს | ❌ იგნორირდება | ✅ Polling იჭერს |
-| Observer Q5-ზეა, Player Q3-ზე პასუხობს | ❌ იგნორირდება | ✅ Polling იჭერს |
-| Player სწორად პასუხობს | ✅ ბონუსი 0 | ✅ ბონუსი 0 |
-| Player არასწორად პასუხობს | ❌ 0 (თუ Observer გადავიდა) | ✅ ბონუსი ~100-175 |
-
-## ტექნიკური დეტალები
-
-- **Polling interval**: 2 წამი (საკმარისი real-time ეფექტისთვის)
-- **Key format**: `{userId}-{questionIndex}` - უნიკალური თითოეული პასუხისთვის
-- **Query**: მხოლოდ `is_correct=false` - ოპტიმიზებული
-- **Memory**: `processedAnswerIds` Set შეინახავს დათვლილ პასუხებს
-
-## დამატებით
-
-Import-ებში დაგვჭირდება `supabase`:
-```typescript
-import { supabase } from "@/integrations/supabase/client";
-```
-
-და `useMultiplayerV2`-დან `currentRoom`:
-```typescript
-const { currentRoom, ... } = useMultiplayerV2();
-```
+## Files to Modify
+1. `src/pages/PowerUps.tsx` - Fix sticky header padding and bottom padding breakpoint
+2. `src/components/shop/ShopHeader.tsx` - Improve background visibility
