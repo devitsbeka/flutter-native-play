@@ -5,6 +5,16 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { getNotificationConfig } from '@/config/notificationConfig';
+import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
+import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
+import pushButton3d from "@/assets/icons/push-button-3d.png";
+
+// 3D icon mapping for trivia notification types
+const TRIVIA_TYPE_ICONS: Record<string, string> = {
+  trivia_liked: purpleHeart3d,
+  trivia_saved: bookmark3d,
+  trivia_played: pushButton3d,
+};
 import { Notification } from '@/hooks/useNotifications';
 import { translateNotificationTitle, translateNotificationMessage } from '@/utils/notificationTranslations';
 
@@ -228,11 +238,16 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
           )}
           
           {/* Type indicator badge - solid background for visibility */}
-          <div className={cn(
-            "absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
-            config.bgColor.replace('/20', '')
-          )}>
-            <Icon className="w-2.5 h-2.5 text-white" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center bg-card border-2 border-border shadow-sm">
+            {TRIVIA_TYPE_ICONS[notification.type] ? (
+              <img 
+                src={TRIVIA_TYPE_ICONS[notification.type]} 
+                alt=""
+                className="w-3.5 h-3.5 object-contain"
+              />
+            ) : (
+              <Icon className={cn("w-2.5 h-2.5", config.color)} />
+            )}
           </div>
         </div>
 
