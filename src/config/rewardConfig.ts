@@ -21,9 +21,13 @@ export const REWARDS = {
   GEMS_FOR_PLAYS: 2,         // 2 gems = instant plays (1000 coins value)
   GEMS_PLAYS_AMOUNT: 2,      // Number of plays for gems
 
-  // ===== LEVEL UP REWARDS =====
-  LEVEL_UP_COINS_PER_LEVEL: 100,  // 20% of a game stake per level
-  LEVEL_UP_GEMS_THRESHOLD: 5,     // Every 5 levels get 1 gem
+  // ===== LEVEL UP REWARDS (SIMPLIFIED) =====
+  LEVEL_UP_COINS: 150,              // Fixed 150 coins per level
+  LEVEL_UP_POWER_UP_TYPES: ["5050", "freeze", "replace", "time-drain"] as string[],
+  
+  // DEPRECATED - kept for backwards compatibility
+  LEVEL_UP_COINS_PER_LEVEL: 100,
+  LEVEL_UP_GEMS_THRESHOLD: 5,
 
   // ===== DAILY REWARDS - 7-day cycle =====
   // Total week value: ~6,750 coins worth (13.5 games)

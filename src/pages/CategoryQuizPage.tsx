@@ -341,17 +341,35 @@ export default function CategoryQuizPage() {
       }
       
       // Check for profile level-up (XP-based overall level)
+      // Simplified: 150 coins + 1 random power-up
       if (user && profile) {
         const newTotalPoints = (profile.total_points || 0) + earned;
         const newLevel = calculateLevel(newTotalPoints).level;
         if (newLevel > previousLevel) {
           setNewProfileLevel(newLevel);
-          // Credit level-up rewards immediately (no modal)
-          const levelUpCoins = REWARDS.LEVEL_UP_COINS_PER_LEVEL * newLevel;
-          const levelUpGems = newLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
-            ? Math.floor(newLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD) 
-            : 0;
-          addCurrency(levelUpCoins, levelUpGems);
+          
+          // Credit simplified level-up rewards
+          const levelUpCoins = REWARDS.LEVEL_UP_COINS;
+          const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
+          const randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+          
+          // Add coins
+          addCurrency(levelUpCoins, 0);
+          
+          // Credit the random power-up to database
+          const { data: existingPowerUp } = await supabase
+            .from("user_power_ups")
+            .select("quantity")
+            .eq("user_id", user.id)
+            .eq("power_up_type", randomPowerUp)
+            .maybeSingle();
+          
+          await supabase.from("user_power_ups").upsert({
+            user_id: user.id,
+            power_up_type: randomPowerUp,
+            quantity: (existingPowerUp?.quantity || 0) + 1,
+          });
+          
           setLevelUpRewardsCredited(true);
         }
       }
