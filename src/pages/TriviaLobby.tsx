@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info, Heart } from "lucide-react";
+import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -10,6 +10,9 @@ import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
+import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
+import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
+import pushButton3d from "@/assets/icons/push-button-3d.png";
 
 // Lazy load the heavy modal - only loads when user clicks Play
 const QuizPlayModal = lazy(() => 
@@ -194,35 +197,19 @@ export default function TriviaLobby() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="grid grid-cols-4 gap-2 bg-card rounded-2xl border border-border p-3"
+          className="flex items-center justify-center gap-6 bg-card rounded-2xl border border-border p-4"
         >
-          <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{stats.uniquePlayers}</p>
-            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
-              <span>მოთამაშე</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <img src={purpleHeart3d} alt="Likes" className="w-6 h-6 object-contain" />
+            <span className="font-bold text-foreground">{trivia.likes_count || 0}</span>
           </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{stats.avgScore}/{trivia.question_count}</p>
-            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span>საშუალო</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <img src={bookmark3d} alt="Saves" className="w-6 h-6 object-contain" />
+            <span className="font-bold text-foreground">{trivia.saves_count || 0}</span>
           </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{trivia.question_count}</p>
-            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>კითხვა</span>
-            </div>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{trivia.likes_count || 0}</p>
-            <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-              <Heart className="w-3.5 h-3.5" />
-              <span>მოწონება</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <img src={pushButton3d} alt="Plays" className="w-6 h-6 object-contain" />
+            <span className="font-bold text-foreground">{trivia.plays_count || 0}</span>
           </div>
         </motion.div>
 
