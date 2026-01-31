@@ -32,20 +32,49 @@ serve(async (req) => {
       formats.push("links");
     }
 
-    // Scrape the URL using Firecrawl with extended timeout
-    const firecrawlResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats,
-        onlyMainContent: true,
-        timeout: 60000, // 60 seconds timeout for slow pages
-      }),
-    });
+    // Retry logic for transient network failures
+    const maxRetries = 3;
+    let firecrawlResponse: Response | null = null;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        firecrawlResponse = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${FIRECRAWL_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url,
+            formats,
+            onlyMainContent: true,
+            timeout: 60000,
+          }),
+        });
+        break; // Success, exit retry loop
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.error(`Firecrawl attempt ${attempt}/${maxRetries} failed:`, lastError.message);
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, attempt - 1) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    if (!firecrawlResponse) {
+      console.error("All Firecrawl attempts failed:", lastError?.message);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Scraping service temporarily unavailable. Please try again." 
+        }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Check response status first before parsing JSON
     if (!firecrawlResponse.ok) {
