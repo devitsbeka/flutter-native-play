@@ -707,6 +707,8 @@ export const ka = {
     active: "აქტიური",
     daysRemaining: "{days} დღე დარჩენილი",
     popular: "პოპულარული",
+    bestValue: "საუკეთესო ფასი",
+    gem: "ალმასი",
     tabAll: "ყველა",
     tabCoins: "მონეტები",
     tabPowers: "ძალები",

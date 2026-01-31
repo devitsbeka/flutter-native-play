@@ -613,6 +613,8 @@ export const ru: KaTranslations = {
     active: "Активно",
     daysRemaining: "Осталось {days} дней",
     popular: "Популярное",
+    bestValue: "Лучшее предложение",
+    gem: "гем",
     tabAll: "Все",
     tabCoins: "Монеты",
     tabPowers: "Силы",
