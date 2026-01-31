@@ -17,6 +17,7 @@ import { EditRoundModal } from "./EditRoundModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
 import { useDrafts } from "@/hooks/useDrafts";
+import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -494,12 +495,12 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-lg">👤</span>
-            )}
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
+            <SafeAvatarImage 
+              avatarUrl={profile?.avatar_url}
+              fallback={profile?.nickname || 'U'}
+              containerClassName="w-full h-full"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
@@ -607,13 +608,13 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
       {/* Author Info & Stats */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          {/* Simple Avatar without frame effects */}
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-lg">👤</span>
-            )}
+          {/* Avatar with SafeAvatarImage for robust fallback handling */}
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
+            <SafeAvatarImage 
+              avatarUrl={profile?.avatar_url}
+              fallback={profile?.nickname || 'U'}
+              containerClassName="w-full h-full"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground truncate">
