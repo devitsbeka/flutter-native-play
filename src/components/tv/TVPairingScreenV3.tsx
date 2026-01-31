@@ -16,11 +16,6 @@ export const TVPairingScreenV3: React.FC = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 flex items-center justify-center p-6 overflow-hidden relative">
-      {/* Mirror button - top right */}
-      <TVMirrorButton />
-      
-      {/* Code overlay in top-right (logo is already centered in main content) */}
-      <TVBrandingOverlay showLogo={false} showCode />
 
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
