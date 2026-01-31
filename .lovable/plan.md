@@ -1,85 +1,130 @@
 
-# Fix Notification Type Indicator Badges
+# Fix Missing Trivia Played Notifications for Multiplayer Games
 
 ## Problem
-The small type indicator badges on notification cards have two issues:
-1. **Using wrong icons**: Currently using Lucide icons (Heart, Bookmark, Play) instead of the 3D emoji icons used elsewhere
-2. **No background container**: The indicators use transparent backgrounds, making them invisible on certain avatars
+When someone plays your trivia in a multiplayer room, you don't receive a notification. The notification is only sent when someone plays it solo via `QuizPlayModal`.
+
+The code calls `increment_quiz_plays` to update the plays count in multiplayer, but never creates a notification for the trivia creator.
+
+## Root Cause
+In `MultiplayerContextV2.tsx`, there are 3 places where `increment_quiz_plays` is called for user trivia, but none of them create a notification:
+- Line 888-891: When room has existing questions
+- Line 1009-1012: When loading questions from user_quiz_posts
+- Line 1636-1639: When starting next round with user trivia
 
 ## Solution
-Update the `CompactNotificationCard` to:
-1. Use 3D emoji icons for trivia notifications (trivia_liked, trivia_saved, trivia_played)
-2. Add a solid white/card background container for all type indicator badges
+Add notification creation logic after each `increment_quiz_plays` call to notify the trivia creator that their trivia was played.
 
 ---
 
 ## Files to Modify
 
-### `src/components/notifications/CompactNotificationCard.tsx`
+### 1. `src/contexts/MultiplayerContextV2.tsx`
 
-**Change 1**: Add 3D icon imports
+**Add import at top:**
 ```typescript
-import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
-import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
-import pushButton3d from "@/assets/icons/push-button-3d.png";
+import { createNotification } from "@/hooks/useNotifications";
 ```
 
-**Change 2**: Create icon mapping for trivia notification types
+**Create helper function to notify trivia creator:**
 ```typescript
-const TRIVIA_TYPE_ICONS: Record<string, string> = {
-  trivia_liked: purpleHeart3d,
-  trivia_saved: bookmark3d,
-  trivia_played: pushButton3d,
+// Helper to notify trivia creator when their trivia is played in multiplayer
+const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
+  try {
+    // Get trivia details
+    const { data: triviaPost } = await supabase
+      .from("user_quiz_posts")
+      .select("user_id, title")
+      .eq("id", userTriviaId)
+      .single();
+    
+    // Don't notify if creator is the one playing
+    if (!triviaPost || triviaPost.user_id === playerId) return;
+    
+    // Get player profile
+    const { data: playerProfile } = await supabase
+      .from("profiles")
+      .select("nickname")
+      .eq("user_id", playerId)
+      .single();
+    
+    await createNotification(
+      triviaPost.user_id,
+      "trivia_played",
+      `${playerProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`,
+      triviaPost.title || undefined,
+      { post_id: userTriviaId, player_id: playerId }
+    );
+  } catch (error) {
+    console.error("Error notifying trivia creator:", error);
+  }
 };
 ```
 
-**Change 3**: Update the type indicator badge (lines 230-236)
+**Update 3 locations to call helper after increment_quiz_plays:**
 
-Current code:
-```tsx
-<div className={cn(
-  "absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background",
-  config.bgColor.replace('/20', '')
-)}>
-  <Icon className="w-2.5 h-2.5 text-white" />
-</div>
+**Location 1** (lines 888-892):
+```typescript
+if (freshRoom.user_trivia_id) {
+  await supabase.rpc('increment_quiz_plays', { 
+    post_id: freshRoom.user_trivia_id 
+  });
+  // Notify trivia creator - use first participant who is not host
+  const { data: participants } = await supabase
+    .from("room_participants")
+    .select("user_id")
+    .eq("room_id", roomId)
+    .neq("user_id", freshRoom.host_id)
+    .limit(1);
+  if (participants?.[0]?.user_id) {
+    await notifyTriviaCreator(freshRoom.user_trivia_id, participants[0].user_id);
+  }
+}
 ```
 
-New code:
-```tsx
-<div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center bg-card border-2 border-border shadow-sm">
-  {TRIVIA_TYPE_ICONS[notification.type] ? (
-    <img 
-      src={TRIVIA_TYPE_ICONS[notification.type]} 
-      alt=""
-      className="w-3.5 h-3.5 object-contain"
-    />
-  ) : (
-    <Icon className={cn("w-2.5 h-2.5", config.color)} />
-  )}
-</div>
-```
+**Location 2** (lines 1009-1012): Same pattern
+
+**Location 3** (lines 1636-1639): Same pattern
 
 ---
 
-## Visual Changes
+## Alternative: Database Trigger Approach
+
+For more reliable instant notifications, we could create a database trigger on the `quiz_post_plays` table that automatically creates notifications when a play is recorded. This is the pattern already used for friend requests.
+
+Benefits:
+- Single source of truth
+- Cannot be missed by any code path
+- Works even if frontend code fails
+
+This would require a database migration to create the trigger function.
+
+---
+
+## Visual Result
 
 | Before | After |
 |--------|-------|
-| Transparent badge with white Lucide icon | Solid card background with shadow |
-| Heart icon (Lucide) | Purple heart 3D emoji |
-| Bookmark icon (Lucide) | Orange bookmark 3D emoji |
-| Play icon (Lucide) | Push button 3D emoji |
-| Hard to see on light avatars | Clear visibility on all backgrounds |
+| No notification when trivia played in multiplayer | Notification sent to creator |
+| Only solo play triggers notification | All play types trigger notification |
 
 ---
 
 ## Technical Details
 
-| Change | Details |
-|--------|---------|
-| Background | `bg-card` instead of dynamic color |
-| Border | `border-border` instead of `border-background` |
-| Shadow | Added `shadow-sm` for depth |
-| Icons | 3D emoji images for trivia types, Lucide for others |
-| Fallback | Non-trivia types keep using Lucide icons with colored styling |
+| Change | Location | Details |
+|--------|----------|---------|
+| Import createNotification | MultiplayerContextV2.tsx | Top of file |
+| Helper function | MultiplayerContextV2.tsx | notifyTriviaCreator() |
+| Call after increment_quiz_plays | 3 locations | Lines 888, 1009, 1636 |
+
+---
+
+## Note on Instant Delivery
+
+The notification system already supports instant delivery:
+- `notifications` table is in the realtime publication
+- `useNotifications` hook subscribes to `postgres_changes` for INSERT events
+- When a notification is inserted, it appears instantly and plays a sound
+
+The issue is simply that notifications are not being **created** for multiplayer trivia plays.
