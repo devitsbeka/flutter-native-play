@@ -10,6 +10,39 @@ import { getQuestions } from "@/services/questionService";
 import { shuffleArray } from "@/utils/shuffle";
 import { getSeenQuestionIds, markQuestionsAsSeen } from "@/services/questionTracker";
 import { useUserPresence } from "@/hooks/useUserPresence";
+import { createNotification } from "@/hooks/useNotifications";
+
+// Helper to notify trivia creator when their trivia is played in multiplayer
+const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
+  try {
+    // Get trivia details
+    const { data: triviaPost } = await supabase
+      .from("user_quiz_posts")
+      .select("user_id, title")
+      .eq("id", userTriviaId)
+      .maybeSingle();
+    
+    // Don't notify if no trivia found or creator is the one playing
+    if (!triviaPost || triviaPost.user_id === playerId) return;
+    
+    // Get player profile
+    const { data: playerProfile } = await supabase
+      .from("profiles")
+      .select("nickname")
+      .eq("user_id", playerId)
+      .maybeSingle();
+    
+    await createNotification(
+      triviaPost.user_id,
+      "trivia_played",
+      `${playerProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`,
+      triviaPost.title || undefined,
+      { post_id: userTriviaId, player_id: playerId }
+    );
+  } catch (error) {
+    console.error("Error notifying trivia creator:", error);
+  }
+};
 
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
@@ -889,6 +922,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             await supabase.rpc('increment_quiz_plays', { 
               post_id: freshRoom.user_trivia_id 
             });
+            // Notify trivia creator - notify for each non-host participant
+            const nonHostParticipants = participants.filter(p => p.user_id !== freshRoom.host_user_id);
+            for (const participant of nonHostParticipants) {
+              await notifyTriviaCreator(freshRoom.user_trivia_id, participant.user_id);
+            }
           }
           
           return; // Exit early - custom questions handled
@@ -1010,6 +1048,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             await supabase.rpc('increment_quiz_plays', { 
               post_id: freshRoom.user_trivia_id 
             });
+            // Notify trivia creator - notify for each non-host participant
+            const nonHostParticipants = participants.filter(p => p.user_id !== freshRoom.host_user_id);
+            for (const participant of nonHostParticipants) {
+              await notifyTriviaCreator(freshRoom.user_trivia_id, participant.user_id);
+            }
             
             return; // Exit early - trivia loaded from user_quiz_posts
           }
@@ -1637,6 +1680,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           await supabase.rpc('increment_quiz_plays', { 
             post_id: nextItem.user_trivia_id 
           });
+          // Notify trivia creator - notify for each non-host participant
+          const nonHostParticipants = participants.filter(p => p.user_id !== state.currentRoom?.host_user_id);
+          for (const participant of nonHostParticipants) {
+            await notifyTriviaCreator(nextItem.user_trivia_id, participant.user_id);
+          }
           
           return; // Done with custom trivia
         }
