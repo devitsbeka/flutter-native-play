@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { Sparkles, User, Lock, Eye, EyeOff } from "lucide-react";
+import { Sparkles, User, Eye, EyeOff } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { t } from "@/lib/i18n";
@@ -32,7 +32,7 @@ const celebrateConfetti = () => {
 };
 
 // Step order for determining animation direction
-const stepOrder = ["welcome", "username", "password", "creating"] as const;
+const stepOrder = ["username", "creating"] as const;
 
 // Slide and fade animation variants
 const slideVariants: Variants = {
@@ -149,9 +149,8 @@ export function SignupOnboardingModal() {
   const [prevStep, setPrevStep] = useState(step);
   
   const usernameRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
   
-  const isOpen = step === "welcome" || step === "username" || step === "password" || step === "creating";
+  const isOpen = step === "username" || step === "creating";
   
   // Track step changes to determine animation direction
   useEffect(() => {
@@ -163,12 +162,10 @@ export function SignupOnboardingModal() {
     }
   }, [step, prevStep]);
   
-  // Auto-focus inputs with delay for animation
+  // Auto-focus username input with delay for animation
   useEffect(() => {
     if (step === "username") {
       setTimeout(() => usernameRef.current?.focus(), 400);
-    } else if (step === "password") {
-      setTimeout(() => passwordRef.current?.focus(), 400);
     }
   }, [step]);
   
@@ -187,20 +184,13 @@ export function SignupOnboardingModal() {
     return undefined;
   };
   
-  const handleNextFromUsername = () => {
-    const error = validateUsername(username);
-    if (error) {
-      setErrors({ username: error });
-      return;
-    }
-    setErrors({});
-    setStep("password");
-  };
-  
+  // Combined create account - validates both username and password
   const handleCreateAccount = async () => {
-    const error = validatePassword(password);
-    if (error) {
-      setErrors({ password: error });
+    const usernameError = validateUsername(username);
+    const passwordError = validatePassword(password);
+    
+    if (usernameError || passwordError) {
+      setErrors({ username: usernameError, password: passwordError });
       return;
     }
     
@@ -223,20 +213,15 @@ export function SignupOnboardingModal() {
     } catch (error: any) {
       console.error("Signup error:", error);
       toast.error(error.message || t("errors.generic"));
-      setStep("password");
+      setStep("username");
     } finally {
       setIsLoading(false);
     }
   };
   
+  // Handle back - close modal
   const handleBack = () => {
-    if (step === "password") {
-      setStep("username");
-    } else if (step === "username") {
-      setStep("welcome");
-    } else if (step === "welcome") {
-      setStep("idle");
-    }
+    setStep("idle");
   };
   
   // Get animation variants based on direction
@@ -246,35 +231,15 @@ export function SignupOnboardingModal() {
   // Determine current step config
   const getStepConfig = () => {
     switch (step) {
-      case "welcome":
-        return {
-          icon: "👋",
-          iconEmoji: true,
-          title: t("onboarding.welcomeTitle"),
-          subtitle: t("onboarding.welcomeSubtitle"),
-          primaryLabel: t("onboarding.startAdventure"),
-          primaryIcon: <Sparkles className="w-5 h-5" />,
-          onPrimaryClick: () => setStep("username"),
-          showBack: false,
-        };
       case "username":
         return {
           icon: <User className="w-10 h-10 text-white" />,
           title: t("onboarding.chooseUsername"),
           subtitle: t("onboarding.usernameHint"),
-          primaryLabel: t("common.next"),
-          onPrimaryClick: handleNextFromUsername,
-          primaryDisabled: !username.trim(),
-          showBack: true,
-        };
-      case "password":
-        return {
-          icon: <Lock className="w-10 h-10 text-white" />,
-          title: t("onboarding.createPassword"),
-          subtitle: t("onboarding.passwordHint"),
           primaryLabel: t("auth.createAccount"),
+          primaryIcon: <Sparkles className="w-5 h-5" />,
           onPrimaryClick: handleCreateAccount,
-          primaryDisabled: !password || isLoading,
+          primaryDisabled: !username.trim() || !password || isLoading,
           showBack: true,
         };
       case "creating":
@@ -312,13 +277,10 @@ export function SignupOnboardingModal() {
             {config.iconEmoji ? (
               <motion.span 
                 className="text-5xl"
-                animate={step === "welcome" ? { 
-                  rotate: [0, -10, 10, -10, 0],
-                  scale: [1, 1.1, 1],
-                } : step === "creating" ? {
+                animate={step === "creating" ? {
                   scale: [1, 1.2, 1],
                 } : {}}
-                transition={step === "creating" ? { duration: 1, repeat: Infinity } : { duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                transition={step === "creating" ? { duration: 1, repeat: Infinity } : {}}
               >
                 {config.icon}
               </motion.span>
@@ -346,23 +308,10 @@ export function SignupOnboardingModal() {
       hideCloseButton={step === "creating"}
     >
       <AnimatePresence mode="wait" custom={direction}>
-        {/* Welcome Step - empty content */}
-        {step === "welcome" && (
-          <motion.div
-            key="welcome-content"
-            variants={slideVariants}
-            initial={getEnterVariant()}
-            animate="center"
-            exit={getExitVariant()}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full min-h-[60px]"
-          />
-        )}
-        
-        {/* Username Input */}
+        {/* Combined Username + Password Input */}
         {step === "username" && (
           <motion.div
-            key="username-content"
+            key="signup-content"
             variants={slideVariants}
             initial={getEnterVariant()}
             animate="center"
@@ -375,7 +324,9 @@ export function SignupOnboardingModal() {
               initial="initial"
               animate="animate"
               exit="exit"
+              className="space-y-4"
             >
+              {/* Username Input */}
               <motion.div variants={itemVariants} className="relative">
                 <input
                   ref={usernameRef}
@@ -383,58 +334,36 @@ export function SignupOnboardingModal() {
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
-                    setErrors({});
+                    setErrors(prev => ({ ...prev, username: undefined }));
                   }}
-                  onKeyDown={(e) => e.key === "Enter" && handleNextFromUsername()}
                   placeholder={t("auth.usernamePlaceholder")}
                   className="w-full px-5 py-4 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-all duration-200"
                   style={{
                     boxShadow: "0 4px 0 hsl(var(--border))",
                   }}
                 />
+                <AnimatePresence>
+                  {errors.username && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -10, height: 0 }}
+                      className="text-destructive text-sm mt-2 text-center font-medium overflow-hidden"
+                    >
+                      {errors.username}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </motion.div>
               
-              <AnimatePresence>
-                {errors.username && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, y: -10, height: 0 }}
-                    className="text-destructive text-sm mt-3 text-center font-medium overflow-hidden"
-                  >
-                    {errors.username}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </motion.div>
-        )}
-        
-        {/* Password Input */}
-        {step === "password" && (
-          <motion.div
-            key="password-content"
-            variants={slideVariants}
-            initial={getEnterVariant()}
-            animate="center"
-            exit={getExitVariant()}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full"
-          >
-            <motion.div 
-              variants={contentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+              {/* Password Input */}
               <motion.div variants={itemVariants} className="relative">
                 <input
-                  ref={passwordRef}
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    setErrors({});
+                    setErrors(prev => ({ ...prev, password: undefined }));
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
                   placeholder={t("auth.passwordPlaceholder")}
@@ -452,20 +381,19 @@ export function SignupOnboardingModal() {
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </motion.button>
+                <AnimatePresence>
+                  {errors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -10, height: 0 }}
+                      className="text-destructive text-sm mt-2 text-center font-medium overflow-hidden"
+                    >
+                      {errors.password}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </motion.div>
-              
-              <AnimatePresence>
-                {errors.password && (
-                  <motion.p
-                    initial={{ opacity: 0, y: -10, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, y: -10, height: 0 }}
-                    className="text-destructive text-sm mt-3 text-center font-medium overflow-hidden"
-                  >
-                    {errors.password}
-                  </motion.p>
-                )}
-              </AnimatePresence>
             </motion.div>
           </motion.div>
         )}

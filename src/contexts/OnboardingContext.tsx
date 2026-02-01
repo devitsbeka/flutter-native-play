@@ -66,9 +66,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const isOnboarding = step !== "idle" && step !== "complete";
   const needsAvatar = !!user && !profile?.avatar_url;
   
-  // Start onboarding for new users
+  // Start onboarding for new users - skip welcome, go directly to signup
   const startOnboarding = useCallback(() => {
-    setStep("welcome");
+    setStep("username");
     setUsername("");
     setPassword("");
     setUploadedImage(null);
