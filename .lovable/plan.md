@@ -1,216 +1,247 @@
 
+# Comprehensive Fix for Quality Review System
 
-# AI-Powered Question Quality Review System
+## Issues Identified
 
-## Overview
-This plan outlines the implementation of a new admin page called "Review" that performs deep AI-powered analysis of trivia questions. The system will evaluate questions based on Georgian grammar correctness, answer uniqueness/clarity, and overall question confusion level, producing an A-D grade for each question.
+### Issue 1: "Select All C-D" Only Selects D Questions
+**Root Cause**: The `handleSelectAll` function correctly filters for C and D grades, BUT the checkbox's `checked` state comparison is fragile. When results are sorted, and if there's any timing issue with state updates, it could cause selection mismatch.
 
-## Grade Definitions
-- **Grade A (90-100%)**: Excellent quality, production ready
-- **Grade B (75-89%)**: Good quality, minor issues possible
-- **Grade C (50-74%)**: Needs improvement, should be reviewed
-- **Grade D (0-49%)**: Poor quality, needs rewrite
+**Fix**: Ensure selection logic explicitly handles both C and D grades with proper state synchronization.
+
+### Issue 2: "Move to Library" Doesn't Actually Work
+**Root Cause**: Two problems:
+1. The questions are only visually "marked" with `movedToLibrary: true` but never removed from the displayed results
+2. No toast feedback if the update fails due to RLS (though admin role should work)
+
+**Fix**: 
+- After successful update, filter out moved questions from the results array
+- Add proper error handling and feedback
+- Remove moved questions from the UI
+
+### Issue 3: Missing "Quick Resolve" Feature
+**User Request**: Ability to auto-fix questions using AI recommendations
+
+**Implementation**:
+1. Create new edge function `resolve-question-quality` that:
+   - Takes a question and its review data
+   - Uses AI to generate corrected question text, correct answer, and incorrect answers
+   - Updates the question in the database
+   - Re-runs quality review to verify improvement
+
+2. Add UI buttons:
+   - "Quick Resolve" button on each question card
+   - "Resolve Selected" button for batch resolution
+   - Progress indicator for batch operations
+   - Re-review confirmation after resolution
 
 ---
 
-## Technical Implementation
+## Implementation Plan
 
-### 1. New Edge Function: `review-question-quality`
+### 1. Fix "Select All C-D" Selection Bug
 
-**Location:** `supabase/functions/review-question-quality/index.ts`
+**File: `src/pages/admin/QualityReview.tsx`**
 
-This function will use Lovable AI to perform deep analysis on questions:
+Update the selection logic to be more explicit:
+
+```text
+// Current (lines 86-91):
+const handleSelectAll = (checked: boolean) => {
+  if (checked) {
+    setSelectedIds(new Set(lowGradeResults.map(r => r.id)));
+  } else {
+    setSelectedIds(new Set());
+  }
+};
+
+// Fixed version:
+const handleSelectAll = (checked: boolean) => {
+  if (checked) {
+    // Explicitly filter for C and D grades from current results
+    const cdIds = results
+      .filter(r => r.grade === 'C' || r.grade === 'D')
+      .map(r => r.id);
+    setSelectedIds(new Set(cdIds));
+  } else {
+    setSelectedIds(new Set());
+  }
+};
+```
+
+Also update the checkbox checked state calculation to be more robust.
+
+### 2. Fix "Move to Library" Functionality
+
+**File: `src/hooks/useQuestionQualityReview.ts`**
+
+Update `moveToLibrary` function:
+
+```text
+const moveToLibrary = useCallback(async (questionIds: string[]) => {
+  if (questionIds.length === 0) {
+    toast.error('No questions selected');
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('questions')
+      .update({ in_production: false })
+      .in('id', questionIds);
+
+    if (error) throw error;
+
+    toast.success(`Moved ${questionIds.length} questions to library`);
+    
+    // Remove moved questions from results (not just mark them)
+    setResults(prev => prev.filter(r => !questionIds.includes(r.id)));
+    
+    // Update summary counts
+    setSummary(prev => {
+      const movedResults = results.filter(r => questionIds.includes(r.id));
+      return {
+        A: prev.A - movedResults.filter(r => r.grade === 'A').length,
+        B: prev.B - movedResults.filter(r => r.grade === 'B').length,
+        C: prev.C - movedResults.filter(r => r.grade === 'C').length,
+        D: prev.D - movedResults.filter(r => r.grade === 'D').length,
+      };
+    });
+  } catch (error) {
+    console.error('Move to library error:', error);
+    toast.error('Failed to move questions to library. Make sure you have admin permissions.');
+  }
+}, [results]);
+```
+
+### 3. Create New Edge Function for AI Resolution
+
+**File: `supabase/functions/resolve-question-quality/index.ts`**
+
+New edge function that:
+- Receives question ID and review data
+- Uses AI to generate improved question/answers based on identified issues
+- Updates the question in database
+- Optionally re-runs review to verify improvement
 
 ```text
 Input:
-- categoryId (optional): Filter by category
-- questionIds (optional): Specific question IDs to review
-- onlyProduction: boolean (filter to in_production questions)
-- limit: number (batch size, default 20)
-
-Processing (per question):
-1. Grammar Check (30% weight):
-   - Uses Georgian grammar AI prompt similar to verify-georgian-grammar
-   - Checks verb conjugation, case endings, spelling
-   - Score 0-100
-
-2. Answer Uniqueness Check (40% weight):
-   - Verifies only one answer is definitively correct
-   - Checks for vague or ambiguous options
-   - Ensures incorrect answers are plausibly wrong but clearly incorrect
-   - Score 0-100
-
-3. Confusion Analysis (30% weight):
-   - Evaluates how confusing the question+answers combination is
-   - Checks if question phrasing is clear
-   - Assesses if answer options are distinguishable
-   - Score 0-100
-
-Output per question:
 {
-  id: string,
-  overall_score: number (0-100),
-  grade: "A" | "B" | "C" | "D",
-  grammar_score: number,
-  grammar_issues: string[],
-  uniqueness_score: number,
-  uniqueness_issues: string[],
-  confusion_score: number,
-  confusion_issues: string[],
-  corrected_text?: string,
-  recommendations: string[]
+  questionIds: string[],
+  reviewData: ReviewResult[] // Contains issues and recommendations
+}
+
+Processing:
+1. For each question, construct AI prompt with:
+   - Original question text, correct answer, incorrect answers
+   - Grammar issues identified
+   - Uniqueness issues identified  
+   - Clarity issues identified
+   - Recommendations from review
+
+2. AI returns corrected version:
+   - Fixed question_text
+   - Fixed correct_answer
+   - Fixed incorrect_answers
+
+3. Update question in database
+
+4. Optionally re-review to confirm grade improvement
+
+Output:
+{
+  resolved: [{ id, newGrade, success }],
+  failed: [{ id, error }]
 }
 ```
 
-### 2. Database Schema Updates
+### 4. Add Resolution UI Components
 
-Add new columns to the `questions` table for storing review results:
+**File: `src/pages/admin/QualityReview.tsx`**
 
-```sql
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS ai_review_score integer;
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS ai_review_grade text;
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS ai_review_data jsonb;
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS last_ai_review timestamp with time zone;
-```
+Add:
+- "Quick Resolve" button on each question card (only for C/D grades)
+- "Resolve Selected" button in the header actions
+- Resolution progress modal
+- Re-review confirmation
 
-### 3. New Admin Page: `QualityReview.tsx`
+**File: `src/hooks/useQuestionQualityReview.ts`**
 
-**Location:** `src/pages/admin/QualityReview.tsx`
+Add new functions:
+- `resolveQuestions(questionIds: string[], reviewData: ReviewResult[])`
+- `resolving` state
+- `resolveProgress` state
 
-**UI Layout:**
+### 5. Update Config
+
+**File: `supabase/config.toml`**
+
+Add the new edge function configuration.
+
+---
+
+## Technical Details
+
+### AI Prompt for Resolution
 
 ```text
-+----------------------------------------------------------+
-|  Quality Review                              [Run Review] |
-+----------------------------------------------------------+
-| Filters:                                                  |
-| [Category Dropdown] [Status: All/Prod/Lib] [Limit: 50]   |
-| [x] Only unreviewed                                       |
-+----------------------------------------------------------+
-| Progress: [==========] 45/100 questions reviewed          |
-+----------------------------------------------------------+
-| Summary:                                                  |
-| Grade A: 12 | Grade B: 18 | Grade C: 10 | Grade D: 5     |
-+----------------------------------------------------------+
-| Results (sortable by grade):                              |
-|                                                           |
-| [x] Q1: "ვინ დაწერა ვეფხისტყაოსანი?"                      |
-|     Grade: A (95%) | Grammar: 100 | Unique: 95 | Clear: 90|
-|                                                           |
-| [x] Q2: "რა არის საქართველოს დედაქალაქი?"                 |
-|     Grade: C (62%) | Grammar: 80 | Unique: 50 | Clear: 55 |
-|     Issues: "Multiple answers could be interpreted..."    |
-|                                                           |
-+----------------------------------------------------------+
-| Selected: 15 questions                                    |
-| [Move C-D to Library] [Export Issues CSV]                 |
-+----------------------------------------------------------+
-```
+System: You are a Georgian language trivia question expert. Your task is to fix 
+questions to achieve A-grade quality (90%+ score).
 
-**Features:**
-1. Category and status filters
-2. Batch review with progress indicator
-3. Results table with expandable details
-4. Checkbox selection for bulk actions
-5. "Move to Library" button for selected C-D grade questions
-6. Visual grade badges (A=green, B=blue, C=yellow, D=red)
+Given:
+- Original question and answers
+- Identified issues (grammar, uniqueness, clarity)
+- Recommendations
 
-### 4. Custom Hook: `useQuestionQualityReview.ts`
+You must:
+1. Fix all grammar issues (spelling, verb conjugation, case endings)
+2. Ensure only ONE answer is correct with no ambiguity
+3. Make incorrect answers clearly wrong but still plausible
+4. Improve question clarity and phrasing
 
-**Location:** `src/hooks/useQuestionQualityReview.ts`
-
-```typescript
-interface ReviewResult {
-  id: string;
-  question_text: string;
-  overall_score: number;
-  grade: 'A' | 'B' | 'C' | 'D';
-  grammar_score: number;
-  grammar_issues: string[];
-  uniqueness_score: number;
-  uniqueness_issues: string[];
-  confusion_score: number;
-  confusion_issues: string[];
-  recommendations: string[];
-}
-
-interface UseQuestionQualityReview {
-  reviewing: boolean;
-  progress: { current: number; total: number };
-  results: ReviewResult[];
-  summary: { A: number; B: number; C: number; D: number };
-  startReview: (options: ReviewOptions) => Promise<void>;
-  moveToLibrary: (questionIds: string[]) => Promise<void>;
-  clearResults: () => void;
+Return JSON:
+{
+  "question_text": "Fixed question",
+  "correct_answer": "Fixed correct answer",
+  "incorrect_answers": ["Fixed incorrect 1", "Fixed incorrect 2", "Fixed incorrect 3"],
+  "changes_made": ["Change 1", "Change 2"]
 }
 ```
 
-### 5. Route and Navigation Updates
-
-**src/App.tsx:**
-```typescript
-const QualityReview = lazy(() => import("./pages/admin/QualityReview"));
-// Add route:
-<Route path="review" element={<QualityReview />} />
-```
-
-**src/pages/Admin.tsx:**
-```typescript
-// Add to toolsNavItems array:
-{ 
-  to: '/admin/review', 
-  icon: ClipboardCheck, // from lucide-react
-  label: 'Review' 
-},
-```
-
----
-
-## File Changes Summary
-
-| File | Action |
-|------|--------|
-| `supabase/functions/review-question-quality/index.ts` | Create |
-| `src/pages/admin/QualityReview.tsx` | Create |
-| `src/hooks/useQuestionQualityReview.ts` | Create |
-| `src/App.tsx` | Edit (add route) |
-| `src/pages/Admin.tsx` | Edit (add nav item) |
-| Database migration | Create (add review columns) |
-| `supabase/config.toml` | Edit (add function config) |
-
----
-
-## AI Prompt Design
-
-The edge function will use a carefully crafted prompt for Georgian trivia evaluation:
+### UI Flow
 
 ```text
-System: You are an expert Georgian language trivia evaluator. 
-Analyze each question for:
-
-1. GRAMMAR (30%): Check Georgian spelling, verb conjugation, 
-   case endings, and proper phrasing.
-
-2. ANSWER UNIQUENESS (40%): Ensure exactly one answer is correct.
-   Check if any incorrect answers could also be valid.
-   Verify answers are not too similar or confusing.
-
-3. CLARITY (30%): Assess if the question is clear and 
-   unambiguous. Check if answer options are distinguishable.
-
-Return JSON with scores 0-100 for each criterion and specific issues found.
+1. User runs review -> sees results with grades
+2. For low-grade questions:
+   a. Click "Quick Resolve" on individual question
+      -> AI fixes question
+      -> Question is re-reviewed
+      -> Updated grade shown inline
+   
+   b. Select multiple questions + click "Resolve Selected"
+      -> Progress modal shows resolution progress
+      -> After completion, all resolved questions re-reviewed
+      -> Results updated with new grades
+      
+3. User can then move remaining C-D questions to library
 ```
 
 ---
 
-## User Flow
+## Files to Create/Modify
 
-1. Admin navigates to Admin > Tools > Review
-2. Selects category (or all) and filters (production status)
-3. Clicks "Run Review" - system processes questions in batches
-4. Views results sorted by grade (worst first)
-5. Expands individual questions to see detailed issues
-6. Selects all C-D grade questions using checkbox
-7. Clicks "Move to Library" to set `in_production = false`
-8. Questions are now in library for manual improvement
+| File | Action | Description |
+|------|--------|-------------|
+| `supabase/functions/resolve-question-quality/index.ts` | Create | New edge function for AI resolution |
+| `src/hooks/useQuestionQualityReview.ts` | Edit | Add resolve functions, fix moveToLibrary |
+| `src/pages/admin/QualityReview.tsx` | Edit | Fix selection bug, add resolve UI |
+| `supabase/config.toml` | Edit | Add new function config |
 
+---
+
+## Summary of Fixes
+
+1. **Selection Bug**: Direct filtering from `results` instead of cached `lowGradeResults`
+2. **Move to Library**: Actually remove items from state after successful update
+3. **Quick Resolve**: New AI-powered auto-fix feature with re-review capability
+4. **Batch Resolution**: Select multiple questions and resolve all at once
+5. **Better Feedback**: Clear progress indicators and success/error messages
