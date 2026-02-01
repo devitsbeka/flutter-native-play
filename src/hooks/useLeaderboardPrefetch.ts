@@ -12,27 +12,38 @@ const AI_NAMES: Record<number, string[]> = {
 };
 
 // Generate fake users for a league tier
-function generateFakeUsers(tier: number, count: number = 15, existingCoinsRange?: { min: number; max: number }) {
+// AI users should ALWAYS have fewer coins than the lowest real user
+function generateFakeUsers(tier: number, count: number = 15, lowestRealUserCoins?: number) {
   const names = AI_NAMES[tier] || AI_NAMES[1];
-  const baseCoins = existingCoinsRange?.max || (tier * 2000 + 1000);
-  const minCoins = existingCoinsRange?.min || tier * 500;
+  
+  // AI users get coins BELOW the lowest real user (or tier-appropriate defaults if no real users)
+  const maxAiCoins = lowestRealUserCoins 
+    ? Math.max(lowestRealUserCoins - 1, 100) 
+    : (tier === 3 ? 9000 : tier === 2 ? 2500 : 1500);
+  const minAiCoins = tier === 3 ? 5000 : tier === 2 ? 1000 : 200;
   
   const seededRandom = (i: number) => {
     const x = Math.sin(tier * 1000 + i) * 10000;
     return x - Math.floor(x);
   };
   
-  return Array.from({ length: count }, (_, i) => ({
-    user_id: `ai-${tier}-${i}`,
-    nickname: names[i % names.length] + (i >= names.length ? `_${Math.floor(i / names.length)}` : ""),
-    avatar_url: null,
-    weekly_xp: Math.floor(minCoins + seededRandom(i) * (baseCoins - minCoins)),
-    coins: Math.floor(minCoins + seededRandom(i) * (baseCoins - minCoins)),
-    rank: i + 1,
-    league_tier: tier,
-    rankChange: "same" as const,
-    isAI: true,
-  }));
+  return Array.from({ length: count }, (_, i) => {
+    // Spread AI users across the range, with higher indices getting lower coins
+    const positionFactor = 1 - (i / count); // First AI user gets more coins
+    const coins = Math.floor(minAiCoins + seededRandom(i) * (maxAiCoins - minAiCoins) * positionFactor);
+    
+    return {
+      user_id: `ai-${tier}-${i}`,
+      nickname: names[i % names.length] + (i >= names.length ? `_${Math.floor(i / names.length)}` : ""),
+      avatar_url: null,
+      weekly_xp: coins,
+      coins: coins,
+      rank: i + 1,
+      league_tier: tier,
+      rankChange: "same" as const,
+      isAI: true,
+    };
+  });
 }
 
 // Fast leaderboard fetch using RPC
@@ -102,15 +113,13 @@ async function fetchLeaderboardFast(tier: number, region?: string) {
   }
 
   // Generate AI users to fill the league
-  const existingCoinsRange = realEntries.length > 0 
-    ? { 
-        min: Math.min(...realEntries.map(e => e.coins), 500),
-        max: Math.max(...realEntries.map(e => e.coins), 3000)
-      }
+  // They should always rank BELOW real users
+  const lowestRealUserCoins = realEntries.length > 0 
+    ? Math.min(...realEntries.map(e => e.coins))
     : undefined;
 
   const aiCount = Math.max(15, 25 - realEntries.length);
-  const aiUsers = generateFakeUsers(tier, aiCount, existingCoinsRange);
+  const aiUsers = generateFakeUsers(tier, aiCount, lowestRealUserCoins);
 
   // Combine and sort by coins
   const allEntries = [...realEntries, ...aiUsers]
