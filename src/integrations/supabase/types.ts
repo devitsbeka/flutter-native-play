@@ -1527,6 +1527,9 @@ export type Database = {
       }
       questions: {
         Row: {
+          ai_review_data: Json | null
+          ai_review_grade: string | null
+          ai_review_score: number | null
           answer_shorten_status: string | null
           audio_url: string | null
           category_id: string
@@ -1540,6 +1543,7 @@ export type Database = {
           incorrect_answers: Json
           is_active: boolean | null
           language: string
+          last_ai_review: string | null
           last_quality_check: string | null
           level_number: number | null
           original_correct_answer: string | null
@@ -1556,6 +1560,9 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          ai_review_data?: Json | null
+          ai_review_grade?: string | null
+          ai_review_score?: number | null
           answer_shorten_status?: string | null
           audio_url?: string | null
           category_id: string
@@ -1569,6 +1576,7 @@ export type Database = {
           incorrect_answers?: Json
           is_active?: boolean | null
           language?: string
+          last_ai_review?: string | null
           last_quality_check?: string | null
           level_number?: number | null
           original_correct_answer?: string | null
@@ -1585,6 +1593,9 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          ai_review_data?: Json | null
+          ai_review_grade?: string | null
+          ai_review_score?: number | null
           answer_shorten_status?: string | null
           audio_url?: string | null
           category_id?: string
@@ -1598,6 +1609,7 @@ export type Database = {
           incorrect_answers?: Json
           is_active?: boolean | null
           language?: string
+          last_ai_review?: string | null
           last_quality_check?: string | null
           level_number?: number | null
           original_correct_answer?: string | null
