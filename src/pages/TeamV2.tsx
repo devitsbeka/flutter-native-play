@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,7 +42,7 @@ import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
-import { TabOnboardingTooltips } from "@/components/team/TabOnboardingTooltips";
+import { TabOnboardingTooltips, TabOnboardingTooltipsRef, TooltipTriggerButton } from "@/components/team/TabOnboardingTooltips";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -257,6 +257,9 @@ function TeamContentV2() {
     image_url?: string | null;
     total_levels: number;
   } | null>(null);
+
+  // Ref for manually triggering onboarding tooltips
+  const tooltipsRef = useRef<TabOnboardingTooltipsRef>(null);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
@@ -578,7 +581,7 @@ function TeamContentV2() {
                     }}
                   >
                     {/* Onboarding tooltips for new users */}
-                    <TabOnboardingTooltips activeTab={activeTab} />
+                    <TabOnboardingTooltips ref={tooltipsRef} activeTab={activeTab} />
                     {/* Tabs with equal distribution */}
                     {[
                       { id: "explore", label: "აღმოაჩინე" },
@@ -614,6 +617,8 @@ function TeamContentV2() {
                       </button>
                     ))}
                   </div>
+                  {/* Manual tooltip trigger button */}
+                  <TooltipTriggerButton onClick={() => tooltipsRef.current?.showTooltips()} />
                 </div>
               </div>
             </div>
