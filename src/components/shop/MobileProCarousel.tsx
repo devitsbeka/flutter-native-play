@@ -87,7 +87,12 @@ export function MobileProCarousel() {
             <h2 className="text-lg font-bold text-purple-900">გახდი PRO</h2>
           </div>
           {/* Right: Mascot */}
-          <img src={proMascot} alt="" className="w-16 h-16 object-contain" />
+          <img 
+            src={proMascot} 
+            alt="" 
+            className="w-16 h-16 object-contain" 
+            style={{ transform: "scaleX(-1)" }}
+          />
         </div>
       </div>
 
