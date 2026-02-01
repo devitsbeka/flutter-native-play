@@ -43,6 +43,7 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import { AvatarModal } from "@/components/home/AvatarModal";
+import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 
 import { t } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
@@ -598,6 +599,29 @@ export default function Index() {
                       </motion.div>
                     </div>
                   )}
+                  {/* Guest: Title and desc ABOVE avatar */}
+                  {!user && (
+                    <motion.div
+                      initial={{ y: -10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2, type: "spring" }}
+                      className="absolute -top-24 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto z-20"
+                    >
+                      <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 28, fontWeight: 900 }}>
+                        გამარჯობა!
+                      </span>
+                      <motion.button
+                        onClick={() => navigate("/auth")}
+                        className="mt-1 text-center cursor-pointer"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
+                          შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                        </p>
+                      </motion.button>
+                    </motion.div>
+                  )}
                   <motion.div 
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -629,50 +653,49 @@ export default function Index() {
                   transition={{ delay: 0.3, type: "spring" }}
                   className="flex flex-col items-center mt-6 pointer-events-auto"
                 >
-                  <div className="flex items-center justify-center gap-2.5">
-                    {user && profile?.country_code && (
-                      <FlagIcon countryCode={profile.country_code} size="md" />
-                    )}
-                    <span className={`font-slackey text-gray-800 capitalize ${!user ? 'font-black' : ''}`} style={{ fontSize: 28, fontWeight: !user ? 900 : undefined }}>
-                      {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
-                    </span>
-                  </div>
-                  {user ? (
-                    <div className="flex items-center gap-6 mt-1">
-                      <motion.button
-                        className="flex items-center gap-2 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate("/power-ups?section=coins")}
-                      >
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          <img src={coinIcon} alt="Coins" className="w-9 h-9" />
-                        </div>
-                        <span className="font-bold text-gray-700 text-base">{formatCompactNumber(coins)}</span>
-                      </motion.button>
-                      <motion.button
-                        className="flex items-center gap-2 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate("/power-ups?section=gems-lari")}
-                      >
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          <img src={gemIcon} alt="Gems" className="w-9 h-9" />
-                        </div>
-                        <span className="font-bold text-gray-700 text-base">{formatCompactNumber(gems)}</span>
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <motion.button
-                      onClick={() => navigate("/auth")}
-                      className="mt-2 text-center cursor-pointer max-w-[200px]"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                        შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                  {user && (
+                    <>
+                      <div className="flex items-center justify-center gap-2.5">
+                        {profile?.country_code && (
+                          <FlagIcon countryCode={profile.country_code} size="md" />
+                        )}
+                        <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
+                          {profile?.nickname || t("game.guest")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-6 mt-1">
+                        <motion.button
+                          className="flex items-center gap-2 cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => navigate("/power-ups?section=coins")}
+                        >
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                            <img src={coinIcon} alt="Coins" className="w-9 h-9" />
+                          </div>
+                          <span className="font-bold text-gray-700 text-base">{formatCompactNumber(coins)}</span>
+                        </motion.button>
+                        <motion.button
+                          className="flex items-center gap-2 cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => navigate("/power-ups?section=gems-lari")}
+                        >
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                            <img src={gemIcon} alt="Gems" className="w-9 h-9" />
+                          </div>
+                          <span className="font-bold text-gray-700 text-base">{formatCompactNumber(gems)}</span>
+                        </motion.button>
+                      </div>
+                    </>
+                  )}
+                  {!user && (
+                    <div className="flex flex-col items-center mt-2">
+                      <p className="text-base text-gray-600 font-medium text-center">
+                        ან ითამაშე როგორც სტუმარმა
                       </p>
-                    </motion.button>
+                      <HandDrawnArrow size={40} color="#9CA3AF" />
+                    </div>
                   )}
                   <div className="mt-14">
                     <DesktopPlayButtonLarge
@@ -695,6 +718,30 @@ export default function Index() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
+              {/* Guest: Title and desc ABOVE avatar */}
+              {!user && (
+                <motion.div
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                  className="flex flex-col items-center mb-6 pointer-events-auto"
+                >
+                  <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
+                    გამარჯობა!
+                  </span>
+                  <motion.button
+                    onClick={() => navigate("/auth")}
+                    className="mt-1 text-center cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
+                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                    </p>
+                  </motion.button>
+                </motion.div>
+              )}
+
               <div className="relative">
                 <motion.div 
                   animate={{ y: [0, -8, 0] }}
@@ -728,55 +775,53 @@ export default function Index() {
                 transition={{ delay: 0.3, type: "spring" }}
                 className="flex flex-col items-center mt-11 pointer-events-auto"
               >
-                <div className="flex items-center justify-center gap-2.5">
-                  {user && profile?.country_code && (
-                    <FlagIcon countryCode={profile.country_code} size="md" />
-                  )}
-                  <span className={`font-slackey text-gray-800 capitalize ${!user ? 'font-black' : ''}`} style={{ fontSize: 32, fontWeight: !user ? 900 : undefined }}>
-                    {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
-                  </span>
-                </div>
-                
-                {user ? (
-                  <div className="flex items-center gap-6 mt-1">
-                    <motion.button
-                      className="flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/power-ups?section=coins")}
-                    >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-lg">
-                        {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                {user && (
+                  <>
+                    <div className="flex items-center justify-center gap-2.5">
+                      {profile?.country_code && (
+                        <FlagIcon countryCode={profile.country_code} size="md" />
+                      )}
+                      <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                        {profile?.nickname || t("game.guest")}
                       </span>
-                    </motion.button>
-                    <motion.button
-                      className="flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/power-ups?section=gems-lari")}
-                    >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-lg">
-                        {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
-                      </span>
-                    </motion.button>
-                  </div>
-                ) : (
-                  <motion.button
-                    onClick={() => navigate("/auth")}
-                    className="mt-2 text-center cursor-pointer max-w-[220px]"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                    </div>
+                    <div className="flex items-center gap-6 mt-1">
+                      <motion.button
+                        className="flex items-center gap-2 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate("/power-ups?section=coins")}
+                      >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-lg">
+                          {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                        </span>
+                      </motion.button>
+                      <motion.button
+                        className="flex items-center gap-2 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate("/power-ups?section=gems-lari")}
+                      >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={gemIcon} alt="Gems" className="w-10 h-10" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-lg">
+                          {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
+                        </span>
+                      </motion.button>
+                    </div>
+                  </>
+                )}
+                {!user && (
+                  <div className="flex flex-col items-center mt-2">
+                    <p className="text-base text-gray-600 font-medium text-center">
+                      ან ითამაშე როგორც სტუმარმა
                     </p>
-                  </motion.button>
+                    <HandDrawnArrow size={44} color="#9CA3AF" />
+                  </div>
                 )}
 
                 <div className="mt-20">
@@ -799,6 +844,30 @@ export default function Index() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
+              {/* Guest: Title and desc ABOVE avatar for mobile */}
+              {!user && (
+                <motion.div
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                  className="flex flex-col items-center mb-4 pointer-events-auto"
+                >
+                  <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
+                    გამარჯობა!
+                  </span>
+                  <motion.button
+                    onClick={() => navigate("/auth")}
+                    className="mt-1 text-center cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
+                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                    </p>
+                  </motion.button>
+                </motion.div>
+              )}
+
               <div className="relative">
                 {/* Mobile: Show curved action buttons above avatar */}
                 {user && (
@@ -882,20 +951,26 @@ export default function Index() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.4, type: "spring" }}
-                      style={{ marginBottom: 32 }}
+                      style={{ marginBottom: 48 }}
                     >
                       <ActionButtonWithParticles
                         iconSrc={chestBoxIcon}
                         alt="Chest"
                         onClick={() => setIsChestModalOpen(true)}
-                        background="linear-gradient(180deg, #E8FFE6 0%, #D9FFD7 100%)"
-                        shadowColor="#A7D9A5"
+                        background="linear-gradient(180deg, #FCE7F3 0%, #F9A8D4 100%)"
+                        shadowColor="#F472B6"
                         delay={0.56}
-                        particleColor="rgba(169, 217, 167, 0.9)"
-                        glowColor="rgba(169, 217, 167, 0.5)"
+                        particleColor="rgba(244, 114, 182, 0.9)"
+                        glowColor="rgba(244, 114, 182, 0.5)"
                         idleOffset={1.4}
                         size={62}
-                        badge={<ChestButtonBadge canClaimChest={canClaimChest} />}
+                        badge={
+                          canClaimChest ? (
+                            <span className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md z-20">
+                              <Check className="w-3.5 h-3.5" />
+                            </span>
+                          ) : undefined
+                        }
                       />
                     </motion.div>
 
@@ -903,18 +978,38 @@ export default function Index() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.45, type: "spring" }}
+                      style={{ marginBottom: 32 }}
+                    >
+                      <ActionButtonWithParticles
+                        iconSrc={adFreeIcon}
+                        alt="Leaderboard"
+                        onClick={() => navigate("/leaderboards")}
+                        background="linear-gradient(180deg, #FEF9C3 0%, #FDE047 100%)"
+                        shadowColor="#FACC15"
+                        delay={0.64}
+                        particleColor="rgba(250, 204, 21, 0.9)"
+                        glowColor="rgba(250, 204, 21, 0.5)"
+                        idleOffset={2.1}
+                        size={62}
+                      />
+                    </motion.div>
+
+                    <motion.div 
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.5, type: "spring" }}
                       style={{ marginBottom: 0 }}
                     >
                       <ActionButtonWithParticles
                         iconSrc={powersIcon}
-                        alt="Powers"
-                        onClick={() => setShowMyPowersModal(true)}
-                        background="linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                        shadowColor="#C4B5FD"
-                        delay={0.64}
-                        particleColor="rgba(196, 181, 253, 0.9)"
-                        glowColor="rgba(196, 181, 253, 0.5)"
-                        idleOffset={2.1}
+                        alt="Shop"
+                        onClick={() => navigate("/power-ups")}
+                        background="linear-gradient(180deg, #E9D5FF 0%, #C084FC 100%)"
+                        shadowColor="#A855F7"
+                        delay={0.72}
+                        particleColor="rgba(168, 85, 247, 0.9)"
+                        glowColor="rgba(168, 85, 247, 0.5)"
+                        idleOffset={2.8}
                         size={62}
                         badge={
                           totalPowerUps > 0 ? (
@@ -931,7 +1026,7 @@ export default function Index() {
                 <motion.div 
                   animate={{ y: [0, -8, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ marginTop: 15 }}
+                  style={{ marginTop: user ? 15 : 0 }}
                 >
                   <div 
                     data-walkthrough="avatar" 
@@ -961,55 +1056,53 @@ export default function Index() {
                 transition={{ delay: 0.3, type: "spring" }}
                 className="flex flex-col items-center mt-8 pointer-events-auto"
               >
-                <div className="flex items-center justify-center gap-2.5">
-                  {user && profile?.country_code && (
-                    <FlagIcon countryCode={profile.country_code} size="md" />
-                  )}
-                  <span className={`font-slackey text-gray-800 capitalize ${!user ? 'font-black' : ''}`} style={{ fontSize: 32, fontWeight: !user ? 900 : undefined }}>
-                    {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
-                  </span>
-                </div>
-                
-                {user ? (
-                  <div className="flex items-center gap-6 mt-1">
-                    <motion.button
-                      className="flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/power-ups?section=coins")}
-                    >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-lg">
-                        {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                {user && (
+                  <>
+                    <div className="flex items-center justify-center gap-2.5">
+                      {profile?.country_code && (
+                        <FlagIcon countryCode={profile.country_code} size="md" />
+                      )}
+                      <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                        {profile?.nickname || t("game.guest")}
                       </span>
-                    </motion.button>
-                    <motion.button
-                      className="flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/power-ups?section=gems-lari")}
-                    >
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-lg">
-                        {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
-                      </span>
-                    </motion.button>
-                  </div>
-                ) : (
-                  <motion.button
-                    onClick={() => navigate("/auth")}
-                    className="mt-2 text-center cursor-pointer max-w-[220px]"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                    </div>
+                    <div className="flex items-center gap-6 mt-1">
+                      <motion.button
+                        className="flex items-center gap-2 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate("/power-ups?section=coins")}
+                      >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-lg">
+                          {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                        </span>
+                      </motion.button>
+                      <motion.button
+                        className="flex items-center gap-2 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate("/power-ups?section=gems-lari")}
+                      >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={gemIcon} alt="Gems" className="w-10 h-10" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-lg">
+                          {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
+                        </span>
+                      </motion.button>
+                    </div>
+                  </>
+                )}
+                {!user && (
+                  <div className="flex flex-col items-center">
+                    <p className="text-base text-gray-600 font-medium text-center">
+                      ან ითამაშე როგორც სტუმარმა
                     </p>
-                  </motion.button>
+                    <HandDrawnArrow size={44} color="#9CA3AF" />
+                  </div>
                 )}
               </motion.div>
             </motion.div>
