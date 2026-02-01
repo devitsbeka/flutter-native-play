@@ -482,7 +482,7 @@ export function RoomLobbyV2() {
     if (!currentRoom) return;
     
     try {
-      // Fetch trivia questions
+      // Fetch trivia to get question count (for display purposes only)
       const { data: triviaData } = await supabase
         .from("user_quiz_posts")
         .select("questions")
@@ -494,26 +494,12 @@ export function RoomLobbyV2() {
         return;
       }
 
-      // Store questions in room_questions
       const questions = triviaData.questions as any[];
       
-      // Clear existing questions
+      // SIMPLIFIED: Only update room metadata - questions will be fetched fresh on game start
+      // This eliminates race conditions between lobby selection and game start
       await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
       
-      // Insert new questions
-      await Promise.all(questions.map((q: any, index: number) => 
-        supabase.from("room_questions").insert({
-          room_id: currentRoom.id,
-          question_index: index,
-          question_text: q.question_text || q.question,
-          correct_answer: q.correct_answer || q.correctAnswer,
-          incorrect_answers: q.incorrect_answers || q.incorrectAnswers,
-          difficulty: q.difficulty || "medium",
-          icon_slug: q.icon_slug || null,
-        })
-      ));
-
-      // Update room with trivia info (including user_trivia_id for TV sync)
       await supabase
         .from("game_rooms")
         .update({ 
