@@ -458,12 +458,12 @@ export default function Index() {
           {/* Main content area */}
           <div className="flex-1 relative overflow-hidden">
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
-           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none lg:pr-[280px]">
+           <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px] md:pl-[120px] lg:pl-0">
+            <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px]">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
