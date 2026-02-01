@@ -69,13 +69,9 @@ export function GlobalSplineBackground() {
   const location = useLocation();
   const isMobile = useIsBreakpointDown("md");
   
-  // HARD EXCLUDE /team routes - they have their own styling
-  if (location.pathname.startsWith("/team")) {
-    return null;
-  }
-  
-  // Check if current page should show background
-  const shouldShow = BACKGROUND_PAGES.some(page => {
+  // Check if current page should show background (include team check here)
+  const isTeamRoute = location.pathname.startsWith("/team");
+  const shouldShow = !isTeamRoute && BACKGROUND_PAGES.some(page => {
     if (page === "/") return location.pathname === "/";
     return location.pathname.startsWith(page);
   });
@@ -90,7 +86,7 @@ export function GlobalSplineBackground() {
   const sparkleCount = isMobile ? 20 : 80;
   const orbCount = isMobile ? 5 : 20;
   
-  // Generate sparkle particles - reduced on mobile
+  // Generate sparkle particles - reduced on mobile (hooks must be called unconditionally)
   const sparkles = useMemo(() =>
     Array.from({ length: sparkleCount }, (_, i) => ({
       id: i,
