@@ -45,6 +45,7 @@ export function useQuestionQualityReview() {
   const [resolveProgress, setResolveProgress] = useState<ResolveProgress>({ current: 0, total: 0 });
   const [results, setResults] = useState<ReviewResult[]>([]);
   const [summary, setSummary] = useState<ReviewSummary>({ A: 0, B: 0, C: 0, D: 0 });
+  const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
 
   const startReview = useCallback(async (options: ReviewOptions) => {
     setReviewing(true);
@@ -223,8 +224,15 @@ export function useQuestionQualityReview() {
 
       setResolveProgress({ current: questionsToResolve.length, total: questionsToResolve.length });
 
-      // Update results with resolved questions
+      // Update results with resolved questions and track resolved IDs
       if (resolvedResults.length > 0) {
+        // Add to resolved IDs set
+        setResolvedIds(prev => {
+          const newSet = new Set(prev);
+          resolvedResults.forEach(r => newSet.add(r.id));
+          return newSet;
+        });
+
         setResults(prev => {
           const updated = [...prev];
           resolvedResults.forEach(resolved => {
@@ -267,6 +275,7 @@ export function useQuestionQualityReview() {
     setResults([]);
     setSummary({ A: 0, B: 0, C: 0, D: 0 });
     setProgress({ current: 0, total: 0 });
+    setResolvedIds(new Set());
   }, []);
 
   return {
@@ -276,6 +285,7 @@ export function useQuestionQualityReview() {
     resolveProgress,
     results,
     summary,
+    resolvedIds,
     startReview,
     moveToLibrary,
     resolveQuestions,
