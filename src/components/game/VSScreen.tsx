@@ -27,6 +27,8 @@ import botAvatar7 from "@/assets/avatars/bot-avatar-7.png";
 import botAvatar8 from "@/assets/avatars/bot-avatar-8.png";
 import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
 import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
+import defaultGuestAvatar from "@/assets/guest-avatar.png";
+import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 
 // Slot machine avatars for cycling effect
 const slotAvatars = [
@@ -505,8 +507,8 @@ export function VSScreen() {
               {/* Avatar container - fixed size */}
               <div className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 <SmartAvatar
-                  avatarUrl={profile?.avatar_url}
-                  animatedAvatarUrl={profile?.animated_avatar_url}
+                  avatarUrl={profile?.avatar_url || defaultGuestAvatar}
+                  animatedAvatarUrl={profile?.animated_avatar_url || defaultGuestAvatarAnimated}
                   fallback={profile?.nickname || "P"}
                   size="2xl"
                   autoPlay={true}
