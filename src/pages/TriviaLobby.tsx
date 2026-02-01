@@ -79,7 +79,7 @@ function convertToSamplePost(trivia: any, creator: any) {
       question: q.question_text || q.question,
       correct_answer: q.correct_answer,
       incorrect_answers: q.incorrect_answers || [],
-      icon_slug: q.icon_slug || null,
+      icon_slug: q.icon_slug || q.iconSlug || null,
     })),
   };
 }
