@@ -185,7 +185,7 @@ export function QuestionScreen() {
   });
 
   return (
-    <div className="w-full h-full flex flex-col bg-gradient-to-b from-[#9B8AC4] to-[#8B7AB8] dark:from-slate-900 dark:to-slate-800">
+    <div className="w-full h-[100dvh] flex flex-col bg-gradient-to-b from-[#9B8AC4] to-[#8B7AB8] dark:from-slate-900 dark:to-slate-800 overflow-hidden">
       {/* Safe area + top bar with back and theme toggle */}
       <div className="pt-[env(safe-area-inset-top,8px)] mt-1 mb-1 px-4 flex items-center justify-between">
         <button
@@ -307,9 +307,9 @@ export function QuestionScreen() {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col px-4 pb-4 overflow-hidden">
+      <div className="flex-1 flex flex-col px-4 pb-[max(16px,env(safe-area-inset-bottom))] overflow-hidden min-h-0">
         {/* Answer buttons - 3D chunky style */}
-        <div className="flex-1 flex flex-col gap-3 min-h-0">
+        <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
           {visibleAnswers.map((answer, visibleIndex) => {
             const originalIndex = currentQuestion.allAnswers.indexOf(answer);
             const isThisSelected = selectedAnswer === answer;
@@ -447,8 +447,8 @@ export function QuestionScreen() {
           )}
         </AnimatePresence>
 
-        {/* Next Button */}
-        <div className="flex-shrink-0 h-14">
+        {/* Next Button - always visible at bottom */}
+        <div className="flex-shrink-0 pt-2">
           <div className={cn(
             "transition-opacity duration-200",
             isRevealed ? "opacity-100" : "opacity-0 pointer-events-none"
