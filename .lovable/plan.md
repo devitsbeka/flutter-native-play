@@ -1,119 +1,107 @@
 
-## Multiplayer Round Transition Bug Analysis & Fix Plan
+## Fix Multiplayer User Trivia Round Transition Bug
 
-### The Problem
+### Problem Summary
+When the host finishes Round 1 and picks a **different** user trivia ("My Trivia") for Round 2, both players see the **previous round's questions** instead of the new trivia's questions.
 
-When the host finishes playing quickly and starts a new round with a new category, the guest (non-host):
-1. Sees the **first round's questions again** instead of the new category
-2. Has the **same score from before** (not reset)
-3. Match history shows **duplicate entries with identical scores**
+### Root Cause Analysis
 
----
+**Bug Location:** `src/contexts/MultiplayerContextV2.tsx`
 
-### Root Causes Identified
+The problem is in both `startGame` (lines 825-932) and `startNewRound` (lines 1331-1424). Both functions have this flawed logic:
 
-#### Bug 1: Missing `game_id` Update in `startNewRound`
-
-**Location:** `src/contexts/MultiplayerContextV2.tsx` lines 1356-1362
-
-When reusing custom questions in `startNewRound`, the code updates `shuffled_answers` but **does NOT update `game_id`**:
-
-```typescript
-// Current code (BROKEN):
-await Promise.all(questions.map((q, index) => 
-  supabase.from("room_questions")
-    .update({ shuffled_answers: q.allAnswers }) // Missing game_id!
-    .eq("room_id", roomId)
-    .eq("question_index", index)
-));
+```text
+if (!freshRoom.category_id) {  // True for user trivia
+  fetch existingQuestions from room_questions
+  if (existingQuestions.length > 0) {
+    USE THESE EXISTING QUESTIONS  // <-- BUG: Doesn't verify they match current trivia!
+  }
+}
 ```
 
-The non-host's validation logic checks `game_id === expectedGameId`, so it **fails validation** and falls back to using stale questions.
+When the host switches from Trivia A to Trivia B:
+1. `room_questions` still contains Trivia A's questions (from Round 1)
+2. `handleSelectTrivia` should replace them with Trivia B's questions
+3. But if `startGame` or `startNewRound` is called before the new questions are fully committed, OR if there's any timing issue, the old questions are reused
+4. The code uses the NEW trivia's category name but OLD trivia's questions
+
+**Evidence from database:**
+- Room has `user_trivia_id = Business World trivia`
+- But `room_questions` contains Sports trivia questions (Olympics, weightlifting, etc.)
+- Match history shows duplicate identical scores because players played the same questions twice
 
 ---
 
-#### Bug 2: Only Resets Caller's Score (Not All Participants)
+### Solution Strategy
 
-**Location:** `src/contexts/MultiplayerContextV2.tsx` lines 1367-1372
+**Option 1 (Recommended): Always fetch fresh from `user_trivia_id`**
 
+When starting a game with user trivia, ALWAYS load questions fresh from `user_quiz_posts` using `freshRoom.user_trivia_id` instead of trusting `room_questions`.
+
+This is the most reliable approach because:
+- Questions in `room_questions` may be stale from previous trivia
+- `handleSelectTrivia` pre-loading is just for convenience, not a guarantee
+- Fresh fetch ensures data consistency
+
+**Option 2: Add tracking column**
+
+Add `source_trivia_id` column to `room_questions` to verify questions match current trivia.
+
+This is more complex and requires database migration. Option 1 is preferred.
+
+---
+
+### Technical Implementation
+
+**File: `src/contexts/MultiplayerContextV2.tsx`**
+
+#### Fix 1: Update `startGame` (lines 825-932)
+
+Change the logic from "reuse existing questions if they exist" to "always fetch from user_trivia_id when it exists":
+
+**Current (broken):**
 ```typescript
-// Current code (BROKEN):
-await supabase
-  .from("room_participants")
-  .update({ score: 0, current_question: 0, status: "playing" })
-  .eq("room_id", roomId)
-  .eq("user_id", user.id); // Only resets caller!
+if (!freshRoom.category_id) {
+  const { data: existingQuestions } = await supabase
+    .from("room_questions")
+    .select("*")
+    .eq("room_id", roomId);
+  
+  if (existingQuestions && existingQuestions.length > 0) {
+    // Use existing questions (BUG: may be from wrong trivia!)
+  }
+}
 ```
 
-This should reset **ALL participants** in the room, not just the caller. This is why beka's score stayed at 844/408 across multiple games.
-
----
-
-#### Bug 3: Race Condition in Non-Host Question Fetching
-
-**Location:** `src/contexts/MultiplayerContextV2.tsx` lines 311-360
-
-When the host starts a new game rapidly (finishing before non-host), the non-host's realtime subscription triggers but:
-1. The initial 500ms delay may not be enough
-2. The old `room_questions` may still be present if they weren't deleted (custom trivia path)
-3. Fallback validation uses unvalidated stale questions
-
----
-
-### Fix Strategy
-
-#### Fix 1: Add `game_id` to the shuffled_answers update
-
+**Fixed:**
 ```typescript
-// FIXED:
-await Promise.all(questions.map((q, index) => 
-  supabase.from("room_questions")
-    .update({ 
-      shuffled_answers: q.allAnswers,
-      game_id: game?.id, // CRITICAL: Update game_id for validation
-    })
-    .eq("room_id", roomId)
-    .eq("question_index", index)
-));
+if (!freshRoom.category_id && freshRoom.user_trivia_id) {
+  // ALWAYS fetch fresh from user_quiz_posts to ensure correct trivia
+  const { data: triviaPost } = await supabase
+    .from("user_quiz_posts")
+    .select("questions, title")
+    .eq("id", freshRoom.user_trivia_id)
+    .single();
+  
+  if (triviaPost?.questions) {
+    // Clear old questions and insert fresh ones
+    await supabase.from("room_questions").delete().eq("room_id", roomId);
+    // Insert new questions with game_id...
+  }
+}
 ```
 
----
+#### Fix 2: Update `startNewRound` (lines 1331-1424)
 
-#### Fix 2: Reset ALL Participants' Scores
+Apply the same fix - when `freshRoom.user_trivia_id` exists, always fetch fresh from `user_quiz_posts` instead of reusing `room_questions`.
 
-```typescript
-// FIXED:
-await supabase
-  .from("room_participants")
-  .update({ score: 0, current_question: 0, status: "playing" })
-  .eq("room_id", roomId); // Remove user_id filter - reset ALL
-```
+#### Fix 3: Simplify `handleSelectTrivia` in `RoomLobbyV2.tsx`
 
----
+Since we're now fetching fresh on game start, the lobby can just:
+1. Update the room's `user_trivia_id`, `category_name`, `total_questions`
+2. **NOT** pre-load questions into `room_questions` (remove the insert logic)
 
-#### Fix 3: Clear Stale Questions for Custom Trivia Path
-
-Before reusing custom questions, explicitly delete and re-insert them with the new `game_id` to ensure the non-host's validation works:
-
-```typescript
-// Delete old questions
-await supabase.from("room_questions").delete().eq("room_id", roomId);
-
-// Re-insert with new game_id
-await Promise.all(questions.map((q, index) => 
-  supabase.from("room_questions").insert({
-    room_id: roomId,
-    question_index: index,
-    question_text: q.question,
-    correct_answer: q.correctAnswer,
-    incorrect_answers: q.incorrectAnswers,
-    shuffled_answers: q.allAnswers,
-    difficulty: q.difficulty,
-    icon_slug: q.iconSlug || null,
-    game_id: game?.id,
-  })
-));
-```
+This removes the race condition entirely and makes the data flow cleaner.
 
 ---
 
@@ -121,26 +109,60 @@ await Promise.all(questions.map((q, index) =>
 
 | File | Changes |
 |------|---------|
-| `src/contexts/MultiplayerContextV2.tsx` | Fix `startNewRound` function (3 fixes) |
-
----
-
-### Technical Details
-
-**File: `src/contexts/MultiplayerContextV2.tsx`**
-
-**Change 1:** Lines 1356-1362 - Add `game_id` to update query
-
-**Change 2:** Lines 1367-1372 - Reset ALL participants, not just caller
-
-**Change 3:** Lines 1330-1414 - Restructure custom trivia path to delete/re-insert questions with new `game_id` instead of just updating `shuffled_answers`
+| `src/contexts/MultiplayerContextV2.tsx` | Refactor `startGame` and `startNewRound` to always fetch fresh from `user_trivia_id` |
+| `src/components/team/RoomLobbyV2.tsx` | Simplify `handleSelectTrivia` to only update room metadata |
 
 ---
 
 ### Expected Outcome
 
 After these fixes:
-- Non-host players will correctly see new questions when host starts a new round
-- All participant scores will be reset to 0 at the start of each round
-- Match history will show accurate scores for each game
-- The `game_id` validation in the non-host subscription will work correctly
+- Round 2 will correctly load the new trivia's questions
+- No stale questions from previous rounds
+- Both host and guest will see the same correct questions
+- Match history will show accurate, unique scores per round
+- Eliminates race conditions between lobby and game start
+
+---
+
+### Technical Details
+
+**Changes to `startGame` function:**
+
+The function currently has two paths:
+1. Custom trivia path (lines 825-932): Reads from `room_questions`
+2. Standard category path (lines 1062-1107): Fetches from question service
+
+The fix consolidates custom trivia loading to always use `user_trivia_id`:
+
+1. If `!freshRoom.category_id` AND `freshRoom.user_trivia_id` exists:
+   - Fetch questions directly from `user_quiz_posts` using `user_trivia_id`
+   - Clear any existing `room_questions`
+   - Insert fresh questions with proper `game_id`
+   - Start game
+
+2. If `!freshRoom.category_id` AND NO `user_trivia_id` (shouldn't happen normally):
+   - Show error and return
+
+**Changes to `startNewRound` function:**
+
+Same approach - when detecting user trivia (`!freshRoom.category_id`), check for `freshRoom.user_trivia_id` and fetch fresh questions instead of reusing `room_questions`.
+
+**Changes to `handleSelectTrivia` in lobby:**
+
+Remove the `room_questions` insert logic:
+
+```typescript
+// Before (current):
+await Promise.all(questions.map(...insert...)); // Remove this
+await supabase.from("game_rooms").update({...});
+
+// After (fixed):
+// Just update room metadata - questions will be fetched on game start
+await supabase.from("game_rooms").update({
+  category_id: null,
+  category_name: trivia.title,
+  total_questions: questions.length,
+  user_trivia_id: trivia.id,
+}).eq("id", currentRoom.id);
+```
