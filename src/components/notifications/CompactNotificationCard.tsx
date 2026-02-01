@@ -1,4 +1,4 @@
-import { memo, useState, useMemo } from 'react';
+import { memo, useState, useMemo, useRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Trash2, Home, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   timeAgo,
 }: CompactNotificationCardProps) {
   const [isDismissing, setIsDismissing] = useState(false);
+  const touchedRef = useRef(false);
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [0, 1]);
   const deleteOpacity = useTransform(x, [-SWIPE_THRESHOLD, -50, 0], [1, 0.5, 0]);
@@ -121,21 +122,90 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   
   const subtitle = getSubtitle();
 
-  const handleAccept = (e: React.MouseEvent) => {
+  // Prevent double-firing from both touch and click on mobile
+  const handleAcceptClick = (e: React.MouseEvent) => {
+    if (touchedRef.current) {
+      touchedRef.current = false;
+      return; // Skip click after touch
+    }
+    handleAcceptAction(e);
+  };
+  
+  const handleAcceptTouch = (e: React.TouchEvent) => {
+    touchedRef.current = true;
+    handleAcceptAction(e);
+  };
+  
+  const handleAcceptAction = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    if (isFriendRequest && notification.data?.friendship_id) {
-      onAcceptFriend?.(notification.data.friendship_id as string, notification.id);
-    } else if (isGameInvite && notification.data?.invitation_id) {
-      onAcceptInvite?.(notification.data.invitation_id as string, notification.id);
+    e.preventDefault();
+    
+    if (isLoading) return;
+    
+    console.log("[NotificationCard] handleAccept called", {
+      type: notification.type,
+      data: notification.data,
+      isFriendRequest,
+      isGameInvite,
+      friendship_id: notification.data?.friendship_id,
+      invitation_id: notification.data?.invitation_id,
+    });
+    
+    if (isFriendRequest) {
+      const friendshipId = notification.data?.friendship_id as string;
+      if (!friendshipId) {
+        console.error("[NotificationCard] Missing friendship_id in notification data");
+        return;
+      }
+      onAcceptFriend?.(friendshipId, notification.id);
+    } else if (isGameInvite) {
+      const invitationId = notification.data?.invitation_id as string;
+      if (!invitationId) {
+        console.error("[NotificationCard] Missing invitation_id in notification data");
+        return;
+      }
+      onAcceptInvite?.(invitationId, notification.id);
     }
   };
 
-  const handleDecline = (e: React.MouseEvent) => {
+  const handleDeclineClick = (e: React.MouseEvent) => {
+    if (touchedRef.current) {
+      touchedRef.current = false;
+      return;
+    }
+    handleDeclineAction(e);
+  };
+  
+  const handleDeclineTouch = (e: React.TouchEvent) => {
+    touchedRef.current = true;
+    handleDeclineAction(e);
+  };
+  
+  const handleDeclineAction = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    if (isFriendRequest && notification.data?.friendship_id) {
-      onDeclineFriend?.(notification.data.friendship_id as string, notification.id);
-    } else if (isGameInvite && notification.data?.invitation_id) {
-      onDeclineInvite?.(notification.data.invitation_id as string, notification.id);
+    e.preventDefault();
+    
+    if (isLoading) return;
+    
+    console.log("[NotificationCard] handleDecline called", {
+      type: notification.type,
+      data: notification.data,
+    });
+    
+    if (isFriendRequest) {
+      const friendshipId = notification.data?.friendship_id as string;
+      if (!friendshipId) {
+        console.error("[NotificationCard] Missing friendship_id in notification data");
+        return;
+      }
+      onDeclineFriend?.(friendshipId, notification.id);
+    } else if (isGameInvite) {
+      const invitationId = notification.data?.invitation_id as string;
+      if (!invitationId) {
+        console.error("[NotificationCard] Missing invitation_id in notification data");
+        return;
+      }
+      onDeclineInvite?.(invitationId, notification.id);
     }
   };
 
@@ -321,22 +391,26 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
           {/* Action buttons */}
           {hasDualActions && (
             <div className="flex gap-2 mt-2">
-              <motion.button
-                onClick={handleAccept}
+              <button
+                type="button"
+                onClick={handleAcceptClick}
+                onTouchEnd={handleAcceptTouch}
                 disabled={isLoading}
-                className="px-4 py-1.5 rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50"
-                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 min-h-[40px] rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
+                style={{ touchAction: 'manipulation' }}
               >
-                {isFriendRequest ? "მიღება" : "შესვლა"}
-              </motion.button>
-              <motion.button
-                onClick={handleDecline}
+                {isLoading ? "..." : isFriendRequest ? "მიღება" : "შესვლა"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeclineClick}
+                onTouchEnd={handleDeclineTouch}
                 disabled={isLoading}
-                className="px-4 py-1.5 rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50"
-                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 min-h-[40px] rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
+                style={{ touchAction: 'manipulation' }}
               >
                 უარყოფა
-              </motion.button>
+              </button>
             </div>
           )}
 
