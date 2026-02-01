@@ -632,7 +632,7 @@ export default function Index() {
                     {user && profile?.country_code && (
                       <FlagIcon countryCode={profile.country_code} size="md" />
                     )}
-                    <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
+                    <span className={`font-slackey text-gray-800 capitalize ${!user ? 'font-black' : ''}`} style={{ fontSize: 28, fontWeight: !user ? 900 : undefined }}>
                       {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
                     </span>
                   </div>
@@ -664,12 +664,12 @@ export default function Index() {
                   ) : (
                     <motion.button
                       onClick={() => navigate("/auth")}
-                      className="mt-2 text-center cursor-pointer"
+                      className="mt-2 text-center cursor-pointer max-w-[200px]"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <p className="text-sm text-gray-600 font-medium">
-                        შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                      <p className="text-sm text-gray-600 font-medium text-center leading-relaxed">
+                        შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
                       </p>
                     </motion.button>
                   )}
@@ -731,7 +731,7 @@ export default function Index() {
                   {user && profile?.country_code && (
                     <FlagIcon countryCode={profile.country_code} size="md" />
                   )}
-                  <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                  <span className={`font-slackey text-gray-800 capitalize ${!user ? 'font-black' : ''}`} style={{ fontSize: 32, fontWeight: !user ? 900 : undefined }}>
                     {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
                   </span>
                 </div>
@@ -768,12 +768,12 @@ export default function Index() {
                 ) : (
                   <motion.button
                     onClick={() => navigate("/auth")}
-                    className="mt-2 text-center cursor-pointer"
+                    className="mt-2 text-center cursor-pointer max-w-[220px]"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <p className="text-sm text-gray-600 font-medium">
-                      შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                    <p className="text-sm text-gray-600 font-medium text-center leading-relaxed">
+                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
                     </p>
                   </motion.button>
                 )}
@@ -964,7 +964,7 @@ export default function Index() {
                   {user && profile?.country_code && (
                     <FlagIcon countryCode={profile.country_code} size="md" />
                   )}
-                  <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                  <span className={`font-slackey text-gray-800 capitalize ${!user ? 'font-black' : ''}`} style={{ fontSize: 32, fontWeight: !user ? 900 : undefined }}>
                     {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
                   </span>
                 </div>
@@ -1001,12 +1001,12 @@ export default function Index() {
                 ) : (
                   <motion.button
                     onClick={() => navigate("/auth")}
-                    className="mt-2 text-center cursor-pointer"
+                    className="mt-2 text-center cursor-pointer max-w-[220px]"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <p className="text-sm text-gray-600 font-medium">
-                      შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                    <p className="text-sm text-gray-600 font-medium text-center leading-relaxed">
+                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
                     </p>
                   </motion.button>
                 )}
