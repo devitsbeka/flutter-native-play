@@ -278,7 +278,7 @@ export default function Leaderboards() {
                   block: 'center' 
                 });
               }}
-              className="w-full bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
+              className="w-full text-left bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
             >
               <LeaguePlayerRow
                 entry={userEntry}
