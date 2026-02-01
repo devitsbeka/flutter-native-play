@@ -70,7 +70,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   return (
     <div 
-      className={`relative w-full overflow-hidden ${isMobile ? 'h-[50vh]' : 'min-h-screen'}`}
+      className={`relative w-full overflow-hidden ${isMobile ? 'h-[35vh]' : 'min-h-screen'}`}
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}

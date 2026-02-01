@@ -44,7 +44,7 @@ export function LeaderboardCardSkeleton({ isUserTier = false }: { isUserTier?: b
 
 export function MobileLeaderboardSkeleton() {
   return (
-    <div className="pt-[calc(70vh-130px)] md:pt-[calc(60vh-130px)] px-4">
+    <div className="pt-[calc(35vh-30px)] md:pt-[calc(60vh-130px)] px-4">
       <LeaderboardCardSkeleton isUserTier />
     </div>
   );
