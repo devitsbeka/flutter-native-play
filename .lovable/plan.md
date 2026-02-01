@@ -1,93 +1,77 @@
 
+## Fix Room Icon Picker Modal Scrolling Issue
 
-## Admin Exclusion from Published Builds
+### Problem Analysis
+The Room Icon Picker modal has a non-scrollable, stuck layout on mobile devices. Looking at the screenshot, the user is on the icon/name change screen and content is cut off.
 
-### The Goal
-Keep admin code in the codebase (GitHub) but exclude it from published builds, so:
-- User-facing app publishes are fast and lightweight
-- Admin stays accessible at its own URL via the separate project you created
-- No code deletion needed - everything stays in version control
+**Root Cause:**
+The modal uses hardcoded pixel values for positioning that don't account for:
+1. Safe area insets on notched devices (iPhone, Android with cutouts)
+2. Variable height of the search section (changes when category filters are shown/hidden)
+3. The gap between fixed headers and scrollable content
+
+**Current Layout Issues:**
+- Header: `fixed top-0` with `safe-top` class (which has no effect - not defined in CSS)
+- Search section: `fixed top-[60px]` - hardcoded, doesn't account for safe area
+- Content: `pt-[140px]` - hardcoded, doesn't match actual header+search height
+- When category filters are visible, search section is ~112px tall, but content only accounts for 140px total (header 60px + ~80px), leaving ~32px overlap
 
 ---
 
-### How This Works
+### Solution
 
+Restructure the modal to use a flexbox-based layout instead of fixed positioning with hardcoded pixel values. This approach is used successfully in other components like `QuestionScreen.tsx` and `MultiplayerGameScreenV2.tsx`.
+
+---
+
+### Technical Implementation
+
+**File: `src/components/team/RoomIconPickerModal.tsx`**
+
+Change from this structure:
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    THIS PROJECT                             │
-│  ┌─────────────────┐      ┌─────────────────────────────┐   │
-│  │  User Pages     │      │  Admin Code                 │   │
-│  │  (Published)    │      │  (Kept in repo, NOT built)  │   │
-│  └─────────────────┘      └─────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│              ADMIN PROJECT (Separate)                       │
-│  Uses same backend - copies admin code from this repo       │
-│  Published at: admin.yourapp.com                            │
-└─────────────────────────────────────────────────────────────┘
+fixed inset-0 (container)
+  ├── fixed top-0 (header)
+  ├── fixed top-[60px] (search section)
+  ├── pt-[140px] overflow-y-auto (content)
+  └── fixed bottom-0 (footer)
 ```
 
----
-
-### Implementation Steps
-
-#### Step 1: Environment-Based Route Exclusion
-Add an environment variable to conditionally exclude admin routes from the build:
-
-**File: `src/App.tsx`**
-- Wrap admin route imports and `<Route>` definitions in a build-time check
-- When `VITE_INCLUDE_ADMIN=false` (or not set), admin routes are not included in the bundle
-
-#### Step 2: Update Vite Config (Optional Optimization)
-Configure Vite to completely tree-shake admin code when the flag is off, ensuring zero admin code in the published bundle.
-
-#### Step 3: Keep Code in Repository
-- All admin files remain in `src/pages/admin/*` and `src/components/admin/*`
-- Git history preserved
-- Developers can still run admin locally with `VITE_INCLUDE_ADMIN=true`
-
-#### Step 4: Use Separate Admin Project
-The admin project you created (https://lovable.dev/projects/43017512-61d9-41ac-b3cb-cc001bc413e4):
-- Copy admin pages/components there
-- Connect to same backend
-- Publish independently at its own URL
-
----
-
-### Technical Details
-
-**Changes to `src/App.tsx`:**
-```typescript
-// Conditional admin imports
-const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN === 'true';
-
-// Lazy load admin only if enabled
-const Admin = INCLUDE_ADMIN 
-  ? lazy(() => import("./pages/Admin"))
-  : null;
-// ... other admin pages similarly
-
-// In Routes:
-{INCLUDE_ADMIN && (
-  <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
-    {/* admin sub-routes */}
-  </Route>
-)}
+To this structure:
+```text
+fixed inset-0 h-[100dvh] flex flex-col (container)
+  ├── flex-shrink-0 pt-[env(safe-area-inset-top)] (header)
+  ├── flex-shrink-0 (search section)
+  ├── flex-1 overflow-y-auto (content)
+  └── flex-shrink-0 pb-[env(safe-area-inset-bottom)] (footer)
 ```
 
-**For local development with admin:**
-Set `VITE_INCLUDE_ADMIN=true` in your local environment.
+**Key Changes:**
 
-**For published builds:**
-Leave it unset or `false` - admin code won't be included.
+1. **Container**: Add `h-[100dvh] flex flex-col` to the main container
+
+2. **Header**: Change from `fixed top-0` to `flex-shrink-0` with proper safe area padding using `pt-[env(safe-area-inset-top)]`
+
+3. **Search Section**: Change from `fixed top-[60px]` to `flex-shrink-0` - it naturally flows after the header
+
+4. **Scrollable Content**: Change from `h-full overflow-y-auto pt-[140px]` to `flex-1 overflow-y-auto min-h-0` - the flex-1 takes remaining space, min-h-0 ensures proper overflow
+
+5. **Footer**: Change from `fixed bottom-0` to `flex-shrink-0` with `pb-[env(safe-area-inset-bottom)]` for safe area
 
 ---
 
-### Result
-- **This project**: Publishes only user-facing pages (fast builds)
-- **Admin project**: Publishes admin separately (at different URL)
-- **Same backend**: Both share database, users, content
-- **No code loss**: Admin code stays in this repo's git history
+### Benefits
 
+- Content will be fully scrollable
+- Safe areas properly respected on all devices
+- No hardcoded pixel calculations
+- Layout adapts when category filters show/hide
+- Keyboard-friendly when editing room name
+
+---
+
+### Affected Files
+
+| File | Change |
+|------|--------|
+| `src/components/team/RoomIconPickerModal.tsx` | Restructure layout from fixed positioning to flexbox |
