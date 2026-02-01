@@ -23,7 +23,8 @@ import {
   Coins,
   Settings,
   Smartphone,
-  Layers
+  Layers,
+  ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,11 @@ const mainNavItems: NavItem[] = [
 ];
 
 const toolsNavItems: NavItem[] = [
+  { 
+    to: '/admin/review', 
+    icon: ClipboardCheck, 
+    label: 'Review' 
+  },
   { 
     to: '/admin/content', 
     icon: FolderOpen, 
