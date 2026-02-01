@@ -1,136 +1,64 @@
 
-# Fix Quality Review: Resolution & Visual Feedback
+# Show Fixed Questions First in List
 
-## Problems Found
+## Current Behavior
+The results are sorted by grade (D → C → B → A) or by score (lowest first), but resolved/fixed questions appear mixed in with other questions at the same grade level.
 
-1. **Wrong AI Gateway URL**: The `resolve-question-quality` edge function uses `https://ai.lovable.dev/chat/completions` which doesn't exist. It should be `https://ai.gateway.lovable.dev/v1/chat/completions`
-
-2. **No visual feedback for resolved questions**: After fixing questions, there's no indication that they were successfully resolved. User wants green highlighting for fixed questions.
-
-3. **No tracking of resolved questions**: The system doesn't track which questions have been fixed vs their original state.
+## Requested Change
+Fixed (resolved) questions should appear at the top of the list for easy review.
 
 ---
 
-## Implementation Plan
+## Implementation
 
-### 1. Fix Edge Function URL
+### File: `src/pages/admin/QualityReview.tsx`
 
-**File**: `supabase/functions/resolve-question-quality/index.ts`
+Update the `sortedResults` memo (lines 72-81) to sort resolved questions first:
 
-Change both AI fetch calls from:
-```
-https://ai.lovable.dev/chat/completions
-```
-To:
-```
-https://ai.gateway.lovable.dev/v1/chat/completions
-```
-
-This affects lines 117 and 212 in the file.
-
-### 2. Add Resolved State Tracking
-
-**File**: `src/hooks/useQuestionQualityReview.ts`
-
-Add a new state to track which question IDs have been successfully resolved:
+**Current logic:**
 ```typescript
-const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
+const sortedResults = useMemo(() => {
+  const sorted = [...results];
+  if (sortBy === 'grade') {
+    const gradeOrder = { D: 0, C: 1, B: 2, A: 3 };
+    sorted.sort((a, b) => gradeOrder[a.grade] - gradeOrder[b.grade]);
+  } else {
+    sorted.sort((a, b) => a.overall_score - b.overall_score);
+  }
+  return sorted;
+}, [results, sortBy]);
 ```
 
-Update `resolveQuestions` to add successfully resolved IDs to this set.
-
-### 3. Add Visual Feedback for Resolved Questions
-
-**File**: `src/pages/admin/QualityReview.tsx`
-
-- Pass `resolvedIds` set to `QuestionResultCard`
-- Add green border/background for resolved questions
-- Show a "Resolved" badge or checkmark
-- Optionally show "before" grade vs "after" grade
-
-**Visual Design**:
-```text
-Before resolution:
-┌─────────────────────────────────────────────┐
-│ 🟠 Question text here...          [Fix] C  │
-└─────────────────────────────────────────────┘
-
-After resolution:
-┌─────────────────────────────────────────────┐ Green border
-│ ✅ Question text here...     [Resolved] A  │ Green bg tint
-└─────────────────────────────────────────────┘
-```
-
----
-
-## Technical Changes
-
-### Edge Function Fix (lines 117 & 212)
-
+**New logic:**
 ```typescript
-// Line 117 - First AI call
-const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-
-// Line 212 - Second AI call (re-review)
-const reviewResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-```
-
-### Hook State Addition
-
-```typescript
-// New state
-const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
-
-// In resolveQuestions, after successful resolution:
-if (resolvedResults.length > 0) {
-  setResolvedIds(prev => {
-    const newSet = new Set(prev);
-    resolvedResults.forEach(r => newSet.add(r.id));
-    return newSet;
+const sortedResults = useMemo(() => {
+  const sorted = [...results];
+  
+  sorted.sort((a, b) => {
+    // Resolved questions always come first
+    const aResolved = resolvedIds.has(a.id) ? 0 : 1;
+    const bResolved = resolvedIds.has(b.id) ? 0 : 1;
+    if (aResolved !== bResolved) return aResolved - bResolved;
+    
+    // Then sort by grade or score
+    if (sortBy === 'grade') {
+      const gradeOrder = { D: 0, C: 1, B: 2, A: 3 };
+      return gradeOrder[a.grade] - gradeOrder[b.grade];
+    } else {
+      return a.overall_score - b.overall_score;
+    }
   });
-}
-
-// Return resolvedIds from hook
-return { ...existing, resolvedIds };
-```
-
-### UI Visual Changes
-
-```typescript
-// In QuestionResultCard - add isResolved prop
-const isResolved = resolvedIds.has(result.id);
-
-// Apply green styling when resolved
-<div className={cn(
-  "border rounded-lg p-3 transition-colors",
-  isResolved && "bg-green-500/10 border-green-500/50",
-  isSelected && !isResolved && "bg-accent/50 border-accent"
-)}>
-  {isResolved && (
-    <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
-      ✓ Fixed
-    </Badge>
-  )}
-</div>
+  
+  return sorted;
+}, [results, sortBy, resolvedIds]);
 ```
 
 ---
 
-## Files to Modify
+## Result
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/resolve-question-quality/index.ts` | Fix AI gateway URL (2 locations) |
-| `src/hooks/useQuestionQualityReview.ts` | Add `resolvedIds` state tracking |
-| `src/pages/admin/QualityReview.tsx` | Add green visual feedback for resolved questions |
-
----
-
-## Expected Result
-
-After implementation:
-1. Clicking "Fix" will actually work (API calls succeed)
-2. Successfully resolved questions show with green background/border
-3. A "Fixed" badge appears on resolved questions
-4. User can clearly see which questions have been improved
-5. Questions that improve to A/B grade stay visible with new grade but green styling
+After this change:
+1. All fixed questions (green background) will appear at the top of the list
+2. Within fixed questions, they'll still be sorted by grade/score
+3. Non-fixed questions appear after, also sorted by grade/score
+4. Easy to review all your fixed questions in one place
