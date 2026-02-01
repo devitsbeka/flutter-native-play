@@ -186,6 +186,7 @@
 
   html {
     overflow-y: scroll;
+    overscroll-behavior: none;
   }
 
   body {
@@ -193,6 +194,14 @@
     font-family: var(--font-sans);
     letter-spacing: var(--tracking-normal);
     background: transparent;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent pull-to-refresh on scrollable containers */
+  #main-scroll-container {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

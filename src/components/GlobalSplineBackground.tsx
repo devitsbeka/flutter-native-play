@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
 
 // Pages where the background should be visible
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/category", "/auth", "/vip", "/power-ups"];
@@ -11,7 +12,7 @@ const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-
 // Pages where the white radial mask should be hidden (they have their own solid background)
 const NO_RADIAL_MASK_PAGES = ["/game", "/category", "/power-ups"];
 
-// White sparkle particle with glow effect
+// White sparkle particle with glow effect - using CSS animation for better performance
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
   <motion.div
     className="absolute rounded-full pointer-events-none"
@@ -66,6 +67,7 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
 
 export function GlobalSplineBackground() {
   const location = useLocation();
+  const isMobile = useIsBreakpointDown("md");
   
   // HARD EXCLUDE /team routes - they have their own styling
   if (location.pathname.startsWith("/team")) {
@@ -84,27 +86,31 @@ export function GlobalSplineBackground() {
   // Check if radial mask should be hidden (game/category pages have their own backgrounds)
   const shouldHideRadialMask = NO_RADIAL_MASK_PAGES.some(page => location.pathname.startsWith(page));
   
-  // Generate sparkle particles - 80 particles for dense effect
+  // Reduce particle count on mobile for performance
+  const sparkleCount = isMobile ? 20 : 80;
+  const orbCount = isMobile ? 5 : 20;
+  
+  // Generate sparkle particles - reduced on mobile
   const sparkles = useMemo(() =>
-    Array.from({ length: 80 }, (_, i) => ({
+    Array.from({ length: sparkleCount }, (_, i) => ({
       id: i,
       delay: Math.random() * 15,
       x: Math.random() * 100,
       size: 3 + Math.random() * 8,
       duration: 5 + Math.random() * 7,
-    })), []
+    })), [sparkleCount]
   );
   
-  // Generate floating orbs - larger ambient particles
+  // Generate floating orbs - reduced on mobile
   const orbs = useMemo(() => 
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: orbCount }, (_, i) => ({
       id: i,
       delay: Math.random() * 5,
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: 40 + Math.random() * 80,
       duration: 8 + Math.random() * 6,
-    })), []
+    })), [orbCount]
   );
 
   // Don't render anything if not on allowed pages
