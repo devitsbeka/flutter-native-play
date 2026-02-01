@@ -110,7 +110,7 @@ const App = () => (
             <GlobalSplineBackground />
             
             <UserPresenceTracker />
-            <Suspense fallback={<PageSkeleton />}>
+            <Suspense fallback={null}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/loading" element={<Loading />} />
