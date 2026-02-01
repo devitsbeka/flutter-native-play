@@ -341,6 +341,7 @@ export default function Index() {
         maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
         canPlay={user ? canPlay : guestPlaysRemaining > 0}
         isVip={isVip}
+        isGuest={!user}
         showPlayButton={true}
         showBottomNav={!isSideMenuOpen}
         disableScroll
@@ -705,6 +706,7 @@ export default function Index() {
                       maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
                       canPlay={user ? canPlay : guestPlaysRemaining > 0}
                       isVip={isVip}
+                      isGuest={!user}
                     />
                   </div>
                 </motion.div>
@@ -832,6 +834,7 @@ export default function Index() {
                     maxPlays={user ? maxPlays : MAX_GUEST_PLAYS_COUNT}
                     canPlay={user ? canPlay : guestPlaysRemaining > 0}
                     isVip={isVip}
+                    isGuest={!user}
                   />
                 </div>
               </motion.div>
