@@ -87,14 +87,12 @@ export function MobileProCarousel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="relative rounded-2xl overflow-hidden cursor-pointer"
+            className="relative rounded-2xl overflow-hidden"
             style={{
               background: tier.gradient,
               boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 20px rgba(0,0,0,0.3)`,
               opacity: isProcessing ? 0.7 : 1,
-              pointerEvents: isProcessing ? 'none' : 'auto',
             }}
-            onClick={() => !isCurrentTier && !isProcessing && handleUpgrade(tier.id)}
           >
             {/* Popular Badge */}
             {tier.popular && !isCurrentTier && (
@@ -151,7 +149,15 @@ export function MobileProCarousel() {
 
               {/* CTA Button */}
               <button
-                className="w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isCurrentTier && !isProcessing) {
+                    handleUpgrade(tier.id);
+                  }
+                }}
+                disabled={isCurrentTier || isProcessing}
+                className="w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
                 style={{
                   background: isCurrentTier 
                     ? "rgba(255,255,255,0.15)" 
