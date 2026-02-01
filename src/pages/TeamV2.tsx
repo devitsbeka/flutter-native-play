@@ -42,6 +42,7 @@ import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { TabsContent } from "@/components/ui/tabs";
+import { TabOnboardingTooltips } from "@/components/team/TabOnboardingTooltips";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -571,11 +572,13 @@ function TeamContentV2() {
                 <div className="flex items-center justify-between gap-3">
                   {/* Tab container - takes available space */}
                   <div 
-                    className="flex-1 flex rounded-2xl bg-muted p-1.5"
+                    className="relative flex-1 flex rounded-2xl bg-muted p-1.5"
                     style={{
                       boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
                     }}
                   >
+                    {/* Onboarding tooltips for new users */}
+                    <TabOnboardingTooltips activeTab={activeTab} />
                     {/* Tabs with equal distribution */}
                     {[
                       { id: "explore", label: "აღმოაჩინე" },
