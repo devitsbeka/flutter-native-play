@@ -261,7 +261,7 @@ export default function Leaderboards() {
         </div>
       </div>
 
-      {/* Fixed User Position Bar (Mobile only) */}
+      {/* Fixed User Position Bar (Mobile only) - Click to scroll to position */}
       <AnimatePresence>
         {userEntry && !isLeagueLocked && showFixedBar && (
           <motion.div
@@ -271,7 +271,15 @@ export default function Leaderboards() {
             exit={{ y: 50, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50">
+            <button
+              onClick={() => {
+                userRowRef.current?.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center' 
+                });
+              }}
+              className="w-full bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
+            >
               <LeaguePlayerRow
                 entry={userEntry}
                 isCurrentUser={true}
@@ -283,7 +291,7 @@ export default function Leaderboards() {
                 isDemotionZone={(viewingTier ?? userTier) > 1 && userEntry.rank > leaderboard.length - 10}
                 isFixed={true}
               />
-            </div>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
