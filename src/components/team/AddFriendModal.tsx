@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, UserPlus, Loader2, Clock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
@@ -172,8 +172,13 @@ interface SearchResultCardProps {
 
 function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchResultCardProps) {
   const [isSending, setIsSending] = useState(false);
+  const touchedRef = useRef(false);
   
   const handleButtonAction = async () => {
+    console.log("[AddFriendModal] handleButtonAction called", { 
+      userId: result.user_id, isPending, isSent, isSending 
+    });
+    
     if (isPending || isSent || isSending) {
       if (isPending || isSent) {
         toast.info("მოთხოვნა უკვე გაგზავნილია, დაელოდე პასუხს");
@@ -187,6 +192,23 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
     } finally {
       setIsSending(false);
     }
+  };
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (touchedRef.current) {
+      touchedRef.current = false;
+      return; // Skip click after touch
+    }
+    handleButtonAction();
+  };
+  
+  const handleTouch = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    touchedRef.current = true;
+    handleButtonAction();
   };
   
   // Show pending state after sending OR if already pending
@@ -217,16 +239,8 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
 
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          handleButtonAction();
-        }}
-        onTouchEnd={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          handleButtonAction();
-        }}
+        onClick={handleClick}
+        onTouchEnd={handleTouch}
         disabled={showPendingState || isSending}
         className={`flex items-center gap-1.5 px-5 py-3 min-h-[48px] rounded-xl text-sm font-medium transition-colors active:scale-95 ${
           showPendingState

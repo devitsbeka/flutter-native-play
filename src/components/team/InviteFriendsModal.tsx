@@ -110,6 +110,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
   const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
+  const touchedRef = useRef(false);
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
   const { user } = useAuth();
@@ -421,6 +422,9 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                 const isSent = sentRequests.has(result.user_id);
                                 
                                 const handleButtonAction = () => {
+                                  console.log("[InviteFriendsModal] handleButtonAction called", { 
+                                    isFriend, isSent, isLoading, isPendingOutgoing, userId: result.user_id 
+                                  });
                                   if (isFriend) {
                                     // For friends - send room invite
                                     if (isSent || isLoading) return;
@@ -436,21 +440,30 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                   }
                                 };
                                 
+                                const handleClick = (e: React.MouseEvent) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  if (touchedRef.current) {
+                                    touchedRef.current = false;
+                                    return; // Skip click after touch
+                                  }
+                                  handleButtonAction();
+                                };
+                                
+                                const handleTouch = (e: React.TouchEvent) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  touchedRef.current = true;
+                                  handleButtonAction();
+                                };
+                                
                                 const isDisabled = isSent || isLoading || (!isFriend && isPendingOutgoing);
                                 
                                 return (
                                   <button
                                     type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      handleButtonAction();
-                                    }}
-                                    onTouchEnd={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      handleButtonAction();
-                                    }}
+                                    onClick={handleClick}
+                                    onTouchEnd={handleTouch}
                                     disabled={isDisabled}
                                     className={`relative z-10 flex items-center gap-2 px-5 py-3 min-h-[48px] rounded-2xl text-sm font-semibold transition-colors border active:scale-95 ${
                                       isSent || (!isFriend && isPendingOutgoing)
