@@ -46,7 +46,8 @@ export default function QualityReview() {
     progress, 
     resolveProgress,
     results, 
-    summary, 
+    summary,
+    resolvedIds,
     startReview, 
     moveToLibrary, 
     resolveQuestions,
@@ -343,6 +344,7 @@ export default function QualityReview() {
                     result={result}
                     isExpanded={expandedIds.has(result.id)}
                     isSelected={selectedIds.has(result.id)}
+                    isResolved={resolvedIds.has(result.id)}
                     isResolving={resolving}
                     onToggleExpand={() => toggleExpanded(result.id)}
                     onToggleSelect={(checked) => handleSelectOne(result.id, checked)}
@@ -372,6 +374,7 @@ interface QuestionResultCardProps {
   result: ReviewResult;
   isExpanded: boolean;
   isSelected: boolean;
+  isResolved: boolean;
   isResolving: boolean;
   onToggleExpand: () => void;
   onToggleSelect: (checked: boolean) => void;
@@ -381,7 +384,8 @@ interface QuestionResultCardProps {
 function QuestionResultCard({ 
   result, 
   isExpanded, 
-  isSelected, 
+  isSelected,
+  isResolved,
   isResolving,
   onToggleExpand, 
   onToggleSelect,
@@ -389,13 +393,14 @@ function QuestionResultCard({
 }: QuestionResultCardProps) {
   const config = gradeConfig[result.grade];
   const Icon = config.icon;
-  const showCheckbox = result.grade === 'C' || result.grade === 'D';
-  const showResolve = result.grade === 'C' || result.grade === 'D';
+  const showCheckbox = (result.grade === 'C' || result.grade === 'D') && !isResolved;
+  const showResolve = (result.grade === 'C' || result.grade === 'D') && !isResolved;
 
   return (
     <div className={cn(
       "border rounded-lg p-3 transition-colors",
-      isSelected && "bg-accent/50 border-accent"
+      isResolved && "bg-green-500/10 border-green-500/50",
+      isSelected && !isResolved && "bg-accent/50 border-accent"
     )}>
       <div className="flex items-start gap-3">
         {showCheckbox && (
@@ -423,6 +428,12 @@ function QuestionResultCard({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {isResolved && (
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Fixed
+                  </Badge>
+                )}
                 {showResolve && (
                   <Button
                     variant="ghost"

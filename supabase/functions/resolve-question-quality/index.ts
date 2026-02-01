@@ -114,7 +114,7 @@ Return ONLY a valid JSON object (no markdown, no code blocks):
 }`;
 
     // Call Lovable AI
-    const aiResponse = await fetch('https://ai.lovable.dev/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
@@ -209,7 +209,7 @@ Return ONLY a valid JSON object:
   "recommendations": []
 }`;
 
-    const reviewResponse = await fetch('https://ai.lovable.dev/chat/completions', {
+    const reviewResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
