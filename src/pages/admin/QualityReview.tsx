@@ -71,14 +71,24 @@ export default function QualityReview() {
   // Sort results
   const sortedResults = useMemo(() => {
     const sorted = [...results];
-    if (sortBy === 'grade') {
-      const gradeOrder = { D: 0, C: 1, B: 2, A: 3 };
-      sorted.sort((a, b) => gradeOrder[a.grade] - gradeOrder[b.grade]);
-    } else {
-      sorted.sort((a, b) => a.overall_score - b.overall_score);
-    }
+    
+    sorted.sort((a, b) => {
+      // Resolved questions always come first
+      const aResolved = resolvedIds.has(a.id) ? 0 : 1;
+      const bResolved = resolvedIds.has(b.id) ? 0 : 1;
+      if (aResolved !== bResolved) return aResolved - bResolved;
+      
+      // Then sort by grade or score
+      if (sortBy === 'grade') {
+        const gradeOrder = { D: 0, C: 1, B: 2, A: 3 };
+        return gradeOrder[a.grade] - gradeOrder[b.grade];
+      } else {
+        return a.overall_score - b.overall_score;
+      }
+    });
+    
     return sorted;
-  }, [results, sortBy]);
+  }, [results, sortBy, resolvedIds]);
 
   // Count C and D grade questions directly from results
   const lowGradeCount = useMemo(() => 
