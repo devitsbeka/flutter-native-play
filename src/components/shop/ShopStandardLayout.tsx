@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopHeroCarousel } from "./ShopHeroCarousel";
 import { ShopProductGrid } from "./ShopProductGrid";
+import { MobileProCarousel } from "./MobileProCarousel";
+import { useIsBreakpointUp } from "@/hooks/use-breakpoint";
 
 interface ShopStandardLayoutProps {
   sections: ShopSection[];
@@ -25,6 +27,7 @@ export function ShopStandardLayout({
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolled = useRef(false);
+  const isDesktop = useIsBreakpointUp("xl");
 
   // Scroll to initial section on mount
   useEffect(() => {
@@ -58,8 +61,12 @@ export function ShopStandardLayout({
 
   return (
     <div className="flex-1 pb-8">
-      {/* Hero Carousel */}
-      <ShopHeroCarousel onSlideClick={handleSlideClick} />
+      {/* Hero Carousel - Desktop only / PRO Carousel - Mobile/Tablet */}
+      {isDesktop ? (
+        <ShopHeroCarousel onSlideClick={handleSlideClick} />
+      ) : (
+        <MobileProCarousel />
+      )}
 
       {/* Product Sections */}
       {displaySections.map((section, index) => (

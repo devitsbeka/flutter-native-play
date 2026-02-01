@@ -986,8 +986,8 @@ export default function Index() {
                     >
                       <ActionButtonWithParticles
                         iconSrc={adFreeIcon}
-                        alt="Leaderboard"
-                        onClick={() => navigate("/leaderboards")}
+                        alt="Shop"
+                        onClick={() => navigate("/power-ups")}
                         background="linear-gradient(180deg, #FEF9C3 0%, #FDE047 100%)"
                         shadowColor="#FACC15"
                         delay={0.64}
