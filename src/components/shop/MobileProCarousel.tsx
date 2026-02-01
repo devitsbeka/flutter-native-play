@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
+import proMascot from "@/assets/pro-mascot.png";
+import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
 
 const PRO_TIERS = [
   {
@@ -70,16 +72,27 @@ export function MobileProCarousel() {
 
   return (
     <div className="px-4 pt-4 pb-2">
-      {/* Title */}
-      <div className="text-center mb-3">
-        <div className="inline-flex items-center gap-2 bg-background/60 backdrop-blur-sm px-4 py-2 rounded-xl border border-border/30">
-          <Crown className="w-5 h-5 text-purple-400" />
-          <h2 className="text-base font-bold text-foreground">გახდი PRO</h2>
+      {/* Header Banner */}
+      <div 
+        className="relative mb-4 rounded-2xl overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, rgba(233,213,255,0.8) 0%, rgba(251,207,232,0.6) 50%, rgba(233,213,255,0.8) 100%)",
+          boxShadow: "0 8px 32px rgba(147,51,234,0.15), 0 4px 16px rgba(168,85,247,0.1)"
+        }}
+      >
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Left: Crown + Text */}
+          <div className="flex items-center gap-2">
+            <img src={iconVipCrown} alt="" className="w-7 h-7" />
+            <h2 className="text-lg font-bold text-purple-900">გახდი PRO</h2>
+          </div>
+          {/* Right: Mascot */}
+          <img src={proMascot} alt="" className="w-16 h-16 object-contain" />
         </div>
       </div>
 
       {/* Carousel Card */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden rounded-3xl">
         <AnimatePresence mode="wait">
           <motion.div
             key={tier.id}
@@ -90,7 +103,7 @@ export function MobileProCarousel() {
             className="relative rounded-2xl overflow-hidden"
             style={{
               background: tier.gradient,
-              boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 20px rgba(0,0,0,0.3)`,
+              boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 25px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.2)`,
               opacity: isProcessing ? 0.7 : 1,
             }}
           >
