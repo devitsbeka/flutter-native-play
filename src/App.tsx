@@ -95,6 +95,7 @@ const AllButtons = lazy(() => import("./pages/AllButtons"));
 const ModalsShowcase = lazy(() => import("./pages/ModalsShowcase"));
 const TVScreensShowcase = lazy(() => import("./pages/TVScreensShowcase"));
 const Docs = lazy(() => import("./pages/Docs"));
+const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 
 const App = () => (
   <LanguageProvider>
@@ -182,6 +183,7 @@ const App = () => (
                 <Route path="/modals" element={<ModalsShowcase />} />
                 <Route path="/tv-showcase" element={<TVScreensShowcase />} />
                 <Route path="/docs" element={<Docs />} />
+                <Route path="/onboarding-preview" element={<OnboardingPreview />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

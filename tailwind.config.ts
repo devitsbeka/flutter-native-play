@@ -118,6 +118,14 @@ export default {
         'glow-pulse': {
           '0%, 100%': { boxShadow: '0 0 8px 2px rgba(139, 92, 246, 0.4)' },
           '50%': { boxShadow: '0 0 20px 8px rgba(139, 92, 246, 0.8)' }
+        },
+        'spin-slow': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' }
+        },
+        'pulse-shadow': {
+          '0%, 100%': { opacity: '0.3' },
+          '50%': { opacity: '0.6' }
         }
       },
       animation: {
@@ -127,7 +135,9 @@ export default {
         'shimmer': 'shimmer 2s infinite',
         'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
         'float': 'float 3s ease-in-out infinite',
-        'glow-pulse': 'glow-pulse 1.5s ease-in-out'
+        'glow-pulse': 'glow-pulse 1.5s ease-in-out',
+        'spin-slow': 'spin-slow 3s linear infinite',
+        'pulse-shadow': 'pulse-shadow 2s ease-in-out infinite'
       },
       fontFamily: {
         sans: [

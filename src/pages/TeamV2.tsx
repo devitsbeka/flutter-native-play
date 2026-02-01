@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,8 +41,7 @@ import { CreateRoomScreen } from "@/components/team/CreateRoomScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
-import { TabsContent } from "@/components/ui/tabs";
-import { TabOnboardingTooltips, TabOnboardingTooltipsRef, TooltipTriggerButton } from "@/components/team/TabOnboardingTooltips";
+import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -258,8 +257,8 @@ function TeamContentV2() {
     total_levels: number;
   } | null>(null);
 
-  // Ref for manually triggering onboarding tooltips
-  const tooltipsRef = useRef<TabOnboardingTooltipsRef>(null);
+  // Feature onboarding state
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => hasSeenFeatureOnboarding());
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
@@ -580,8 +579,6 @@ function TeamContentV2() {
                       boxShadow: "inset 0 2px 4px hsl(0 0% 0% / 0.05)",
                     }}
                   >
-                    {/* Onboarding tooltips for new users */}
-                    <TabOnboardingTooltips ref={tooltipsRef} activeTab={activeTab} />
                     {/* Tabs with equal distribution */}
                     {[
                       { id: "explore", label: "აღმოაჩინე" },
@@ -617,8 +614,6 @@ function TeamContentV2() {
                       </button>
                     ))}
                   </div>
-                  {/* Manual tooltip trigger button */}
-                  <TooltipTriggerButton onClick={() => tooltipsRef.current?.showTooltips()} />
                 </div>
               </div>
             </div>
@@ -688,6 +683,7 @@ function TeamContentV2() {
                   filter={roomsFilter}
                   searchQuery={roomsSearchQuery}
                   sort={roomsSort}
+                  onNavigateToTab={handleTabChange}
                 />
               )}
 
