@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -27,6 +27,12 @@ import {
   ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const AdminPageLoader = () => (
+  <div className="flex items-center justify-center h-full min-h-[200px]">
+    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+  </div>
+);
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -268,7 +274,9 @@ export default function Admin() {
       {/* Main Content */}
       <main className="flex-1 overflow-auto bg-muted/30">
         <div className="p-6">
-          <Outlet />
+          <Suspense fallback={<AdminPageLoader />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>
