@@ -13,11 +13,13 @@ import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
 import "@/components/game/VideoPreloader";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
-import { AdminRoute } from "@/components/admin/AdminRoute";
 import { UserPresenceTracker } from "@/components/UserPresenceTracker";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
+
+// Build-time flag for admin inclusion (default: excluded from published builds)
+const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN === 'true';
 
 // Eagerly loaded pages (critical path)
 import Index from "./pages/Index";
@@ -59,30 +61,31 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const TermsOfServiceEN = lazy(() => import("./pages/TermsOfServiceEN"));
 const Support = lazy(() => import("./pages/Support"));
 
-// Admin pages (lazy loaded as rarely accessed)
-const Admin = lazy(() => import("./pages/Admin"));
-const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
-const ContentManager = lazy(() => import("./pages/admin/ContentManager"));
-const QuestionStudio = lazy(() => import("./pages/admin/QuestionStudio"));
-const AdminOnlineUsers = lazy(() => import("./pages/admin/OnlineUsers"));
-const AdminImport = lazy(() => import("./pages/admin/Import"));
-const DuplicateScanner = lazy(() => import("./pages/admin/DuplicateScanner"));
-const IconLibraryAdmin = lazy(() => import("./pages/admin/IconLibrary"));
-const QuestionTools = lazy(() => import("./pages/admin/QuestionTools"));
-const IconAssignment = lazy(() => import("./pages/admin/IconAssignment"));
-const IconReview = lazy(() => import("./pages/admin/IconReview"));
-const MissingIcons = lazy(() => import("./pages/admin/MissingIcons"));
-const FixIcons = lazy(() => import("./pages/admin/FixIcons"));
-const AIGenerations = lazy(() => import("./pages/admin/AIGenerations"));
-const QualityReview = lazy(() => import("./pages/admin/QualityReview"));
-const PushNotifications = lazy(() => import("./pages/admin/PushNotifications"));
-const TVModeGameDocs = lazy(() => import("./pages/admin/TVModeGameDocs"));
-const AdminReports = lazy(() => import("./pages/admin/Reports"));
-const AdminFlow = lazy(() => import("./pages/admin/Flow"));
-const AdminDesign = lazy(() => import("./pages/admin/Design"));
-const AdminEconomy = lazy(() => import("./pages/admin/Economy"));
-const AdminSettings = lazy(() => import("./pages/admin/Settings"));
-const AdminGuestShowcase = lazy(() => import("./pages/AdminGuestShowcase"));
+// Admin pages - conditionally imported to enable tree-shaking when excluded
+const AdminRoute = INCLUDE_ADMIN ? lazy(() => import("./components/admin/AdminRoute").then(m => ({ default: m.AdminRoute }))) : null;
+const Admin = INCLUDE_ADMIN ? lazy(() => import("./pages/Admin")) : null;
+const AdminDashboard = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Dashboard")) : null;
+const ContentManager = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/ContentManager")) : null;
+const QuestionStudio = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/QuestionStudio")) : null;
+const AdminOnlineUsers = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/OnlineUsers")) : null;
+const AdminImport = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Import")) : null;
+const DuplicateScanner = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/DuplicateScanner")) : null;
+const IconLibraryAdmin = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/IconLibrary")) : null;
+const QuestionTools = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/QuestionTools")) : null;
+const IconAssignment = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/IconAssignment")) : null;
+const IconReview = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/IconReview")) : null;
+const MissingIcons = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/MissingIcons")) : null;
+const FixIcons = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/FixIcons")) : null;
+const AIGenerations = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/AIGenerations")) : null;
+const QualityReview = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/QualityReview")) : null;
+const PushNotifications = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/PushNotifications")) : null;
+const TVModeGameDocs = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/TVModeGameDocs")) : null;
+const AdminReports = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Reports")) : null;
+const AdminFlow = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Flow")) : null;
+const AdminDesign = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Design")) : null;
+const AdminEconomy = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Economy")) : null;
+const AdminSettings = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Settings")) : null;
+const AdminGuestShowcase = INCLUDE_ADMIN ? lazy(() => import("./pages/AdminGuestShowcase")) : null;
 
 // Shop pages
 const ShopSuccess = lazy(() => import("./pages/shop/Success"));
@@ -146,30 +149,32 @@ const App = () => (
                 <Route path="/settings/name" element={<SettingsName />} />
                 <Route path="/settings/password" element={<SettingsPassword />} />
                 <Route path="/settings/privacy" element={<SettingsPrivacy />} />
-                <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="question-studio" element={<QuestionStudio />} />
-                  <Route path="flow" element={<AdminFlow />} />
-                  <Route path="content" element={<ContentManager />} />
-                  <Route path="import" element={<AdminImport />} />
-                  <Route path="users" element={<AdminOnlineUsers />} />
-                  <Route path="duplicates" element={<DuplicateScanner />} />
-                  <Route path="icons" element={<IconLibraryAdmin />} />
-                  <Route path="tools" element={<QuestionTools />} />
-                  <Route path="icon-assign" element={<IconAssignment />} />
-                  <Route path="icon-review" element={<IconReview />} />
-                  <Route path="missing-icons" element={<MissingIcons />} />
-                  <Route path="fix-icons" element={<FixIcons />} />
-                  <Route path="ai-generations" element={<AIGenerations />} />
-                  <Route path="review" element={<QualityReview />} />
-                  <Route path="push" element={<PushNotifications />} />
-                  <Route path="reports" element={<AdminReports />} />
-                  <Route path="design" element={<AdminDesign />} />
-                  <Route path="guest" element={<AdminGuestShowcase />} />
-                  <Route path="economy" element={<AdminEconomy />} />
-                  <Route path="settings" element={<AdminSettings />} />
-                  <Route path="tvmodegame" element={<TVModeGameDocs />} />
-                </Route>
+                {INCLUDE_ADMIN && Admin && AdminRoute && (
+                  <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>}>
+                    <Route index element={AdminDashboard && <AdminDashboard />} />
+                    <Route path="question-studio" element={QuestionStudio && <QuestionStudio />} />
+                    <Route path="flow" element={AdminFlow && <AdminFlow />} />
+                    <Route path="content" element={ContentManager && <ContentManager />} />
+                    <Route path="import" element={AdminImport && <AdminImport />} />
+                    <Route path="users" element={AdminOnlineUsers && <AdminOnlineUsers />} />
+                    <Route path="duplicates" element={DuplicateScanner && <DuplicateScanner />} />
+                    <Route path="icons" element={IconLibraryAdmin && <IconLibraryAdmin />} />
+                    <Route path="tools" element={QuestionTools && <QuestionTools />} />
+                    <Route path="icon-assign" element={IconAssignment && <IconAssignment />} />
+                    <Route path="icon-review" element={IconReview && <IconReview />} />
+                    <Route path="missing-icons" element={MissingIcons && <MissingIcons />} />
+                    <Route path="fix-icons" element={FixIcons && <FixIcons />} />
+                    <Route path="ai-generations" element={AIGenerations && <AIGenerations />} />
+                    <Route path="review" element={QualityReview && <QualityReview />} />
+                    <Route path="push" element={PushNotifications && <PushNotifications />} />
+                    <Route path="reports" element={AdminReports && <AdminReports />} />
+                    <Route path="design" element={AdminDesign && <AdminDesign />} />
+                    <Route path="guest" element={AdminGuestShowcase && <AdminGuestShowcase />} />
+                    <Route path="economy" element={AdminEconomy && <AdminEconomy />} />
+                    <Route path="settings" element={AdminSettings && <AdminSettings />} />
+                    <Route path="tvmodegame" element={TVModeGameDocs && <TVModeGameDocs />} />
+                  </Route>
+                )}
                 <Route path="/shop/success" element={<ShopSuccess />} />
                 <Route path="/shop/cancel" element={<ShopCancel />} />
                 <Route path="/styleguide" element={<Styleguide />} />
