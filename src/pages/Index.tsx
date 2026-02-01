@@ -471,6 +471,30 @@ export default function Index() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
               >
+                {/* Guest: Title and desc ABOVE avatar - placed in flow, not absolute */}
+                {!user && (
+                  <motion.div
+                    initial={{ y: -10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2, type: "spring" }}
+                    className="flex flex-col items-center mb-6 pointer-events-auto"
+                  >
+                    <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 28, fontWeight: 900 }}>
+                      გამარჯობა!
+                    </span>
+                    <motion.button
+                      onClick={() => navigate("/auth")}
+                      className="mt-2 text-center cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <p className="text-base text-gray-600 font-medium text-center leading-relaxed whitespace-nowrap">
+                        შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                      </p>
+                    </motion.button>
+                  </motion.div>
+                )}
+
                 <div className="relative">
                   {/* Tablet portrait: use the same curved circular action buttons as mobile */}
                   {user && (
@@ -598,29 +622,6 @@ export default function Index() {
                         />
                       </motion.div>
                     </div>
-                  )}
-                  {/* Guest: Title and desc ABOVE avatar */}
-                  {!user && (
-                    <motion.div
-                      initial={{ y: -10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.2, type: "spring" }}
-                      className="absolute -top-28 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-auto z-20"
-                    >
-                      <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 28, fontWeight: 900 }}>
-                        გამარჯობა!
-                      </span>
-                      <motion.button
-                        onClick={() => navigate("/auth")}
-                        className="mt-2 text-center cursor-pointer"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <p className="text-base text-gray-600 font-medium text-center leading-relaxed whitespace-nowrap">
-                          შექმენი შენი პროფილი და ითამაშე უფასოდ!
-                        </p>
-                      </motion.button>
-                    </motion.div>
                   )}
                   <motion.div 
                     animate={{ y: [0, -8, 0] }}
