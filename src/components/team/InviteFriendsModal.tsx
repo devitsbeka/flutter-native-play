@@ -109,6 +109,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const [invitingUser, setInvitingUser] = useState<string | null>(null);
   const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
   const [pendingOutgoingIds, setPendingOutgoingIds] = useState<Set<string>>(new Set());
+  const [copied, setCopied] = useState(false);
   
   const { searchUsers, sendFriendRequest, friends } = useFriends();
   const { user } = useAuth();
@@ -626,14 +627,25 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
               <motion.button
                 onClick={() => {
                   navigator.clipboard.writeText(appLink);
+                  setCopied(true);
                   toast.success("ლინკი დაკოპირდა!");
+                  setTimeout(() => setCopied(false), 2000);
                 }}
-                className={`mx-auto w-full max-w-[460px] py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base bg-white/15 hover:bg-white/20 transition-colors flex items-center justify-center gap-2`}
+                className={`mx-auto w-full max-w-[460px] py-4 rounded-2xl ${lobbyGlassCard} text-white font-bold text-base transition-colors flex items-center justify-center gap-2 ${copied ? 'bg-green-500/30 border-green-400/50' : 'bg-white/15 hover:bg-white/20'}`}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
-                <Share2 className="w-5 h-5 text-white/90" />
-                ლინკის კოპირება
+                {copied ? (
+                  <>
+                    <Check className="w-5 h-5 text-green-300" />
+                    დაკოპირდა!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-5 h-5 text-white/90" />
+                    ლინკის კოპირება
+                  </>
+                )}
               </motion.button>
             </div>
           </div>
