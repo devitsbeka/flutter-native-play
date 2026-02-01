@@ -724,19 +724,19 @@ export default function Index() {
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
-                  className="flex flex-col items-center mb-6 pointer-events-auto"
+                  className="flex flex-col items-center mb-8 pointer-events-auto"
                 >
                   <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
                     გამარჯობა!
                   </span>
                   <motion.button
                     onClick={() => navigate("/auth")}
-                    className="mt-1 text-center cursor-pointer"
+                    className="mt-2 text-center cursor-pointer"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
-                      შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
+                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed whitespace-nowrap">
+                      შექმენი შენი პროფილი და ითამაშე უფასოდ!
                     </p>
                   </motion.button>
                 </motion.div>
@@ -850,7 +850,7 @@ export default function Index() {
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, type: "spring" }}
-                  className="flex flex-col items-center mb-4 pointer-events-auto"
+                  className="flex flex-col items-center mb-10 pointer-events-auto"
                 >
                   <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
                     გამარჯობა!
