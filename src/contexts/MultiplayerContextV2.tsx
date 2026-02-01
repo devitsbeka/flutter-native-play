@@ -1353,25 +1353,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             };
           });
           
-          // Update shuffled_answers in DB for sync
-          await Promise.all(questions.map((q, index) => 
-            supabase.from("room_questions")
-              .update({ shuffled_answers: q.allAnswers })
-              .eq("room_id", roomId)
-              .eq("question_index", index)
-          ));
-          
-          // Clear old answers only
+          // Clear old answers
           await supabase.from("player_answers").delete().eq("room_id", roomId);
           
-          // Reset only my score and current_question
+          // FIX: Reset ALL participants' scores (not just caller)
           await supabase
             .from("room_participants")
             .update({ score: 0, current_question: 0, status: "playing" })
-            .eq("room_id", roomId)
-            .eq("user_id", user.id);
+            .eq("room_id", roomId);
           
-          // Create room_game record
+          // Create room_game record FIRST to get game_id
           const { data: game } = await supabase
             .from("room_games")
             .insert([{
@@ -1381,6 +1372,23 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             }])
             .select()
             .single();
+          
+          // FIX: Delete old questions and re-insert with new game_id for proper validation
+          await supabase.from("room_questions").delete().eq("room_id", roomId);
+          
+          await Promise.all(questions.map((q, index) => 
+            supabase.from("room_questions").insert({
+              room_id: roomId,
+              question_index: index,
+              question_text: q.question,
+              correct_answer: q.correctAnswer,
+              incorrect_answers: q.incorrectAnswers,
+              shuffled_answers: q.allAnswers,
+              difficulty: q.difficulty,
+              icon_slug: q.iconSlug || null,
+              game_id: game?.id, // CRITICAL: Link to current game for non-host validation
+            })
+          ));
           
           // Update room status
           await supabase
@@ -1458,12 +1466,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Mark questions as seen globally
       markQuestionsAsSeen(questions.map(q => q.id));
       
-      // Reset only my score and current_question
+      // FIX: Reset ALL participants' scores (not just caller)
       await supabase
         .from("room_participants")
         .update({ score: 0, current_question: 0, status: "playing" })
-        .eq("room_id", roomId)
-        .eq("user_id", user.id);
+        .eq("room_id", roomId);
       
       // Create room_game record FIRST to get game_id
       const { data: game } = await supabase
