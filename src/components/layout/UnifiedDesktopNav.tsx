@@ -282,7 +282,7 @@ export function UnifiedDesktopNav({
                     boxShadow: "0 2px 0 hsl(var(--primary)/0.3), 0 2px 8px hsl(var(--primary)/0.2)",
                   }}
                 >
-                  რეგისტრაცია
+                  ითამაშე უფასოდ
                 </div>
               </div>
             </motion.button>
