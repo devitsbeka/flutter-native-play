@@ -40,8 +40,7 @@ export function CategoryGrid({
 
   return (
     <div 
-      className="flex flex-col gap-4"
-      style={{ paddingLeft: 20, paddingRight: 20 }}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-5"
     >
       {categories.map((category, index) => {
         // Use uuid for favorites if available, fallback to id
