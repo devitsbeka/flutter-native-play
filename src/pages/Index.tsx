@@ -40,7 +40,7 @@ import { REWARDS } from "@/config/rewardConfig";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
-import defaultGuestAvatar from "@/assets/avatars/bot-avatar-1.png";
+import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import { AvatarModal } from "@/components/home/AvatarModal";
 
 import { t } from "@/lib/i18n";
@@ -601,10 +601,10 @@ export default function Index() {
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <div 
+                  <div 
                       data-walkthrough="avatar" 
                       className="pointer-events-auto cursor-pointer"
-                      onClick={() => user && setIsAvatarModalOpen(true)}
+                      onClick={() => user ? setIsAvatarModalOpen(true) : navigate("/auth")}
                     >
                       <AvatarCircle 
                         avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
@@ -616,6 +616,7 @@ export default function Index() {
                         xpProgress={user ? levelInfo.progress : 0}
                         xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
                         xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
+                        hideStats={!user}
                       />
                     </div>
                   </motion.div>
@@ -632,33 +633,46 @@ export default function Index() {
                       <FlagIcon countryCode={profile.country_code} size="md" />
                     )}
                     <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
-                      {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                      {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-6 mt-1">
+                  {user ? (
+                    <div className="flex items-center gap-6 mt-1">
+                      <motion.button
+                        className="flex items-center gap-2 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate("/power-ups?section=coins")}
+                      >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={coinIcon} alt="Coins" className="w-9 h-9" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-base">{formatCompactNumber(coins)}</span>
+                      </motion.button>
+                      <motion.button
+                        className="flex items-center gap-2 cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => navigate("/power-ups?section=gems-lari")}
+                      >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={gemIcon} alt="Gems" className="w-9 h-9" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-base">{formatCompactNumber(gems)}</span>
+                      </motion.button>
+                    </div>
+                  ) : (
                     <motion.button
-                      className="flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/power-ups?section=coins")}
+                      onClick={() => navigate("/auth")}
+                      className="mt-2 text-center cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <img src={coinIcon} alt="Coins" className="w-9 h-9" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-base">{user ? formatCompactNumber(coins) : 0}</span>
+                      <p className="text-sm text-gray-600 font-medium">
+                        შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                      </p>
                     </motion.button>
-                    <motion.button
-                      className="flex items-center gap-2 cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate("/power-ups?section=gems-lari")}
-                    >
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <img src={gemIcon} alt="Gems" className="w-9 h-9" />
-                      </div>
-                      <span className="font-bold text-gray-700 text-base">{user ? formatCompactNumber(gems) : 0}</span>
-                    </motion.button>
-                  </div>
+                  )}
                   <div className="mt-14">
                     <DesktopPlayButtonLarge
                       onClick={handlePlayClick}
@@ -688,7 +702,7 @@ export default function Index() {
                   <div 
                     data-walkthrough="avatar" 
                     className="pointer-events-auto cursor-pointer"
-                    onClick={() => user && setIsAvatarModalOpen(true)}
+                    onClick={() => user ? setIsAvatarModalOpen(true) : navigate("/auth")}
                   >
                     <AvatarCircle 
                       avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
@@ -700,6 +714,7 @@ export default function Index() {
                       xpProgress={user ? levelInfo.progress : 0}
                       xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
                       xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
+                      hideStats={!user}
                     />
                   </div>
                 </motion.div>
@@ -717,38 +732,51 @@ export default function Index() {
                     <FlagIcon countryCode={profile.country_code} size="md" />
                   )}
                   <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
-                    {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                    {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-6 mt-1">
+                {user ? (
+                  <div className="flex items-center gap-6 mt-1">
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=coins")}
+                    >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-lg">
+                        {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                      </span>
+                    </motion.button>
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=gems-lari")}
+                    >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={gemIcon} alt="Gems" className="w-10 h-10" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-lg">
+                        {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
+                      </span>
+                    </motion.button>
+                  </div>
+                ) : (
                   <motion.button
-                    className="flex items-center gap-2 cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/power-ups?section=coins")}
+                    onClick={() => navigate("/auth")}
+                    className="mt-2 text-center cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                      <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                    </div>
-                    <span className="font-bold text-gray-700 text-lg">
-                      {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
-                    </span>
+                    <p className="text-sm text-gray-600 font-medium">
+                      შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                    </p>
                   </motion.button>
-                  <motion.button
-                    className="flex items-center gap-2 cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/power-ups?section=gems-lari")}
-                  >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                      <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                    </div>
-                    <span className="font-bold text-gray-700 text-lg">
-                      {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
-                    </span>
-                  </motion.button>
-                </div>
+                )}
 
                 <div className="mt-20">
                   <DesktopPlayButtonLarge
@@ -907,7 +935,7 @@ export default function Index() {
                   <div 
                     data-walkthrough="avatar" 
                     className="pointer-events-auto cursor-pointer"
-                    onClick={() => user && setIsAvatarModalOpen(true)}
+                    onClick={() => user ? setIsAvatarModalOpen(true) : navigate("/auth")}
                   >
                     <AvatarCircle 
                       avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
@@ -919,6 +947,7 @@ export default function Index() {
                       xpProgress={user ? levelInfo.progress : 0}
                       xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
                       xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
+                      hideStats={!user}
                     />
                   </div>
                 </motion.div>
@@ -936,38 +965,51 @@ export default function Index() {
                     <FlagIcon countryCode={profile.country_code} size="md" />
                   )}
                   <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
-                    {user ? (profile?.nickname || t("game.guest")) : "Trivia Guru"}
+                    {user ? (profile?.nickname || t("game.guest")) : "გამარჯობა!"}
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-6 mt-1">
+                {user ? (
+                  <div className="flex items-center gap-6 mt-1">
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=coins")}
+                    >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-lg">
+                        {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                      </span>
+                    </motion.button>
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=gems-lari")}
+                    >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={gemIcon} alt="Gems" className="w-10 h-10" />
+                      </div>
+                      <span className="font-bold text-gray-700 text-lg">
+                        {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
+                      </span>
+                    </motion.button>
+                  </div>
+                ) : (
                   <motion.button
-                    className="flex items-center gap-2 cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/power-ups?section=coins")}
+                    onClick={() => navigate("/auth")}
+                    className="mt-2 text-center cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                      <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                    </div>
-                    <span className="font-bold text-gray-700 text-lg">
-                      {user ? (coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins) : 0}
-                    </span>
+                    <p className="text-sm text-gray-600 font-medium">
+                      შექმენი შენი პროფილი და ითამაშე უფასოდ!
+                    </p>
                   </motion.button>
-                  <motion.button
-                    className="flex items-center gap-2 cursor-pointer"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/power-ups?section=gems-lari")}
-                  >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                      <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                    </div>
-                    <span className="font-bold text-gray-700 text-lg">
-                      {user ? (gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems) : 0}
-                    </span>
-                  </motion.button>
-                </div>
+                )}
               </motion.div>
             </motion.div>
         </div>
