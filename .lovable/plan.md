@@ -1,130 +1,216 @@
 
-# Fix Missing Trivia Played Notifications for Multiplayer Games
 
-## Problem
-When someone plays your trivia in a multiplayer room, you don't receive a notification. The notification is only sent when someone plays it solo via `QuizPlayModal`.
+# AI-Powered Question Quality Review System
 
-The code calls `increment_quiz_plays` to update the plays count in multiplayer, but never creates a notification for the trivia creator.
+## Overview
+This plan outlines the implementation of a new admin page called "Review" that performs deep AI-powered analysis of trivia questions. The system will evaluate questions based on Georgian grammar correctness, answer uniqueness/clarity, and overall question confusion level, producing an A-D grade for each question.
 
-## Root Cause
-In `MultiplayerContextV2.tsx`, there are 3 places where `increment_quiz_plays` is called for user trivia, but none of them create a notification:
-- Line 888-891: When room has existing questions
-- Line 1009-1012: When loading questions from user_quiz_posts
-- Line 1636-1639: When starting next round with user trivia
-
-## Solution
-Add notification creation logic after each `increment_quiz_plays` call to notify the trivia creator that their trivia was played.
+## Grade Definitions
+- **Grade A (90-100%)**: Excellent quality, production ready
+- **Grade B (75-89%)**: Good quality, minor issues possible
+- **Grade C (50-74%)**: Needs improvement, should be reviewed
+- **Grade D (0-49%)**: Poor quality, needs rewrite
 
 ---
 
-## Files to Modify
+## Technical Implementation
 
-### 1. `src/contexts/MultiplayerContextV2.tsx`
+### 1. New Edge Function: `review-question-quality`
 
-**Add import at top:**
-```typescript
-import { createNotification } from "@/hooks/useNotifications";
-```
+**Location:** `supabase/functions/review-question-quality/index.ts`
 
-**Create helper function to notify trivia creator:**
-```typescript
-// Helper to notify trivia creator when their trivia is played in multiplayer
-const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
-  try {
-    // Get trivia details
-    const { data: triviaPost } = await supabase
-      .from("user_quiz_posts")
-      .select("user_id, title")
-      .eq("id", userTriviaId)
-      .single();
-    
-    // Don't notify if creator is the one playing
-    if (!triviaPost || triviaPost.user_id === playerId) return;
-    
-    // Get player profile
-    const { data: playerProfile } = await supabase
-      .from("profiles")
-      .select("nickname")
-      .eq("user_id", playerId)
-      .single();
-    
-    await createNotification(
-      triviaPost.user_id,
-      "trivia_played",
-      `${playerProfile?.nickname || "ვიღაცამ"} ითამაშა შენი ტრივია`,
-      triviaPost.title || undefined,
-      { post_id: userTriviaId, player_id: playerId }
-    );
-  } catch (error) {
-    console.error("Error notifying trivia creator:", error);
-  }
-};
-```
+This function will use Lovable AI to perform deep analysis on questions:
 
-**Update 3 locations to call helper after increment_quiz_plays:**
+```text
+Input:
+- categoryId (optional): Filter by category
+- questionIds (optional): Specific question IDs to review
+- onlyProduction: boolean (filter to in_production questions)
+- limit: number (batch size, default 20)
 
-**Location 1** (lines 888-892):
-```typescript
-if (freshRoom.user_trivia_id) {
-  await supabase.rpc('increment_quiz_plays', { 
-    post_id: freshRoom.user_trivia_id 
-  });
-  // Notify trivia creator - use first participant who is not host
-  const { data: participants } = await supabase
-    .from("room_participants")
-    .select("user_id")
-    .eq("room_id", roomId)
-    .neq("user_id", freshRoom.host_id)
-    .limit(1);
-  if (participants?.[0]?.user_id) {
-    await notifyTriviaCreator(freshRoom.user_trivia_id, participants[0].user_id);
-  }
+Processing (per question):
+1. Grammar Check (30% weight):
+   - Uses Georgian grammar AI prompt similar to verify-georgian-grammar
+   - Checks verb conjugation, case endings, spelling
+   - Score 0-100
+
+2. Answer Uniqueness Check (40% weight):
+   - Verifies only one answer is definitively correct
+   - Checks for vague or ambiguous options
+   - Ensures incorrect answers are plausibly wrong but clearly incorrect
+   - Score 0-100
+
+3. Confusion Analysis (30% weight):
+   - Evaluates how confusing the question+answers combination is
+   - Checks if question phrasing is clear
+   - Assesses if answer options are distinguishable
+   - Score 0-100
+
+Output per question:
+{
+  id: string,
+  overall_score: number (0-100),
+  grade: "A" | "B" | "C" | "D",
+  grammar_score: number,
+  grammar_issues: string[],
+  uniqueness_score: number,
+  uniqueness_issues: string[],
+  confusion_score: number,
+  confusion_issues: string[],
+  corrected_text?: string,
+  recommendations: string[]
 }
 ```
 
-**Location 2** (lines 1009-1012): Same pattern
+### 2. Database Schema Updates
 
-**Location 3** (lines 1636-1639): Same pattern
+Add new columns to the `questions` table for storing review results:
+
+```sql
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS ai_review_score integer;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS ai_review_grade text;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS ai_review_data jsonb;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS last_ai_review timestamp with time zone;
+```
+
+### 3. New Admin Page: `QualityReview.tsx`
+
+**Location:** `src/pages/admin/QualityReview.tsx`
+
+**UI Layout:**
+
+```text
++----------------------------------------------------------+
+|  Quality Review                              [Run Review] |
++----------------------------------------------------------+
+| Filters:                                                  |
+| [Category Dropdown] [Status: All/Prod/Lib] [Limit: 50]   |
+| [x] Only unreviewed                                       |
++----------------------------------------------------------+
+| Progress: [==========] 45/100 questions reviewed          |
++----------------------------------------------------------+
+| Summary:                                                  |
+| Grade A: 12 | Grade B: 18 | Grade C: 10 | Grade D: 5     |
++----------------------------------------------------------+
+| Results (sortable by grade):                              |
+|                                                           |
+| [x] Q1: "ვინ დაწერა ვეფხისტყაოსანი?"                      |
+|     Grade: A (95%) | Grammar: 100 | Unique: 95 | Clear: 90|
+|                                                           |
+| [x] Q2: "რა არის საქართველოს დედაქალაქი?"                 |
+|     Grade: C (62%) | Grammar: 80 | Unique: 50 | Clear: 55 |
+|     Issues: "Multiple answers could be interpreted..."    |
+|                                                           |
++----------------------------------------------------------+
+| Selected: 15 questions                                    |
+| [Move C-D to Library] [Export Issues CSV]                 |
++----------------------------------------------------------+
+```
+
+**Features:**
+1. Category and status filters
+2. Batch review with progress indicator
+3. Results table with expandable details
+4. Checkbox selection for bulk actions
+5. "Move to Library" button for selected C-D grade questions
+6. Visual grade badges (A=green, B=blue, C=yellow, D=red)
+
+### 4. Custom Hook: `useQuestionQualityReview.ts`
+
+**Location:** `src/hooks/useQuestionQualityReview.ts`
+
+```typescript
+interface ReviewResult {
+  id: string;
+  question_text: string;
+  overall_score: number;
+  grade: 'A' | 'B' | 'C' | 'D';
+  grammar_score: number;
+  grammar_issues: string[];
+  uniqueness_score: number;
+  uniqueness_issues: string[];
+  confusion_score: number;
+  confusion_issues: string[];
+  recommendations: string[];
+}
+
+interface UseQuestionQualityReview {
+  reviewing: boolean;
+  progress: { current: number; total: number };
+  results: ReviewResult[];
+  summary: { A: number; B: number; C: number; D: number };
+  startReview: (options: ReviewOptions) => Promise<void>;
+  moveToLibrary: (questionIds: string[]) => Promise<void>;
+  clearResults: () => void;
+}
+```
+
+### 5. Route and Navigation Updates
+
+**src/App.tsx:**
+```typescript
+const QualityReview = lazy(() => import("./pages/admin/QualityReview"));
+// Add route:
+<Route path="review" element={<QualityReview />} />
+```
+
+**src/pages/Admin.tsx:**
+```typescript
+// Add to toolsNavItems array:
+{ 
+  to: '/admin/review', 
+  icon: ClipboardCheck, // from lucide-react
+  label: 'Review' 
+},
+```
 
 ---
 
-## Alternative: Database Trigger Approach
+## File Changes Summary
 
-For more reliable instant notifications, we could create a database trigger on the `quiz_post_plays` table that automatically creates notifications when a play is recorded. This is the pattern already used for friend requests.
-
-Benefits:
-- Single source of truth
-- Cannot be missed by any code path
-- Works even if frontend code fails
-
-This would require a database migration to create the trigger function.
-
----
-
-## Visual Result
-
-| Before | After |
-|--------|-------|
-| No notification when trivia played in multiplayer | Notification sent to creator |
-| Only solo play triggers notification | All play types trigger notification |
+| File | Action |
+|------|--------|
+| `supabase/functions/review-question-quality/index.ts` | Create |
+| `src/pages/admin/QualityReview.tsx` | Create |
+| `src/hooks/useQuestionQualityReview.ts` | Create |
+| `src/App.tsx` | Edit (add route) |
+| `src/pages/Admin.tsx` | Edit (add nav item) |
+| Database migration | Create (add review columns) |
+| `supabase/config.toml` | Edit (add function config) |
 
 ---
 
-## Technical Details
+## AI Prompt Design
 
-| Change | Location | Details |
-|--------|----------|---------|
-| Import createNotification | MultiplayerContextV2.tsx | Top of file |
-| Helper function | MultiplayerContextV2.tsx | notifyTriviaCreator() |
-| Call after increment_quiz_plays | 3 locations | Lines 888, 1009, 1636 |
+The edge function will use a carefully crafted prompt for Georgian trivia evaluation:
+
+```text
+System: You are an expert Georgian language trivia evaluator. 
+Analyze each question for:
+
+1. GRAMMAR (30%): Check Georgian spelling, verb conjugation, 
+   case endings, and proper phrasing.
+
+2. ANSWER UNIQUENESS (40%): Ensure exactly one answer is correct.
+   Check if any incorrect answers could also be valid.
+   Verify answers are not too similar or confusing.
+
+3. CLARITY (30%): Assess if the question is clear and 
+   unambiguous. Check if answer options are distinguishable.
+
+Return JSON with scores 0-100 for each criterion and specific issues found.
+```
 
 ---
 
-## Note on Instant Delivery
+## User Flow
 
-The notification system already supports instant delivery:
-- `notifications` table is in the realtime publication
-- `useNotifications` hook subscribes to `postgres_changes` for INSERT events
-- When a notification is inserted, it appears instantly and plays a sound
+1. Admin navigates to Admin > Tools > Review
+2. Selects category (or all) and filters (production status)
+3. Clicks "Run Review" - system processes questions in batches
+4. Views results sorted by grade (worst first)
+5. Expands individual questions to see detailed issues
+6. Selects all C-D grade questions using checkbox
+7. Clicks "Move to Library" to set `in_production = false`
+8. Questions are now in library for manual improvement
 
-The issue is simply that notifications are not being **created** for multiplayer trivia plays.
