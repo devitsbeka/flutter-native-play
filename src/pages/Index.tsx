@@ -41,6 +41,7 @@ import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
+import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import { AvatarModal } from "@/components/home/AvatarModal";
 
 import { t } from "@/lib/i18n";
@@ -608,7 +609,7 @@ export default function Index() {
                     >
                       <AvatarCircle 
                         avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
-                        animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
+                        animatedAvatarUrl={user ? profile?.animated_avatar_url : defaultGuestAvatarAnimated}
                         size={260} 
                         coins={user ? coins : 0}
                         gems={user ? gems : 0}
@@ -668,7 +669,7 @@ export default function Index() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <p className="text-sm text-gray-600 font-medium text-center leading-relaxed">
+                      <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
                         შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
                       </p>
                     </motion.button>
@@ -706,7 +707,7 @@ export default function Index() {
                   >
                     <AvatarCircle 
                       avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
-                      animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
+                      animatedAvatarUrl={user ? profile?.animated_avatar_url : defaultGuestAvatarAnimated}
                       size={280} 
                       coins={user ? coins : 0}
                       gems={user ? gems : 0}
@@ -772,7 +773,7 @@ export default function Index() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <p className="text-sm text-gray-600 font-medium text-center leading-relaxed">
+                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
                       შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
                     </p>
                   </motion.button>
@@ -939,7 +940,7 @@ export default function Index() {
                   >
                     <AvatarCircle 
                       avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
-                      animatedAvatarUrl={user ? profile?.animated_avatar_url : undefined}
+                      animatedAvatarUrl={user ? profile?.animated_avatar_url : defaultGuestAvatarAnimated}
                       size={280} 
                       coins={user ? coins : 0}
                       gems={user ? gems : 0}
@@ -1005,7 +1006,7 @@ export default function Index() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <p className="text-sm text-gray-600 font-medium text-center leading-relaxed">
+                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed">
                       შექმენი შენი პროფილი და<br />ითამაშე უფასოდ!
                     </p>
                   </motion.button>
