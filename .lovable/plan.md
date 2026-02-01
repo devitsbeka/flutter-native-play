@@ -1,164 +1,116 @@
 
-# Feature Onboarding Tooltips System
+
+# Fix No-Ads Navigation & Add Mobile PRO Carousel
 
 ## Overview
-Redesign the onboarding system with an engaging, sequential tooltip carousel that educates new users about the three main tabs (Rooms, My Trivia, Explore). The tooltips will feature gradient stroke borders with animated shadows and auto-rotate every 4 seconds.
-
-## Current State
-- Simple dual tooltips appear above tab bar
-- Question mark button manually triggers tooltips  
-- Plain white cards with minimal styling
-- Shows when empty state "აქტიური ოთახი არ გაქვს" is displayed
+Two changes are needed:
+1. Fix the "no-ads" icon button that incorrectly navigates to leaderboards instead of the shop page
+2. Add a PRO subscription cards carousel on mobile/tablet devices in the shop page, replacing the current hero carousel
 
 ## Changes
 
-### 1. Redesigned Tooltip Cards
-Each tooltip card will include:
-- **Icon**: Using `QuizCategoryIcon` component with appropriate icon slugs
-- **Title**: Tab name in Georgian
-- **Description**: Detailed feature explanation in Georgian
-- **Animated gradient stroke border**: Purple gradient (similar to existing avatar progress rings)
-- **Looping shadow animation**: Subtle rotating glow effect
+### 1. Fix No-Ads Icon Navigation (Bug Fix)
 
-**Content for each tooltip:**
-| Tab | Icon | Title | Description |
-|-----|------|-------|-------------|
-| ოთახები | `retro-tv` | ოთახები | შექმენი სათამაშო ოთახი, აირჩიე რას ითამაშებთ, და მოიწვიე მეგობრები სათამაშოდ. თამაში TV-ზეც შესაძლებელია |
-| ჩემი ტრივია | `sparkles` or trivia-buzzer | ჩემი ტრივია | შექმენი შენი Trivia, გამოაქვეყნე ან შექმენი My Trivia Party მეგობრებთან ერთად სათამაშოდ, შენი კითხვებით / შენი პასუხებით |
-| აღმოაჩინე | `compass` or icon-compass.png | აღმოაჩინე | ითამაშე სხვა მოთამაშეების მიერ შექმნილი Trivia სხვადასხვა თემაზე |
+**Current Issue:**
+The "no-ads" button in the home page orbit navigates users to `/leaderboards` instead of the shop page.
 
-### 2. Carousel Behavior
-- Displays **one tooltip at a time** in the empty state area (replacing "აქტიური ოთახი არ გაქვს")
-- Auto-rotates every **4 seconds** in sequence: Rooms -> My Trivia -> Explore
-- Includes dot indicators showing current position
-- Tap to navigate between tooltips
-- Tap on card navigates to the corresponding tab
+**File:** `src/pages/Index.tsx`
 
-### 3. Visual Design
+**Change:**
+Line ~990: Change `navigate("/leaderboards")` to `navigate("/power-ups")` for the `adFreeIcon` button.
+
+```typescript
+// Before
+onClick={() => navigate("/leaderboards")}
+
+// After  
+onClick={() => navigate("/power-ups")}
+```
+
+---
+
+### 2. Add Mobile PRO Cards Carousel
+
+**Goal:**
+On mobile and tablet (below `xl` breakpoint), show a carousel with "გახდი PRO" (Solo PRO) and "სამეგობრო PRO" (Family PRO) subscription cards above the powers section, replacing the current hero carousel.
+
+**Implementation:**
+
+#### New Component: `src/components/shop/MobileProCarousel.tsx`
+
+Create a new carousel component specifically for mobile/tablet that displays:
+- **სოლო PRO** (₾9.99/month) - Purple gradient card with Crown icon
+- **სამეგობრო PRO** (₾19.99/month) - Pink gradient card with Users icon, "TOP" badge
+
+Features:
+- Swipeable carousel with dot indicators
+- Uses existing PRO tier data from `ShopRightSidebar`
+- Triggers `useProPurchase` hook for Stripe checkout
+- Shows benefits and pricing
+- Respects current subscription status (shows "აქტიური" badge if subscribed)
+
+#### Modify: `src/components/shop/ShopStandardLayout.tsx`
+
+- Import the new `MobileProCarousel` component
+- Import `useIsMobile` hook for responsive detection
+- Conditionally render:
+  - **Desktop (xl+):** Keep existing `ShopHeroCarousel`
+  - **Mobile/Tablet (<xl):** Show `MobileProCarousel` instead
+
+```typescript
+// Conditional carousel based on screen size
+{isDesktop ? (
+  <ShopHeroCarousel onSlideClick={handleSlideClick} />
+) : (
+  <MobileProCarousel />
+)}
+```
+
+---
+
+## Technical Details
+
+### Mobile PRO Carousel Component Structure
 
 ```text
-+----------------------------------+
-|   ╭━━━━━━━━━━━━━━━━━━━━━━━━━━╮   |
-|   ┃ [Animated Gradient Border] ┃   |
-|   ┃   ╭────────────────────╮   ┃   |
-|   ┃   │  [Icon]            │   ┃   |
-|   ┃   │  ოთახები           │   ┃   |
-|   ┃   │  შექმენი სათამაშო  │   ┃   |
-|   ┃   │  ოთახი, აირჩიე...  │   ┃   |
-|   ┃   ╰────────────────────╯   ┃   |
-|   ╰━━━━━━━━━━━━━━━━━━━━━━━━━━╯   |
-|         ● ○ ○  (dot indicators)    |
-+----------------------------------+
+MobileProCarousel
+├── Uses useProPurchase hook for checkout
+├── Uses useVipStatus for current subscription
+├── Swipeable container (touch gestures)
+├── PRO Tier Cards
+│   ├── Solo PRO Card
+│   │   ├── Crown icon
+│   │   ├── Price: ₾9.99/month
+│   │   └── Benefits list
+│   └── სამეგობრო PRO Card
+│       ├── Users icon
+│       ├── "TOP" badge
+│       ├── Price: ₾19.99/month
+│       └── Benefits list
+└── Dot pagination indicators
 ```
 
-### 4. Animation Details
-- **Gradient stroke**: SVG-based animated gradient border using CSS animation (`@keyframes rotate`)
-- **Shadow loop**: Box-shadow with rotating blur using `transform: rotate()` animation
-- **Card transitions**: Framer Motion for smooth slide/fade between cards
-- **Dot pulse**: Active dot has subtle pulse animation
+### Responsive Breakpoints
 
----
+- **xl (1280px+):** Desktop - Show existing hero carousel + right sidebar
+- **< xl:** Mobile/Tablet - Show PRO carousel, hide right sidebar (already hidden)
 
-## Technical Implementation
+### Files Summary
 
-### Files to Create
-
-**1. `src/components/team/FeatureOnboardingCarousel.tsx`**
-New carousel component containing:
-- Array of tooltip data (icon, title, description, targetTab)
-- Auto-rotation with 4-second interval using `useEffect` + `setInterval`
-- Animated gradient border using SVG `linearGradient` with animation
-- Framer Motion for card transitions
-- Navigation to corresponding tab on card click
-- Dot navigation indicators
-
-**2. `src/pages/OnboardingPreview.tsx`**
-Developer preview page showing all tooltips side-by-side:
-- All 3 tooltip cards displayed simultaneously
-- Controls to test animations
-- Useful for design iteration
-
-### Files to Modify
-
-**1. `src/components/team/TabOnboardingTooltips.tsx`**
-- Remove or deprecate this component (replaced by new carousel)
-- Can be deleted or kept for reference
-
-**2. `src/pages/TeamV2.tsx`**
-- Remove `TooltipTriggerButton` (question mark button)
-- Remove `TabOnboardingTooltips` usage from tab bar area
-- Import and use new `FeatureOnboardingCarousel` component
-
-**3. `src/components/team/MyRoomsSection.tsx`**
-- Modify the empty state (lines 165-181)
-- Instead of showing the glitch icon + "აქტიური ოთახი არ გაქვს"
-- Show `FeatureOnboardingCarousel` for first-time users
-- Keep existing empty state for users who have seen onboarding
-
-**4. `src/App.tsx`**
-- Add route for `/onboarding-preview` page (lazy loaded)
-
-### localStorage Keys
-- `mytrivia_feature_onboarding_seen`: Tracks if user completed feature onboarding
-- Existing `mytrivia_tab_tooltips_shown` can be removed or migrated
-
----
-
-## Component Structure
-
-```text
-FeatureOnboardingCarousel
-├── GradientBorderCard (SVG animated border)
-│   ├── QuizCategoryIcon (dynamic icon)
-│   ├── Title text
-│   └── Description text
-├── DotIndicators
-│   └── Animated dots (● ○ ○)
-└── Auto-rotation logic (4s interval)
-```
-
-### Gradient Animation CSS
-```css
-@keyframes rotate-gradient {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.gradient-border {
-  animation: rotate-gradient 3s linear infinite;
-}
-```
-
-### Shadow Animation CSS  
-```css
-@keyframes pulse-shadow {
-  0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5); }
-}
-```
-
----
-
-## User Flow
-
-1. New user signs up and lands on `/team?tab=rooms`
-2. Empty state shows `FeatureOnboardingCarousel` instead of glitch icon
-3. First card appears: "ოთახები" with TV icon
-4. After 4 seconds, auto-transitions to "ჩემი ტრივია" 
-5. After 4 seconds, auto-transitions to "აღმოაჩინე"
-6. Loops back to beginning
-7. User can tap dots to navigate manually
-8. Tapping a card navigates to that tab and marks onboarding as seen
-9. On subsequent visits, empty state shows normal "აქტიური ოთახი არ გაქვს" message
+| File | Action | Description |
+|------|--------|-------------|
+| `src/pages/Index.tsx` | Modify | Fix navigation from `/leaderboards` to `/power-ups` |
+| `src/components/shop/MobileProCarousel.tsx` | Create | New carousel for PRO tiers on mobile |
+| `src/components/shop/ShopStandardLayout.tsx` | Modify | Conditionally render appropriate carousel |
 
 ---
 
 ## Testing Checklist
-- [ ] Tooltips auto-rotate every 4 seconds
-- [ ] Gradient border animation loops smoothly
-- [ ] Shadow pulse animation works
-- [ ] Dot indicators update correctly
-- [ ] Tapping card navigates to correct tab
-- [ ] Onboarding state persists in localStorage
-- [ ] Preview page shows all tooltips
-- [ ] Works on mobile and desktop
+- [ ] Clicking no-ads icon navigates to shop page
+- [ ] Mobile: PRO carousel appears above powers section
+- [ ] Mobile: Can swipe between Solo and Family PRO cards
+- [ ] Mobile: Tapping card initiates Stripe checkout
+- [ ] Tablet: Same behavior as mobile
+- [ ] Desktop: Original hero carousel still shows (no PRO carousel)
+- [ ] Active subscription shows "აქტიური" badge correctly
+
