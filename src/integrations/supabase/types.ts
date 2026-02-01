@@ -3516,6 +3516,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      format_display_name: { Args: { full_name: string }; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       generate_room_code: { Args: never; Returns: string }
       get_category_question_counts: {
