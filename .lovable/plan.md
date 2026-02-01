@@ -1,123 +1,128 @@
 
-# Fix Mobile PRO Carousel Card Design
+# Remove "მოიმატე ძალები" Section & Update "სუპერ ძალები" Icons
 
 ## Overview
-Redesign the `MobileProCarousel` component to add a horizontal header banner with "გახდი PRO" branding, fix card edge styling, and add a mascot character with a crown.
+Two changes needed:
+1. Remove the "მოიმატე ძალები" (Starter Pack) section from the shop
+2. Replace icons in the "სუპერ ძალები" (Super Powers) section with new magical-themed icons
 
 ## Current State
-- Simple centered title with "გახდი PRO" in a small pill
-- Cards have rounded corners but may have clipping issues
-- No mascot character illustration
+- Shop has 7 sections: powers, starter, mega-powers, vip, frames, coins, gems-lari
+- "მოიმატე ძალები" is the "starter" section with 3 bundle items
+- "სუპერ ძალები" is the "mega-powers" section with 3 items using `iconPowersBottle` for all
 
 ## Changes
 
-### 1. Add Mascot Character Image
-Copy the uploaded mascot image (blue character with crown) from user-uploads to the project assets.
+### 1. Remove "მოიმატე ძალები" Section
 
-**Action:** Copy `user-uploads://image-1769988843.png` to `src/assets/pro-mascot.png`
+**File:** `src/hooks/useShopData.tsx`
 
-### 2. Redesign Header Section
-Replace the current simple pill title with a full-width horizontal header banner:
-
-**Layout:**
-```text
-╭────────────────────────────────────────╮
-│  👑 გახდი PRO              [Mascot]   │
-│  ────────────────────────  [Image]    │
-╰────────────────────────────────────────╯
-```
-
-**Styling:**
-- Light background: `bg-gradient-to-r from-purple-100/80 via-pink-50/60 to-purple-100/80`
-- Soft purple shadow underneath (matching reference image)
-- Crown icon on left side of text
-- Mascot character image positioned on the right side
-- Rounded corners: `rounded-2xl`
-
-### 3. Fix Card Edge Styling
-- Ensure rounded corners are consistent (`rounded-2xl` everywhere)
-- Add proper overflow handling
-- Remove any clipping issues with the gradient background
-- Add subtle inner shadow for depth
-
-### 4. Updated Component Structure
+Remove the "starter" section from `SHOP_SECTIONS` array (lines 364-369):
 
 ```text
-MobileProCarousel
-├── Header Banner
-│   ├── Crown icon + "გახდი PRO" text (left)
-│   └── Mascot image (right, 60-80px)
-├── Carousel Container
-│   └── Animated PRO Cards (Solo/Family)
-└── Dot Indicators
+Before: 7 sections [powers, starter, mega-powers, vip, frames, coins, gems-lari]
+After: 6 sections [powers, mega-powers, vip, frames, coins, gems-lari]
 ```
+
+The `STARTER_PACK_ITEMS` array definition can remain in the file (unused) or be removed for cleanup.
 
 ---
 
-## Technical Implementation
+### 2. Add New Icon Assets
 
-### File Changes
+Copy uploaded images to project assets:
 
-**1. Copy asset:**
-- `user-uploads://image-1769988843.png` → `src/assets/pro-mascot.png`
+| Upload | Destination | Usage |
+|--------|-------------|-------|
+| `magic-orb.png` | `src/assets/icons/magic-orb.png` | Small bundle (პატარა) |
+| `magic-portal-1.png` | `src/assets/icons/magic-portal.png` | Medium bundle (საშუალო) |
+| Anvil image | `src/assets/icons/magic-forge.png` | Large bundle (დიდი) |
 
-**2. Update `src/components/shop/MobileProCarousel.tsx`:**
+---
+
+### 3. Update "სუპერ ძალები" Icons
+
+**File:** `src/hooks/useShopData.tsx`
+
+Add new imports and update `MEGA_POWERS_ITEMS`:
 
 ```typescript
 // New imports
-import proMascot from "@/assets/pro-mascot.png";
-import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
+import iconMagicOrb from "@/assets/icons/magic-orb.png";
+import iconMagicPortal from "@/assets/icons/magic-portal.png";
+import iconMagicForge from "@/assets/icons/magic-forge.png";
 
-// Replace title section with horizontal header banner
-<div className="relative mb-4 rounded-2xl overflow-hidden"
-  style={{
-    background: "linear-gradient(135deg, rgba(233,213,255,0.8) 0%, rgba(251,207,232,0.6) 50%, rgba(233,213,255,0.8) 100%)",
-    boxShadow: "0 8px 32px rgba(147,51,234,0.15), 0 4px 16px rgba(168,85,247,0.1)"
-  }}
->
-  <div className="flex items-center justify-between px-4 py-3">
-    {/* Left: Crown + Text */}
-    <div className="flex items-center gap-2">
-      <img src={iconVipCrown} className="w-7 h-7" />
-      <h2 className="text-lg font-bold text-purple-900">გახდი PRO</h2>
-    </div>
-    {/* Right: Mascot */}
-    <img src={proMascot} className="w-16 h-16 object-contain" />
-  </div>
-</div>
+// Updated MEGA_POWERS_ITEMS
+const MEGA_POWERS_ITEMS: ShopItem[] = [
+  {
+    id: "power_bundle_small",
+    name: t("shop.smallPackage"),
+    description: `2x ${t("shop.allPowers")}`,
+    price: 7,
+    currency: "gems",
+    icon: <img src={iconMagicOrb} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    savings: 12,
+  },
+  {
+    id: "mega_power_bundle",
+    name: t("shop.mediumPackage"),
+    description: `5x ${t("shop.allPowers")}`,
+    price: 16,
+    currency: "gems",
+    icon: <img src={iconMagicPortal} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "popular",
+    savings: 20,
+  },
+  {
+    id: "power_bundle_large",
+    name: t("shop.largePackage"),
+    description: `10x ${t("shop.allPowers")}`,
+    price: 28,
+    currency: "gems",
+    icon: <img src={iconMagicForge} alt="" className="w-[50px] h-[50px] object-contain" />,
+    gradient: "transparent",
+    badge: "best-value",
+    savings: 30,
+  },
+];
 ```
-
-**Card styling fixes:**
-- Add `rounded-3xl` to card container
-- Use `overflow-hidden` properly
-- Improve box-shadow for better depth
-- Fix any edge clipping on gradient borders
-
----
-
-## Visual Reference
-
-The header will match the reference images showing:
-- Soft lavender/pink gradient background
-- Purple crown icon on left
-- Bold Georgian text "გახდი PRO"
-- Character mascot (blue character with yellow crown) on the right side
-- Soft purple shadow underneath the banner
 
 ---
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
-| `src/assets/pro-mascot.png` | Create (copy from user upload) |
-| `src/components/shop/MobileProCarousel.tsx` | Modify header and card styling |
+| File | Action | Description |
+|------|--------|-------------|
+| `src/assets/icons/magic-orb.png` | Create | Copy from user upload (crystal ball) |
+| `src/assets/icons/magic-portal.png` | Create | Copy from user upload (portal) |
+| `src/assets/icons/magic-forge.png` | Create | Copy from user upload (anvil with fire) |
+| `src/hooks/useShopData.tsx` | Modify | Remove starter section, update mega-powers icons |
+
+---
+
+## Visual Result
+
+```text
+Shop Sections (After):
+1. ძალები (Powers) - Individual power-ups
+2. სუპერ ძალები (Super Powers) - NEW ICONS
+   - პატარა: Crystal ball orb
+   - საშუალო: Magic portal  
+   - დიდი: Forge with fire
+3. VIP სტატუსი
+4. ჩარჩოები (Frames)
+5. მონეტები (Coins)
+6. ალმასები (Gems)
+
+Removed: "მოიმატე ძალები" section
+```
 
 ---
 
 ## Testing
-- Verify header displays correctly with mascot
-- Check card edges are properly rounded without clipping
-- Test on mobile and tablet viewports
-- Confirm carousel animation still works
-- Verify checkout buttons still function
+- Verify "მოიმატე ძალები" section no longer appears in shop
+- Verify "სუპერ ძალები" section shows new icons correctly
+- Test purchase flow still works for mega power bundles
+- Check icons display properly on mobile and desktop
