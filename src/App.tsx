@@ -46,7 +46,7 @@ const TVLobby = lazy(() => import("./pages/TVLobby"));
 const TVJoin = lazy(() => import("./pages/TVJoin"));
 const VIP = lazy(() => import("./pages/VIP"));
 const Notifications = lazy(() => import("./pages/Notifications"));
-const AdventureMapAdmin = lazy(() => import("./pages/AdventureMapAdmin"));
+
 
 // Settings pages
 const Settings = lazy(() => import("./pages/Settings"));
@@ -117,7 +117,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/loading" element={<Loading />} />
-                <Route path="/adventure-map-admin" element={<AdventureMapAdmin />} />
+                
                 <Route path="/power-ups" element={<PowerUps />} />
                 <Route path="/category/:categoryId" element={<CategoryPage />} />
                 <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
