@@ -329,10 +329,10 @@ export function RoomIconPickerModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-background h-[100dvh] flex flex-col"
         >
-          {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+          {/* Header */}
+          <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/30 pt-[env(safe-area-inset-top)]">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 <button 
@@ -346,8 +346,8 @@ export function RoomIconPickerModal({
             </div>
           </div>
 
-          {/* Sticky Search Section - Below header */}
-          <div className="fixed top-[60px] left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/20">
+          {/* Search Section */}
+          <div className="flex-shrink-0 bg-background/95 backdrop-blur-md border-b border-border/20">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full px-4 py-3 space-y-3">
               {/* Search input */}
               <div className="relative">
@@ -394,8 +394,8 @@ export function RoomIconPickerModal({
             </div>
           </div>
 
-          {/* Scrollable Content - Adjusted padding for sticky search */}
-          <div className="h-full overflow-y-auto pt-[140px] pb-24 safe-top">
+          {/* Scrollable Content */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <div className="p-4 space-y-4">
               {/* Current icon preview with editable name */}
@@ -574,15 +574,15 @@ export function RoomIconPickerModal({
             </div>
           </div>
 
-          {/* Fixed Footer */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-border/30 bg-background safe-bottom">
+          {/* Footer */}
+          <div className="flex-shrink-0 p-4 border-t border-border/30 bg-background pb-[max(1rem,env(safe-area-inset-bottom))]">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full">
               <ChunkyButton
-              onClick={handleConfirmClick}
-              disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
-              className="w-full"
-              variant="success"
-            >
+                onClick={handleConfirmClick}
+                disabled={!selectedIcon || !editableName.trim() || isGeneratingName}
+                className="w-full"
+                variant="success"
+              >
                 <Check className="w-5 h-5 mr-2" />
                 არჩევა
               </ChunkyButton>
