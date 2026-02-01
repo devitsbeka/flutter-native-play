@@ -172,7 +172,7 @@ export function usePlayerFeedItems(
             question: q.question_text || q.question || "",
             correct_answer: q.correct_answer || "",
             incorrect_answers: q.incorrect_answers || [],
-            icon_slug: q.icon_slug,
+            icon_slug: q.icon_slug || q.iconSlug || null,
           })),
           isUserPost: false,
           isPublic: post.is_public ?? true,
