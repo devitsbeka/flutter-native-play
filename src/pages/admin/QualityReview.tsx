@@ -12,7 +12,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Play, 
-  Trash2, 
   ChevronDown, 
   ChevronRight,
   CheckCircle2,
@@ -20,7 +19,9 @@ import {
   XCircle,
   Sparkles,
   FileText,
-  BookOpen
+  BookOpen,
+  Wand2,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +40,18 @@ export default function QualityReview() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'grade' | 'score'>('grade');
 
-  const { reviewing, progress, results, summary, startReview, moveToLibrary, clearResults } = useQuestionQualityReview();
+  const { 
+    reviewing, 
+    resolving,
+    progress, 
+    resolveProgress,
+    results, 
+    summary, 
+    startReview, 
+    moveToLibrary, 
+    resolveQuestions,
+    clearResults 
+  } = useQuestionQualityReview();
 
   // Fetch categories
   const { data: categories } = useQuery({
@@ -67,9 +79,9 @@ export default function QualityReview() {
     return sorted;
   }, [results, sortBy]);
 
-  // Filter C and D grade questions
-  const lowGradeResults = useMemo(() => 
-    results.filter(r => r.grade === 'C' || r.grade === 'D'),
+  // Count C and D grade questions directly from results
+  const lowGradeCount = useMemo(() => 
+    results.filter(r => r.grade === 'C' || r.grade === 'D').length,
     [results]
   );
 
@@ -85,7 +97,11 @@ export default function QualityReview() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(lowGradeResults.map(r => r.id)));
+      // Directly filter from results for C and D grades
+      const cdIds = results
+        .filter(r => r.grade === 'C' || r.grade === 'D')
+        .map(r => r.id);
+      setSelectedIds(new Set(cdIds));
     } else {
       setSelectedIds(new Set());
     }
@@ -116,7 +132,22 @@ export default function QualityReview() {
     setSelectedIds(new Set());
   };
 
+  const handleResolveSelected = () => {
+    resolveQuestions(Array.from(selectedIds));
+  };
+
+  const handleResolveSingle = (id: string) => {
+    resolveQuestions([id]);
+  };
+
+  // Check if all C-D questions are selected
+  const allCDSelected = useMemo(() => {
+    const cdIds = results.filter(r => r.grade === 'C' || r.grade === 'D').map(r => r.id);
+    return cdIds.length > 0 && cdIds.every(id => selectedIds.has(id));
+  }, [results, selectedIds]);
+
   const progressPercent = progress.total > 0 ? (progress.current / progress.total) * 100 : 0;
+  const resolvePercent = resolveProgress.total > 0 ? (resolveProgress.current / resolveProgress.total) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -128,7 +159,7 @@ export default function QualityReview() {
         </div>
         <Button 
           onClick={handleStartReview} 
-          disabled={reviewing}
+          disabled={reviewing || resolving}
           className="gap-2"
         >
           <Play className="h-4 w-4" />
@@ -215,6 +246,29 @@ export default function QualityReview() {
         </Card>
       )}
 
+      {/* Resolve Progress */}
+      {resolving && (
+        <Card className="border-primary/50">
+          <CardContent className="pt-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Resolving questions with AI...
+                </span>
+                <span>{resolveProgress.current} / {resolveProgress.total}</span>
+              </div>
+              <Progress value={resolvePercent} className="h-2" />
+              {resolveProgress.currentQuestion && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {resolveProgress.currentQuestion}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary */}
       {results.length > 0 && (
         <div className="grid grid-cols-4 gap-4">
@@ -242,25 +296,35 @@ export default function QualityReview() {
       {results.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Review Results ({results.length})
               </CardTitle>
-              {lowGradeResults.length > 0 && (
-                <div className="flex items-center gap-3">
+              {lowGradeCount > 0 && (
+                <div className="flex items-center gap-3 flex-wrap">
                   <label className="flex items-center gap-2 text-sm">
                     <Checkbox 
-                      checked={selectedIds.size === lowGradeResults.length && lowGradeResults.length > 0}
+                      checked={allCDSelected}
                       onCheckedChange={handleSelectAll}
                     />
-                    Select all C-D ({lowGradeResults.length})
+                    Select all C-D ({lowGradeCount})
                   </label>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleResolveSelected}
+                    disabled={selectedIds.size === 0 || resolving}
+                    className="gap-2"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    Resolve Selected ({selectedIds.size})
+                  </Button>
                   <Button 
                     variant="destructive" 
                     size="sm"
                     onClick={handleMoveToLibrary}
-                    disabled={selectedIds.size === 0}
+                    disabled={selectedIds.size === 0 || resolving}
                     className="gap-2"
                   >
                     <BookOpen className="h-4 w-4" />
@@ -279,8 +343,10 @@ export default function QualityReview() {
                     result={result}
                     isExpanded={expandedIds.has(result.id)}
                     isSelected={selectedIds.has(result.id)}
+                    isResolving={resolving}
                     onToggleExpand={() => toggleExpanded(result.id)}
                     onToggleSelect={(checked) => handleSelectOne(result.id, checked)}
+                    onResolve={() => handleResolveSingle(result.id)}
                   />
                 ))}
               </div>
@@ -306,14 +372,25 @@ interface QuestionResultCardProps {
   result: ReviewResult;
   isExpanded: boolean;
   isSelected: boolean;
+  isResolving: boolean;
   onToggleExpand: () => void;
   onToggleSelect: (checked: boolean) => void;
+  onResolve: () => void;
 }
 
-function QuestionResultCard({ result, isExpanded, isSelected, onToggleExpand, onToggleSelect }: QuestionResultCardProps) {
+function QuestionResultCard({ 
+  result, 
+  isExpanded, 
+  isSelected, 
+  isResolving,
+  onToggleExpand, 
+  onToggleSelect,
+  onResolve 
+}: QuestionResultCardProps) {
   const config = gradeConfig[result.grade];
   const Icon = config.icon;
   const showCheckbox = result.grade === 'C' || result.grade === 'D';
+  const showResolve = result.grade === 'C' || result.grade === 'D';
 
   return (
     <div className={cn(
@@ -345,10 +422,27 @@ function QuestionResultCard({ result, isExpanded, isSelected, onToggleExpand, on
                 </div>
               </div>
 
-              <Badge variant="outline" className={cn("shrink-0 gap-1", config.color)}>
-                <Icon className="h-3 w-3" />
-                {result.grade} ({result.overall_score}%)
-              </Badge>
+              <div className="flex items-center gap-2 shrink-0">
+                {showResolve && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onResolve();
+                    }}
+                    disabled={isResolving}
+                    className="gap-1 h-7 px-2"
+                  >
+                    <Wand2 className="h-3 w-3" />
+                    Fix
+                  </Button>
+                )}
+                <Badge variant="outline" className={cn("gap-1", config.color)}>
+                  <Icon className="h-3 w-3" />
+                  {result.grade} ({result.overall_score}%)
+                </Badge>
+              </div>
             </div>
           </CollapsibleTrigger>
 
