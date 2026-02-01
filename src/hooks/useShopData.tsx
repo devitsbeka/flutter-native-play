@@ -13,6 +13,9 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
 import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
 import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
+import iconMagicOrb from "@/assets/icons/magic-orb.png";
+import iconMagicPortal from "@/assets/icons/magic-portal.png";
+import iconMagicForge from "@/assets/icons/magic-forge.png";
 
 export interface ShopItem {
   id: string;
@@ -111,7 +114,7 @@ export function useShopData() {
         description: `2x ${t("shop.allPowers")}`,
         price: 7,  // 8 powers worth 8 gems, sell for 7 = 12% discount
         currency: "gems",
-        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconMagicOrb} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         savings: 12,
       },
@@ -121,7 +124,7 @@ export function useShopData() {
         description: `5x ${t("shop.allPowers")}`,
         price: 16,  // 20 powers worth 20 gems, sell for 16 = 20% discount
         currency: "gems",
-        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconMagicPortal} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "popular",
         savings: 20,
@@ -132,7 +135,7 @@ export function useShopData() {
         description: `10x ${t("shop.allPowers")}`,
         price: 28,  // 40 powers worth 40 gems, sell for 28 = 30% discount
         currency: "gems",
-        icon: <img src={iconPowersBottle} alt="" className="w-[50px] h-[50px] object-contain" />,
+        icon: <img src={iconMagicForge} alt="" className="w-[50px] h-[50px] object-contain" />,
         gradient: "transparent",
         badge: "best-value",
         savings: 30,
@@ -359,13 +362,6 @@ export function useShopData() {
         description: t("shop.advantage"),
         videoSrc: "/videos/powers.mp4",
         items: POWERS_ITEMS,
-      },
-      {
-        id: "starter",
-        title: t("shop.starterPack"),
-        description: t("shop.forBeginners"),
-        videoSrc: "/videos/starter.mp4",
-        items: STARTER_PACK_ITEMS,
       },
       {
         id: "mega-powers",
