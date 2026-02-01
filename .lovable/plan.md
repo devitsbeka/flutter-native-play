@@ -1,77 +1,146 @@
 
-## Fix Room Icon Picker Modal Scrolling Issue
+## Multiplayer Round Transition Bug Analysis & Fix Plan
 
-### Problem Analysis
-The Room Icon Picker modal has a non-scrollable, stuck layout on mobile devices. Looking at the screenshot, the user is on the icon/name change screen and content is cut off.
+### The Problem
 
-**Root Cause:**
-The modal uses hardcoded pixel values for positioning that don't account for:
-1. Safe area insets on notched devices (iPhone, Android with cutouts)
-2. Variable height of the search section (changes when category filters are shown/hidden)
-3. The gap between fixed headers and scrollable content
-
-**Current Layout Issues:**
-- Header: `fixed top-0` with `safe-top` class (which has no effect - not defined in CSS)
-- Search section: `fixed top-[60px]` - hardcoded, doesn't account for safe area
-- Content: `pt-[140px]` - hardcoded, doesn't match actual header+search height
-- When category filters are visible, search section is ~112px tall, but content only accounts for 140px total (header 60px + ~80px), leaving ~32px overlap
+When the host finishes playing quickly and starts a new round with a new category, the guest (non-host):
+1. Sees the **first round's questions again** instead of the new category
+2. Has the **same score from before** (not reset)
+3. Match history shows **duplicate entries with identical scores**
 
 ---
 
-### Solution
+### Root Causes Identified
 
-Restructure the modal to use a flexbox-based layout instead of fixed positioning with hardcoded pixel values. This approach is used successfully in other components like `QuestionScreen.tsx` and `MultiplayerGameScreenV2.tsx`.
+#### Bug 1: Missing `game_id` Update in `startNewRound`
 
----
+**Location:** `src/contexts/MultiplayerContextV2.tsx` lines 1356-1362
 
-### Technical Implementation
+When reusing custom questions in `startNewRound`, the code updates `shuffled_answers` but **does NOT update `game_id`**:
 
-**File: `src/components/team/RoomIconPickerModal.tsx`**
-
-Change from this structure:
-```text
-fixed inset-0 (container)
-  ├── fixed top-0 (header)
-  ├── fixed top-[60px] (search section)
-  ├── pt-[140px] overflow-y-auto (content)
-  └── fixed bottom-0 (footer)
+```typescript
+// Current code (BROKEN):
+await Promise.all(questions.map((q, index) => 
+  supabase.from("room_questions")
+    .update({ shuffled_answers: q.allAnswers }) // Missing game_id!
+    .eq("room_id", roomId)
+    .eq("question_index", index)
+));
 ```
 
-To this structure:
-```text
-fixed inset-0 h-[100dvh] flex flex-col (container)
-  ├── flex-shrink-0 pt-[env(safe-area-inset-top)] (header)
-  ├── flex-shrink-0 (search section)
-  ├── flex-1 overflow-y-auto (content)
-  └── flex-shrink-0 pb-[env(safe-area-inset-bottom)] (footer)
+The non-host's validation logic checks `game_id === expectedGameId`, so it **fails validation** and falls back to using stale questions.
+
+---
+
+#### Bug 2: Only Resets Caller's Score (Not All Participants)
+
+**Location:** `src/contexts/MultiplayerContextV2.tsx` lines 1367-1372
+
+```typescript
+// Current code (BROKEN):
+await supabase
+  .from("room_participants")
+  .update({ score: 0, current_question: 0, status: "playing" })
+  .eq("room_id", roomId)
+  .eq("user_id", user.id); // Only resets caller!
 ```
 
-**Key Changes:**
-
-1. **Container**: Add `h-[100dvh] flex flex-col` to the main container
-
-2. **Header**: Change from `fixed top-0` to `flex-shrink-0` with proper safe area padding using `pt-[env(safe-area-inset-top)]`
-
-3. **Search Section**: Change from `fixed top-[60px]` to `flex-shrink-0` - it naturally flows after the header
-
-4. **Scrollable Content**: Change from `h-full overflow-y-auto pt-[140px]` to `flex-1 overflow-y-auto min-h-0` - the flex-1 takes remaining space, min-h-0 ensures proper overflow
-
-5. **Footer**: Change from `fixed bottom-0` to `flex-shrink-0` with `pb-[env(safe-area-inset-bottom)]` for safe area
+This should reset **ALL participants** in the room, not just the caller. This is why beka's score stayed at 844/408 across multiple games.
 
 ---
 
-### Benefits
+#### Bug 3: Race Condition in Non-Host Question Fetching
 
-- Content will be fully scrollable
-- Safe areas properly respected on all devices
-- No hardcoded pixel calculations
-- Layout adapts when category filters show/hide
-- Keyboard-friendly when editing room name
+**Location:** `src/contexts/MultiplayerContextV2.tsx` lines 311-360
+
+When the host starts a new game rapidly (finishing before non-host), the non-host's realtime subscription triggers but:
+1. The initial 500ms delay may not be enough
+2. The old `room_questions` may still be present if they weren't deleted (custom trivia path)
+3. Fallback validation uses unvalidated stale questions
 
 ---
 
-### Affected Files
+### Fix Strategy
 
-| File | Change |
-|------|--------|
-| `src/components/team/RoomIconPickerModal.tsx` | Restructure layout from fixed positioning to flexbox |
+#### Fix 1: Add `game_id` to the shuffled_answers update
+
+```typescript
+// FIXED:
+await Promise.all(questions.map((q, index) => 
+  supabase.from("room_questions")
+    .update({ 
+      shuffled_answers: q.allAnswers,
+      game_id: game?.id, // CRITICAL: Update game_id for validation
+    })
+    .eq("room_id", roomId)
+    .eq("question_index", index)
+));
+```
+
+---
+
+#### Fix 2: Reset ALL Participants' Scores
+
+```typescript
+// FIXED:
+await supabase
+  .from("room_participants")
+  .update({ score: 0, current_question: 0, status: "playing" })
+  .eq("room_id", roomId); // Remove user_id filter - reset ALL
+```
+
+---
+
+#### Fix 3: Clear Stale Questions for Custom Trivia Path
+
+Before reusing custom questions, explicitly delete and re-insert them with the new `game_id` to ensure the non-host's validation works:
+
+```typescript
+// Delete old questions
+await supabase.from("room_questions").delete().eq("room_id", roomId);
+
+// Re-insert with new game_id
+await Promise.all(questions.map((q, index) => 
+  supabase.from("room_questions").insert({
+    room_id: roomId,
+    question_index: index,
+    question_text: q.question,
+    correct_answer: q.correctAnswer,
+    incorrect_answers: q.incorrectAnswers,
+    shuffled_answers: q.allAnswers,
+    difficulty: q.difficulty,
+    icon_slug: q.iconSlug || null,
+    game_id: game?.id,
+  })
+));
+```
+
+---
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/contexts/MultiplayerContextV2.tsx` | Fix `startNewRound` function (3 fixes) |
+
+---
+
+### Technical Details
+
+**File: `src/contexts/MultiplayerContextV2.tsx`**
+
+**Change 1:** Lines 1356-1362 - Add `game_id` to update query
+
+**Change 2:** Lines 1367-1372 - Reset ALL participants, not just caller
+
+**Change 3:** Lines 1330-1414 - Restructure custom trivia path to delete/re-insert questions with new `game_id` instead of just updating `shuffled_answers`
+
+---
+
+### Expected Outcome
+
+After these fixes:
+- Non-host players will correctly see new questions when host starts a new round
+- All participant scores will be reset to 0 at the start of each round
+- Match history will show accurate scores for each game
+- The `game_id` validation in the non-host subscription will work correctly
