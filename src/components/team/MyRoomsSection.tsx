@@ -20,6 +20,7 @@ import glitchIcon from "@/assets/glitch.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
+import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -45,6 +46,7 @@ interface MyRoomsSectionProps {
   filter?: RoomFilter;
   sort?: RoomSort;
   searchQuery?: string;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export function MyRoomsSection({ 
@@ -54,7 +56,8 @@ export function MyRoomsSection({
   vertical = false,
   filter = "all",
   sort = "recent",
-  searchQuery = ""
+  searchQuery = "",
+  onNavigateToTab
 }: MyRoomsSectionProps) {
   const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, sort, searchQuery });
   const { enterRoom } = useMultiplayerV2();
@@ -151,10 +154,16 @@ export function MyRoomsSection({
     enterRoom(room.room_code);
   };
 
+  // Check if user has seen feature onboarding
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => hasSeenFeatureOnboarding());
+
   if (loading) {
     // Reserve space to prevent layout jump
     return <div className="min-h-[200px]" />;
   }
+
+  // Show feature onboarding carousel for new users with no rooms
+  const showOnboardingCarousel = rooms.length === 0 && activeFilter === "all" && !hasSeenOnboarding;
 
   return (
     <div>
@@ -163,22 +172,35 @@ export function MyRoomsSection({
 
       {/* Rooms List */}
       {rooms.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mx-4 flex flex-col items-center py-8 rounded-2xl bg-card border border-border"
-        >
-          <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3">
-            <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
-          </div>
-          <p className="text-muted-foreground text-sm text-center">
-            {activeFilter === "my_rooms" && "შენ ჯერ ოთახი არ შეგიქმნია"}
-            {activeFilter === "friends_rooms" && "მეგობრებს ოთახები არ აქვთ"}
-            {activeFilter === "active" && "აქტიური ოთახები არ არის"}
-            {activeFilter === "completed" && "დასრულებული ოთახები არ არის"}
-            {activeFilter === "all" && t('team.noActiveRooms')}
-          </p>
-        </motion.div>
+        showOnboardingCarousel ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mx-4"
+          >
+            <FeatureOnboardingCarousel 
+              onNavigateToTab={onNavigateToTab}
+              onComplete={() => setHasSeenOnboarding(true)}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mx-4 flex flex-col items-center py-8 rounded-2xl bg-card border border-border"
+          >
+            <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3">
+              <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+            </div>
+            <p className="text-muted-foreground text-sm text-center">
+              {activeFilter === "my_rooms" && "შენ ჯერ ოთახი არ შეგიქმნია"}
+              {activeFilter === "friends_rooms" && "მეგობრებს ოთახები არ აქვთ"}
+              {activeFilter === "active" && "აქტიური ოთახები არ არის"}
+              {activeFilter === "completed" && "დასრულებული ოთახები არ არის"}
+              {activeFilter === "all" && t('team.noActiveRooms')}
+            </p>
+          </motion.div>
+        )
       ) : vertical ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pb-4 w-full max-w-full">
           {rooms.map((room, index) => (
