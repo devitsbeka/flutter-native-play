@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellOff, ChevronDown, Trash2, X, Gamepad2, Users, Sparkles } from 'lucide-react';
@@ -64,14 +64,26 @@ export default function Notifications() {
     ).length;
   };
 
-  // Mark all as read when page loads
-  useEffect(() => {
-    // unreadCount can be 0 on first mount while notifications are still loading.
-    // Re-run when unreadCount changes so unread badge doesn't get stuck.
-    if (unreadCount > 0 && !loading) {
-      markAllAsRead();
+  // Mark only current tab's notifications as read
+  const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
+    const unreadInTab = notifications.filter(n => 
+      TAB_TYPES[tab].includes(n.type) && !n.read_at
+    );
+    
+    for (const notification of unreadInTab) {
+      await markAsRead(notification.id);
     }
-  }, [unreadCount, loading, markAllAsRead]);
+  }, [notifications, markAsRead]);
+
+  // Mark notifications as read when switching to a tab (with delay so user sees badge first)
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => {
+        markTabAsRead(activeTab);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, loading, markTabAsRead]);
 
   const displayedNotifications = filteredNotifications.slice(0, displayLimit);
   const hasMore = filteredNotifications.length > displayLimit;

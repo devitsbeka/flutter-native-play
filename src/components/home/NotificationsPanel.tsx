@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff, Gamepad2, Users, Sparkles } from 'lucide-react';
@@ -62,12 +62,27 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     ).length;
   };
 
-  // Mark all as read when panel opens
-  useEffect(() => {
-    if (isOpen && unreadCount > 0 && !loading) {
-      markAllAsRead();
+  // Mark only current tab's notifications as read
+  const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
+    const unreadInTab = notifications.filter(n => 
+      TAB_TYPES[tab].includes(n.type) && !n.read_at
+    );
+    
+    // Mark each unread notification in this tab as read
+    for (const notification of unreadInTab) {
+      await markAsRead(notification.id);
     }
-  }, [isOpen, unreadCount, loading, markAllAsRead]);
+  }, [notifications, markAsRead]);
+
+  // Mark notifications as read when switching to a tab (with delay so user sees badge first)
+  useEffect(() => {
+    if (isOpen && !loading) {
+      const timer = setTimeout(() => {
+        markTabAsRead(activeTab);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, activeTab, loading, markTabAsRead]);
 
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
   const hasTabContent = filteredNotifications.length > 0;
