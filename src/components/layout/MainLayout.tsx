@@ -9,6 +9,7 @@ interface MainLayoutProps {
   maxPlays?: number;
   canPlay?: boolean;
   isVip?: boolean;
+  isGuest?: boolean;
   showPlayButton?: boolean;
   showBottomNav?: boolean;
   className?: string;
@@ -22,6 +23,7 @@ export function MainLayout({
   maxPlays,
   canPlay,
   isVip,
+  isGuest = false,
   showPlayButton = true,
   showBottomNav = true,
   className = "",
@@ -60,6 +62,7 @@ export function MainLayout({
             maxPlays={maxPlays}
             canPlay={canPlay}
             isVip={isVip}
+            isGuest={isGuest}
           />
         </div>
       )}
