@@ -248,39 +248,49 @@ export function UnifiedDesktopNav({
 
         </div>
 
-        {/* Promo Card - Desktop only */}
-        <div className="hidden lg:block px-3 mt-auto mb-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-2xl p-4 relative overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg, rgba(147, 51, 234, 0.08) 0%, rgba(79, 70, 229, 0.08) 100%)",
-              border: "1px solid rgba(147, 51, 234, 0.15)",
-            }}
-          >
-            {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-primary/10 blur-xl" />
-            <div className="absolute -bottom-2 -left-2 w-12 h-12 rounded-full bg-indigo-500/10 blur-lg" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🎮</span>
-                <span className="text-2xl">📺</span>
+        {/* Promo Card - Desktop only, guests only */}
+        {!profile && (
+          <div className="hidden lg:block px-3 mt-auto mb-4">
+            <motion.button
+              onClick={() => navigate("/auth")}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full rounded-2xl p-4 relative overflow-hidden text-left cursor-pointer"
+              style={{
+                background: "linear-gradient(135deg, rgba(147, 51, 234, 0.08) 0%, rgba(79, 70, 229, 0.08) 100%)",
+                border: "1px solid rgba(147, 51, 234, 0.15)",
+              }}
+            >
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-primary/10 blur-xl" />
+              <div className="absolute -bottom-2 -left-2 w-12 h-12 rounded-full bg-indigo-500/10 blur-lg" />
+              
+              <div className="relative z-10">
+                <h3 className="font-bold text-foreground text-sm mb-1">
+                  გაერთე მეგობრებთან ერთად
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                  ითამაშე ტრივია აპლიკაციაში ან TV-ზე!
+                </p>
+                <div 
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-primary-foreground"
+                  style={{
+                    background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.9) 100%)",
+                    boxShadow: "0 2px 0 hsl(var(--primary)/0.3), 0 2px 8px hsl(var(--primary)/0.2)",
+                  }}
+                >
+                  რეგისტრაცია
+                </div>
               </div>
-              <h3 className="font-bold text-foreground text-sm mb-1">
-                გაერთე მეგობრებთან ერთად
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                ითამაშე ტრივია აპლიკაციაში ან TV-ზე!
-              </p>
-            </div>
-          </motion.div>
-        </div>
+            </motion.button>
+          </div>
+        )}
 
         {/* Bottom Section - Language selector and More menu */}
-        <div className="px-2 lg:px-3 space-y-1">
+        <div className={`px-2 lg:px-3 space-y-1 ${profile ? 'mt-auto' : ''}`}>
           {/* Language Selector */}
           <motion.button
             onClick={() => setIsLanguageModalOpen(true)}
