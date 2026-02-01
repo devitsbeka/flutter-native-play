@@ -180,3 +180,6 @@ verify_jwt = true
 # --- QUALITY REVIEW ---
 [functions.review-question-quality]
 verify_jwt = true
+
+[functions.resolve-question-quality]
+verify_jwt = true
