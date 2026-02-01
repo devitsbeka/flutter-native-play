@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
 import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
@@ -105,10 +105,43 @@ const initialState: GameState = {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
+const SESSION_TIMEOUT_MS = 3 * 60 * 60 * 1000; // 3 hours
+
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const { fetchQuestions, loading, preparationProgress, resetAskedQuestions } = useTrivia();
+  const sessionStartTimeRef = useRef<number | null>(null);
+
+  // Track session start and check for 3-hour timeout
+  useEffect(() => {
+    const activePhases: GamePhase[] = ["matchmaking", "preparing", "vs-screen", "playing", "question-result"];
+    
+    if (activePhases.includes(state.phase)) {
+      // Start tracking if not already
+      if (sessionStartTimeRef.current === null) {
+        sessionStartTimeRef.current = Date.now();
+      }
+      
+      // Check timeout every minute
+      const checkTimeout = () => {
+        if (sessionStartTimeRef.current && Date.now() - sessionStartTimeRef.current >= SESSION_TIMEOUT_MS) {
+          console.log("Game session expired after 3 hours, resetting to lobby");
+          sessionStartTimeRef.current = null;
+          setState(initialState);
+          resetAskedQuestions();
+        }
+      };
+      
+      const intervalId = setInterval(checkTimeout, 60000); // Check every minute
+      checkTimeout(); // Also check immediately
+      
+      return () => clearInterval(intervalId);
+    } else {
+      // Reset timer when not in active game phases
+      sessionStartTimeRef.current = null;
+    }
+  }, [state.phase, resetAskedQuestions]);
 
   const startMatchmaking = useCallback(async (categoryId?: string) => {
     setState(prev => ({ ...prev, phase: "matchmaking" }));
