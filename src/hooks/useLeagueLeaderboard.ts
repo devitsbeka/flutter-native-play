@@ -123,9 +123,9 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
     queryKey: ["leagueLeaderboard", activeTier, region],
     queryFn: () => fetchLeaderboardFast(activeTier, region),
     enabled: true,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes - instant navigation
-    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
-    refetchOnMount: false,
+    staleTime: 60 * 1000, // Cache for 1 minute - more responsive to changes
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    refetchOnMount: true, // Refetch when navigating back
     refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData, // Show previous data while loading
   });
