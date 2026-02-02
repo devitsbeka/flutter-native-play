@@ -1,57 +1,126 @@
 
-# Plan: Fix Admin Pages Accessibility
+# Plan: Add Power-Ups Summary Next to "ძალები" Section Title
 
-## Problem
+## Overview
 
-Admin pages return 404 because of this condition in `App.tsx`:
-
-```typescript
-const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN === 'true';
-```
-
-Since `VITE_INCLUDE_ADMIN` is not set in the development/preview environment, it defaults to `undefined`, making `INCLUDE_ADMIN = false`, which causes all admin routes to be `null`.
+Add a compact power-ups summary display showing each power-up type with its icon and count next to the "ძალები" (Powers) section title on the shop page, similar to how coins and gems are displayed in the header.
 
 ---
 
-## Solution
+## Visual Design
 
-Change the logic to **include admin by default** and only **exclude when explicitly set to 'false'**. This matches the intended behavior:
-- Development/Preview: Admin accessible
-- Production (main app): Explicitly exclude admin via build flag
-- Admin-only project: Include admin
+**Current:**
+```
+ძალები
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ 50/50   │ │ გაყინვა │ │ შეცვლა │
+└─────────┘ └─────────┘ └─────────┘
+```
+
+**After:**
+```
+ძალები   [🔴 2] [❄️ 1] [🔄 1] [⏰ 1]
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│ 50/50   │ │ გაყინვა │ │ შეცვლა │
+└─────────┘ └─────────┘ └─────────┘
+```
+
+The summary will use small rounded chips with the power-up icon and count, styled similarly to the header currency display.
 
 ---
 
 ## Technical Changes
 
-### File: `src/App.tsx`
+### File 1: Create `src/components/shop/PowerUpsSummary.tsx` (NEW)
 
-**Line 22** - Change from opt-in to opt-out:
+A compact inline component to display all 4 power-up types with their counts.
 
 ```typescript
-// Before (admin excluded unless explicitly enabled):
-const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN === 'true';
+// Component structure:
+// - Uses useUserPowerUps hook for counts
+// - Displays 4 chips in a horizontal row
+// - Each chip: icon (16x16) + count
+// - Small, unobtrusive styling matching header currency style
+```
 
-// After (admin included unless explicitly disabled):
-const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN !== 'false';
+**Key elements:**
+- Import power-up icons from `@/assets/powers/`
+- Use `useUserPowerUps` hook to get current counts
+- Compact chip design: `w-6 h-6` icon container + count text
+- Horizontal flex layout with small gap
+
+---
+
+### File 2: Modify `src/components/shop/ShopProductGrid.tsx`
+
+Update the section header to conditionally show the power-ups summary for the "powers" section.
+
+**Changes:**
+1. Accept optional `sectionId` prop
+2. Import and render `PowerUpsSummary` when `sectionId === "powers"`
+3. Update header layout to accommodate inline summary
+
+```typescript
+// Line 35-39 - Update section header:
+<div className="px-[15px] mb-3">
+  <div className="flex items-center gap-3">
+    <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
+      {title}
+    </h2>
+    {sectionId === "powers" && <PowerUpsSummary />}
+  </div>
+</div>
 ```
 
 ---
 
-## Logic Comparison
+### File 3: Modify `src/components/shop/ShopStandardLayout.tsx`
 
-| Environment Variable | Before (opt-in) | After (opt-out) |
-|---------------------|-----------------|-----------------|
-| Not set / undefined | `false` (404) | `true` (works) |
-| `'true'` | `true` (works) | `true` (works) |
-| `'false'` | `false` (excluded) | `false` (excluded) |
+Pass the `sectionId` prop to `ShopProductGrid`:
+
+```typescript
+// Line 82-90 - Add sectionId prop:
+<ShopProductGrid
+  sectionId={section.id}  // NEW
+  title={section.title}
+  items={section.items}
+  gems={gems}
+  ...
+/>
+```
 
 ---
 
-## Impact
+## Component Design: PowerUpsSummary
 
-- **Preview/Development**: Admin routes will work immediately without needing to set any environment variable
-- **Production builds**: Can explicitly set `VITE_INCLUDE_ADMIN=false` to exclude admin code from the bundle
-- **Admin project**: Works as before (can optionally set `VITE_INCLUDE_ADMIN=true` for clarity)
+```typescript
+// Icon order: 5050, freeze, replace, time-drain
+// Style: Similar to header currency chips
 
-This is a single-line change that restores admin accessibility while preserving the ability to exclude it from production builds.
+const powerTypes = ["5050", "freeze", "replace", "time-drain"];
+
+// Each chip:
+<div className="flex items-center gap-1">
+  <img src={icon} className="w-4 h-4" />
+  <span className="text-xs font-bold">{count}</span>
+</div>
+```
+
+**Styling approach:**
+- Small rounded container (similar to header currency display)
+- Icon size: 16x16 pixels
+- Count text: `text-xs font-bold`
+- Gap between chips: `gap-2`
+- Optional: subtle background/border for visibility
+
+---
+
+## Summary
+
+| File | Action |
+|------|--------|
+| `src/components/shop/PowerUpsSummary.tsx` | CREATE - New compact power-ups display component |
+| `src/components/shop/ShopProductGrid.tsx` | EDIT - Add sectionId prop, render summary for powers section |
+| `src/components/shop/ShopStandardLayout.tsx` | EDIT - Pass sectionId to ShopProductGrid |
+
+This adds a quick-glance view of the user's current power-up inventory right where they're shopping for more, helping them make informed purchase decisions.
