@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, Grid3X3, Users, Trophy, Zap, Globe } from 'lucide-react';
 import splashBackground from '@/assets/loading-bg.png';
-import myTriviaLogo from '@/assets/mytrivia-live-logo.png';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 
 const FEATURES = [
   { icon: Tv, text: "TV რეჟიმი მეგობრებთან ერთად სათამაშოდ" },
@@ -65,13 +65,9 @@ export default function Loading() {
             }}
           >
             {/* MyTrivia LIVE Logo */}
-            <img 
-              src={myTriviaLogo} 
-              alt="MyTrivia LIVE" 
-              className="h-12 md:h-16 w-auto"
-              style={{
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4)) drop-shadow(0 8px 24px rgba(0,0,0,0.3))',
-              }}
+            <MyTriviaLiveLogo 
+              size="lg" 
+              textColor="light"
             />
           </motion.div>
         </motion.div>

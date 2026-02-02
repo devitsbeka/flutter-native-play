@@ -1,23 +1,40 @@
-import myTriviaLogo from "@/assets/mytrivia-live-logo.png";
+import { LiveBadge } from "@/components/social/LiveBadge";
 
 interface MyTriviaLiveLogoProps {
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
+  textColor?: "light" | "dark";
   className?: string;
 }
 
-export function MyTriviaLiveLogo({ size = "md", className = "" }: MyTriviaLiveLogoProps) {
-  const heights = {
-    sm: 28,
-    md: 36,
-    lg: 56,
-  };
+const sizeConfig = {
+  sm: { fontSize: 20, badgeSize: "sm" as const },
+  md: { fontSize: 28, badgeSize: "md" as const },
+  lg: { fontSize: 40, badgeSize: "lg" as const },
+  xl: { fontSize: 48, badgeSize: "xl" as const },
+};
+
+export function MyTriviaLiveLogo({ 
+  size = "md", 
+  textColor = "dark",
+  className = "" 
+}: MyTriviaLiveLogoProps) {
+  const config = sizeConfig[size];
+  const colorClass = textColor === "light" ? "text-white" : "text-black";
 
   return (
-    <img 
-      src={myTriviaLogo} 
-      alt="MyTrivia LIVE" 
-      className={className}
-      style={{ height: heights[size], width: 'auto' }}
-    />
+    <div className={`flex items-center gap-1.5 ${className}`}>
+      <span 
+        className={`font-slackey ${colorClass} leading-none`}
+        style={{ 
+          fontSize: config.fontSize,
+          textShadow: textColor === "light" 
+            ? '0 2px 4px rgba(0,0,0,0.3)' 
+            : 'none',
+        }}
+      >
+        MyTrivia
+      </span>
+      <LiveBadge size={config.badgeSize} />
+    </div>
   );
 }
