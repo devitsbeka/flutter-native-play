@@ -431,9 +431,9 @@ export default function Index() {
             </div>
             
             {/* Center: Logo + Spotlight */}
-            <div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
+            <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
               {/* Logo - sm on mobile/tablet, md on desktop - single line always */}
-              <div className="flex-shrink-0">
+              <div className="shrink-0" style={{ minWidth: 'max-content' }}>
                 <MyTriviaLiveLogo size="sm" className="md:hidden" />
                 <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
                 <MyTriviaLiveLogo size="md" className="hidden lg:block" />
