@@ -1,114 +1,36 @@
 
-# Show Unread Badges on Notification Tabs
 
-## Overview
-Change the notification panel behavior so that unread badges remain visible on tabs when the panel opens. Currently, all notifications are marked as read immediately when opening the panel, which prevents users from seeing which category (Games/Social/Trivia) has new notifications.
+# Fix "დიდი" Bundle Icon - Replace Screenshot with Magic Forge
 
-## Current Behavior
-- When panel opens → `markAllAsRead()` is called immediately
-- All unread badges disappear instantly
-- User cannot tell which tab has new content
+## Issue
+The "დიდი" (Large) bundle in the "სუპერ ძალები" section is showing a screenshot instead of the proper magic forge icon (anvil with fire).
 
-## Desired Behavior
-- When panel opens → Show unread counts on each tab
-- When user switches to a tab → Mark only those notifications as read
-- User can see "მეგობრები has 2 new" vs "ტრივია has 5 new" etc.
+## Root Cause
+The wrong image was copied to `src/assets/icons/magic-forge.png` earlier. It currently shows a screenshot of the shop UI instead of the intended forge icon.
 
-## Technical Changes
+## Solution
 
-### File: `src/components/home/NotificationsPanel.tsx`
+### Replace Asset
 
-**1. Remove immediate `markAllAsRead()` on panel open**
+Copy the correct magic forge icon from user uploads:
 
-Remove lines 65-70:
-```typescript
-// ❌ REMOVE this useEffect
-useEffect(() => {
-  if (isOpen && unreadCount > 0 && !loading) {
-    markAllAsRead();
-  }
-}, [isOpen, unreadCount, loading, markAllAsRead]);
-```
+| Source | Destination |
+|--------|-------------|
+| `user-uploads://magic-forge.png` (anvil with fire) | `src/assets/icons/magic-forge.png` |
 
-**2. Add new function to mark only current tab's notifications as read**
-
-```typescript
-// ✅ ADD new function
-const markTabAsRead = useCallback(async (tab: 'games' | 'social' | 'trivia') => {
-  const unreadInTab = notifications.filter(n => 
-    TAB_TYPES[tab].includes(n.type) && !n.read_at
-  );
-  
-  // Mark each unread notification in this tab as read
-  for (const notification of unreadInTab) {
-    await markAsRead(notification.id);
-  }
-}, [notifications, markAsRead]);
-```
-
-**3. Call `markTabAsRead` when tab changes**
-
-Add useEffect to mark current tab's notifications as read when tab is switched:
-```typescript
-// ✅ ADD - Mark notifications as read when switching to a tab
-useEffect(() => {
-  if (isOpen && !loading) {
-    // Small delay to let user see the badge before it disappears
-    const timer = setTimeout(() => {
-      markTabAsRead(activeTab);
-    }, 500);
-    return () => clearTimeout(timer);
-  }
-}, [isOpen, activeTab, loading, markTabAsRead]);
-```
+This will overwrite the incorrect screenshot with the proper icon.
 
 ---
 
-### File: `src/pages/Notifications.tsx`
+## Files Summary
 
-Apply the same pattern to the full notifications page:
-
-**1. Remove immediate `markAllAsRead()` on page load (lines 67-74)**
-
-**2. Add `markTabAsRead` function (same as panel)**
-
-**3. Add useEffect to mark current tab as read when switching**
-
----
-
-## Summary of Changes
-
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/components/home/NotificationsPanel.tsx` | Remove auto `markAllAsRead`, add per-tab read marking |
-| `src/pages/Notifications.tsx` | Same changes for consistency |
+| `src/assets/icons/magic-forge.png` | Replace with correct anvil/forge icon |
+
+---
 
 ## Visual Result
 
-```text
-Opening panel with unread notifications:
+The "დიდი" (Large) bundle will show the anvil with blue fire icon instead of the screenshot, matching the other magical-themed icons in the section.
 
-╭─────────────────────────────────────╮
-│  🔔 აქტივობა                    ✕  │
-├─────────────────────────────────────┤
-│  თამაშები   მეგობრები(2)  ტრივია(3) │
-│  [active]   [badge]       [badge]   │
-├─────────────────────────────────────┤
-│  (shows თამაშები notifications)     │
-│  ...                                │
-╰─────────────────────────────────────╯
-
-After switching to მეგობრები tab:
-- მეგობრები badge (2) disappears after 0.5s
-- User can see which notifications are new
-- Other tabs keep their badges until visited
-```
-
----
-
-## Testing
-- Open notification panel with unread notifications
-- Verify badges show on tabs
-- Switch to a tab and verify badge clears after short delay
-- Verify notifications are properly marked as read in database
-- Test on both panel and full notifications page
