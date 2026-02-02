@@ -76,7 +76,7 @@ export default function Loading() {
               MyTrivia
             </span>
             
-            {/* Large LIVE Badge */}
+            {/* Large LIVE Badge - 8px rounded */}
             <motion.span
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -84,7 +84,7 @@ export default function Loading() {
               className="ml-3"
             >
               <span 
-                className="relative inline-flex items-center px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-wider text-white"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-wider text-white"
                 style={{
                   background: '#EF4444',
                   boxShadow: '0 4px 0 #B91C1C, 0 6px 12px rgba(0,0,0,0.25)',
@@ -94,7 +94,7 @@ export default function Loading() {
                 <motion.span
                   animate={{ opacity: [0.6, 1, 0.6] }}
                   transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-2.5 h-2.5 rounded-full bg-white mr-2"
+                  className="w-2.5 h-2.5 rounded-full bg-white"
                 />
                 LIVE
               </span>
