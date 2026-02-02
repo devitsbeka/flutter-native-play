@@ -7,7 +7,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
 
 const RECENT_ROOM_ICONS_KEY = "recent-room-icons";
-const MAX_RECENT_ICONS = 8;
+const MAX_RECENT_ICONS = 4;
 
 // Icon categories with Georgian labels and emojis
 const ICON_CATEGORIES = [
@@ -167,7 +167,7 @@ export function RoomIconPickerModal({
 
       if (data) {
         const shuffled = [...data].sort(() => Math.random() - 0.5);
-        setSuggestedIcons(shuffled.slice(0, 4) as IconItem[]); // Only 4 suggestions (1 row)
+        setSuggestedIcons(shuffled.slice(0, 28) as IconItem[]); // 28 suggestions (7 rows)
       }
     } catch (e) {
       console.error("Failed to fetch icons:", e);
@@ -450,7 +450,7 @@ export function RoomIconPickerModal({
                   </div>
                   
                   <div className="grid grid-cols-4 gap-3">
-                    {recentIcons.map((icon, index) => (
+                    {recentIcons.slice(0, 4).map((icon, index) => (
                       <motion.button
                         key={icon.id}
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -499,7 +499,7 @@ export function RoomIconPickerModal({
                   <button
                     onClick={fetchRandomIcons}
                     disabled={isLoading}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors text-xs font-medium text-emerald-700"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
                     განახლება
@@ -509,7 +509,7 @@ export function RoomIconPickerModal({
                   <button
                     onClick={() => fetchCategoryIcons(ICON_CATEGORIES.find(c => c.id === selectedCategory)?.dbValue || null)}
                     disabled={isCategoryLoading}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-xs font-medium text-muted-foreground"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors text-xs font-medium text-emerald-700"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isCategoryLoading ? "animate-spin" : ""}`} />
                     განახლება
@@ -517,11 +517,11 @@ export function RoomIconPickerModal({
                 )}
               </div>
 
-              {/* Icons grid - 4 columns with minimum height to prevent jumping */}
-              <div className="grid grid-cols-4 gap-3 min-h-[80px]">
+              {/* Icons grid - 4 columns */}
+              <div className="grid grid-cols-4 gap-3 pb-4">
                 <AnimatePresence mode="sync">
                   {isDisplayLoading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
+                    Array.from({ length: 28 }).map((_, i) => (
                       <motion.div
                         key={`skeleton-${i}`}
                         initial={{ opacity: 0.5 }}
