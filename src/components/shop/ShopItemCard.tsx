@@ -168,15 +168,15 @@ export function ShopItemCard({
           ) : isLari ? (
             <>
               {/* Price Display */}
-              <span className="font-bold text-lg sm:text-xl text-green-600 dark:text-green-400">₾{price}</span>
+              <span className="font-bold text-lg sm:text-xl text-pink-600 dark:text-pink-400">₾{price}</span>
               {/* Buy Button - only this is clickable */}
               <motion.button
                 onClick={onClick}
                 disabled={isPurchased || isLoading}
                 className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
                 style={{
-                  background: "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)",
-                  boxShadow: "0 3px 0 #2E7D32",
+                  background: "linear-gradient(180deg, #DB4B82 0%, #C13B6D 100%)",
+                  boxShadow: "0 3px 0 #A32D58",
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95, y: 2 }}
