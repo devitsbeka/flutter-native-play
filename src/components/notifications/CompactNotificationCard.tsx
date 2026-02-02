@@ -399,7 +399,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 className="px-4 py-2 min-h-[40px] rounded-full border border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
                 style={{ touchAction: 'manipulation' }}
               >
-                {isLoading ? "..." : isFriendRequest ? "მიღება" : "შესვლა"}
+                {isLoading ? (
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  </span>
+                ) : isFriendRequest ? "მიღება" : "შესვლა"}
               </button>
               <button
                 type="button"
@@ -409,7 +413,11 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                 className="px-4 py-2 min-h-[40px] rounded-full border border-destructive/50 text-destructive hover:bg-destructive/10 transition-colors text-xs font-semibold disabled:opacity-50 active:scale-95"
                 style={{ touchAction: 'manipulation' }}
               >
-                უარყოფა
+                {isLoading ? (
+                  <span className="flex items-center gap-1">
+                    <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  </span>
+                ) : "უარყოფა"}
               </button>
             </div>
           )}

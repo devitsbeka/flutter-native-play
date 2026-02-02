@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
@@ -313,8 +313,17 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                           size="sm"
                           className="flex-1"
                         >
-                          <UserPlus className="w-4 h-4 mr-1" />
-                          დამატება
+                          {addingFriend ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              იგზავნება...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-4 h-4 mr-1" />
+                              დამატება
+                            </>
+                          )}
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'sent' && (
