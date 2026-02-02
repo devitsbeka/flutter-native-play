@@ -31,7 +31,7 @@ export function MyTriviaLiveLogo({
     } else if (breakpoint === "md") {
       effectiveSize = "sm";  // Tablet (same as mobile)
     } else {
-      effectiveSize = "lg";  // Desktop (lg, xl, 2xl)
+      effectiveSize = "md";  // Desktop (lg, xl, 2xl) - md not lg
     }
   }
   
