@@ -98,29 +98,13 @@ export const UserPresenceTracker = () => {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Handle before unload with proper auth
+    // Handle before unload - don't use sendBeacon as it can't authenticate properly
+    // Server-side will mark users as offline after timeout (last_seen check)
     const handleBeforeUnload = () => {
-      // Only send if we have a valid session
-      if (!session?.access_token || !user?.id) return;
-      
-      // Use sendBeacon with proper headers via URL-encoded form
-      // Note: sendBeacon can't send auth headers, so we use PATCH method
-      // which is supported by anon policies we set up
-      const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_presence`);
-      url.searchParams.set('user_id', `eq.${user.id}`);
-      
-      const formData = new FormData();
-      formData.append('status', 'offline');
-      formData.append('last_seen', new Date().toISOString());
-      
-      // Use Blob for sendBeacon with proper content type
-      const blob = new Blob([JSON.stringify({
-        status: 'offline',
-        last_seen: new Date().toISOString(),
-      })], { type: 'application/json' });
-      
-      // Note: This may fail due to auth - that's okay, cleanup happens via timeout
-      navigator.sendBeacon?.(url.toString(), blob);
+      // Best effort offline update - may not complete before page unloads
+      if (session?.access_token && user?.id) {
+        updatePresence('offline');
+      }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 

@@ -19,25 +19,10 @@ const getGuestSessionId = (): string => {
 let cachedCountryCode: string | null = null;
 let countryCodeFetched = false;
 
-// Fetch country from IP geolocation API
-const fetchCountryFromIP = async (): Promise<string | null> => {
+// Get country code - use timezone detection only (no external API to avoid CORS issues)
+const getCountryCode = (): string | null => {
   if (countryCodeFetched) return cachedCountryCode;
   
-  try {
-    const response = await fetch('https://ipapi.co/json/', { 
-      signal: AbortSignal.timeout(3000) 
-    });
-    if (response.ok) {
-      const data = await response.json();
-      cachedCountryCode = data.country_code?.toLowerCase() || null;
-      countryCodeFetched = true;
-      return cachedCountryCode;
-    }
-  } catch {
-    logger.debug('IP geolocation failed, using timezone fallback');
-  }
-  
-  // Fallback to timezone detection
   cachedCountryCode = detectCountryFromTimezone();
   countryCodeFetched = true;
   return cachedCountryCode;
@@ -184,16 +169,12 @@ export const useUserPresence = () => {
   }, [user?.id, location.pathname, canMakeRequest]);
 
   useEffect(() => {
-    // Fetch country code first, then start presence tracking
-    const initPresence = async () => {
-      const countryCode = await fetchCountryFromIP();
-      countryCodeRef.current = countryCode;
-      
-      // Set initial online status with country
-      updatePresence('online', location.pathname);
-    };
-
-    initPresence();
+    // Get country code synchronously, then start presence tracking
+    const countryCode = getCountryCode();
+    countryCodeRef.current = countryCode;
+    
+    // Set initial online status with country
+    updatePresence('online', location.pathname);
 
     // Heartbeat every 60 seconds (reduced from 30s)
     heartbeatInterval.current = setInterval(() => {
