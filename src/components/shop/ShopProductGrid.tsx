@@ -2,8 +2,10 @@ import { motion } from "framer-motion";
 import { ShopItem } from "@/hooks/useShopData";
 import { ShopItemCard } from "./ShopItemCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PowerUpsSummary } from "./PowerUpsSummary";
 
 interface ShopProductGridProps {
+  sectionId?: string;
   title: string;
   items: ShopItem[];
   gems: number;
@@ -14,6 +16,7 @@ interface ShopProductGridProps {
 }
 
 export function ShopProductGrid({
+  sectionId,
   title,
   items,
   gems,
@@ -33,9 +36,12 @@ export function ShopProductGrid({
     >
       {/* Section Header */}
       <div className="px-[15px] mb-3">
-        <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
-          {title}
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
+            {title}
+          </h2>
+          {sectionId === "powers" && <PowerUpsSummary />}
+        </div>
       </div>
 
       {/* Products Grid */}
