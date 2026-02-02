@@ -49,12 +49,10 @@ import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import {
   UnifiedFiltersBar,
   roomFilterOptions,
-  roomSortOptions,
   myTriviaFilterOptions,
   exploreFilterOptions,
   exploreSortOptions,
   RoomFilter,
-  RoomSort,
   MyTriviaFilter,
   ExploreFilter,
   ExploreSort,
@@ -234,7 +232,6 @@ function TeamContentV2() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [roomsFilter, setRoomsFilter] = useState<RoomFilter>("all");
-  const [roomsSort, setRoomsSort] = useState<RoomSort>("recent");
   const [roomsSearchQuery, setRoomsSearchQuery] = useState("");
   const [exploreFilter, setExploreFilter] = useState<ExploreFilter>("all");
   const [exploreSort, setExploreSort] = useState<ExploreSort>("recent");
@@ -621,13 +618,10 @@ function TeamContentV2() {
           {/* STICKY: Only Filter Bar */}
           <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
             {activeTab === "rooms" && (
-              <UnifiedFiltersBar<RoomFilter, RoomSort>
+              <UnifiedFiltersBar<RoomFilter, string>
                 filter={roomsFilter}
                 onFilterChange={(f) => setRoomsFilter(f)}
                 filterOptions={roomFilterOptions}
-                sort={roomsSort}
-                onSortChange={(s) => setRoomsSort(s)}
-                sortOptions={roomSortOptions}
                 searchQuery={roomsSearchQuery}
                 onSearchQueryChange={setRoomsSearchQuery}
                 onAddClick={() => setShowCreateModal(true)}
@@ -682,7 +676,6 @@ function TeamContentV2() {
                   vertical
                   filter={roomsFilter}
                   searchQuery={roomsSearchQuery}
-                  sort={roomsSort}
                   onNavigateToTab={handleTabChange}
                 />
               )}

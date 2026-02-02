@@ -173,10 +173,7 @@ export const roomFilterOptions: FilterOption<RoomFilter>[] = [
   { value: "completed", label: "დასრულებული" },
 ];
 
-export const roomSortOptions: SortOption<RoomSort>[] = [
-  { value: "recent", label: "ბოლო აქტივობით" },
-  { value: "created_date", label: "თარიღით" },
-];
+// Room sort options removed - always sort by last activity
 
 // Pre-defined filter options for my trivia content
 export const myTriviaFilterOptions: FilterOption<MyTriviaFilter>[] = [
@@ -207,7 +204,6 @@ export const exploreSortOptions: SortOption<ExploreSort>[] = [
 
 // Type exports
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
-export type RoomSort = "recent" | "created_date";
 export type MyTriviaFilter =
   | "all"
   | "private"
