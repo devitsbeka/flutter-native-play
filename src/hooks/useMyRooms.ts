@@ -440,9 +440,9 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       if (aIsMyNew && !bIsMyNew) return -1;
       if (bIsMyNew && !aIsMyNew) return 1;
       
-      // Priority 2: LIVE rooms (playing or others online)
-      const aIsLive = a.status === "playing" || a.has_others_online;
-      const bIsLive = b.status === "playing" || b.has_others_online;
+      // Priority 2: LIVE rooms (players actually IN the room, more accurate than just online)
+      const aIsLive = a.has_players_in_room || (a.status === "playing" && a.has_others_online);
+      const bIsLive = b.has_players_in_room || (b.status === "playing" && b.has_others_online);
       
       if (aIsLive && !bIsLive) return -1;
       if (bIsLive && !aIsLive) return 1;

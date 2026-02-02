@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff, Gamepad2, Users, Sparkles } from 'lucide-react';
@@ -74,15 +74,29 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
     }
   }, [notifications, markAsRead]);
 
-  // Mark notifications as read when switching to a tab (with delay so user sees badge first)
+  // Track previous isOpen state to mark as read only when panel closes
+  const prevIsOpenRef = useRef(isOpen);
+  const viewedTabsRef = useRef<Set<'games' | 'social' | 'trivia'>>(new Set());
+
+  // Track which tabs have been viewed while panel is open
   useEffect(() => {
-    if (isOpen && !loading) {
-      const timer = setTimeout(() => {
-        markTabAsRead(activeTab);
-      }, 500);
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      viewedTabsRef.current.add(activeTab);
     }
-  }, [isOpen, activeTab, loading, markTabAsRead]);
+  }, [isOpen, activeTab]);
+
+  // Mark viewed tabs as read when panel closes (transitions from open to closed)
+  useEffect(() => {
+    if (prevIsOpenRef.current && !isOpen) {
+      // Panel just closed - mark all viewed tabs as read
+      viewedTabsRef.current.forEach(tab => {
+        markTabAsRead(tab);
+      });
+      // Reset viewed tabs for next open
+      viewedTabsRef.current.clear();
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, markTabAsRead]);
 
   const hasAnyContent = generationNotifications.length > 0 || notifications.length > 0;
   const hasTabContent = filteredNotifications.length > 0;
