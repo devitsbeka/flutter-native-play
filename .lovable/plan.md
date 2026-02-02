@@ -1,115 +1,94 @@
 
-# Plan: Add No-Ads Card to Desktop and Tablet Layouts
+# Plan: Fix PRO Card Layout in MobileProCarousel
 
-## Problem Analysis
+## Issues to Fix
 
-Currently, the "no-ads" icon is only shown on mobile in the curved action buttons above the avatar (line 1017 in Index.tsx). On desktop and tablet:
-- The **DesktopActionCards** component (shown in the right side panel on lg+ screens) only includes: Daily Rewards, Missions, Chest, and Powers
-- There's no Ad-Free/No-Ads card in the desktop layout
-
-The user wants the no-ads card to also appear on desktop and tablet layouts.
-
----
-
-## Solution
-
-Add a new "No-Ads" card to the `DesktopActionCards` component, following the same pattern as the existing cards (Daily Rewards, Missions, etc.).
+1. **Button not at bottom**: The CTA button should be positioned at the absolute bottom of the card
+2. **Benefits need more spacing**: Move benefits down by 40px from the header
+3. **Mascot crown cropped**: The video mascot has a crown on its head that gets cut off - need to reposition video to show the full mascot
 
 ---
 
 ## Technical Changes
 
-### File 1: `src/components/home/DesktopActionCards.tsx`
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-#### Change 1.1: Import the ad-free icon
+#### Change 1: Make left content use flex column with space-between
 
-**Location: Line 7**
+Update the left content container to use flexbox with justify-between so the button stays at the bottom:
+
+**Lines 106-184** - Restructure the content layout:
+
 ```typescript
-// ADD after powersIcon import:
-import adFreeIcon from "@/assets/icons/icon-ad-free.png";
+{/* Left: Content */}
+<div className="w-[65%] p-5 z-10 flex flex-col">
+  {/* Top Content */}
+  <div>
+    {/* Header - Icon + Title (+ Price on md+) */}
+    <div className="flex flex-wrap items-center gap-3 mb-2">
+      {/* ... existing header content ... */}
+    </div>
+    {/* Price - mobile only */}
+    <div className="flex md:hidden items-baseline gap-1 mb-2">
+      {/* ... existing price ... */}
+    </div>
+  </div>
+
+  {/* Benefits - add mt-10 (40px) for spacing */}
+  <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mt-10 mb-auto">
+    {/* ... existing benefits ... */}
+  </ul>
+
+  {/* CTA Button - mt-auto pushes it to bottom */}
+  <button
+    className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
+    {/* ... rest of button ... */}
+  >
+    {/* ... button content ... */}
+  </button>
+</div>
 ```
 
-#### Change 1.2: Add onAdFreeClick prop to interface
+#### Change 2: Adjust video positioning to show full mascot with crown
 
-**Location: Lines 12-18**
-```typescript
-interface DesktopActionCardsProps {
-  onDailyRewardsClick: () => void;
-  onMissionsClick: () => void;
-  onChestClick: () => void;
-  onPowersClick: () => void;
-  onAdFreeClick: () => void;  // ADD THIS
-  vertical?: boolean;
-}
-```
+The mascot has a crown on its head that gets cropped. Update the video element to position from the top-right corner and adjust object-position:
 
-#### Change 1.3: Destructure the new prop
-
-**Location: Lines 246-252**
-```typescript
-export function DesktopActionCards({
-  onDailyRewardsClick,
-  onMissionsClick,
-  onChestClick,
-  onPowersClick,
-  onAdFreeClick,  // ADD THIS
-  vertical = false,
-}: DesktopActionCardsProps) {
-```
-
-#### Change 1.4: Add the No-Ads ActionCard
-
-**Location: After line 320 (after Powers Card, before closing div)**
-```typescript
-{/* No-Ads Card */}
-<ActionCard
-  iconSrc={adFreeIcon}
-  title="რეკლამის გარეშე"
-  statusText="პრემიუმ გამოცდილება"
-  expandedDetails="ითამაშე რეკლამების გარეშე და მიიღე ექსკლუზიური შეღავათები."
-  actionLabel="გახდი VIP"
-  onClick={onAdFreeClick}
-  bgGradient=""
-  particleColor=""
-  delay={0.3}
-/>
-```
-
----
-
-### File 2: `src/pages/Index.tsx`
-
-#### Change 2.1: Pass onAdFreeClick to DesktopActionCards
-
-**Location: Lines 510-516** - Update the DesktopActionCards usage
+**Lines 187-197** - Update video styling:
 
 ```typescript
-<DesktopActionCards
-  onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
-  onMissionsClick={() => setShowMissionsModal(true)}
-  onChestClick={() => setIsChestModalOpen(true)}
-  onPowersClick={() => setShowMyPowersModal(true)}
-  onAdFreeClick={() => setIsAdFreeModalOpen(true)}  // ADD THIS
-  vertical
-/>
+{/* Right: Video Background */}
+<div className="w-[35%] flex-shrink-0 relative overflow-hidden">
+  <video
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="absolute inset-0 w-full h-full object-cover"
+    style={{ 
+      objectPosition: "70% 20%"  // Shift focus to show crown (move up and slightly left)
+    }}
+  >
+    <source src={shopBgVideo} type="video/mp4" />
+  </video>
+</div>
 ```
 
 ---
 
-## Summary
+## Summary of Changes
 
-| Location | Change |
-|----------|--------|
-| DesktopActionCards.tsx | Import ad-free icon |
-| DesktopActionCards.tsx | Add `onAdFreeClick` prop to interface |
-| DesktopActionCards.tsx | Add No-Ads ActionCard component |
-| Index.tsx | Pass `onAdFreeClick` handler |
+| Element | Before | After |
+|---------|--------|-------|
+| Left content div | Regular div | `flex flex-col` |
+| Benefits section | `mb-4` | `mt-10 mb-auto` (40px down, flex grow) |
+| CTA Button | After benefits | Fixed at bottom with `mt-4` |
+| Video | `object-center` | `objectPosition: "70% 20%"` to show crown |
 
 ---
 
 ## Expected Result
 
-- A new "რეკლამის გარეშე" (No-Ads) card appears in the right sidebar on desktop/tablet
-- Uses the same ad-free icon (`icon-ad-free.png`) that's used on mobile
-- Clicking it opens the AdFreeModal (same behavior as mobile)
-- Card style matches the existing Daily Rewards, Missions, Chest, and Powers cards
+- The CTA button ("გააქტიურება") stays at the bottom of the card
+- Benefits section has 40px gap from header
+- Video mascot shows the full figure including the crown on its head
+- Layout maintains proper structure on both mobile and tablet
