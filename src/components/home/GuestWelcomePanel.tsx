@@ -84,7 +84,7 @@ export function GuestWelcomePanel({
   const loading = isLoading || isSubmitting;
 
   return (
-    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 py-2 overflow-y-auto">
+    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 py-2 overflow-y-auto" style={{ marginTop: "-35px" }}>
       {/* Title */}
       <motion.div
         initial={{ y: -10, opacity: 0 }}
@@ -122,7 +122,7 @@ export function GuestWelcomePanel({
             }}
           >
             {/* Video with scale and offset to center mascot face */}
-            <div className="absolute inset-0 scale-[1.4]" style={{ top: '-12%' }}>
+            <div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(-18%)' }}>
               <PingPongVideo 
                 src={guestWelcomeVideo}
                 className="rounded-full w-full h-full object-cover"
@@ -156,7 +156,7 @@ export function GuestWelcomePanel({
             }}
             placeholder="სახელი"
             disabled={loading}
-            className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-background border-2 border-border 
+            className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                        focus:border-primary outline-none text-sm font-medium
                        disabled:opacity-50 transition-colors"
             style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
@@ -180,7 +180,7 @@ export function GuestWelcomePanel({
             }}
             placeholder="პაროლი"
             disabled={loading}
-            className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-background border-2 border-border 
+            className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
                        focus:border-primary outline-none text-sm font-medium
                        disabled:opacity-50 transition-colors"
             style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
