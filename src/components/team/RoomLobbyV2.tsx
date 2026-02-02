@@ -80,19 +80,42 @@ export function RoomLobbyV2() {
   const [willBeObserver, setWillBeObserver] = useState(false); // Pre-calculate if host will be observer
   const prevParticipantsRef = useRef<string[]>([]);
 
-  // Detect and redirect to active TV session when host returns to room
+  // Detect and handle TV session when host returns to room
+  // - Active session: redirect to controller
+  // - Expired/inactive session: clear and stay in lobby
   useEffect(() => {
     if (!currentRoom?.id || !isHost || hasCheckedTVSession) return;
     
     const checkActiveSession = async () => {
       try {
-        // Check if room has an active TV session
+        // Check if room has a TV session
         if (currentRoom.tv_session_id) {
           const { data: session } = await supabase
             .from('tv_sessions')
-            .select('id, status')
+            .select('id, status, created_at')
             .eq('id', currentRoom.tv_session_id)
             .maybeSingle();
+          
+          // Check if session is expired (3+ hours old)
+          const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
+          const sessionCreatedAt = session?.created_at ? new Date(session.created_at).getTime() : 0;
+          const isExpired = !session || sessionCreatedAt < threeHoursAgo;
+          
+          // Inactive statuses that should NOT redirect
+          const inactiveStatuses = ['completed', 'cancelled', 'results'];
+          const isInactive = !session || inactiveStatuses.includes(session.status || '');
+          
+          // Clear expired/inactive TV session from room
+          if (isExpired || isInactive) {
+            console.log('[RoomLobbyV2] Clearing expired/inactive TV session from room');
+            await supabase
+              .from("game_rooms")
+              .update({ tv_session_id: null })
+              .eq("id", currentRoom.id);
+            
+            setHasCheckedTVSession(true);
+            return;
+          }
           
           // Active session statuses that should redirect host to controller
           const activeStatuses = ['waiting', 'paired', 'lobby', 'countdown', 'question', 'playing', 'reveal', 'round-intro', 'poll-suggest', 'poll-voting', 'poll-results', 'category-select'];
