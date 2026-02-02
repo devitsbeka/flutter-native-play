@@ -1,107 +1,62 @@
 
+# გეგმა: მენიუს შეკეთება - გამოსვლა და კომპაქტური ლეიაუთი
 
-# გეგმა: შესვლის გვერდის ტექსტის და ავატარის გაუმჯობესება
+## პრობლემები
 
-## რას შევცვლი
+### 1. გამოსვლა არ მუშაობს
+- `handleLogout` ფუნქცია async-ია, მაგრამ შეცდომის დამუშავება არ აქვს
+- თუ `signOut` წარუმატებელია, ნავიგაცია მაინც ხდება
 
-### 1. ტექსტის ცვლილება შესვლის რეჟიმში
+### 2. გამოსვლის ღილაკი ჩაჭრილია
+- სქროლ კონტეინერს არ აქვს `safe-area-inset-bottom` 
+- მოწყობილობებზე home indicator-ით ქვედა შიგთავსი იჭრება
 
-**ახლა (Login mode):**
-- სათაური: "მობრძანდი!"  
-- ქვესათაური: "შედი შენს ანგარიშზე"
-
-**შემდეგ (Login mode):**
-- სათაური: "გამარჯობა!"
-- ქვესათაური: _(არაფერი)_
-
-### 2. ავატარის ვიდეოს ლოგიკა
-
-**ახლა:**
-- ვიდეო უსასრულოდ ბრუნავს (loop)
-- კამერის აიკონი ყოველთვის ჩანს
-
-**შემდეგ:**
-- ვიდეო მხოლოდ 1-ჯერ ითამაშებს
-- ვიდეოს დასრულების შემდეგ:
-  - კამერის აიკონი გამოჩნდება ანიმაციით (pulse/bounce)
-  - ეს მიუთითებს რომ მომხმარებელს შეუძლია ავატარის შეცვლა
+### 3. ელემენტებს შორის ძალიან დიდი gap-ები
+- `gap-4` და `p-4` ძალიან ბევრ ადგილს იკავებს
+- პატარა ეკრანებზე შიგთავსი არ ეტევა
 
 ---
 
-## ფაილები რომლებშიც ცვლილებები იქნება
+## გადაწყვეტა
 
-### 1. `src/components/home/GuestWelcomePanel.tsx`
-
-**ცვლილებები:**
-- ხაზი 145-149: შევცვლი login რეჟიმის ტექსტებს
-  - "მობრძანდი!" → "გამარჯობა!" (ორივე რეჟიმში ერთნაირი)
-  - Login-ზე ქვესათაური ცარიელი იქნება
-- დავამატებ `videoEnded` state ვიდეოს დასრულების ტრეკინგისთვის
-- `PingPongVideo` ნაცვლად გამოვიყენებ `<video>` ელემენტს `loop={false}` და `onEnded` ჰენდლერით
-- კამერის badge-ს დავამატებ pulse ანიმაციას ვიდეოს დასრულების შემდეგ
-
-### 2. `src/components/home/DesktopGuestSplitLayout.tsx`
+### ფაილი: `src/components/home/SideMenuDrawer.tsx`
 
 **ცვლილებები:**
-- ხაზი 148-153: იგივე ტექსტის ცვლილება (Login mode)
-- იგივე ვიდეო/კამერა ლოგიკა
 
-### 3. `src/components/shared/SinglePlayVideo.tsx` (ახალი კომპონენტი)
+1. **handleLogout შეკეთება (ხაზი 63-67)**
+   - დამატება error logging და checking
+   ```typescript
+   const handleLogout = async () => {
+     try {
+       const { error } = await signOut();
+       if (error) {
+         console.error('Logout error:', error);
+         return;
+       }
+       onClose();
+       navigate("/");
+     } catch (err) {
+       console.error('Logout exception:', err);
+     }
+   };
+   ```
 
-**შექმნა:**
-- ახალი ვიდეო კომპონენტი რომელიც მხოლოდ 1-ჯერ ითამაშებს
-- `onEnded` callback ვიდეოს დასრულებისას
-- Reusable კომპონენტი სხვა ადგილებისთვისაც
+2. **Scrollable content-ზე safe-area დამატება (ხაზი 164)**
+   - `overflow-y-auto` → `overflow-y-auto pb-safe` (ან `pb-[env(safe-area-inset-bottom)]`)
+   
+3. **Gap-ების შემცირება:**
+   - User profile section: `p-4` → `p-3`, `gap-4` → `gap-3`
+   - Play button height: 56 → 52
+   - Nav items: `p-4` → `p-3`, `gap-4` → `gap-3`
+   - Settings/Logout: `p-4` → `p-3`, `gap-4` → `gap-3`, `pb-4` → `pb-6`
 
----
-
-## ტექნიკური დეტალები
-
-### ახალი State
-```typescript
-const [videoEnded, setVideoEnded] = useState(false);
-```
-
-### კამერის Badge ანიმაცია (ვიდეოს შემდეგ)
-```typescript
-<motion.div 
-  className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-20"
-  initial={videoEnded ? { scale: 0 } : { scale: 1 }}
-  animate={videoEnded ? { 
-    scale: [0, 1.3, 1],
-    opacity: [0, 1, 1]
-  } : {}}
-  transition={{ duration: 0.5, ease: "easeOut" }}
->
-  <motion.div
-    animate={videoEnded ? { scale: [1, 1.2, 1] } : {}}
-    transition={{ duration: 1.5, repeat: 2, ease: "easeInOut" }}
-  >
-    <Camera className="w-3.5 h-3.5 text-primary-foreground" />
-  </motion.div>
-</motion.div>
-```
-
-### ვიდეოს ელემენტი (loop-ის გარეშე)
-```typescript
-<video
-  src={guestWelcomeVideo}
-  muted
-  playsInline
-  autoPlay
-  onEnded={() => setVideoEnded(true)}
-  className="w-full h-full object-cover"
-  style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
-/>
-```
+4. **ქვედა safe-area padding (ხაზი 273)**
+   - `pb-4` → `pb-[calc(1rem+env(safe-area-inset-bottom))]`
 
 ---
 
 ## შედეგი
 
-**Login რეჟიმში:**
-- მარტივი მისალმება: "გამარჯობა!" (ქვესათაურის გარეშე)
-- ვიდეო 1-ჯერ ითამაშებს
-- ვიდეოს შემდეგ კამერის აიკონი "გამოხტება" ანიმაციით
-- მომხმარებელს ესმის რომ შეუძლია ავატარის შეცვლა
-
+- გამოსვლის ღილაკი იმუშავებს სწორად
+- ქვედა ელემენტები აღარ იქნება ჩაჭრილი
+- მენიუ კომპაქტური იქნება და პატარა ეკრანებზეც მოთავსდება
