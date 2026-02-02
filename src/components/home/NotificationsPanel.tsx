@@ -324,12 +324,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
             {/* Header */}
             <div className="px-4 pt-4 pb-3 border-b border-border">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Bell className="w-4 h-4 text-primary" />
-                  </div>
-                  <h2 className="font-bold text-base text-foreground">აქტივობა</h2>
-                </div>
+                <h2 className="font-bold text-base text-foreground">აქტივობა</h2>
                 <button
                   onClick={onClose}
                   className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
