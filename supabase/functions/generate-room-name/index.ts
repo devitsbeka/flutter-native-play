@@ -11,53 +11,72 @@ const BANNED_WORDS = [
 // Max character limit for room names
 const MAX_NAME_LENGTH = 18;
 
-// Trivia-themed room names - all ≤18 characters, focused on intelligence/challenge
-const TRIVIA_NAMES = [
-  // Intelligence/Knowledge (≤18 chars)
-  "IQ არენა",           // 8  - IQ Arena
-  "ქვიზ არენა",         // 10 - Quiz Arena
-  "გონების არენა",      // 13 - Mind Arena
-  "ცოდნის არენა",       // 12 - Knowledge Arena
-  "ტვინის შტორმი",      // 13 - Brain Storm
-  "ბრძენთა კლუბი",      // 13 - Sages Club
-  "გენიოსთა კლუბი",     // 14 - Geniuses Club
-  "ჭკუის ტესტი",        // 11 - Wit Test
-  "ცოდნის ტესტი",       // 12 - Knowledge Test
-  
-  // Challenge/Duel (≤18 chars)
-  "ტრივია დუელი",       // 12 - Trivia Duel
-  "ბრძენთა დუელი",      // 13 - Sages Duel
-  "გონების დუელი",      // 13 - Mind Duel
-  "ქვიზ შეჯიბრი",       // 12 - Quiz Contest
-  "ცოდნის ბრძოლა",      // 13 - Knowledge Battle
-  "ჭკუის ბრძოლა",       // 12 - Wit Battle
-  "IQ ბატალია",         // 10 - IQ Battle
-  "გონების რბოლა",      // 13 - Mind Race
-  
-  // Team/Friends (≤18 chars)
-  "გუნდური ქვიზი",      // 13 - Team Quiz
-  "მეგობართა ქვიზი",    // 14 - Friends' Quiz
-  "ოჯახის ქვიზი",       // 12 - Family Quiz
-  "კომპანიის ქვიზი",    // 15 - Company's Quiz
-  "გუნდის არენა",       // 12 - Team Arena
-  "საოჯახო დუელი",      // 13 - Family Duel
-  
-  // Short/Universal (≤12 chars)
-  "ქვიზ ზონა",          // 9  - Quiz Zone
-  "გონება+",            // 7  - Mind+
-  "ცოდნა+",             // 6  - Knowledge+
-  "ტრივია+",            // 8  - Trivia+
-  "IQ ზონა",            // 7  - IQ Zone
-  "ბრძენი",             // 6  - Sage
-  "გენიოსი",            // 7  - Genius
-  "ჭკვიანები",          // 9  - Smart Ones
-  "ერუდიტები",          // 9  - Erudites
-  "მცოდნეები",          // 9  - Knowers
+// Themed room configurations with matching icon slugs
+// Each theme has names (plural form) and relevant icon slugs from our 9k library
+const THEMED_ROOMS = [
+  // Intelligence/Knowledge theme
+  {
+    category: 'intellect',
+    names: ["ერუდიტები", "მცოდნეები", "ბრძენები", "გენიოსები", "მოაზროვნეები", "ჭკვიანები"],
+    icons: ["brain", "lightbulb", "idea", "thinking", "graduation-cap", "book", "knowledge"]
+  },
+  // Famous People theme
+  {
+    category: 'celebrities',
+    names: ["აინშტაინები", "დავინჩები", "ნიუტონები", "პიკასოები", "შექსპირები", "სოკრატეები"],
+    icons: ["albert-einstein", "sir-isaac-newton", "marie-curie", "galileo-galilei", "socrates", "leonardo-da-vinci"]
+  },
+  // Places/Structures theme
+  {
+    category: 'places',
+    names: ["აკადემია", "ობსერვატორია", "ბიბლიოთეკა", "ანტიკა", "ოლიმპო", "პანთეონი"],
+    icons: ["library", "observatory", "school", "temple", "castle", "amphitheater", "colosseum"]
+  },
+  // Challenge/Game theme
+  {
+    category: 'challenge',
+    names: ["ჩემპიონები", "გამარჯვებულები", "ლიდერები", "ნავიგატორები", "მებრძოლები"],
+    icons: ["trophy", "gold-medal", "trivia-quiz", "puzzle", "question-mark", "crown", "star"]
+  },
+  // Smart Animals theme
+  {
+    category: 'animals',
+    names: ["ბუები", "დელფინები", "სპილოები", "მაიმუნები", "ყორნები", "რვაფეხები"],
+    icons: ["owl", "dolphin", "elephant", "chimpanzee", "raven", "octopus", "fox"]
+  },
+  // Science theme
+  {
+    category: 'science',
+    names: ["ასტრონომები", "მეცნიერები", "ფიზიკოსები", "მათემატიკოსები", "ინჟინრები", "ქიმიკოსები"],
+    icons: ["scientist", "telescope", "astronaut", "rocket", "microscope", "atom", "flask"]
+  },
+  // Quiz/Trivia theme
+  {
+    category: 'quiz',
+    names: ["ქვიზერები", "ტრივიელები", "კითხვარები", "გამომცნობები"],
+    icons: ["quiz", "question", "answer", "game-controller", "joystick", "puzzle-piece"]
+  },
+  // Explorers/Adventurers theme
+  {
+    category: 'explorers',
+    names: ["მკვლევარები", "აღმომჩენები", "მოგზაურები", "პიონერები"],
+    icons: ["compass", "map", "explorer", "binoculars", "globe", "world-map"]
+  }
 ];
 
-// Get random trivia name
+// Get random themed room (name + matching icon slugs)
+function getRandomThemedRoom(): { name: string; iconSlugs: string[] } {
+  const theme = THEMED_ROOMS[Math.floor(Math.random() * THEMED_ROOMS.length)];
+  const name = theme.names[Math.floor(Math.random() * theme.names.length)];
+  return { name, iconSlugs: theme.icons };
+}
+
+// Flat list of all names for fallback
+const ALL_THEMED_NAMES = THEMED_ROOMS.flatMap(theme => theme.names);
+
+// Get random name from all themes
 function getRandomTriviaName(): string {
-  return TRIVIA_NAMES[Math.floor(Math.random() * TRIVIA_NAMES.length)];
+  return ALL_THEMED_NAMES[Math.floor(Math.random() * ALL_THEMED_NAMES.length)];
 }
 
 // Validate and clean generated name
@@ -116,62 +135,73 @@ serve(async (req) => {
       const body = await req.json();
       iconSlug = body?.iconSlug || null;
     } catch {
-      // No body or invalid JSON, use random icon
+      // No body or invalid JSON, use themed selection
     }
 
-    let selectedIcon: { slug: string; title: string; icon_url: string | null } | null = null;
+    // Get a themed room (name + matching icon slugs)
+    const themedRoom = getRandomThemedRoom();
+    let selectedIconUrl: string | null = null;
 
     // If specific icon requested, find it by slug
     if (iconSlug) {
       const { data: specificIcon, error: specificError } = await supabase
         .from('icon_library')
-        .select('slug, title, icon_url, category')
+        .select('slug, title, icon_url')
         .eq('slug', iconSlug)
         .single();
       
-      if (!specificError && specificIcon) {
-        selectedIcon = specificIcon;
+      if (!specificError && specificIcon?.icon_url) {
+        selectedIconUrl = specificIcon.icon_url;
         console.log(`Using requested icon: ${iconSlug}`);
       }
     }
 
-    // If no specific icon, pick a random one for visual variety
-    if (!selectedIcon) {
-      const { data: icons, error: iconError } = await supabase
-        .from('icon_library')
-        .select('slug, title, icon_url, category')
-        .not('icon_url', 'is', null)
-        .limit(100);
-
-      if (iconError || !icons || icons.length === 0) {
-        console.error('Failed to fetch icons:', iconError);
-        // Return just a name without icon
-        return new Response(
-          JSON.stringify({ 
-            name: getRandomTriviaName(), 
-            icon_url: null 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    // If no specific icon, try to find one from the theme's icon list
+    if (!selectedIconUrl) {
+      // Try each icon slug from the theme until we find one in the library
+      for (const slug of themedRoom.iconSlugs) {
+        const { data: themeIcon, error: themeError } = await supabase
+          .from('icon_library')
+          .select('slug, icon_url')
+          .ilike('slug', `%${slug}%`)
+          .not('icon_url', 'is', null)
+          .limit(1)
+          .single();
+        
+        if (!themeError && themeIcon?.icon_url) {
+          selectedIconUrl = themeIcon.icon_url;
+          console.log(`Found themed icon: ${themeIcon.slug} for theme icons: ${themedRoom.iconSlugs.join(', ')}`);
+          break;
+        }
       }
-
-      selectedIcon = icons[Math.floor(Math.random() * icons.length)];
     }
 
-    console.log(`Selected icon: ${selectedIcon.slug}`);
+    // If still no icon, pick a random one as fallback
+    if (!selectedIconUrl) {
+      const { data: randomIcon, error: randomError } = await supabase
+        .from('icon_library')
+        .select('slug, icon_url')
+        .not('icon_url', 'is', null)
+        .limit(1);
+      
+      if (!randomError && randomIcon && randomIcon.length > 0) {
+        selectedIconUrl = randomIcon[0].icon_url;
+        console.log(`Using random fallback icon: ${randomIcon[0].slug}`);
+      }
+    }
 
-    // If no AI key, return random trivia name
+    // If no AI key, return themed name
     if (!lovableApiKey) {
       return new Response(
         JSON.stringify({ 
-          name: getRandomTriviaName(), 
-          icon_url: selectedIcon.icon_url 
+          name: themedRoom.name, 
+          icon_url: selectedIconUrl 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use AI to generate a short trivia-themed name
+    // Use AI to generate a creative trivia-themed name
     const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის.
 
 კონტექსტი: მეგობრები/ოჯახი ეჯიბრებიან ერთმანეთს - ვინ უფრო ჭკვიანია, სწრაფი, მცოდნე.
@@ -179,15 +209,21 @@ serve(async (req) => {
 მოთხოვნები:
 - მაქსიმუმ 18 სიმბოლო (ჩათვლით სფეისი)
 - 1-2 სიტყვა მაქსიმუმ
-- თემა: ინტელექტი, ცოდნა, გამოწვევა, სწრაფი აზროვნება
+- თუ ერთი სიტყვაა, გამოიყენე მრავლობითი რიცხვი (მაგ: "გენიოსები" არა "გენიოსი")
 - მხოლოდ ქართული (IQ შეიძლება), არანაირი emoji
 
-კარგი მაგალითები: "ქვიზ არენა", "IQ ტესტი", "ბრძენთა დუელი", "გონების ბრძოლა", "ტვინის შტორმი"
-ცუდი მაგალითები: "ვარსკვლავთა კავშირი" (ძალიან გრძელი), "კოსმოსური ხომალდი" (არ არის ტრივია თემაზე)
+თემები (აირჩიე ერთი):
+1. ინტელექტი: "ერუდიტები", "მცოდნეები", "ბრძენები", "გენიოსები"
+2. ცნობილი პიროვნებები: "აინშტაინები", "დავინჩები", "ნიუტონები"
+3. ადგილები: "აკადემია", "ობსერვატორია", "ბიბლიოთეკა"
+4. გამოწვევა: "ჩემპიონები", "გამარჯვებულები", "ლიდერები"
+5. ჭკვიანი ცხოველები: "ბუები", "დელფინები", "სპილოები"
+6. მეცნიერება: "ასტრონომები", "მეცნიერები", "ფიზიკოსები"
+7. მკვლევარები: "აღმომჩენები", "მოგზაურები", "პიონერები"
 
 დაბრუნე მხოლოდ სახელი, არაფერი სხვა.`;
 
-    console.log('Generating trivia-themed room name...');
+    console.log('Generating themed room name...');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -205,11 +241,11 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('AI API error:', response.status);
-      // Fallback to random trivia name
+      // Fallback to themed name
       return new Response(
         JSON.stringify({ 
-          name: getRandomTriviaName(), 
-          icon_url: selectedIcon.icon_url 
+          name: themedRoom.name, 
+          icon_url: selectedIconUrl 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -226,7 +262,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         name: generatedName, 
-        icon_url: selectedIcon.icon_url 
+        icon_url: selectedIconUrl 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -234,9 +270,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error generating room name:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const fallback = getRandomThemedRoom();
     return new Response(
       JSON.stringify({ 
-        name: getRandomTriviaName(), 
+        name: fallback.name, 
         icon_url: null,
         error: errorMessage 
       }),
