@@ -743,7 +743,7 @@ export default function Index() {
                 >
                   <div className="flex items-center justify-center gap-2.5">
                     {profile?.country_code && (
-                      <FlagIcon countryCode={profile.country_code} size="md" />
+                      <FlagIcon countryCode={profile.country_code} size="md" className="md:hidden" />
                     )}
                     <span className="font-sans text-gray-800 capitalize font-bold" style={{ fontSize: 28 }}>
                       {profile?.nickname || t("game.guest")}
@@ -833,7 +833,7 @@ export default function Index() {
               >
                 <div className="flex items-center justify-center gap-2.5">
                   {profile?.country_code && (
-                    <FlagIcon countryCode={profile.country_code} size="md" />
+                    <FlagIcon countryCode={profile.country_code} size="md" className="md:hidden" />
                   )}
                   <span className="font-sans text-gray-800 capitalize font-bold" style={{ fontSize: 32 }}>
                     {profile?.nickname || t("game.guest")}
@@ -1108,7 +1108,7 @@ export default function Index() {
                   <>
                     <div className="flex items-center justify-center gap-2.5">
                       {profile?.country_code && (
-                        <FlagIcon countryCode={profile.country_code} size="md" />
+                        <FlagIcon countryCode={profile.country_code} size="md" className="md:hidden" />
                       )}
                       <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
                         {profile?.nickname || t("game.guest")}

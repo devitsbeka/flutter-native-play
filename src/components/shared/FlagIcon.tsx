@@ -19,7 +19,7 @@ export function FlagIcon({ countryCode, size = "md", className }: FlagIconProps)
     <img
       src={`https://flagcdn.com/w40/${code}.png`}
       alt={`${countryCode} flag`}
-      className={cn(sizeClasses[size], "rounded-sm object-cover", className)}
+      className={cn(sizeClasses[size], "object-cover", className)}
     />
   );
 }
