@@ -59,7 +59,9 @@ export function MyRoomsSection({
   searchQuery = "",
   onNavigateToTab
 }: MyRoomsSectionProps) {
-  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, sort, searchQuery });
+  const isMobile = useIsMobile();
+  const roomLimit = isMobile ? 10 : 15;
+  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, sort, searchQuery, limit: roomLimit });
   const { enterRoom } = useMultiplayerV2();
   const navigate = useNavigate();
   const { t } = useLanguage();
