@@ -312,20 +312,10 @@ function CollectionCard({
               {/* Collection Info */}
               <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between">
-                  {/* Stats Row */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
-                      <span className="font-medium">{collection.likes_count || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
-                      <span className="font-medium">{collection.saves_count || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
-                      <span className="font-medium">{collection.plays_count || 0}</span>
-                    </div>
+                  {/* Collection Badge */}
+                  <div className="flex items-center gap-2 bg-purple-500 text-white rounded-full px-3 py-1.5">
+                    <Layers className="w-4 h-4" />
+                    <span className="text-sm font-medium">კოლექცია</span>
                   </div>
                   {/* Visibility badge */}
                   <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
@@ -466,20 +456,10 @@ function CollectionCard({
         {/* Info Row */}
         <div className="p-4">
           <div className="flex items-center justify-between">
-            {/* Stats Row */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
-                <span className="font-medium">{collection.likes_count || 0}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
-                <span className="font-medium">{collection.saves_count || 0}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
-                <span className="font-medium">{collection.plays_count || 0}</span>
-              </div>
+            {/* Collection Badge */}
+            <div className="flex items-center gap-2 bg-purple-500 text-white rounded-full px-3 py-1.5">
+              <Layers className="w-4 h-4" />
+              <span className="text-sm font-medium">კოლექცია</span>
             </div>
             {/* Expand/Collapse icon */}
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
