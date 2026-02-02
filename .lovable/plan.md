@@ -1,51 +1,46 @@
 
-# Plan: Fix Mobile Zoom Issue on Login
+# Plan: Match LIVE Badge Style Across All Logo Sizes
 
 ## Problem
 
-When users enter username/password on mobile, the page appears zoomed in after navigating to the main page. This is a common iOS/Android browser behavior caused by:
+The LIVE badge on the loading/splash screen looks different from the badges shown elsewhere in the app. The loading screen badge has:
+- More rounded, pill-shaped edges (appears like `rounded-full`)
+- Larger proportions relative to text
+- More balanced spacing
 
-1. **Input fields with font-size < 16px** - Mobile browsers automatically zoom in when focusing on inputs smaller than 16px to make text readable
-2. **Missing viewport zoom prevention** - The viewport meta tag doesn't prevent user scaling, so the zoom persists after login
+Currently, the `LiveBadge` component uses a fixed `rounded-[8px]` for all sizes, which doesn't scale properly with larger badge sizes.
 
 ## Solution
 
-Two-pronged fix:
+Update the `LiveBadge` component to use size-proportional border radius that creates the pill-shaped look seen on the loading screen. For smaller sizes, a rounded-full approach works better than a fixed 8px radius.
 
-### 1. Update Viewport Meta Tag (index.html)
+### File: `src/components/social/LiveBadge.tsx`
 
-Add `maximum-scale=1` and `user-scalable=no` to prevent iOS/Android from auto-zooming on input focus:
+**Changes:**
+1. Add `rounded` to the size config to scale border-radius with badge size
+2. Use `rounded-full` for smaller sizes (sm, md) to achieve the pill shape
+3. Use proportional rounded values for larger sizes (lg, xl)
+4. Slightly increase padding to match the reference look
 
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+| Size | Current | New Border Radius |
+|------|---------|------------------|
+| sm   | 8px     | rounded-full     |
+| md   | 8px     | rounded-full     |
+| lg   | 8px     | rounded-full     |
+| xl   | 8px     | rounded-full     |
+
+**Updated size config:**
+```typescript
+const sizeConfig = {
+  sm: { text: "text-[8px]", dot: "w-1 h-1", px: "px-2", py: "py-1", gap: "gap-1", rounded: "rounded-full" },
+  md: { text: "text-[10px]", dot: "w-1.5 h-1.5", px: "px-2.5", py: "py-1", gap: "gap-1", rounded: "rounded-full" },
+  lg: { text: "text-[13px]", dot: "w-2 h-2", px: "px-3", py: "py-1.5", gap: "gap-1.5", rounded: "rounded-full" },
+  xl: { text: "text-[15px]", dot: "w-2.5 h-2.5", px: "px-4", py: "py-2", gap: "gap-2", rounded: "rounded-full" },
+};
 ```
 
-### 2. Increase Input Font Size to 16px Minimum
-
-Update all input fields to use at least 16px font size. This is the magic threshold that prevents mobile browser auto-zoom.
-
-**Files to update:**
-
-| File | Current | Change |
-|------|---------|--------|
-| `GuestWelcomePanel.tsx` | `text-sm` (14px) | `text-base` (16px) |
-| `SignupOnboardingModal.tsx` | `text-lg` (18px) | Already good |
-| `DesktopGuestSplitLayout.tsx` | `text-sm` (14px) | `text-base` (16px) |
-
-## Technical Details
-
-### File: `index.html`
-- Line 5: Update viewport meta tag
-
-### File: `src/components/home/GuestWelcomePanel.tsx`
-- Lines 253-256, 279-282, 304-307: Change `text-sm` to `text-base` on input fields
-
-### File: `src/components/home/DesktopGuestSplitLayout.tsx`
-- Similar input field font size updates
+This will give the badge the same pill-shaped appearance across all sizes, matching the loading screen reference.
 
 ## Result
 
-After these changes:
-- Mobile browsers won't auto-zoom when focusing on login inputs
-- The page will stay at normal scale throughout the login flow
-- User experience remains consistent without needing to manually zoom out
+After this change, the LIVE badge will have a consistent pill-shaped appearance throughout the app, matching the loading screen design that the user referenced.
