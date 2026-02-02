@@ -1,178 +1,156 @@
 
-# Plan: Fix Logo Alignment + Convert Search Bar to Button
+
+# Plan: Adjust PRO Card Layout on Tablet
 
 ## Overview
 
-Based on the screenshots, there are two issues to fix:
-1. **Logo alignment** - The "MyTrivia" text and "LIVE" badge are not aligned horizontally (badge appears slightly lower)
-2. **Search bar → Search button** - Replace the full search bar with just a search icon button, which expands to full search when clicked
+Based on the screenshot, you want to:
+1. **Increase card heights** - Make the PRO card taller
+2. **Increase benefits text sizes** - Larger font for the benefit items
+3. **Change layout ratio** - Left content: 65%, Mascot video: 35%
 
 ---
 
-## Issue 1: Fix Logo Horizontal Alignment
+## File: `src/components/shop/MobileProCarousel.tsx`
 
-### Root Cause
-The `LiveBadge` component has `boxShadow: '0 2px 0 #B91C1C'` which adds 2px visual offset at the bottom, making it appear lower than the text.
+### Change 1: Increase Card Height
 
-### Solution
-Adjust the `MyTriviaLiveLogo` component to use `items-baseline` instead of `items-center`, and tweak the LiveBadge positioning.
-
-### File: `src/components/shared/MyTriviaLiveLogo.tsx`
-
-**Line 42** - Change alignment from `items-center` to `items-baseline` and add vertical adjustment:
+**Line 75** - Increase minimum height:
 
 ```typescript
 // Before:
-<div className={`flex items-center gap-1.5 ${className}`}>
+<div className="relative overflow-hidden rounded-3xl min-h-[280px]">
 
-// After:
-<div className={`flex items-center gap-1.5 ${className}`}>
-  // ...text remains same
-  <span className="self-center">
-    <LiveBadge size={config.badgeSize} />
-  </span>
+// After: Increase height for tablet
+<div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[360px]">
 ```
 
-Alternative approach - offset the badge slightly upward using a wrapper or margin.
+### Change 2: Increase Benefits Text Size
 
-### File: `src/components/social/LiveBadge.tsx`
-
-Adjust the wrapper to compensate for the bottom shadow offset:
-
-**Lines 18-21** - Add margin or transform to shift up:
+**Lines 128-137** - Update text sizes in benefits list:
 
 ```typescript
 // Before:
-<motion.span
-  initial={{ opacity: 0, scale: 0.8 }}
-  animate={{ opacity: 1, scale: 1 }}
-  className="inline-flex items-center"
->
+<ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4">
+  {tier.benefits.map((benefit, i) => (
+    <li 
+      key={i} 
+      className="flex items-start gap-1.5 text-white/90"
+    >
+      <Check className="w-3 h-3 text-white/80 flex-shrink-0 mt-0.5" />
+      <span className="text-[11px] leading-tight">{benefit}</span>
+    </li>
+  ))}
+</ul>
 
-// After: Add slight negative margin to compensate for shadow
-<motion.span
-  initial={{ opacity: 0, scale: 0.8 }}
-  animate={{ opacity: 1, scale: 1 }}
-  className="inline-flex items-center"
-  style={{ marginBottom: '2px' }}
->
+// After: Larger text and icons on tablet
+<ul className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+  {tier.benefits.map((benefit, i) => (
+    <li 
+      key={i} 
+      className="flex items-start gap-2 text-white/90"
+    >
+      <Check className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/80 flex-shrink-0 mt-0.5" />
+      <span className="text-xs md:text-sm leading-tight">{benefit}</span>
+    </li>
+  ))}
+</ul>
 ```
 
----
+### Change 3: Adjust Content/Video Ratio to 65%/35%
 
-## Issue 2: Convert Search Bar to Search Button
-
-### Current Behavior
-Full search bar is always visible on tablet/desktop
-
-### Desired Behavior
-- Show only a search icon button (like the notification bell)
-- When clicked, open the full search dialog (CommandDialog)
-
-### File: `src/components/search/SpotlightSearch.tsx`
-
-Add a `variant` prop to support both modes:
-- `"bar"` - current behavior (full search bar)
-- `"button"` - just an icon button that opens the dialog
-
-**Lines 35-37** - Add variant prop:
-
-```typescript
-interface SpotlightSearchProps {
-  className?: string;
-  variant?: "bar" | "button";
-}
-```
-
-**Lines 189-213** - Conditionally render based on variant:
-
-```typescript
-return (
-  <>
-    {variant === "button" ? (
-      // Button mode - just an icon
-      <motion.button
-        className={`relative p-2 rounded-full bg-white/40 backdrop-blur-sm border border-purple-900/10 hover:bg-white/50 transition-colors ${className}`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setOpen(true)}
-      >
-        <Search className="w-5 h-5 text-muted-foreground" />
-        <kbd className="hidden lg:inline-flex absolute -bottom-1 -right-1 items-center gap-0.5 px-1 py-0.5 rounded bg-muted/80 text-[8px] font-medium text-muted-foreground border border-border/50">
-          <Command className="w-2 h-2" />K
-        </kbd>
-      </motion.button>
-    ) : (
-      // Bar mode - current full search bar
-      <motion.div
-        className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] bg-white/40 backdrop-blur-sm border border-purple-900/10 ${className}`}
-        whileHover={{ backgroundColor: "rgba(255,255,255,0.5)" }}
-      >
-        ...existing bar content...
-      </motion.div>
-    )}
-    
-    {/* Command Dialog - same as before */}
-    <CommandDialog ...>
-```
-
-### File: `src/pages/Index.tsx`
-
-Update the header to use the button variant for search:
-
-**Lines 439-442** - Change SpotlightSearch usage:
+**Line 106** - Add explicit width to left content:
 
 ```typescript
 // Before:
-{/* Spotlight Search Bar - Hidden on mobile */}
-<div className="hidden md:flex flex-1">
-  <SpotlightSearch />
+<div className="flex-1 p-5 z-10">
+
+// After: 65% width for content
+<div className="w-[65%] p-5 z-10">
+```
+
+**Lines 180-191** - Change video width to 35%:
+
+```typescript
+// Before:
+<div className="w-[120px] flex-shrink-0 relative overflow-hidden">
+
+// After: 35% width for video
+<div className="w-[35%] flex-shrink-0 relative overflow-hidden">
+```
+
+### Change 4: Additional Sizing Improvements
+
+**Lines 108-125** - Increase header text sizes on tablet:
+
+```typescript
+// Before:
+<h3 className="text-base font-bold text-white flex-1">
+  {tier.nameKa}
+</h3>
+<div className="flex items-baseline gap-1">
+  <span className="text-xl font-black text-white">₾{tier.price}</span>
+  <span className="text-xs text-white/70">/თვე</span>
 </div>
 
-// After: Use button variant positioned before notification bell
-// Remove this from center section
+// After: Larger on tablet
+<h3 className="text-base md:text-lg font-bold text-white flex-1">
+  {tier.nameKa}
+</h3>
+<div className="flex items-baseline gap-1">
+  <span className="text-xl md:text-2xl font-black text-white">₾{tier.price}</span>
+  <span className="text-xs md:text-sm text-white/70">/თვე</span>
+</div>
 ```
 
-**Lines 446-448** - Add search button before notification bell:
+**Line 150** - Increase CTA button text on tablet:
 
 ```typescript
-{/* Right side: Search button + Notification */}
-{user && (
-  <div className="flex items-center gap-1">
-    {/* Search button - tablet/desktop only */}
-    <div className="hidden md:block">
-      <SpotlightSearch variant="button" />
-    </div>
-    
-    {/* Bell icon with unread badge */}
-    <motion.button
-      ...
+// Before:
+className="w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+
+// After:
+className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
 ```
 
 ---
 
-## Summary of Changes
+## Summary
 
-| File | Change |
-|------|--------|
-| `src/components/social/LiveBadge.tsx` | Add 2px bottom margin to compensate for shadow offset |
-| `src/components/search/SpotlightSearch.tsx` | Add `variant` prop supporting `"bar"` and `"button"` modes |
-| `src/pages/Index.tsx` | Remove search bar from center, add search button before notification bell |
+| Element | Before | After |
+|---------|--------|-------|
+| Card min-height | `280px` | `320px` mobile, `360px` tablet |
+| Left content width | `flex-1` | `65%` |
+| Video width | `120px` | `35%` |
+| Benefit text | `11px` | `12px` mobile, `14px` tablet |
+| Benefit icons | `12px` | `14px` mobile, `16px` tablet |
+| Title text | `16px` | `16px` mobile, `18px` tablet |
+| Price text | `20px` | `20px` mobile, `24px` tablet |
+| CTA button | `py-3 text-sm` | `py-3/py-4 text-sm/text-base` |
 
 ---
 
 ## Visual Result
 
-**Before:**
 ```text
-[Menu] | MyTrivia [LIVE↓] | [========= ძებნა... ⌘K =========] | [🔔]
-                 ↑ badge lower
+Before:
+┌─────────────────────────────────────────┬───────┐
+│ [Crown] სოლო PRO           ₾9.99 /თვე  │       │
+│ ✓ 2x XP ბონუსი   ✓ ექსკლუზიური        │ Video │
+│ ✓ რეკლამების     ✓ პრიორიტეტული       │ 120px │
+│ [          გააქტიურება          ]      │       │
+└─────────────────────────────────────────┴───────┘
+                    ~80%                    ~20%
+
+After:
+┌──────────────────────────────────────┬──────────────┐
+│ [Crown] სოლო PRO          ₾9.99 /თვე │              │
+│                                      │              │
+│ ✓ 2x XP ბონუსი    ✓ ექსკლუზიური     │    Video     │
+│ ✓ რეკლამების      ✓ პრიორიტეტული    │     35%      │
+│                                      │              │
+│ [          გააქტიურება          ]    │              │
+└──────────────────────────────────────┴──────────────┘
+                    65%                      35%
 ```
 
-**After:**
-```text
-[Menu] | MyTrivia [LIVE] | [flex-1 empty space] | [🔍] [🔔]
-                 ↑ aligned                         ↑ search button
-```
-
-When search button is clicked → Full CommandDialog opens (existing behavior)
