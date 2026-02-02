@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -25,6 +26,7 @@ interface AvatarCircleProps {
   xpCurrent?: number;
   xpTotal?: number;
   hideStats?: boolean;
+  showAvatarPrompt?: boolean; // Show sparkle badge to prompt user to create animated avatar
 }
 
 export function AvatarCircle({ 
@@ -38,6 +40,7 @@ export function AvatarCircle({
   xpCurrent,
   xpTotal,
   hideStats = false,
+  showAvatarPrompt = false,
 }: AvatarCircleProps) {
   const [showVideo, setShowVideo] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -257,6 +260,21 @@ export function AvatarCircle({
             )}
 
             {/* Sparkle indicator for animated avatars */}
+            
+            {/* Avatar prompt badge - shows when user should create animated avatar */}
+            {showAvatarPrompt && !animatedAvatarUrl && (
+              <motion.div
+                className="absolute -top-2 -right-2 rounded-full p-2 shadow-lg z-20"
+                style={{
+                  background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
+                  boxShadow: "0 4px 12px rgba(168, 85, 247, 0.4)",
+                }}
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+              </motion.div>
+            )}
           </>
         ) : (
           <div 
