@@ -72,7 +72,7 @@ export function MobileProCarousel() {
   return (
     <div className="px-4 pt-4 pb-0">
       {/* Combined PRO Card with Mascot */}
-      <div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[420px]">
+      <div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[340px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={tier.id}
