@@ -1,90 +1,136 @@
 
-# Plan: Fix True/False Card Height and Arrow Visibility
+# Plan: Replace Avatar/Profile Info with "Add Round" Button
 
 ## Overview
 
-Three changes needed:
-1. Increase True/False button height from 90px to 120px
-2. Remove navigation arrows from the game play screen (QuizPlayModal)
-3. Keep navigation arrows on the question editor (already present in GameStyleQuestionEditor)
+Replace the player's avatar and date section with an "Add Round" button ("დაამატე რაუნდი") in collection cards. This affects both the collapsed card view and the expanded modal view.
 
 ---
 
 ## Technical Changes
 
-### 1. Increase True/False Button Height
+### File: `src/components/social/MyTriviaTab.tsx`
 
-**File: `src/components/ui/quiz-true-false-button.tsx`**
+#### Change 1: Collapsed Card - Replace Info Row (Lines 493-518)
 
-Change line 119 from `h-[90px]` to `h-[120px]`:
+Replace the avatar + profile + date section with an "Add Round" button:
+
+**Current structure (Lines 493-518):**
+- Avatar
+- Profile nickname
+- Date
+- Expand/collapse chevron
+
+**New structure:**
+- "დაამატე რაუნდი" button (Add Round)
+- Expand/collapse chevron
 
 ```typescript
-// BEFORE (Line 119):
-className={cn(
-  "w-full relative cursor-pointer h-[90px]",
-  disabled && "cursor-default",
-  className
-)}
+{/* Info Row - BEFORE */}
+<div className="p-4">
+  <div className="flex items-center gap-3">
+    {/* Avatar ... */}
+    {/* Profile name + date ... */}
+    {/* Expand chevron */}
+  </div>
+  {/* Stats ... */}
+  {/* Publish button ... */}
+</div>
 
-// AFTER:
-className={cn(
-  "w-full relative cursor-pointer h-[120px]",
-  disabled && "cursor-default",
-  className
-)}
+{/* Info Row - AFTER */}
+<div className="p-4">
+  <div className="flex items-center gap-3">
+    {/* Add Round Button */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onAddRound(collection.id, roundsCount + 1);
+      }}
+      className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                 bg-muted/30 hover:bg-muted/50 transition-colors 
+                 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+    >
+      <Plus className="w-4 h-4" />
+      <span className="text-sm font-medium">დაამატე რაუნდი</span>
+    </button>
+    {/* Expand/Collapse icon */}
+    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+      {isExpanded ? (
+        <ChevronUp className="w-5 h-5 text-muted-foreground" />
+      ) : (
+        <ChevronDown className="w-5 h-5 text-muted-foreground" />
+      )}
+    </div>
+  </div>
+  {/* Stats Row */}
+  ...
+  {/* Publish Button */}
+  ...
+</div>
 ```
-
-This restores a taller card appearance, making the icon and text less cramped.
 
 ---
 
-### 2. Remove Arrows from Game Screen
+#### Change 2: Expanded Modal (Desktop) - Replace Collection Info (Lines 325-350)
 
-**File: `src/components/social/QuizPlayModal.tsx`**
+Replace the avatar + profile section in the expanded modal with the "Add Round" button:
 
-Remove the entire navigation arrows block (lines 380-411):
+**Current structure (Lines 325-350):**
+- Avatar
+- Profile nickname
+- Date  
+- Visibility badge with rounds count
+
+**New structure:**
+- "დაამატე რაუნდი" button
+- Visibility badge with rounds count
 
 ```typescript
-// DELETE THESE LINES (380-411):
-{!gameComplete && !roundComplete && !allRoundsComplete && questions.length > 1 && (
-  <>
-    {/* Left Arrow - Go to previous question ... */}
-    <button ... >
-      <ChevronLeft ... />
+{/* Collection Info - AFTER */}
+<div className="p-4 border-b border-border">
+  <div className="flex items-center gap-3">
+    {/* Add Round Button */}
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onAddRound(collection.id, (quizzes?.length || roundsCount) + 1);
+      }}
+      className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                 bg-muted/30 hover:bg-muted/50 transition-colors 
+                 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+    >
+      <Plus className="w-4 h-4" />
+      <span className="text-sm font-medium">დაამატე რაუნდი</span>
     </button>
-    
-    {/* Right Arrow - Skip to next question ... */}
-    <button ... >
-      <ChevronRight ... />
-    </button>
-  </>
-)}
+    {/* Visibility badge */}
+    <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
+      {collection.is_public ? (
+        <Globe className="w-3.5 h-3.5" aria-hidden />
+      ) : (
+        <Lock className="w-3.5 h-3.5" aria-hidden />
+      )}
+      <span>{roundsCount} რაუნდი</span>
+    </div>
+  </div>
+  {/* Stats Row remains */}
+  ...
+</div>
 ```
-
-The game screen doesn't need navigation arrows - players should answer questions in sequence.
-
----
-
-### 3. Verify Edit Screen Arrows (Already Present)
-
-**File: `src/components/social/GameStyleQuestionEditor.tsx`**
-
-The arrows are already implemented at lines 725-750 with `className="block"` (visible on all devices). No changes needed here.
 
 ---
 
 ## Summary
 
-| File | Change |
-|------|--------|
-| `quiz-true-false-button.tsx` | Increase height: `h-[90px]` → `h-[120px]` |
-| `QuizPlayModal.tsx` | Remove navigation arrows block (lines 380-411) |
-| `GameStyleQuestionEditor.tsx` | No changes - arrows already present on all devices |
+| Location | Line Range | Change |
+|----------|------------|--------|
+| Collapsed card info row | Lines 495-518 | Remove avatar/profile/date, add "დაამატე რაუნდი" button |
+| Expanded modal info section | Lines 327-350 | Remove avatar/profile/date, add "დაამატე რაუნდი" button |
 
 ---
 
 ## Expected Result
 
-- **True/False buttons**: Taller (120px) with more breathing room for icon and text
-- **Game screen**: No navigation arrows - clean gameplay experience
-- **Edit screen**: Navigation arrows visible on all devices (mobile, tablet, desktop) + swipe still works
+- **Collapsed cards**: Show "დაამატე რაუნდი" button + expand chevron instead of avatar/name/date
+- **Expanded modal (desktop)**: Show "დაამატე რაუნდი" button + rounds count badge instead of avatar/name/date
+- Stats row (likes, saves, plays) remains visible below the button
+- Publish button remains at the bottom
