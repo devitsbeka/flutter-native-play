@@ -190,7 +190,7 @@ export function GuestWelcomePanel({
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 -z-10" />
                 
                 {/* Camera badge overlay */}
-                <div className="absolute bottom-1 right-1 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform">
+                <div className="absolute bottom-1 right-1 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform z-20">
                   <Camera className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
                 
