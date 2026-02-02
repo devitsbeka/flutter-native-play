@@ -21,7 +21,7 @@ export function LiveBadge({ size = "md" }: LiveBadgeProps) {
       className="inline-flex items-center"
     >
       <span 
-        className={`inline-flex items-center ${config.gap} ${config.px} ${config.py} ${config.rounded} ${config.text} font-bold uppercase tracking-wider text-white`}
+        className={`inline-flex items-center ${config.gap} ${config.px} ${config.py} ${config.rounded} ${config.text} font-black uppercase tracking-wider text-white`}
         style={{
           background: '#EF4444',
           boxShadow: '0 2px 0 #B91C1C',

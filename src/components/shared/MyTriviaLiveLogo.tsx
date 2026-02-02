@@ -1,7 +1,9 @@
 import { LiveBadge } from "@/components/social/LiveBadge";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 
 interface MyTriviaLiveLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
+  responsive?: boolean;
   textColor?: "light" | "dark";
   className?: string;
 }
@@ -15,10 +17,25 @@ const sizeConfig = {
 
 export function MyTriviaLiveLogo({ 
   size = "md", 
+  responsive = false,
   textColor = "dark",
   className = "" 
 }: MyTriviaLiveLogoProps) {
-  const config = sizeConfig[size];
+  const breakpoint = useBreakpoint();
+  
+  // Auto-size based on breakpoint when responsive is enabled
+  let effectiveSize = size;
+  if (responsive) {
+    if (breakpoint === "xxs" || breakpoint === "xs" || breakpoint === "sm") {
+      effectiveSize = "sm";  // Mobile
+    } else if (breakpoint === "md") {
+      effectiveSize = "md";  // Tablet
+    } else {
+      effectiveSize = "lg";  // Desktop (lg, xl, 2xl)
+    }
+  }
+  
+  const config = sizeConfig[effectiveSize];
   const colorClass = textColor === "light" ? "text-white" : "text-black";
 
   return (
