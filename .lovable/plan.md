@@ -1,151 +1,165 @@
 
-
-# Plan: Optimize Shop Layout & PRO Card Mobile Design
+# Plan: Fix Logo, Flag Display, and Screen-Specific Visibility
 
 ## Overview
 
-Based on the screenshots, there are 4 issues to fix:
-1. **Move shop content up by 60px** - Reduce the gap between the PRO carousel and product cards
-2. **Decrease power-up count badges by 5%** - Make them smaller so they don't touch the "ძალები" title
-3. **Benefits text overlapping mascot video on mobile** - Convert to a vertical list instead of 2-column grid
-4. **Price below title on mobile only** - Move price from header row to its own row on mobile screens
+Based on the screenshots and analysis, there are 3 distinct issues to fix:
+
+1. **Logo breaks to two lines** - Ensure "MyTrivia LIVE" always stays on one line
+2. **Remove flags from desktop/tablet username sections** - Flags should NOT appear next to username on tablet and desktop screens
+3. **Keep flag on mobile only** - Mobile should show the rectangular FlagIcon (same style as sidebar bottom)
+
+---
+
+## Screen Breakdown
+
+Understanding the Tailwind breakpoints used in `Index.tsx`:
+- **Mobile**: `md:hidden` (screens < 768px)
+- **Tablet**: `hidden md:flex xl:hidden` (768px ≤ screen < 1280px)
+- **Desktop**: `hidden xl:flex` (screens ≥ 1280px)
 
 ---
 
 ## Technical Changes
 
-### File 1: `src/components/shop/MobileProCarousel.tsx`
+### File 1: `src/pages/Index.tsx`
 
-#### Change 1: Reduce bottom padding to move content up by 60px
+#### Change 1: Remove FlagIcon from tablet section (md to xl)
 
-**Line 73** - Decrease bottom padding from `pb-[30px]` to `pb-0`:
+**Lines 834-841** - Remove the FlagIcon from the tablet user info section:
 
 ```typescript
-// Before:
-<div className="px-4 pt-4 pb-[30px]">
+// BEFORE (Lines 834-841):
+<div className="flex items-center justify-center gap-2.5">
+  {profile?.country_code && (
+    <FlagIcon countryCode={profile.country_code} size="md" />
+  )}
+  <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+    {profile?.nickname || t("game.guest")}
+  </span>
+</div>
 
-// After:
-<div className="px-4 pt-4 pb-0">
+// AFTER:
+<div className="flex items-center justify-center gap-2.5">
+  <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+    {profile?.nickname || t("game.guest")}
+  </span>
+</div>
 ```
 
-#### Change 2: Convert benefits to single column list on mobile (2 columns on tablet+)
+#### Change 2: Remove FlagIcon from another tablet-ish section (with power-ups)
 
-**Lines 128-138** - Change grid to flex column on mobile, 2 cols on md+:
+**Lines 744-751** - This section is for `md to xl` with `lg:hidden` action buttons (smaller tablets):
 
 ```typescript
-// Before:
-<ul className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+// BEFORE (Lines 744-751):
+<div className="flex items-center justify-center gap-2.5">
+  {profile?.country_code && (
+    <FlagIcon countryCode={profile.country_code} size="md" />
+  )}
+  <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+    {profile?.nickname || t("game.guest")}
+  </span>
+</div>
 
-// After:
-<ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mb-4">
+// AFTER:
+<div className="flex items-center justify-center gap-2.5">
+  <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+    {profile?.nickname || t("game.guest")}
+  </span>
+</div>
 ```
 
-#### Change 3: Move price below title on mobile
+#### Change 3: Remove FlagIcon from desktop section (xl+)
 
-**Lines 107-125** - Restructure header to show price inline on md+, below title on mobile:
+**Lines 1109-1116** - Remove the FlagIcon from the desktop (xl+) user info section:
 
 ```typescript
-// Before (all inline):
-<div className="flex items-center gap-3 mb-2">
-  <div className="icon">...</div>
-  <h3 className="text-base md:text-lg font-bold text-white flex-1">{tier.nameKa}</h3>
-  <div className="flex items-baseline gap-1">
-    <span className="text-xl md:text-2xl font-black text-white">₾{tier.price}</span>
-    <span className="text-xs md:text-sm text-white/70">/თვე</span>
-  </div>
+// BEFORE (Lines 1109-1116):
+<div className="flex items-center justify-center gap-2.5">
+  {profile?.country_code && (
+    <FlagIcon countryCode={profile.country_code} size="md" />
+  )}
+  <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+    {profile?.nickname || t("game.guest")}
+  </span>
 </div>
 
-// After (price below on mobile):
-<div className="flex flex-wrap items-center gap-3 mb-2">
-  <div className="icon">...</div>
-  <h3 className="text-base md:text-lg font-bold text-white">{tier.nameKa}</h3>
-  {/* Price - md+: inline with header */}
-  <div className="hidden md:flex items-baseline gap-1">
-    <span className="text-2xl font-black text-white">₾{tier.price}</span>
-    <span className="text-sm text-white/70">/თვე</span>
-  </div>
+// AFTER:
+<div className="flex items-center justify-center gap-2.5">
+  <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+    {profile?.nickname || t("game.guest")}
+  </span>
 </div>
-{/* Price - mobile only: below title */}
-<div className="flex md:hidden items-baseline gap-1 mb-2">
-  <span className="text-xl font-black text-white">₾{tier.price}</span>
-  <span className="text-xs text-white/70">/თვე</span>
-</div>
+```
+
+#### Change 4: Keep FlagIcon on mobile section (md:hidden)
+
+The mobile section at lines around 1100 already has a mobile-only layout with `md:hidden`. We need to verify there IS a FlagIcon here for the mobile username. Looking at the code, the mobile section is at lines 885-1070 with class `md:hidden`.
+
+Need to add FlagIcon to the mobile section if it doesn't exist in the user info area for mobile.
+
+---
+
+### File 2: `src/components/shared/MyTriviaLiveLogo.tsx`
+
+#### Change: Ensure logo never wraps
+
+The component already has `flex-nowrap` on the container. Add `shrink-0` to prevent the badge from shrinking and causing a wrap:
+
+```typescript
+// BEFORE (Line 54):
+<span className="flex items-center" style={{ marginTop: '-2px' }}>
+
+// AFTER:
+<span className="flex items-center shrink-0" style={{ marginTop: '-2px' }}>
+```
+
+Also ensure the entire container has `shrink-0`:
+
+```typescript
+// BEFORE (Line 42):
+<div className={`flex items-center gap-2 flex-nowrap ${className}`}>
+
+// AFTER:
+<div className={`flex items-center gap-2 flex-nowrap shrink-0 ${className}`}>
 ```
 
 ---
 
-### File 2: `src/components/shop/PowerUpsSummary.tsx`
+## Summary Table
 
-#### Change: Decrease badge size by ~5%
+| Screen | Flag Display | Location |
+|--------|--------------|----------|
+| Mobile (<768px) | ✅ Show FlagIcon | Next to username in mobile section |
+| Tablet (768px-1279px) | ❌ Remove | Was showing, now removed |
+| Desktop (≥1280px) | ❌ Remove | Was showing, now removed |
 
-**Line 30** - Reduce `min-w` from 58px to 55px and reduce icon size:
-
-```typescript
-// Before:
-className="flex items-center justify-between gap-2 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm min-w-[58px]"
-...
-<img src={POWER_UP_ICONS[type]} alt="" className="w-5 h-5" />
-
-// After:
-className="flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-sm min-w-[54px]"
-...
-<img src={POWER_UP_ICONS[type]} alt="" className="w-[18px] h-[18px]" />
-```
-
-**Line 41** - Reduce text size slightly:
-
-```typescript
-// Before:
-className="text-sm font-bold text-foreground/90"
-
-// After:
-className="text-[13px] font-bold text-foreground/90"
-```
-
----
-
-## Summary
-
-| Issue | File | Change |
-|-------|------|--------|
-| Gap too large | `MobileProCarousel.tsx` | Remove `pb-[30px]` → `pb-0` |
-| Power-up badges too wide | `PowerUpsSummary.tsx` | Reduce sizes by ~5% |
-| Benefits overlay mascot | `MobileProCarousel.tsx` | Single column list on mobile, 2-col on md+ |
-| Price inline on mobile | `MobileProCarousel.tsx` | Move price below title, show inline only on md+ |
+| Logo Fix | Change |
+|----------|--------|
+| Prevent wrapping | Add `shrink-0` to container and badge span |
 
 ---
 
 ## Visual Result
 
-**Before (Mobile):**
+**Desktop/Tablet (After):**
 ```text
-┌─────────────────────────────────────────────┐
-│ [Icon] სამეგობრო PRO        ₾19.99/თვე     │  ← Price inline, tight
-│                                             │
-│  ✓ Solo PRO +     ✓ საოჯახო                │  ← 2 columns overlay
-│    5 მეგობარი       ლიდერბორდი              │     mascot video
-│  ✓ ყველა PRO      ✓ ერთობლივი              │
-│    ფუნქცია          გამოწვევები             │
-│                                             │
-│         [ შეძენა > ]                        │
-└─────────────────────────────────────────────┘
-                      ↓ 30px gap
- ძალები [40] [44] [6] [14]   ← badges touch title
+      [Avatar Circle]
+      
+         მაკო          ← Just username, no flag
+      1.4M   167       ← Coins and gems
 ```
 
-**After (Mobile):**
+**Mobile (After):**
 ```text
-┌─────────────────────────────────────────────┐
-│ [Icon] სამეგობრო PRO                        │  ← Title only
-│ ₾19.99/თვე                                  │  ← Price on new line
-│                                             │
-│  ✓ Solo PRO + 5 მეგობარი                    │  ← Single column
-│  ✓ საოჯახო ლიდერბორდი                       │     list, no overlap
-│  ✓ ყველა PRO ფუნქცია                        │
-│  ✓ ერთობლივი გამოწვევები                    │
-│                                             │
-│         [ შეძენა > ]                        │
-└─────────────────────────────────────────────┘
- ძალები [40] [44] [6] [14]   ← 5% smaller badges
+      [Avatar Circle]
+      
+    [🇬🇪] მაკო         ← Rectangular flag + username
+      1.4M   167       ← Coins and gems
 ```
 
+**Logo (After):**
+```text
+MyTrivia [LIVE]        ← Always stays on one line, never wraps
+```
