@@ -47,7 +47,11 @@ export function GuestWelcomePanel({
   const [usernameError, setUsernameError] = useState<string | undefined>();
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(true);
+  // Detect returning user - show login instead of signup
+  const [isSignUp, setIsSignUp] = useState(() => {
+    const lastEmail = localStorage.getItem('lastLoginEmail');
+    return !lastEmail; // If saved email exists, default to login
+  });
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   
@@ -239,29 +243,57 @@ export function GuestWelcomePanel({
         onSubmit={handleSubmit}
         className="w-full space-y-2"
       >
-        {/* Username Input */}
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
-            <User className="w-4 h-4" />
+        {/* Username Input - Only show in signup mode */}
+        {isSignUp && (
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
+              <User className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (usernameError) setUsernameError(undefined);
+              }}
+              placeholder="სახელი"
+              disabled={loading}
+              className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
+                         focus:border-primary outline-none text-sm font-medium
+                         disabled:opacity-50 transition-colors"
+              style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
+            />
+            {usernameError && (
+              <p className="text-xs text-destructive mt-0.5 ml-2">{usernameError}</p>
+            )}
           </div>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-              if (usernameError) setUsernameError(undefined);
-            }}
-            placeholder="სახელი"
-            disabled={loading}
-            className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
-                       focus:border-primary outline-none text-sm font-medium
-                       disabled:opacity-50 transition-colors"
-            style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
-          />
-          {usernameError && (
-            <p className="text-xs text-destructive mt-0.5 ml-2">{usernameError}</p>
-          )}
-        </div>
+        )}
+
+        {/* Email Input - Only show in login mode */}
+        {!isSignUp && (
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
+              <User className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (usernameError) setUsernameError(undefined);
+              }}
+              placeholder="ელფოსტა ან სახელი"
+              disabled={loading}
+              className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
+                         focus:border-primary outline-none text-sm font-medium
+                         disabled:opacity-50 transition-colors"
+              style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
+            />
+            {usernameError && (
+              <p className="text-xs text-destructive mt-0.5 ml-2">{usernameError}</p>
+            )}
+          </div>
+        )}
 
         {/* Password Input */}
         <div className="relative">
