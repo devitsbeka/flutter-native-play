@@ -129,15 +129,15 @@ export function MobileProCarousel() {
                 </div>
               </div>
 
-              {/* Benefits - Horizontal with flex-wrap */}
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4">
-                {tier.benefits.slice(0, 3).map((benefit, i) => (
+              {/* Benefits - Grid layout: 3 columns first row, 1 on second */}
+              <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 mb-4">
+                {tier.benefits.map((benefit, i) => (
                   <div 
                     key={i} 
-                    className="flex items-center gap-1.5 text-sm text-white/90"
+                    className="flex items-center gap-1.5 text-white/90"
                   >
                     <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
-                    <span>{benefit}</span>
+                    <span className="text-xs">{benefit}</span>
                   </div>
                 ))}
               </div>
@@ -189,7 +189,7 @@ export function MobileProCarousel() {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover object-top"
+                className="absolute inset-0 w-full h-full object-cover object-center"
               >
                 <source src={shopBgVideo} type="video/mp4" />
               </video>
