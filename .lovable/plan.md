@@ -1,12 +1,26 @@
 
 
-# Fix Camera Badge - Move Outside Circular Container
+# Show Login View for Returning Users
 
 ## Problem
-The camera badge icon is placed **inside** the circular button that has `overflow-hidden`. This causes the badge to be cropped by the circular boundary, making it partially invisible.
+The GuestWelcomePanel always starts in **signup mode** with 3 fields (username, email equivalent, password). When a returning user visits, they should see:
+- "მობრძანდი!" (Welcome back!) title
+- Only **2 fields**: Email + Password (no username)
+- "შესვლა" button
+- Option to switch to signup if they don't have an account
+
+---
 
 ## Solution
-Move the camera badge **outside** the button element but keep it visually positioned at the bottom-right corner of the avatar. This requires wrapping both the button and the badge in a parent container.
+
+### 1. Detect Returning Users
+Store the user's email in localStorage after successful login or signup. When the component loads, check if this email exists to determine if the user is returning.
+
+### 2. Hide Username Field in Sign-In Mode
+The username field should only show when `isSignUp` is true. In sign-in mode, users enter their email/username and password only.
+
+### 3. Default to Sign-In for Returning Users
+If localStorage has a stored email from a previous session, initialize `isSignUp` as `false` (sign-in mode).
 
 ---
 
@@ -14,72 +28,81 @@ Move the camera badge **outside** the button element but keep it visually positi
 
 ### File: `src/components/home/GuestWelcomePanel.tsx`
 
-**Current structure (badge inside button, gets clipped):**
-```text
-<PopoverTrigger>
-  <button class="overflow-hidden rounded-full">
-    <video ... />
-    <div class="camera-badge" />  ← CLIPPED!
-  </button>
-</PopoverTrigger>
-```
+| Change | Description |
+|--------|-------------|
+| Check localStorage on mount | Look for `lastLoginEmail` to detect returning users |
+| Initialize `isSignUp` based on returning status | `false` if returning, `true` otherwise |
+| Conditionally render username field | Only show when `isSignUp === true` |
+| Update placeholder text | In sign-in mode, show "ელფოსტა ან სახელი" (email or username) |
 
-**New structure (badge outside button, visible):**
-```text
-<PopoverTrigger>
-  <div class="relative">  ← New wrapper
-    <button class="overflow-hidden rounded-full">
-      <video ... />
-    </button>
-    <div class="camera-badge" />  ← NOT CLIPPED!
-  </div>
-</PopoverTrigger>
-```
-
-### Changes:
-1. Add a wrapper `<div className="relative">` around the button
-2. Move the camera badge div **outside** the button, but still inside the wrapper
-3. Position the badge at `bottom-0 right-0` of the wrapper
-4. Remove hover effects tied to the button group (or use CSS sibling selectors)
+**Key code changes:**
 
 ```tsx
-<PopoverTrigger asChild>
-  <div className="relative group cursor-pointer">
-    {/* Circular avatar container */}
-    <button 
-      type="button"
-      className="relative rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-      style={{...}}
-    >
-      {/* Video/Photo content */}
-    </button>
-    
-    {/* Camera badge - OUTSIDE button, not clipped */}
-    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform z-20">
-      <Camera className="w-3.5 h-3.5 text-primary-foreground" />
-    </div>
+// Detect returning user on mount
+const [isSignUp, setIsSignUp] = useState(() => {
+  const lastEmail = localStorage.getItem('lastLoginEmail');
+  return !lastEmail; // If no saved email, show signup; otherwise show login
+});
+
+// In the form, conditionally render username field:
+{isSignUp && (
+  <div className="relative">
+    {/* Username input - only for signup */}
   </div>
-</PopoverTrigger>
+)}
+
+// Update the input placeholder for sign-in mode:
+placeholder={isSignUp ? "სახელი" : "ელფოსტა ან სახელი"}
 ```
+
+### Storage Logic
+- After successful login/signup in the parent component, store the email:
+  ```tsx
+  localStorage.setItem('lastLoginEmail', email);
+  ```
+- This happens in the auth handlers, not in GuestWelcomePanel itself
 
 ---
 
-## Visual Result
+## UI Changes
 
+**Signup Mode (new users):**
 ```text
-Before (clipped):          After (visible):
-╭───────────╮              ╭───────────╮
-│           │              │           │
-│  AVATAR   │              │  AVATAR   │
-│        [─ │ ← cut off    │           │📷 ← fully visible
-╰───────────╯              ╰───────────╯
+╭────────────────────────╮
+│     გამარჯობა!         │
+│  შექმენი შენი პროფილი   │
+│      [Avatar 📷]       │
+│  ┌──────────────────┐  │
+│  │ 👤 სახელი        │  │  ← Username (signup only)
+│  └──────────────────┘  │
+│  ┌──────────────────┐  │
+│  │ 🔒 პაროლი        │  │
+│  └──────────────────┘  │
+│  [ შექმენი ანგარიში ]  │
+╰────────────────────────╯
+```
+
+**Sign-in Mode (returning users):**
+```text
+╭────────────────────────╮
+│     მობრძანდი!         │
+│  შედი შენს ანგარიშზე   │
+│      [Avatar 📷]       │
+│  ┌──────────────────┐  │
+│  │ 👤 ელფოსტა       │  │  ← Email/username only
+│  └──────────────────┘  │
+│  ┌──────────────────┐  │
+│  │ 🔒 პაროლი        │  │
+│  └──────────────────┘  │
+│  [      შესვლა      ]  │
+╰────────────────────────╯
 ```
 
 ---
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/components/home/GuestWelcomePanel.tsx` | Wrap button in relative div, move camera badge outside button |
+| File | Changes |
+|------|---------|
+| `src/components/home/GuestWelcomePanel.tsx` | Detect returning users, conditionally show username field, default to login for returning users |
 
