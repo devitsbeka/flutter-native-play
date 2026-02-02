@@ -44,7 +44,7 @@ export function MyTriviaLiveLogo({ size = "md", animate = true, className = "" }
       {/* LIVE Badge */}
       <motion.span className={s.gap}>
         <span 
-          className={`relative inline-flex items-center ${s.badge} rounded-md font-bold uppercase tracking-wider text-white`}
+          className={`relative inline-flex items-center ${s.badge} rounded-full font-bold uppercase tracking-wider text-white`}
           style={{
             background: '#EF4444',
             boxShadow: '0 2px 0 #B91C1C, 0 3px 6px rgba(0,0,0,0.15)',
