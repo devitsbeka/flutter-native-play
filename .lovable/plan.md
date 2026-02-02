@@ -1,11 +1,13 @@
 
-# Plan: Fix PRO Card Layout in MobileProCarousel
+# Plan: Update PRO Tier Benefits and Swap Colors
 
-## Issues to Fix
+## Current State
+- **სოლო PRO**: Purple gradient, 4 benefits
+- **სამეგობრო PRO**: Pink gradient, 4 benefits
 
-1. **Button not at bottom**: The CTA button should be positioned at the absolute bottom of the card
-2. **Benefits need more spacing**: Move benefits down by 40px from the header
-3. **Mascot crown cropped**: The video mascot has a crown on its head that gets cut off - need to reposition video to show the full mascot
+## Target State (from images)
+- **სოლო PRO**: Pink gradient, 3 benefits
+- **სამეგობრო PRO**: Purple gradient, 3 benefits
 
 ---
 
@@ -13,82 +15,56 @@
 
 ### File: `src/components/shop/MobileProCarousel.tsx`
 
-#### Change 1: Make left content use flex column with space-between
-
-Update the left content container to use flexbox with justify-between so the button stays at the bottom:
-
-**Lines 106-184** - Restructure the content layout:
+#### Update PRO_TIERS array (lines 8-40)
 
 ```typescript
-{/* Left: Content */}
-<div className="w-[65%] p-5 z-10 flex flex-col">
-  {/* Top Content */}
-  <div>
-    {/* Header - Icon + Title (+ Price on md+) */}
-    <div className="flex flex-wrap items-center gap-3 mb-2">
-      {/* ... existing header content ... */}
-    </div>
-    {/* Price - mobile only */}
-    <div className="flex md:hidden items-baseline gap-1 mb-2">
-      {/* ... existing price ... */}
-    </div>
-  </div>
-
-  {/* Benefits - add mt-10 (40px) for spacing */}
-  <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mt-10 mb-auto">
-    {/* ... existing benefits ... */}
-  </ul>
-
-  {/* CTA Button - mt-auto pushes it to bottom */}
-  <button
-    className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
-    {/* ... rest of button ... */}
-  >
-    {/* ... button content ... */}
-  </button>
-</div>
-```
-
-#### Change 2: Adjust video positioning to show full mascot with crown
-
-The mascot has a crown on its head that gets cropped. Update the video element to position from the top-right corner and adjust object-position:
-
-**Lines 187-197** - Update video styling:
-
-```typescript
-{/* Right: Video Background */}
-<div className="w-[35%] flex-shrink-0 relative overflow-hidden">
-  <video
-    autoPlay
-    loop
-    muted
-    playsInline
-    className="absolute inset-0 w-full h-full object-cover"
-    style={{ 
-      objectPosition: "70% 20%"  // Shift focus to show crown (move up and slightly left)
-    }}
-  >
-    <source src={shopBgVideo} type="video/mp4" />
-  </video>
-</div>
+const PRO_TIERS = [
+  {
+    id: "solo" as const,
+    nameKa: "სოლო PRO",
+    price: 9.99,
+    icon: Crown,
+    benefits: [
+      "უფასო თამაშში",
+      "ყველა PRO ფუნქცია",
+      "რეკლამის გარეშე",
+    ],
+    // SWAP: Now using Pink gradient (was on Family)
+    gradient: "linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)",
+    shadow: "#9D174D",
+    ctaText: "გააქტიურება",
+  },
+  {
+    id: "family" as const,
+    nameKa: "სამეგობრო PRO",
+    price: 19.99,
+    icon: Users,
+    benefits: [
+      "SOLO PRO + 5 მეგობარი",
+      "ყველა PRO ფუნქცია",
+      "რეკლამის გარეშე",
+    ],
+    // SWAP: Now using Purple gradient (was on Solo)
+    gradient: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)",
+    shadow: "#4C1D95",
+    popular: true,
+    ctaText: "შეძენა",
+  },
+];
 ```
 
 ---
 
 ## Summary of Changes
 
-| Element | Before | After |
-|---------|--------|-------|
-| Left content div | Regular div | `flex flex-col` |
-| Benefits section | `mb-4` | `mt-10 mb-auto` (40px down, flex grow) |
-| CTA Button | After benefits | Fixed at bottom with `mt-4` |
-| Video | `object-center` | `objectPosition: "70% 20%"` to show crown |
+| Tier | Before | After |
+|------|--------|-------|
+| **სოლო PRO Color** | Purple | Pink |
+| **სოლო PRO Benefits** | 4 items (2x XP, No-ads, +3 spins, VIP badge) | 3 items (Free game, All PRO, No-ads) |
+| **სამეგობრო PRO Color** | Pink | Purple |
+| **სამეგობრო PRO Benefits** | 4 items (Solo+5, Power-ups, Free game, No-ads) | 3 items (Solo+5 friends, All PRO, No-ads) |
 
 ---
 
-## Expected Result
-
-- The CTA button ("გააქტიურება") stays at the bottom of the card
-- Benefits section has 40px gap from header
-- Video mascot shows the full figure including the crown on its head
-- Layout maintains proper structure on both mobile and tablet
+## Note
+The text "ყველა PRO ფუნქცია" (All PRO features) is a summary reference - it implies users get all the active benefits without listing each one explicitly. This is a cleaner marketing approach.
