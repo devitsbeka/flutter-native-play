@@ -8,7 +8,7 @@ export function LiveBadge() {
       className="inline-flex items-center ml-1.5"
     >
       <span 
-        className="relative inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-white"
+        className="relative inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white"
         style={{
           background: '#EF4444',
           boxShadow: '0 2px 0 #B91C1C, 0 3px 6px rgba(0,0,0,0.15)',
