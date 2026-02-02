@@ -1,18 +1,22 @@
-// Trivia-themed room name generator for game rooms
+// Fun trivia room name generator - exciting themes for game rooms
 // Simple fallback names for when AI generation is not available
 
 const TRIVIA_NAMES = [
-  "IQ ბრძოლა",
-  "გენიოსები", 
-  "ჭკვიანები",
-  "ერუდიტები",
-  "მცოდნეები",
-  "მეცნიერები",
-  "კვიზმანიები",
-  "ტვინები",
-  "გონიერები",
-  "გამარჯვებულები",
-  "ლიდერები"
+  // Battle themes
+  "ტვინების არენა",   // Brain Arena
+  "გონების რინგი",    // Mind Ring
+  "IQ დუელი",         // IQ Duel
+  // Team themes  
+  "გენიოსთა კლუბი",   // Genius Club
+  "ჭკვიანთა ბანდა",   // Smart Gang
+  // Fun themes
+  "IQ პარტი",         // IQ Party
+  "გონების რეივი",    // Mind Rave
+  // Epic themes
+  "დრაკონთა კლუბი",   // Dragon Club
+  "ნინჯა ტვინები",    // Ninja Brains
+  "ფენიქსის ბრძოლა",  // Phoenix Battle
+  "ლომთა ბრძოლა",     // Lions' Battle
 ];
 
 export function generateRoomName(): string {

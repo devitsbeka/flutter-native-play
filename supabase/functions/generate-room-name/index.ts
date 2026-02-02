@@ -11,52 +11,77 @@ const BANNED_WORDS = [
 // Max character limit for room names
 const MAX_NAME_LENGTH = 18;
 
-// Simple fallback names for when AI fails
+// Fun fallback names for trivia rooms - exciting themes!
 const FALLBACK_NAMES = [
-  "IQ ბრძოლა", "გენიოსები", "ჭკვიანები", "ერუდიტები",
-  "მცოდნეები", "მეცნიერები", "კვიზმანიები", "ტვინები",
-  "გონიერები", "გამარჯვებულები", "ლიდერები"
+  // Battle themes
+  "ტვინების არენა",   // Brain Arena
+  "გონების რინგი",    // Mind Ring
+  "IQ დუელი",         // IQ Duel
+  // Team themes  
+  "გენიოსთა კლუბი",   // Genius Club
+  "ჭკვიანთა ბანდა",   // Smart Gang
+  // Fun themes
+  "IQ პარტი",         // IQ Party
+  "გონების რეივი",    // Mind Rave
+  // Epic themes
+  "დრაკონთა კლუბი",   // Dragon Club
+  "ნინჯა ტვინები",    // Ninja Brains
+  "ფენიქსის ბრძოლა",  // Phoenix Battle
+  "ლომთა ბრძოლა",     // Lions' Battle
 ];
 
-// Curated keyword-to-slug fallback map for common trivia themes
+// Curated keyword-to-slug fallback map for fun trivia themes
 const THEME_ICON_FALLBACKS: Record<string, string[]> = {
-  // Knowledge themes
-  'brain': ['brain', 'head', 'mind', 'thinking'],
-  'smart': ['brain', 'lightbulb', 'genius'],
-  'genius': ['lightbulb', 'brain', 'star'],
-  'lightbulb': ['lightbulb', 'bulb', 'idea'],
-  'idea': ['lightbulb', 'bulb', 'brain'],
-  'think': ['brain', 'head', 'thinking'],
+  // Battle/Competition themes
+  'arena': ['arena', 'colosseum', 'stadium', 'ring', 'amphitheater'],
+  'duel': ['sword', 'fencing', 'swords', 'fight', 'crossed-swords'],
+  'ring': ['boxing', 'ring', 'fight', 'arena', 'wrestling'],
+  'battle': ['sword', 'swords', 'fight', 'battle', 'shield'],
+  'war': ['shield', 'sword', 'battle', 'helmet', 'warrior'],
+  'boxing': ['boxing', 'gloves', 'fight', 'punch'],
+  'knight': ['knight', 'armor', 'sword', 'shield', 'helmet'],
+  'sword': ['sword', 'swords', 'blade', 'fight', 'crossed-swords'],
+  'shield': ['shield', 'defense', 'armor', 'knight'],
   
-  // Competition themes
-  'battle': ['sword', 'swords', 'fight', 'battle'],
-  'war': ['shield', 'sword', 'battle'],
-  'champion': ['trophy', 'medal', 'winner', 'cup'],
-  'trophy': ['trophy', 'cup', 'award', 'prize'],
-  'winner': ['medal', 'trophy', 'star', 'crown'],
-  'crown': ['crown', 'king', 'queen', 'royal'],
-  'medal': ['medal', 'award', 'badge'],
+  // Team/Social themes  
+  'club': ['friends', 'group', 'party', 'team', 'people'],
+  'gang': ['group', 'friends', 'team', 'squad', 'people'],
+  'team': ['team', 'group', 'friends', 'people', 'squad'],
+  'friends': ['friends', 'group', 'people', 'team'],
+  'party': ['party', 'celebration', 'confetti', 'fireworks', 'balloon'],
   
-  // Knowledge/education themes
-  'book': ['book', 'books', 'reading', 'library'],
-  'science': ['flask', 'beaker', 'atom', 'science'],
-  'scientist': ['scientist', 'flask', 'lab'],
-  'wizard': ['wizard', 'magic', 'wand', 'hat'],
-  'magic': ['wand', 'magic', 'wizard', 'star'],
-  'knowledge': ['book', 'brain', 'graduation'],
+  // Mythical/Epic themes
+  'dragon': ['dragon', 'fire', 'knight', 'monster', 'creature'],
+  'phoenix': ['phoenix', 'fire', 'flame', 'bird', 'rebirth'],
+  'ninja': ['ninja', 'samurai', 'warrior', 'mask', 'shuriken'],
+  'samurai': ['samurai', 'ninja', 'warrior', 'sword', 'katana'],
+  'wizard': ['wizard', 'magic', 'wand', 'hat', 'sorcerer'],
+  'lion': ['lion', 'crown', 'king', 'beast', 'mane'],
+  'tiger': ['tiger', 'stripes', 'wild', 'beast', 'cat'],
+  'eagle': ['eagle', 'bird', 'flying', 'hawk', 'wings'],
+  'wolf': ['wolf', 'pack', 'wild', 'howl', 'beast'],
+  'bear': ['bear', 'beast', 'wild', 'grizzly'],
   
-  // Speed/energy themes  
-  'lightning': ['lightning', 'bolt', 'thunder', 'flash'],
-  'fast': ['rocket', 'lightning', 'speed'],
-  'rocket': ['rocket', 'spaceship', 'space'],
-  'star': ['star', 'stars', 'sparkle'],
-  'fire': ['fire', 'flame', 'hot'],
+  // Victory/Success themes
+  'champion': ['trophy', 'medal', 'crown', 'cup', 'winner'],
+  'trophy': ['trophy', 'cup', 'award', 'prize', 'winner'],
+  'winner': ['medal', 'trophy', 'star', 'crown', 'champion'],
+  'crown': ['crown', 'king', 'queen', 'royal', 'throne'],
+  'medal': ['medal', 'award', 'badge', 'gold', 'winner'],
+  'olympic': ['medal', 'torch', 'olympic', 'rings', 'flame'],
   
-  // Fun/game themes
-  'quiz': ['question', 'quiz', 'trivia'],
-  'game': ['gamepad', 'controller', 'dice'],
-  'puzzle': ['puzzle', 'jigsaw', 'piece'],
-  'target': ['target', 'bullseye', 'aim'],
+  // Fun/Energy themes
+  'fireworks': ['fireworks', 'explosion', 'spark', 'celebration'],
+  'lightning': ['lightning', 'bolt', 'thunder', 'flash', 'electric'],
+  'fire': ['fire', 'flame', 'hot', 'burning'],
+  'explosion': ['explosion', 'boom', 'blast', 'fireworks'],
+  'rocket': ['rocket', 'spaceship', 'space', 'launch'],
+  'star': ['star', 'stars', 'sparkle', 'shine'],
+  
+  // Brain/Smart themes
+  'brain': ['brain', 'head', 'mind', 'thinking', 'smart'],
+  'genius': ['lightbulb', 'brain', 'star', 'smart'],
+  'lightbulb': ['lightbulb', 'bulb', 'idea', 'smart'],
 };
 
 // Icon library row type
@@ -107,14 +132,44 @@ function validateAndCleanName(name: string): string {
   return cleaned;
 }
 
-// Search for icons matching keywords
+// Search for icons matching keywords - prioritizes exact matches
 async function searchIconByKeyword(
   supabase: SupabaseClient,
   keyword: string
 ): Promise<string | null> {
   const normalizedKeyword = keyword.toLowerCase().trim();
   
-  // First try direct keyword search in title
+  // First try exact title match (highest priority)
+  const { data: exactMatches, error: exactError } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url, title')
+    .not('icon_url', 'is', null)
+    .ilike('title', normalizedKeyword)
+    .limit(5);
+  
+  if (!exactError && exactMatches && exactMatches.length > 0) {
+    const matches = exactMatches as IconRow[];
+    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+    console.log(`Found icon by exact title: "${randomMatch.slug}" for keyword "${keyword}"`);
+    return randomMatch.icon_url;
+  }
+  
+  // Second try prefix match (title starts with keyword)
+  const { data: prefixMatches, error: prefixError } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url, title')
+    .not('icon_url', 'is', null)
+    .ilike('title', `${normalizedKeyword}%`)
+    .limit(10);
+  
+  if (!prefixError && prefixMatches && prefixMatches.length > 0) {
+    const matches = prefixMatches as IconRow[];
+    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+    console.log(`Found icon by prefix: "${randomMatch.slug}" for keyword "${keyword}"`);
+    return randomMatch.icon_url;
+  }
+  
+  // Third try partial match (contains keyword)
   const { data: titleMatches, error: titleError } = await supabase
     .from('icon_library')
     .select('slug, icon_url, title')
@@ -247,30 +302,19 @@ serve(async (req) => {
       );
     }
 
-    // Use AI to generate BOTH a creative name AND matching icon keyword
-    const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის და შესაბამისი აიკონის საძიებო სიტყვა.
+    // Use AI to generate fun, exciting names with matching icons
+    const prompt = `Generate a fun Georgian trivia room name. Pick ONE style:
+- Battle: ტვინების არენა, IQ დუელი, გონების რინგი
+- Team: გენიოსთა კლუბი, ჭკვიანთა ბანდა  
+- Epic: დრაკონთა კლუბი, ნინჯა ტვინები, ლომთა ბრძოლა
+- Party: IQ პარტი, გონების რეივი
 
-მოთხოვნები სახელისთვის:
-- მაქსიმუმ 18 სიმბოლო (ჩათვლით სფეისი)
-- 1-2 სიტყვა მაქსიმუმ
-- კრეატიული და სახალისო
-- მხოლოდ ქართული (IQ შეიძლება), არანაირი emoji
+Rules: max 18 chars, 1-2 words, Georgian only (IQ allowed), NO boring words (კვიზი, ტესტი, საკითხავი)
 
-აიკონის სიტყვა უნდა იყოს:
-- ინგლისურად, მხოლოდ 1 სიტყვა
-- რომელიც შეესაბამება სახელის თემას
-- მაგალითად: brain, trophy, star, book, lightning, rocket, crown, wizard, medal, fire, puzzle
+Return ONLY valid JSON, nothing else:
+{"name": "ქართული_სახელი", "icon_keyword": "english_word"}
 
-დააბრუნე JSON ფორმატში:
-{"name": "სახელი აქ", "icon_keyword": "keyword"}
-
-მაგალითები:
-{"name": "ტვინების ომი", "icon_keyword": "brain"}
-{"name": "IQ გენიუსები", "icon_keyword": "lightbulb"}
-{"name": "მეცნიერები", "icon_keyword": "scientist"}
-{"name": "ვარსკვლავები", "icon_keyword": "star"}
-{"name": "ჩემპიონები", "icon_keyword": "trophy"}
-{"name": "გონების ომი", "icon_keyword": "battle"}`;
+icon_keyword must match theme: dragon, lion, ninja, sword, trophy, party, crown, phoenix, wolf, eagle, boxing, arena`;
 
     console.log('Generating creative room name with matching icon...');
 
