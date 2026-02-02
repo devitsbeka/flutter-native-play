@@ -70,7 +70,7 @@ export function MobileProCarousel() {
   const TierIcon = tier.icon;
 
   return (
-    <div className="px-4 pt-4 pb-0">
+    <div className="px-4 pt-4 pb-[30px]">
       {/* Combined PRO Card with Mascot */}
       <div className="relative overflow-hidden rounded-3xl min-h-[280px]">
         <AnimatePresence mode="wait">
@@ -83,7 +83,6 @@ export function MobileProCarousel() {
             className="relative rounded-2xl overflow-hidden flex h-full"
             style={{
               background: tier.gradient,
-              boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 25px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.2)`,
               opacity: isProcessing ? 0.7 : 1,
             }}
           >
