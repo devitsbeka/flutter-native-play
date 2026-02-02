@@ -1,332 +1,133 @@
 
-# გეგმა: ჭკვიანი ძიების გაუმჯობესება - Typo Tolerance & Fuzzy Matching
+# Plan: Remove Avatar from Login Page & Add Avatar Reminder on Main Page
 
-## მიმოხილვა
+## Overview
 
-აიკონების ძიება უკვე აქვს ძლიერი ფუნდამენტი:
-- ქართულ-ინგლისური ბილინგვალური ძიება
-- ფონეტიკური ვარიანტების გენერაცია
-- Levenshtein distance ფუნქცია
-- კონტექსტური პატერნების ამოცნობა
-
-ახლა გავაძლიეროთ **typo tolerance** და **fuzzy matching** უფრო დაბალი threshold-ებით.
+The user wants to:
+1. **Remove** the mascot avatar from the login/sign-in page (GuestWelcomePanel)
+2. **Add** an avatar reminder prompt on the main page for logged-in users who haven't set their animated avatar yet
 
 ---
 
-## ცვლილებები
+## Changes
 
-### ფაილი 1: `supabase/functions/smart-icon-search/index.ts`
+### File 1: `src/components/home/GuestWelcomePanel.tsx`
 
-#### 1.1 Fuzzy Match Threshold-ის დაწევა
+**Remove the clickable avatar section** (lines 155-253)
 
-**ახლანდელი კოდი (ხაზი 946-954):**
-```typescript
-function isSimilar(a: string, b: string, threshold = 2): boolean {
-  // ...
-  const dynamicThreshold = Math.min(threshold, Math.floor(Math.min(a.length, b.length) / 3));
-  return levenshteinDistance(aLower, bLower) <= Math.max(1, dynamicThreshold);
-}
-```
+The current login page shows a mascot video with a camera badge for photo upload. This will be completely removed to simplify the login experience.
 
-**ახალი კოდი:**
-```typescript
-function isSimilar(a: string, b: string, threshold = 3): boolean {
-  const aLower = a.toLowerCase();
-  const bLower = b.toLowerCase();
-  
-  // Very short strings (< 3 chars): exact match only
-  if (a.length < 3 || b.length < 3) return aLower === bLower;
-  
-  // For medium strings (3-6 chars): allow 1 typo
-  // For longer strings (7+): allow 2-3 typos
-  const minLen = Math.min(a.length, b.length);
-  const dynamicThreshold = minLen <= 6 
-    ? 1 
-    : Math.min(threshold, Math.floor(minLen / 3));
-  
-  return levenshteinDistance(aLower, bLower) <= dynamicThreshold;
-}
-```
+**Before:**
+- Title "გამარჯობა!"
+- Mascot video avatar with camera badge
+- Login form
 
-#### 1.2 ახალი Fuzzy Search ფუნქცია - Trigram Similarity
+**After:**
+- Title "გამარჯობა!"
+- Login form (immediately below title)
 
-დავამატოთ trigram-based similarity რომელიც უკეთესად აღიქვამს typo-ებს:
+---
+
+### File 2: `src/components/home/AvatarCircle.tsx`
+
+**Add a "Set Avatar" prompt badge** when the user has no custom avatar set.
+
+Add a new prop `showAvatarPrompt` and display a sparkle/camera badge that pulses to remind users they can create their animated avatar.
+
+**Changes:**
+- Add new prop: `showAvatarPrompt?: boolean`
+- When `showAvatarPrompt` is true and no animated avatar exists, show a pulsing badge with sparkles icon
+- The badge will be positioned on the avatar circle (similar to the animated avatar sparkle)
 
 ```typescript
-// Calculate trigram similarity (better for typo detection)
-function trigramSimilarity(a: string, b: string): number {
-  const getTrigrams = (s: string): Set<string> => {
-    const padded = `  ${s.toLowerCase()}  `;
-    const trigrams = new Set<string>();
-    for (let i = 0; i < padded.length - 2; i++) {
-      trigrams.add(padded.substring(i, i + 3));
-    }
-    return trigrams;
-  };
-
-  const trigramsA = getTrigrams(a);
-  const trigramsB = getTrigrams(b);
-  
-  let intersection = 0;
-  trigramsA.forEach(t => { if (trigramsB.has(t)) intersection++; });
-  
-  const union = trigramsA.size + trigramsB.size - intersection;
-  return union === 0 ? 0 : intersection / union;
-}
-
-// Check if strings are similar using multiple methods
-function isFuzzyMatch(a: string, b: string): { match: boolean; score: number } {
-  const aLower = a.toLowerCase();
-  const bLower = b.toLowerCase();
-  
-  // Exact match
-  if (aLower === bLower) return { match: true, score: 100 };
-  
-  // Prefix/suffix match (for partial typing)
-  if (aLower.startsWith(bLower) || bLower.startsWith(aLower)) {
-    return { match: true, score: 85 };
-  }
-  
-  // Contains match
-  if (aLower.includes(bLower) || bLower.includes(aLower)) {
-    return { match: true, score: 70 };
-  }
-  
-  // Skip for very short strings
-  if (a.length < 3 || b.length < 3) {
-    return { match: false, score: 0 };
-  }
-  
-  // Levenshtein distance check
-  const distance = levenshteinDistance(aLower, bLower);
-  const maxLen = Math.max(a.length, b.length);
-  const levenshteinScore = Math.max(0, 100 - (distance / maxLen) * 100);
-  
-  // Trigram similarity for typo tolerance
-  const trigramScore = trigramSimilarity(a, b) * 100;
-  
-  // Use the better score
-  const bestScore = Math.max(levenshteinScore, trigramScore);
-  
-  // Match if score is above threshold (50% for typo tolerance)
-  return { 
-    match: bestScore >= 50, 
-    score: bestScore 
-  };
-}
-```
-
-#### 1.3 Common Typos Dictionary
-
-```typescript
-// Common typos and misspellings
-const COMMON_TYPOS: Record<string, string[]> = {
-  // Georgian transliteration variants
-  'kata': ['cata', 'katta', 'kataa', 'qata'],
-  'dzaghli': ['dzaghl', 'dzagly', 'zaghl', 'dzagli'],
-  'lomi': ['lom', 'lomy', 'lome'],
-  'tevzi': ['tevz', 'thevzi', 'tevzy'],
-  'frinveli': ['frinvel', 'prinveli', 'frinvelly'],
-  
-  // English common typos
-  'cat': ['catt', 'kat', 'kcat', 'cta'],
-  'dog': ['dogg', 'dgo', 'god'],
-  'bird': ['brid', 'bidr', 'brird'],
-  'fish': ['fich', 'fis', 'fissh'],
-  'horse': ['hrose', 'hrse', 'horsee'],
-  'lion': ['loin', 'lioon', 'lino'],
-  'music': ['musci', 'muisc', 'musikc'],
-  'movie': ['moive', 'movei', 'mvoie'],
-  'phone': ['pohne', 'phoen', 'fone'],
-  'computer': ['computre', 'compueter', 'computar'],
-  'football': ['footbal', 'fooball', 'fotball'],
-  'basketball': ['basketbal', 'bascetball', 'basektball'],
-  
-  // Georgian Latin typos
-  'xachapuri': ['khachapuri', 'hachapuri', 'xachapury'],
-  'xinkali': ['khinkali', 'hinkali', 'xinkaly'],
-  'ghvino': ['gvino', 'ghvini', 'gvini'],
-};
-```
-
-#### 1.4 ძიების ლოგიკაში Fuzzy Matching-ის გაძლიერება
-
-**ხაზი 1057-1070** (Latin query processing) განახლება:
-
-```typescript
-// Enhanced typo-tolerant search in LATIN_TRANSLITERATIONS
-for (const [latinWord, translations] of Object.entries(LATIN_TRANSLITERATIONS)) {
-  if (queryLower.length >= 3 && latinWord.length >= 3) {
-    // Check prefix/suffix match
-    if (latinWord.startsWith(queryLower) || queryLower.startsWith(latinWord)) {
-      console.log(`Latin prefix match: "${queryLower}" ~ "${latinWord}"`);
-      translations.forEach(t => searchTerms.add(t));
-      continue;
-    }
-    
-    // Enhanced fuzzy match with lower threshold
-    const fuzzyResult = isFuzzyMatch(queryLower, latinWord);
-    if (fuzzyResult.match && fuzzyResult.score >= 50) {
-      console.log(`Latin fuzzy match (score=${fuzzyResult.score.toFixed(1)}): "${queryLower}" ~ "${latinWord}"`);
-      translations.forEach(t => searchTerms.add(t));
-    }
-  }
-}
-
-// Check common typos dictionary
-const typoCorrections = COMMON_TYPOS[queryLower];
-if (typoCorrections) {
-  typoCorrections.forEach(typo => {
-    if (LATIN_TRANSLITERATIONS[typo]) {
-      LATIN_TRANSLITERATIONS[typo].forEach(t => searchTerms.add(t));
-    }
-  });
-}
-
-// Reverse typo lookup (if user typed a typo)
-for (const [correct, typos] of Object.entries(COMMON_TYPOS)) {
-  if (typos.some(t => isFuzzyMatch(queryLower, t).match)) {
-    if (LATIN_TRANSLITERATIONS[correct]) {
-      console.log(`Typo correction: "${queryLower}" -> "${correct}"`);
-      LATIN_TRANSLITERATIONS[correct].forEach(t => searchTerms.add(t));
-    }
-    searchTerms.add(correct);
-  }
-}
-```
-
-#### 1.5 Database Query-ში Fuzzy Matching დამატება
-
-**ხაზი 1282-1286** - სკორინგში fuzzy bonus გაზრდა:
-
-```typescript
-// Enhanced fuzzy match bonus in scoring
-const slugFuzzy = isFuzzyMatch(slug, termLower);
-const titleFuzzy = isFuzzyMatch(title, termLower);
-
-if (slugFuzzy.match) {
-  score += Math.floor(slugFuzzy.score * 0.4); // Up to 40 points for fuzzy slug match
-}
-if (titleFuzzy.match) {
-  score += Math.floor(titleFuzzy.score * 0.3); // Up to 30 points for fuzzy title match
-}
+// New badge component for avatar prompt
+{showAvatarPrompt && !animatedAvatarUrl && (
+  <motion.div
+    className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-2 shadow-lg z-20"
+    animate={{ scale: [1, 1.15, 1] }}
+    transition={{ duration: 2, repeat: Infinity }}
+  >
+    <Sparkles className="w-4 h-4 text-white" />
+  </motion.div>
+)}
 ```
 
 ---
 
-### ფაილი 2: `src/utils/transliteration.ts`
+### File 3: `src/pages/Index.tsx`
 
-#### 2.1 Fuzzy Match Utility Frontend-სთვის
+**Pass the avatar prompt prop** to AvatarCircle for logged-in users without animated avatars.
 
 ```typescript
-/**
- * Calculate Levenshtein distance between two strings
- */
-export function levenshteinDistance(a: string, b: string): number {
-  const matrix: number[][] = [];
-  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-  
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-  return matrix[b.length][a.length];
-}
-
-/**
- * Check if two strings are similar (typo-tolerant)
- * Returns similarity score 0-100
- */
-export function fuzzyMatch(a: string, b: string): number {
-  const aLower = a.toLowerCase();
-  const bLower = b.toLowerCase();
-  
-  if (aLower === bLower) return 100;
-  if (aLower.startsWith(bLower) || bLower.startsWith(aLower)) return 85;
-  if (aLower.includes(bLower) || bLower.includes(aLower)) return 70;
-  
-  if (a.length < 3 || b.length < 3) return 0;
-  
-  const distance = levenshteinDistance(aLower, bLower);
-  const maxLen = Math.max(a.length, b.length);
-  return Math.max(0, 100 - (distance / maxLen) * 100);
-}
+<AvatarCircle 
+  avatarUrl={profile?.avatar_url} 
+  animatedAvatarUrl={profile?.animated_avatar_url}
+  // ... other props
+  showAvatarPrompt={user && !profile?.animated_avatar_url}
+/>
 ```
 
-#### 2.2 buildBilingualSearchTerms-ის გაუმჯობესება
+This applies to all three breakpoint layouts (mobile, tablet/md-xl, xl+).
 
-```typescript
-// Add fuzzy variants for common typos
-const TYPO_CORRECTIONS: Record<string, string> = {
-  'cata': 'kata', 'katta': 'kata', 'kataa': 'kata',
-  'dogg': 'dog', 'dgo': 'dog',
-  'brid': 'bird', 'bidr': 'bird',
-  'fich': 'fish', 'fissh': 'fish',
-  'loin': 'lion', 'lioon': 'lion',
-  'musci': 'music', 'muisc': 'music',
-  'moive': 'movie', 'movei': 'movie',
-  'pohne': 'phone', 'phoen': 'phone',
-};
+---
 
-export function buildBilingualSearchTerms(input: string): string[] {
-  if (!input || input.trim().length === 0) return [];
-  
-  const terms: string[] = [];
-  const normalized = input.trim().toLowerCase();
-  terms.push(normalized);
-  
-  // Apply typo corrections
-  const corrected = TYPO_CORRECTIONS[normalized];
-  if (corrected) {
-    terms.push(corrected);
-  }
-  
-  // ... existing bilingual logic ...
-  
-  return [...new Set(terms)].filter(t => t.length >= 2);
-}
+## Visual Result
+
+### Login Page (Before → After)
+```
+BEFORE:                          AFTER:
+┌─────────────────────┐         ┌─────────────────────┐
+│    გამარჯობა!       │         │    გამარჯობა!       │
+│   [Mascot Avatar]   │         │                     │
+│      📷 badge       │         │ [Username field]    │
+│ [Username field]    │   →     │ [Password field]    │
+│ [Password field]    │         │ [Login Button]      │
+│ [Login Button]      │         │ ──── ან ────        │
+│ ──── ან ────        │         │ [Google] [Apple]    │
+│ [Google] [Apple]    │         └─────────────────────┘
+└─────────────────────┘
+```
+
+### Main Page - Logged In User Without Animated Avatar
+```
+┌─────────────────────────┐
+│                         │
+│   ┌─────────────────┐   │
+│   │                 │ ✨│  ← Sparkle badge prompting 
+│   │    Avatar       │   │    user to create animated
+│   │    Circle       │   │    avatar
+│   │                 │   │
+│   └─────────────────┘   │
+│        დონე 63          │
+│     3,313 / 4,920 XP    │
+│                         │
+└─────────────────────────┘
 ```
 
 ---
 
-## ახალი ფუნქციონალი - შედეგი
+## Files to Modify
 
-| ძიება | ახლანდელი | განახლებული |
-|-------|-----------|-------------|
-| "cata" (typo for kata/cat) | ❌ ვერ პოულობს | ✅ პოულობს კატას |
-| "katta" (double t typo) | ❌ ვერ პოულობს | ✅ პოულობს კატას |
-| "musci" (typo for music) | ❌ ვერ პოულობს | ✅ პოულობს მუსიკას |
-| "loin" (typo for lion) | ❌ ვერ პოულობს | ✅ პოულობს ლომს |
-| "fexburt" (typo) | ❌ ვერ პოულობს | ✅ პოულობს ფეხბურთს |
-| "dzagl" (partial word) | ⚠️ შეზღუდული | ✅ სრული ძაღლის შედეგები |
+| File | Change |
+|------|--------|
+| `src/components/home/GuestWelcomePanel.tsx` | Remove avatar/camera section (lines 155-253) |
+| `src/components/home/AvatarCircle.tsx` | Add `showAvatarPrompt` prop with sparkle badge |
+| `src/pages/Index.tsx` | Pass `showAvatarPrompt` prop to all AvatarCircle instances |
 
-## ტექნიკური დეტალები
+---
 
-### Fuzzy Matching Algorithms:
-1. **Levenshtein Distance** - edit distance ტექსტებს შორის
-2. **Trigram Similarity** - 3-გრამებით მსგავსების გამოთვლა
-3. **Prefix/Suffix Matching** - პრეფიქსური შესატყვისობა
-4. **Common Typos Dictionary** - ხშირი შეცდომების ლექსიკონი
+## Technical Details
 
-### Thresholds:
-- **Exact match**: 100 ქულა
-- **Prefix match**: 85 ქულა
-- **Contains match**: 70 ქულა
-- **Fuzzy match threshold**: 50 ქულა (წინა 60-დან)
-- **Levenshtein tolerance**: 1-3 სიმბოლო (სიგრძის მიხედვით)
+### GuestWelcomePanel Changes:
+- Remove the entire "Clickable Avatar" motion.div block
+- Keep all form validation and OAuth logic unchanged
+- Adjust spacing: reduce `marginTop` since avatar is removed
 
-### Performance:
-- Trigram მხოლოდ 3+ სიმბოლოიან სტრინგებზე
-- ვარიანტების ლიმიტი: მაქს 16
-- მეხსიერების ოპტიმიზაცია Set-ების გამოყენებით
+### AvatarCircle Changes:
+- Import `Sparkles` from lucide-react
+- Add optional `showAvatarPrompt` prop
+- Render badge conditionally when user needs to set animated avatar
 
+### Index.tsx Changes:
+- Calculate condition: `user && !profile?.animated_avatar_url`
+- Apply to all 3 AvatarCircle instances (mobile, md-xl, xl+)
