@@ -1,238 +1,280 @@
 
-# Plan: Add Purple Background to "Add Round" Modal
 
-## Problem Analysis
+# Plan: Add Search Icon to Mobile Header with Full-Screen Search Panel
 
-The "რაუნდის დამატება" (Add Round) modal opens with a white background (`bg-background`), which is inconsistent with the purple-themed create trivia/collection screens shown in the reference images.
+## Overview
 
-Looking at the current implementation in `AddRoundToCollectionModal.tsx`:
-- **Line 486**: Main container uses `bg-background` (white/light)
-- **Line 489**: Header uses `bg-background/95` (white/light)
-- Text colors and UI elements are designed for light background
-
-The suggestions already display as a **grid with a refresh button** (lines 273-318), not a carousel - so that part is already correctly implemented.
+Add a search icon before the notification bell on mobile, and when clicked, show a full-screen search panel with horizontally scrollable lists for friends, rooms, trivias, collections, and MyTriviaParties.
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/social/AddRoundToCollectionModal.tsx`
+### File 1: `src/pages/Index.tsx`
 
-#### Change 1: Apply Purple Gradient Background to Main Container
+#### Change 1.1: Add Search Icon to Mobile Header
 
-**Location: Line 486**
+**Location: Lines 447-499** - Modify the right side header section
+
+Move the SpotlightSearch button outside the `hidden md:flex` wrapper so it's visible on mobile too:
+
 ```typescript
-// BEFORE:
-className="fixed inset-0 z-50 bg-background"
+// BEFORE (simplified):
+{user && (
+  <div className="hidden md:flex items-center gap-1">
+    <SpotlightSearch variant="button" />
+  </div>
+)}
+
+{user && (
+  <div className="flex items-center gap-1">
+    <Bell button />
+  </div>
+)}
 
 // AFTER:
-className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900"
-```
-
-#### Change 2: Update Header Background
-
-**Location: Line 489**
-```typescript
-// BEFORE:
-className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top"
-
-// AFTER:
-className="fixed top-0 left-0 right-0 z-50 bg-purple-900/90 backdrop-blur-md border-b border-white/10 safe-top"
-```
-
-#### Change 3: Update Back Button Styling
-
-**Location: Lines 491-496**
-```typescript
-// BEFORE:
-className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-<ChevronLeft className="w-5 h-5 text-foreground" />
-
-// AFTER:
-className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-<ChevronLeft className="w-5 h-5 text-white" />
-```
-
-#### Change 4: Update Progress Dots Colors
-
-**Location: Lines 500-507**
-```typescript
-// BEFORE:
-s === step ? "w-6 bg-primary" : s < step ? "w-2 bg-primary/50" : "w-2 bg-muted"
-
-// AFTER:
-s === step ? "w-6 bg-white" : s < step ? "w-2 bg-white/60" : "w-2 bg-white/30"
-```
-
-#### Change 5: Update AI Badge Styling
-
-**Location: Lines 510-513**
-```typescript
-// BEFORE:
-className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full"
-<Sparkles className="w-4 h-4 text-primary" />
-<span className="text-xs font-semibold text-primary">AI</span>
-
-// AFTER:
-className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full"
-<Sparkles className="w-4 h-4 text-white" />
-<span className="text-xs font-semibold text-white">AI</span>
-```
-
-#### Change 6: Update Step Content Styling
-
-**Location: Lines 265-271 (Step 1 header)**
-```typescript
-// BEFORE:
-<div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-  <Sparkles className="w-8 h-8 text-primary" />
-</div>
-<h3 className="text-xl font-bold text-foreground mb-1">რაუნდი {roundNumber} ✨</h3>
-<p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
-
-// AFTER:
-<div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 mb-4">
-  <Sparkles className="w-8 h-8 text-white" />
-</div>
-<h3 className="text-xl font-bold text-white mb-1">რაუნდი {roundNumber} ✨</h3>
-<p className="text-sm text-purple-200">რა თემაზე გსურს კითხვები?</p>
-```
-
-#### Change 7: Update Topic Suggestions Header and Refresh Button
-
-**Location: Lines 274-287**
-```typescript
-// BEFORE:
-<span className="text-xs text-muted-foreground">💡 იდეები:</span>
-<Button ... className="h-6 px-2 text-xs hover:bg-muted">
-
-// AFTER:
-<span className="text-xs text-purple-200">💡 იდეები:</span>
-<Button ... className="h-6 px-2 text-xs text-purple-200 hover:text-white hover:bg-white/10">
-```
-
-#### Change 8: Update Topic Suggestion Cards
-
-**Location: Lines 298-316**
-```typescript
-// BEFORE:
-className={`p-3 rounded-xl border-2 transition-all text-center ${
-  subject === topic.value
-    ? "border-primary bg-primary/10 scale-105"
-    : "border-border hover:border-primary/50 hover:bg-muted/50"
-}`}
-<span className="text-xs font-medium text-foreground">{topic.label}</span>
-
-// AFTER:
-className={`p-3 rounded-xl border-2 transition-all text-center ${
-  subject === topic.value
-    ? "border-white bg-white/20 scale-105"
-    : "border-white/20 hover:border-white/50 hover:bg-white/10"
-}`}
-<span className="text-xs font-medium text-white">{topic.label}</span>
-```
-
-#### Change 9: Update Divider
-
-**Location: Lines 320-327**
-```typescript
-// BEFORE:
-<div className="w-full border-t border-border" />
-<span className="bg-background px-3 text-xs text-muted-foreground">ან ჩაწერე</span>
-
-// AFTER:
-<div className="w-full border-t border-white/20" />
-<span className="bg-transparent px-3 text-xs text-purple-200">ან ჩაწერე</span>
-```
-
-#### Change 10: Update Input Field
-
-**Location: Lines 329-334**
-```typescript
-// BEFORE:
-className="text-center text-lg h-14 rounded-xl"
-
-// AFTER:
-className="text-center text-lg h-14 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-purple-300"
-```
-
-#### Change 11: Update Step 2 & 3 Text Colors
-
-**Location: Lines 356-358 (Step 2 header)**
-```typescript
-// BEFORE:
-<h3 className="text-xl font-bold text-foreground mb-1">რამდენი კითხვა? 🤔</h3>
-<p className="text-sm text-muted-foreground">აირჩიე რაოდენობა</p>
-
-// AFTER:
-<h3 className="text-xl font-bold text-white mb-1">რამდენი კითხვა? 🤔</h3>
-<p className="text-sm text-purple-200">აირჩიე რაოდენობა</p>
-```
-
-#### Change 12: Update Question Count Buttons
-
-**Location: Lines 361-376**
-```typescript
-// BEFORE:
-questionCount === count
-  ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30"
-  : "bg-muted text-muted-foreground hover:bg-muted/80"
-
-// AFTER:
-questionCount === count
-  ? "bg-white text-purple-700 shadow-lg shadow-white/30"
-  : "bg-white/20 text-white hover:bg-white/30"
-```
-
-#### Change 13: Update Back Button in Steps 2 & 3
-
-**Location: Lines 379 & 451**
-```typescript
-// BEFORE:
-<Button variant="outline" onClick={() => setStep(...)} className="flex-1 h-12 rounded-xl">
-
-// AFTER:
-<Button variant="outline" onClick={() => setStep(...)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
-```
-
-#### Change 14: Update Step 3 Format Cards
-
-**Location: Lines 405-448**
-```typescript
-// BEFORE:
-answerFormat === "4_answers"
-  ? "border-primary bg-primary/10"
-  : "border-border hover:border-primary/50"
-<div className="font-semibold text-foreground">4 ვარიანტი</div>
-<div className="text-sm text-muted-foreground">კლასიკური Quiz ფორმატი</div>
-
-// AFTER:
-answerFormat === "4_answers"
-  ? "border-white bg-white/20"
-  : "border-white/20 hover:border-white/50"
-<div className="font-semibold text-white">4 ვარიანტი</div>
-<div className="text-sm text-purple-200">კლასიკური Quiz ფორმატი</div>
+{user && (
+  <div className="flex items-center gap-1">
+    {/* Search button - visible on all screens */}
+    <SpotlightSearch variant="button" />
+    
+    {/* Bell icon with unread badge */}
+    <motion.button ... Bell ... />
+  </div>
+)}
 ```
 
 ---
 
-## Summary
+### File 2: `src/components/search/SpotlightSearch.tsx`
 
-| Element | Before | After |
-|---------|--------|-------|
-| Main background | `bg-background` (white) | `bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900` |
-| Header | `bg-background/95` | `bg-purple-900/90` |
-| Titles | `text-foreground` | `text-white` |
-| Subtitles | `text-muted-foreground` | `text-purple-200` |
-| Cards/buttons | Light borders | `border-white/20` with `text-white` |
-| Selected state | `bg-primary/10` | `bg-white/20` or solid white |
-| Input field | Default styling | `bg-white/10 border-white/20 text-white` |
+#### Change 2.1: Replace CommandDialog with Custom Full-Screen Panel
+
+Transform the existing SpotlightSearch to show a mobile-friendly full-screen panel with horizontal scroll lists instead of the existing command dialog.
+
+**Key changes:**
+
+1. **Import additional hooks:**
+```typescript
+import { useMyQuizPosts } from "@/hooks/useSocialFeed";
+import { useMyCollections } from "@/hooks/useCollections";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+```
+
+2. **Add new state for mobile panel mode:**
+```typescript
+const [showMobilePanel, setShowMobilePanel] = useState(false);
+```
+
+3. **Create new horizontal scroll sections:**
+
+```typescript
+// Friends Section (horizontal scroll)
+<div className="space-y-2">
+  <h3 className="text-sm font-semibold text-muted-foreground px-4">მეგობრები</h3>
+  <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+    {friends.map((friend) => (
+      <FriendCard key={friend.id} friend={friend} onClick={() => handleFriendSelect(friend.id)} />
+    ))}
+  </div>
+</div>
+
+// Rooms Section (horizontal scroll)
+<div className="space-y-2">
+  <h3 className="text-sm font-semibold text-muted-foreground px-4">ოთახები</h3>
+  <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
+    {rooms.map((room) => (
+      <RoomCard key={room.id} room={room} onClick={() => handleRoomSelect(room.room_code)} />
+    ))}
+  </div>
+</div>
+
+// Similar sections for: Trivias, Collections, MyTriviaParties
+```
+
+4. **Create compact card components for horizontal scroll:**
+   - `FriendCard` - Avatar + name (compact)
+   - `RoomCard` - Icon + name (compact)  
+   - `TriviaCard` - Cover + title (compact)
+   - `CollectionCard` - Cover + title (compact)
+
+5. **Render full-screen panel on mobile:**
+
+```typescript
+{/* Full-screen search panel */}
+<AnimatePresence>
+  {open && (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      className="fixed inset-0 z-50 bg-background"
+    >
+      {/* Header with search bar and close */}
+      <div className="p-4 border-b">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setOpen(false)}>
+            <ChevronLeft />
+          </button>
+          <input 
+            placeholder="ძებნა..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 bg-muted rounded-full px-4 py-2"
+          />
+        </div>
+      </div>
+      
+      {/* Content with horizontal lists */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Friends horizontal scroll */}
+        {/* Rooms horizontal scroll */}
+        {/* Trivias horizontal scroll */}
+        {/* Collections horizontal scroll */}
+        {/* MyTriviaParties horizontal scroll */}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+```
+
+---
+
+### File 3: Create `src/components/search/SearchHorizontalLists.tsx` (New File)
+
+A dedicated component for the horizontal scrolling sections:
+
+```typescript
+interface SearchHorizontalListsProps {
+  friends: Friend[];
+  rooms: MyRoom[];
+  trivias: QuizPost[];
+  collections: Collection[];
+  onSelectFriend: (id: string) => void;
+  onSelectRoom: (code: string) => void;
+  onSelectTrivia: (id: string) => void;
+  onSelectCollection: (id: string) => void;
+}
+
+export function SearchHorizontalLists({ ... }: SearchHorizontalListsProps) {
+  return (
+    <div className="space-y-6 py-4">
+      {/* Friends Section */}
+      <HorizontalSection title="მეგობრები" icon={Users}>
+        {friends.map((friend) => (
+          <FriendMiniCard key={friend.id} friend={friend} onClick={() => onSelectFriend(friend.friendId)} />
+        ))}
+      </HorizontalSection>
+
+      {/* Rooms Section */}
+      <HorizontalSection title="ოთახები" icon={Gamepad2}>
+        {rooms.map((room) => (
+          <RoomMiniCard key={room.id} room={room} onClick={() => onSelectRoom(room.room_code)} />
+        ))}
+      </HorizontalSection>
+
+      {/* Trivias Section */}
+      <HorizontalSection title="ტრივიები" icon={Sparkles}>
+        {trivias.map((trivia) => (
+          <TriviaMiniCard key={trivia.id} trivia={trivia} onClick={() => onSelectTrivia(trivia.id)} />
+        ))}
+      </HorizontalSection>
+
+      {/* Collections Section */}
+      <HorizontalSection title="კოლექციები" icon={Folder}>
+        {collections.map((collection) => (
+          <CollectionMiniCard key={collection.id} collection={collection} onClick={() => onSelectCollection(collection.id)} />
+        ))}
+      </HorizontalSection>
+
+      {/* MyTriviaParties = Rooms you created (host rooms) */}
+      <HorizontalSection title="ჩემი წვეულებები" icon={Crown}>
+        {rooms.filter(r => r.is_host).map((room) => (
+          <RoomMiniCard key={room.id} room={room} onClick={() => onSelectRoom(room.room_code)} />
+        ))}
+      </HorizontalSection>
+    </div>
+  );
+}
+```
+
+---
+
+## Data Sources
+
+| Section | Hook | Filter |
+|---------|------|--------|
+| Friends | `useFriends()` | All accepted friends |
+| Rooms | `useMyRooms()` | All rooms user is part of |
+| Trivias | `useMyQuizPosts()` | User's created trivias |
+| Collections | `useMyCollections()` | User's collections |
+| MyTriviaParties | `useMyRooms()` | Filter: `is_host === true` |
+
+---
+
+## UI Layout
+
+```text
+┌─────────────────────────────────────┐
+│ ← [ Search bar input... ]           │
+├─────────────────────────────────────┤
+│                                     │
+│ 👥 მეგობრები                         │
+│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ →     │
+│ │ 😀│ │ 😎│ │ 🤓│ │ 😊│ │ 🥳│       │
+│ │John│ │Ana│ │Max│ │Eva│ │Tom│      │
+│ └───┘ └───┘ └───┘ └───┘ └───┘       │
+│                                     │
+│ 🎮 ოთახები                          │
+│ ┌───────┐ ┌───────┐ ┌───────┐ →     │
+│ │Room 1 │ │Room 2 │ │Room 3 │       │
+│ │3 👤   │ │5 👤   │ │2 👤   │       │
+│ └───────┘ └───────┘ └───────┘       │
+│                                     │
+│ ✨ ტრივიები                         │
+│ ┌───────┐ ┌───────┐ ┌───────┐ →     │
+│ │History│ │Science│ │Music  │       │
+│ │10 Q   │ │15 Q   │ │8 Q    │       │
+│ └───────┘ └───────┘ └───────┘       │
+│                                     │
+│ 📁 კოლექციები                        │
+│ ┌───────┐ ┌───────┐ ┌───────┐ →     │
+│ │My Quiz│ │Fun Set│ │Series │       │
+│ │3 რაუნ │ │5 რაუნ │ │2 რაუნ │       │
+│ └───────┘ └───────┘ └───────┘       │
+│                                     │
+│ 👑 ჩემი წვეულებები                   │
+│ ┌───────┐ ┌───────┐ →               │
+│ │Party 1│ │Party 2│                 │
+│ │8 👤   │ │12 👤  │                 │
+│ └───────┘ └───────┘                 │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Files Changed Summary
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/pages/Index.tsx` | Modify | Show search icon on mobile header |
+| `src/components/search/SpotlightSearch.tsx` | Modify | Add full-screen panel with horizontal lists |
+| `src/components/search/SearchHorizontalLists.tsx` | Create | Reusable horizontal scroll sections |
+| `src/components/search/SearchMiniCards.tsx` | Create | Compact card components for horizontal scroll |
 
 ---
 
 ## Expected Result
 
-- The "Add Round" modal will have the same purple gradient background as the create trivia/collection screens
-- All text and UI elements will be styled for visibility on dark purple background
-- The topic suggestions with refresh button remain unchanged functionally (already correct)
-- Consistent visual experience across all creation flows
+- Search icon appears before notification bell on mobile
+- Clicking search opens full-screen panel (not dialog)
+- Panel shows 5 horizontal scrollable sections:
+  - Friends (with avatars)
+  - Rooms (with participant count)
+  - Trivias (with question count)
+  - Collections (with round count)
+  - MyTriviaParties (host rooms)
+- Search input filters all lists simultaneously
+- Tapping any item navigates to that item's detail page
+
