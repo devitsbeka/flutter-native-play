@@ -39,7 +39,7 @@ export function MyTriviaLiveLogo({
   const colorClass = textColor === "light" ? "text-white" : "text-black";
 
   return (
-    <div className={`flex items-center gap-2 flex-nowrap ${className}`}>
+    <div className={`flex items-center gap-2 flex-nowrap shrink-0 ${className}`}>
       <span 
         className={`font-slackey ${colorClass} leading-none whitespace-nowrap`}
         style={{ 
@@ -51,7 +51,7 @@ export function MyTriviaLiveLogo({
       >
         MyTrivia
       </span>
-      <span className="flex items-center" style={{ marginTop: '-2px' }}>
+      <span className="flex items-center shrink-0" style={{ marginTop: '-2px' }}>
         <LiveBadge size={config.badgeSize} />
       </span>
     </div>

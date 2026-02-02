@@ -742,9 +742,6 @@ export default function Index() {
                   className="flex flex-col items-center mt-6 pointer-events-auto"
                 >
                   <div className="flex items-center justify-center gap-2.5">
-                    {profile?.country_code && (
-                      <FlagIcon countryCode={profile.country_code} size="md" />
-                    )}
                     <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
@@ -832,9 +829,6 @@ export default function Index() {
                 className="flex flex-col items-center mt-11 pointer-events-auto"
               >
                 <div className="flex items-center justify-center gap-2.5">
-                  {profile?.country_code && (
-                    <FlagIcon countryCode={profile.country_code} size="md" />
-                  )}
                   <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
                     {profile?.nickname || t("game.guest")}
                   </span>
