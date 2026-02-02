@@ -11,77 +11,21 @@ const BANNED_WORDS = [
 // Max character limit for room names
 const MAX_NAME_LENGTH = 18;
 
-// Themed room configurations with matching icon slugs
-// Each theme has names (plural form) and relevant icon slugs from our 9k library
-const THEMED_ROOMS = [
-  // Intelligence/Knowledge theme
-  {
-    category: 'intellect',
-    names: ["ერუდიტები", "მცოდნეები", "ბრძენები", "გენიოსები", "მოაზროვნეები", "ჭკვიანები"],
-    icons: ["brain", "lightbulb", "idea", "thinking", "graduation-cap", "book", "knowledge"]
-  },
-  // Famous People theme
-  {
-    category: 'celebrities',
-    names: ["აინშტაინები", "დავინჩები", "ნიუტონები", "პიკასოები", "შექსპირები", "სოკრატეები"],
-    icons: ["albert-einstein", "sir-isaac-newton", "marie-curie", "galileo-galilei", "socrates", "leonardo-da-vinci"]
-  },
-  // Places/Structures theme
-  {
-    category: 'places',
-    names: ["აკადემია", "ობსერვატორია", "ბიბლიოთეკა", "ანტიკა", "ოლიმპო", "პანთეონი"],
-    icons: ["library", "observatory", "school", "temple", "castle", "amphitheater", "colosseum"]
-  },
-  // Challenge/Game theme
-  {
-    category: 'challenge',
-    names: ["ჩემპიონები", "გამარჯვებულები", "ლიდერები", "ნავიგატორები", "მებრძოლები"],
-    icons: ["trophy", "gold-medal", "trivia-quiz", "puzzle", "question-mark", "crown", "star"]
-  },
-  // Smart Animals theme
-  {
-    category: 'animals',
-    names: ["ბუები", "დელფინები", "სპილოები", "მაიმუნები", "ყორნები", "რვაფეხები"],
-    icons: ["owl", "dolphin", "elephant", "chimpanzee", "raven", "octopus", "fox"]
-  },
-  // Science theme
-  {
-    category: 'science',
-    names: ["ასტრონომები", "მეცნიერები", "ფიზიკოსები", "მათემატიკოსები", "ინჟინრები", "ქიმიკოსები"],
-    icons: ["scientist", "telescope", "astronaut", "rocket", "microscope", "atom", "flask"]
-  },
-  // Quiz/Trivia theme
-  {
-    category: 'quiz',
-    names: ["ქვიზერები", "ტრივიელები", "კითხვარები", "გამომცნობები"],
-    icons: ["quiz", "question", "answer", "game-controller", "joystick", "puzzle-piece"]
-  },
-  // Explorers/Adventurers theme
-  {
-    category: 'explorers',
-    names: ["მკვლევარები", "აღმომჩენები", "მოგზაურები", "პიონერები"],
-    icons: ["compass", "map", "explorer", "binoculars", "globe", "world-map"]
-  }
+// Simple fallback names for when AI fails
+const FALLBACK_NAMES = [
+  "IQ ბრძოლა", "გენიოსები", "ჭკვიანები", "ერუდიტები",
+  "მცოდნეები", "მეცნიერები", "კვიზმანიები", "ტვინები",
+  "გონიერები", "გამარჯვებულები", "ლიდერები"
 ];
 
-// Get random themed room (name + matching icon slugs)
-function getRandomThemedRoom(): { name: string; iconSlugs: string[] } {
-  const theme = THEMED_ROOMS[Math.floor(Math.random() * THEMED_ROOMS.length)];
-  const name = theme.names[Math.floor(Math.random() * theme.names.length)];
-  return { name, iconSlugs: theme.icons };
-}
-
-// Flat list of all names for fallback
-const ALL_THEMED_NAMES = THEMED_ROOMS.flatMap(theme => theme.names);
-
-// Get random name from all themes
-function getRandomTriviaName(): string {
-  return ALL_THEMED_NAMES[Math.floor(Math.random() * ALL_THEMED_NAMES.length)];
+// Get random fallback name
+function getRandomFallbackName(): string {
+  return FALLBACK_NAMES[Math.floor(Math.random() * FALLBACK_NAMES.length)];
 }
 
 // Validate and clean generated name
 function validateAndCleanName(name: string): string {
-  if (!name) return getRandomTriviaName();
+  if (!name) return getRandomFallbackName();
   
   // Remove quotes
   let cleaned = name.replace(/^["']|["']$/g, '').trim();
@@ -97,7 +41,7 @@ function validateAndCleanName(name: string): string {
   );
   
   if (containsBanned) {
-    return getRandomTriviaName();
+    return getRandomFallbackName();
   }
   
   // Ensure max 2 words
@@ -108,7 +52,7 @@ function validateAndCleanName(name: string): string {
   
   // If too long or empty, use fallback
   if (!cleaned || cleaned.length > MAX_NAME_LENGTH) {
-    return getRandomTriviaName();
+    return getRandomFallbackName();
   }
   
   return cleaned;
@@ -135,11 +79,9 @@ serve(async (req) => {
       const body = await req.json();
       iconSlug = body?.iconSlug || null;
     } catch {
-      // No body or invalid JSON, use themed selection
+      // No body or invalid JSON, use random selection
     }
 
-    // Get a themed room (name + matching icon slugs)
-    const themedRoom = getRandomThemedRoom();
     let selectedIconUrl: string | null = null;
 
     // If specific icon requested, find it by slug
@@ -156,45 +98,26 @@ serve(async (req) => {
       }
     }
 
-    // If no specific icon, try to find one from the theme's icon list
+    // If no specific icon, get a random one from the library
     if (!selectedIconUrl) {
-      // Try each icon slug from the theme until we find one in the library
-      for (const slug of themedRoom.iconSlugs) {
-        const { data: themeIcon, error: themeError } = await supabase
-          .from('icon_library')
-          .select('slug, icon_url')
-          .ilike('slug', `%${slug}%`)
-          .not('icon_url', 'is', null)
-          .limit(1)
-          .single();
-        
-        if (!themeError && themeIcon?.icon_url) {
-          selectedIconUrl = themeIcon.icon_url;
-          console.log(`Found themed icon: ${themeIcon.slug} for theme icons: ${themedRoom.iconSlugs.join(', ')}`);
-          break;
-        }
-      }
-    }
-
-    // If still no icon, pick a random one as fallback
-    if (!selectedIconUrl) {
-      const { data: randomIcon, error: randomError } = await supabase
+      const { data: randomIcon, error: iconError } = await supabase
         .from('icon_library')
         .select('slug, icon_url')
         .not('icon_url', 'is', null)
+        .order('random()')
         .limit(1);
       
-      if (!randomError && randomIcon && randomIcon.length > 0) {
+      if (!iconError && randomIcon && randomIcon.length > 0) {
         selectedIconUrl = randomIcon[0].icon_url;
-        console.log(`Using random fallback icon: ${randomIcon[0].slug}`);
+        console.log(`Using random icon: ${randomIcon[0].slug}`);
       }
     }
 
-    // If no AI key, return themed name
+    // If no AI key, return fallback name
     if (!lovableApiKey) {
       return new Response(
         JSON.stringify({ 
-          name: themedRoom.name, 
+          name: getRandomFallbackName(), 
           icon_url: selectedIconUrl 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -204,26 +127,17 @@ serve(async (req) => {
     // Use AI to generate a creative trivia-themed name
     const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის.
 
-კონტექსტი: მეგობრები/ოჯახი ეჯიბრებიან ერთმანეთს - ვინ უფრო ჭკვიანია, სწრაფი, მცოდნე.
-
 მოთხოვნები:
 - მაქსიმუმ 18 სიმბოლო (ჩათვლით სფეისი)
 - 1-2 სიტყვა მაქსიმუმ
-- თუ ერთი სიტყვაა, გამოიყენე მრავლობითი რიცხვი (მაგ: "გენიოსები" არა "გენიოსი")
+- კრეატიული და სახალისო
 - მხოლოდ ქართული (IQ შეიძლება), არანაირი emoji
 
-თემები (აირჩიე ერთი):
-1. ინტელექტი: "ერუდიტები", "მცოდნეები", "ბრძენები", "გენიოსები"
-2. ცნობილი პიროვნებები: "აინშტაინები", "დავინჩები", "ნიუტონები"
-3. ადგილები: "აკადემია", "ობსერვატორია", "ბიბლიოთეკა"
-4. გამოწვევა: "ჩემპიონები", "გამარჯვებულები", "ლიდერები"
-5. ჭკვიანი ცხოველები: "ბუები", "დელფინები", "სპილოები"
-6. მეცნიერება: "ასტრონომები", "მეცნიერები", "ფიზიკოსები"
-7. მკვლევარები: "აღმომჩენები", "მოგზაურები", "პიონერები"
+მაგალითები: "გონიერები", "IQ კლუბი", "მეცნიერები", "ჭკვიანთა ბრძოლა", "ტვინების ომი"
 
 დაბრუნე მხოლოდ სახელი, არაფერი სხვა.`;
 
-    console.log('Generating themed room name...');
+    console.log('Generating creative room name...');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -241,10 +155,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('AI API error:', response.status);
-      // Fallback to themed name
+      // Fallback to random name
       return new Response(
         JSON.stringify({ 
-          name: themedRoom.name, 
+          name: getRandomFallbackName(), 
           icon_url: selectedIconUrl 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -270,10 +184,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error generating room name:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const fallback = getRandomThemedRoom();
     return new Response(
       JSON.stringify({ 
-        name: fallback.name, 
+        name: getRandomFallbackName(), 
         icon_url: null,
         error: errorMessage 
       }),
