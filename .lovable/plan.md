@@ -1,104 +1,88 @@
 
-# Fix Login to Support Both Email and Username
+# Restore Video Background to Mobile PRO Carousel
 
 ## Problem Identified
 
-When clicking "შესვლა" (Sign in) with email `marianakapanadze92@gmail.com`, the login fails with "Invalid login credentials".
+The `MobileProCarousel` component on the shop page is showing a **static PNG image** (`pro-mascot.png`) instead of a video. The desktop version (`ShopRightSidebar`) uses `shopbg.mp4` as an animated background, but the mobile carousel uses a static image.
 
-**Root Cause:** The `handleGuestSignIn` function in `Index.tsx` always uses `signInWithUsername()` which converts the input to a pseudo-email:
+---
 
-```text
-Input: marianakapanadze92@gmail.com
-Converted to: marianakapanadze92gmailcom@mytrivia.local  ← WRONG!
-```
+## Current Implementation
 
-The user registered with their **real email** (via Google OAuth), so the pseudo-email doesn't exist.
+| View | Component | Background |
+|------|-----------|------------|
+| Desktop (xl+) | `ShopRightSidebar` | `shopbg.mp4` (video) |
+| Mobile/Tablet | `MobileProCarousel` | `pro-mascot.png` (static image) |
 
 ---
 
 ## Solution
 
-Update `handleGuestSignIn` in `Index.tsx` to detect if the input is an email or username, then use the appropriate authentication method:
+Replace the static mascot image with a video background in the `MobileProCarousel`, similar to how the desktop sidebar works. Two options:
 
-- **If input contains `@`** → Use `signIn()` (real email auth)
-- **If input is plain username** → Use `signInWithUsername()` (pseudo-email auth)
+### Option A: Use the same `shopbg.mp4` video
+Use the existing mascot video that's already working on desktop.
+
+### Option B: Create mascot area with video
+Keep the mascot area but replace the PNG with a video version if available.
+
+**Recommended: Option A** - Use the same video background as desktop for consistency.
 
 ---
 
 ## Technical Changes
 
-### File: `src/pages/Index.tsx`
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-**Current code (lines 270-278):**
+**Changes:**
+1. Import `shopbg.mp4` instead of `pro-mascot.png`
+2. Replace the `<img>` element with a `<video>` element
+3. Adjust styling for video background in the mascot area
+
+**Current code (lines 6, 183-189):**
 ```tsx
-const handleGuestSignIn = useCallback(async (username: string, password: string) => {
-  setIsAuthLoading(true);
-  try {
-    const { error } = await signInWithUsername(username, password);
-    if (error) throw error;
-  } finally {
-    setIsAuthLoading(false);
-  }
-}, [signInWithUsername]);
+import proMascot from "@/assets/pro-mascot.png";
+
+// In the render:
+<div className="w-[140px] flex-shrink-0 relative overflow-hidden">
+  <img 
+    src={proMascot} 
+    alt="" 
+    className="absolute inset-0 w-full h-full object-cover object-top"
+  />
+</div>
 ```
 
-**Updated code:**
+**New code:**
 ```tsx
-const handleGuestSignIn = useCallback(async (usernameOrEmail: string, password: string) => {
-  setIsAuthLoading(true);
-  try {
-    // Detect if input is an email (contains @) or username
-    const isEmail = usernameOrEmail.includes('@');
-    
-    let error;
-    if (isEmail) {
-      // Real email - use standard signIn
-      const result = await signIn(usernameOrEmail, password);
-      error = result.error;
-      if (!error) {
-        // Store email for "returning user" detection
-        localStorage.setItem('lastLoginEmail', usernameOrEmail);
-      }
-    } else {
-      // Username - use pseudo-email signIn
-      const result = await signInWithUsername(usernameOrEmail, password);
-      error = result.error;
-    }
-    
-    if (error) throw error;
-  } finally {
-    setIsAuthLoading(false);
-  }
-}, [signIn, signInWithUsername]);
-```
+import shopBgVideo from "@/assets/shopbg.mp4";
 
-### Changes Required:
-1. Add `signIn` to the destructured auth methods from `useAuth()`
-2. Check if input contains `@` to determine auth method
-3. Store email in localStorage on successful email login
+// In the render:
+<div className="w-[140px] flex-shrink-0 relative overflow-hidden">
+  <video
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="absolute inset-0 w-full h-full object-cover"
+  >
+    <source src={shopBgVideo} type="video/mp4" />
+  </video>
+</div>
+```
 
 ---
 
-## Flow After Fix
+## Visual Result
 
 ```text
-User enters: marianakapanadze92@gmail.com
-
-↓ contains '@'? YES
-
-→ Use signIn("marianakapanadze92@gmail.com", password)
-→ Authenticates with real email ✓
-→ Store in localStorage for "returning user" feature ✓
-```
-
-```text
-User enters: player123
-
-↓ contains '@'? NO
-
-→ Use signInWithUsername("player123", password)  
-→ Converts to player123@mytrivia.local internally
-→ Authenticates with pseudo-email ✓
+Before (static image):       After (video):
+╭─────────────────────╮     ╭─────────────────────╮
+│ Solo PRO     [IMG]  │     │ Solo PRO     [▶VIDEO]│
+│ ₾9.99       static  │     │ ₾9.99       animated │
+│ • Benefits   ████   │     │ • Benefits   ████   │
+│ [შეძენა]     ████   │     │ [შეძენა]     ████   │
+╰─────────────────────╯     ╰─────────────────────╯
 ```
 
 ---
@@ -107,4 +91,4 @@ User enters: player123
 
 | File | Changes |
 |------|---------|
-| `src/pages/Index.tsx` | Update `handleGuestSignIn` to detect email vs username and use appropriate auth method |
+| `src/components/shop/MobileProCarousel.tsx` | Replace static mascot image with video background |
