@@ -1,7 +1,7 @@
 import React, { forwardRef } from "react";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { LeagueEntry } from "@/hooks/useLeagueLeaderboard";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import pirateCoinAnimation from "@/assets/lottie/pirate-coin.json";
@@ -116,12 +116,12 @@ export const LeaguePlayerRow = forwardRef<HTMLDivElement, LeaguePlayerRowProps>(
         className="relative shrink-0 cursor-pointer hover:scale-105 transition-transform active:scale-95"
         onClick={() => openProfile(entry.user_id)}
       >
-        <Avatar className={`h-12 w-12 ${isCurrentUser ? "ring-2 ring-primary" : ""}`}>
-          <AvatarImage src={entry.avatar_url || undefined} alt={entry.nickname} />
-          <AvatarFallback className={`${getAvatarColor(entry.nickname)} text-white font-bold text-lg`}>
-            {entry.nickname?.charAt(0)?.toUpperCase() || "?"}
-          </AvatarFallback>
-        </Avatar>
+        <SafeAvatar 
+          avatarUrl={entry.avatar_url}
+          fallback={entry.nickname || "?"}
+          className={`h-12 w-12 ${isCurrentUser ? "ring-2 ring-primary" : ""}`}
+          fallbackClassName={`${getAvatarColor(entry.nickname)} text-white font-bold text-lg`}
+        />
         
         {/* Rank badge positioned at bottom-right of avatar */}
         <div 

@@ -4,7 +4,7 @@ import { X, Send, ArrowLeft, MoreVertical } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserModeration } from "@/hooks/useUserModeration";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { Friend } from "@/hooks/useFriends";
 
@@ -125,17 +125,12 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
               </motion.button>
 
               <div className="relative">
-                <Avatar className="w-10 h-10 border-2 border-white shadow-md">
-                  <AvatarImage src={friend.avatarUrl || undefined} />
-                  <AvatarFallback 
-                    className="text-white font-bold"
-                    style={{
-                      background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
-                    }}
-                  >
-                    {friend.nickname.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <SafeAvatar 
+                  avatarUrl={friend.avatarUrl}
+                  fallback={friend.nickname || "?"}
+                  className="w-10 h-10 border-2 border-white shadow-md"
+                  fallbackClassName="text-white font-bold"
+                />
                 {friend.isOnline && (
                   <div 
                     className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
@@ -273,17 +268,12 @@ export function ChatModal({ isOpen, onClose, friend }: ChatModalProps) {
                               className="w-8"
                             >
                               {showAvatar && (
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage src={friend.avatarUrl || undefined} />
-                                  <AvatarFallback 
-                                    className="text-white text-xs"
-                                    style={{
-                                      background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
-                                    }}
-                                  >
-                                    {friend.nickname.charAt(0).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <SafeAvatar 
+                                  avatarUrl={friend.avatarUrl}
+                                  fallback={friend.nickname || "?"}
+                                  className="w-8 h-8"
+                                  fallbackClassName="text-white text-xs"
+                                />
                               )}
                             </motion.div>
                           )}

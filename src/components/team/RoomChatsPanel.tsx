@@ -12,6 +12,7 @@ import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserModeration } from "@/hooks/useUserModeration";
 import { useConversationPreviews, ConversationPreview } from "@/hooks/useConversationPreviews";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
@@ -118,25 +119,18 @@ const ConversationCard = memo(function ConversationCard({ conversation, onClick,
       >
         {/* Avatar - no badges */}
         <div className="relative flex-shrink-0">
-          <Avatar className="w-11 h-11">
-            {conversation.type === "room" && conversation.roomIcon ? (
-              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                <img src={conversation.roomIcon} alt="" className="w-6 h-6 object-contain" />
-              </div>
-            ) : (
-              <>
-                <AvatarImage src={conversation.avatarUrl || undefined} />
-                <AvatarFallback 
-                  className="text-sm font-bold text-primary-foreground"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(270, 70%, 50%) 100%)"
-                  }}
-                >
-                  {conversation.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </>
-            )}
-          </Avatar>
+          {conversation.type === "room" && conversation.roomIcon ? (
+            <div className="w-11 h-11 rounded-full bg-muted/50 flex items-center justify-center">
+              <img src={conversation.roomIcon} alt="" className="w-6 h-6 object-contain" />
+            </div>
+          ) : (
+            <SafeAvatar 
+              avatarUrl={conversation.avatarUrl}
+              fallback={conversation.name || "?"}
+              className="w-11 h-11"
+              fallbackClassName="text-sm font-bold text-primary-foreground"
+            />
+          )}
         </div>
 
         {/* Content */}

@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { useNavigate } from "react-router-dom";
 import { QuizPlayerAvatar } from "@/components/ui/quiz-player-avatar";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
@@ -191,12 +191,13 @@ export function MultiplayerGameScreen() {
         >
           <div className="flex -space-x-2">
             {opponents.slice(0, 3).map((opp, i) => (
-              <Avatar key={opp.id} className="w-6 h-6 border border-white/30" style={{ zIndex: 3 - i }}>
-                <AvatarImage src={opp.avatar_url || undefined} />
-                <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                  {opp.nickname?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
+              <SafeAvatar 
+                key={opp.id} 
+                avatarUrl={opp.avatar_url}
+                fallback={opp.nickname || "?"}
+                className="w-6 h-6 border border-white/30"
+                fallbackClassName="bg-purple-500 text-white text-[10px]"
+              />
             ))}
             {opponents.length > 3 && (
               <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px] text-white border border-white/30">
@@ -233,12 +234,12 @@ export function MultiplayerGameScreen() {
                   <span className="w-5 text-center text-white/60 text-sm font-bold">
                     {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                   </span>
-                  <Avatar className="w-6 h-6">
-                    <AvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                      {p.nickname?.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <SafeAvatar 
+                    avatarUrl={p.avatar_url}
+                    fallback={p.nickname || "?"}
+                    className="w-6 h-6"
+                    fallbackClassName="bg-purple-500 text-white text-[10px]"
+                  />
                   <span className="flex-1 text-white text-sm truncate">
                     {p.user_id === user?.id ? "შენ" : p.nickname}
                   </span>
@@ -343,18 +344,16 @@ export function MultiplayerGameScreen() {
                 {opponentsWhoChoseThis.length > 0 && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5">
                     {opponentsWhoChoseThis.slice(0, 4).map((opp, i) => (
-                      <Avatar 
+                      <SafeAvatar 
                         key={opp?.id || i} 
+                        avatarUrl={opp?.avatar_url}
+                        fallback={opp?.nickname || "?"}
                         className={cn(
                           "w-7 h-7 border-2",
                           opponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
                         )}
-                      >
-                        <AvatarImage src={opp?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-purple-500 text-white text-[10px]">
-                          {opp?.nickname?.charAt(0) || "?"}
-                        </AvatarFallback>
-                      </Avatar>
+                        fallbackClassName="bg-purple-500 text-white text-[10px]"
+                      />
                     ))}
                     {opponentsWhoChoseThis.length > 4 && (
                       <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px] text-slate-600 border-2 border-slate-300">

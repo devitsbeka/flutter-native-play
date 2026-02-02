@@ -2,7 +2,7 @@ import { useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Layers, Play, Users, HelpCircle, Heart } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -137,12 +137,12 @@ export default function CollectionLobby() {
         {/* Creator avatar */}
         {creator && (
           <button onClick={() => openProfile(creator.user_id)} className="absolute top-4 right-4 z-10">
-            <Avatar className="w-9 h-9 border-2 border-white/40 shadow-lg">
-              <AvatarImage src={creator.avatar_url || undefined} />
-              <AvatarFallback className="text-sm bg-white/20 text-white">
-                {creator.nickname?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <SafeAvatar 
+              avatarUrl={creator.avatar_url}
+              fallback={creator.nickname || "?"}
+              className="w-9 h-9 border-2 border-white/40 shadow-lg"
+              fallbackClassName="text-sm bg-white/20 text-white"
+            />
           </button>
         )}
 
