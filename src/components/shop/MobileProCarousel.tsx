@@ -104,41 +104,43 @@ export function MobileProCarousel() {
             )}
 
             {/* Left: Content */}
-            <div className="flex-1 p-4 z-10">
-              {/* Header */}
+            <div className="flex-1 p-5 z-10">
+              {/* Header - Icon, Title, Price in one row */}
               <div className="flex items-center gap-3 mb-3">
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ 
                     background: "rgba(255,255,255,0.2)",
                     boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
                   }}
                 >
-                  <TierIcon className="w-6 h-6 text-white" />
+                  <TierIcon className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xl font-black text-white">₾{tier.price}</span>
-                    <span className="text-xs text-white/70">/თვე</span>
-                  </div>
+                
+                {/* Title - flex-1 to push price to right */}
+                <h3 className="flex-1 text-base font-bold text-white">
+                  {tier.nameKa}
+                </h3>
+                
+                {/* Price - right aligned */}
+                <div className="flex items-baseline gap-1 flex-shrink-0">
+                  <span className="text-xl font-black text-white">₾{tier.price}</span>
+                  <span className="text-xs text-white/70">/თვე</span>
                 </div>
               </div>
 
-              {/* Benefits List */}
-              <ul className="space-y-2 mb-3">
+              {/* Benefits - Horizontal with flex-wrap */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4">
                 {tier.benefits.slice(0, 3).map((benefit, i) => (
-                  <li 
+                  <div 
                     key={i} 
-                    className="flex items-center gap-2 text-sm text-white/90"
+                    className="flex items-center gap-1.5 text-sm text-white/90"
                   >
-                    <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                    {benefit}
-                  </li>
+                    <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
+                    <span>{benefit}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
 
               {/* CTA Button */}
               <button
@@ -181,7 +183,7 @@ export function MobileProCarousel() {
             </div>
 
             {/* Right: Video Background */}
-            <div className="w-[140px] flex-shrink-0 relative overflow-hidden">
+            <div className="w-[160px] flex-shrink-0 relative overflow-hidden">
               <video
                 autoPlay
                 loop
