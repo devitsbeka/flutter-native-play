@@ -504,9 +504,13 @@ function TeamContentV2() {
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
           {/* NON-STICKY: Title, Buttons, Friends Bar, Tabs */}
           <div className="bg-background w-full max-w-full">
-              <div className="px-4 pt-4 pb-2">
-                <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
-                  <div className="flex items-center gap-2 shrink-0">
+              <div className="px-4 py-3 border-b border-purple-900/10">
+                <div className="flex items-center justify-between gap-3">
+                  {/* Left placeholder for symmetry - matches Index.tsx structure */}
+                  <div className="flex items-center gap-2 w-0" />
+                  
+                  {/* Center: Logo - same flex-1 + justify-start as Index */}
+                  <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
                     <MyTriviaLiveLogo responsive />
                   </div>
 
@@ -554,6 +558,9 @@ function TeamContentV2() {
                     </motion.button> */}
                   </div>
                 </div>
+              </div>
+
+              <div className="px-4">
 
                 {/* Friends Bar - show on all tabs */}
                 <div className="py-2">
