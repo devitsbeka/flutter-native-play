@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type RoomFilter = "all" | "my_rooms" | "friends_rooms" | "active" | "completed";
-export type RoomSort = "recent" | "created_date";
 
 export interface MyRoom {
   id: string;
@@ -51,6 +50,8 @@ export interface MyRoom {
     avatar_url: string | null;
   }[];
   has_players_in_room: boolean;
+  // Has at least one participant (excluding self) active in last 10 minutes
+  has_recent_activity: boolean;
 }
 
 // Active TV session statuses that indicate a "LIVE" game
@@ -93,7 +94,6 @@ export function isRoomActive(lastActivityAt: string | null, createdAt: string): 
 
 interface UseMyRoomsOptions {
   filter?: RoomFilter;
-  sort?: RoomSort;
   searchQuery?: string;
   includeArchived?: boolean;
   limit?: number;
@@ -107,7 +107,6 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
   const { 
     filter = "all", 
-    sort = "recent", 
     searchQuery = "",
     includeArchived = false,
     limit = 10,
@@ -159,7 +158,8 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       const roomIds = participations.map((p) => p.room_id);
       const hostMap = new Map(participations.map((p) => [p.room_id, p.is_host || false]));
 
-      const orderColumn = sort === "created_date" ? "created_at" : "last_activity_at";
+      // Always sort by last activity
+      const orderColumn = "last_activity_at";
 
       // Build query with optional archived filter and limit
       let roomsQuery = supabase
@@ -203,9 +203,14 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       let onlineUserIds = new Set<string>();
       // Map of user_id -> current_page for checking if they're IN a specific room
       let presencePageMap = new Map<string, string>();
+      // Track users active in last 10 minutes (for "active" filter)
+      let recentlyActiveUserIds = new Set<string>();
       
       if (allParticipantUserIds.length > 0) {
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        
+        // Fetch online presence (2 min for "online" status)
         const { data: presenceData } = await supabase
           .from("user_presence")
           .select("user_id, status, last_seen, current_page")
@@ -218,6 +223,17 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           if (p.current_page) {
             presencePageMap.set(p.user_id, p.current_page);
           }
+        });
+        
+        // Fetch recently active users (10 min for "active" filter)
+        const { data: recentPresenceData } = await supabase
+          .from("user_presence")
+          .select("user_id")
+          .in("user_id", allParticipantUserIds)
+          .gte("last_seen", tenMinutesAgo);
+        
+        recentPresenceData?.forEach(p => {
+          recentlyActiveUserIds.add(p.user_id);
         });
       }
 
@@ -297,6 +313,11 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
             avatar_url: p.avatar_url,
           }));
 
+        // Check if any participant (excluding self) was recently active (10 min)
+        const hasRecentActivity = participants.some(
+          p => p.user_id !== user.id && recentlyActiveUserIds.has(p.user_id)
+        );
+
         return {
           id: room.id,
           room_code: room.room_code,
@@ -329,9 +350,11 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           })),
           online_participants: onlineParticipants,
           has_others_online: onlineParticipants.length > 0,
-          // NEW: Players actually inside this room
+          // Players actually inside this room
           in_room_participants: inRoomParticipants,
           has_players_in_room: inRoomParticipants.length > 0,
+          // At least one participant active in last 10 minutes
+          has_recent_activity: hasRecentActivity,
         };
       });
 
@@ -341,7 +364,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     } finally {
       setLoading(false);
     }
-  }, [user, sort]);
+  }, [user]);
 
   useEffect(() => {
     fetchMyRooms();
@@ -430,9 +453,8 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
         );
         break;
       case "active":
-        result = result.filter(
-          (room) => room.status === "waiting" || room.status === "playing"
-        );
+        // Show rooms where at least one participant was active in last 10 minutes
+        result = result.filter((room) => room.has_recent_activity);
         break;
       case "completed":
         result = result.filter((room) => room.status === "completed");

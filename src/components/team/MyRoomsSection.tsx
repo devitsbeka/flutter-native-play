@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { SafeAvatarImage } from "@/components/shared/SafeAvatar";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { Plus, Users, Tv, Airplay, Cast, UserPlus, Trash2, MoreHorizontal, MonitorPlay } from "lucide-react";
-import { useMyRooms, MyRoom, RoomFilter, RoomSort, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
+import { useMyRooms, MyRoom, RoomFilter, isActiveTVSession, isLiveTVSession, isNewlyCreated } from "@/hooks/useMyRooms";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
@@ -44,7 +44,6 @@ interface MyRoomsSectionProps {
   onShowAllRooms?: () => void;
   vertical?: boolean;
   filter?: RoomFilter;
-  sort?: RoomSort;
   searchQuery?: string;
   onNavigateToTab?: (tab: string) => void;
 }
@@ -55,13 +54,12 @@ export function MyRoomsSection({
   onShowAllRooms, 
   vertical = false,
   filter = "all",
-  sort = "recent",
   searchQuery = "",
   onNavigateToTab
 }: MyRoomsSectionProps) {
   const isMobile = useIsMobile();
   const roomLimit = isMobile ? 10 : 15;
-  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, sort, searchQuery, limit: roomLimit });
+  const { rooms, loading, filter: activeFilter, refreshRooms } = useMyRooms({ filter, searchQuery, limit: roomLimit });
   const { enterRoom } = useMultiplayerV2();
   const navigate = useNavigate();
   const { t } = useLanguage();
