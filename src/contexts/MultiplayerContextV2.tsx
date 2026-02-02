@@ -86,6 +86,7 @@ export interface GameRoom {
   background_gradient?: string | null;
   tv_session_id?: string | null;
   user_trivia_id?: string | null; // Track which user trivia is being played
+  last_activity_at?: string | null; // Track last activity for room staleness detection
 }
 
 export interface RoomGame {
