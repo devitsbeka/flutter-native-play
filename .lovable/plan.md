@@ -1,9 +1,13 @@
 
-# Plan: Replace Avatar/Profile Info with "Add Round" Button
+
+# Plan: UI Cleanup for Collection Cards
 
 ## Overview
 
-Replace the player's avatar and date section with an "Add Round" button ("დაამატე რაუნდი") in collection cards. This affects both the collapsed card view and the expanded modal view.
+Based on the screenshot, the user wants to:
+1. Remove the top "+ დაამატე რაუნდი" button - keep only the bottom one
+2. Increase icons and stat number font sizes by 15%
+3. Remove the duplicate play button on quiz cards - keep only one that opens the game
 
 ---
 
@@ -11,109 +15,172 @@ Replace the player's avatar and date section with an "Add Round" button ("და
 
 ### File: `src/components/social/MyTriviaTab.tsx`
 
-#### Change 1: Collapsed Card - Replace Info Row (Lines 493-518)
+#### Change 1: Remove Top "Add Round" Button from Expanded Modal (Lines 327-351)
 
-Replace the avatar + profile + date section with an "Add Round" button:
+Replace the "Add Round" button row with just the visibility badge:
 
-**Current structure (Lines 493-518):**
-- Avatar
-- Profile nickname
-- Date
-- Expand/collapse chevron
-
-**New structure:**
-- "დაამატე რაუნდი" button (Add Round)
-- Expand/collapse chevron
-
+**Current (Lines 325-351):**
 ```typescript
-{/* Info Row - BEFORE */}
-<div className="p-4">
-  <div className="flex items-center gap-3">
-    {/* Avatar ... */}
-    {/* Profile name + date ... */}
-    {/* Expand chevron */}
-  </div>
-  {/* Stats ... */}
-  {/* Publish button ... */}
-</div>
-
-{/* Info Row - AFTER */}
-<div className="p-4">
+<div className="p-4 border-b border-border">
   <div className="flex items-center gap-3">
     {/* Add Round Button */}
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onAddRound(collection.id, roundsCount + 1);
-      }}
-      className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
-                 bg-muted/30 hover:bg-muted/50 transition-colors 
-                 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
-    >
-      <Plus className="w-4 h-4" />
-      <span className="text-sm font-medium">დაამატე რაუნდი</span>
-    </button>
-    {/* Expand/Collapse icon */}
-    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-      {isExpanded ? (
-        <ChevronUp className="w-5 h-5 text-muted-foreground" />
-      ) : (
-        <ChevronDown className="w-5 h-5 text-muted-foreground" />
-      )}
+    <button ... >დაამატე რაუნდი</button>
+    {/* Visibility badge */}
+    <div className="bg-muted ...">
+      {roundsCount} რაუნდი
     </div>
   </div>
   {/* Stats Row */}
   ...
-  {/* Publish Button */}
+</div>
+```
+
+**New:**
+```typescript
+<div className="p-4 border-b border-border">
+  <div className="flex items-center justify-between">
+    {/* Stats Row - moved up and increased size */}
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
+        <span className="font-medium">{collection.likes_count || 0}</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
+        <span className="font-medium">{collection.saves_count || 0}</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
+        <span className="font-medium">{collection.plays_count || 0}</span>
+      </div>
+    </div>
+    {/* Visibility badge */}
+    <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
+      {collection.is_public ? <Globe /> : <Lock />}
+      <span>{roundsCount} რაუნდი</span>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+#### Change 2: Remove Top "Add Round" Button from Collapsed Card (Lines 494-518)
+
+Replace the "Add Round" button + chevron with just stats + chevron:
+
+**Current (Lines 494-518):**
+```typescript
+<div className="p-4">
+  <div className="flex items-center gap-3">
+    {/* Add Round Button */}
+    <button ...>დაამატე რაუნდი</button>
+    {/* Chevron */}
+    <div className="w-8 h-8 ...">
+      <ChevronDown />
+    </div>
+  </div>
+  {/* Stats Row */}
+  <div className="flex items-center gap-3 mt-3">...</div>
+  ...
+</div>
+```
+
+**New:**
+```typescript
+<div className="p-4">
+  <div className="flex items-center justify-between">
+    {/* Stats Row - increased size */}
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
+        <span className="font-medium">{collection.likes_count || 0}</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
+        <span className="font-medium">{collection.saves_count || 0}</span>
+      </div>
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
+        <span className="font-medium">{collection.plays_count || 0}</span>
+      </div>
+    </div>
+    {/* Chevron */}
+    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+      {isExpanded ? <ChevronUp /> : <ChevronDown />}
+    </div>
+  </div>
+  {/* Publish button row */}
   ...
 </div>
 ```
 
 ---
 
-#### Change 2: Expanded Modal (Desktop) - Replace Collection Info (Lines 325-350)
+#### Change 3: Remove Duplicate Play Button from CollectionQuizCard (Lines 140-186)
 
-Replace the avatar + profile section in the expanded modal with the "Add Round" button:
+Currently there are 2 play buttons:
+1. Purple play icon at top right (line 140-150)
+2. ChunkyButton with play icon at bottom right (lines 177-186)
 
-**Current structure (Lines 325-350):**
-- Avatar
-- Profile nickname
-- Date  
-- Visibility badge with rounds count
+Remove the ChunkyButton (second play button) and keep only the top-right purple icon.
 
-**New structure:**
-- "დაამატე რაუნდი" button
-- Visibility badge with rounds count
+**Delete lines 177-186:**
+```typescript
+// DELETE THIS:
+<div onClick={(e) => e.stopPropagation()}>
+  <ChunkyButton
+    size="sm"
+    variant="outline"
+    className="text-xs px-2 py-1 h-7"
+    onClick={() => navigate(`/trivia/${quiz.id}`)}
+  >
+    <Play className="w-3 h-3" />
+  </ChunkyButton>
+</div>
+```
+
+**Update the remaining play button to navigate to game** (line 140-150):
+```typescript
+{/* Play button (purple) - opens game */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    onPlay?.(quiz);
+  }}
+  className="absolute top-0 right-0 p-2 rounded-full hover:bg-muted transition-colors text-purple-500 border border-purple-200 bg-white"
+  aria-label="Play trivia"
+>
+  <Play className="w-4 h-4 fill-current" />
+</button>
+```
+
+---
+
+#### Change 4: Increase Quiz Card Icon & Font Sizes by 15% (Lines 162-175)
+
+**Current (Lines 162-175):**
+- Icons: `w-[19px] h-[19px]`
+- Text: `text-[13px]`
+
+**New (15% larger):**
+- Icons: `w-[22px] h-[22px]` (19 × 1.15 ≈ 22)
+- Text: `text-[15px]` (13 × 1.15 ≈ 15)
 
 ```typescript
-{/* Collection Info - AFTER */}
-<div className="p-4 border-b border-border">
-  <div className="flex items-center gap-3">
-    {/* Add Round Button */}
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onAddRound(collection.id, (quizzes?.length || roundsCount) + 1);
-      }}
-      className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
-                 bg-muted/30 hover:bg-muted/50 transition-colors 
-                 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
-    >
-      <Plus className="w-4 h-4" />
-      <span className="text-sm font-medium">დაამატე რაუნდი</span>
-    </button>
-    {/* Visibility badge */}
-    <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
-      {collection.is_public ? (
-        <Globe className="w-3.5 h-3.5" aria-hidden />
-      ) : (
-        <Lock className="w-3.5 h-3.5" aria-hidden />
-      )}
-      <span>{roundsCount} რაუნდი</span>
-    </div>
+<div className="flex items-center gap-4 text-[15px]">
+  <div className="flex items-center gap-1">
+    <img src={purpleHeart3d} alt="Likes" className="w-[22px] h-[22px] object-contain" />
+    <span>{quiz.likes_count || 0}</span>
   </div>
-  {/* Stats Row remains */}
-  ...
+  <div className="flex items-center gap-1">
+    <img src={bookmark3d} alt="Saves" className="w-[22px] h-[22px] object-contain" />
+    <span>{quiz.saves_count || 0}</span>
+  </div>
+  <div className="flex items-center gap-1">
+    <img src={pushButton3d} alt="Plays" className="w-[22px] h-[22px] object-contain" />
+    <span>{quiz.plays_count || 0}</span>
+  </div>
 </div>
 ```
 
@@ -121,16 +188,19 @@ Replace the avatar + profile section in the expanded modal with the "Add Round" 
 
 ## Summary
 
-| Location | Line Range | Change |
-|----------|------------|--------|
-| Collapsed card info row | Lines 495-518 | Remove avatar/profile/date, add "დაამატე რაუნდი" button |
-| Expanded modal info section | Lines 327-350 | Remove avatar/profile/date, add "დაამატე რაუნდი" button |
+| Location | Change |
+|----------|--------|
+| Expanded modal (desktop) | Remove top "+ დაამატე რაუნდი" button, move stats up, increase sizes |
+| Collapsed card (mobile) | Remove top "+ დაამატე რაუნდი" button, move stats up with chevron, increase sizes |
+| CollectionQuizCard | Remove duplicate ChunkyButton play button, keep only purple icon |
+| CollectionQuizCard stats | Increase icon size: 19px → 22px, font: 13px → 15px |
 
 ---
 
 ## Expected Result
 
-- **Collapsed cards**: Show "დაამატე რაუნდი" button + expand chevron instead of avatar/name/date
-- **Expanded modal (desktop)**: Show "დაამატე რაუნდი" button + rounds count badge instead of avatar/name/date
-- Stats row (likes, saves, plays) remains visible below the button
-- Publish button remains at the bottom
+- Only one "Add Round" button at the bottom of the quizzes list
+- Stats (likes, saves, plays) shown prominently with larger icons (22px) and text (15px)
+- Single purple play button per quiz card that starts the game
+- Cleaner, less cluttered UI
+
