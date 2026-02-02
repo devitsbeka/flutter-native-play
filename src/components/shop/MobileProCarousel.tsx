@@ -117,10 +117,10 @@ export function MobileProCarousel() {
                   <TierIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white">{tier.nameKa}</h3>
+                  <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-white">₾{tier.price}</span>
-                    <span className="text-sm text-white/70">/თვე</span>
+                    <span className="text-xl font-black text-white">₾{tier.price}</span>
+                    <span className="text-xs text-white/70">/თვე</span>
                   </div>
                 </div>
               </div>
