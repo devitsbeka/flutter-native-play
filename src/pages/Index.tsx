@@ -55,7 +55,7 @@ import { DesktopRightSidebarWidgets } from "@/components/home/DesktopSidebars";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
 import { useTotalStars } from "@/hooks/useTotalStars";
-import { FlagIcon } from "@/components/shared/FlagIcon";
+import { getCountryFlag } from "@/data/opponents";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { useDailyPlays } from "@/hooks/useDailyPlays";
@@ -1102,7 +1102,7 @@ export default function Index() {
                   <>
                     <div className="flex items-center justify-center gap-2.5">
                       {profile?.country_code && (
-                        <FlagIcon countryCode={profile.country_code} size="md" />
+                        <span className="text-3xl">{getCountryFlag(profile.country_code)}</span>
                       )}
                       <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
                         {profile?.nickname || t("game.guest")}
