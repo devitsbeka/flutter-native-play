@@ -722,30 +722,30 @@ export function GameStyleQuestionEditor({
         className="hidden"
       />
 
-      {/* Navigation Arrows for Desktop */}
-      <div className="hidden md:block">
+      {/* Navigation Arrows for All Devices */}
+      <div className="block">
         {/* Left Arrow */}
         <button
           onClick={() => emblaApi?.scrollPrev()}
           disabled={currentIndex === 0}
-          className="fixed left-4 z-40 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
+          className="fixed left-2 md:left-4 z-40 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
           style={{ 
             top: 'calc(50% - 80px)',
           }}
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
         </button>
         
         {/* Right Arrow */}
         <button
           onClick={() => emblaApi?.scrollNext()}
           disabled={currentIndex >= questions.length - 1}
-          className="fixed right-4 z-40 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
+          className="fixed right-2 md:right-4 z-40 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
           style={{ 
             top: 'calc(50% - 80px)',
           }}
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
         </button>
       </div>
 
