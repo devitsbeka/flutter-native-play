@@ -1,207 +1,94 @@
 
-# Plan: Complete VIP Benefits Implementation
+# Plan: Fix PRO Carousel Benefits Layout & Mascot Video
 
 ## Overview
 
-The VIP system currently has **6 promised benefits** but only **2 are fully implemented**. This plan will implement all missing benefits to create a complete PRO/VIP experience.
+Two issues to fix in `MobileProCarousel.tsx`:
+1. Benefits text should show 3 columns on first row, 1 on second row
+2. Mascot video is cropped at bottom - need to show full figure
 
 ---
 
-## Current Status Analysis
+## Changes
 
-| Benefit | Promised | Status |
-|---------|----------|--------|
-| 2x XP | ✅ | ❌ Not applied in game |
-| +3 Daily Spins | ✅ | ❌ Not applied |
-| Exclusive Frames | ✅ | ❌ No VIP-only frames |
-| Daily Free Powers | ✅ | ❌ No grant system |
-| VIP Badge | ✅ | ✅ Working |
-| No Ads | ✅ | ⚠️ Partial |
-| Unlimited Plays | Hidden | ✅ Working |
-| No Game Stake | Hidden | ❌ Not implemented |
+### File: `src/components/shop/MobileProCarousel.tsx`
 
----
+### 1. Benefits Layout - 3 columns + 1 row
 
-## Implementation Plan
+**Current (lines 133-143):**
+- Shows only 3 benefits with `tier.benefits.slice(0, 3)`
+- Uses flex-wrap which creates 2+1 layout currently
 
-### Step 1: Implement 2x XP Multiplier
+**New layout:**
+- Show all 4 benefits
+- Use CSS Grid for precise 3-column layout on first row
+- Fourth benefit spans or starts new row
 
-**Files to modify:**
-- `src/hooks/useRewards.ts` - Apply multiplier when recording rewards
-- `src/components/social/QuizPlayModal.tsx` - Apply to feed trivia XP
-- Create new `src/utils/vipMultipliers.ts` - Centralized VIP multiplier utility
-
-**Logic:**
 ```text
-Calculate XP earned → Check if VIP → If VIP, multiply by 2 → Save to profile
+Row 1: [Benefit 1] [Benefit 2] [Benefit 3]
+Row 2: [Benefit 4]
+```
+
+**Code change:**
+```tsx
+{/* Benefits - Grid layout: 3 columns first row, 1 on second */}
+<div className="grid grid-cols-3 gap-x-3 gap-y-1.5 mb-4">
+  {tier.benefits.map((benefit, i) => (
+    <div 
+      key={i} 
+      className="flex items-center gap-1.5 text-sm text-white/90"
+    >
+      <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
+      <span className="text-xs">{benefit}</span>
+    </div>
+  ))}
+</div>
+```
+
+### 2. Mascot Video - Show Full Figure
+
+**Current (line 192):**
+```tsx
+className="absolute inset-0 w-full h-full object-cover object-top"
+```
+
+**Problem:** `object-top` aligns to top but mascot body is cropped at bottom
+
+**Solution:** Change to `object-center` to center the mascot vertically, showing the full figure
+
+```tsx
+className="absolute inset-0 w-full h-full object-cover object-center"
 ```
 
 ---
 
-### Step 2: Implement +3 Daily Spins for VIP
+## Visual Result
 
-**File to modify:** `src/hooks/useRewards.ts`
+### Before:
+```text
+┌──────────────────────────────────┬─────────┐
+│ ✓ Benefit 1    ✓ Benefit 2       │  TOP    │
+│ ✓ Benefit 3                      │ (crown) │
+│                                  │ cropped │
+│ [Button]                         │  body   │
+└──────────────────────────────────┴─────────┘
+```
 
-**Current behavior:** `maxSpins` is always set to 1
-**New behavior:** Check VIP status and set `maxSpins = 1 + 3 = 4` for VIP users
-
----
-
-### Step 3: Add VIP-Exclusive Avatar Frames
-
-**File to modify:** `src/hooks/useAvatarFrames.ts`
-
-**Add new VIP-only frames:**
-- Crown frame (legendary, gold theme)
-- Diamond frame (legendary, purple/pink theme)  
-- Royal frame (epic, red/gold theme)
-
-**Add `vipOnly: true` flag to frame definition**
-
-**File to modify:** `src/components/home/AvatarFrameShop.tsx`
-- Show "VIP" badge on VIP-only frames
-- Auto-unlock VIP frames for VIP users
-- Lock message for non-VIP users
-
----
-
-### Step 4: Implement Daily Free Power-ups
-
-**New file:** `src/hooks/useDailyVipPowerUps.ts`
-
-**System design:**
-1. Check if user is VIP
-2. Check if daily power-ups already claimed today
-3. Grant 1 of each power-up type daily (4 total)
-4. Store claim date in database
-
-**New table needed:** `user_daily_vip_rewards`
-- `user_id` (FK)
-- `reward_date` (date)
-- `powers_claimed` (boolean)
-
----
-
-### Step 5: VIP No-Stake Gameplay
-
-**File to modify:** `src/hooks/useGameStake.ts`
-
-**Current:** All users pay 500 coins to play
-**New:** VIP users skip stake payment entirely
-
----
-
-### Step 6: Add VIP Welcome/Activation Flow
-
-**New component:** `src/components/vip/VipActivationSuccessModal.tsx`
-
-When VIP is activated:
-1. Show celebration animation
-2. Display all unlocked benefits
-3. Grant daily VIP power-ups immediately
-4. Show VIP badge preview
-
----
-
-### Step 7: VIP Status Indicator Enhancement
-
-**Files to modify:**
-- `src/components/layout/UniversalBottomNav.tsx`
-- `src/components/home/FloatingUserStats.tsx`
-
-**Add:**
-- Golden glow effect around profile when VIP
-- VIP countdown timer (days remaining)
-- Quick access to VIP benefits popup
-
----
-
-## Database Changes Required
-
-```sql
--- New table for daily VIP rewards tracking
-CREATE TABLE user_daily_vip_rewards (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  reward_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  powers_claimed BOOLEAN DEFAULT FALSE,
-  spins_granted BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(user_id, reward_date)
-);
-
--- Enable RLS
-ALTER TABLE user_daily_vip_rewards ENABLE ROW LEVEL SECURITY;
-
--- Users can only access their own rewards
-CREATE POLICY "Users can view own rewards"
-  ON user_daily_vip_rewards FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid());
-
-CREATE POLICY "Users can insert own rewards"
-  ON user_daily_vip_rewards FOR INSERT
-  TO authenticated
-  WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY "Users can update own rewards"
-  ON user_daily_vip_rewards FOR UPDATE
-  TO authenticated
-  USING (user_id = auth.uid());
+### After:
+```text
+┌──────────────────────────────────┬─────────┐
+│ ✓ Benefit 1  ✓ Benefit 2  ✓ B3   │         │
+│ ✓ Benefit 4                      │ FULL    │
+│                                  │ MASCOT  │
+│ [Button]                         │         │
+└──────────────────────────────────┴─────────┘
 ```
 
 ---
 
-## Files to Create
+## Summary of Changes
 
-| File | Purpose |
-|------|---------|
-| `src/utils/vipMultipliers.ts` | Centralized VIP benefit calculations |
-| `src/hooks/useDailyVipRewards.ts` | Daily VIP rewards grant system |
-| `src/components/vip/VipActivationSuccessModal.tsx` | Celebration on VIP purchase |
-| `src/components/vip/VipBenefitsPopup.tsx` | Quick benefits overview |
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/hooks/useRewards.ts` | Apply 2x XP, grant +3 spins |
-| `src/hooks/useAvatarFrames.ts` | Add VIP-only frames |
-| `src/components/home/AvatarFrameShop.tsx` | VIP frame badges and auto-unlock |
-| `src/hooks/useGameStake.ts` | Skip stake for VIP |
-| `src/hooks/useVipStatus.ts` | Add benefit helper methods |
-| `src/components/social/QuizPlayModal.tsx` | Apply 2x XP to feed trivia |
-
----
-
-## VIP Benefits Summary After Implementation
-
-| Benefit | Details |
-|---------|---------|
-| **2x XP** | All XP earnings doubled |
-| **4 Daily Spins** | 1 free + 3 VIP bonus |
-| **3 Exclusive Frames** | Crown, Diamond, Royal |
-| **4 Daily Power-ups** | 1x each type (50/50, freeze, replace, time-drain) |
-| **VIP Crown Badge** | Gold crown on avatar |
-| **Ad-Free Experience** | No ad prompts shown |
-| **Unlimited Plays** | No daily play limit |
-| **Free Gameplay** | No 500-coin stake required |
-
----
-
-## Priority Order
-
-1. **High Priority** (core monetization value):
-   - 2x XP multiplier
-   - +3 Daily spins
-   - Free gameplay (no stake)
-
-2. **Medium Priority** (user experience):
-   - Daily free power-ups
-   - VIP exclusive frames
-
-3. **Lower Priority** (polish):
-   - VIP activation celebration
-   - Enhanced VIP indicators
+| Line | Change |
+|------|--------|
+| 133-143 | Replace flex-wrap with CSS grid (grid-cols-3), show all 4 benefits |
+| 192 | Change `object-top` → `object-center` for video positioning |
