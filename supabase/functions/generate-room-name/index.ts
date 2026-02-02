@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Banned inappropriate Georgian words
@@ -17,6 +17,55 @@ const FALLBACK_NAMES = [
   "მცოდნეები", "მეცნიერები", "კვიზმანიები", "ტვინები",
   "გონიერები", "გამარჯვებულები", "ლიდერები"
 ];
+
+// Curated keyword-to-slug fallback map for common trivia themes
+const THEME_ICON_FALLBACKS: Record<string, string[]> = {
+  // Knowledge themes
+  'brain': ['brain', 'head', 'mind', 'thinking'],
+  'smart': ['brain', 'lightbulb', 'genius'],
+  'genius': ['lightbulb', 'brain', 'star'],
+  'lightbulb': ['lightbulb', 'bulb', 'idea'],
+  'idea': ['lightbulb', 'bulb', 'brain'],
+  'think': ['brain', 'head', 'thinking'],
+  
+  // Competition themes
+  'battle': ['sword', 'swords', 'fight', 'battle'],
+  'war': ['shield', 'sword', 'battle'],
+  'champion': ['trophy', 'medal', 'winner', 'cup'],
+  'trophy': ['trophy', 'cup', 'award', 'prize'],
+  'winner': ['medal', 'trophy', 'star', 'crown'],
+  'crown': ['crown', 'king', 'queen', 'royal'],
+  'medal': ['medal', 'award', 'badge'],
+  
+  // Knowledge/education themes
+  'book': ['book', 'books', 'reading', 'library'],
+  'science': ['flask', 'beaker', 'atom', 'science'],
+  'scientist': ['scientist', 'flask', 'lab'],
+  'wizard': ['wizard', 'magic', 'wand', 'hat'],
+  'magic': ['wand', 'magic', 'wizard', 'star'],
+  'knowledge': ['book', 'brain', 'graduation'],
+  
+  // Speed/energy themes  
+  'lightning': ['lightning', 'bolt', 'thunder', 'flash'],
+  'fast': ['rocket', 'lightning', 'speed'],
+  'rocket': ['rocket', 'spaceship', 'space'],
+  'star': ['star', 'stars', 'sparkle'],
+  'fire': ['fire', 'flame', 'hot'],
+  
+  // Fun/game themes
+  'quiz': ['question', 'quiz', 'trivia'],
+  'game': ['gamepad', 'controller', 'dice'],
+  'puzzle': ['puzzle', 'jigsaw', 'piece'],
+  'target': ['target', 'bullseye', 'aim'],
+};
+
+// Icon library row type
+interface IconRow {
+  slug: string;
+  icon_url: string | null;
+  title?: string;
+  tags?: string[];
+}
 
 // Get random fallback name
 function getRandomFallbackName(): string {
@@ -58,6 +107,85 @@ function validateAndCleanName(name: string): string {
   return cleaned;
 }
 
+// Search for icons matching keywords
+async function searchIconByKeyword(
+  supabase: SupabaseClient,
+  keyword: string
+): Promise<string | null> {
+  const normalizedKeyword = keyword.toLowerCase().trim();
+  
+  // First try direct keyword search in title
+  const { data: titleMatches, error: titleError } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url, title')
+    .not('icon_url', 'is', null)
+    .ilike('title', `%${normalizedKeyword}%`)
+    .limit(10);
+  
+  if (!titleError && titleMatches && titleMatches.length > 0) {
+    const matches = titleMatches as IconRow[];
+    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+    console.log(`Found icon by title: "${randomMatch.slug}" for keyword "${keyword}"`);
+    return randomMatch.icon_url;
+  }
+  
+  // Try tags search
+  const { data: tagMatches, error: tagError } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url, tags')
+    .not('icon_url', 'is', null)
+    .contains('tags', [normalizedKeyword])
+    .limit(10);
+  
+  if (!tagError && tagMatches && tagMatches.length > 0) {
+    const matches = tagMatches as IconRow[];
+    const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+    console.log(`Found icon by tag: "${randomMatch.slug}" for keyword "${keyword}"`);
+    return randomMatch.icon_url;
+  }
+  
+  // Try fallback keywords from theme map
+  const fallbackKeywords = THEME_ICON_FALLBACKS[normalizedKeyword];
+  if (fallbackKeywords) {
+    for (const fallbackKw of fallbackKeywords) {
+      const { data: fallbackMatches, error: fallbackError } = await supabase
+        .from('icon_library')
+        .select('slug, icon_url, title')
+        .not('icon_url', 'is', null)
+        .ilike('title', `%${fallbackKw}%`)
+        .limit(5);
+      
+      if (!fallbackError && fallbackMatches && fallbackMatches.length > 0) {
+        const matches = fallbackMatches as IconRow[];
+        const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+        console.log(`Found icon by fallback: "${randomMatch.slug}" for keyword "${keyword}" -> "${fallbackKw}"`);
+        return randomMatch.icon_url;
+      }
+    }
+  }
+  
+  console.log(`No icon found for keyword "${keyword}"`);
+  return null;
+}
+
+// Get random icon as ultimate fallback
+async function getRandomIcon(supabase: SupabaseClient): Promise<string | null> {
+  const { data: randomIcon, error } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url')
+    .not('icon_url', 'is', null)
+    .order('random()')
+    .limit(1);
+  
+  if (!error && randomIcon && randomIcon.length > 0) {
+    const icons = randomIcon as IconRow[];
+    console.log(`Using random fallback icon: ${icons[0].slug}`);
+    return icons[0].icon_url;
+  }
+  
+  return null;
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   
@@ -79,7 +207,7 @@ serve(async (req) => {
       const body = await req.json();
       iconSlug = body?.iconSlug || null;
     } catch {
-      // No body or invalid JSON, use random selection
+      // No body or invalid JSON, use AI generation
     }
 
     let selectedIconUrl: string | null = null;
@@ -95,26 +223,21 @@ serve(async (req) => {
       if (!specificError && specificIcon?.icon_url) {
         selectedIconUrl = specificIcon.icon_url;
         console.log(`Using requested icon: ${iconSlug}`);
+        
+        // Return early with fallback name if icon is specified
+        return new Response(
+          JSON.stringify({ 
+            name: getRandomFallbackName(), 
+            icon_url: selectedIconUrl 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
 
-    // If no specific icon, get a random one from the library
-    if (!selectedIconUrl) {
-      const { data: randomIcon, error: iconError } = await supabase
-        .from('icon_library')
-        .select('slug, icon_url')
-        .not('icon_url', 'is', null)
-        .order('random()')
-        .limit(1);
-      
-      if (!iconError && randomIcon && randomIcon.length > 0) {
-        selectedIconUrl = randomIcon[0].icon_url;
-        console.log(`Using random icon: ${randomIcon[0].slug}`);
-      }
-    }
-
-    // If no AI key, return fallback name
+    // If no AI key, return fallback name with random icon
     if (!lovableApiKey) {
+      selectedIconUrl = await getRandomIcon(supabase);
       return new Response(
         JSON.stringify({ 
           name: getRandomFallbackName(), 
@@ -124,20 +247,32 @@ serve(async (req) => {
       );
     }
 
-    // Use AI to generate a creative trivia-themed name
-    const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის.
+    // Use AI to generate BOTH a creative name AND matching icon keyword
+    const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის და შესაბამისი აიკონის საძიებო სიტყვა.
 
-მოთხოვნები:
+მოთხოვნები სახელისთვის:
 - მაქსიმუმ 18 სიმბოლო (ჩათვლით სფეისი)
 - 1-2 სიტყვა მაქსიმუმ
 - კრეატიული და სახალისო
 - მხოლოდ ქართული (IQ შეიძლება), არანაირი emoji
 
-მაგალითები: "გონიერები", "IQ კლუბი", "მეცნიერები", "ჭკვიანთა ბრძოლა", "ტვინების ომი"
+აიკონის სიტყვა უნდა იყოს:
+- ინგლისურად, მხოლოდ 1 სიტყვა
+- რომელიც შეესაბამება სახელის თემას
+- მაგალითად: brain, trophy, star, book, lightning, rocket, crown, wizard, medal, fire, puzzle
 
-დაბრუნე მხოლოდ სახელი, არაფერი სხვა.`;
+დააბრუნე JSON ფორმატში:
+{"name": "სახელი აქ", "icon_keyword": "keyword"}
 
-    console.log('Generating creative room name...');
+მაგალითები:
+{"name": "ტვინების ომი", "icon_keyword": "brain"}
+{"name": "IQ გენიუსები", "icon_keyword": "lightbulb"}
+{"name": "მეცნიერები", "icon_keyword": "scientist"}
+{"name": "ვარსკვლავები", "icon_keyword": "star"}
+{"name": "ჩემპიონები", "icon_keyword": "trophy"}
+{"name": "გონების ომი", "icon_keyword": "battle"}`;
+
+    console.log('Generating creative room name with matching icon...');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -155,7 +290,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error('AI API error:', response.status);
-      // Fallback to random name
+      selectedIconUrl = await getRandomIcon(supabase);
       return new Response(
         JSON.stringify({ 
           name: getRandomFallbackName(), 
@@ -166,12 +301,40 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const rawName = data.choices?.[0]?.message?.content?.trim() || '';
+    const rawResponse = data.choices?.[0]?.message?.content?.trim() || '';
     
-    // Validate and clean the generated name
-    const generatedName = validateAndCleanName(rawName);
+    // Parse AI response as JSON
+    let generatedName = getRandomFallbackName();
+    let iconKeyword: string | null = null;
 
-    console.log(`Generated room name: ${generatedName} (raw: ${rawName}, length: ${generatedName.length})`);
+    try {
+      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        generatedName = validateAndCleanName(parsed.name || '');
+        iconKeyword = parsed.icon_keyword?.toLowerCase()?.trim() || null;
+        console.log(`Parsed AI response: name="${generatedName}", keyword="${iconKeyword}"`);
+      } else {
+        // Fallback: treat entire response as name (legacy behavior)
+        generatedName = validateAndCleanName(rawResponse);
+        console.log(`No JSON found, using raw response as name: "${generatedName}"`);
+      }
+    } catch (e) {
+      console.error('Failed to parse AI JSON:', e);
+      generatedName = validateAndCleanName(rawResponse);
+    }
+
+    // Search for matching icon based on keyword
+    if (iconKeyword) {
+      selectedIconUrl = await searchIconByKeyword(supabase, iconKeyword);
+    }
+    
+    // Ultimate fallback to random icon
+    if (!selectedIconUrl) {
+      selectedIconUrl = await getRandomIcon(supabase);
+    }
+
+    console.log(`Final result: name="${generatedName}", icon_url="${selectedIconUrl?.substring(0, 50)}..."`);
 
     return new Response(
       JSON.stringify({ 
