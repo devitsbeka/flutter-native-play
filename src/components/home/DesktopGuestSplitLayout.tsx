@@ -143,12 +143,12 @@ export function DesktopGuestSplitLayout({
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1, type: "spring" }}
-            className="flex flex-col items-center mb-4"
+            className="flex flex-col items-center mb-4 h-[72px]"
           >
-            <span className="font-slackey text-foreground font-black text-3xl">
+            <span className="font-slackey text-foreground font-bold text-2xl">
               {isSignUp ? "გამარჯობა!" : "მობრძანდი!"}
             </span>
-            <p className="mt-1 text-base text-muted-foreground font-medium text-center leading-relaxed">
+            <p className="mt-1 text-sm text-muted-foreground font-medium text-center leading-relaxed">
               {isSignUp ? "შექმენი შენი პროფილი და ითამაშე უფასოდ!" : "შედი შენს ანგარიშზე"}
             </p>
           </motion.div>
@@ -386,10 +386,22 @@ export function DesktopGuestSplitLayout({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2, type: "spring" }}
-          className="flex flex-col items-center justify-between h-full"
+          className="flex flex-col items-center h-full"
         >
-          {/* Spacer to push content down */}
-          <div className="flex-1" />
+          {/* Title - matching left side */}
+          <motion.div
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1, type: "spring" }}
+            className="flex flex-col items-center mb-4 h-[72px]"
+          >
+            <span className="font-slackey text-foreground font-bold text-2xl">
+              სტუმრის რეჟიმი
+            </span>
+            <p className="mt-1 text-sm text-muted-foreground font-medium text-center leading-relaxed">
+              ითამაშე რეგისტრაციის გარეშე
+            </p>
+          </motion.div>
           
           {/* Guest Card - Clean Design */}
           <div 
@@ -399,15 +411,6 @@ export function DesktopGuestSplitLayout({
               boxShadow: "0 4px 0 hsl(var(--border))",
             }}
           >
-            {/* Header - No icon */}
-            <div className="flex flex-col items-center mb-5">
-              <h3 className="font-slackey text-xl text-foreground font-bold">
-                სტუმრის რეჟიმი
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1 text-center">
-                ითამაშე რეგისტრაციის გარეშე
-              </p>
-            </div>
 
             {/* Limitations - Simple bullets */}
             <div className="space-y-3 mb-5">
