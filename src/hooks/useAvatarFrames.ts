@@ -12,6 +12,7 @@ export interface AvatarFrame {
   borderStyle: string;
   animationClass?: string;
   rarity: "common" | "rare" | "epic" | "legendary";
+  vipOnly?: boolean;
 }
 
 export const AVATAR_FRAMES: AvatarFrame[] = [
@@ -72,6 +73,40 @@ export const AVATAR_FRAMES: AvatarFrame[] = [
     gradient: "from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500",
     borderStyle: "border-4 border-pink-400",
     rarity: "legendary",
+  },
+  // VIP-Exclusive Frames
+  {
+    id: "vip-crown",
+    name: "Royal Crown",
+    description: "ექსკლუზიური ოქროს სამეფო გვირგვინი",
+    price: 0,
+    gradient: "from-yellow-300 via-amber-400 to-yellow-600",
+    borderStyle: "border-4 border-yellow-300",
+    animationClass: "animate-pulse",
+    rarity: "legendary",
+    vipOnly: true,
+  },
+  {
+    id: "vip-diamond",
+    name: "Diamond Elite",
+    description: "ექსკლუზიური ალმასის ჩარჩო",
+    price: 0,
+    gradient: "from-pink-400 via-purple-500 to-indigo-500",
+    borderStyle: "border-4 border-pink-300",
+    animationClass: "animate-pulse",
+    rarity: "legendary",
+    vipOnly: true,
+  },
+  {
+    id: "vip-royal",
+    name: "Royal Flame",
+    description: "ექსკლუზიური სამეფო ცეცხლი",
+    price: 0,
+    gradient: "from-red-500 via-orange-500 to-yellow-400",
+    borderStyle: "border-4 border-red-400",
+    animationClass: "animate-pulse",
+    rarity: "epic",
+    vipOnly: true,
   },
 ];
 

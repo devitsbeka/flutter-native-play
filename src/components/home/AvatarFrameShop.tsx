@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Lock, Sparkles } from "lucide-react";
+import { Check, Lock, Sparkles, Crown } from "lucide-react";
 import { useAvatarFrames, AVATAR_FRAMES, AvatarFrame } from "@/hooks/useAvatarFrames";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { useSound } from "@/contexts/SoundContext";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
@@ -39,12 +40,44 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
   const { profile } = useAuth();
   const { unlockFrame, equipFrame, isFrameUnlocked, equippedFrame } = useAvatarFrames();
   const { gems, spendGems, canAffordGems } = useCurrency();
+  const { isVip } = useVipStatus();
   const { playSound } = useSound();
   const { notify } = useNotificationModal();
   const [selectedFrame, setSelectedFrame] = useState<AvatarFrame | null>(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchase = async (frame: AvatarFrame) => {
+    // VIP-only frame handling
+    if (frame.vipOnly) {
+      if (!isVip) {
+        notify.error("ეს ჩარჩო მხოლოდ VIP მომხმარებლებისთვისაა!", { icon: "👑" });
+        playSound("wrong-answer");
+        return;
+      }
+      
+      // VIP frames are free - auto-unlock if not already
+      if (!isFrameUnlocked(frame.id)) {
+        const unlocked = await unlockFrame(frame.id);
+        if (!unlocked) return;
+      }
+      
+      // Toggle equip
+      const newFrameId = equippedFrame === frame.id ? null : frame.id;
+      await equipFrame(newFrameId);
+      playSound("correct-answer");
+      
+      if (newFrameId) {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ["#FFD700", "#FFA500", "#F59E0B"],
+          zIndex: 9999,
+        });
+      }
+      return;
+    }
+
     if (isFrameUnlocked(frame.id)) {
       // Already unlocked - just equip/unequip
       const newFrameId = equippedFrame === frame.id ? null : frame.id;
@@ -131,10 +164,12 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
       {/* Frames Grid - 3D chunky cards */}
       <div className="grid grid-cols-3 gap-3">
         {AVATAR_FRAMES.map((frame) => {
-          const isUnlocked = isFrameUnlocked(frame.id);
+          const isVipFrame = frame.vipOnly === true;
+          const isUnlocked = isVipFrame ? isVip : isFrameUnlocked(frame.id);
           const isEquipped = equippedFrame === frame.id;
-          const canAfford = canAffordGems(frame.price);
+          const canAfford = isVipFrame ? isVip : canAffordGems(frame.price);
           const isSelected = selectedFrame?.id === frame.id;
+          const isLocked = isVipFrame ? !isVip : (!isUnlocked && !canAfford);
 
           return (
             <motion.button
@@ -148,38 +183,63 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
               onMouseEnter={() => setSelectedFrame(frame)}
               className="relative p-3 rounded-2xl transition-all"
               style={{
-                background: isSelected
-                  ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
-                  : isEquipped
-                    ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)"
-                    : "#F9FAFB",
-                boxShadow: isSelected
-                  ? "0 3px 0 #C4B5FD"
-                  : isEquipped
-                    ? "0 3px 0 #6EE7B7"
-                    : "0 2px 0 #E5E7EB",
-                border: isSelected
-                  ? "2px solid #A78BFA"
-                  : isEquipped
-                    ? "2px solid #34D399"
-                    : "2px solid transparent",
-                opacity: !isUnlocked && !canAfford ? 0.5 : 1,
+                background: isVipFrame
+                  ? isSelected
+                    ? "linear-gradient(180deg, #FEF3C7 0%, #FDE68A 100%)"
+                    : isEquipped
+                      ? "linear-gradient(180deg, #FEF3C7 0%, #FCD34D 100%)"
+                      : "linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%)"
+                  : isSelected
+                    ? "linear-gradient(180deg, #EDE9FE 0%, #DDD6FE 100%)"
+                    : isEquipped
+                      ? "linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 100%)"
+                      : "#F9FAFB",
+                boxShadow: isVipFrame
+                  ? isSelected
+                    ? "0 3px 0 #D97706"
+                    : isEquipped
+                      ? "0 3px 0 #F59E0B"
+                      : "0 2px 0 #F59E0B"
+                  : isSelected
+                    ? "0 3px 0 #C4B5FD"
+                    : isEquipped
+                      ? "0 3px 0 #6EE7B7"
+                      : "0 2px 0 #E5E7EB",
+                border: isVipFrame
+                  ? "2px solid #F59E0B"
+                  : isSelected
+                    ? "2px solid #A78BFA"
+                    : isEquipped
+                      ? "2px solid #34D399"
+                      : "2px solid transparent",
+                opacity: isLocked ? 0.5 : 1,
               }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98, y: 2 }}
               disabled={isPurchasing}
             >
-              {/* Rarity badge */}
-              <div
-                className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold text-white bg-gradient-to-r ${
-                  rarityColors[frame.rarity]
-                }`}
-                style={{
-                  boxShadow: `0 1px 0 ${rarityShadows[frame.rarity]}`,
-                }}
-              >
-                {rarityLabels[frame.rarity]}
-              </div>
+              {/* VIP badge for VIP-only frames */}
+              {isVipFrame ? (
+                <div
+                  className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold text-white bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center gap-0.5"
+                  style={{ boxShadow: "0 1px 0 #D97706" }}
+                >
+                  <Crown className="w-2.5 h-2.5" />
+                  VIP
+                </div>
+              ) : (
+                /* Rarity badge */
+                <div
+                  className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold text-white bg-gradient-to-r ${
+                    rarityColors[frame.rarity]
+                  }`}
+                  style={{
+                    boxShadow: `0 1px 0 ${rarityShadows[frame.rarity]}`,
+                  }}
+                >
+                  {rarityLabels[frame.rarity]}
+                </div>
+              )}
 
               {/* Frame preview */}
               <div
@@ -189,13 +249,19 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
                 style={{
                   boxShadow: isEquipped
                     ? "0 0 20px rgba(34, 197, 94, 0.4), 0 3px 0 rgba(0,0,0,0.15)"
-                    : "0 3px 0 rgba(0,0,0,0.15)",
+                    : isVipFrame && isVip
+                      ? "0 0 15px rgba(245, 158, 11, 0.4), 0 3px 0 rgba(0,0,0,0.15)"
+                      : "0 3px 0 rgba(0,0,0,0.15)",
                 }}
               >
                 {isEquipped ? (
                   <Check className="w-6 h-6 text-white" />
                 ) : isUnlocked ? (
-                  <Sparkles className="w-5 h-5 text-white" />
+                  isVipFrame ? (
+                    <Crown className="w-5 h-5 text-white" />
+                  ) : (
+                    <Sparkles className="w-5 h-5 text-white" />
+                  )
                 ) : (
                   <Lock className="w-5 h-5 text-white/60" />
                 )}
@@ -210,6 +276,14 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
               <div className="flex items-center justify-center gap-1 mt-1">
                 {isEquipped ? (
                   <span className="text-[10px] text-green-600 font-bold">აქტიური</span>
+                ) : isVipFrame ? (
+                  isVip ? (
+                    <span className="text-[10px] text-amber-600 font-bold">უფასო</span>
+                  ) : (
+                    <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
+                      <Crown className="w-3 h-3" /> VIP
+                    </span>
+                  )
                 ) : isUnlocked ? (
                   <span className="text-[10px] text-gray-500">გახსნილი</span>
                 ) : (

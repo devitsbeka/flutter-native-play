@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { shuffleArray } from "@/utils/shuffle";
 import { useAuth } from "@/contexts/AuthContext";
 import { REWARDS } from "@/config/rewardConfig";
@@ -22,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createNotification } from "@/hooks/useNotifications";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { useLocation, useNavigate } from "react-router-dom";
+import { calculateXP } from "@/utils/vipMultipliers";
 
 interface Question {
   question: string;
@@ -42,6 +44,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
   const navigate = useNavigate();
   const location = useLocation();
   const { addCoins } = useCurrency();
+  const { isVip } = useVipStatus();
   const { profile, updateProfile } = useAuth();
   const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
   
@@ -126,9 +129,10 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
         const roundScore = score + (isCorrect ? 1 : 0);
         const isPerfect = roundScore === questions.length;
         
-        // Calculate round rewards
-        const xpEarned = (roundScore * REWARDS.FEED_TRIVIA_XP_PER_CORRECT) + 
+        // Calculate round rewards - apply VIP 2x XP multiplier
+        const baseXpEarned = (roundScore * REWARDS.FEED_TRIVIA_XP_PER_CORRECT) + 
           (isPerfect ? REWARDS.FEED_TRIVIA_PERFECT_XP_BONUS : 0);
+        const xpEarned = calculateXP(baseXpEarned, isVip);
         const coinsEarned = (roundScore * REWARDS.FEED_TRIVIA_COINS_PER_CORRECT) + 
           (isPerfect ? REWARDS.FEED_TRIVIA_PERFECT_COINS_BONUS : 0);
         

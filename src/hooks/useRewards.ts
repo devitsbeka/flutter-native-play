@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useCurrency } from "./useCurrency";
+import { useVipStatus } from "./useVipStatus";
+import { getMaxDailySpins, calculateXP } from "@/utils/vipMultipliers";
 
 interface SpinResult {
   label: string;
@@ -18,6 +20,7 @@ interface DailySpinInfo {
 export function useRewards() {
   const { user, profile, updateProfile } = useAuth();
   const { addCoins, addGems, addCurrency } = useCurrency();
+  const { isVip } = useVipStatus();
   const [dailySpinInfo, setDailySpinInfo] = useState<DailySpinInfo>({
     canSpin: true,
     spinsUsed: 0,
@@ -44,21 +47,27 @@ export function useRewards() {
 
       if (error) throw error;
 
+      // Calculate max spins based on VIP status
+      const vipMaxSpins = getMaxDailySpins(isVip);
+
       if (data) {
+        // Update max_spins if VIP status changed
+        const effectiveMaxSpins = Math.max(data.max_spins, vipMaxSpins);
+        
         setDailySpinInfo({
-          canSpin: data.spins_used < data.max_spins,
+          canSpin: data.spins_used < effectiveMaxSpins,
           spinsUsed: data.spins_used,
-          maxSpins: data.max_spins,
+          maxSpins: effectiveMaxSpins,
         });
       } else {
-        setDailySpinInfo({ canSpin: true, spinsUsed: 0, maxSpins: 1 });
+        setDailySpinInfo({ canSpin: true, spinsUsed: 0, maxSpins: vipMaxSpins });
       }
     } catch (error) {
       console.error("Error fetching daily spin info:", error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isVip]);
 
   useEffect(() => {
     fetchDailySpinInfo();
@@ -99,10 +108,11 @@ export function useRewards() {
         });
       }
 
-      // Apply rewards based on type
+      // Apply rewards based on type - apply VIP 2x multiplier to XP
       if (result.type === "xp" || result.type === "bonus") {
         const currentPoints = profile?.total_points || 0;
-        await updateProfile({ total_points: currentPoints + result.value });
+        const xpToAdd = calculateXP(result.value, isVip);
+        await updateProfile({ total_points: currentPoints + xpToAdd });
       } else if (result.type === "coins") {
         await addCoins(result.value);
       } else if (result.type === "gems") {
@@ -130,7 +140,7 @@ export function useRewards() {
         reward_value: { rewards: rewards.map(r => ({ type: r.type, value: r.value, label: r.label })) },
       }]);
 
-      // Process all reward types
+      // Process all reward types - apply VIP 2x multiplier to XP
       let newPoints: number | undefined;
       let totalCoins = 0;
       let totalGems = 0;
@@ -138,7 +148,8 @@ export function useRewards() {
       for (const reward of rewards) {
         if (reward.type === "xp") {
           const currentPoints = profile?.total_points || 0;
-          newPoints = currentPoints + reward.value;
+          const xpToAdd = calculateXP(reward.value, isVip);
+          newPoints = currentPoints + xpToAdd;
           await updateProfile({ total_points: newPoints });
         } else if (reward.type === "coins") {
           totalCoins += reward.value;
