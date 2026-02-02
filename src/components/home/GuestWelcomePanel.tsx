@@ -130,7 +130,7 @@ export function GuestWelcomePanel({
             }}
           >
             {/* Video with scale and offset to center mascot face */}
-            <div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(15%)' }}>
+            <div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(28%)' }}>
               <PingPongVideo 
                 src={guestWelcomeVideo}
                 className="rounded-full w-full h-full object-cover"
