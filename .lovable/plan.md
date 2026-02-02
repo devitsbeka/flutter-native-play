@@ -1,135 +1,143 @@
 
-# Plan: Add Navigation Arrows to Question Editor
+# Plan: Fix Card Click Behavior and Add Universal Navigation Arrows
 
 ## Overview
 
-Add left and right navigation arrows to the `GameStyleQuestionEditor` component for desktop users to navigate between questions while editing. These arrows will be positioned on the sides of the content area with proper z-index management to avoid overlapping with editable answer fields.
+Two issues to fix:
+1. **Card click behavior**: Clicking on a quiz card inside a collection should open the edit flow, not play the quiz
+2. **Navigation arrows**: Show left/right arrows on all devices (desktop, tablet, mobile) while keeping swipe navigation
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/social/GameStyleQuestionEditor.tsx`
+### File: `src/components/social/MyTriviaTab.tsx`
 
-#### 1. Update the Carousel Container to Support Arrow Positioning
+#### Change 1: Fix CollectionQuizCard Click Behavior (Lines 103-178)
 
-The carousel is currently at lines 726-1001. We need to wrap it in a relative container and add arrow buttons.
+Currently, the entire card triggers `onPlay`. Need to:
+- Change the card container's `onClick` to call `onEdit` instead of `onPlay`
+- Add a separate explicit Play button next to the Edit button
 
-**Add Navigation Arrows (after line 725, before the carousel):**
+**Current (Line 105-106):**
+```typescript
+<div 
+  className="flex gap-3 p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
+  onClick={() => onPlay?.(quiz)}
+>
+```
+
+**New:**
+```typescript
+<div 
+  className="flex gap-3 p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
+  onClick={() => onEdit(quiz)}
+>
+```
+
+**Update buttons section (Lines 128-138)**:
+Add a play button next to the edit button:
 
 ```typescript
-{/* Navigation Arrows for Desktop */}
+{/* Edit button (top-right) */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    onEdit(quiz);
+  }}
+  className="absolute top-0 right-9 p-2 rounded-full hover:bg-muted transition-colors"
+  aria-label="Edit trivia"
+>
+  <Pencil className="w-4 h-4" />
+</button>
+
+{/* Play button (top-right corner) */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    onPlay?.(quiz);
+  }}
+  className="absolute top-0 right-0 p-2 rounded-full hover:bg-muted transition-colors text-purple-500"
+  aria-label="Play trivia"
+>
+  <Play className="w-4 h-4 fill-current" />
+</button>
+```
+
+This matches the user's screenshot showing an edit button (pencil icon) and a play button (purple play icon) on the right side.
+
+---
+
+### File: `src/components/social/GameStyleQuestionEditor.tsx`
+
+#### Change 2: Show Navigation Arrows on All Devices (Lines 725-750)
+
+**Current (Line 726):**
+```typescript
 <div className="hidden md:block">
+```
+
+**New:**
+```typescript
+<div className="block">
+```
+
+Also adjust the styling for better mobile visibility:
+
+```typescript
+{/* Navigation Arrows for All Devices */}
+<div className="block">
   {/* Left Arrow */}
   <button
     onClick={() => emblaApi?.scrollPrev()}
     disabled={currentIndex === 0}
-    className="fixed left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
+    className="fixed left-2 md:left-4 z-40 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
     style={{ 
-      top: 'calc(50% - 60px)',  // Offset up to avoid answer area
+      top: 'calc(50% - 80px)',
     }}
   >
-    <ChevronLeft className="w-6 h-6" />
+    <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
   </button>
   
   {/* Right Arrow */}
   <button
     onClick={() => emblaApi?.scrollNext()}
     disabled={currentIndex >= questions.length - 1}
-    className="fixed right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
+    className="fixed right-2 md:right-4 z-40 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
     style={{ 
-      top: 'calc(50% - 60px)',  // Offset up to avoid answer area
+      top: 'calc(50% - 80px)',
     }}
   >
-    <ChevronRight className="w-6 h-6" />
+    <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
   </button>
 </div>
 ```
 
-#### 2. Key Design Decisions
+Key changes:
+- Remove `hidden md:block`, use just `block` to show on all devices
+- Smaller arrows on mobile: `w-10 h-10` vs `md:w-12 md:h-12`
+- Smaller icons on mobile: `w-5 h-5` vs `md:w-6 md:h-6`
+- Closer to edge on mobile: `left-2` vs `md:left-4`
 
-| Aspect | Implementation |
-|--------|----------------|
-| **Visibility** | `hidden md:block` - Only visible on desktop/tablet (768px+) |
-| **Z-Index** | `z-30` - Above carousel content but below modals (z-50/z-60) |
-| **Position** | `fixed` with offset `top: calc(50% - 60px)` to position at question card level, avoiding overlap with answer fields |
-| **Styling** | Semi-transparent white with blur (`bg-white/20 backdrop-blur-sm`), matching the existing UI style |
-| **States** | Disabled state with reduced opacity when at first/last question |
-| **Navigation** | Uses `emblaApi.scrollPrev()` and `emblaApi.scrollNext()` for smooth carousel navigation |
-
-#### 3. Alternative: Use Calculated Position Based on Content
-
-For more precise positioning that adapts to content:
-
-```typescript
-{/* Desktop Navigation Arrows - positioned at question card level */}
-<div className="hidden md:flex fixed inset-x-4 pointer-events-none" style={{ top: 'calc(env(safe-area-inset-top, 8px) + 200px)' }}>
-  <button
-    onClick={() => emblaApi?.scrollPrev()}
-    disabled={currentIndex === 0}
-    className="pointer-events-auto w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
-  >
-    <ChevronLeft className="w-6 h-6" />
-  </button>
-  
-  <div className="flex-1" />
-  
-  <button
-    onClick={() => emblaApi?.scrollNext()}
-    disabled={currentIndex >= questions.length - 1}
-    className="pointer-events-auto w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
-  >
-    <ChevronRight className="w-6 h-6" />
-  </button>
-</div>
-```
+**Note**: Swipe navigation via Embla Carousel remains unchanged (it's the default behavior).
 
 ---
 
-## Visual Layout
+## Summary
 
-```text
-+----------------------------------------------------------+
-|  [Back]           Title                         [Delete] |
-|                                                          |
-|  [<]            +------------------+              [>]    |
-|  Left           | Question Card    |             Right   |
-|  Arrow          | - Icon           |             Arrow   |
-|                 | - Question Text  |                     |
-|                 +------------------+                     |
-|                                                          |
-|                 +------------------+                     |
-|                 | Answer A (edit)  |                     |
-|                 +------------------+                     |
-|                 | Answer B         |                     |
-|                 +------------------+                     |
-|                 | Answer C         |                     |
-|                 +------------------+                     |
-|                 | Answer D         |                     |
-|                 +------------------+                     |
-|                                                          |
-|               < ● ● ● ● ● >  (dots)                     |
-|                                                          |
-|              [      Save Button      ]                   |
-+----------------------------------------------------------+
-```
-
-The arrows are positioned at the question card level (upper portion) to avoid overlapping with the editable answer fields below.
-
----
-
-## Summary of Changes
-
-| Line | Change |
-|------|--------|
-| ~725 (after Header Content, before Carousel) | Add desktop navigation arrows block |
+| File | Location | Change |
+|------|----------|--------|
+| MyTriviaTab.tsx | Line 106 | Change `onPlay?.(quiz)` → `onEdit(quiz)` |
+| MyTriviaTab.tsx | Lines 128-138 | Adjust edit button position, add play button with purple icon |
+| GameStyleQuestionEditor.tsx | Line 726 | Change `hidden md:block` → `block` |
+| GameStyleQuestionEditor.tsx | Lines 728-749 | Add responsive sizing for mobile arrows |
 
 ---
 
 ## Expected Result
 
-- **Desktop/Tablet (md+)**: Left and right arrow buttons appear on the sides at the question card level
-- **Mobile**: No arrows shown (users swipe to navigate, existing behavior)
-- **Disabled states**: Left arrow disabled on first question, right arrow disabled on last question
-- **Z-index handling**: Arrows stay above content but don't interfere with input fields or modals
-- **Styling**: Consistent with existing UI using semi-transparent white buttons with blur effect
+1. **Quiz card click**: Opens the question editor (edit flow)
+2. **Play button**: Dedicated play button (purple icon) to play the quiz
+3. **Edit button**: Pencil icon for editing (same action as card click, but explicit)
+4. **Navigation arrows**: Visible on all devices (desktop, tablet, mobile)
+5. **Swipe navigation**: Still works on touch devices (Embla Carousel default)
