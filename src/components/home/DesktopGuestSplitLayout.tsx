@@ -390,9 +390,8 @@ export function DesktopGuestSplitLayout({
         >
           {/* Guest Card - Clean Design */}
           <div 
-            className="w-full max-w-sm rounded-2xl p-6"
+            className="w-full max-w-sm rounded-2xl p-6 bg-card"
             style={{
-              background: "linear-gradient(180deg, hsl(var(--muted)/0.5) 0%, hsl(var(--muted)/0.3) 100%)",
               border: "2px solid hsl(var(--border))",
               boxShadow: "0 4px 0 hsl(var(--border))",
             }}
@@ -428,9 +427,9 @@ export function DesktopGuestSplitLayout({
             {/* Play as Guest Button */}
             <ChunkyButton 
               type="button" 
-              variant="outline" 
+              variant="secondary" 
               size="md" 
-              className="w-full border-2 border-foreground/30 bg-background text-foreground hover:bg-muted" 
+              className="w-full" 
               onClick={onPlayAsGuest}
             >
               ითამაშე როგორც სტუმარი
