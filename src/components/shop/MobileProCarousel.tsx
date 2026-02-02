@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
-import proMascot from "@/assets/pro-mascot.png";
+import shopBgVideo from "@/assets/shopbg.mp4";
 
 const PRO_TIERS = [
   {
@@ -180,13 +180,17 @@ export function MobileProCarousel() {
               </button>
             </div>
 
-            {/* Right: Mascot */}
+            {/* Right: Video Background */}
             <div className="w-[140px] flex-shrink-0 relative overflow-hidden">
-              <img 
-                src={proMascot} 
-                alt="" 
-                className="absolute inset-0 w-full h-full object-cover object-top"
-              />
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src={shopBgVideo} type="video/mp4" />
+              </video>
             </div>
           </motion.div>
         </AnimatePresence>
