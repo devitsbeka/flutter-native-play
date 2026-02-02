@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Lock, Sparkles, Loader2 } from "lucide-react";
+import { User, Lock, Sparkles, Loader2, Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useCamera } from "@/hooks/useCamera";
 import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
 interface GuestWelcomePanelProps {
@@ -46,6 +48,10 @@ export function GuestWelcomePanel({
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(true);
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  
+  const { takePhoto, selectFromGallery, isLoading: isCameraLoading } = useCamera();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +95,37 @@ export function GuestWelcomePanel({
     }
   };
 
+  const handleTakePhoto = async () => {
+    setShowUploadOptions(false);
+    const photo = await takePhoto();
+    if (photo) {
+      // Get the data URL from the photo
+      if (photo.dataUrl) {
+        setSelectedPhoto(photo.dataUrl);
+      } else if (photo.webPath) {
+        setSelectedPhoto(photo.webPath);
+      } else if (photo.base64String) {
+        const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg';
+        setSelectedPhoto(`data:${mimeType};base64,${photo.base64String}`);
+      }
+    }
+  };
+
+  const handleSelectFromGallery = async () => {
+    setShowUploadOptions(false);
+    const photo = await selectFromGallery();
+    if (photo) {
+      if (photo.dataUrl) {
+        setSelectedPhoto(photo.dataUrl);
+      } else if (photo.webPath) {
+        setSelectedPhoto(photo.webPath);
+      } else if (photo.base64String) {
+        const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg';
+        setSelectedPhoto(`data:${mimeType};base64,${photo.base64String}`);
+      }
+    }
+  };
+
   const loading = isLoading || isSubmitting;
 
   return (
@@ -108,7 +145,7 @@ export function GuestWelcomePanel({
         </p>
       </motion.div>
 
-      {/* Video Avatar */}
+      {/* Clickable Avatar */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -119,26 +156,75 @@ export function GuestWelcomePanel({
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
-          {/* Circular video container */}
-          <div 
-            className="relative rounded-full overflow-hidden"
-            style={{
-              width: "clamp(100px, 28vw, 140px)",
-              height: "clamp(100px, 28vw, 140px)",
-              boxShadow: "0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08)",
-              border: "3px solid hsl(var(--background))",
-            }}
-          >
-            {/* Video with scale and offset to center mascot face */}
-            <div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(-15%)' }}>
-              <PingPongVideo 
-                src={guestWelcomeVideo}
-                className="rounded-full w-full h-full object-cover"
-              />
-            </div>
-            {/* Fallback gradient if video not ready */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-400 -z-10" />
-          </div>
+          <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
+            <PopoverTrigger asChild>
+              {/* Circular avatar container - clickable */}
+              <button 
+                type="button"
+                className="relative rounded-full overflow-hidden cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                style={{
+                  width: "clamp(100px, 28vw, 140px)",
+                  height: "clamp(100px, 28vw, 140px)",
+                  boxShadow: "0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08)",
+                  border: "3px solid hsl(var(--background))",
+                }}
+                disabled={isCameraLoading}
+              >
+                {selectedPhoto ? (
+                  /* Show selected photo */
+                  <img 
+                    src={selectedPhoto} 
+                    alt="Selected avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  /* Show mascot video with correct positioning */
+                  <PingPongVideo 
+                    src={guestWelcomeVideo}
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+                  />
+                )}
+                
+                {/* Fallback gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 -z-10" />
+                
+                {/* Camera badge overlay */}
+                <div className="absolute bottom-1 right-1 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform">
+                  <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+                </div>
+                
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+              </button>
+            </PopoverTrigger>
+            
+            <PopoverContent 
+              className="w-48 p-2" 
+              side="bottom" 
+              align="center"
+              sideOffset={8}
+            >
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={handleTakePhoto}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
+                >
+                  <Camera className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium">გადაიღე სელფი</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectFromGallery}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
+                >
+                  <ImagePlus className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium">აირჩიე ფოტო</span>
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </motion.div>
       </motion.div>
 
