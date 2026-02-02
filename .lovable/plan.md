@@ -1,66 +1,74 @@
 
-# Remove No-Ads Icon and Center Logo in Header
+# გეგმა: ოთახების მართვის გაუმჯობესება
 
-## Problem
-The header currently shows a no-ads (ad-free) icon button next to the bell notification icon on the right side. The user wants to remove this icon and ensure the logo stays centered.
+## პრობლემა
+ამჟამად, როცა მომხმარებელი ძველ ან არააქტიურ ოთახზე დაკლიკავს, შეიძლება ნახოს შეცდომის ეკრანი ("No session ID"). ასევე, ოთახების სია არ არის შეზღუდული და ყველა ოთახი ერთდროულად ჩანს.
 
 ---
 
-## Current Header Layout
+## რას გავაკეთებ
 
+### 1. ოთახების არქივაცია (Database)
+- დავამატებ `is_archived` სვეტს `game_rooms` ცხრილში
+- 3 საათის შემდეგ უმოქმედო ოთახები ავტომატურად დაარქივდება
+- დაარქივებული ოთახები ლობიში არ გამოჩნდება, მაგრამ ძიებით მოძებნება
+
+### 2. ოთახების ლიმიტი
+- "ოთახები" გვერდზე მაქსიმუმ 10 ოთახი გამოჩნდება
+- ძიებისას შეზღუდვა მოიხსნება და დაარქივებული ოთახებიც ჩანს
+
+### 3. ოთახში შესვლის გაუმჯობესება
+- როცა TV სესია არ არის აქტიური, ოთახი გადავა ლობი რეჟიმში
+- არ გამოჩნდება შეცდომის ეკრანი - ნაცვლად ლობი ისტორიით
+
+### 4. ლობიში მატჩის ისტორია
+- ვაჩვენებ ბოლო მატჩების ისტორიას (ვინ მოიგო, რომელი რაუნდი)
+- ეს უკვე არსებობს `RoomScoreboard`-ში - დავრწმუნდები რომ გამოჩნდეს
+
+---
+
+## ტექნიკური დეტალები
+
+### Database მიგრაცია
 ```text
-┌─────────────────────────────────────────────┐
-│  [☰]        MyTrivia LIVE        [AD] [🔔]  │
-│  menu           logo              icons     │
-└─────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────┐
+│ ALTER TABLE game_rooms                             │
+│ ADD COLUMN is_archived BOOLEAN DEFAULT FALSE       │
+│                                                    │
+│ CREATE INDEX ON game_rooms (is_archived)           │
+│ WHERE is_archived = FALSE                          │
+└────────────────────────────────────────────────────┘
 ```
 
-## New Header Layout
+### ავტომატური არქივაცია (Database Function)
+- ფუნქცია რომელიც 3 საათის შემდეგ უმოქმედო ოთახებს დაარქივებს
+- გაეშვება `last_activity_at` ცვლილებისას
 
-```text
-┌─────────────────────────────────────────────┐
-│  [☰]        MyTrivia LIVE            [🔔]   │
-│  menu           logo                 icon   │
-└─────────────────────────────────────────────┘
-```
+### კოდის ცვლილებები
+
+**useMyRooms.ts:**
+- დაამატებს `is_archived = false` ფილტრს (სტანდარტული ხედვა)
+- ძიებისას ფილტრს მოხსნის და დაარქივებულსაც აჩვენებს
+- დაამატებს `.limit(10)` სტანდარტულ ხედვაში
+
+**MyRoomsSection.tsx:**
+- ძიების რეჟიმში სხვა UI (არქივიდან ნაპოვნი ოთახებისთვის)
+- "დაარქივებული" ბეჯი
+
+**MyRoomsSection.tsx - handleJoin:**
+- TV სესიის შემოწმება გაუმჯობესდება
+- თუ TV სესია არააქტიურია ან ვადაგასულია → ლობი
+- `tv_session_id` წაიშლება ოთახიდან თუ ვადაგასულია
+
+**RoomLobbyV2.tsx:**
+- უკვე აჩვენებს ისტორიას `RoomScoreboard`-ში
+- დავამატებ "ახალი თამაში" ღილაკს ისტორიის ქვემოთ
 
 ---
 
-## Technical Changes
+## ფაილები რომლებშიც ცვლილებები იქნება
 
-### File: `src/pages/Index.tsx`
-
-| Change | Lines | Description |
-|--------|-------|-------------|
-| Remove ad-free icon import | Line 40 | Remove `adFreeIcon` import (no longer needed) |
-| Remove Ad-Free button | Lines 444-452 | Delete the entire Ad-Free button block from the header |
-
-**Code to remove (lines 444-452):**
-```tsx
-{/* Ad-Free button */}
-<motion.button
-  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-  whileHover={{ scale: 1.1 }}
-  whileTap={{ scale: 0.9 }}
-  onClick={() => navigate("/profile?tab=PRO")}
->
-  <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
-</motion.button>
-```
-
----
-
-## Visual Result
-
-The logo will remain centered because the current CSS structure already handles this:
-- Logo container has `flex-1` and `justify-center`
-- The bell icon on the right will balance against the burger menu on the left
-- The layout naturally keeps the logo in the center
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/Index.tsx` | Remove ad-free icon import and remove the Ad-Free button from header |
+1. `src/hooks/useMyRooms.ts` - არქივაციის ფილტრი, 10 ოთახის ლიმიტი
+2. `src/components/team/MyRoomsSection.tsx` - handleJoin გაუმჯობესება, არქივის UI
+3. `src/components/team/RoomLobbyV2.tsx` - TV სესიის ვალიდაცია, ლობი რესეტი
+4. Database მიგრაცია - `is_archived` სვეტი და ფუნქცია
