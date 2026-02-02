@@ -130,7 +130,7 @@ export function DesktopGuestSplitLayout({
 
   return (
     <div className="w-full max-w-4xl mx-auto px-6 py-8">
-      <div className="grid grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-2 gap-8 items-stretch">
         {/* ===== LEFT SIDE: Auth Panel ===== */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -386,8 +386,11 @@ export function DesktopGuestSplitLayout({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2, type: "spring" }}
-          className="flex flex-col items-center justify-center h-full"
+          className="flex flex-col items-center justify-between h-full"
         >
+          {/* Spacer to push content down */}
+          <div className="flex-1" />
+          
           {/* Guest Card - Clean Design */}
           <div 
             className="w-full max-w-sm rounded-2xl p-6 bg-card/60"
@@ -424,17 +427,18 @@ export function DesktopGuestSplitLayout({
               </div>
             </div>
 
-            {/* Play as Guest Button */}
-            <ChunkyButton 
-              type="button" 
-              variant="secondary" 
-              size="md" 
-              className="w-full" 
+            {/* Play as Guest Button - Purple outline */}
+            <button
+              type="button"
               onClick={onPlayAsGuest}
+              className="w-full py-3 px-4 rounded-xl font-bold text-primary border border-primary bg-transparent hover:bg-primary/5 transition-colors"
             >
               ითამაშე როგორც სტუმარი
-            </ChunkyButton>
+            </button>
           </div>
+          
+          {/* Bottom spacer to match OAuth section height */}
+          <div className="h-[88px]" />
         </motion.div>
       </div>
     </div>
