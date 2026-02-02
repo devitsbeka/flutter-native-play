@@ -72,8 +72,10 @@ export function useNotifications() {
 
     fetchNotifications();
 
+    // Use unique channel name to avoid conflicts when hook is used in multiple components
+    const channelId = `notifications-${user.id}-${Math.random().toString(36).slice(2, 8)}`;
     const channel = supabase
-      .channel('notifications-realtime')
+      .channel(channelId)
       .on(
         'postgres_changes',
         {
