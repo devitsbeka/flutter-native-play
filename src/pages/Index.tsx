@@ -430,12 +430,8 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Logo + Spotlight */}
+            {/* Center: Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
-              {/* Logo - visible on all screens, md size on desktop/tablet, sm on mobile */}
-              <MyTriviaLiveLogo size="sm" className="md:hidden" />
-              <MyTriviaLiveLogo size="md" className="hidden md:flex" />
-              
               {/* Spotlight Search Bar - Hidden on mobile */}
               <div className="hidden md:flex flex-1">
                 <SpotlightSearch />
@@ -741,7 +737,7 @@ export default function Index() {
                     {profile?.country_code && (
                       <FlagIcon countryCode={profile.country_code} size="md" />
                     )}
-                    <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
+                    <span className="font-sans text-gray-800 capitalize font-bold" style={{ fontSize: 28 }}>
                       {profile?.nickname || t("game.guest")}
                     </span>
                   </div>
@@ -831,7 +827,7 @@ export default function Index() {
                   {profile?.country_code && (
                     <FlagIcon countryCode={profile.country_code} size="md" />
                   )}
-                  <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                  <span className="font-sans text-gray-800 capitalize font-bold" style={{ fontSize: 32 }}>
                     {profile?.nickname || t("game.guest")}
                   </span>
                 </div>
