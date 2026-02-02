@@ -246,9 +246,9 @@ export default function PowerUps() {
           />
         </div>
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0">
           {/* Main Content Area */}
-          <div className="flex-1 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px]">
+          <div className="flex-1 relative pb-24 md:pb-0 bg-transparent scroll-smooth scrollbar-hide xl:mr-[320px] overflow-y-auto">
             <GlobalSplineBackground />
 
             {/* Standard Shop Layout - Hero carousel + product grids */}
