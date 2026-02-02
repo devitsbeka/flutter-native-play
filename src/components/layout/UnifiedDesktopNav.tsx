@@ -139,9 +139,16 @@ export function UnifiedDesktopNav({
   return (
     <>
       <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-6 pb-4 transition-all duration-200 z-50">
-        {/* Logo - Desktop only */}
-        <div className="hidden lg:flex justify-center px-3 mb-4">
-          <MyTriviaLiveLogo size="md" />
+        {/* Logo - Tablet & Desktop */}
+        <div className="flex justify-center px-3 mb-4">
+          {/* Small logo on tablet */}
+          <div className="lg:hidden">
+            <MyTriviaLiveLogo size="sm" />
+          </div>
+          {/* Medium logo on desktop */}
+          <div className="hidden lg:block">
+            <MyTriviaLiveLogo size="md" />
+          </div>
         </div>
 
         {/* Profile Button - at top */}
