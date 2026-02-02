@@ -1,242 +1,189 @@
 
-# Unified Guest Welcome Screen with Video Avatar + Sign In
+
+# Fix Guest Welcome Panel Layout Issues
 
 ## Overview
-Redesign the guest first screen on the home page to combine:
-1. **New animated video avatar** playing in the circle placeholder (replacing current static guest avatar)
-2. **Inline sign-in form** with username + password fields
-3. **Social login options** (Google + Apple) 
-4. **Responsive layout** that works from small mobile to large desktop without cropping or edge touching
-
-This creates a single, engaging welcome experience that reduces friction by allowing sign-in directly on the home screen.
+Address multiple UI issues on the guest welcome screen to ensure the mascot face is visible, content fits without cropping, and OAuth buttons are icon-only.
 
 ---
 
-## Visual Layout
+## Issues Identified
 
-```text
-+----------------------------------+
-|        გამარჯობა! (Hi!)          |
-|  შექმენი შენი პროფილი...         |
-|                                  |
-|      ╭─────────────────╮         |
-|      │   [VIDEO AVA]   │  ← New animated video
-|      │  (looping MP4)  │
-|      ╰─────────────────╯         |
-|                                  |
-|  ┌────────────────────────────┐  |
-|  │ 🙍 სახელი (Username)       │  |
-|  └────────────────────────────┘  |
-|  ┌────────────────────────────┐  |
-|  │ 🔒 პაროლი (Password)       │  |
-|  └────────────────────────────┘  |
-|                                  |
-|  ┌────────────────────────────┐  |
-|  │   ✨ შექმენი ანგარიში      │  ← Primary CTA
-|  └────────────────────────────┘  |
-|                                  |
-|  ────────── ან ──────────        |
-|                                  |
-|  [G] გააგრძელე Google-ით        |
-|  [] გააგრძელე Apple-ით          |
-|                                  |
-|  ─────────────────────────────   |
-|  ან ითამაშე როგორც სტუმარმა     |
-|        ↓ (arrow to play)         |
-+----------------------------------+
-```
+| Issue | Current State | Fix |
+|-------|---------------|-----|
+| 1. "გამარჯობა!" cropped | Title at top gets clipped | Add `pt-safe` top padding and ensure container doesn't overflow |
+| 2. Mascot face not centered | Video uses `object-cover` but mascot face is lower in frame | Add `object-position: center 35%` to pull the face up to center |
+| 3. Google/Apple buttons have text | Full text: "გააგრძელე Google-ით" | Show only logo icons, make buttons smaller circles side-by-side |
+| 4. Button too large | `size="lg"` takes too much vertical space | Change to `size="md"` and reduce padding |
+| 5. Content doesn't fit | Bottom elements cut off on small viewports | Reduce spacing, smaller avatar, condensed layout |
 
 ---
 
-## Technical Implementation
+## Technical Changes
 
-### 1. Copy New Video Asset to Project
+### File: `src/components/home/GuestWelcomePanel.tsx`
 
-Copy the uploaded video to `src/assets/`:
-```
-user-uploads://social_u2355245691_...mp4 → src/assets/guest-welcome-avatar.mp4
-```
+#### 1. Fix Video Centering - Show Mascot Face
 
-### 2. Create New Component: `GuestWelcomePanel.tsx`
-
-A new component that consolidates all guest welcome UI:
-
-**Location:** `src/components/home/GuestWelcomePanel.tsx`
-
-**Features:**
-- Animated video avatar (looping) with the same circular frame styling as `AvatarCircle`
-- Username + Password input fields (styled like the signup modal)
-- "Create Account" primary button
-- Google and Apple OAuth buttons (matching Auth.tsx styling)
-- "Or play as guest" text with arrow pointing to play button
-- Full viewport responsiveness with safe padding
-
-**Props:**
-```tsx
-interface GuestWelcomePanelProps {
-  onCreateAccount: (username: string, password: string) => Promise<void>;
-  onGoogleSignIn: () => Promise<void>;
-  onAppleSignIn: () => Promise<void>;
-  isLoading: boolean;
-}
-```
-
-### 3. Modify `Index.tsx` - Guest Layout
-
-Replace the current guest UI sections (mobile, tablet, desktop) with the new `GuestWelcomePanel` component.
-
-**Key changes:**
-- Import new `guest-welcome-avatar.mp4` 
-- Import `GuestWelcomePanel` component
-- Add sign-up handlers that integrate with `signUpWithUsername` from `useAuth`
-- Handle OAuth flows with `signInWithGoogle` and `signInWithApple`
-- Pass loading state for button disabled states
-
-**Layout adjustments by breakpoint:**
-- **Mobile (< md)**: Smaller avatar (180px), compact spacing, stacked layout
-- **Tablet (md-xl)**: Medium avatar (220px), comfortable spacing
-- **Desktop (xl+)**: Larger avatar (260px), generous spacing
-
-### 4. Video Avatar Component Logic
-
-The video component will:
-- Auto-play on load (muted, looping)
-- Have the same circular frame styling as existing `AvatarCircle`
-- Use ping-pong playback for smooth looping (similar to `AnimatedAvatar`)
-- Be sized responsively based on viewport
+The video's mascot character has its face lower in the frame. Use `object-position` to adjust:
 
 ```tsx
-// Video avatar sizing by breakpoint
-const avatarSizes = {
-  mobile: 180,   // < 640px
-  tablet: 220,   // 640px - 1024px  
-  desktop: 260,  // > 1024px
-};
-```
+// Line 124-127 - Update PingPongVideo with style prop OR
+// Wrap with a div that adjusts positioning
 
-### 5. Responsive Container
-
-The panel uses a flexible container that:
-- Has `max-w-sm` (24rem / 384px) for form elements
-- Uses `px-4` minimum padding on mobile
-- Uses `px-6` on larger screens
-- Accounts for safe-area-inset on mobile
-- Centers content vertically with `flex-1` and `justify-center`
-- Never allows content to touch edges
-
-```tsx
-<div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 sm:px-6 py-6 safe-area-inset">
-  {/* Content never touches edges */}
+// Option: Add a wrapper with transform/positioning
+<div 
+  className="relative rounded-full overflow-hidden"
+  style={{
+    width: "clamp(120px, 32vw, 180px)", // Smaller avatar
+    height: "clamp(120px, 32vw, 180px)",
+    ...
+  }}
+>
+  {/* Video with adjusted position to center face */}
+  <div className="absolute inset-0 scale-[1.3]" style={{ top: '-15%' }}>
+    <PingPongVideo 
+      src={guestWelcomeVideo}
+      className="rounded-full"
+    />
+  </div>
 </div>
 ```
 
+Or modify PingPongVideo to accept `objectPosition` prop.
+
+#### 2. Reduce Avatar Size
+
+Change from:
+```tsx
+width: "clamp(150px, 40vw, 220px)",
+height: "clamp(150px, 40vw, 220px)",
+```
+
+To:
+```tsx
+width: "clamp(100px, 28vw, 150px)",
+height: "clamp(100px, 28vw, 150px)",
+```
+
+#### 3. Change Button Size
+
+```tsx
+// Line 191-206 - Change from size="lg" to size="md"
+<ChunkyButton 
+  type="submit" 
+  variant="primary" 
+  size="md"  // Was "lg"
+  className="w-full" 
+  disabled={loading}
+>
+```
+
+#### 4. OAuth Buttons - Icons Only, Side by Side
+
+Replace the full-width text buttons with compact icon-only buttons in a row:
+
+```tsx
+{/* OAuth Buttons - Icon Only Side by Side */}
+<motion.div
+  initial={{ y: 20, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ delay: 0.5, type: "spring" }}
+  className="flex items-center justify-center gap-3"
+>
+  {/* Google Button - Icon Only */}
+  <button
+    type="button"
+    onClick={handleGoogleSignIn}
+    disabled={loading}
+    className="w-12 h-12 rounded-full bg-card border border-border shadow-sm 
+               flex items-center justify-center
+               hover:bg-muted/50 transition-colors disabled:opacity-50"
+  >
+    <svg className="w-5 h-5" viewBox="0 0 24 24">
+      {/* Google logo paths */}
+    </svg>
+  </button>
+
+  {/* Apple Button - Icon Only */}
+  <button
+    type="button"
+    onClick={handleAppleSignIn}
+    disabled={loading}
+    className="w-12 h-12 rounded-full bg-card border border-border shadow-sm 
+               flex items-center justify-center
+               hover:bg-muted/50 transition-colors disabled:opacity-50"
+  >
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      {/* Apple logo path */}
+    </svg>
+  </button>
+</motion.div>
+```
+
+#### 5. Reduce Spacing Throughout
+
+```tsx
+// Container - reduce padding
+<div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 py-2 overflow-y-auto">
+
+// Title section - reduce margin
+className="flex flex-col items-center mb-2 sm:mb-4"
+
+// Avatar section - reduce margin  
+className="relative mb-3 sm:mb-4"
+
+// Form spacing - reduce
+className="w-full space-y-2"
+
+// Input padding - reduce
+className="w-full pl-11 pr-3 py-2.5 rounded-xl ..."
+
+// Divider margin - reduce
+className="flex items-center gap-3 w-full my-2"
+
+// Guest option margin - reduce
+className="flex flex-col items-center mt-3"
+```
+
 ---
 
-## Files to Create
+## Updated Layout Flow
 
-| File | Purpose |
-|------|---------|
-| `src/components/home/GuestWelcomePanel.tsx` | New unified guest welcome component with video avatar + auth forms |
+```text
++----------------------------------+
+|        გამარჯობა!               |  ← Full visible
+|  შექმენი შენი პროფილი...        |
+|                                  |
+|      ╭───────────╮              |  ← Smaller avatar
+|      │  [FACE]   │              |  ← Face centered
+|      ╰───────────╯              |
+|                                  |
+|  ┌──────────────────────────┐   |
+|  │ 🙍 სახელი                 │   |  ← Compact inputs
+|  └──────────────────────────┘   |
+|  ┌──────────────────────────┐   |
+|  │ 🔒 პაროლი                 │   |
+|  └──────────────────────────┘   |
+|                                  |
+|  ┌──────────────────────────┐   |
+|  │   ✨ შექმენი ანგარიში    │   |  ← Medium size button
+|  └──────────────────────────┘   |
+|                                  |
+|  ────────── ან ──────────       |
+|                                  |
+|       [G]    []               |  ← Icon-only buttons side by side
+|                                  |
+|  ან ითამაშე როგორც სტუმარმა    |
+|        ↓                         |
++----------------------------------+
+```
+
+---
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/pages/Index.tsx` | Replace guest UI sections with GuestWelcomePanel, add auth handlers |
-| (Copy) `guest-welcome-avatar.mp4` | Copy uploaded video to `src/assets/` |
+| `src/components/home/GuestWelcomePanel.tsx` | 1. Reduce avatar size<br>2. Center mascot face with scale/position transform<br>3. Change button to `size="md"`<br>4. OAuth buttons icon-only in flex row<br>5. Reduce all vertical spacing |
 
----
-
-## Viewport Safety Guarantees
-
-The layout ensures no content is cropped or touches edges:
-
-1. **Container constraints**: `max-w-sm` (384px) prevents horizontal overflow
-2. **Horizontal padding**: `px-4` (16px) minimum on all sides
-3. **Vertical padding**: `py-6` (24px) minimum top/bottom
-4. **Safe area**: `safe-area-inset-bottom` for iOS home indicator
-5. **Scroll safety**: `overflow-y-auto` if content exceeds viewport
-6. **Centered layout**: `items-center justify-center` for all breakpoints
-
----
-
-## Form Validation
-
-Using same validation as `SignupOnboardingModal`:
-
-```tsx
-// Username: 3+ chars, alphanumeric + Georgian + underscore
-const validateUsername = (value: string): string | undefined => {
-  if (!value.trim()) return "სახელი საჭიროა";
-  if (value.length < 3) return "მინ. 3 სიმბოლო";
-  if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
-    return "მხოლოდ ასოები, ციფრები და _";
-  }
-  return undefined;
-};
-
-// Password: 6+ chars
-const validatePassword = (value: string): string | undefined => {
-  if (!value) return "პაროლი საჭიროა";
-  if (value.length < 6) return "მინ. 6 სიმბოლო";
-  return undefined;
-};
-```
-
----
-
-## UI Component Styling
-
-### Input Fields
-Match existing chunky input style from `SignupOnboardingModal`:
-```tsx
-className="w-full px-5 py-4 rounded-2xl bg-background border-4 border-border 
-           focus:border-primary outline-none text-lg font-medium text-center"
-style={{ boxShadow: "0 4px 0 hsl(var(--border))" }}
-```
-
-### Primary Button
-Use existing `ChunkyButton` component:
-```tsx
-<ChunkyButton variant="primary" size="lg" className="w-full">
-  <Sparkles className="w-5 h-5" />
-  შექმენი ანგარიში
-</ChunkyButton>
-```
-
-### OAuth Buttons
-Match Auth.tsx styling - white background, gray border, brand icons:
-```tsx
-className="w-full h-14 rounded-2xl bg-white border border-gray-200 shadow-sm 
-           flex items-center justify-center gap-3 text-gray-700 font-medium"
-```
-
----
-
-## Animation Details
-
-### Video Avatar
-- Plays automatically on component mount
-- Loops continuously (muted)
-- Has subtle floating animation like existing avatars:
-  ```tsx
-  animate={{ y: [0, -8, 0] }}
-  transition={{ duration: 4, repeat: Infinity }}
-  ```
-
-### Form Entry
-- Staggered fade-in animation for form elements:
-  ```tsx
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.2 + index * 0.1 }}
-  ```
-
----
-
-## Error Handling
-
-- Inline error messages below inputs (same as current modals)
-- Toast notifications for API errors
-- Loading state disables all buttons during submission
-- OAuth errors show toast with localized messages
