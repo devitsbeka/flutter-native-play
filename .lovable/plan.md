@@ -1,59 +1,85 @@
 
+# Plan: Fix Logo Size and Wrapping on Desktop/Tablet
 
-# Plan: Fix Georgian Flag Emoji Not Showing
+## Problem Analysis
 
-## Root Cause
+Looking at the screenshot, the logo in TeamV2.tsx shows:
+1. **Size is too large**: Using `lg` (40px font) on desktop instead of `md` (28px)
+2. **LIVE badge wraps below**: The container doesn't provide enough space to keep elements on one line
 
-The `getCountryFlag` function in `src/data/opponents.ts` looks up country codes in the `countries` array to find the corresponding flag emoji. However, **Georgia (country code: "GE")** is not in this list.
+### Root Cause
 
-When the user's profile has `country_code: "GE"`, the function can't find it and returns the fallback white flag emoji `🏳️` instead of the Georgian flag `🇬🇪`.
+In `MyTriviaLiveLogo.tsx`, when `responsive={true}`:
+- Desktop (lg, xl, 2xl breakpoints) → uses `"lg"` size (40px font) - **too large**
+- Tablet (md breakpoint) → uses `"sm"` size (20px font) - correct
+
+The wrapping happens because the parent container `<div className="flex items-center gap-2">` doesn't guarantee minimum width for the logo.
 
 ---
 
 ## Technical Changes
 
-### File: `src/data/opponents.ts`
+### File 1: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-**Add Georgia to the countries array** (after line 85, before line 86):
-
-```typescript
-// Add Georgia to the countries list
-{ code: "GE", name: "Georgia", flag: "🇬🇪" },
-```
-
-The updated countries array section will look like:
+**Change 1 (Lines 33-35)**: Update responsive sizing to use `md` on desktop instead of `lg`
 
 ```typescript
-export const countries = [
-  { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  // ... other countries ...
-  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
-  { code: "PH", name: "Philippines", flag: "🇵🇭" },
-  { code: "GE", name: "Georgia", flag: "🇬🇪" },  // ← Add this
-];
+// BEFORE:
+} else {
+  effectiveSize = "lg";  // Desktop (lg, xl, 2xl)
+}
+
+// AFTER:
+} else {
+  effectiveSize = "md";  // Desktop (lg, xl, 2xl) - md not lg
+}
 ```
+
+### File 2: `src/pages/TeamV2.tsx`
+
+**Change 2 (Lines 508-511)**: Give the logo container explicit minimum width to prevent wrapping
+
+```typescript
+// BEFORE:
+<div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
+  <div className="flex items-center gap-2">
+    <MyTriviaLiveLogo responsive />
+  </div>
+
+// AFTER:
+<div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
+  <div className="flex items-center gap-2 shrink-0">
+    <MyTriviaLiveLogo responsive />
+  </div>
+```
+
+The key addition is `shrink-0` which prevents the logo container from shrinking below its natural width, which forces other elements to shrink instead.
 
 ---
 
 ## Summary
 
-| Issue | Solution |
-|-------|----------|
-| Georgia (GE) missing from countries list | Add `{ code: "GE", name: "Georgia", flag: "🇬🇪" }` |
-| Fallback `🏳️` shown | Will now correctly show `🇬🇪` |
+| Location | Before | After | Purpose |
+|----------|--------|-------|---------|
+| MyTriviaLiveLogo.tsx (line 34) | `effectiveSize = "lg"` | `effectiveSize = "md"` | Use medium (28px) not large (40px) on desktop |
+| TeamV2.tsx (line 509) | `flex items-center gap-2` | `flex items-center gap-2 shrink-0` | Prevent container from shrinking and causing wrap |
 
 ---
 
-## Result
+## Visual Result
 
-**Before:**
+**Before (Desktop):**
 ```text
-🏳️ მაკო   ← White flag (country not found)
+MyTrivia     ← 40px font (lg size)
+● LIVE       ← badge wraps to second line
 ```
 
-**After:**
+**After (Desktop):**
 ```text
-🇬🇪 მაკო   ← Georgian flag emoji
+MyTrivia ● LIVE   ← 28px font (md size), all on one line
 ```
 
+**Tablet remains at sm (20px):**
+```text
+MyTrivia ● LIVE   ← 20px font, all on one line
+```
