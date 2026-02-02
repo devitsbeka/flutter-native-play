@@ -45,6 +45,7 @@ interface RoomMiniCardProps {
 
 export function RoomMiniCard({ room, onClick, isParty }: RoomMiniCardProps) {
   const participantCount = room.participants?.length || 0;
+  const iconUrl = room.room_icon || room.cover_image;
   
   return (
     <motion.button
@@ -53,14 +54,14 @@ export function RoomMiniCard({ room, onClick, isParty }: RoomMiniCardProps) {
       className="flex flex-col items-center gap-2 min-w-[100px] p-2"
     >
       <div 
-        className="w-16 h-16 rounded-2xl flex items-center justify-center"
+        className="w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden"
         style={{ 
           background: room.background_gradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
         }}
       >
-        {room.cover_image ? (
+        {iconUrl ? (
           <img 
-            src={room.cover_image} 
+            src={iconUrl} 
             alt={room.room_name || ""} 
             className="w-full h-full rounded-2xl object-cover"
           />
