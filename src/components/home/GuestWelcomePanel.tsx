@@ -231,7 +231,7 @@ export function GuestWelcomePanel({
                 onClick={() => setIsSignUp(false)}
                 className="text-primary font-semibold hover:underline"
               >
-                შედი
+                შესვლა
               </button>
             </>
           ) : (
