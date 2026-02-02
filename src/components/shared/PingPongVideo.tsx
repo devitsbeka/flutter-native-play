@@ -5,12 +5,14 @@ interface PingPongVideoProps {
   src: string;
   className?: string;
   rootMargin?: string;
+  style?: React.CSSProperties;
 }
 
 export function PingPongVideo({ 
   src, 
   className = "",
   rootMargin = "200px",
+  style,
 }: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -101,6 +103,7 @@ export function PingPongVideo({
         playsInline
         loop
         preload="none"
+        style={style}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
           isReady && isInView ? 'opacity-100' : 'opacity-0'
         } ${className}`}
