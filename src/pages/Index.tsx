@@ -45,6 +45,7 @@ import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
+import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
 import { lovable } from "@/integrations/lovable";
 
 import { t } from "@/lib/i18n";
@@ -520,23 +521,43 @@ export default function Index() {
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
-            {/* GUEST: Show unified welcome panel with video avatar + auth forms */}
+            {/* GUEST: Show split layout on desktop, unified panel on mobile */}
             {!user && (
-              <motion.div
-                className="w-full h-full flex items-center justify-center pointer-events-auto overflow-y-auto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, type: "spring" }}
-              >
-                <GuestWelcomePanel
-                  onCreateAccount={handleGuestCreateAccount}
-                  onSignIn={handleGuestSignIn}
-                  onGoogleSignIn={handleGuestGoogleSignIn}
-                  onAppleSignIn={handleGuestAppleSignIn}
-                  onPlayAsGuest={handlePlayClick}
-                  isLoading={isAuthLoading}
-                />
-              </motion.div>
+              <>
+                {/* Desktop: Split layout with auth on left, guest info on right */}
+                <motion.div
+                  className="hidden md:flex w-full h-full items-center justify-center pointer-events-auto overflow-y-auto"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, type: "spring" }}
+                >
+                  <DesktopGuestSplitLayout
+                    onCreateAccount={handleGuestCreateAccount}
+                    onSignIn={handleGuestSignIn}
+                    onGoogleSignIn={handleGuestGoogleSignIn}
+                    onAppleSignIn={handleGuestAppleSignIn}
+                    onPlayAsGuest={handlePlayClick}
+                    isLoading={isAuthLoading}
+                  />
+                </motion.div>
+                
+                {/* Mobile: Original unified panel */}
+                <motion.div
+                  className="md:hidden w-full h-full flex items-center justify-center pointer-events-auto overflow-y-auto"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, type: "spring" }}
+                >
+                  <GuestWelcomePanel
+                    onCreateAccount={handleGuestCreateAccount}
+                    onSignIn={handleGuestSignIn}
+                    onGoogleSignIn={handleGuestGoogleSignIn}
+                    onAppleSignIn={handleGuestAppleSignIn}
+                    onPlayAsGuest={handlePlayClick}
+                    isLoading={isAuthLoading}
+                  />
+                </motion.div>
+              </>
             )}
             
             {/* xl+ layout: Cards moved to fixed right side */}
