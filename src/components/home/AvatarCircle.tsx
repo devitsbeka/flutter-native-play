@@ -296,7 +296,7 @@ export function AvatarCircle({
         ) : shouldShowMascot ? (
           /* Mascot reminder video - plays once for users without avatar */
           <div 
-            className="rounded-full overflow-hidden"
+            className="rounded-full overflow-hidden relative"
             style={{
               width: size - (progressRingWidth + ringGap) * 2 - 8,
               height: size - (progressRingWidth + ringGap) * 2 - 8,
