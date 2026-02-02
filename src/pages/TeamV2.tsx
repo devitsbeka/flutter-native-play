@@ -510,7 +510,7 @@ function TeamContentV2() {
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
                   <div className="flex items-center gap-2">
-                    <MyTriviaLiveLogo size="md" />
+                    <MyTriviaLiveLogo responsive />
                   </div>
 
                   <div className="flex items-center gap-2">
