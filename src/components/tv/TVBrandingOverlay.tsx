@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTVGame } from '@/contexts/TVGameContext';
-import myTriviaLogo from '@/assets/mytrivia-live-logo.png';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 
 interface TVBrandingOverlayProps {
   showLogo?: boolean;
@@ -20,13 +20,9 @@ export const TVBrandingOverlay: React.FC<TVBrandingOverlayProps> = ({
       {/* Logo - Top Left (hidden when compact) */}
       {showLogo && !compact && (
         <div className="absolute top-4 left-4 z-20">
-          <img 
-            src={myTriviaLogo} 
-            alt="MyTrivia LIVE" 
-            className="h-8 w-auto"
-            style={{
-              filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
-            }}
+          <MyTriviaLiveLogo 
+            size="sm" 
+            textColor="light"
           />
         </div>
       )}
