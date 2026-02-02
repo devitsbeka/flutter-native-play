@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
   Plus, 
@@ -15,7 +15,9 @@ import {
   Sparkles,
   Users,
   Zap,
-  Command
+  Command,
+  ChevronLeft,
+  X
 } from "lucide-react";
 import {
   CommandDialog,
@@ -29,8 +31,12 @@ import {
 import { useCategories } from "@/hooks/useCategories";
 import { useFriends } from "@/hooks/useFriends";
 import { useMyRooms } from "@/hooks/useMyRooms";
+import { useMyQuizPosts } from "@/hooks/useSocialFeed";
+import { useMyCollections } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { SearchHorizontalLists } from "./SearchHorizontalLists";
 
 interface SpotlightSearchProps {
   className?: string;
@@ -55,13 +61,33 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   const [query, setQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const mobileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { signOut } = useAuth();
   
   // Data hooks
   const { categories } = useCategories();
   const { friends } = useFriends();
-  const { rooms } = useMyRooms();
+  const { rooms } = useMyRooms({ limit: 20 });
+  const { data: trivias = [] } = useMyQuizPosts();
+  const { data: collections = [] } = useMyCollections();
+  
+  // Detect mobile
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Focus mobile input when panel opens
+  useEffect(() => {
+    if (open && isMobile && mobileInputRef.current) {
+      setTimeout(() => mobileInputRef.current?.focus(), 100);
+    }
+  }, [open, isMobile]);
   
   // Command detection
   const isCommand = query.startsWith("/");
@@ -85,7 +111,6 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
       setQuery("");
       setInputValue("");
     } else if (inputValue) {
-      // Transfer any typed value to query when modal opens
       setQuery(inputValue);
       setInputValue("");
     }
@@ -108,23 +133,43 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
       .slice(0, 6);
   }, [categories, query, isCommand, lowerQuery]);
 
-  // Filter friends
+  // Filter friends for mobile
   const filteredFriends = useMemo(() => {
-    if (isCommand || !query) return friends.slice(0, 5);
+    if (isCommand) return [];
+    if (!query) return friends.slice(0, 10);
     return friends
       .filter(f => f.nickname.toLowerCase().includes(lowerQuery))
-      .slice(0, 5);
+      .slice(0, 10);
   }, [friends, query, isCommand, lowerQuery]);
 
-  // Filter rooms
+  // Filter rooms for mobile
   const filteredRooms = useMemo(() => {
-    if (isCommand || !query) return rooms.slice(0, 5);
+    if (isCommand) return [];
+    if (!query) return rooms.slice(0, 10);
     return rooms
       .filter(r => 
         (r.room_name || r.room_code || "").toLowerCase().includes(lowerQuery)
       )
-      .slice(0, 5);
+      .slice(0, 10);
   }, [rooms, query, isCommand, lowerQuery]);
+
+  // Filter trivias for mobile
+  const filteredTrivias = useMemo(() => {
+    if (isCommand) return [];
+    if (!query) return trivias.slice(0, 10);
+    return trivias
+      .filter(t => t.title?.toLowerCase().includes(lowerQuery))
+      .slice(0, 10);
+  }, [trivias, query, isCommand, lowerQuery]);
+
+  // Filter collections for mobile
+  const filteredCollections = useMemo(() => {
+    if (isCommand) return [];
+    if (!query) return collections.slice(0, 10);
+    return collections
+      .filter(c => c.title?.toLowerCase().includes(lowerQuery))
+      .slice(0, 10);
+  }, [collections, query, isCommand, lowerQuery]);
 
   // Handle command execution
   const handleCommandSelect = async (cmd: typeof COMMANDS[0]) => {
@@ -162,6 +207,18 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     navigate(`/room/${roomCode}`);
   };
 
+  // Handle trivia select
+  const handleTriviaSelect = (triviaId: string) => {
+    setOpen(false);
+    navigate(`/trivia/${triviaId}`);
+  };
+
+  // Handle collection select
+  const handleCollectionSelect = (collectionId: string) => {
+    setOpen(false);
+    navigate(`/collection/${collectionId}`);
+  };
+
   // Handle input change - open modal when typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -169,11 +226,6 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     if (value && !open) {
       setOpen(true);
     }
-  };
-
-  // Handle input focus
-  const handleInputFocus = () => {
-    // Focus is ready for typing, modal opens on first keystroke
   };
 
   // Handle input keydown
@@ -186,6 +238,105 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
       inputRef.current?.blur();
     }
   };
+
+  // Render mobile full-screen panel
+  if (isMobile && open) {
+    return (
+      <>
+        {/* Button trigger (still needed for initial open) */}
+        {variant === "button" && (
+          <motion.button
+            className={`relative p-2 rounded-full hover:bg-white/30 transition-colors ${className}`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setOpen(true)}
+          >
+            <Search className="w-5 h-5 text-gray-600" />
+          </motion.button>
+        )}
+        
+        {/* Full-screen mobile panel */}
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-background flex flex-col"
+          >
+            {/* Header with search bar */}
+            <div className="flex items-center gap-3 p-4 border-b border-border safe-top">
+              <motion.button
+                onClick={() => setOpen(false)}
+                whileTap={{ scale: 0.9 }}
+                className="p-2 -ml-2 rounded-full hover:bg-muted"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </motion.button>
+              
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  ref={mobileInputRef}
+                  type="text"
+                  placeholder="ძებნა..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="pl-10 pr-10 h-11 rounded-full bg-muted border-0"
+                />
+                {query && (
+                  <motion.button
+                    onClick={() => setQuery("")}
+                    whileTap={{ scale: 0.9 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-background"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </motion.button>
+                )}
+              </div>
+            </div>
+
+            {/* Content with horizontal lists */}
+            <div className="flex-1 overflow-y-auto">
+              <SearchHorizontalLists
+                friends={filteredFriends}
+                rooms={filteredRooms}
+                trivias={filteredTrivias.map(t => ({
+                  id: t.id,
+                  title: t.title || "",
+                  cover_image: t.cover_image,
+                  cover_gradient: t.cover_gradient,
+                  question_count: t.question_count,
+                }))}
+                collections={filteredCollections.map(c => ({
+                  id: c.id,
+                  title: c.title,
+                  cover_image: c.cover_image,
+                  cover_gradient: c.cover_gradient,
+                  rounds: c.rounds,
+                }))}
+                onSelectFriend={handleFriendSelect}
+                onSelectRoom={handleRoomSelect}
+                onSelectTrivia={handleTriviaSelect}
+                onSelectCollection={handleCollectionSelect}
+              />
+
+              {/* Empty state */}
+              {filteredFriends.length === 0 && 
+               filteredRooms.length === 0 && 
+               filteredTrivias.length === 0 && 
+               filteredCollections.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground text-sm">არაფერი მოიძებნა</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <>
@@ -211,7 +362,6 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            onFocus={handleInputFocus}
             onKeyDown={handleInputKeyDown}
             placeholder="ძებნა..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
@@ -225,197 +375,199 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
         </motion.div>
       )}
 
-      {/* Command Dialog */}
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput 
-          placeholder={isCommand ? "შეიყვანე ბრძანება..." : "ძებნა კატეგორიებში, მეგობრებში, ოთახებში..."}
-          value={query}
-          onValueChange={setQuery}
-        />
-        <CommandList className="max-h-[400px]">
-          <CommandEmpty>
-            <div className="flex flex-col items-center gap-2 py-6">
-              <Search className="w-10 h-10 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">არაფერი მოიძებნა</p>
-              <p className="text-xs text-muted-foreground/70">
-                სცადე <span className="font-mono bg-muted px-1 rounded">/</span> ბრძანებებისთვის
-              </p>
-            </div>
-          </CommandEmpty>
+      {/* Command Dialog (Desktop only) */}
+      {!isMobile && (
+        <CommandDialog open={open} onOpenChange={setOpen}>
+          <CommandInput 
+            placeholder={isCommand ? "შეიყვანე ბრძანება..." : "ძებნა კატეგორიებში, მეგობრებში, ოთახებში..."}
+            value={query}
+            onValueChange={setQuery}
+          />
+          <CommandList className="max-h-[400px]">
+            <CommandEmpty>
+              <div className="flex flex-col items-center gap-2 py-6">
+                <Search className="w-10 h-10 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">არაფერი მოიძებნა</p>
+                <p className="text-xs text-muted-foreground/70">
+                  სცადე <span className="font-mono bg-muted px-1 rounded">/</span> ბრძანებებისთვის
+                </p>
+              </div>
+            </CommandEmpty>
 
-          {/* Commands Group (when starts with /) */}
-          {isCommand && filteredCommands.length > 0 && (
-            <CommandGroup heading="ბრძანებები">
-              {filteredCommands.map((cmd) => (
-                <CommandItem 
-                  key={cmd.command}
-                  onSelect={() => handleCommandSelect(cmd)}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                    <cmd.icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{cmd.label}</span>
-                    <span className="text-xs text-muted-foreground font-mono">{cmd.command}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-
-          {/* Quick Actions (when no query) */}
-          {!isCommand && !query && (
-            <>
-              <CommandGroup heading="სწრაფი მოქმედებები">
-                <CommandItem 
-                  onSelect={() => handleCommandSelect(COMMANDS[0])}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                    <Plus className="w-4 h-4 text-white" />
-                  </div>
-                  <span>ახალი ოთახის შექმნა</span>
-                  <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
-                </CommandItem>
-                <CommandItem 
-                  onSelect={() => { setOpen(false); navigate("/game"); }}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
-                    <Zap className="w-4 h-4 text-white" />
-                  </div>
-                  <span>თამაშის დაწყება</span>
-                </CommandItem>
-                <CommandItem 
-                  onSelect={() => { setOpen(false); navigate("/discover"); }}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-                    <Search className="w-4 h-4 text-white" />
-                  </div>
-                  <span>აღმოაჩინე</span>
-                </CommandItem>
-              </CommandGroup>
-              <CommandSeparator />
-            </>
-          )}
-
-          {/* Categories */}
-          {!isCommand && filteredCategories.length > 0 && (
-            <CommandGroup heading="კატეგორიები">
-              {filteredCategories.map((category) => (
-                <CommandItem 
-                  key={category.id}
-                  onSelect={() => handleCategorySelect(category.id)}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div 
-                    className="flex items-center justify-center w-8 h-8 rounded-lg"
-                    style={{ backgroundColor: category.color + "20" }}
-                  >
-                    <Sparkles className="w-4 h-4" style={{ color: category.color }} />
-                  </div>
-                  <span>{category.name}</span>
-                  {category.totalLevels && (
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {category.totalLevels} დონე
-                    </span>
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-
-          {/* Friends */}
-          {!isCommand && filteredFriends.length > 0 && (
-            <>
-              <CommandSeparator />
-              <CommandGroup heading="მეგობრები">
-                {filteredFriends.map((friend) => (
+            {/* Commands Group (when starts with /) */}
+            {isCommand && filteredCommands.length > 0 && (
+              <CommandGroup heading="ბრძანებები">
+                {filteredCommands.map((cmd) => (
                   <CommandItem 
-                    key={friend.id}
-                    onSelect={() => handleFriendSelect(friend.id)}
+                    key={cmd.command}
+                    onSelect={() => handleCommandSelect(cmd)}
                     className="flex items-center gap-3 cursor-pointer"
                   >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={friend.avatarUrl || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                        {friend.nickname.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>{friend.nickname}</span>
-                    {friend.isOnline && (
-                      <span className="ml-auto flex items-center gap-1.5 text-xs text-green-600">
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                        ონლაინ
-                      </span>
-                    )}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </>
-          )}
-
-          {/* Game Rooms */}
-          {!isCommand && filteredRooms.length > 0 && (
-            <>
-              <CommandSeparator />
-              <CommandGroup heading="თამაშის ოთახები">
-                {filteredRooms.map((room) => (
-                  <CommandItem 
-                    key={room.id}
-                    onSelect={() => handleRoomSelect(room.room_code)}
-                    className="flex items-center gap-3 cursor-pointer"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500">
-                      <Gamepad2 className="w-4 h-4 text-white" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                      <cmd.icon className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex flex-col">
-                      <span>{room.room_name || room.room_code}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {room.participants?.length || 0} მოთამაშე
-                      </span>
+                      <span className="font-medium">{cmd.label}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{cmd.command}</span>
                     </div>
-                    {room.status === "playing" && (
-                      <span className="ml-auto px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
-                        მიმდინარე
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {/* Quick Actions (when no query) */}
+            {!isCommand && !query && (
+              <>
+                <CommandGroup heading="სწრაფი მოქმედებები">
+                  <CommandItem 
+                    onSelect={() => handleCommandSelect(COMMANDS[0])}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                      <Plus className="w-4 h-4 text-white" />
+                    </div>
+                    <span>ახალი ოთახის შექმნა</span>
+                    <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
+                  </CommandItem>
+                  <CommandItem 
+                    onSelect={() => { setOpen(false); navigate("/game"); }}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">
+                      <Zap className="w-4 h-4 text-white" />
+                    </div>
+                    <span>თამაშის დაწყება</span>
+                  </CommandItem>
+                  <CommandItem 
+                    onSelect={() => { setOpen(false); navigate("/discover"); }}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                      <Search className="w-4 h-4 text-white" />
+                    </div>
+                    <span>აღმოაჩინე</span>
+                  </CommandItem>
+                </CommandGroup>
+                <CommandSeparator />
+              </>
+            )}
+
+            {/* Categories */}
+            {!isCommand && filteredCategories.length > 0 && (
+              <CommandGroup heading="კატეგორიები">
+                {filteredCategories.map((category) => (
+                  <CommandItem 
+                    key={category.id}
+                    onSelect={() => handleCategorySelect(category.id)}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <div 
+                      className="flex items-center justify-center w-8 h-8 rounded-lg"
+                      style={{ backgroundColor: category.color + "20" }}
+                    >
+                      <Sparkles className="w-4 h-4" style={{ color: category.color }} />
+                    </div>
+                    <span>{category.name}</span>
+                    {category.totalLevels && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {category.totalLevels} დონე
                       </span>
                     )}
                   </CommandItem>
                 ))}
               </CommandGroup>
-            </>
-          )}
+            )}
 
-          {/* Shop */}
-          {!isCommand && (
-            <>
-              <CommandSeparator />
-              <CommandGroup heading="მაღაზია">
-                <CommandItem 
-                  onSelect={() => { setOpen(false); navigate("/power-ups"); }}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500">
-                    <Zap className="w-4 h-4 text-white" />
-                  </div>
-                  <span>ძალები</span>
-                </CommandItem>
-                <CommandItem 
-                  onSelect={() => { setOpen(false); navigate("/vip"); }}
-                  className="flex items-center gap-3 cursor-pointer"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500">
-                    <Trophy className="w-4 h-4 text-white" />
-                  </div>
-                  <span>VIP</span>
-                </CommandItem>
-              </CommandGroup>
-            </>
-          )}
-        </CommandList>
-      </CommandDialog>
+            {/* Friends */}
+            {!isCommand && filteredFriends.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="მეგობრები">
+                  {filteredFriends.slice(0, 5).map((friend) => (
+                    <CommandItem 
+                      key={friend.id}
+                      onSelect={() => handleFriendSelect(friend.friendId)}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={friend.avatarUrl || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {friend.nickname.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{friend.nickname}</span>
+                      {friend.isOnline && (
+                        <span className="ml-auto flex items-center gap-1.5 text-xs text-green-600">
+                          <span className="w-2 h-2 rounded-full bg-green-500" />
+                          ონლაინ
+                        </span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            )}
+
+            {/* Game Rooms */}
+            {!isCommand && filteredRooms.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="თამაშის ოთახები">
+                  {filteredRooms.slice(0, 5).map((room) => (
+                    <CommandItem 
+                      key={room.id}
+                      onSelect={() => handleRoomSelect(room.room_code)}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500">
+                        <Gamepad2 className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span>{room.room_name || room.room_code}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {room.participants?.length || 0} მოთამაშე
+                        </span>
+                      </div>
+                      {room.status === "playing" && (
+                        <span className="ml-auto px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+                          მიმდინარე
+                        </span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            )}
+
+            {/* Shop */}
+            {!isCommand && (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="მაღაზია">
+                  <CommandItem 
+                    onSelect={() => { setOpen(false); navigate("/power-ups"); }}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500">
+                      <Zap className="w-4 h-4 text-white" />
+                    </div>
+                    <span>ძალები</span>
+                  </CommandItem>
+                  <CommandItem 
+                    onSelect={() => { setOpen(false); navigate("/vip"); }}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500">
+                      <Trophy className="w-4 h-4 text-white" />
+                    </div>
+                    <span>VIP</span>
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </CommandDialog>
+      )}
     </>
   );
 };
