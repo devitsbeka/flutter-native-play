@@ -441,16 +441,6 @@ export default function Index() {
             {/* Notification icons - Hidden for guests */}
             {user && (
               <div className="flex items-center gap-1">
-                {/* Ad-Free button */}
-                <motion.button
-                  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate("/profile?tab=PRO")}
-                >
-                  <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
-                </motion.button>
-                
                 {/* Bell icon with unread badge */}
                 <motion.button
                   className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
