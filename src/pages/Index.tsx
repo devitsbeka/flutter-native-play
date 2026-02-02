@@ -163,7 +163,7 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
-  const { profile, user, fetchProfile, signUpWithUsername, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
+  const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, setStep, hasCompletedOnboarding } = useOnboarding();
   const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
@@ -267,15 +267,32 @@ export default function Index() {
     }
   }, [signUpWithUsername]);
 
-  const handleGuestSignIn = useCallback(async (username: string, password: string) => {
+  const handleGuestSignIn = useCallback(async (usernameOrEmail: string, password: string) => {
     setIsAuthLoading(true);
     try {
-      const { error } = await signInWithUsername(username, password);
+      // Detect if input is an email (contains @) or username
+      const isEmail = usernameOrEmail.includes('@');
+      
+      let error;
+      if (isEmail) {
+        // Real email - use standard signIn
+        const result = await signIn(usernameOrEmail, password);
+        error = result.error;
+        if (!error) {
+          // Store email for "returning user" detection
+          localStorage.setItem('lastLoginEmail', usernameOrEmail);
+        }
+      } else {
+        // Username - use pseudo-email signIn
+        const result = await signInWithUsername(usernameOrEmail, password);
+        error = result.error;
+      }
+      
       if (error) throw error;
     } finally {
       setIsAuthLoading(false);
     }
-  }, [signInWithUsername]);
+  }, [signIn, signInWithUsername]);
 
   const handleGuestGoogleSignIn = useCallback(async () => {
     setIsAuthLoading(true);
