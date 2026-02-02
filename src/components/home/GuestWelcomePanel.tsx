@@ -251,7 +251,7 @@ export function GuestWelcomePanel({
               placeholder="სახელი"
               disabled={loading}
               className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
-                         focus:border-primary outline-none text-sm font-medium
+                         focus:border-primary outline-none text-base font-medium
                          disabled:opacity-50 transition-colors"
               style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
             />
@@ -277,7 +277,7 @@ export function GuestWelcomePanel({
               placeholder="ელფოსტა ან სახელი"
               disabled={loading}
               className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
-                         focus:border-primary outline-none text-sm font-medium
+                         focus:border-primary outline-none text-base font-medium
                          disabled:opacity-50 transition-colors"
               style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
             />
@@ -302,7 +302,7 @@ export function GuestWelcomePanel({
             placeholder="პაროლი"
             disabled={loading}
             className="w-full pl-10 pr-3 py-[15px] rounded-xl bg-background border-2 border-border 
-                       focus:border-primary outline-none text-sm font-medium
+                       focus:border-primary outline-none text-base font-medium
                        disabled:opacity-50 transition-colors"
             style={{ boxShadow: "0 2px 0 hsl(var(--border))" }}
           />
