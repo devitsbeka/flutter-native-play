@@ -1,110 +1,122 @@
 
-
-# Redesign PRO Carousel - Combined Layout with Mascot on Right
+# Add Loading Indicators for Interactive Action Buttons
 
 ## Overview
-Merge the separate header banner and carousel card into one unified design. The mascot will be positioned on the right side of the card (large, not flipped), while the PRO content stays on the left - matching the reference design.
+Add consistent loading/sending indicators to buttons that currently lack proper visual feedback after being clicked. The goal is to standardize the user experience across all interactive elements with the pattern already established in the Add Friend button.
 
-## Current Structure
-```text
-╭────────────────────────────────────────╮
-│  👑 გახდი PRO          [Small Mascot] │  ← Header Banner
-╰────────────────────────────────────────╯
+## Current State Analysis
 
-╭────────────────────────────────────────╮
-│  [Icon] სოლო PRO                       │
-│  ₾9.99/თვე                             │  ← Separate Card
-│  ✓ Benefit 1                           │
-│  ✓ Benefit 2                           │
-│  [     გააქტიურება     ]               │
-╰────────────────────────────────────────╯
-```
-
-## New Combined Design
-```text
-╭───────────────────────────────────────────────────╮
-│                                                   │
-│  [Icon]  სოლო PRO        │                        │
-│  ₾9.99/თვე               │                        │
-│                          │     [MASCOT]           │
-│  ✓ 2x XP ბონუსი          │      (large)          │
-│  ✓ ექსკლუზიური VIP ბეჯი  │    (not flipped)      │
-│  ✓ რეკლამების გარეშე     │                        │
-│                          │                        │
-│  [    გააქტიურება    ]   │                        │
-│                                                   │
-╰───────────────────────────────────────────────────╯
-```
+| Component | Action | Current State | Needs Fix |
+|-----------|--------|---------------|-----------|
+| `InviteFriendsModal` | Add Friend (`+ დამატება`) | Spinner + "იგზავნება..." text | No - already good |
+| `InviteFriendsModal` | Invite (`მოწვევა`) | Spinner only, no text | **Yes** |
+| `CompactNotificationCard` | Accept/Decline | Shows "..." only | **Yes** |
+| `PlayerProfileModal` | Add Friend (`დამატება`) | Disabled only, no visual | **Yes** |
+| `PlayerProfileModal` | Challenge (`გამოწვევა`) | Navigates instantly | No - navigation is instant |
 
 ## Technical Changes
 
-### File: `src/components/shop/MobileProCarousel.tsx`
+### 1. InviteFriendsModal.tsx - Invite Button (Lines ~477-500)
 
-**1. Remove the separate header banner (lines 75-97)**
+**Current behavior:** When inviting a friend to a room, the button shows only a `Loader2` spinner.
 
-The header with "გახდი PRO" text and small mascot will be removed entirely.
-
-**2. Restructure the card layout**
-
-Change from single-column to a two-column flex layout:
-- **Left column (~60%)**: PRO icon, title, price, benefits, CTA button
-- **Right column (~40%)**: Large mascot image (not flipped, natural position facing left toward content)
-
-**3. Updated JSX structure:**
+**Fix:** Add "იგზავნება..." text next to the spinner for consistency with Add Friend button.
 
 ```tsx
-<div className="px-4 pt-4 pb-2">
-  {/* Combined PRO Card with Mascot */}
-  <div className="relative overflow-hidden rounded-3xl">
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={tier.id}
-        className="relative rounded-2xl overflow-hidden flex"
-        style={{ background: tier.gradient, ... }}
-      >
-        {/* Left: Content */}
-        <div className="flex-1 p-4 z-10">
-          {/* Icon + Title + Price */}
-          {/* Benefits */}
-          {/* CTA Button */}
-        </div>
-        
-        {/* Right: Mascot */}
-        <div className="w-[140px] flex-shrink-0 relative">
-          <img 
-            src={proMascot} 
-            alt="" 
-            className="absolute bottom-0 right-0 w-[160px] h-auto object-contain"
-            // No transform - natural position facing left
-          />
-        </div>
-      </motion.div>
-    </AnimatePresence>
-  </div>
-  
-  {/* Dot Indicators */}
-</div>
+// Before (around line 477-493)
+{isLoading ? (
+  <Loader2 className="w-4 h-4 animate-spin" />
+) : ...
+
+// After
+{isLoading ? (
+  <>
+    <Loader2 className="w-4 h-4 animate-spin" />
+    იგზავნება...
+  </>
+) : ...
 ```
 
-**4. Mascot positioning**
-- Remove `transform: scaleX(-1)` - mascot naturally faces left toward the content
-- Position at bottom-right, slightly overflowing for dynamic look
-- Size ~160px width to match reference
+### 2. CompactNotificationCard.tsx - Accept/Decline Buttons (Lines 399-413)
 
-**5. Remove unused import**
-- Remove `iconVipCrown` import since header banner is removed
+**Current behavior:** Shows "..." when loading.
+
+**Fix:** Show a more descriptive loading state with spinner.
+
+```tsx
+// Before (line 402)
+{isLoading ? "..." : isFriendRequest ? "მიღება" : "შესვლა"}
+
+// After - Accept button
+{isLoading ? (
+  <span className="flex items-center gap-1">
+    <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+  </span>
+) : isFriendRequest ? "მიღება" : "შესვლა"}
+
+// Similar for Decline button
+```
+
+### 3. PlayerProfileModal.tsx - Add Friend Button (Lines 308-318)
+
+**Current behavior:** Button only gets disabled when `addingFriend` is true.
+
+**Fix:** Add loading spinner and text feedback.
+
+```tsx
+// Before
+<ChunkyButton
+  onClick={handleAddFriend}
+  disabled={addingFriend}
+  variant="secondary"
+  size="sm"
+  className="flex-1"
+>
+  <UserPlus className="w-4 h-4 mr-1" />
+  დამატება
+</ChunkyButton>
+
+// After
+<ChunkyButton
+  onClick={handleAddFriend}
+  disabled={addingFriend}
+  variant="secondary"
+  size="sm"
+  className="flex-1"
+>
+  {addingFriend ? (
+    <>
+      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+      იგზავნება...
+    </>
+  ) : (
+    <>
+      <UserPlus className="w-4 h-4 mr-1" />
+      დამატება
+    </>
+  )}
+</ChunkyButton>
+```
+
+Also need to import `Loader2` from lucide-react in this file.
 
 ---
 
-## Files Summary
+## Files to Modify
 
-| File | Action |
-|------|--------|
-| `src/components/shop/MobileProCarousel.tsx` | Restructure layout, remove header, add mascot to card |
+| File | Changes |
+|------|---------|
+| `src/components/team/InviteFriendsModal.tsx` | Add "იგზავნება..." text to invite button loading state |
+| `src/components/notifications/CompactNotificationCard.tsx` | Add spinner to accept/decline loading states |
+| `src/components/profile/PlayerProfileModal.tsx` | Add loading state with spinner + text to Add Friend button |
 
 ---
 
-## Visual Result
+## Visual Consistency
 
-The PRO subscription section becomes a single, cohesive card with the friendly blue mascot prominently displayed on the right side, creating a more engaging and unified appearance that matches the reference design.
+All action buttons will now follow the same pattern:
+1. **Default state**: Icon + text label
+2. **Loading state**: Spinning loader + "იგზავნება..." text (or just spinner for compact buttons)
+3. **Success state**: Check icon + confirmation text (where applicable)
+4. **Pending state**: Clock icon + "მოლოდინში" text (for friend requests)
 
