@@ -101,7 +101,10 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
   const gradientClass = gradientStyle ? '' : `bg-gradient-to-br ${quiz.cover_gradient || 'from-purple-500 to-pink-500'}`;
 
   return (
-    <div className="flex gap-3 p-4 bg-muted/50 rounded-xl">
+    <div 
+      className="flex gap-3 p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
+      onClick={() => onPlay?.(quiz)}
+    >
       {/* Round icon - shows cover image, icon, or fallback to round number */}
       <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative">
         {quiz.cover_image ? (
@@ -195,7 +198,8 @@ function CollectionCard({
   isNew, 
   isPosting,
   isExpanded: isExpandedProp,
-  onExpandChange
+  onExpandChange,
+  isMobile
 }: { 
   collection: any; 
   profile: any; 
@@ -208,6 +212,7 @@ function CollectionCard({
   isPosting?: boolean;
   isExpanded?: boolean;
   onExpandChange?: (collectionId: string | null) => void;
+  isMobile?: boolean;
 }) {
   const isExpanded = isExpandedProp ?? false;
   
@@ -215,6 +220,14 @@ function CollectionCard({
     const newExpandedState = !isExpanded;
     onExpandChange?.(newExpandedState ? collection.id : null);
   };
+
+  const handlePlayCollection = () => {
+    if (quizzes && quizzes.length > 0) {
+      const allPosts = quizzes.map(q => convertQuizToSamplePost(q, profile));
+      onPlay?.(allPosts[0], allPosts);
+    }
+  };
+
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
   const roundsCount =
@@ -229,6 +242,177 @@ function CollectionCard({
   // Tilt animation for new items - random left or right tilt
   const tiltDirection = collection.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
 
+  // Desktop: Render as fixed centered modal when expanded
+  if (isExpanded && !isMobile) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { 
+            if (e.target === e.currentTarget) onExpandChange?.(null);
+          }}
+        >
+          <motion.div 
+            className="bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-2xl 
+                       w-full max-w-lg max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Scrollable content container */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {/* Header with image/gradient */}
+              <div className="h-40 relative overflow-hidden flex-shrink-0">
+                {collection.cover_image ? (
+                  <>
+                    <img src={collection.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/30" />
+                  </>
+                ) : (
+                  <>
+                    <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
+                    <div className="absolute inset-0 bg-black/20" />
+                  </>
+                )}
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => onExpandChange?.(null)}
+                  className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+                >
+                  <ChevronUp className="w-5 h-5 text-white" />
+                </button>
+                
+                {/* Edit Button */}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onEditCollection(collection); }}
+                  className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+                >
+                  <Pencil className="w-4 h-4 text-white" />
+                </button>
+                
+                {/* Collection Badge */}
+                <div className="absolute top-3 left-14 flex h-8 items-center gap-1.5 bg-purple-600/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>კოლექცია</span>
+                </div>
+
+                {/* Title */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <h4 className={`${
+                    collection.title.length > 60 ? 'text-xs' :
+                    collection.title.length > 45 ? 'text-sm' :
+                    collection.title.length > 30 ? 'text-base' : 'text-lg'
+                  } font-bold text-white text-center px-4 drop-shadow-lg line-clamp-2`}>
+                    {collection.title}
+                  </h4>
+                </div>
+              </div>
+
+              {/* Collection Info */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
+                    {profile?.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-lg">👤</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground text-sm">{profile?.nickname || 'შენ'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatGeorgianTimeAgo(new Date(collection.created_at))}
+                    </p>
+                  </div>
+                  {/* Visibility badge */}
+                  <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
+                    {collection.is_public ? (
+                      <Globe className="w-3.5 h-3.5" aria-hidden />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5" aria-hidden />
+                    )}
+                    <span>{roundsCount} რაუნდი</span>
+                  </div>
+                </div>
+                
+                {/* Stats Row */}
+                <div className="flex items-center gap-3 mt-3">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
+                    <span>{collection.likes_count || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
+                    <span>{collection.saves_count || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
+                    <span>{collection.plays_count || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rounds List */}
+              <div className="p-4 space-y-2">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : quizzes && quizzes.length > 0 ? (
+                  quizzes.map((quiz) => (
+                    <CollectionQuizCard 
+                      key={quiz.id} 
+                      quiz={quiz} 
+                      profile={profile}
+                      onEdit={onEditRound}
+                      onPlay={(q) => onPlay?.(convertQuizToSamplePost(q, profile), quizzes?.map(qz => convertQuizToSamplePost(qz, profile)))}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    ამ კოლექციაში ჯერ არ არის ქვიზები
+                  </p>
+                )}
+                
+                {/* Add More Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const nextRoundNumber = (quizzes?.length || 0) + 1;
+                    onAddRound(collection.id, nextRoundNumber);
+                  }}
+                  className="w-full py-3 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                             bg-muted/30 hover:bg-muted/50 transition-colors 
+                             flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium">კიდევ დამატება</span>
+                </button>
+              </div>
+            </div>
+            
+            {/* Fixed Play Button at bottom */}
+            <div className="p-4 border-t border-border bg-card flex-shrink-0">
+              <ChunkyButton 
+                variant="primary" 
+                size="lg" 
+                className="w-full gap-2"
+                onClick={handlePlayCollection}
+                disabled={!quizzes || quizzes.length === 0}
+              >
+                <Play className="w-5 h-5 fill-current" />
+                ითამაშე
+              </ChunkyButton>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // Mobile / collapsed: Render normal in-grid card
   return (
     <motion.div
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
@@ -366,7 +550,7 @@ function CollectionCard({
         </div>
       </button>
 
-      {/* Expanded Quizzes */}
+      {/* Expanded Quizzes - Mobile Only */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -411,6 +595,18 @@ function CollectionCard({
                 <Plus className="w-4 h-4" />
                 <span className="text-sm font-medium">კიდევ დამატება</span>
               </button>
+              
+              {/* Play All Button - Mobile */}
+              <ChunkyButton 
+                variant="primary" 
+                size="lg" 
+                className="w-full gap-2 mt-3"
+                onClick={handlePlayCollection}
+                disabled={!quizzes || quizzes.length === 0}
+              >
+                <Play className="w-5 h-5 fill-current" />
+                ითამაშე
+              </ChunkyButton>
             </div>
           </motion.div>
         )}
@@ -1082,6 +1278,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               isPosting={postingItemId === item.data.id}
               isExpanded={expandedCollectionId === item.data.id}
               onExpandChange={setExpandedCollectionId}
+              isMobile={isMobile}
             />
           ) : item.data.subject === 'personal' ? (
             <PersonalTriviaCard 
