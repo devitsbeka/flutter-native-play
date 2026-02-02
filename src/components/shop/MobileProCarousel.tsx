@@ -4,7 +4,6 @@ import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-rea
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import proMascot from "@/assets/pro-mascot.png";
-import iconVipCrown from "@/assets/icons/icon-vip-crown.png";
 
 const PRO_TIERS = [
   {
@@ -72,31 +71,7 @@ export function MobileProCarousel() {
 
   return (
     <div className="px-4 pt-4 pb-2">
-      {/* Header Banner */}
-      <div 
-        className="relative mb-4 rounded-2xl overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, rgba(233,213,255,0.8) 0%, rgba(251,207,232,0.6) 50%, rgba(233,213,255,0.8) 100%)",
-          boxShadow: "0 8px 32px rgba(147,51,234,0.15), 0 4px 16px rgba(168,85,247,0.1)"
-        }}
-      >
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Left: Crown + Text */}
-          <div className="flex items-center gap-2">
-            <img src={iconVipCrown} alt="" className="w-7 h-7" />
-            <h2 className="text-lg font-bold text-purple-900">გახდი PRO</h2>
-          </div>
-          {/* Right: Mascot */}
-          <img 
-            src={proMascot} 
-            alt="" 
-            className="w-16 h-16 object-contain" 
-            style={{ transform: "scaleX(-1)" }}
-          />
-        </div>
-      </div>
-
-      {/* Carousel Card */}
+      {/* Combined PRO Card with Mascot */}
       <div className="relative overflow-hidden rounded-3xl">
         <AnimatePresence mode="wait">
           <motion.div
@@ -105,7 +80,7 @@ export function MobileProCarousel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="relative rounded-2xl overflow-hidden"
+            className="relative rounded-2xl overflow-hidden flex"
             style={{
               background: tier.gradient,
               boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 25px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.2)`,
@@ -128,8 +103,8 @@ export function MobileProCarousel() {
               </div>
             )}
 
-            {/* Card Content */}
-            <div className="p-4">
+            {/* Left: Content */}
+            <div className="flex-1 p-4 z-10">
               {/* Header */}
               <div className="flex items-center gap-3 mb-3">
                 <div 
@@ -203,6 +178,15 @@ export function MobileProCarousel() {
                   </>
                 )}
               </button>
+            </div>
+
+            {/* Right: Mascot */}
+            <div className="w-[120px] flex-shrink-0 relative">
+              <img 
+                src={proMascot} 
+                alt="" 
+                className="absolute bottom-0 right-0 w-[140px] h-auto object-contain"
+              />
             </div>
           </motion.div>
         </AnimatePresence>
