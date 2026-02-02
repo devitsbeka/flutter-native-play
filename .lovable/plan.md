@@ -1,88 +1,127 @@
 
-# Plan: Replace CSS Logo with PNG Logo Image
+# Plan: Improve Tablet Layout for PRO Carousel
 
 ## Overview
 
-Replace the current CSS/font-based "MyTrivia LIVE" logo with the actual uploaded logo image (`MyTriviaLIVE_logo.png`) across all pages and components.
+Redesign the `MobileProCarousel` component to have a more flexible tablet layout with:
+1. Single-row header: Icon → Title → Price (right-aligned)
+2. Horizontal benefits list instead of vertical
+3. Better padding and spacing to prevent cropping
 
 ---
 
-## Step 1: Copy Logo to Assets
+## Changes
 
-Copy the uploaded logo image to the project assets folder:
-```
-user-uploads://MyTriviaLIVE_logo.png → src/assets/mytrivia-live-logo.png
-```
+### File: `src/components/shop/MobileProCarousel.tsx`
 
----
+**Restructure the card layout for tablet:**
 
-## Step 2: Update MyTriviaLiveLogo Component
+### 1. Header Row - Flex with space-between
 
-**File:** `src/components/shared/MyTriviaLiveLogo.tsx`
-
-Replace the CSS-based logo with an `<img>` tag that uses the PNG. Keep the size variants for different contexts.
-
-| Size | Height | Use Case |
-|------|--------|----------|
-| `sm` | 28px | Compact headers |
-| `md` | 36px | Main header |
-| `lg` | 56px | Featured/hero areas |
-
-The component will now simply render the image at different sizes instead of constructing the logo from text + badge.
-
----
-
-## Step 3: Update Loading Page
-
-**File:** `src/pages/Loading.tsx`
-
-Replace the inline CSS logo (lines 66-101) with an imported image.
-
-For the loading/splash context, use a larger version with optional white text shadow filter for visibility on dark backgrounds.
-
----
-
-## Step 4: Update SplashScreen
-
-**File:** `src/components/SplashScreen.tsx`
-
-Replace the inline CSS logo (lines 168-201) with the imported image, similar to Loading page changes.
-
----
-
-## Step 5: Update TV Pairing Screen
-
-**File:** `src/components/tv/TVPairingScreenV3.tsx`
-
-Replace the inline CSS logo (lines 52-86) with the imported image for TV display context.
-
----
-
-## Step 6: Update TV Branding Overlay
-
-**File:** `src/components/tv/TVBrandingOverlay.tsx`
-
-Replace the CSS logo (lines 23-38) with an image version. For TV contexts with dark backgrounds, may need filter/brightness adjustments.
-
----
-
-## Visual Comparison
-
-### Current (CSS-based):
-```
-┌────────────────────────────────────┐
-│ MyTrivia [font] + [● LIVE badge]   │
-│ Built with CSS, animations, colors │
-└────────────────────────────────────┘
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ [Icon]   სოლო PRO / სამეგობრო PRO            ₾19.99 /თვე  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### After (Image-based):
+- Icon on left
+- Title in middle (flex-1)
+- Price on right edge
+
+### 2. Benefits Row - Horizontal flex-wrap
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ ✓ Solo PRO + 5   ✓ საოჯახო ლიდერბორდი   ✓ ყველა PRO      │
+└─────────────────────────────────────────────────────────────┘
 ```
-┌────────────────────────────────────┐
-│ [MyTriviaLIVE_logo.png image]      │
-│ Single image asset, scales cleanly │
-└────────────────────────────────────┘
+
+- `flex flex-wrap gap-x-4 gap-y-1` instead of vertical `space-y-2`
+- Smaller text and compact checkmarks
+- Benefits flow horizontally and wrap if needed
+
+### 3. Improved Spacing
+
+- Increase padding from `p-4` to `p-5` for more breathing room
+- Add safe margin from video section
+- Ensure CTA button has proper spacing
+
+---
+
+## Layout Comparison
+
+### Before (Mobile-style vertical):
+```text
+┌────────────────────────────────┬─────────┐
+│ [Icon]                         │         │
+│ სამეგობრო PRO                  │  VIDEO  │
+│ ₾19.99 /თვე                    │         │
+│                                │         │
+│ ✓ Solo PRO + 5 მეგობარი       │         │
+│ ✓ საოჯახო ლიდერბორდი          │         │
+│ ✓ ყველა PRO ფუნქცია           │         │
+│                                │         │
+│ [      შეძენა      ]           │         │
+└────────────────────────────────┴─────────┘
 ```
+
+### After (Tablet-optimized horizontal):
+```text
+┌────────────────────────────────────────────────────┬─────────┐
+│ [Icon]  სამეგობრო PRO                   ₾19.99/თვე │         │
+│                                                    │  VIDEO  │
+│ ✓ Solo PRO + 5  ✓ საოჯახო ლიდერბორდი  ✓ ყველა PRO │         │
+│                                                    │         │
+│ [                    შეძენა                      ] │         │
+└────────────────────────────────────────────────────┴─────────┘
+```
+
+---
+
+## Code Changes
+
+```tsx
+{/* Header - Icon, Title, Price in one row */}
+<div className="flex items-center gap-3 mb-3">
+  {/* Icon */}
+  <div className="w-12 h-12 rounded-xl ...">
+    <TierIcon className="w-6 h-6 text-white" />
+  </div>
+  
+  {/* Title - flex-1 to push price to right */}
+  <h3 className="flex-1 text-base font-bold text-white">
+    {tier.nameKa}
+  </h3>
+  
+  {/* Price - right aligned */}
+  <div className="flex items-baseline gap-1 flex-shrink-0">
+    <span className="text-xl font-black text-white">₾{tier.price}</span>
+    <span className="text-xs text-white/70">/თვე</span>
+  </div>
+</div>
+
+{/* Benefits - Horizontal with flex-wrap */}
+<div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4">
+  {tier.benefits.slice(0, 3).map((benefit, i) => (
+    <div 
+      key={i} 
+      className="flex items-center gap-1.5 text-sm text-white/90"
+    >
+      <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
+      <span>{benefit}</span>
+    </div>
+  ))}
+</div>
+```
+
+---
+
+## Additional Improvements
+
+1. **Padding**: Increase container padding from `p-4` to `p-5`
+2. **Video width**: Adjust from `w-[140px]` to `w-[160px]` for better balance
+3. **CTA Button**: Keep full width with proper margins
+4. **Benefits text**: Slightly smaller font for better fit
 
 ---
 
@@ -90,19 +129,4 @@ Replace the CSS logo (lines 23-38) with an image version. For TV contexts with d
 
 | File | Change |
 |------|--------|
-| `src/assets/` | Add `mytrivia-live-logo.png` |
-| `src/components/shared/MyTriviaLiveLogo.tsx` | Replace with image-based logo |
-| `src/pages/Loading.tsx` | Replace inline CSS logo with image |
-| `src/components/SplashScreen.tsx` | Replace inline CSS logo with image |
-| `src/components/tv/TVPairingScreenV3.tsx` | Replace inline CSS logo with image |
-| `src/components/tv/TVBrandingOverlay.tsx` | Replace inline CSS logo with image |
-
----
-
-## Technical Notes
-
-- Import the image as ES6 module: `import myTriviaLogo from "@/assets/mytrivia-live-logo.png"`
-- Use `height` CSS property for consistent sizing (width auto-scales)
-- For dark backgrounds (Loading, Splash, TV), may need `filter: drop-shadow()` for visibility
-- Keep motion animations for entrance effects where they exist
-- Remove the blinking dot animation since it's now part of the static image
+| `src/components/shop/MobileProCarousel.tsx` | Restructure header row, horizontal benefits |
