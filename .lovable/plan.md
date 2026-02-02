@@ -1,19 +1,22 @@
 
-# Plan: Fix Logo Size and Wrapping on Desktop/Tablet
+# Plan: Fix Logo Always on One Line
 
 ## Problem Analysis
 
-Looking at the screenshot, the logo in TeamV2.tsx shows:
-1. **Size is too large**: Using `lg` (40px font) on desktop instead of `md` (28px)
-2. **LIVE badge wraps below**: The container doesn't provide enough space to keep elements on one line
+Looking at the screenshot, the logo shows:
+- "MyTrivia" on line 1
+- "● LIVE" badge on line 2
 
-### Root Cause
+This happens despite the `MyTriviaLiveLogo` component having `flex-nowrap` and `shrink-0`. The issue is that these flexbox properties don't always prevent wrapping when the parent container has `min-w-0` (which allows content to shrink below its natural size).
 
-In `MyTriviaLiveLogo.tsx`, when `responsive={true}`:
-- Desktop (lg, xl, 2xl breakpoints) → uses `"lg"` size (40px font) - **too large**
-- Tablet (md breakpoint) → uses `"sm"` size (20px font) - correct
+## Root Cause
 
-The wrapping happens because the parent container `<div className="flex items-center gap-2">` doesn't guarantee minimum width for the logo.
+In `Index.tsx` line 434:
+```typescript
+<div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
+```
+
+The `min-w-0` allows the flex child to shrink to 0 width, which can cause its children to wrap even if they have `flex-nowrap`.
 
 ---
 
@@ -21,65 +24,72 @@ The wrapping happens because the parent container `<div className="flex items-ce
 
 ### File 1: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-**Change 1 (Lines 33-35)**: Update responsive sizing to use `md` on desktop instead of `lg`
+**Change (Line 42)**: Add explicit minimum width using CSS calc to guarantee enough space for text + badge:
 
 ```typescript
 // BEFORE:
-} else {
-  effectiveSize = "lg";  // Desktop (lg, xl, 2xl)
-}
+<div className={`inline-flex items-center gap-2 flex-nowrap shrink-0 w-auto min-w-fit whitespace-nowrap ${className}`}>
 
 // AFTER:
-} else {
-  effectiveSize = "md";  // Desktop (lg, xl, 2xl) - md not lg
-}
+<div 
+  className={`inline-flex items-center gap-2 shrink-0 whitespace-nowrap ${className}`}
+  style={{ minWidth: 'max-content' }}
+>
 ```
 
-### File 2: `src/pages/TeamV2.tsx`
+The key change is using `style={{ minWidth: 'max-content' }}` which is more reliable than `min-w-fit` in flex contexts. This ensures the container never shrinks below the combined width of its content.
 
-**Change 2 (Lines 508-511)**: Give the logo container explicit minimum width to prevent wrapping
+### File 2: `src/pages/Index.tsx`
+
+**Change (Lines 434-441)**: Remove `min-w-0` which was allowing shrinkage, and ensure the logo container is always protected:
 
 ```typescript
 // BEFORE:
-<div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
-  <div className="flex items-center gap-2">
-    <MyTriviaLiveLogo responsive />
+<div className="flex-1 flex justify-center md:justify-start items-center gap-4 min-w-0">
+  {/* Logo - sm on mobile/tablet, md on desktop - single line always */}
+  <div className="flex-shrink-0">
+    <MyTriviaLiveLogo size="sm" className="md:hidden" />
+    <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
+    <MyTriviaLiveLogo size="md" className="hidden lg:block" />
   </div>
+</div>
 
 // AFTER:
-<div className="flex items-center justify-between mb-3 pb-3 border-b border-purple-900/10">
-  <div className="flex items-center gap-2 shrink-0">
-    <MyTriviaLiveLogo responsive />
+<div className="flex-1 flex justify-center md:justify-start items-center gap-4">
+  {/* Logo - sm on mobile/tablet, md on desktop - single line always */}
+  <div className="shrink-0" style={{ minWidth: 'max-content' }}>
+    <MyTriviaLiveLogo size="sm" className="md:hidden" />
+    <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
+    <MyTriviaLiveLogo size="md" className="hidden lg:block" />
   </div>
+</div>
 ```
 
-The key addition is `shrink-0` which prevents the logo container from shrinking below its natural width, which forces other elements to shrink instead.
+Key changes:
+1. Remove `min-w-0` from parent - this was the main culprit allowing shrinkage
+2. Add `minWidth: 'max-content'` to the logo container div for extra protection
 
 ---
 
 ## Summary
 
-| Location | Before | After | Purpose |
-|----------|--------|-------|---------|
-| MyTriviaLiveLogo.tsx (line 34) | `effectiveSize = "lg"` | `effectiveSize = "md"` | Use medium (28px) not large (40px) on desktop |
-| TeamV2.tsx (line 509) | `flex items-center gap-2` | `flex items-center gap-2 shrink-0` | Prevent container from shrinking and causing wrap |
+| File | Line | Change | Purpose |
+|------|------|--------|---------|
+| MyTriviaLiveLogo.tsx | 42 | Add `minWidth: 'max-content'` style | Prevent internal wrapping |
+| Index.tsx | 434 | Remove `min-w-0` | Stop parent from allowing child shrinkage |
+| Index.tsx | 436 | Add `minWidth: 'max-content'` style | Double protection for logo container |
 
 ---
 
 ## Visual Result
 
-**Before (Desktop):**
+**Before:**
 ```text
-MyTrivia     ← 40px font (lg size)
-● LIVE       ← badge wraps to second line
+MyTrivia     ← Text on line 1
+● LIVE       ← Badge wraps to line 2
 ```
 
-**After (Desktop):**
+**After:**
 ```text
-MyTrivia ● LIVE   ← 28px font (md size), all on one line
-```
-
-**Tablet remains at sm (20px):**
-```text
-MyTrivia ● LIVE   ← 20px font, all on one line
+MyTrivia ● LIVE   ← Everything on one line, always
 ```
