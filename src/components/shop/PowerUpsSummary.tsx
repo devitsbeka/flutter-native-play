@@ -27,10 +27,10 @@ export function PowerUpsSummary() {
       {POWER_UP_ORDER.map((type) => (
         <div
           key={type}
-          className="flex items-center justify-between gap-2 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm min-w-[58px]"
+          className="flex items-center justify-between gap-1.5 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-sm min-w-[54px]"
           style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}
         >
-          <img src={POWER_UP_ICONS[type]} alt="" className="w-5 h-5" />
+          <img src={POWER_UP_ICONS[type]} alt="" className="w-[18px] h-[18px]" />
           <AnimatePresence mode="wait">
             <motion.span
               key={powerUps[type]}
@@ -38,7 +38,7 @@ export function PowerUpsSummary() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 500, damping: 25 }}
-              className="text-sm font-bold text-foreground/90"
+              className="text-[13px] font-bold text-foreground/90"
             >
               {powerUps[type]}
             </motion.span>
