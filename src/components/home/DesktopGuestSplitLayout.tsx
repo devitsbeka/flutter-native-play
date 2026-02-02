@@ -428,9 +428,9 @@ export function DesktopGuestSplitLayout({
             {/* Play as Guest Button */}
             <ChunkyButton 
               type="button" 
-              variant="secondary" 
+              variant="outline" 
               size="md" 
-              className="w-full" 
+              className="w-full border-2 border-foreground/30 bg-background text-foreground hover:bg-muted" 
               onClick={onPlayAsGuest}
             >
               ითამაშე როგორც სტუმარი
