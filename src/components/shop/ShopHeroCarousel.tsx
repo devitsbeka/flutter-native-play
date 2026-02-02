@@ -161,7 +161,7 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
     <div className="relative px-[15px] mb-6 pt-3">
       <div 
         className="relative overflow-hidden rounded-3xl touch-pan-y" 
-        style={{ height: 340 }}
+        style={{ height: 400 }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
