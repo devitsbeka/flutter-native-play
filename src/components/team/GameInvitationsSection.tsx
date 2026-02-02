@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Gamepad2, Mail, X, Clock, Zap } from "lucide-react";
 import { useGameInvitations, GameInvitation } from "@/hooks/useGameInvitations";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -163,12 +163,12 @@ function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps
       <div className="relative flex items-center gap-4">
         {/* Sender Avatar */}
         <div className="relative">
-          <Avatar className="w-14 h-14 border-2 border-emerald-300">
-            <AvatarImage src={invitation.sender?.avatar_url || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-500 text-white font-bold">
-              {invitation.sender?.nickname?.charAt(0).toUpperCase() || "?"}
-            </AvatarFallback>
-          </Avatar>
+          <SafeAvatar 
+            avatarUrl={invitation.sender?.avatar_url}
+            fallback={invitation.sender?.nickname || "?"}
+            className="w-14 h-14 border-2 border-emerald-300"
+            fallbackClassName="bg-gradient-to-br from-emerald-500 to-green-500 text-white font-bold"
+          />
           {invitation.sender?.country_code && (
             <span className="absolute -bottom-1 -right-1 text-sm">
               {getCountryFlag(invitation.sender.country_code)}

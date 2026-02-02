@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Trophy, Clock, Users } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 
 interface AllRecentRoomsModalProps {
@@ -105,21 +105,13 @@ function RoomListItem({ room, index, formatTimeAgo }: { room: RecentRoom; index:
         {/* Participants */}
         <div className="flex -space-x-2">
           {room.participants.slice(0, 3).map((p, i) => (
-            <Avatar 
+            <SafeAvatar 
               key={p.user_id} 
+              avatarUrl={p.avatar_url}
+              fallback={p.nickname || "?"}
               className="w-10 h-10 border-2 border-white shadow-sm" 
-              style={{ zIndex: 3 - i }}
-            >
-              <AvatarImage src={p.avatar_url || undefined} />
-              <AvatarFallback 
-                className="text-white text-sm font-bold"
-                style={{
-                  background: "linear-gradient(135deg, #A855F7 0%, #EC4899 100%)",
-                }}
-              >
-                {p.nickname.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+              fallbackClassName="text-white text-sm font-bold"
+            />
           ))}
           {room.participants.length > 3 && (
             <div 

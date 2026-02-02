@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Gamepad2, Trophy, Sparkles, AlertTriangle, X } from "lucide-react";
 import { usePendingChallenges, PendingChallenge } from "@/hooks/usePendingChallenges";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 
@@ -163,15 +163,15 @@ function ChallengeCard({ challenge, onAccept, onDecline }: ChallengeCardProps) {
       <div className="relative flex items-center gap-4">
         {/* Challenger Avatar */}
         <div className="relative">
-          <Avatar className={cn(
-            "w-14 h-14 border-2",
-            isUrgent ? "border-red-300" : "border-amber-300"
-          )}>
-            <AvatarImage src={challenge.challengerAvatar || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold">
-              {challenge.challengerNickname.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <SafeAvatar 
+            avatarUrl={challenge.challengerAvatar}
+            fallback={challenge.challengerNickname || "?"}
+            className={cn(
+              "w-14 h-14 border-2",
+              isUrgent ? "border-red-300" : "border-amber-300"
+            )}
+            fallbackClassName="bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold"
+          />
           {challenge.challengerCountry && (
             <span className="absolute -bottom-1 -right-1 text-sm">
               {getCountryFlag(challenge.challengerCountry)}

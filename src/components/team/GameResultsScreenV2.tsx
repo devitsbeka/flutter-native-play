@@ -17,7 +17,7 @@ import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 
 interface RankedParticipant {
   user_id: string;
@@ -344,12 +344,12 @@ export function GameResultsScreenV2() {
               >
                 {/* Avatar with crown for winner */}
                 <div className="relative">
-                  <Avatar className="w-12 h-12 border-2 border-white/30">
-                    <AvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold">
-                      {p.nickname?.charAt(0)?.toUpperCase() || "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <SafeAvatar 
+                    avatarUrl={p.avatar_url}
+                    fallback={p.nickname || "?"}
+                    className="w-12 h-12 border-2 border-white/30"
+                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-base font-bold"
+                  />
                   {idx === 0 && (
                     <Crown className="absolute -top-3 -right-1 w-5 h-5 text-amber-400 fill-amber-400 drop-shadow-md" />
                   )}

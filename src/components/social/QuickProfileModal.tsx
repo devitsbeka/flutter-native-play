@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogClose
 } from "@/components/ui/dialog";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Button } from "@/components/ui/button";
 import { Creator } from "@/hooks/useExploreCreators";
 import { useFriends } from "@/hooks/useFriends";
@@ -143,12 +143,12 @@ export function QuickProfileModal({ creator, isOpen, onClose }: QuickProfileModa
         
         {/* Profile Header */}
         <div className="flex flex-col items-center pt-2 pb-4">
-          <Avatar className="w-20 h-20 border-4 border-background shadow-lg">
-            <AvatarImage src={creator.avatar_url || undefined} />
-            <AvatarFallback className="bg-muted text-2xl font-bold">
-              {creator.nickname.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <SafeAvatar 
+            avatarUrl={creator.avatar_url}
+            fallback={creator.nickname || "?"}
+            className="w-20 h-20 border-4 border-background shadow-lg"
+            fallbackClassName="bg-muted text-2xl font-bold"
+          />
           
           <div className="mt-3 text-center">
             <div className="flex items-center justify-center gap-2">

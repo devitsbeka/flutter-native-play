@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Trophy, Swords } from "lucide-react";
 import { useRecentPlayers, RecentPlayer } from "@/hooks/useRecentPlayers";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 
 interface AllRecentPlayersModalProps {
@@ -80,17 +80,12 @@ function PlayerListItem({ player, index }: { player: RecentPlayer; index: number
         boxShadow: "0 2px 0 #E5E7EB, inset 0 1px 2px rgba(255,255,255,0.8)",
       }}
     >
-      <Avatar className="w-12 h-12 border-3 border-white shadow-md">
-        <AvatarImage src={player.oderAvatarUrl || undefined} />
-        <AvatarFallback 
-          className="font-bold text-white"
-          style={{
-            background: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
-          }}
-        >
-          {player.odername.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <SafeAvatar 
+        avatarUrl={player.oderAvatarUrl}
+        fallback={player.odername || "?"}
+        className="w-12 h-12 border-3 border-white shadow-md"
+        fallbackClassName="font-bold text-white"
+      />
 
       <div className="flex-1 min-w-0">
         <p className="font-bold text-gray-800 text-sm uppercase tracking-wide">{player.odername}</p>

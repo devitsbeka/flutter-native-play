@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trophy, Home, RotateCcw, Star, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
@@ -350,12 +350,12 @@ export function MultiplayerResultScreen() {
                   <span className="w-6 text-center text-slate-500 font-bold text-sm">
                     #{p.rank}
                   </span>
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={p.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm">
-                      {p.nickname?.charAt(0) || "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <SafeAvatar 
+                    avatarUrl={p.avatar_url}
+                    fallback={p.nickname || "?"}
+                    className="w-8 h-8"
+                    fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white text-sm"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <span className="font-medium text-slate-800 text-sm truncate">
@@ -472,16 +472,16 @@ function PodiumSpot({
     >
       {/* Avatar */}
       <div className="relative mb-2">
-        <Avatar className={cn(
-          avatarSizes[place],
-          "border-3",
-          participant.isMe ? "border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]" : "border-white/50"
-        )}>
-          <AvatarImage src={participant.avatar_url || undefined} />
-          <AvatarFallback className="bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold">
-            {participant.nickname?.charAt(0) || "?"}
-          </AvatarFallback>
-        </Avatar>
+        <SafeAvatar 
+          avatarUrl={participant.avatar_url}
+          fallback={participant.nickname || "?"}
+          className={cn(
+            avatarSizes[place],
+            "border-3",
+            participant.isMe ? "border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]" : "border-white/50"
+          )}
+          fallbackClassName="bg-gradient-to-br from-purple-400 to-purple-600 text-white font-bold"
+        />
         <div className="absolute -bottom-1 right-1/2 translate-x-1/2 text-sm">
           {getFlagEmoji(participant.country_code)}
         </div>
