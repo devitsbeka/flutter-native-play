@@ -189,7 +189,7 @@ export function MobileProCarousel() {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover object-top"
               >
                 <source src={shopBgVideo} type="video/mp4" />
               </video>
