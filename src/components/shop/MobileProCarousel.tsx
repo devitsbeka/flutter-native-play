@@ -181,11 +181,11 @@ export function MobileProCarousel() {
             </div>
 
             {/* Right: Mascot */}
-            <div className="w-[120px] flex-shrink-0 relative">
+            <div className="w-[140px] flex-shrink-0 relative overflow-hidden">
               <img 
                 src={proMascot} 
                 alt="" 
-                className="absolute bottom-0 right-0 w-[140px] h-auto object-contain"
+                className="absolute inset-0 w-full h-full object-cover object-top"
               />
             </div>
           </motion.div>
