@@ -70,7 +70,7 @@ export function MobileProCarousel() {
   const TierIcon = tier.icon;
 
   return (
-    <div className="px-4 pt-4 pb-2">
+    <div className="px-4 pt-4 pb-0">
       {/* Combined PRO Card with Mascot */}
       <div className="relative overflow-hidden rounded-3xl min-h-[280px]">
         <AnimatePresence mode="wait">
@@ -105,25 +105,21 @@ export function MobileProCarousel() {
 
             {/* Left: Content */}
             <div className="flex-1 p-5 z-10">
-              {/* Header - Icon + Title, Price below */}
-              <div className="mb-2">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ 
-                      background: "rgba(255,255,255,0.2)",
-                      boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
-                    }}
-                  >
-                    <TierIcon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-base font-bold text-white">
-                    {tier.nameKa}
-                  </h3>
+              {/* Header - Icon + Title + Price on same row */}
+              <div className="flex items-center gap-3 mb-2">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ 
+                    background: "rgba(255,255,255,0.2)",
+                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
+                  }}
+                >
+                  <TierIcon className="w-5 h-5 text-white" />
                 </div>
-                
-                {/* Price below title */}
-                <div className="flex items-baseline gap-1 ml-[52px]">
+                <h3 className="text-base font-bold text-white flex-1">
+                  {tier.nameKa}
+                </h3>
+                <div className="flex items-baseline gap-1">
                   <span className="text-xl font-black text-white">₾{tier.price}</span>
                   <span className="text-xs text-white/70">/თვე</span>
                 </div>
@@ -199,7 +195,7 @@ export function MobileProCarousel() {
       </div>
 
       {/* Dot Indicators */}
-      <div className="flex justify-center gap-2 mt-3">
+      <div className="flex justify-center gap-2 mt-2">
         {PRO_TIERS.map((_, index) => (
           <button
             key={index}
