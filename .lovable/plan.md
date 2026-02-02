@@ -1,17 +1,13 @@
 
-# Plan: Add Dark Blur Overlay for Expanded Collections on Desktop/Tablet
 
-## Overview
+# Plan: Improve Collection Card UX with Centering and Play Button
 
-When a user clicks on a collection card to view/edit its rounds on desktop or tablet, the background will become darker and blurred to highlight the focused collection.
+## Issues to Fix
 
-## Technical Approach
-
-### Solution: Lift Expanded State + Conditional Overlay
-
-1. **Track Expanded Collection ID in Parent** - Add state in `MyTriviaTab` to track which collection is currently expanded
-2. **Add Dark Blur Overlay** - Render a fixed overlay when any collection is expanded (only on md+ screens)
-3. **Elevate Expanded Card** - Give the expanded collection a higher z-index to appear above the overlay
+1. **Round cards not clickable**: The `CollectionQuizCard` (round container with image and title) should be clickable to play
+2. **Expanded collection not centered**: When clicked, the collection should stick to the center of the viewport
+3. **Add play button**: Add a visible play button with "ითამაშე" text to the expanded collection
+4. **Scroll issue**: The expanded card is stuck and doesn't scroll properly (needs fixed positioning with scrollable content)
 
 ---
 
@@ -19,112 +15,145 @@ When a user clicks on a collection card to view/edit its rounds on desktop or ta
 
 ### File: `src/components/social/MyTriviaTab.tsx`
 
-**1. Add imports and state for expanded tracking**
+#### 1. Make CollectionQuizCard Clickable (Lines 103-176)
 
-At the top of `MyTriviaTab` function (around line 692):
+The entire round card should be clickable to play:
+
 ```typescript
-import { useIsMobile } from "@/hooks/use-mobile";
+// Line 103-104: Add onClick to container
+return (
+  <div 
+    className="flex gap-3 p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
+    onClick={() => onPlay?.(quiz)}
+  >
 ```
 
-Add new state:
+Keep the edit button stopPropagation as-is at lines 126-135.
+
+#### 2. Transform Expanded Collection into Fixed Centered Modal (Lines 232-418)
+
+When expanded on desktop/tablet, convert the collection card to a fixed centered modal:
+
+**Current structure:**
 ```typescript
-const [expandedCollectionId, setExpandedCollectionId] = useState<string | null>(null);
-const isMobile = useIsMobile();
+<motion.div className={cn("bg-card rounded-2xl...", isExpanded && "relative z-50")}>
+  {/* Header button */}
+  <button onClick={handleToggleExpand}>...</button>
+  
+  {/* Expanded content */}
+  <AnimatePresence>{isExpanded && ...}</AnimatePresence>
+</motion.div>
 ```
 
-**2. Update CollectionCard to accept callback**
-
-Update `CollectionCard` props (around line 185):
+**New structure (controlled by `isExpanded` and `!isMobile`):**
 ```typescript
-function CollectionCard({ 
-  collection, 
-  profile, 
-  onEditCollection, 
-  onEditRound, 
-  onAddRound, 
-  onPlay, 
-  onPost, 
-  isNew, 
-  isPosting,
-  onExpandChange,  // NEW: callback when expanded state changes
-  isExpanded: isExpandedProp  // NEW: controlled expanded state
-}: { 
-  // ... existing props
-  onExpandChange?: (collectionId: string | null) => void;
-  isExpanded?: boolean;
-}) {
-```
-
-**3. Update CollectionCard expand logic**
-
-Change the internal state to use controlled pattern:
-```typescript
-// In CollectionCard
-const isExpanded = isExpandedProp ?? false;
-
-const handleToggleExpand = () => {
-  const newExpandedState = !isExpanded;
-  onExpandChange?.(newExpandedState ? collection.id : null);
-};
-```
-
-Update the button onClick:
-```typescript
-<button
-  onClick={handleToggleExpand}
-  className="w-full text-left"
->
-```
-
-**4. Add z-index for expanded card**
-
-Update the CollectionCard wrapper motion.div (around line 202):
-```typescript
-<motion.div
-  // ... existing props
-  className={cn(
-    "bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg",
-    isExpanded && "relative z-50"  // Elevate when expanded
-  )}
->
-```
-
-**5. Add overlay in MyTriviaTab render**
-
-Before the grid (around line 1017), add the overlay:
-```typescript
-{/* Dark blur overlay when collection is expanded (md+ only) */}
-{expandedCollectionId && !isMobile && (
+// When expanded on desktop, render as fixed centered modal
+{isExpanded && !isMobile ? (
   <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-    onClick={() => setExpandedCollectionId(null)}
-  />
+    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.9 }}
+  >
+    <motion.div 
+      className="bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-2xl 
+                 w-full max-w-lg max-h-[85vh] flex flex-col"
+    >
+      {/* Scrollable content container */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Header with image/gradient - reduced height */}
+        <div className="h-40 relative overflow-hidden">
+          {/* Same gradient/image content */}
+          {/* Close button in top-right */}
+        </div>
+        
+        {/* Collection info */}
+        {/* Rounds list */}
+        {/* Add round button */}
+      </div>
+      
+      {/* Fixed Play Button at bottom */}
+      <div className="p-4 border-t border-border bg-card">
+        <ChunkyButton 
+          variant="primary" 
+          size="lg" 
+          className="w-full gap-2"
+          onClick={handlePlayCollection}
+        >
+          <Play className="w-5 h-5 fill-current" />
+          ითამაშე
+        </ChunkyButton>
+      </div>
+    </motion.div>
+  </motion.div>
+) : (
+  // Normal in-grid card (mobile or collapsed)
+  <motion.div className="bg-card rounded-2xl border-2 border-purple-500/30...">
+    ...existing structure...
+  </motion.div>
 )}
 ```
 
-**6. Update CollectionCard usage in grid**
+#### 3. Add Play Handler for Collection
 
-Update the CollectionCard rendering (around line 1021):
+Add a function to play all rounds in the collection:
+
+```typescript
+const handlePlayCollection = (e: React.MouseEvent) => {
+  e.stopPropagation();
+  if (quizzes && quizzes.length > 0) {
+    const allPosts = quizzes.map(q => convertQuizToSamplePost(q, profile));
+    onPlay?.(allPosts[0], allPosts);
+  }
+};
+```
+
+#### 4. Add isMobile prop to CollectionCard
+
+Pass `isMobile` from parent to control behavior:
+
+**Props update (Line 198-210):**
+```typescript
+isExpanded?: boolean;
+onExpandChange?: (collectionId: string | null) => void;
+isMobile?: boolean;  // NEW
+```
+
+**Usage (Line 1070-1085):**
 ```typescript
 <CollectionCard 
-  key={item.data.id} 
-  collection={item.data} 
-  profile={profile} 
-  onEditCollection={(data) => setEditingQuiz(data)}
-  onEditRound={(quiz) => setEditingRound(quiz)}
-  onAddRound={(collectionId, roundNumber) => 
-    setAddingToCollection({ collectionId, roundNumber })
-  }
-  onPlay={onPlay}
-  onPost={handleToggleCollectionVisibility}
-  isNew={newItemIds.has(item.data.id)}
-  isPosting={postingItemId === item.data.id}
-  isExpanded={expandedCollectionId === item.data.id}  // NEW
-  onExpandChange={setExpandedCollectionId}            // NEW
+  ...
+  isMobile={isMobile}
 />
+```
+
+#### 5. Update Overlay to Stay Behind Modal (Lines 1053-1064)
+
+The overlay is already at `z-40`, modal at `z-50` - this is correct.
+
+---
+
+## Component Structure When Expanded on Desktop
+
+```text
++------------------------------------------+
+|              [Dark Overlay z-40]         |
+|   +----------------------------------+   |
+|   |        [Modal z-50]              |   |
+|   |   +--------------------------+   |   |
+|   |   |    Cover Image/Gradient  |   |   |
+|   |   |    Title, Close Button   |   |   |
+|   |   +--------------------------+   |   |
+|   |   |    Scrollable Content    |   |   |
+|   |   |    - Round 1 (clickable) |   |   |
+|   |   |    - Round 2 (clickable) |   |   |
+|   |   |    - Round 3 (clickable) |   |   |
+|   |   |    - [+ Add Round]       |   |   |
+|   |   +--------------------------+   |   |
+|   |   | [Play Icon] ითამაშე      |   |   |
+|   |   +--------------------------+   |   |
+|   +----------------------------------+   |
++------------------------------------------+
 ```
 
 ---
@@ -133,50 +162,22 @@ Update the CollectionCard rendering (around line 1021):
 
 | Location | Change |
 |----------|--------|
-| Line 1 | Add `useIsMobile` import |
-| Line ~693 | Add `expandedCollectionId` state and `isMobile` hook |
-| Line 185 | Add `onExpandChange` and `isExpanded` props to CollectionCard |
-| Line 186-187 | Convert to controlled expand state pattern |
-| Line 202 | Add conditional z-50 class when expanded |
-| Line ~1017 | Add dark blur overlay with AnimatePresence |
-| Line ~1021 | Pass isExpanded and onExpandChange to CollectionCard |
+| Line 103-104 | Add onClick to CollectionQuizCard container |
+| Line 198-210 | Add `isMobile` prop to CollectionCard |
+| Line 212 | Add `isMobile` destructuring |
+| Line 215-220 | Add `handlePlayCollection` function |
+| Line 232-418 | Wrap in conditional: fixed modal (desktop) vs inline card (mobile) |
+| Line 370-415 | Move rounds into scrollable container with fixed play button |
+| Line 1070-1085 | Pass `isMobile` prop to CollectionCard |
 
 ---
 
 ## Expected Result
 
-### On Desktop/Tablet (md+ screens):
-- Clicking a collection card to expand it will:
-  - Dim the entire background with a dark semi-transparent overlay
-  - Add a subtle blur effect to the background
-  - Highlight the expanded collection card above the overlay
-- Clicking the overlay will close the expanded collection
-- Clicking the same collection's expand button will also close it
+- **Clicking collection header**: Opens centered modal with dark backdrop on desktop/tablet
+- **Clicking round card**: Navigates to play that specific round
+- **Play button**: Prominent purple "ითამაშე" button at modal bottom plays all rounds
+- **Scroll behavior**: Modal content scrolls independently, card stays centered
+- **Mobile**: Keeps current inline expand behavior (no changes)
+- **Clicking overlay or close button**: Closes the modal
 
-### On Mobile:
-- No overlay effect (same behavior as before)
-- Collections expand/collapse normally within the flow
-
----
-
-## Visual Effect
-
-```text
-Before (collapsed):
-+------------------+  +------------------+
-|   Collection A   |  |   Collection B   |
-+------------------+  +------------------+
-+------------------+  +------------------+
-|   Collection C   |  |   Collection D   |
-+------------------+  +------------------+
-
-After (Collection A expanded on desktop):
-+------------------+  +------------------+
-|   Collection A   |  | [DIMMED+BLURRED] |
-|   [Rounds...]    |  |   Collection B   |
-|   + Add Round    |  +------------------+
-+------------------+  +------------------+
-                      | [DIMMED+BLURRED] |
-                      |   Collection D   |
-                      +------------------+
-```
