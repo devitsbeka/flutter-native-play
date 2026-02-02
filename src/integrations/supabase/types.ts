@@ -639,6 +639,7 @@ export type Database = {
           host_is_observer: boolean | null
           host_user_id: string
           id: string
+          is_archived: boolean | null
           is_permanent: boolean | null
           last_activity_at: string | null
           max_players: number | null
@@ -670,6 +671,7 @@ export type Database = {
           host_is_observer?: boolean | null
           host_user_id: string
           id?: string
+          is_archived?: boolean | null
           is_permanent?: boolean | null
           last_activity_at?: string | null
           max_players?: number | null
@@ -701,6 +703,7 @@ export type Database = {
           host_is_observer?: boolean | null
           host_user_id?: string
           id?: string
+          is_archived?: boolean | null
           is_permanent?: boolean | null
           last_activity_at?: string | null
           max_players?: number | null

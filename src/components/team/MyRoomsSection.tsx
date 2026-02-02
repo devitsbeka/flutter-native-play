@@ -103,7 +103,55 @@ export function MyRoomsSection({
         .eq("id", room.id);
     }
     
-    // If room is completed, reset it to waiting for rematch
+    // Check if TV session exists but is expired (3+ hours old)
+    if (room.tv_session_id) {
+      const { data: tvSession } = await supabase
+        .from("tv_sessions")
+        .select("id, status, created_at")
+        .eq("id", room.tv_session_id)
+        .maybeSingle();
+      
+      const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
+      const sessionCreatedAt = tvSession?.created_at ? new Date(tvSession.created_at).getTime() : 0;
+      const isExpired = !tvSession || sessionCreatedAt < threeHoursAgo;
+      const inactiveStatuses = ['completed', 'cancelled', 'results'];
+      const isInactive = !tvSession || inactiveStatuses.includes(tvSession.status || '');
+      
+      // Clear expired/inactive TV session from room
+      if (isExpired || isInactive) {
+        console.log('[MyRoomsSection] Clearing expired/inactive TV session from room');
+        await supabase
+          .from("game_rooms")
+          .update({ tv_session_id: null })
+          .eq("id", room.id);
+        
+        // Reset room to waiting state
+        await supabase
+          .from("game_rooms")
+          .update({ 
+            status: "waiting",
+            started_at: null,
+            completed_at: null 
+          })
+          .eq("id", room.id);
+        
+        // Continue to lobby instead of erroring out
+        enterRoom(room.room_code);
+        return;
+      }
+      
+      // Active TV session with players - navigate directly
+      if (isActiveTVSession(room.tv_status) && room.tv_active_players > 0) {
+        if (room.is_host) {
+          navigate(`/tv/host/${room.tv_session_id}`);
+        } else {
+          navigate(`/join/session/${room.tv_session_id}`);
+        }
+        return;
+      }
+    }
+    
+    // If room is completed (non-TV), reset it to waiting for rematch
     if (room.status === "completed") {
       await supabase
         .from("game_rooms")
@@ -137,20 +185,7 @@ export function MyRoomsSection({
         .eq("room_id", room.id);
     }
     
-    // OPTIMIZATION: Skip RoomLobbyV2 for active TV sessions WITH active players
-    // Only navigate directly to TV mode if there are actually players in the session
-    if (room.tv_session_id && isActiveTVSession(room.tv_status) && room.tv_active_players > 0) {
-      if (room.is_host) {
-        // Host goes directly to TV host controller
-        navigate(`/tv/host/${room.tv_session_id}`);
-      } else {
-        // Guest goes directly to TV join flow
-        navigate(`/join/session/${room.tv_session_id}`);
-      }
-      return;
-    }
-    
-    // Standard room join for non-TV rooms or TV rooms without active players
+    // Standard room join - goes to lobby
     enterRoom(room.room_code);
   };
 

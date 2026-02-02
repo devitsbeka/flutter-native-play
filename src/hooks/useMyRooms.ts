@@ -85,6 +85,8 @@ interface UseMyRoomsOptions {
   filter?: RoomFilter;
   sort?: RoomSort;
   searchQuery?: string;
+  includeArchived?: boolean;
+  limit?: number;
 }
 
 export function useMyRooms(options?: UseMyRoomsOptions) {
@@ -93,7 +95,13 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
   const [loading, setLoading] = useState(true);
   const [friendIds, setFriendIds] = useState<string[]>([]);
 
-  const { filter = "all", sort = "recent", searchQuery = "" } = options || {};
+  const { 
+    filter = "all", 
+    sort = "recent", 
+    searchQuery = "",
+    includeArchived = false,
+    limit = 10,
+  } = options || {};
 
   // Fetch friend IDs for filtering
   useEffect(() => {
@@ -143,12 +151,25 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
       const orderColumn = sort === "created_date" ? "created_at" : "last_activity_at";
 
-      const { data: roomsData, error: roomsError } = await supabase
+      // Build query with optional archived filter and limit
+      let roomsQuery = supabase
         .from("game_rooms")
         .select("*")
         .in("id", roomIds)
         .neq("status", "cancelled")
         .order(orderColumn, { ascending: false, nullsFirst: false });
+      
+      // Filter out archived rooms unless searching (includeArchived) or explicitly requested
+      if (!includeArchived && !searchQuery.trim()) {
+        roomsQuery = roomsQuery.or("is_archived.is.null,is_archived.eq.false");
+      }
+      
+      // Apply limit only when not searching
+      if (!searchQuery.trim() && limit > 0) {
+        roomsQuery = roomsQuery.limit(limit);
+      }
+      
+      const { data: roomsData, error: roomsError } = await roomsQuery;
 
       if (roomsError) throw roomsError;
 
@@ -314,7 +335,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
   useEffect(() => {
     fetchMyRooms();
-  }, [fetchMyRooms]);
+  }, [fetchMyRooms, searchQuery, includeArchived, limit]);
 
   // Subscribe to realtime updates
   useEffect(() => {
