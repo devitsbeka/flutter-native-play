@@ -1,74 +1,51 @@
 
 
-# Plan: Increase Carousel Card Height on Desktop/Tablet
+# Plan: Fix Logo Always on One Line
 
-## Analysis
+## Problem
 
-Based on the screenshots and code review:
+The "MyTrivia LIVE" logo is wrapping to two lines because:
+1. The logo container doesn't have a fixed/auto width
+2. Parent flex containers with `flex-1` can squeeze the logo container
+3. Even with `flex-nowrap`, the container itself can be compressed
 
-1. **Current Layout Structure**:
-   - `ShopHeroCarousel` is shown only on **desktop (xl+)** with fixed height of `340px`
-   - `MobileProCarousel` is shown on **mobile and tablet (below xl)** with `min-h-[320px] md:min-h-[360px]`
+## Solution
 
-2. **Issue**: The screenshots show tablet views where there's a large gap between the PRO carousel card and the "ძალები" section below
-
-3. **Solution**: Increase the height of the carousel cards to fill more vertical space and reduce the gap
+Add `w-auto` (width: auto) to the logo container to ensure it maintains its natural width and doesn't get compressed by parent flex layouts.
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/shop/MobileProCarousel.tsx`
+### File: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-Increase the `min-h` values for the carousel container on tablet (md) breakpoint:
-
-**Line 75** - Change min-height values:
+**Line 42** - Add `w-auto` to force auto width:
 
 ```typescript
 // BEFORE:
-<div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[360px]">
+<div className={`flex items-center gap-2 flex-nowrap shrink-0 ${className}`}>
 
 // AFTER:
-<div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[420px]">
+<div className={`flex items-center gap-2 flex-nowrap shrink-0 w-auto ${className}`}>
 ```
 
-This increases the tablet carousel height from `360px` to `420px` (60px taller).
-
----
-
-### File: `src/components/shop/ShopHeroCarousel.tsx`
-
-Increase the height for the desktop carousel:
-
-**Line 164** - Change fixed height:
+Additionally, add `min-w-fit` to ensure the container never shrinks below its content size:
 
 ```typescript
-// BEFORE:
-<div 
-  className="relative overflow-hidden rounded-3xl touch-pan-y" 
-  style={{ height: 340 }}
-  ...
->
-
-// AFTER:
-<div 
-  className="relative overflow-hidden rounded-3xl touch-pan-y" 
-  style={{ height: 400 }}
-  ...
->
+// FINAL:
+<div className={`flex items-center gap-2 flex-nowrap shrink-0 w-auto min-w-fit ${className}`}>
 ```
-
-This increases the desktop carousel height from `340px` to `400px` (60px taller).
 
 ---
 
 ## Summary
 
-| Screen | Before | After | Change |
-|--------|--------|-------|--------|
-| Mobile (<768px) | 320px min-height | 320px min-height | No change |
-| Tablet (768px-1279px) | 360px min-height | 420px min-height | +60px |
-| Desktop (≥1280px) | 340px fixed | 400px fixed | +60px |
+| Property | Purpose |
+|----------|---------|
+| `flex-nowrap` | Prevent internal flex items from wrapping |
+| `shrink-0` | Prevent container from shrinking in flex parent |
+| `w-auto` | Force container to take natural content width |
+| `min-w-fit` | Ensure minimum width fits the content |
 
 ---
 
@@ -76,31 +53,12 @@ This increases the desktop carousel height from `340px` to `400px` (60px taller)
 
 **Before:**
 ```text
-┌──────────────────────────────┐
-│      PRO Carousel (360px)    │
-└──────────────────────────────┘
-            ↓
-         ~200px gap
-            ↓
-ძალები [40] [44] [6] [17]
-┌────┐ ┌────┐ ┌────┐ ┌────┐
-│Card│ │Card│ │Card│ │Card│
-└────┘ └────┘ └────┘ └────┘
+MyTrivia
+[LIVE]     ← Badge wraps to second line
 ```
 
 **After:**
 ```text
-┌──────────────────────────────┐
-│                              │
-│      PRO Carousel (420px)    │
-│                              │
-└──────────────────────────────┘
-            ↓
-         ~140px gap (reduced)
-            ↓
-ძალები [40] [44] [6] [17]
-┌────┐ ┌────┐ ┌────┐ ┌────┐
-│Card│ │Card│ │Card│ │Card│
-└────┘ └────┘ └────┘ └────┘
+MyTrivia [LIVE]     ← Always stays on one line
 ```
 
