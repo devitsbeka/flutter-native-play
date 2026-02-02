@@ -72,7 +72,7 @@ export function MobileProCarousel() {
   return (
     <div className="px-4 pt-4 pb-2">
       {/* Combined PRO Card with Mascot */}
-      <div className="relative overflow-hidden rounded-3xl">
+      <div className="relative overflow-hidden rounded-3xl min-h-[280px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={tier.id}
@@ -80,7 +80,7 @@ export function MobileProCarousel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="relative rounded-2xl overflow-hidden flex"
+            className="relative rounded-2xl overflow-hidden flex h-full"
             style={{
               background: tier.gradient,
               boxShadow: `0 6px 0 ${tier.shadow}, 0 10px 25px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.2)`,
@@ -106,8 +106,8 @@ export function MobileProCarousel() {
             {/* Left: Content */}
             <div className="flex-1 p-5 z-10">
               {/* Header - Icon + Title, Price below */}
-              <div className="mb-3">
-                <div className="flex items-center gap-3 mb-1">
+              <div className="mb-2">
+                <div className="flex items-center gap-3">
                   <div 
                     className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ 
@@ -129,15 +129,15 @@ export function MobileProCarousel() {
                 </div>
               </div>
 
-              {/* Benefits - Vertical list */}
-              <ul className="space-y-1.5 mb-4">
+              {/* Benefits - 2 column grid */}
+              <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-4">
                 {tier.benefits.map((benefit, i) => (
                   <li 
                     key={i} 
-                    className="flex items-start gap-2 text-white/90"
+                    className="flex items-start gap-1.5 text-white/90"
                   >
-                    <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0 mt-0.5" />
-                    <span className="text-xs leading-tight">{benefit}</span>
+                    <Check className="w-3 h-3 text-white/80 flex-shrink-0 mt-0.5" />
+                    <span className="text-[11px] leading-tight">{benefit}</span>
                   </li>
                 ))}
               </ul>
