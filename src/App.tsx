@@ -18,8 +18,8 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import { Navigate } from "react-router-dom";
 import { OfflineBanner } from "./components/shared/OfflineBanner";
 
-// Build-time flag for admin inclusion (default: excluded from published builds)
-const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN === 'true';
+// Build-time flag for admin inclusion (default: included unless explicitly disabled)
+const INCLUDE_ADMIN = import.meta.env.VITE_INCLUDE_ADMIN !== 'false';
 
 // Eagerly loaded pages (critical path)
 import Index from "./pages/Index";
