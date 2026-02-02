@@ -112,19 +112,6 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                         {getFlagEmoji(player.country_code || "GE")}
                       </div>
-                      {/* Delete button on avatar for host + invited */}
-                      {isHost && isInvited && (
-                        <motion.button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemoveParticipant?.(player.id);
-                          }}
-                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-background z-20"
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </motion.button>
-                      )}
                     </div>
                     <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
                       {player.user_id === currentUserId ? "შენ" : player.nickname}
@@ -152,17 +139,19 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                               მოწვეული...
                             </motion.p>
                             {isHost && (
-                              <motion.button
-                                onClick={async () => {
-                                  await onResendInvitation?.(player.user_id);
-                                  setSentInvites(prev => new Set([...prev, player.user_id]));
-                                }}
-                                className="mt-2 px-3 py-1 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center gap-1.5 text-xs text-primary"
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <Send className="w-3 h-3" />
-                                {isRoomActive ? "თავიდან" : "მოიწვიე"}
-                              </motion.button>
+                              <div className="min-h-[36px] flex items-center justify-center mt-1">
+                                <motion.button
+                                  onClick={async () => {
+                                    await onResendInvitation?.(player.user_id);
+                                    setSentInvites(prev => new Set([...prev, player.user_id]));
+                                  }}
+                                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  <Send className="w-3 h-3" />
+                                  {isRoomActive ? "თავიდან" : "მოიწვიე"}
+                                </motion.button>
+                              </div>
                             )}
                           </>
                         )}
@@ -216,19 +205,6 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center text-sm">
                         {getFlagEmoji(player.country_code || "GE")}
                       </div>
-                      {/* Delete button on avatar for host + invited */}
-                      {isHost && isInvited && (
-                        <motion.button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemoveParticipant?.(player.id);
-                          }}
-                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-background z-20"
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </motion.button>
-                      )}
                     </div>
                     <p className={`font-medium text-sm truncate ${isInvited ? 'text-white/50' : 'text-white'}`}>
                       {player.user_id === currentUserId ? "შენ" : player.nickname}
@@ -256,17 +232,19 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                               მოწვეული...
                             </motion.p>
                             {isHost && (
-                              <motion.button
-                                onClick={async () => {
-                                  await onResendInvitation?.(player.user_id);
-                                  setSentInvites(prev => new Set([...prev, player.user_id]));
-                                }}
-                                className="mt-2 px-3 py-1 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center gap-1.5 text-xs text-primary"
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                <Send className="w-3 h-3" />
-                                {isRoomActive ? "თავიდან" : "მოიწვიე"}
-                              </motion.button>
+                              <div className="min-h-[36px] flex items-center justify-center mt-1">
+                                <motion.button
+                                  onClick={async () => {
+                                    await onResendInvitation?.(player.user_id);
+                                    setSentInvites(prev => new Set([...prev, player.user_id]));
+                                  }}
+                                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  <Send className="w-3 h-3" />
+                                  {isRoomActive ? "თავიდან" : "მოიწვიე"}
+                                </motion.button>
+                              </div>
                             )}
                           </>
                         )}
@@ -367,16 +345,6 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                           <Send className="w-3.5 h-3.5 text-primary" />
                         </motion.button>
                       )}
-                      <motion.button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveParticipant?.(p.id);
-                        }}
-                        className="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-500/30 flex items-center justify-center"
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <X className="w-3.5 h-3.5 text-red-400" />
-                      </motion.button>
                     </div>
                   )}
                 </div>
