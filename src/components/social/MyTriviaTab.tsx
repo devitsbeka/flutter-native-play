@@ -157,32 +157,19 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
           <span aria-hidden className="w-9" />
         </div>
 
-        {/* 3) likes/saves/plays + Play button */}
-        <div className="flex items-center justify-between gap-3 text-muted-foreground">
-          <div className="flex items-center gap-4 text-[13px]">
-            <div className="flex items-center gap-1">
-              <img src={purpleHeart3d} alt="Likes" className="w-[19px] h-[19px] object-contain" />
-              <span>{quiz.likes_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <img src={bookmark3d} alt="Saves" className="w-[19px] h-[19px] object-contain" />
-              <span>{quiz.saves_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <img src={pushButton3d} alt="Plays" className="w-[19px] h-[19px] object-contain" />
-              <span>{quiz.plays_count || 0}</span>
-            </div>
+        {/* 3) likes/saves/plays */}
+        <div className="flex items-center gap-4 text-[15px] text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <img src={purpleHeart3d} alt="Likes" className="w-[22px] h-[22px] object-contain" />
+            <span>{quiz.likes_count || 0}</span>
           </div>
-
-          <div onClick={(e) => e.stopPropagation()}>
-            <ChunkyButton
-              size="sm"
-              variant="outline"
-              className="text-xs px-2 py-1 h-7"
-              onClick={() => navigate(`/trivia/${quiz.id}`)}
-            >
-              <Play className="w-3 h-3" />
-            </ChunkyButton>
+          <div className="flex items-center gap-1">
+            <img src={bookmark3d} alt="Saves" className="w-[22px] h-[22px] object-contain" />
+            <span>{quiz.saves_count || 0}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <img src={pushButton3d} alt="Plays" className="w-[22px] h-[22px] object-contain" />
+            <span>{quiz.plays_count || 0}</span>
           </div>
         </div>
       </div>
@@ -324,21 +311,22 @@ function CollectionCard({
 
               {/* Collection Info */}
               <div className="p-4 border-b border-border">
-                <div className="flex items-center gap-3">
-                  {/* Add Round Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const nextRoundNumber = (quizzes?.length || roundsCount) + 1;
-                      onAddRound(collection.id, nextRoundNumber);
-                    }}
-                    className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
-                               bg-muted/30 hover:bg-muted/50 transition-colors 
-                               flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span className="text-sm font-medium">დაამატე რაუნდი</span>
-                  </button>
+                <div className="flex items-center justify-between">
+                  {/* Stats Row */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
+                      <span className="font-medium">{collection.likes_count || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
+                      <span className="font-medium">{collection.saves_count || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
+                      <span className="font-medium">{collection.plays_count || 0}</span>
+                    </div>
+                  </div>
                   {/* Visibility badge */}
                   <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
                     {collection.is_public ? (
@@ -347,22 +335,6 @@ function CollectionCard({
                       <Lock className="w-3.5 h-3.5" aria-hidden />
                     )}
                     <span>{roundsCount} რაუნდი</span>
-                  </div>
-                </div>
-                
-                {/* Stats Row */}
-                <div className="flex items-center gap-3 mt-3">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
-                    <span>{collection.likes_count || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
-                    <span>{collection.saves_count || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
-                    <span>{collection.plays_count || 0}</span>
                   </div>
                 </div>
               </div>
@@ -493,20 +465,22 @@ function CollectionCard({
 
         {/* Info Row */}
         <div className="p-4">
-          <div className="flex items-center gap-3">
-            {/* Add Round Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddRound(collection.id, roundsCount + 1);
-              }}
-              className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
-                         bg-muted/30 hover:bg-muted/50 transition-colors 
-                         flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="text-sm font-medium">დაამატე რაუნდი</span>
-            </button>
+          <div className="flex items-center justify-between">
+            {/* Stats Row */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <img src={purpleHeart3d} alt="Likes" className="w-5 h-5 object-contain" />
+                <span className="font-medium">{collection.likes_count || 0}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <img src={bookmark3d} alt="Saves" className="w-5 h-5 object-contain" />
+                <span className="font-medium">{collection.saves_count || 0}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <img src={pushButton3d} alt="Plays" className="w-5 h-5 object-contain" />
+                <span className="font-medium">{collection.plays_count || 0}</span>
+              </div>
+            </div>
             {/* Expand/Collapse icon */}
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               {isExpanded ? (
@@ -514,22 +488,6 @@ function CollectionCard({
               ) : (
                 <ChevronDown className="w-5 h-5 text-muted-foreground" />
               )}
-            </div>
-          </div>
-          
-          {/* Stats Row */}
-          <div className="flex items-center gap-3 mt-3">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <img src={purpleHeart3d} alt="Likes" className="w-4 h-4 object-contain" />
-              <span>{collection.likes_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <img src={bookmark3d} alt="Saves" className="w-4 h-4 object-contain" />
-              <span>{collection.saves_count || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <img src={pushButton3d} alt="Plays" className="w-4 h-4 object-contain" />
-              <span>{collection.plays_count || 0}</span>
             </div>
           </div>
           
