@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play, Crown, Hourglass } from "lucide-react";
+import { Play, Hourglass } from "lucide-react";
 
 interface DesktopPlayButtonProps {
   onClick?: () => void;
@@ -53,7 +53,7 @@ export function DesktopPlayButton({
     };
   };
 
-  const Icon = isExhausted ? Hourglass : (isVip ? Crown : Play);
+  const Icon = isExhausted ? Hourglass : Play;
 
   return (
     <div className="relative w-full">
