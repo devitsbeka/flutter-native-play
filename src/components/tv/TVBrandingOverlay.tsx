@@ -26,7 +26,13 @@ export const TVBrandingOverlay: React.FC<TVBrandingOverlayProps> = ({
             >
               MyTrivia
             </span>
-            <span className="px-2 py-1 rounded-md text-xs font-bold text-white bg-red-500 flex items-center gap-1">
+            <span 
+              className="px-2.5 py-1 rounded-lg text-xs font-bold text-white flex items-center gap-1.5"
+              style={{
+                background: '#EF4444',
+                boxShadow: '0 2px 0 #B91C1C',
+              }}
+            >
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
               LIVE
             </span>

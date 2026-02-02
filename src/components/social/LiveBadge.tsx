@@ -8,17 +8,17 @@ export function LiveBadge() {
       className="inline-flex items-center ml-1.5"
     >
       <span 
-        className="relative inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider text-white"
         style={{
           background: '#EF4444',
-          boxShadow: '0 2px 0 #B91C1C, 0 3px 6px rgba(0,0,0,0.15)',
+          boxShadow: '0 2px 0 #B91C1C',
         }}
       >
         {/* Blinking dot */}
         <motion.span
           animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-1.5 h-1.5 rounded-full bg-white mr-1"
+          className="w-1.5 h-1.5 rounded-full bg-white"
         />
         LIVE
       </span>
