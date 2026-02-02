@@ -163,7 +163,7 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
-  const { profile, user, fetchProfile, signUpWithUsername, signInWithGoogle, signInWithApple } = useAuth();
+  const { profile, user, fetchProfile, signUpWithUsername, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, setStep, hasCompletedOnboarding } = useOnboarding();
   const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
@@ -266,6 +266,16 @@ export default function Index() {
       setIsAuthLoading(false);
     }
   }, [signUpWithUsername]);
+
+  const handleGuestSignIn = useCallback(async (username: string, password: string) => {
+    setIsAuthLoading(true);
+    try {
+      const { error } = await signInWithUsername(username, password);
+      if (error) throw error;
+    } finally {
+      setIsAuthLoading(false);
+    }
+  }, [signInWithUsername]);
 
   const handleGuestGoogleSignIn = useCallback(async () => {
     setIsAuthLoading(true);
@@ -513,6 +523,7 @@ export default function Index() {
               >
                 <GuestWelcomePanel
                   onCreateAccount={handleGuestCreateAccount}
+                  onSignIn={handleGuestSignIn}
                   onGoogleSignIn={handleGuestGoogleSignIn}
                   onAppleSignIn={handleGuestAppleSignIn}
                   onPlayAsGuest={handlePlayClick}

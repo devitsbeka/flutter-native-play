@@ -9,6 +9,7 @@ import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
 interface GuestWelcomePanelProps {
   onCreateAccount: (username: string, password: string) => Promise<void>;
+  onSignIn: (username: string, password: string) => Promise<void>;
   onGoogleSignIn: () => Promise<void>;
   onAppleSignIn: () => Promise<void>;
   onPlayAsGuest: () => void;
@@ -33,6 +34,7 @@ const validatePassword = (value: string): string | undefined => {
 
 export function GuestWelcomePanel({
   onCreateAccount,
+  onSignIn,
   onGoogleSignIn,
   onAppleSignIn,
   onPlayAsGuest,
@@ -43,11 +45,13 @@ export function GuestWelcomePanel({
   const [usernameError, setUsernameError] = useState<string | undefined>();
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const uError = validateUsername(username);
+    // For sign in mode, only validate password (username can be any format)
+    const uError = isSignUp ? validateUsername(username) : (!username.trim() ? "სახელი საჭიროა" : undefined);
     const pError = validatePassword(password);
     
     setUsernameError(uError);
@@ -57,7 +61,11 @@ export function GuestWelcomePanel({
     
     setIsSubmitting(true);
     try {
-      await onCreateAccount(username, password);
+      if (isSignUp) {
+        await onCreateAccount(username, password);
+      } else {
+        await onSignIn(username, password);
+      }
     } catch (err: any) {
       toast.error(err?.message || "შეცდომა, სცადე თავიდან");
     } finally {
@@ -93,10 +101,10 @@ export function GuestWelcomePanel({
         className="flex flex-col items-center mb-2 sm:mb-3"
       >
         <span className="font-slackey text-foreground font-black text-2xl sm:text-3xl">
-          გამარჯობა!
+          {isSignUp ? "გამარჯობა!" : "მობრძანდი!"}
         </span>
         <p className="mt-1 text-sm sm:text-base text-muted-foreground font-medium text-center leading-relaxed">
-          შექმენი შენი პროფილი და ითამაშე უფასოდ!
+          {isSignUp ? "შექმენი შენი პროფილი და ითამაშე უფასოდ!" : "შედი შენს ანგარიშზე"}
         </p>
       </motion.div>
 
@@ -190,7 +198,7 @@ export function GuestWelcomePanel({
           )}
         </div>
 
-        {/* Create Account Button */}
+        {/* Submit Button */}
         <ChunkyButton 
           type="submit" 
           variant="primary" 
@@ -200,13 +208,45 @@ export function GuestWelcomePanel({
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
+          ) : isSignUp ? (
             <>
               <Sparkles className="w-4 h-4" />
               შექმენი ანგარიში
             </>
+          ) : (
+            <>
+              <Lock className="w-4 h-4" />
+              შესვლა
+            </>
           )}
         </ChunkyButton>
+
+        {/* Toggle between Sign Up and Sign In */}
+        <p className="text-sm text-muted-foreground text-center mt-2">
+          {isSignUp ? (
+            <>
+              უკვე გაქვს ანგარიში?{" "}
+              <button 
+                type="button" 
+                onClick={() => setIsSignUp(false)}
+                className="text-primary font-semibold hover:underline"
+              >
+                შედი
+              </button>
+            </>
+          ) : (
+            <>
+              არ გაქვს ანგარიში?{" "}
+              <button 
+                type="button" 
+                onClick={() => setIsSignUp(true)}
+                className="text-primary font-semibold hover:underline"
+              >
+                შექმენი
+              </button>
+            </>
+          )}
+        </p>
       </motion.form>
 
       {/* Divider */}
