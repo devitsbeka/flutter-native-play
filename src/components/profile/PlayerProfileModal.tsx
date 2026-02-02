@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
-import iconChatBubble from "@/assets/chat-bubble.png";
+
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/hooks/usePlayerProfile";
@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useState } from "react";
-import { FriendChatSheet } from "@/components/chat/FriendChatSheet";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +72,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const navigate = useNavigate();
   const { data, loading, refetch } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingFriend, setDeletingFriend] = useState(false);
 
@@ -123,10 +122,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
   const handleChallenge = () => {
     onClose();
     navigate(`/team?challenge=${userId}&type=create-room`);
-  };
-
-  const handleMessage = () => {
-    setChatOpen(true);
   };
 
   const handleDeleteFriend = async () => {
@@ -339,34 +334,26 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                         </ChunkyButton>
                       )}
                       {data.friendshipStatus === 'accepted' && (
-                        <>
-                          <ChunkyButton onClick={handleMessage} variant="secondary" size="sm" className="flex-1">
-                            <img src={iconChatBubble} alt="" className="w-6 h-6 mr-1" />
-                            შეტყობინება
-                          </ChunkyButton>
-                          <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
-                            <Swords className="w-4 h-4 mr-1" />
-                            გამოწვევა
-                          </ChunkyButton>
-                        </>
+                        <ChunkyButton onClick={handleChallenge} variant="primary" size="sm" className="flex-1">
+                          <Swords className="w-4 h-4 mr-1" />
+                          გამოწვევა
+                        </ChunkyButton>
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* Tabs - Trivias, Collections, Trophies (trophies only for friends) */}
+                {/* Tabs - Trivias and Trophies (both visible to everyone) */}
                 <Tabs defaultValue="trivias" className="px-4 pb-4">
-                  <TabsList className={`grid w-full mb-4 h-auto py-2 ${canSeePrivateInfo ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  <TabsList className="grid w-full mb-4 h-auto py-2 grid-cols-2">
                     <TabsTrigger value="trivias" className="flex flex-col items-center gap-0.5">
                       <img src={iconTrivia} alt="" className="w-9 h-9" />
                       <span className="text-xs">ტრივიები</span>
                     </TabsTrigger>
-                    {canSeePrivateInfo && (
-                      <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
-                        <img src={iconTrophy} alt="" className="w-9 h-9" />
-                        <span className="text-xs">ჯილდოები</span>
-                      </TabsTrigger>
-                    )}
+                    <TabsTrigger value="trophies" className="flex flex-col items-center gap-0.5">
+                      <img src={iconTrophy} alt="" className="w-9 h-9" />
+                      <span className="text-xs">ჯილდოები</span>
+                    </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="trophies">
@@ -513,19 +500,6 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
         )}
       </AnimatePresence>
 
-      {/* Chat Sheet */}
-      {data?.profile && (
-        <FriendChatSheet
-          isOpen={chatOpen}
-          onClose={() => setChatOpen(false)}
-          friendId={userId}
-          friendProfile={{
-            nickname: data.profile.nickname,
-            avatar_url: data.profile.avatar_url,
-            animated_avatar_url: data.profile.animated_avatar_url,
-          }}
-        />
-      )}
 
       {/* Delete Friend Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
