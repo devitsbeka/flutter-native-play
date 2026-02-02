@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { 
   Home, 
   Compass, 
@@ -138,6 +139,11 @@ export function UnifiedDesktopNav({
   return (
     <>
       <nav className="hidden md:flex flex-col w-[72px] lg:w-[220px] min-w-[72px] lg:min-w-[220px] h-screen sticky top-0 border-r border-purple-900/20 bg-white/50 backdrop-blur-xl pt-[14px] lg:pt-6 pb-4 transition-all duration-200 z-50">
+        {/* Logo - Desktop only */}
+        <div className="hidden lg:flex justify-center px-3 mb-4">
+          <MyTriviaLiveLogo size="md" />
+        </div>
+
         {/* Profile Button - at top */}
         <div className="px-2 lg:px-3 mb-4">
           {/* Tablet: Avatar only */}
