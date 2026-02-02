@@ -1,91 +1,48 @@
 
-# Plan: Update Power-Ups Summary Layout for Tablet
+# Plan: Fix Mascot Video Display in Avatar Circle
 
-## Overview
+## Problem Identified
 
-Modify the `PowerUpsSummary` component to:
-1. Display as a **2-column grid** on tablet (md breakpoint) instead of a single row of 4
-2. Position the **count/price at the right edge** of each chip using `justify-between`
+When a user has no avatar set, the mascot video should play inside the circular avatar area on the main page. There's a CSS positioning bug preventing this from working correctly.
 
----
-
-## Visual Design
-
-**Current (single row):**
-```
-ძალები   [🔴2] [❄️1] [🔄1] [⏰1]
-```
-
-**After (2 columns on tablet, price at right edge):**
-```
-ძალები   ┌─────────────────────┐
-         │ [🔴        2] [❄️        1] │  ← Row 1
-         │ [🔄        1] [⏰        1] │  ← Row 2
-         └─────────────────────┘
-         
-Each chip: [icon    price→]
-```
-
-On desktop (lg+): Keep as single row of 4
-On tablet (md): Show as 2x2 grid
-On mobile: Keep as single row (wraps naturally)
+**Root Cause:** In `AvatarCircle.tsx`, the container for the mascot video (lines 298-303) has `overflow-hidden` and `rounded-full` but is **missing `position: relative`**. Since `SinglePlayVideo` uses `absolute inset-0` positioning for both its wrapper and the video element, the video doesn't position correctly within its intended circular container.
 
 ---
 
-## Technical Changes
+## Visual Issue
 
-### File: `src/components/shop/PowerUpsSummary.tsx`
+**Current behavior:**
+- The mascot video may appear misaligned, escape the circle bounds, or not show at all
+- The circular container exists but the absolute-positioned video inside doesn't respect it
 
-**Line 25** - Update container classes:
+**Expected behavior:**
+- Mascot video plays centered inside the circular avatar area
+- Video is properly clipped by the rounded-full overflow-hidden container
+
+---
+
+## Technical Fix
+
+### File: `src/components/home/AvatarCircle.tsx`
+
+**Line 299** - Add `relative` class to the mascot video container:
+
 ```typescript
-// Before:
-<div className="flex items-center gap-2">
+// Before (line 299):
+className="rounded-full overflow-hidden"
 
 // After:
-<div className="flex flex-wrap md:grid md:grid-cols-2 lg:flex lg:flex-nowrap items-center gap-1.5 md:gap-2">
+className="rounded-full overflow-hidden relative"
 ```
 
-**Lines 27-34** - Update chip layout for price at right edge:
-```typescript
-// Before:
-<div
-  key={type}
-  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-background/80 backdrop-blur-sm"
-  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}
->
-  <img src={POWER_UP_ICONS[type]} alt="" className="w-4 h-4" />
-  <span className="text-xs font-bold text-foreground/90">{powerUps[type]}</span>
-</div>
-
-// After:
-<div
-  key={type}
-  className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-sm min-w-[52px] md:min-w-[56px]"
-  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}
->
-  <img src={POWER_UP_ICONS[type]} alt="" className="w-4 h-4" />
-  <span className="text-xs font-bold text-foreground/90">{powerUps[type]}</span>
-</div>
-```
-
----
-
-## Key Changes
-
-| Aspect | Before | After |
-|--------|--------|-------|
-| Layout (tablet) | Single row | 2-column grid |
-| Layout (desktop) | Single row | Single row (preserved) |
-| Price position | Immediately after icon | Right edge of chip |
-| Min-width | None | 52-56px for consistent chip size |
-| Gap | gap-1 | gap-2 for better spacing |
+This single change ensures the absolutely-positioned `SinglePlayVideo` content stays within the circular container bounds.
 
 ---
 
 ## Summary
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/components/shop/PowerUpsSummary.tsx` | EDIT - Update layout to 2-col grid on tablet, price at right edge |
+| `src/components/home/AvatarCircle.tsx` | Add `relative` class to mascot video container (line 299) |
 
-This provides a cleaner layout on tablet screens where horizontal space may be limited, while keeping the single-row layout on desktop.
+This is a minimal one-line fix that enables the mascot video to display properly within the circular avatar area for users who haven't set an avatar yet.
