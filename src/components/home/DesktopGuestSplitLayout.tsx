@@ -390,7 +390,7 @@ export function DesktopGuestSplitLayout({
         >
           {/* Guest Card - Clean Design */}
           <div 
-            className="w-full max-w-sm rounded-2xl p-6 bg-card/80"
+            className="w-full max-w-sm rounded-2xl p-6 bg-card/90"
             style={{
               border: "2px solid hsl(var(--border))",
               boxShadow: "0 4px 0 hsl(var(--border))",
