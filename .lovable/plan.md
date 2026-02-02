@@ -1,175 +1,101 @@
 
-# Plan: Fix Room Activity Tracking & Invite UX Improvements
+# Plan: Fix Inconsistent Avatar Display Across App
 
-## Issues Identified
+## Problem Identified
 
-Based on the user's feedback and code analysis:
+The same user's avatar shows correctly on some pages (MyTrivia, rooms) but broken (question mark fallback) on others (game results, leaderboard).
 
-1. **Room Activity Tracking** - Need to distinguish between "active" rooms (recent activity) vs "inactive" rooms (3+ hours old)
-2. **Online Player Indicator** - Show green stroke/ring on player avatars when they're online in the ოთახები (Rooms) page
-3. **Button Text Change** - Change "თავიდან" (Again) to "მოიწვიე" (Invite) for inactive rooms where the player is online
-4. **Feedback After Invite** - Show "გაიგზავნა" (Sent) and "ველოდებით" (Waiting) text after clicking invite button
-5. **Delete Button Not Working** - The X button to remove invited participants appears to not be functioning
+**Root Cause:** Multiple components use the raw `AvatarImage` component directly with `src={p.avatar_url || undefined}` **without** using the `resolveAvatarUrl()` utility function that:
+- Handles expired/broken Supabase URLs
+- Resolves local asset paths (`/src/assets/...`)
+- Recovers broken Vite-hashed paths from old builds
+
+The `SafeAvatar` and `SafeAvatarImage` components were created to solve this problem, but many older/other components still use the raw `Avatar/AvatarImage` pattern.
 
 ---
 
-## Technical Changes
+## Technical Solution
 
-### 1. Add Room Inactivity Detection
+### Affected Files to Fix
 
-**File: `src/hooks/useMyRooms.ts`**
+Based on my analysis, these components use raw `AvatarImage` and need to switch to `SafeAvatar`:
 
-Add a helper function and computed property to determine if a room is "stale" (3+ hours since last activity):
+| File | Current Pattern | Fix |
+|------|----------------|-----|
+| `GameResultsScreenV2.tsx` | `<AvatarImage src={p.avatar_url}/>` | Use `SafeAvatar` |
+| `LeaguePlayerRow.tsx` | `<AvatarImage src={entry.avatar_url}/>` | Use `SafeAvatar` |
+| `MultiplayerGameScreen.tsx` | Multiple `<AvatarImage>` usages | Use `SafeAvatar` |
+| `MultiplayerGameScreenV2.tsx` | `<AvatarImage>` in player row | Use `SafeAvatar` |
+| `MultiplayerObserverScreen.tsx` | `<AvatarImage>` in player list | Use `SafeAvatar` |
+| `AsyncResultScreen.tsx` | `<AvatarImage>` in results | Use `SafeAvatar` |
+| `AllRecentPlayersModal.tsx` | `<AvatarImage>` in player list | Use `SafeAvatar` |
+| `AllRecentRoomsModal.tsx` | `<AvatarImage>` in room cards | Use `SafeAvatar` |
+| `AddFriendModal.tsx` | `<AvatarImage>` in search results | Use `SafeAvatar` |
+| `GameInvitationsSection.tsx` | `<AvatarImage>` in invitation cards | Use `SafeAvatar` |
+| `PendingChallengesSection.tsx` | `<AvatarImage>` in challenge cards | Use `SafeAvatar` |
+| `QuickProfileModal.tsx` | `<AvatarImage>` in profile | Use `SafeAvatar` |
+| `CollectionLobby.tsx` | `<AvatarImage>` in creator avatar | Use `SafeAvatar` |
+| `SpotlightSearch.tsx` | `<AvatarImage>` in search results | Use `SafeAvatar` |
+| `RoomChatsPanel.tsx` | `<AvatarImage>` in chat list | Use `SafeAvatar` |
 
+### Implementation Pattern
+
+**Before (broken):**
 ```typescript
-// Add new helper function
-export function isRoomActive(lastActivityAt: string | null, createdAt: string): boolean {
-  const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
-  const activityTime = new Date(lastActivityAt || createdAt).getTime();
-  return activityTime > threeHoursAgo;
-}
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+<Avatar className="w-12 h-12">
+  <AvatarImage src={p.avatar_url || undefined} />
+  <AvatarFallback>
+    {p.nickname?.charAt(0)?.toUpperCase() || "?"}
+  </AvatarFallback>
+</Avatar>
 ```
 
-Add `is_active` computed property to `MyRoom` interface and calculation in the mapping.
-
-### 2. Add Online Player Indicators with Green Stroke on Avatars
-
-**File: `src/components/team/MyRoomsSection.tsx`**
-
-In the `RoomCardGrid` component avatar section, add online detection:
-
+**After (fixed):**
 ```typescript
-// Check if any participant (excluding self) is online
-const onlineParticipantIds = new Set(room.online_participants.map(p => p.user_id));
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 
-// In the avatar render:
-<div 
-  className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 shadow-md ${
-    onlineParticipantIds.has(p.user_id) 
-      ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
-      : "border-2 border-white/40"
-  }`}
->
-```
-
-### 3. Change Button Logic for Inactive Rooms
-
-**File: `src/components/team/RoomScoreboard.tsx`**
-
-Modify the invite button logic for invited players:
-- Add `isRoomActive` prop to component
-- When room is inactive (3+ hours old) and player is online: Show "მოიწვიე" (Invite) button instead of "თავიდან" (Again)
-- Add state to track if invite was sent, then show "გაიგზავნა" (Sent) and "ველოდებით" (Waiting)
-
-```typescript
-interface RoomScoreboardProps {
-  // ... existing props
-  isRoomActive?: boolean;  // Add this
-}
-
-// In the component, add state for tracking sent invites
-const [sentInvites, setSentInvites] = useState<Set<string>>(new Set());
-
-// Modify the resend button logic:
-{isHost && (
-  sentInvites.has(player.user_id) ? (
-    <div className="flex flex-col items-center">
-      <span className="text-xs text-green-400 font-medium">გაიგზავნა</span>
-      <motion.p 
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="text-xs text-white/50"
-      >
-        ველოდებით
-      </motion.p>
-    </div>
-  ) : (
-    <motion.button
-      onClick={async () => {
-        await onResendInvitation?.(player.user_id);
-        setSentInvites(prev => new Set([...prev, player.user_id]));
-      }}
-      className="px-3 py-1 rounded-full bg-primary/30 hover:bg-primary/40 flex items-center gap-1.5 text-xs text-white"
-      whileTap={{ scale: 0.95 }}
-    >
-      <Send className="w-3 h-3" />
-      {isRoomActive ? "თავიდან" : "მოიწვიე"}
-    </motion.button>
-  )
-)}
-```
-
-### 4. Fix Delete Button
-
-**File: `src/components/team/RoomScoreboard.tsx`**
-
-The delete button calls `onRemoveParticipant?.(player.id)` but passes `player.id` (the participant row ID). The issue is likely that:
-1. The click event might be propagating
-2. The `onRemoveParticipant` prop isn't being passed correctly
-
-Add `e.stopPropagation()` to prevent click bubbling:
-
-```typescript
-<motion.button
-  onClick={(e) => {
-    e.stopPropagation();
-    onRemoveParticipant?.(player.id);
-  }}
-  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center border-2 border-background z-20"
-  whileTap={{ scale: 0.9 }}
->
-  <X className="w-3 h-3 text-white" />
-</motion.button>
-```
-
-### 5. Pass Props from RoomLobbyV2
-
-**File: `src/components/team/RoomLobbyV2.tsx`**
-
-Update the RoomScoreboard usage to pass the new `isRoomActive` prop:
-
-```typescript
-<RoomScoreboard
-  participants={participants as any}
-  matches={matches}
-  currentUserId={user?.id}
-  showHostCrown={true}
-  maxPlayers={currentRoom.max_players || 10}
-  isHost={isHost}
-  isRoomActive={isRoomActive(currentRoom.last_activity_at, currentRoom.created_at)}
-  onInviteFriends={() => setShowInviteModal(true)}
-  onRemoveParticipant={handleRemoveParticipant}
-  onResendInvitation={handleResendInvitation}
+<SafeAvatar 
+  avatarUrl={p.avatar_url}
+  fallback={p.nickname || "?"}
+  className="w-12 h-12"
 />
+```
+
+### Key Fix: GameResultsScreenV2.tsx (Lines 346-352)
+
+This is the component shown in your screenshot with the broken avatar:
+
+```typescript
+// Remove: import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// Add: import { SafeAvatar } from "@/components/shared/SafeAvatar";
+
+// In the render (line 346-352):
+<div className="relative">
+  <SafeAvatar 
+    avatarUrl={p.avatar_url}
+    fallback={p.nickname || "?"}
+    className="w-12 h-12 border-2 border-white/30"
+  />
+  {idx === 0 && (
+    <Crown className="absolute -top-3 -right-1 w-5 h-5 text-amber-400 fill-amber-400" />
+  )}
+</div>
 ```
 
 ---
 
 ## Summary
 
-| File | Change |
-|------|--------|
-| `useMyRooms.ts` | Add `isRoomActive()` helper function |
-| `MyRoomsSection.tsx` | Add green ring indicator on avatars for online participants |
-| `RoomScoreboard.tsx` | 1. Add `isRoomActive` prop 2. Track sent invites with state 3. Show "მოიწვიე" for inactive rooms 4. Show "გაიგზავნა" + "ველოდებით" after sending 5. Fix delete button with stopPropagation |
-| `RoomLobbyV2.tsx` | Pass `isRoomActive` prop to RoomScoreboard |
+| Task | Files Changed |
+|------|---------------|
+| Replace raw `Avatar/AvatarImage` with `SafeAvatar` | ~15 files |
+| Remove unused Avatar imports | Same files |
+| Ensure consistent fallback styling | Applied via SafeAvatar props |
 
-## Visual Result
-
-**Inactive room with online player:**
-```
-┌─────────────────────────────────────┐
-│ 🟢 Player Avatar (green ring)       │
-│ "მოწვეული..."                        │
-│ [მოიწვიე] button (not "თავიდან")     │
-└─────────────────────────────────────┘
-```
-
-**After clicking invite:**
-```
-┌─────────────────────────────────────┐
-│ 🟢 Player Avatar                    │
-│ "გაიგზავნა"                          │
-│ "ველოდებით..." (pulsing)            │
-└─────────────────────────────────────┘
-```
+This will ensure all avatars across the app:
+1. Use `resolveAvatarUrl()` for URL resolution
+2. Handle broken/expired URLs gracefully  
+3. Show proper fallback (gradient + initial) when images fail
+4. Work consistently regardless of URL format (http, data:, local path, etc.)
