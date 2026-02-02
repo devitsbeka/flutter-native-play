@@ -1,66 +1,51 @@
 
-# Plan: Fix MyTrivia LIVE Logo Transparency
+# Plan: Fix Mobile Zoom Issue on Login
 
 ## Problem
 
-The current logo (`src/assets/mytrivia-live-logo.png`) is a PNG file with a **white background baked in**. When displayed on colored backgrounds (like the purple splash screen), the white rectangle is visible behind the logo.
+When users enter username/password on mobile, the page appears zoomed in after navigating to the main page. This is a common iOS/Android browser behavior caused by:
+
+1. **Input fields with font-size < 16px** - Mobile browsers automatically zoom in when focusing on inputs smaller than 16px to make text readable
+2. **Missing viewport zoom prevention** - The viewport meta tag doesn't prevent user scaling, so the zoom persists after login
 
 ## Solution
 
-Replace the PNG-based logo with a **CSS/HTML text-based logo component** that is naturally transparent. The project already has:
-- `font-slackey` (Slackey font) configured in Tailwind
-- `LiveBadge` component with the pulsing red badge
+Two-pronged fix:
 
-## Changes
+### 1. Update Viewport Meta Tag (index.html)
 
-### File: `src/components/shared/MyTriviaLiveLogo.tsx`
+Add `maximum-scale=1` and `user-scalable=no` to prevent iOS/Android from auto-zooming on input focus:
 
-Replace the PNG image approach with a text-based approach:
-
-**Current approach:**
-```tsx
-<img src={myTriviaLogo} alt="MyTrivia LIVE" />
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 ```
 
-**New approach:**
-```tsx
-<div className="flex items-center gap-1.5">
-  <span className="font-slackey text-black" style={{ fontSize }}>
-    MyTrivia
-  </span>
-  <LiveBadge size={size} />
-</div>
-```
+### 2. Increase Input Font Size to 16px Minimum
 
-### Key Implementation Details:
+Update all input fields to use at least 16px font size. This is the magic threshold that prevents mobile browser auto-zoom.
 
-1. Remove the PNG import
-2. Use `font-slackey` class for the "MyTrivia" text
-3. Create a reusable `LiveBadge` that accepts size prop
-4. Support existing size variants (sm, md, lg) with appropriate font sizes
-5. Add `textColor` prop for light/dark background usage (black text on light, white text on dark)
+**Files to update:**
 
-### Size Mapping:
-| Size | Font Size | Badge Scale |
-|------|-----------|-------------|
-| sm   | 20px      | 0.8         |
-| md   | 28px      | 1.0         |
-| lg   | 40px      | 1.2         |
-| xl   | 48px      | 1.4         |
+| File | Current | Change |
+|------|---------|--------|
+| `GuestWelcomePanel.tsx` | `text-sm` (14px) | `text-base` (16px) |
+| `SignupOnboardingModal.tsx` | `text-lg` (18px) | Already good |
+| `DesktopGuestSplitLayout.tsx` | `text-sm` (14px) | `text-base` (16px) |
 
-### File: `src/components/social/LiveBadge.tsx`
+## Technical Details
 
-Add a `size` prop to scale the badge appropriately:
-- Small: `text-[8px]`, dot `w-1 h-1`
-- Medium: `text-[9px]`, dot `w-1.5 h-1.5` (current default)
-- Large: `text-[11px]`, dot `w-2 h-2`
+### File: `index.html`
+- Line 5: Update viewport meta tag
 
-### Files That Use Logo (will benefit automatically):
-- `src/pages/Loading.tsx`
-- `src/components/SplashScreen.tsx`
-- `src/components/tv/TVPairingScreenV3.tsx`
-- `src/components/tv/TVBrandingOverlay.tsx`
+### File: `src/components/home/GuestWelcomePanel.tsx`
+- Lines 253-256, 279-282, 304-307: Change `text-sm` to `text-base` on input fields
+
+### File: `src/components/home/DesktopGuestSplitLayout.tsx`
+- Similar input field font size updates
 
 ## Result
 
-The logo will now render with a **transparent background**, blending naturally with any background color - purple splash screens, dark TV overlays, etc.
+After these changes:
+- Mobile browsers won't auto-zoom when focusing on login inputs
+- The page will stay at normal scale throughout the login flow
+- User experience remains consistent without needing to manually zoom out
