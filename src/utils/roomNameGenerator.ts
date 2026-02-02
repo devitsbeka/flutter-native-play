@@ -1,50 +1,50 @@
-// Inspirational room name generator for game rooms
-// These names are epic and creative - perfect for friends gathering to play trivia!
+// Trivia-themed room name generator for game rooms
+// All names are ≤18 characters, focused on intelligence/challenge themes
+// Context: friends/family competing - who's smarter, faster, more knowledgeable
 
-const INSPIRATIONAL_NAMES = [
-  // Cosmic
-  "კოსმოსური ხომალდი",      // Cosmic Ship
-  "ვარსკვლავთა კავშირი",    // Star Alliance
-  "გალაქტიკის მცველები",    // Galaxy Guardians
-  "მთვარის მხარე",          // Moon Side
-  "კოსმოსური არენა",        // Cosmic Arena
-  // Adventure
-  "მოგზაურთა ბანაკი",       // Travelers' Camp
-  "აღმომჩენთა კლუბი",       // Explorers' Club
-  "თავგადასავლის გზა",      // Path of Adventure
-  "ჰორიზონტის მიღმა",       // Beyond the Horizon
-  // Nature
-  "ბუნების მცველები",       // Nature Guardians
-  "მწვანე ოაზისი",          // Green Oasis
-  "ტყის საიდუმლო",          // Forest Secret
-  "მთის მწვერვალი",         // Mountain Peak
-  // Fantasy
-  "დრაკონთა ბუდე",          // Dragons' Nest
-  "ფენიქსის ფრთები",        // Phoenix Wings
-  "ჯადოსნური ტყე",          // Magical Forest
-  "მოჯადოებული სასახლე",    // Enchanted Palace
-  // Wisdom
-  "ბრძენთა საბჭო",          // Council of Sages
-  "გენიოსების კლუბი",       // Geniuses' Club
-  "ცოდნის ციხე",            // Fortress of Knowledge
-  "ჭკვიანების ოთახი",       // Smart Ones' Room
-  // Legends
-  "ლეგენდების ოთახი",       // Room of Legends
-  "მითების სამყარო",        // World of Myths
-  "გმირთა არენა",           // Heroes' Arena
-  "დიდებულთა კლუბი",        // Club of the Great
-  // Champions
-  "ჩემპიონთა ლიგა",         // Champions' League
-  "გამარჯვებულთა კლუბი",    // Winners' Club
-  "ტიტანების არენა",        // Titans' Arena
-  "ძლევამოსილთა ოთახი",     // Room of the Victorious
-  // Friends
-  "მეგობრების ოთახი",       // Friends' Room
-  "სახალისო კომპანია",      // Fun Company
-  "მხიარულთა არენა",        // Arena of the Cheerful
-  "ხუმრობების კლუბი",       // Jokes Club
+const TRIVIA_NAMES = [
+  // Intelligence/Knowledge (≤18 chars)
+  "IQ არენა",           // 8  - IQ Arena
+  "ქვიზ არენა",         // 10 - Quiz Arena
+  "გონების არენა",      // 13 - Mind Arena
+  "ცოდნის არენა",       // 12 - Knowledge Arena
+  "ტვინის შტორმი",      // 13 - Brain Storm
+  "ბრძენთა კლუბი",      // 13 - Sages Club
+  "გენიოსთა კლუბი",     // 14 - Geniuses Club
+  "ჭკუის ტესტი",        // 11 - Wit Test
+  "ცოდნის ტესტი",       // 12 - Knowledge Test
+  
+  // Challenge/Duel (≤18 chars)
+  "ტრივია დუელი",       // 12 - Trivia Duel
+  "ბრძენთა დუელი",      // 13 - Sages Duel
+  "გონების დუელი",      // 13 - Mind Duel
+  "ქვიზ შეჯიბრი",       // 12 - Quiz Contest
+  "ცოდნის ბრძოლა",      // 13 - Knowledge Battle
+  "ჭკუის ბრძოლა",       // 12 - Wit Battle
+  "IQ ბატალია",         // 10 - IQ Battle
+  "გონების რბოლა",      // 13 - Mind Race
+  
+  // Team/Friends (≤18 chars)
+  "გუნდური ქვიზი",      // 13 - Team Quiz
+  "მეგობართა ქვიზი",    // 14 - Friends' Quiz
+  "ოჯახის ქვიზი",       // 12 - Family Quiz
+  "კომპანიის ქვიზი",    // 15 - Company's Quiz
+  "გუნდის არენა",       // 12 - Team Arena
+  "საოჯახო დუელი",      // 13 - Family Duel
+  
+  // Short/Universal (≤12 chars)
+  "ქვიზ ზონა",          // 9  - Quiz Zone
+  "გონება+",            // 7  - Mind+
+  "ცოდნა+",             // 6  - Knowledge+
+  "ტრივია+",            // 8  - Trivia+
+  "IQ ზონა",            // 7  - IQ Zone
+  "ბრძენი",             // 6  - Sage
+  "გენიოსი",            // 7  - Genius
+  "ჭკვიანები",          // 9  - Smart Ones
+  "ერუდიტები",          // 9  - Erudites
+  "მცოდნეები",          // 9  - Knowers
 ];
 
 export function generateRoomName(): string {
-  return INSPIRATIONAL_NAMES[Math.floor(Math.random() * INSPIRATIONAL_NAMES.length)];
+  return TRIVIA_NAMES[Math.floor(Math.random() * TRIVIA_NAMES.length)];
 }
