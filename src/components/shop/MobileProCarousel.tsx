@@ -103,35 +103,38 @@ export function MobileProCarousel() {
             )}
 
             {/* Left: Content */}
-            <div className="w-[65%] p-5 z-10">
-              {/* Header - Icon + Title (+ Price on md+) */}
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ 
-                    background: "rgba(255,255,255,0.2)",
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
-                  }}
-                >
-                  <TierIcon className="w-5 h-5 text-white" />
+            <div className="w-[65%] p-5 z-10 flex flex-col">
+              {/* Top Content */}
+              <div>
+                {/* Header - Icon + Title (+ Price on md+) */}
+                <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ 
+                      background: "rgba(255,255,255,0.2)",
+                      boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    <TierIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base md:text-lg font-bold text-white">
+                    {tier.nameKa}
+                  </h3>
+                  {/* Price - md+: inline with header */}
+                  <div className="hidden md:flex items-baseline gap-1 ml-auto">
+                    <span className="text-2xl font-black text-white">₾{tier.price}</span>
+                    <span className="text-sm text-white/70">/თვე</span>
+                  </div>
                 </div>
-                <h3 className="text-base md:text-lg font-bold text-white">
-                  {tier.nameKa}
-                </h3>
-                {/* Price - md+: inline with header */}
-                <div className="hidden md:flex items-baseline gap-1 ml-auto">
-                  <span className="text-2xl font-black text-white">₾{tier.price}</span>
-                  <span className="text-sm text-white/70">/თვე</span>
+                {/* Price - mobile only: below title */}
+                <div className="flex md:hidden items-baseline gap-1 mb-2">
+                  <span className="text-xl font-black text-white">₾{tier.price}</span>
+                  <span className="text-xs text-white/70">/თვე</span>
                 </div>
-              </div>
-              {/* Price - mobile only: below title */}
-              <div className="flex md:hidden items-baseline gap-1 mb-2">
-                <span className="text-xl font-black text-white">₾{tier.price}</span>
-                <span className="text-xs text-white/70">/თვე</span>
               </div>
 
-              {/* Benefits - single column on mobile, 2 columns on md+ */}
-              <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mb-4">
+              {/* Benefits - add mt-10 (40px) for spacing */}
+              <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mt-10 mb-auto">
                 {tier.benefits.map((benefit, i) => (
                   <li 
                     key={i} 
@@ -143,7 +146,7 @@ export function MobileProCarousel() {
                 ))}
               </ul>
 
-              {/* CTA Button */}
+              {/* CTA Button - mt-4 keeps spacing from benefits */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -153,7 +156,7 @@ export function MobileProCarousel() {
                   }
                 }}
                 disabled={isCurrentTier || isProcessing}
-                className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
                 style={{
                   background: isCurrentTier 
                     ? "rgba(255,255,255,0.15)" 
@@ -190,7 +193,8 @@ export function MobileProCarousel() {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover object-center"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: "70% 20%" }}
               >
                 <source src={shopBgVideo} type="video/mp4" />
               </video>
