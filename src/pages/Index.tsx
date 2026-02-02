@@ -433,11 +433,9 @@ export default function Index() {
             {/* Center: Logo + Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
               {/* Logo - sm on mobile/tablet, md on desktop - single line always */}
-              <div className="shrink-0" style={{ minWidth: 'max-content' }}>
-                <MyTriviaLiveLogo size="sm" className="md:hidden" />
-                <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
-                <MyTriviaLiveLogo size="md" className="hidden lg:block" />
-              </div>
+              <MyTriviaLiveLogo size="sm" className="md:hidden" />
+              <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
+              <MyTriviaLiveLogo size="md" className="hidden lg:block" />
             </div>
             
             {/* Right side: Search button + Notification - Hidden for guests */}
@@ -572,7 +570,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) - LOGGED IN USERS ONLY */}
-            {user && <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px]">
+            {user && <div className="hidden md:flex xl:hidden items-center justify-center w-full h-full px-4">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -789,7 +787,7 @@ export default function Index() {
 
             {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
             {user && <motion.div 
-              className="hidden xl:flex flex-col items-center w-full px-4"
+              className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}

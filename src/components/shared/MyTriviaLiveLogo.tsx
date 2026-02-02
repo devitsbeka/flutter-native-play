@@ -39,9 +39,15 @@ export function MyTriviaLiveLogo({
   const colorClass = textColor === "light" ? "text-white" : "text-black";
 
   return (
-    <div 
-      className={`inline-flex items-center gap-2 shrink-0 whitespace-nowrap ${className}`}
-      style={{ minWidth: 'max-content' }}
+<div 
+      className={`flex flex-row flex-nowrap items-center gap-2 shrink-0 ${className}`}
+      style={{ 
+        display: 'inline-flex',
+        flexWrap: 'nowrap',
+        width: 'fit-content',
+        minWidth: 'fit-content',
+        maxWidth: 'fit-content',
+      }}
     >
       <span 
         className={`font-slackey ${colorClass} leading-none whitespace-nowrap`}
