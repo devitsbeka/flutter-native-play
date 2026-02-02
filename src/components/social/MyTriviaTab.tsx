@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
@@ -182,8 +184,37 @@ function getGradientProps(gradient: string) {
 }
 
 // Expandable collection card
-function CollectionCard({ collection, profile, onEditCollection, onEditRound, onAddRound, onPlay, onPost, isNew, isPosting }: { collection: any; profile: any; onEditCollection: (item: any) => void; onEditRound: (quiz: any) => void; onAddRound: (collectionId: string, nextRoundNumber: number) => void; onPlay?: (quiz: any, allQuizzes?: any[]) => void; onPost?: (collection: any) => void; isNew?: boolean; isPosting?: boolean }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function CollectionCard({ 
+  collection, 
+  profile, 
+  onEditCollection, 
+  onEditRound, 
+  onAddRound, 
+  onPlay, 
+  onPost, 
+  isNew, 
+  isPosting,
+  isExpanded: isExpandedProp,
+  onExpandChange
+}: { 
+  collection: any; 
+  profile: any; 
+  onEditCollection: (item: any) => void; 
+  onEditRound: (quiz: any) => void; 
+  onAddRound: (collectionId: string, nextRoundNumber: number) => void; 
+  onPlay?: (quiz: any, allQuizzes?: any[]) => void; 
+  onPost?: (collection: any) => void; 
+  isNew?: boolean; 
+  isPosting?: boolean;
+  isExpanded?: boolean;
+  onExpandChange?: (collectionId: string | null) => void;
+}) {
+  const isExpanded = isExpandedProp ?? false;
+  
+  const handleToggleExpand = () => {
+    const newExpandedState = !isExpanded;
+    onExpandChange?.(newExpandedState ? collection.id : null);
+  };
   const { data: quizzes, isLoading } = useCollectionQuizzes(isExpanded ? collection.id : null);
 
   const roundsCount =
@@ -203,11 +234,14 @@ function CollectionCard({ collection, profile, onEditCollection, onEditRound, on
       initial={isNew ? { opacity: 0, y: 20, rotate: tiltDirection } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0, rotate: 0 }}
       transition={isNew ? { type: "spring", stiffness: 300, damping: 20 } : undefined}
-      className="bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg"
+      className={cn(
+        "bg-card rounded-2xl border-2 border-purple-500/30 overflow-hidden shadow-lg",
+        isExpanded && "relative z-50"
+      )}
     >
       {/* Collection Header - Clickable */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggleExpand}
         className="w-full text-left"
       >
         {/* Gradient Banner */}
@@ -690,6 +724,8 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const { profile } = useAuth();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
+  const [expandedCollectionId, setExpandedCollectionId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   // Notify parent when editing round state changes
   useEffect(() => {
@@ -1014,6 +1050,19 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
 
       {/* Content Section - header hidden per user request */}
 
+      {/* Dark blur overlay when collection is expanded (md+ only) */}
+      <AnimatePresence>
+        {expandedCollectionId && !isMobile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            onClick={() => setExpandedCollectionId(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Unified feed - sorted by date, newest first */}
         {unifiedFeed.map((item, index) => (
@@ -1031,6 +1080,8 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               onPost={handleToggleCollectionVisibility}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
+              isExpanded={expandedCollectionId === item.data.id}
+              onExpandChange={setExpandedCollectionId}
             />
           ) : item.data.subject === 'personal' ? (
             <PersonalTriviaCard 
