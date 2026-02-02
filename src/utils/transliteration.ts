@@ -326,6 +326,72 @@ const GEORGIAN_TO_ENGLISH: Record<string, string[]> = {
 // Common Georgian grammatical suffixes to strip for better matching
 const GEORGIAN_SUFFIXES = ['ი', 'მა', 'ს', 'ით', 'ად', 'ში', 'ზე', 'თან', 'დან', 'ისა', 'ებ', 'ის'];
 
+// Common typo corrections for frontend fuzzy matching
+const TYPO_CORRECTIONS: Record<string, string> = {
+  'cata': 'kata', 'katta': 'kata', 'kataa': 'kata', 'qata': 'kata',
+  'dogg': 'dog', 'dgo': 'dog',
+  'brid': 'bird', 'bidr': 'bird',
+  'fich': 'fish', 'fissh': 'fish',
+  'loin': 'lion', 'lioon': 'lion', 'lino': 'lion',
+  'musci': 'music', 'muisc': 'music', 'musikc': 'music',
+  'moive': 'movie', 'movei': 'movie', 'mvoie': 'movie',
+  'pohne': 'phone', 'phoen': 'phone', 'fone': 'phone',
+  'computre': 'computer', 'compueter': 'computer', 'computar': 'computer',
+  'footbal': 'football', 'fooball': 'football', 'fotball': 'football',
+  'basketbal': 'basketball', 'bascetball': 'basketball', 'basektball': 'basketball',
+  'fexburt': 'fexburti', 'fexburthi': 'fexburti',
+};
+
+/**
+ * Calculate Levenshtein distance between two strings
+ */
+export function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+/**
+ * Check if two strings are similar (typo-tolerant)
+ * Returns similarity score 0-100
+ */
+export function fuzzyMatch(a: string, b: string): number {
+  const aLower = a.toLowerCase();
+  const bLower = b.toLowerCase();
+  
+  if (aLower === bLower) return 100;
+  if (aLower.startsWith(bLower) || bLower.startsWith(aLower)) return 85;
+  if (aLower.includes(bLower) || bLower.includes(aLower)) return 70;
+  
+  if (a.length < 3 || b.length < 3) return 0;
+  
+  const distance = levenshteinDistance(aLower, bLower);
+  const maxLen = Math.max(a.length, b.length);
+  return Math.max(0, 100 - (distance / maxLen) * 100);
+}
+
+/**
+ * Get typo correction for a term
+ */
+export function getTypoCorrection(term: string): string | null {
+  return TYPO_CORRECTIONS[term.toLowerCase()] || null;
+}
+
 /**
  * Strip Georgian grammatical suffixes for better matching
  */
@@ -472,6 +538,12 @@ export function buildBilingualSearchTerms(input: string): string[] {
   
   // Always include original input
   terms.push(normalized);
+  
+  // Apply typo corrections first
+  const corrected = TYPO_CORRECTIONS[normalized];
+  if (corrected) {
+    terms.push(corrected);
+  }
   
   if (isGeorgianScript(input)) {
     // Georgian input

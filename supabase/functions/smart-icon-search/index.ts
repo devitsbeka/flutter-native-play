@@ -942,16 +942,115 @@ function levenshteinDistance(a: string, b: string): number {
   return matrix[b.length][a.length];
 }
 
-// Check if two strings are similar (fuzzy match)
-function isSimilar(a: string, b: string, threshold = 2): boolean {
+// Calculate trigram similarity (better for typo detection)
+function trigramSimilarity(a: string, b: string): number {
+  const getTrigrams = (s: string): Set<string> => {
+    const padded = `  ${s.toLowerCase()}  `;
+    const trigrams = new Set<string>();
+    for (let i = 0; i < padded.length - 2; i++) {
+      trigrams.add(padded.substring(i, i + 3));
+    }
+    return trigrams;
+  };
+
+  const trigramsA = getTrigrams(a);
+  const trigramsB = getTrigrams(b);
+  
+  let intersection = 0;
+  trigramsA.forEach(t => { if (trigramsB.has(t)) intersection++; });
+  
+  const union = trigramsA.size + trigramsB.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+// Check if strings are similar using multiple methods (fuzzy match with scoring)
+function isFuzzyMatch(a: string, b: string): { match: boolean; score: number } {
   const aLower = a.toLowerCase();
   const bLower = b.toLowerCase();
-  // For short strings (3+ chars), allow matching
-  if (a.length < 3 || b.length < 3) return aLower === bLower;
-  // Dynamic threshold based on string length
-  const dynamicThreshold = Math.min(threshold, Math.floor(Math.min(a.length, b.length) / 3));
-  return levenshteinDistance(aLower, bLower) <= Math.max(1, dynamicThreshold);
+  
+  // Exact match
+  if (aLower === bLower) return { match: true, score: 100 };
+  
+  // Prefix/suffix match (for partial typing)
+  if (aLower.startsWith(bLower) || bLower.startsWith(aLower)) {
+    return { match: true, score: 85 };
+  }
+  
+  // Contains match
+  if (aLower.includes(bLower) || bLower.includes(aLower)) {
+    return { match: true, score: 70 };
+  }
+  
+  // Skip for very short strings
+  if (a.length < 3 || b.length < 3) {
+    return { match: false, score: 0 };
+  }
+  
+  // Levenshtein distance check
+  const distance = levenshteinDistance(aLower, bLower);
+  const maxLen = Math.max(a.length, b.length);
+  const levenshteinScore = Math.max(0, 100 - (distance / maxLen) * 100);
+  
+  // Trigram similarity for typo tolerance
+  const trigramScore = trigramSimilarity(a, b) * 100;
+  
+  // Use the better score
+  const bestScore = Math.max(levenshteinScore, trigramScore);
+  
+  // Match if score is above threshold (50% for typo tolerance)
+  return { 
+    match: bestScore >= 50, 
+    score: bestScore 
+  };
 }
+
+// Check if two strings are similar (fuzzy match) - enhanced with lower threshold
+function isSimilar(a: string, b: string, threshold = 3): boolean {
+  const aLower = a.toLowerCase();
+  const bLower = b.toLowerCase();
+  
+  // Very short strings (< 3 chars): exact match only
+  if (a.length < 3 || b.length < 3) return aLower === bLower;
+  
+  // For medium strings (3-6 chars): allow 1 typo
+  // For longer strings (7+): allow 2-3 typos
+  const minLen = Math.min(a.length, b.length);
+  const dynamicThreshold = minLen <= 6 
+    ? 1 
+    : Math.min(threshold, Math.floor(minLen / 3));
+  
+  return levenshteinDistance(aLower, bLower) <= dynamicThreshold;
+}
+
+// Common typos and misspellings dictionary
+const COMMON_TYPOS: Record<string, string[]> = {
+  // Georgian transliteration variants
+  'kata': ['cata', 'katta', 'kataa', 'qata'],
+  'dzaghli': ['dzaghl', 'dzagly', 'zaghl', 'dzagli'],
+  'lomi': ['lom', 'lomy', 'lome'],
+  'tevzi': ['tevz', 'thevzi', 'tevzy'],
+  'frinveli': ['frinvel', 'prinveli', 'frinvelly'],
+  
+  // English common typos
+  'cat': ['catt', 'kat', 'kcat', 'cta'],
+  'dog': ['dogg', 'dgo', 'god'],
+  'bird': ['brid', 'bidr', 'brird'],
+  'fish': ['fich', 'fis', 'fissh'],
+  'horse': ['hrose', 'hrse', 'horsee'],
+  'lion': ['loin', 'lioon', 'lino'],
+  'music': ['musci', 'muisc', 'musikc'],
+  'movie': ['moive', 'movei', 'mvoie'],
+  'phone': ['pohne', 'phoen', 'fone'],
+  'computer': ['computre', 'compueter', 'computar'],
+  'football': ['footbal', 'fooball', 'fotball'],
+  'basketball': ['basketbal', 'bascetball', 'basektball'],
+  
+  // Georgian Latin typos
+  'xachapuri': ['khachapuri', 'hachapuri', 'xachapury'],
+  'xinkali': ['khinkali', 'hinkali', 'xinkaly'],
+  'ghvino': ['gvino', 'ghvini', 'gvini'],
+  'fexburti': ['fexburt', 'fexburti', 'fexburthi'],
+};
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -1054,19 +1153,43 @@ serve(async (req) => {
         directTranslation.forEach(t => searchTerms.add(t));
       }
       
-      // Also check partial matches in LATIN_TRANSLITERATIONS for typo tolerance
+      // Enhanced typo-tolerant search in LATIN_TRANSLITERATIONS
       for (const [latinWord, translations] of Object.entries(LATIN_TRANSLITERATIONS)) {
         if (queryLower.length >= 3 && latinWord.length >= 3) {
-          // Check if query starts with or is contained in the latin word
+          // Check prefix/suffix match
           if (latinWord.startsWith(queryLower) || queryLower.startsWith(latinWord)) {
-            console.log(`Latin partial match: "${queryLower}" ~ "${latinWord}" -> ${translations.join(', ')}`);
+            console.log(`Latin prefix match: "${queryLower}" ~ "${latinWord}"`);
+            translations.forEach(t => searchTerms.add(t));
+            continue;
+          }
+          
+          // Enhanced fuzzy match with lower threshold
+          const fuzzyResult = isFuzzyMatch(queryLower, latinWord);
+          if (fuzzyResult.match && fuzzyResult.score >= 50) {
+            console.log(`Latin fuzzy match (score=${fuzzyResult.score.toFixed(1)}): "${queryLower}" ~ "${latinWord}"`);
             translations.forEach(t => searchTerms.add(t));
           }
-          // Fuzzy match for typos (Levenshtein distance <= 1 for short words)
-          if (isSimilar(queryLower, latinWord, 1)) {
-            console.log(`Latin fuzzy match: "${queryLower}" ~ "${latinWord}" -> ${translations.join(', ')}`);
-            translations.forEach(t => searchTerms.add(t));
+        }
+      }
+      
+      // Check common typos dictionary
+      const typoCorrections = COMMON_TYPOS[queryLower];
+      if (typoCorrections) {
+        typoCorrections.forEach(typo => {
+          if (LATIN_TRANSLITERATIONS[typo]) {
+            LATIN_TRANSLITERATIONS[typo].forEach(t => searchTerms.add(t));
           }
+        });
+      }
+      
+      // Reverse typo lookup (if user typed a typo)
+      for (const [correct, typos] of Object.entries(COMMON_TYPOS)) {
+        if (typos.some(t => isFuzzyMatch(queryLower, t).match)) {
+          if (LATIN_TRANSLITERATIONS[correct]) {
+            console.log(`Typo correction: "${queryLower}" -> "${correct}"`);
+            LATIN_TRANSLITERATIONS[correct].forEach(t => searchTerms.add(t));
+          }
+          searchTerms.add(correct);
         }
       }
       
@@ -1279,9 +1402,15 @@ serve(async (req) => {
           score += 30;
         }
         
-        // Fuzzy match bonus
-        if (isSimilar(slug, termLower)) {
-          score += 25;
+        // Enhanced fuzzy match bonus in scoring
+        const slugFuzzy = isFuzzyMatch(slug, termLower);
+        const titleFuzzy = isFuzzyMatch(title, termLower);
+        
+        if (slugFuzzy.match) {
+          score += Math.floor(slugFuzzy.score * 0.4); // Up to 40 points for fuzzy slug match
+        }
+        if (titleFuzzy.match) {
+          score += Math.floor(titleFuzzy.score * 0.3); // Up to 30 points for fuzzy title match
         }
       }
       
