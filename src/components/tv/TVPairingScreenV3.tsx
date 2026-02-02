@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Smartphone, QrCode } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
+import myTriviaLogo from '@/assets/mytrivia-live-logo.png';
 import { useTVGame } from '@/contexts/TVGameContext';
-import { TVBrandingOverlay } from './TVBrandingOverlay';
-import { TVMirrorButton } from './TVMirrorButton';
 
 /**
  * TV Pairing Screen V3 - Shows a 4-digit code for phone pairing
@@ -47,44 +46,16 @@ export const TVPairingScreenV3: React.FC = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-6 mt-8"
+          className="mb-6 mt-8 flex justify-center"
         >
-          <div className="flex items-center justify-center">
-            <span 
-              className="text-5xl font-slackey text-white tracking-tight"
-              style={{
-                textShadow: `
-                  0 4px 8px rgba(0,0,0,0.4),
-                  0 8px 24px rgba(0,0,0,0.3)
-                `,
-              }}
-            >
-              MyTrivia
-            </span>
-            
-            {/* LIVE Badge */}
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="ml-3"
-            >
-              <span 
-                className="relative inline-flex items-center px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-wider text-white"
-                style={{
-                  background: '#EF4444',
-                  boxShadow: '0 4px 0 #B91C1C, 0 6px 12px rgba(0,0,0,0.25)',
-                }}
-              >
-                <motion.span
-                  animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-2.5 h-2.5 rounded-full bg-white mr-2"
-                />
-                LIVE
-              </span>
-            </motion.span>
-          </div>
+          <img 
+            src={myTriviaLogo} 
+            alt="MyTrivia LIVE" 
+            className="h-14 w-auto"
+            style={{
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4)) drop-shadow(0 8px 24px rgba(0,0,0,0.3))',
+            }}
+          />
         </motion.div>
 
         {/* Subtitle with TV Icon */}
