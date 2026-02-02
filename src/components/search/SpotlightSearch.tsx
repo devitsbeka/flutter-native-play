@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface SpotlightSearchProps {
   className?: string;
+  variant?: "bar" | "button";
 }
 
 const COMMANDS = [
@@ -49,7 +50,7 @@ const COMMANDS = [
   { command: "/logout", label: "გასვლა", icon: LogOut, action: "logout" },
 ];
 
-const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
+const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = "bar" }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -188,29 +189,41 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className }) => {
 
   return (
     <>
-      {/* Input Bar - acts like real input */}
-      <motion.div
-        className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] bg-white/40 backdrop-blur-sm border border-purple-900/10 ${className}`}
-        whileHover={{ backgroundColor: "rgba(255,255,255,0.5)" }}
-      >
-        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onKeyDown={handleInputKeyDown}
-          placeholder="ძებნა..."
-          className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-        />
-        <kbd 
-          className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 text-[10px] font-medium text-muted-foreground border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors"
+      {variant === "button" ? (
+        /* Button mode - just an icon */
+        <motion.button
+          className={`relative p-2 rounded-full hover:bg-white/30 transition-colors ${className}`}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setOpen(true)}
         >
-          <Command className="w-2.5 h-2.5" />K
-        </kbd>
-      </motion.div>
+          <Search className="w-5 h-5 text-gray-600" />
+        </motion.button>
+      ) : (
+        /* Bar mode - full search bar */
+        <motion.div
+          className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] bg-white/40 backdrop-blur-sm border border-purple-900/10 ${className}`}
+          whileHover={{ backgroundColor: "rgba(255,255,255,0.5)" }}
+        >
+          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onKeyDown={handleInputKeyDown}
+            placeholder="ძებნა..."
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+          />
+          <kbd 
+            className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 text-[10px] font-medium text-muted-foreground border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors"
+            onClick={() => setOpen(true)}
+          >
+            <Command className="w-2.5 h-2.5" />K
+          </kbd>
+        </motion.div>
+      )}
 
       {/* Command Dialog */}
       <CommandDialog open={open} onOpenChange={setOpen}>
