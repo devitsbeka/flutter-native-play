@@ -2,6 +2,7 @@ import { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tv, Grid3X3, Users, Trophy, Zap, Globe } from 'lucide-react';
 import splashBackground from '@/assets/loading-bg.png';
+import myTriviaLogo from '@/assets/mytrivia-live-logo.png';
 import { 
   onVideosLoaded, 
   areVideosLoaded, 
@@ -165,42 +166,15 @@ export function SplashScreen({ children }: SplashScreenProps) {
                     ease: 'easeInOut'
                   }}
                 >
-                  {/* MyTrivia Text */}
-                  <span 
-                    className="text-4xl md:text-6xl font-slackey text-white tracking-tight"
+                  {/* MyTrivia LIVE Logo */}
+                  <img 
+                    src={myTriviaLogo} 
+                    alt="MyTrivia LIVE" 
+                    className="h-12 md:h-16 w-auto"
                     style={{
-                      textShadow: `
-                        0 4px 8px rgba(0,0,0,0.4),
-                        0 8px 24px rgba(0,0,0,0.3)
-                      `,
+                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4)) drop-shadow(0 8px 24px rgba(0,0,0,0.3))',
                     }}
-                  >
-                    MyTrivia
-                  </span>
-                  
-                  {/* Large LIVE Badge */}
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="ml-3"
-                  >
-                    <span 
-                      className="relative inline-flex items-center px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-wider text-white"
-                      style={{
-                        background: '#EF4444',
-                        boxShadow: '0 4px 0 #B91C1C, 0 6px 12px rgba(0,0,0,0.25)',
-                      }}
-                    >
-                      {/* Blinking dot */}
-                      <motion.span
-                        animate={{ opacity: [0.6, 1, 0.6] }}
-                        transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-2.5 h-2.5 rounded-full bg-white mr-2"
-                      />
-                      LIVE
-                    </span>
-                  </motion.span>
+                  />
                 </motion.div>
               </motion.div>
 

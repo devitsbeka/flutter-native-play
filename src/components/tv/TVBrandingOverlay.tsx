@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTVGame } from '@/contexts/TVGameContext';
+import myTriviaLogo from '@/assets/mytrivia-live-logo.png';
 
 interface TVBrandingOverlayProps {
   showLogo?: boolean;
@@ -19,24 +20,14 @@ export const TVBrandingOverlay: React.FC<TVBrandingOverlayProps> = ({
       {/* Logo - Top Left (hidden when compact) */}
       {showLogo && !compact && (
         <div className="absolute top-4 left-4 z-20">
-          <div className="flex items-center gap-2">
-            <span 
-              className="text-2xl font-slackey text-white"
-              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
-            >
-              MyTrivia
-            </span>
-            <span 
-              className="px-2.5 py-1 rounded-lg text-xs font-bold text-white flex items-center gap-1.5"
-              style={{
-                background: '#EF4444',
-                boxShadow: '0 2px 0 #B91C1C',
-              }}
-            >
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              LIVE
-            </span>
-          </div>
+          <img 
+            src={myTriviaLogo} 
+            alt="MyTrivia LIVE" 
+            className="h-8 w-auto"
+            style={{
+              filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
+            }}
+          />
         </div>
       )}
 
