@@ -1,280 +1,115 @@
 
+# Plan: Add No-Ads Card to Desktop and Tablet Layouts
 
-# Plan: Add Search Icon to Mobile Header with Full-Screen Search Panel
+## Problem Analysis
 
-## Overview
+Currently, the "no-ads" icon is only shown on mobile in the curved action buttons above the avatar (line 1017 in Index.tsx). On desktop and tablet:
+- The **DesktopActionCards** component (shown in the right side panel on lg+ screens) only includes: Daily Rewards, Missions, Chest, and Powers
+- There's no Ad-Free/No-Ads card in the desktop layout
 
-Add a search icon before the notification bell on mobile, and when clicked, show a full-screen search panel with horizontally scrollable lists for friends, rooms, trivias, collections, and MyTriviaParties.
+The user wants the no-ads card to also appear on desktop and tablet layouts.
+
+---
+
+## Solution
+
+Add a new "No-Ads" card to the `DesktopActionCards` component, following the same pattern as the existing cards (Daily Rewards, Missions, etc.).
 
 ---
 
 ## Technical Changes
 
-### File 1: `src/pages/Index.tsx`
+### File 1: `src/components/home/DesktopActionCards.tsx`
 
-#### Change 1.1: Add Search Icon to Mobile Header
+#### Change 1.1: Import the ad-free icon
 
-**Location: Lines 447-499** - Modify the right side header section
-
-Move the SpotlightSearch button outside the `hidden md:flex` wrapper so it's visible on mobile too:
-
+**Location: Line 7**
 ```typescript
-// BEFORE (simplified):
-{user && (
-  <div className="hidden md:flex items-center gap-1">
-    <SpotlightSearch variant="button" />
-  </div>
-)}
-
-{user && (
-  <div className="flex items-center gap-1">
-    <Bell button />
-  </div>
-)}
-
-// AFTER:
-{user && (
-  <div className="flex items-center gap-1">
-    {/* Search button - visible on all screens */}
-    <SpotlightSearch variant="button" />
-    
-    {/* Bell icon with unread badge */}
-    <motion.button ... Bell ... />
-  </div>
-)}
+// ADD after powersIcon import:
+import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 ```
 
----
+#### Change 1.2: Add onAdFreeClick prop to interface
 
-### File 2: `src/components/search/SpotlightSearch.tsx`
-
-#### Change 2.1: Replace CommandDialog with Custom Full-Screen Panel
-
-Transform the existing SpotlightSearch to show a mobile-friendly full-screen panel with horizontal scroll lists instead of the existing command dialog.
-
-**Key changes:**
-
-1. **Import additional hooks:**
+**Location: Lines 12-18**
 ```typescript
-import { useMyQuizPosts } from "@/hooks/useSocialFeed";
-import { useMyCollections } from "@/hooks/useCollections";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-```
-
-2. **Add new state for mobile panel mode:**
-```typescript
-const [showMobilePanel, setShowMobilePanel] = useState(false);
-```
-
-3. **Create new horizontal scroll sections:**
-
-```typescript
-// Friends Section (horizontal scroll)
-<div className="space-y-2">
-  <h3 className="text-sm font-semibold text-muted-foreground px-4">მეგობრები</h3>
-  <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
-    {friends.map((friend) => (
-      <FriendCard key={friend.id} friend={friend} onClick={() => handleFriendSelect(friend.id)} />
-    ))}
-  </div>
-</div>
-
-// Rooms Section (horizontal scroll)
-<div className="space-y-2">
-  <h3 className="text-sm font-semibold text-muted-foreground px-4">ოთახები</h3>
-  <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
-    {rooms.map((room) => (
-      <RoomCard key={room.id} room={room} onClick={() => handleRoomSelect(room.room_code)} />
-    ))}
-  </div>
-</div>
-
-// Similar sections for: Trivias, Collections, MyTriviaParties
-```
-
-4. **Create compact card components for horizontal scroll:**
-   - `FriendCard` - Avatar + name (compact)
-   - `RoomCard` - Icon + name (compact)  
-   - `TriviaCard` - Cover + title (compact)
-   - `CollectionCard` - Cover + title (compact)
-
-5. **Render full-screen panel on mobile:**
-
-```typescript
-{/* Full-screen search panel */}
-<AnimatePresence>
-  {open && (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="fixed inset-0 z-50 bg-background"
-    >
-      {/* Header with search bar and close */}
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setOpen(false)}>
-            <ChevronLeft />
-          </button>
-          <input 
-            placeholder="ძებნა..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-muted rounded-full px-4 py-2"
-          />
-        </div>
-      </div>
-      
-      {/* Content with horizontal lists */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Friends horizontal scroll */}
-        {/* Rooms horizontal scroll */}
-        {/* Trivias horizontal scroll */}
-        {/* Collections horizontal scroll */}
-        {/* MyTriviaParties horizontal scroll */}
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
-```
-
----
-
-### File 3: Create `src/components/search/SearchHorizontalLists.tsx` (New File)
-
-A dedicated component for the horizontal scrolling sections:
-
-```typescript
-interface SearchHorizontalListsProps {
-  friends: Friend[];
-  rooms: MyRoom[];
-  trivias: QuizPost[];
-  collections: Collection[];
-  onSelectFriend: (id: string) => void;
-  onSelectRoom: (code: string) => void;
-  onSelectTrivia: (id: string) => void;
-  onSelectCollection: (id: string) => void;
-}
-
-export function SearchHorizontalLists({ ... }: SearchHorizontalListsProps) {
-  return (
-    <div className="space-y-6 py-4">
-      {/* Friends Section */}
-      <HorizontalSection title="მეგობრები" icon={Users}>
-        {friends.map((friend) => (
-          <FriendMiniCard key={friend.id} friend={friend} onClick={() => onSelectFriend(friend.friendId)} />
-        ))}
-      </HorizontalSection>
-
-      {/* Rooms Section */}
-      <HorizontalSection title="ოთახები" icon={Gamepad2}>
-        {rooms.map((room) => (
-          <RoomMiniCard key={room.id} room={room} onClick={() => onSelectRoom(room.room_code)} />
-        ))}
-      </HorizontalSection>
-
-      {/* Trivias Section */}
-      <HorizontalSection title="ტრივიები" icon={Sparkles}>
-        {trivias.map((trivia) => (
-          <TriviaMiniCard key={trivia.id} trivia={trivia} onClick={() => onSelectTrivia(trivia.id)} />
-        ))}
-      </HorizontalSection>
-
-      {/* Collections Section */}
-      <HorizontalSection title="კოლექციები" icon={Folder}>
-        {collections.map((collection) => (
-          <CollectionMiniCard key={collection.id} collection={collection} onClick={() => onSelectCollection(collection.id)} />
-        ))}
-      </HorizontalSection>
-
-      {/* MyTriviaParties = Rooms you created (host rooms) */}
-      <HorizontalSection title="ჩემი წვეულებები" icon={Crown}>
-        {rooms.filter(r => r.is_host).map((room) => (
-          <RoomMiniCard key={room.id} room={room} onClick={() => onSelectRoom(room.room_code)} />
-        ))}
-      </HorizontalSection>
-    </div>
-  );
+interface DesktopActionCardsProps {
+  onDailyRewardsClick: () => void;
+  onMissionsClick: () => void;
+  onChestClick: () => void;
+  onPowersClick: () => void;
+  onAdFreeClick: () => void;  // ADD THIS
+  vertical?: boolean;
 }
 ```
 
----
+#### Change 1.3: Destructure the new prop
 
-## Data Sources
+**Location: Lines 246-252**
+```typescript
+export function DesktopActionCards({
+  onDailyRewardsClick,
+  onMissionsClick,
+  onChestClick,
+  onPowersClick,
+  onAdFreeClick,  // ADD THIS
+  vertical = false,
+}: DesktopActionCardsProps) {
+```
 
-| Section | Hook | Filter |
-|---------|------|--------|
-| Friends | `useFriends()` | All accepted friends |
-| Rooms | `useMyRooms()` | All rooms user is part of |
-| Trivias | `useMyQuizPosts()` | User's created trivias |
-| Collections | `useMyCollections()` | User's collections |
-| MyTriviaParties | `useMyRooms()` | Filter: `is_host === true` |
+#### Change 1.4: Add the No-Ads ActionCard
 
----
-
-## UI Layout
-
-```text
-┌─────────────────────────────────────┐
-│ ← [ Search bar input... ]           │
-├─────────────────────────────────────┤
-│                                     │
-│ 👥 მეგობრები                         │
-│ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ →     │
-│ │ 😀│ │ 😎│ │ 🤓│ │ 😊│ │ 🥳│       │
-│ │John│ │Ana│ │Max│ │Eva│ │Tom│      │
-│ └───┘ └───┘ └───┘ └───┘ └───┘       │
-│                                     │
-│ 🎮 ოთახები                          │
-│ ┌───────┐ ┌───────┐ ┌───────┐ →     │
-│ │Room 1 │ │Room 2 │ │Room 3 │       │
-│ │3 👤   │ │5 👤   │ │2 👤   │       │
-│ └───────┘ └───────┘ └───────┘       │
-│                                     │
-│ ✨ ტრივიები                         │
-│ ┌───────┐ ┌───────┐ ┌───────┐ →     │
-│ │History│ │Science│ │Music  │       │
-│ │10 Q   │ │15 Q   │ │8 Q    │       │
-│ └───────┘ └───────┘ └───────┘       │
-│                                     │
-│ 📁 კოლექციები                        │
-│ ┌───────┐ ┌───────┐ ┌───────┐ →     │
-│ │My Quiz│ │Fun Set│ │Series │       │
-│ │3 რაუნ │ │5 რაუნ │ │2 რაუნ │       │
-│ └───────┘ └───────┘ └───────┘       │
-│                                     │
-│ 👑 ჩემი წვეულებები                   │
-│ ┌───────┐ ┌───────┐ →               │
-│ │Party 1│ │Party 2│                 │
-│ │8 👤   │ │12 👤  │                 │
-│ └───────┘ └───────┘                 │
-│                                     │
-└─────────────────────────────────────┘
+**Location: After line 320 (after Powers Card, before closing div)**
+```typescript
+{/* No-Ads Card */}
+<ActionCard
+  iconSrc={adFreeIcon}
+  title="რეკლამის გარეშე"
+  statusText="პრემიუმ გამოცდილება"
+  expandedDetails="ითამაშე რეკლამების გარეშე და მიიღე ექსკლუზიური შეღავათები."
+  actionLabel="გახდი VIP"
+  onClick={onAdFreeClick}
+  bgGradient=""
+  particleColor=""
+  delay={0.3}
+/>
 ```
 
 ---
 
-## Files Changed Summary
+### File 2: `src/pages/Index.tsx`
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/pages/Index.tsx` | Modify | Show search icon on mobile header |
-| `src/components/search/SpotlightSearch.tsx` | Modify | Add full-screen panel with horizontal lists |
-| `src/components/search/SearchHorizontalLists.tsx` | Create | Reusable horizontal scroll sections |
-| `src/components/search/SearchMiniCards.tsx` | Create | Compact card components for horizontal scroll |
+#### Change 2.1: Pass onAdFreeClick to DesktopActionCards
+
+**Location: Lines 510-516** - Update the DesktopActionCards usage
+
+```typescript
+<DesktopActionCards
+  onDailyRewardsClick={() => setIsDailyRewardsOpen(true)}
+  onMissionsClick={() => setShowMissionsModal(true)}
+  onChestClick={() => setIsChestModalOpen(true)}
+  onPowersClick={() => setShowMyPowersModal(true)}
+  onAdFreeClick={() => setIsAdFreeModalOpen(true)}  // ADD THIS
+  vertical
+/>
+```
+
+---
+
+## Summary
+
+| Location | Change |
+|----------|--------|
+| DesktopActionCards.tsx | Import ad-free icon |
+| DesktopActionCards.tsx | Add `onAdFreeClick` prop to interface |
+| DesktopActionCards.tsx | Add No-Ads ActionCard component |
+| Index.tsx | Pass `onAdFreeClick` handler |
 
 ---
 
 ## Expected Result
 
-- Search icon appears before notification bell on mobile
-- Clicking search opens full-screen panel (not dialog)
-- Panel shows 5 horizontal scrollable sections:
-  - Friends (with avatars)
-  - Rooms (with participant count)
-  - Trivias (with question count)
-  - Collections (with round count)
-  - MyTriviaParties (host rooms)
-- Search input filters all lists simultaneously
-- Tapping any item navigates to that item's detail page
-
+- A new "რეკლამის გარეშე" (No-Ads) card appears in the right sidebar on desktop/tablet
+- Uses the same ad-free icon (`icon-ad-free.png`) that's used on mobile
+- Clicking it opens the AdFreeModal (same behavior as mobile)
+- Card style matches the existing Daily Rewards, Missions, Chest, and Powers cards
