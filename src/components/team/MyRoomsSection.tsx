@@ -450,19 +450,28 @@ function RoomCard({ room, index, onJoin, onDelete, fullWidth = false }: RoomCard
               <div className="flex items-start justify-between mb-8">
                 {/* Top left - Avatars (use TV players when active) */}
                 <div className="flex -space-x-2">
-                  {displayPlayers.slice(0, 3).map((p, idx) => (
-                    <div 
-                      key={p.user_id || idx} 
-                      className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 shadow-md"
-                    >
-                      <SafeAvatarImage
-                        avatarUrl={p.avatar_url}
-                        fallback={p.nickname || "?"}
-                        className="w-full h-full object-cover"
-                        containerClassName="w-full h-full"
-                      />
-                    </div>
-                  ))}
+                  {displayPlayers.slice(0, 3).map((p, idx) => {
+                    // Check if this participant is online
+                    const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
+                    
+                    return (
+                      <div 
+                        key={p.user_id || idx} 
+                        className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white/20 shadow-md ${
+                          isOnline 
+                            ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
+                            : "border-2 border-white/40"
+                        }`}
+                      >
+                        <SafeAvatarImage
+                          avatarUrl={p.avatar_url}
+                          fallback={p.nickname || "?"}
+                          className="w-full h-full object-cover"
+                          containerClassName="w-full h-full"
+                        />
+                      </div>
+                    );
+                  })}
                   {displayPlayers.length > 3 && (
                     <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center shadow-md">
                       <span className="text-xs font-bold text-white">
@@ -816,23 +825,32 @@ function RoomCardGrid({ room, index, onJoin, onDelete }: RoomCardGridProps) {
                 
                 {/* Right: Avatars (use TV players if session is active) */}
                 <div className="flex -space-x-2">
-                  {displayPlayers.slice(0, 4).map((p, idx) => (
-                    <div 
-                      key={p.user_id || idx} 
-                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/40 flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (p.user_id) openProfile(p.user_id);
-                      }}
-                    >
-                      <SafeAvatarImage
-                        avatarUrl={p.avatar_url}
-                        fallback={p.nickname || "?"}
-                        className="w-full h-full object-cover"
-                        containerClassName="w-full h-full"
-                      />
-                    </div>
-                  ))}
+                  {displayPlayers.slice(0, 4).map((p, idx) => {
+                    // Check if this participant is online
+                    const isOnline = room.online_participants.some(op => op.user_id === p.user_id);
+                    
+                    return (
+                      <div 
+                        key={p.user_id || idx} 
+                        className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-white/20 cursor-pointer hover:scale-110 transition-transform active:scale-95 shadow-md ${
+                          isOnline 
+                            ? "ring-2 ring-green-500 ring-offset-1 ring-offset-transparent" 
+                            : "border-2 border-white/40"
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (p.user_id) openProfile(p.user_id);
+                        }}
+                      >
+                        <SafeAvatarImage
+                          avatarUrl={p.avatar_url}
+                          fallback={p.nickname || "?"}
+                          className="w-full h-full object-cover"
+                          containerClassName="w-full h-full"
+                        />
+                      </div>
+                    );
+                  })}
                   {displayPlayers.length > 4 && (
                     <div className="w-8 h-8 rounded-full border-2 border-white/40 bg-white/30 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-md">
                       <span className="text-white text-[10px] font-bold">

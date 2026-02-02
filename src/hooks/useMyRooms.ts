@@ -81,6 +81,16 @@ export function isNewlyCreated(createdAt: string): boolean {
   return new Date(createdAt).getTime() > fiveMinutesAgo;
 }
 
+/**
+ * Check if a room has been active recently (within 3 hours)
+ * Used to distinguish "active" rooms from "stale/inactive" rooms
+ */
+export function isRoomActive(lastActivityAt: string | null, createdAt: string): boolean {
+  const threeHoursAgo = Date.now() - 3 * 60 * 60 * 1000;
+  const activityTime = new Date(lastActivityAt || createdAt).getTime();
+  return activityTime > threeHoursAgo;
+}
+
 interface UseMyRoomsOptions {
   filter?: RoomFilter;
   sort?: RoomSort;

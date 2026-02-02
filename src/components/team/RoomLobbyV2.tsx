@@ -4,6 +4,7 @@ import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus } from "lucide-react";
+import { isRoomActive } from "@/hooks/useMyRooms";
 import { RoomIconPickerModal } from "./RoomIconPickerModal";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
@@ -924,6 +925,7 @@ export function RoomLobbyV2() {
             showHostCrown={true}
             maxPlayers={currentRoom.max_players || 10}
             isHost={isHost}
+            isRoomActive={isRoomActive(currentRoom.last_activity_at || null, currentRoom.created_at)}
             onInviteFriends={() => setShowInviteModal(true)}
             onRemoveParticipant={handleRemoveParticipant}
             onResendInvitation={handleResendInvitation}
