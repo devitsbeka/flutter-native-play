@@ -1,86 +1,73 @@
 
-# Plan: Fix the Huge Gap Between Carousel and Shop Content
+# Plan: Fix Logo to Always Display on One Line with Correct Size on Tablet
 
-## Root Cause Analysis
+## Problem Analysis
 
-Looking at the screenshot and code structure:
+Looking at the screenshots:
+1. **Screenshot #1 & #2 (Tablet)**: The "MyTrivia" text and "LIVE" badge are on separate lines, and the logo is using `md` size (28px font) instead of `sm` (20px)
+2. **Screenshot #3 (Mobile)**: Correctly shows small logo on one line
 
-1. **MobileProCarousel** (line 73): Has `px-4 pt-4 pb-0` - no bottom padding
-2. **ShopStandardLayout** (line 63): Has `flex-1 pb-8` - no margin between carousel and sections
-3. **ShopProductGrid** (line 31): Has `mb-6` - only bottom margin
+### Root Causes
 
-The gap comes from the tall purple background area. The carousel container uses `min-h-[340px]` but the actual card inside is smaller, causing unused space.
+**Issue 1: Wrong size on tablet**
+In `MyTriviaLiveLogo.tsx`, when `responsive={true}` is used:
+- Tablet (`md` breakpoint) → uses `"md"` size (28px font)
+- But user wants tablet to use `"sm"` size (20px font) like mobile
 
-**The real fix**: Remove the `min-h` constraint entirely and add a small bottom margin. The card should size to its content naturally.
+**Issue 2: Logo wrapping to two lines**
+Despite having `flex-nowrap`, `shrink-0`, `w-auto`, and `min-w-fit` on the container, the logo still wraps because the **LiveBadge component wraps as an inline element**.
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/shop/MobileProCarousel.tsx`
+### File: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-**Line 73** - Change wrapper padding to add bottom margin:
+**Change 1 (Line 31-32)**: Change tablet breakpoint to use `sm` size instead of `md`
 
 ```typescript
 // BEFORE:
-<div className="px-4 pt-4 pb-0">
+} else if (breakpoint === "md") {
+  effectiveSize = "md";  // Tablet
 
 // AFTER:
-<div className="px-4 pt-4 pb-2 md:pb-4">
+} else if (breakpoint === "md") {
+  effectiveSize = "sm";  // Tablet (same as mobile)
 ```
 
-**Line 75** - Remove min-height constraints that create empty space:
+**Change 2 (Line 42)**: Add `inline-flex` and `whitespace-nowrap` to ensure the entire logo stays on one line
 
 ```typescript
 // BEFORE:
-<div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[340px]">
+<div className={`flex items-center gap-2 flex-nowrap shrink-0 w-auto min-w-fit ${className}`}>
 
 // AFTER:
-<div className="relative overflow-hidden rounded-3xl">
+<div className={`inline-flex items-center gap-2 flex-nowrap shrink-0 w-auto min-w-fit whitespace-nowrap ${className}`}>
 ```
 
-**Line 83** - Add explicit height to the inner motion.div so it sizes properly:
-
-```typescript
-// BEFORE:
-className="relative rounded-2xl overflow-hidden flex h-full"
-
-// AFTER:  
-className="relative rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px]"
-```
-
-This moves the height control to the **inner card** (that has the gradient) instead of the outer container, eliminating the gap.
+The key addition is `inline-flex` (instead of `flex`) which prevents the container from taking full width, and explicit `whitespace-nowrap` which ensures no text/inline elements wrap.
 
 ---
 
 ## Summary
 
-| Change | Purpose |
-|--------|---------|
-| Remove outer `min-h-[320px] md:min-h-[340px]` | Stop container from creating empty space |
-| Add inner `min-h-[280px] md:min-h-[300px]` | Keep card tall enough for content |
-| Add `pb-2 md:pb-4` to wrapper | Small consistent gap below carousel |
+| Change | Before | After | Purpose |
+|--------|--------|-------|---------|
+| Tablet size | `"md"` (28px) | `"sm"` (20px) | Match mobile size on tablet |
+| Container display | `flex` | `inline-flex` | Prevent full-width expansion |
+| Container whitespace | (none) | `whitespace-nowrap` | Ensure no wrapping |
 
 ---
 
 ## Visual Result
 
-**Before:**
+**Before (Tablet):**
 ```text
-┌──────────────────────────────┐
-│      PRO Card (actual)       │
-├──────────────────────────────┤
-│   EMPTY SPACE (min-h gap!)   │  ← This creates the huge gap
-└──────────────────────────────┘
-            ↓
-ძალები [40] [44] [6] [17]
+MyTrivia   ← 28px font (md)
+● LIVE     ← badge on second line
 ```
 
-**After:**
+**After (Tablet):**
 ```text
-┌──────────────────────────────┐
-│      PRO Card (actual)       │
-└──────────────────────────────┘
-    ↓ 16-24px gap only
-ძალები [40] [44] [6] [17]
+MyTrivia ● LIVE   ← 20px font (sm), all on one line
 ```
