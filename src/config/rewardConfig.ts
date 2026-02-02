@@ -42,10 +42,12 @@ export const REWARDS = {
   ],
 
   // ===== CHEST REWARDS (every 6 hours) =====
-  CHEST_COINS: 250,          // Half a game stake
-  CHEST_GEMS: 0,             // No free gems from chest (keep gems valuable)
+  CHEST_COINS_MIN: 50,       // Minimum coins from chest
+  CHEST_COINS_MAX: 250,      // Maximum coins from chest
+  CHEST_GEMS: 0,             // Base gems (0 on normal days)
+  CHEST_WEEKEND_GEMS: 1,     // Bonus gem on special days (Saturday/Sunday)
   CHEST_COOLDOWN_HOURS: 6,   // 4x per day max
-  CHEST_XP: 0,               // No XP system
+  CHEST_XP: 0,               // No XP from chest
 
   // ===== LUCKY SPIN REWARDS - Balanced =====
   SPIN_REWARDS: [
@@ -108,3 +110,19 @@ export const REWARDS = {
   GAME_LOSE_CONSOLATION_COINS: 0,
   GAME_DRAW_COINS: 0,
 };
+
+// Helper to get random chest coins (50-250)
+export function getRandomChestCoins(): number {
+  return Math.floor(Math.random() * (REWARDS.CHEST_COINS_MAX - REWARDS.CHEST_COINS_MIN + 1)) + REWARDS.CHEST_COINS_MIN;
+}
+
+// Check if today is a special day (weekend: Saturday or Sunday)
+export function isSpecialDay(): boolean {
+  const dayOfWeek = new Date().getDay();
+  return dayOfWeek === 0 || dayOfWeek === 6; // Sunday = 0, Saturday = 6
+}
+
+// Get chest gems (1 on weekends, 0 otherwise)
+export function getChestGems(): number {
+  return isSpecialDay() ? REWARDS.CHEST_WEEKEND_GEMS : REWARDS.CHEST_GEMS;
+}
