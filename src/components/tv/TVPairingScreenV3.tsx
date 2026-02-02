@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Smartphone, QrCode } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
-import myTriviaLogo from '@/assets/mytrivia-live-logo.png';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 import { useTVGame } from '@/contexts/TVGameContext';
 
 /**
@@ -48,13 +48,9 @@ export const TVPairingScreenV3: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="mb-6 mt-8 flex justify-center"
         >
-          <img 
-            src={myTriviaLogo} 
-            alt="MyTrivia LIVE" 
-            className="h-14 w-auto"
-            style={{
-              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4)) drop-shadow(0 8px 24px rgba(0,0,0,0.3))',
-            }}
+          <MyTriviaLiveLogo 
+            size="lg" 
+            textColor="light"
           />
         </motion.div>
 
