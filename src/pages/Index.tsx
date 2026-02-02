@@ -437,16 +437,12 @@ export default function Index() {
             </div>
             
             {/* Right side: Search button + Notification - Hidden for guests */}
-            {user && (
-              <div className="hidden md:flex items-center gap-1">
-                {/* Search button */}
-                <SpotlightSearch variant="button" />
-              </div>
-            )}
-            
             {/* Notification icons - Hidden for guests */}
             {user && (
               <div className="flex items-center gap-1">
+                {/* Search button - visible on all screens */}
+                <SpotlightSearch variant="button" />
+                
                 {/* Bell icon with unread badge */}
                 <motion.button
                   className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
