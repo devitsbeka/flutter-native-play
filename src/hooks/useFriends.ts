@@ -115,71 +115,64 @@ export function useFriends() {
   }, [fetchFriends]);
 
   // Subscribe to friendship changes with notifications
+  // Use unfiltered subscription to catch all changes where user is involved
   useEffect(() => {
     if (!user) return;
 
+    const channelId = `friendships-${user.id}-${Math.random().toString(36).slice(2, 8)}`;
     const channel = supabase
-      .channel("friendships-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "friendships",
-          filter: `friend_id=eq.${user.id}`,
-        },
-        async (payload) => {
-          // New friend request received - fetch sender's profile for notification
-          const senderId = payload.new.user_id;
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("nickname")
-            .eq("user_id", senderId)
-            .maybeSingle();
-          
-          const senderName = profile?.nickname || "ვიღაც";
-          toast.info(`${senderName} გთხოვს მეგობრობას! 🤝`, {
-            duration: 5000,
-          });
-          
-          fetchFriends();
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "friendships",
-          filter: `user_id=eq.${user.id}`,
-        },
-        async (payload) => {
-          // Friend request was accepted
-          if (payload.new.status === "accepted" && payload.old?.status === "pending") {
-            const friendId = payload.new.friend_id;
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("nickname")
-              .eq("user_id", friendId)
-              .maybeSingle();
-            
-            const friendName = profile?.nickname || "მოთამაშე";
-            toast.success(`${friendName} მიიღო შენი მოთხოვნა! 🎉`, {
-              duration: 5000,
-            });
-          }
-          fetchFriends();
-        }
-      )
+      .channel(channelId)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "friendships",
-          filter: `friend_id=eq.${user.id}`,
         },
-        () => fetchFriends()
+        async (payload) => {
+          const row = (payload.new || payload.old) as { user_id?: string; friend_id?: string; status?: string } | null;
+          
+          // Only process if user is involved in this friendship
+          if (!row || (row.user_id !== user.id && row.friend_id !== user.id)) {
+            return;
+          }
+          
+          // Handle INSERT - new friend request received
+          if (payload.eventType === "INSERT" && row.friend_id === user.id && row.status === "pending") {
+            const senderId = row.user_id;
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("nickname")
+              .eq("user_id", senderId)
+              .maybeSingle();
+            
+            const senderName = profile?.nickname || "ვიღაც";
+            toast.info(`${senderName} გთხოვს მეგობრობას! 🤝`, {
+              duration: 5000,
+            });
+          }
+          
+          // Handle UPDATE - friend request was accepted (notify sender)
+          if (payload.eventType === "UPDATE" && row.user_id === user.id) {
+            const oldRow = payload.old as { status?: string } | null;
+            if (row.status === "accepted" && oldRow?.status === "pending") {
+              const friendId = row.friend_id;
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("nickname")
+                .eq("user_id", friendId)
+                .maybeSingle();
+              
+              const friendName = profile?.nickname || "მოთამაშე";
+              toast.success(`${friendName} მიიღო შენი მოთხოვნა! 🎉`, {
+                duration: 5000,
+              });
+            }
+          }
+          
+          // Always refresh friends list for any relevant change
+          fetchFriends();
+        }
       )
       .subscribe();
 
@@ -338,7 +331,6 @@ export function useFriends() {
 
       if (error) throw error;
 
-      toast.success("მეგობარი დაემატა!");
       await fetchFriends();
       return true;
     } catch (error) {

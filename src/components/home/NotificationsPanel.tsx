@@ -39,16 +39,46 @@ const TAB_TYPES: Record<'games' | 'social' | 'trivia', string[]> = {
 interface NotificationsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultTab?: 'games' | 'social' | 'trivia';
 }
 
-export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
+export function NotificationsPanel({ isOpen, onClose, defaultTab }: NotificationsPanelProps) {
   const navigate = useNavigate();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const { generationNotifications } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
   const { acceptInvitation, declineInvitation } = useGameInvitations();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  
+  // Determine best default tab based on unread notifications
+  const getBestDefaultTab = (): 'games' | 'social' | 'trivia' => {
+    if (defaultTab) return defaultTab;
+    
+    const socialUnread = notifications.filter(n => 
+      TAB_TYPES.social.includes(n.type) && !n.read_at
+    ).length;
+    const triviaUnread = notifications.filter(n => 
+      TAB_TYPES.trivia.includes(n.type) && !n.read_at
+    ).length;
+    const gamesUnread = notifications.filter(n => 
+      TAB_TYPES.games.includes(n.type) && !n.read_at
+    ).length;
+    
+    // Prioritize tabs with unread items
+    if (socialUnread > 0) return 'social';
+    if (triviaUnread > 0) return 'trivia';
+    if (gamesUnread > 0) return 'games';
+    return 'games';
+  };
+  
   const [activeTab, setActiveTab] = useState<'games' | 'social' | 'trivia'>('games');
+  
+  // Reset to best tab when panel opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(getBestDefaultTab());
+    }
+  }, [isOpen, defaultTab, notifications]);
 
   // Filter notifications by active tab
   const filteredNotifications = useMemo(() => {
