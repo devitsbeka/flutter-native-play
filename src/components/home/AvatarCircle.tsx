@@ -4,6 +4,8 @@ import { Sparkles } from "lucide-react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
+import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {
@@ -27,6 +29,8 @@ interface AvatarCircleProps {
   xpTotal?: number;
   hideStats?: boolean;
   showAvatarPrompt?: boolean; // Show sparkle badge to prompt user to create animated avatar
+  showMascotReminder?: boolean; // Show mascot video as reminder to set avatar
+  userId?: string; // User ID for localStorage tracking
 }
 
 export function AvatarCircle({ 
@@ -41,13 +45,26 @@ export function AvatarCircle({
   xpTotal,
   hideStats = false,
   showAvatarPrompt = false,
+  showMascotReminder = false,
+  userId,
 }: AvatarCircleProps) {
   const [showVideo, setShowVideo] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [isReversing, setIsReversing] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
+  const [mascotFinished, setMascotFinished] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  
+  // Check if mascot has been shown for this user (localStorage)
+  const mascotStorageKey = userId ? `mytrivia_mascot_shown_${userId}` : null;
+  const [hasMascotPlayed, setHasMascotPlayed] = useState(() => {
+    if (!mascotStorageKey) return true; // No userId = don't show mascot
+    return localStorage.getItem(mascotStorageKey) === 'true';
+  });
+  
+  // Determine if we should show the mascot reminder
+  const shouldShowMascot = showMascotReminder && !avatarUrl && !hasMascotPlayed && !mascotFinished;
   const progressRingWidth = 20;
   const whiteRingWidth = 24; // Thick white chunky ring
   const ringGap = 6;
@@ -276,6 +293,28 @@ export function AvatarCircle({
               </motion.div>
             )}
           </>
+        ) : shouldShowMascot ? (
+          /* Mascot reminder video - plays once for users without avatar */
+          <div 
+            className="rounded-full overflow-hidden"
+            style={{
+              width: size - (progressRingWidth + ringGap) * 2 - 8,
+              height: size - (progressRingWidth + ringGap) * 2 - 8,
+            }}
+          >
+            <SinglePlayVideo 
+              src={guestWelcomeVideo}
+              className="w-full h-full object-cover"
+              style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+              onEnded={() => {
+                setMascotFinished(true);
+                setHasMascotPlayed(true);
+                if (mascotStorageKey) {
+                  localStorage.setItem(mascotStorageKey, 'true');
+                }
+              }}
+            />
+          </div>
         ) : (
           <div 
             className="rounded-full flex items-center justify-center"

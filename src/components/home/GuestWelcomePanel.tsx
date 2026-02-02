@@ -152,6 +152,80 @@ export function GuestWelcomePanel({
         )}
       </motion.div>
 
+      {/* Avatar upload - only show in signup mode */}
+      {isSignUp && (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2, type: "spring" }}
+          className="relative mb-4"
+        >
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
+              <PopoverTrigger asChild>
+                <div className="relative group cursor-pointer">
+                  <button 
+                    type="button"
+                    className="relative rounded-full overflow-hidden focus:outline-none"
+                    style={{
+                      width: 110,
+                      height: 110,
+                      boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
+                      border: "3px solid hsl(var(--background))",
+                    }}
+                    disabled={isCameraLoading}
+                  >
+                    {selectedPhoto ? (
+                      <img src={selectedPhoto} alt="Avatar" className="w-full h-full object-cover"/>
+                    ) : (
+                      <SinglePlayVideo 
+                        src={guestWelcomeVideo}
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+                        onEnded={() => setVideoEnded(true)}
+                      />
+                    )}
+                  </button>
+                  {/* Camera badge */}
+                  <motion.div 
+                    className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-20"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={videoEnded ? { scale: [0, 1.3, 1], opacity: 1 } : { scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+                  </motion.div>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="center">
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={handleTakePhoto}
+                    disabled={isCameraLoading}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                  >
+                    <Camera className="w-4 h-4" />
+                    გადაიღე ფოტო
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSelectFromGallery}
+                    disabled={isCameraLoading}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                  >
+                    <ImagePlus className="w-4 h-4" />
+                    აირჩიე გალერიიდან
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Auth Form */}
       <motion.form
