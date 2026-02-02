@@ -1,168 +1,107 @@
 
-# გეგმა: ოთახის სახელების და აიკონების გაუმჯობესება
 
-## პრობლემები
+# გეგმა: შესვლის გვერდის ტექსტის და ავატარის გაუმჯობესება
 
-1. **აიკონი არ შეესაბამება სახელს** - ამჟამად სისტემა ირჩევს შემთხვევით აიკონს 9k ბიბლიოთეკიდან, რაც იწვევს ისეთ შემთხვევებს როგორიც "გონებამახვილი" + ჭურჭლის აიკონი
+## რას შევცვლი
 
-2. **მხოლოდ ინტელექტზე ორიენტირებული სახელები** - ყველა სახელი ერთნაირი თემატიკით (IQ, ტვინი, ცოდნა)
+### 1. ტექსტის ცვლილება შესვლის რეჟიმში
 
-3. **მხოლობით რიცხვი** - "გონებამახვილი" ნაცვლად "გონებამახვილები"
+**ახლა (Login mode):**
+- სათაური: "მობრძანდი!"  
+- ქვესათაური: "შედი შენს ანგარიშზე"
 
----
+**შემდეგ (Login mode):**
+- სათაური: "გამარჯობა!"
+- ქვესათაური: _(არაფერი)_
 
-## გადაწყვეტა
+### 2. ავატარის ვიდეოს ლოგიკა
 
-### 1. თემატური კატეგორიები სახელებისთვის
-
-დავამატებ 6 ახალ თემატურ კატეგორიას, თითოეულს თავისი შესაბამისი აიკონებით:
-
-```text
-თემა                     | სახელები                                    | აიკონები
--------------------------|---------------------------------------------|------------------
-ინტელექტი/ცოდნა         | "ერუდიტები", "მცოდნეები", "ბრძენები"        | brain, lightbulb, idea, thinking
-ცნობილი პიროვნებები     | "აინშტაინები", "დავინჩები", "ნიუტონები"     | albert-einstein, sir-isaac-newton, marie-curie
-ადგილები/სტრუქტურები    | "აკადემია", "ობსერვატორია", "ბიბლიოთეკა"   | library, observatory, castle, temple
-თამაში/გამოწვევა        | "ჩემპიონები", "გამარჯვებულები", "ლიდერები"  | trophy, gold-medal, trivia-quiz
-ცხოველები (ჭკვიანი)     | "ბუები", "დელფინები", "მაიმუნები"           | owl, dolphin, monkey
-მეცნიერება              | "ასტრონომები", "მეცნიერები", "ფიზიკოსები"   | scientist, telescope, astronaut
-```
-
-### 2. სახელი ↔ აიკონის შესაბამისობა
-
-ყოველ თემატურ კატეგორიას მიენიჭება შესაბამისი აიკონების სია:
-
-```text
-THEME_ICON_MAPPING = {
-  intellect: ['brain', 'lightbulb', 'idea', 'thinking', 'book', 'graduation-cap'],
-  celebrities: ['albert-einstein', 'sir-isaac-newton', 'marie-curie', 'galileo-galilei', 'socrates'],
-  places: ['library', 'observatory', 'castle', 'temple', 'school', 'amphitheater'],
-  challenge: ['trophy', 'gold-medal', 'trivia-quiz', 'puzzle-solving', 'question-mark'],
-  animals: ['owl', 'dolphin', 'elephant', 'chimpanzee'],
-  science: ['scientist', 'telescope', 'astronaut', 'microscope', 'rocket']
-}
-```
-
-### 3. ახალი სახელების სია (მრავლობითი რიცხვი)
-
-```text
-// ინტელექტი (მრავლობითი)
-"ერუდიტები"       // Erudites
-"მცოდნეები"       // Knowers  
-"ბრძენები"        // Sages
-"გენიოსები"       // Geniuses
-"მოაზროვნეები"    // Thinkers
-"ჭკვიანები"       // Smart Ones
-
-// ცნობილი პიროვნებები (მრავლობითი)
-"აინშტაინები"     // Einsteins
-"დავინჩები"       // Da Vincis
-"ნიუტონები"       // Newtons
-"პიკასოები"       // Picassos
-"შექსპირები"      // Shakespeares
-"სოკრატეები"      // Socrateses
-
-// ადგილები (მხოლობითი OK)
-"აკადემია"        // Academy
-"ობსერვატორია"    // Observatory
-"ბიბლიოთეკა"      // Library
-"ანტიკა"          // Antiquity
-"ოლიმპო"          // Olympus
-
-// თამაში/გამოწვევა (მრავლობითი)
-"ჩემპიონები"      // Champions
-"გამარჯვებულები"  // Winners
-"ლიდერები"        // Leaders
-"ნავიგატორები"    // Navigators
-
-// ცხოველები (მრავლობითი)
-"ბუები"           // Owls
-"დელფინები"       // Dolphins
-"სპილოები"        // Elephants
-"მაიმუნები"       // Monkeys
-
-// მეცნიერება (მრავლობითი)
-"ასტრონომები"     // Astronomers
-"მეცნიერები"      // Scientists
-"ფიზიკოსები"      // Physicists
-"მათემატიკოსები"  // Mathematicians
-"ინჟინრები"       // Engineers
-```
-
----
-
-## ტექნიკური დეტალები
-
-### ფაილი 1: `supabase/functions/generate-room-name/index.ts`
-
-1. **ახალი თემატური სტრუქტურა:**
-```text
-const THEMED_ROOMS = [
-  {
-    names: ["ერუდიტები", "მცოდნეები", "ბრძენები", "გენიოსები"],
-    icons: ["brain", "lightbulb", "idea", "thinking", "graduation-cap"]
-  },
-  {
-    names: ["აინშტაინები", "დავინჩები", "ნიუტონები", "პიკასოები"],
-    icons: ["albert-einstein", "sir-isaac-newton", "marie-curie", "galileo-galilei"]
-  },
-  {
-    names: ["აკადემია", "ობსერვატორია", "ბიბლიოთეკა", "ანტიკა"],
-    icons: ["library", "observatory", "school", "temple", "castle"]
-  },
-  {
-    names: ["ჩემპიონები", "გამარჯვებულები", "ლიდერები"],
-    icons: ["trophy", "gold-medal", "trivia-quiz"]
-  },
-  {
-    names: ["ბუები", "დელფინები", "სპილოები"],
-    icons: ["owl", "dolphin", "elephant"]
-  },
-  {
-    names: ["ასტრონომები", "მეცნიერები", "ფიზიკოსები"],
-    icons: ["scientist", "telescope", "astronaut", "rocket"]
-  }
-];
-```
-
-2. **ახალი ლოგიკა:**
-   - შემთხვევით ირჩევს თემატურ კატეგორიას
-   - ამ კატეგორიიდან ირჩევს სახელს
-   - იმავე კატეგორიიდან ირჩევს შესაბამის აიკონს
-   - ამით გარანტირებულია შესაბამისობა
-
-3. **AI prompt-ის განახლება:**
-   - ინსტრუქცია მრავლობითი რიცხვის გამოყენებაზე
-   - უფრო მრავალფეროვანი თემები
-
-### ფაილი 2: `src/utils/roomNameGenerator.ts`
-
-განახლებული fallback სია იგივე თემატური სტრუქტურით
-
----
-
-## შედეგი
-
-**მანამდე:**
-- "გონებამახვილი" + 🍽️ (ჭურჭელი) ← არ შეესაბამება
+**ახლა:**
+- ვიდეო უსასრულოდ ბრუნავს (loop)
+- კამერის აიკონი ყოველთვის ჩანს
 
 **შემდეგ:**
-- "ერუდიტები" + 🧠 (ტვინი) ← შესაბამისი
-- "აინშტაინები" + 👨‍🔬 (აინშტაინი) ← შესაბამისი
-- "ბიბლიოთეკა" + 📚 (ბიბლიოთეკა) ← შესაბამისი
-- "ჩემპიონები" + 🏆 (თასი) ← შესაბამისი
-- "ბუები" + 🦉 (ბუ) ← შესაბამისი
+- ვიდეო მხოლოდ 1-ჯერ ითამაშებს
+- ვიდეოს დასრულების შემდეგ:
+  - კამერის აიკონი გამოჩნდება ანიმაციით (pulse/bounce)
+  - ეს მიუთითებს რომ მომხმარებელს შეუძლია ავატარის შეცვლა
 
 ---
 
 ## ფაილები რომლებშიც ცვლილებები იქნება
 
-1. **`supabase/functions/generate-room-name/index.ts`**
-   - `THEMED_ROOMS` მასივის დამატება (სახელები + აიკონები)
-   - `getRandomThemedRoom()` ფუნქციის შექმნა
-   - აიკონის არჩევა DB-დან თემის მიხედვით
-   - AI prompt-ის განახლება მრავლობითი რიცხვისთვის
+### 1. `src/components/home/GuestWelcomePanel.tsx`
 
-2. **`src/utils/roomNameGenerator.ts`**
-   - `TRIVIA_NAMES` სიის განახლება მრავალფეროვანი თემებით
-   - ყველა ერთსიტყვიანი სახელი მრავლობითში
+**ცვლილებები:**
+- ხაზი 145-149: შევცვლი login რეჟიმის ტექსტებს
+  - "მობრძანდი!" → "გამარჯობა!" (ორივე რეჟიმში ერთნაირი)
+  - Login-ზე ქვესათაური ცარიელი იქნება
+- დავამატებ `videoEnded` state ვიდეოს დასრულების ტრეკინგისთვის
+- `PingPongVideo` ნაცვლად გამოვიყენებ `<video>` ელემენტს `loop={false}` და `onEnded` ჰენდლერით
+- კამერის badge-ს დავამატებ pulse ანიმაციას ვიდეოს დასრულების შემდეგ
+
+### 2. `src/components/home/DesktopGuestSplitLayout.tsx`
+
+**ცვლილებები:**
+- ხაზი 148-153: იგივე ტექსტის ცვლილება (Login mode)
+- იგივე ვიდეო/კამერა ლოგიკა
+
+### 3. `src/components/shared/SinglePlayVideo.tsx` (ახალი კომპონენტი)
+
+**შექმნა:**
+- ახალი ვიდეო კომპონენტი რომელიც მხოლოდ 1-ჯერ ითამაშებს
+- `onEnded` callback ვიდეოს დასრულებისას
+- Reusable კომპონენტი სხვა ადგილებისთვისაც
+
+---
+
+## ტექნიკური დეტალები
+
+### ახალი State
+```typescript
+const [videoEnded, setVideoEnded] = useState(false);
+```
+
+### კამერის Badge ანიმაცია (ვიდეოს შემდეგ)
+```typescript
+<motion.div 
+  className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-20"
+  initial={videoEnded ? { scale: 0 } : { scale: 1 }}
+  animate={videoEnded ? { 
+    scale: [0, 1.3, 1],
+    opacity: [0, 1, 1]
+  } : {}}
+  transition={{ duration: 0.5, ease: "easeOut" }}
+>
+  <motion.div
+    animate={videoEnded ? { scale: [1, 1.2, 1] } : {}}
+    transition={{ duration: 1.5, repeat: 2, ease: "easeInOut" }}
+  >
+    <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+  </motion.div>
+</motion.div>
+```
+
+### ვიდეოს ელემენტი (loop-ის გარეშე)
+```typescript
+<video
+  src={guestWelcomeVideo}
+  muted
+  playsInline
+  autoPlay
+  onEnded={() => setVideoEnded(true)}
+  className="w-full h-full object-cover"
+  style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+/>
+```
+
+---
+
+## შედეგი
+
+**Login რეჟიმში:**
+- მარტივი მისალმება: "გამარჯობა!" (ქვესათაურის გარეშე)
+- ვიდეო 1-ჯერ ითამაშებს
+- ვიდეოს შემდეგ კამერის აიკონი "გამოხტება" ანიმაციით
+- მომხმარებელს ესმის რომ შეუძლია ავატარის შეცვლა
+
