@@ -1,125 +1,103 @@
 
-# Plan: Fix Friend Request Notifications System
 
-## Issues to Fix
+# Plan: Fix Mobile PRO Carousel Layout
 
-1. **Auto-select correct tab when opening notifications** - Panel should open to the tab containing the notification type the user clicked on
-2. **Show success feedback after accepting/declining friend requests** - Currently showing duplicate toasts, need to consolidate 
-3. **Sender sees new friend instantly without refresh** - Fix realtime subscription filter issue
+## Problems Identified
 
----
+1. **Benefits text is unreadable** - Using `grid-cols-3` layout which crams 4 benefits into 3 columns, causing text wrapping and overlap
+2. **Price position** - Currently on same row as title, should be below the title for mobile
+3. **Card cropping** - Content may be getting cut off due to layout constraints
+
+## Solution
+
+Change the mobile carousel card layout to:
+1. Stack title and price vertically (title on top, price below)
+2. Display all 4 benefits as a vertical list (not grid)
+3. Ensure proper spacing and prevent cropping
 
 ## Technical Changes
 
-### 1. Add Default Tab Support to NotificationsPanel
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-**File: `src/components/home/NotificationsPanel.tsx`**
+**1. Restructure Header Section (lines 108-130)**
 
-Add a `defaultTab` prop that allows parent components to specify which tab to show initially:
-
-```typescript
-interface NotificationsPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-  defaultTab?: 'games' | 'social' | 'trivia';
-}
-```
-
-Add logic to auto-detect the most relevant tab when none is specified:
-- If there are unread social notifications (friend requests), default to 'social'
-- Otherwise use 'games' as default
-
-Reset to the determined default tab when panel opens.
-
-### 2. Remove Duplicate Toast in useFriends
-
-**File: `src/hooks/useFriends.ts`**
-
-The `acceptFriendRequest` function shows its own toast ("მეგობარი დაემატა!"), but the `handleAcceptFriend` in NotificationsPanel also shows a toast. Remove the toast from `useFriends.ts` since the caller should control feedback:
+Change from horizontal `Icon > Title > Price` to:
+- Row 1: Icon + Title
+- Row 2: Price below title
 
 ```typescript
-// Line 341 - Remove this toast
-toast.success("მეგობარი დაემატა!");
+{/* Header - Icon + Title, Price below */}
+<div className="mb-3">
+  <div className="flex items-center gap-3 mb-1">
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" ...>
+      <TierIcon className="w-5 h-5 text-white" />
+    </div>
+    <h3 className="text-base font-bold text-white">{tier.nameKa}</h3>
+  </div>
+  
+  {/* Price below title */}
+  <div className="flex items-baseline gap-1 ml-[52px]">
+    <span className="text-xl font-black text-white">₾{tier.price}</span>
+    <span className="text-xs text-white/70">/თვე</span>
+  </div>
+</div>
 ```
 
-### 3. Fix Realtime Subscription for Sender Updates
+**2. Change Benefits to Vertical List (lines 132-143)**
 
-**File: `src/hooks/useFriends.ts`**
-
-The current subscription setup has a potential issue - the UPDATE event filter only matches `user_id=eq.${user.id}`, but we need to also catch when the friendship status is updated for rows where the user is either the sender OR recipient.
-
-Add subscription for UPDATE events on both sides:
+Replace the 3-column grid with a vertical stack:
 
 ```typescript
-// Also subscribe to updates where user is friend_id 
-// (for when recipient accepts/declines your request)
-.on(
-  "postgres_changes",
-  {
-    event: "UPDATE",
-    schema: "public",
-    table: "friendships",
-    filter: `friend_id=eq.${user.id}`,
-  },
-  () => fetchFriends()
-)
+{/* Benefits - Vertical list */}
+<ul className="space-y-1.5 mb-4">
+  {tier.benefits.map((benefit, i) => (
+    <li key={i} className="flex items-start gap-2 text-white/90">
+      <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0 mt-0.5" />
+      <span className="text-xs leading-tight">{benefit}</span>
+    </li>
+  ))}
+</ul>
 ```
 
-Wait - looking more carefully, line 174-183 already has a wildcard listener (`event: "*"`) for `friend_id=eq.${user.id}`. The issue is that:
-- User B sends to User A: `user_id=B, friend_id=A`
-- User A accepts: Updates that row
-- User B needs to get notified of the update
+**3. Adjust Video Width (line 186)**
 
-The wildcard `*` on `friend_id=eq.${user.id}` wouldn't catch this because User B is the `user_id`, not `friend_id`.
-
-**Fix**: Add explicit UPDATE listener for when user is the sender:
-
-Currently the UPDATE listener on `user_id=eq.${user.id}` (lines 148-172) DOES call `fetchFriends()`. But the filter might not be working due to RLS or channel issues.
-
-**Alternative approach**: Use a single broader subscription without filters, then handle all changes:
+Reduce video section width to give more space to content:
 
 ```typescript
-const channel = supabase
-  .channel(`friendships-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "friendships",
-    },
-    async (payload) => {
-      const row = (payload.new || payload.old) as any;
-      // Only process if user is involved
-      if (row?.user_id === user.id || row?.friend_id === user.id) {
-        // Handle notifications...
-        fetchFriends();
-      }
-    }
-  )
-  .subscribe();
+<div className="w-[120px] flex-shrink-0 relative overflow-hidden">
 ```
 
-### 4. Update HeaderActions and TeamV2 to Pass Default Tab
+## Visual Result
 
-**Files: `src/components/shared/HeaderActions.tsx`, `src/pages/TeamV2.tsx`**
+**Before:**
+```text
+┌─────────────────────────────────────────┐
+│ [Icon] Title         ₾19.99/თვე  │[Video]│
+│ ✓ benefit1  ✓ benefit2  ✓ benefit3      │
+│ ✓ benefit4                              │
+│ [Button]                                │
+└─────────────────────────────────────────┘
+```
 
-When opening the notifications panel, determine the most relevant tab based on unread notifications and pass it as `defaultTab`.
+**After:**
+```text
+┌─────────────────────────────────────────┐
+│ [Icon] Title                     │[Video]│
+│        ₾19.99/თვე                │       │
+│ ✓ 2x XP ბონუსი ყველა თამაშში     │       │
+│ ✓ ექსკლუზიური VIP ბეჯი           │       │
+│ ✓ რეკლამების გარეშე              │       │
+│ ✓ პრიორიტეტული მხარდაჭერა        │       │
+│ [Button]                         │       │
+└─────────────────────────────────────────┘
+```
 
----
+## Summary
 
-## Implementation Summary
+| Section | Change |
+|---------|--------|
+| Header | Stack title and price vertically instead of horizontally |
+| Price position | Move below title, aligned with title text |
+| Benefits | Change from 3-column grid to vertical list |
+| Video area | Reduce width from 160px to 120px for more content space |
 
-| File | Change |
-|------|--------|
-| `NotificationsPanel.tsx` | Add `defaultTab` prop, auto-detect best tab based on unread notifications |
-| `useFriends.ts` | Remove duplicate toast, simplify realtime subscription with unique channel IDs |
-| `HeaderActions.tsx` | Pass unread counts to determine default tab |
-| `TeamV2.tsx` | Same as above |
-
-## Result
-
-After these changes:
-- Opening notifications will auto-select the tab with unread items (e.g., Social tab for friend requests)
-- Accept/decline will show a single clear success message
-- Friend request sender will see the new friend appear immediately without page refresh
