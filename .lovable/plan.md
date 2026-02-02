@@ -1,101 +1,200 @@
 
-# Plan: Fix Inconsistent Avatar Display Across App
+
+# Plan: Generate Relevant Room Icons with Matching Room Names
 
 ## Problem Identified
 
-The same user's avatar shows correctly on some pages (MyTrivia, rooms) but broken (question mark fallback) on others (game results, leaderboard).
+Currently, the room creation flow generates:
+1. A creative **AI-generated room name** (e.g., "ტვინის გამოსაცდელი", "ცოდნის ასისი")  
+2. A completely **random icon** from the 9,000+ icon library
 
-**Root Cause:** Multiple components use the raw `AvatarImage` component directly with `src={p.avatar_url || undefined}` **without** using the `resolveAvatarUrl()` utility function that:
-- Handles expired/broken Supabase URLs
-- Resolves local asset paths (`/src/assets/...`)
-- Recovers broken Vite-hashed paths from old builds
+These two are **not connected** - the name might be "Brain Battle" but the icon could be a lollipop or shark fin hat. This creates a confusing and less engaging experience.
 
-The `SafeAvatar` and `SafeAvatarImage` components were created to solve this problem, but many older/other components still use the raw `Avatar/AvatarImage` pattern.
+## Solution: Two-Phase AI Generation
 
----
+Generate the name and icon **together** in a single AI call that produces both a thematic name AND a relevant icon search term. Then use that term to find a matching icon from the library.
 
-## Technical Solution
+### How It Works
 
-### Affected Files to Fix
-
-Based on my analysis, these components use raw `AvatarImage` and need to switch to `SafeAvatar`:
-
-| File | Current Pattern | Fix |
-|------|----------------|-----|
-| `GameResultsScreenV2.tsx` | `<AvatarImage src={p.avatar_url}/>` | Use `SafeAvatar` |
-| `LeaguePlayerRow.tsx` | `<AvatarImage src={entry.avatar_url}/>` | Use `SafeAvatar` |
-| `MultiplayerGameScreen.tsx` | Multiple `<AvatarImage>` usages | Use `SafeAvatar` |
-| `MultiplayerGameScreenV2.tsx` | `<AvatarImage>` in player row | Use `SafeAvatar` |
-| `MultiplayerObserverScreen.tsx` | `<AvatarImage>` in player list | Use `SafeAvatar` |
-| `AsyncResultScreen.tsx` | `<AvatarImage>` in results | Use `SafeAvatar` |
-| `AllRecentPlayersModal.tsx` | `<AvatarImage>` in player list | Use `SafeAvatar` |
-| `AllRecentRoomsModal.tsx` | `<AvatarImage>` in room cards | Use `SafeAvatar` |
-| `AddFriendModal.tsx` | `<AvatarImage>` in search results | Use `SafeAvatar` |
-| `GameInvitationsSection.tsx` | `<AvatarImage>` in invitation cards | Use `SafeAvatar` |
-| `PendingChallengesSection.tsx` | `<AvatarImage>` in challenge cards | Use `SafeAvatar` |
-| `QuickProfileModal.tsx` | `<AvatarImage>` in profile | Use `SafeAvatar` |
-| `CollectionLobby.tsx` | `<AvatarImage>` in creator avatar | Use `SafeAvatar` |
-| `SpotlightSearch.tsx` | `<AvatarImage>` in search results | Use `SafeAvatar` |
-| `RoomChatsPanel.tsx` | `<AvatarImage>` in chat list | Use `SafeAvatar` |
-
-### Implementation Pattern
-
-**Before (broken):**
-```typescript
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-<Avatar className="w-12 h-12">
-  <AvatarImage src={p.avatar_url || undefined} />
-  <AvatarFallback>
-    {p.nickname?.charAt(0)?.toUpperCase() || "?"}
-  </AvatarFallback>
-</Avatar>
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                    generate-room-name                        │
+├──────────────────────────────────────────────────────────────┤
+│  1. AI generates BOTH name + icon keyword together           │
+│     Prompt: "Create a room name AND a matching icon theme"   │
+│                                                              │
+│  2. Response example:                                        │
+│     { "name": "ტვინების ომი", "icon_keyword": "brain" }      │
+│                                                              │
+│  3. Search icon_library for icons matching that keyword      │
+│     SELECT * FROM icon_library                               │
+│     WHERE title ILIKE '%brain%' OR tags @> '["brain"]'       │
+│                                                              │
+│  4. Return matched name + icon pair                          │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**After (fixed):**
-```typescript
-import { SafeAvatar } from "@/components/shared/SafeAvatar";
+## Technical Changes
 
-<SafeAvatar 
-  avatarUrl={p.avatar_url}
-  fallback={p.nickname || "?"}
-  className="w-12 h-12"
-/>
-```
+### File: `supabase/functions/generate-room-name/index.ts`
 
-### Key Fix: GameResultsScreenV2.tsx (Lines 346-352)
-
-This is the component shown in your screenshot with the broken avatar:
+**1. Update AI Prompt to Generate Both Name + Icon Keyword**
 
 ```typescript
-// Remove: import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// Add: import { SafeAvatar } from "@/components/shared/SafeAvatar";
+const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის და შესაბამისი აიკონის საძიებო სიტყვა.
 
-// In the render (line 346-352):
-<div className="relative">
-  <SafeAvatar 
-    avatarUrl={p.avatar_url}
-    fallback={p.nickname || "?"}
-    className="w-12 h-12 border-2 border-white/30"
-  />
-  {idx === 0 && (
-    <Crown className="absolute -top-3 -right-1 w-5 h-5 text-amber-400 fill-amber-400" />
-  )}
-</div>
+მოთხოვნები სახელისთვის:
+- მაქსიმუმ 18 სიმბოლო
+- 1-2 სიტყვა მაქსიმუმ  
+- კრეატიული და სახალისო
+- მხოლოდ ქართული (IQ შეიძლება)
+
+აიკონის სიტყვა უნდა იყოს:
+- ინგლისურად, 1 სიტყვა
+- რომელიც შეესაბამება სახელის თემას
+- მაგალითად: brain, trophy, star, book, lightning, rocket, crown, wizard
+
+დააბრუნე JSON ფორმატში:
+{"name": "სახელი აქ", "icon_keyword": "keyword"}
+
+მაგალითები:
+{"name": "ტვინების ომი", "icon_keyword": "brain"}
+{"name": "IQ გენიუსები", "icon_keyword": "lightbulb"}
+{"name": "მეცნიერები", "icon_keyword": "scientist"}
+{"name": "ვარსკვლავები", "icon_keyword": "star"}`;
 ```
 
----
+**2. Parse JSON Response from AI**
+
+```typescript
+// Parse AI response as JSON
+let generatedName = getRandomFallbackName();
+let iconKeyword = null;
+
+try {
+  const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    const parsed = JSON.parse(jsonMatch[0]);
+    generatedName = validateAndCleanName(parsed.name || '');
+    iconKeyword = parsed.icon_keyword?.toLowerCase()?.trim() || null;
+  }
+} catch (e) {
+  console.error('Failed to parse AI JSON:', e);
+  // Fall back to treating response as plain name
+  generatedName = validateAndCleanName(rawResponse);
+}
+```
+
+**3. Search Icon Library by Keyword**
+
+```typescript
+// If we have a keyword, search for relevant icon
+let selectedIconUrl: string | null = null;
+
+if (iconKeyword) {
+  // Try to find icon matching the keyword in title or tags
+  const { data: matchingIcons, error } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url, title, tags')
+    .not('icon_url', 'is', null)
+    .or(`title.ilike.%${iconKeyword}%,tags.cs.{${iconKeyword}}`)
+    .limit(10);
+  
+  if (!error && matchingIcons && matchingIcons.length > 0) {
+    // Pick random from matches for variety
+    const randomMatch = matchingIcons[Math.floor(Math.random() * matchingIcons.length)];
+    selectedIconUrl = randomMatch.icon_url;
+    console.log(`Matched icon "${randomMatch.slug}" for keyword "${iconKeyword}"`);
+  }
+}
+
+// Fallback to random if no match found
+if (!selectedIconUrl) {
+  const { data: randomIcon } = await supabase
+    .from('icon_library')
+    .select('slug, icon_url')
+    .not('icon_url', 'is', null)
+    .order('random()')
+    .limit(1);
+  
+  if (randomIcon?.[0]) {
+    selectedIconUrl = randomIcon[0].icon_url;
+  }
+}
+```
+
+**4. Add Curated Keyword-to-Category Fallback Map**
+
+For common trivia themes, provide reliable icon mappings:
+
+```typescript
+const THEME_ICON_FALLBACKS: Record<string, string> = {
+  // Knowledge themes
+  'brain': 'brain',
+  'smart': 'brain', 
+  'genius': 'lightbulb',
+  'lightbulb': 'lightbulb',
+  'idea': 'lightbulb',
+  
+  // Competition themes
+  'battle': 'sword',
+  'war': 'shield',
+  'champion': 'trophy',
+  'trophy': 'trophy',
+  'winner': 'medal',
+  'crown': 'crown',
+  
+  // Knowledge themes
+  'book': 'book',
+  'science': 'flask',
+  'scientist': 'scientist',
+  'wizard': 'wizard-hat',
+  'magic': 'magic-wand',
+  
+  // Speed/energy themes  
+  'lightning': 'lightning',
+  'fast': 'rocket',
+  'rocket': 'rocket',
+  'star': 'star',
+};
+```
+
+## Visual Result
+
+**Before (disconnected):**
+```text
+┌─────────────────────────────────┐
+│ 🔴 (buzzer)  ტვინის გამოსაცდელი │  ← Random buzzer icon
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐
+│ 🔴 (buzzer)  ცოდნის ასისი       │  ← Same random icon
+└─────────────────────────────────┘
+```
+
+**After (thematically connected):**
+```text
+┌─────────────────────────────────┐
+│ 🧠 (brain)   ტვინის გამოსაცდელი │  ← Brain icon matches "brain test"
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐
+│ 📚 (books)   ცოდნის ასისი       │  ← Book/knowledge icon matches
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐
+│ ⚡ (lightning) IQ სპრინტი       │  ← Lightning for speed theme
+└─────────────────────────────────┘
+```
 
 ## Summary
 
-| Task | Files Changed |
-|------|---------------|
-| Replace raw `Avatar/AvatarImage` with `SafeAvatar` | ~15 files |
-| Remove unused Avatar imports | Same files |
-| Ensure consistent fallback styling | Applied via SafeAvatar props |
+| Component | Change |
+|-----------|--------|
+| AI Prompt | Request JSON with both `name` and `icon_keyword` |
+| Response Parser | Extract keyword from JSON response |
+| Icon Selection | Search library by keyword (title/tags match) |
+| Fallback | Curated keyword-to-slug map + random fallback |
 
-This will ensure all avatars across the app:
-1. Use `resolveAvatarUrl()` for URL resolution
-2. Handle broken/expired URLs gracefully  
-3. Show proper fallback (gradient + initial) when images fail
-4. Work consistently regardless of URL format (http, data:, local path, etc.)
+This creates a cohesive experience where room names and icons are **meaningfully connected**, making room creation more engaging and fun.
+
