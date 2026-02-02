@@ -475,7 +475,10 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                                     style={{ touchAction: 'manipulation' }}
                                   >
                                     {isLoading ? (
-                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        იგზავნება...
+                                      </>
                                     ) : !isFriend && isPendingOutgoing ? (
                                       <>
                                         <Clock className="w-4 h-4" />
