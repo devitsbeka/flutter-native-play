@@ -26,6 +26,262 @@ function stripGeorgianSuffixes(word: string): string {
   return word;
 }
 
+// Direct Latin transliterations to English meanings
+// This handles common Georgian words written in Latin script (e.g., "kata" for კატა)
+const LATIN_TRANSLITERATIONS: Record<string, string[]> = {
+  // Animals
+  'kata': ['cat', 'kitten', 'pet', 'feline'],
+  'katas': ['cat', 'kitten', 'pet', 'feline'],
+  'dzaghli': ['dog', 'puppy', 'pet', 'canine'],
+  'dzaghl': ['dog', 'puppy', 'pet', 'canine'],
+  'lomi': ['lion', 'cat', 'wild', 'king', 'predator'],
+  'datvi': ['bear', 'wild', 'forest', 'animal'],
+  'veshapi': ['whale', 'ocean', 'mammal', 'sea'],
+  'veshap': ['whale', 'ocean', 'mammal', 'sea'],
+  'zvigeni': ['shark', 'fish', 'ocean', 'predator', 'sea'],
+  'zvigen': ['shark', 'fish', 'ocean', 'predator', 'sea'],
+  'cxeni': ['horse', 'equine', 'riding', 'animal'],
+  'cxen': ['horse', 'equine', 'riding', 'animal'],
+  'tskheni': ['horse', 'equine', 'riding', 'animal'],
+  'spilo': ['elephant', 'animal', 'trunk', 'large'],
+  'gveli': ['snake', 'serpent', 'reptile'],
+  'mgeli': ['wolf', 'canine', 'wild', 'pack'],
+  'artsivi': ['eagle', 'bird', 'flying', 'predator'],
+  'tevzi': ['fish', 'aquatic', 'sea', 'water'],
+  'frinveli': ['bird', 'avian', 'flying', 'wing'],
+  'chiti': ['bird', 'sparrow', 'small'],
+  'kurdi': ['turtle', 'reptile', 'shell'],
+  'kurdgeli': ['rabbit', 'bunny', 'pet'],
+  'txa': ['goat', 'animal', 'farm'],
+  'ghori': ['pig', 'swine', 'farm', 'animal'],
+  'dzroxa': ['cow', 'cattle', 'farm', 'milk'],
+  'tsxvari': ['sheep', 'wool', 'farm'],
+  'virela': ['donkey', 'animal', 'farm'],
+  'iremi': ['deer', 'animal', 'forest', 'wild'],
+  'mekvle': ['fox', 'wild', 'animal'],
+  'melia': ['fox', 'wild', 'animal', 'forest'],
+  'delfini': ['dolphin', 'ocean', 'mammal', 'sea'],
+  'krazana': ['crocodile', 'reptile', 'predator'],
+  'tikani': ['goat', 'kid', 'baby'],
+  
+  // Food
+  'xinkali': ['dumpling', 'food', 'georgian', 'meat'],
+  'khinkali': ['dumpling', 'food', 'georgian', 'meat'],
+  'xachapuri': ['cheese', 'bread', 'food', 'georgian'],
+  'khachapuri': ['cheese', 'bread', 'food', 'georgian'],
+  'ghvino': ['wine', 'grape', 'drink', 'bottle'],
+  'puri': ['bread', 'bakery', 'food', 'loaf'],
+  'xorci': ['meat', 'beef', 'food', 'steak'],
+  'khorci': ['meat', 'beef', 'food', 'steak'],
+  'qatami': ['chicken', 'poultry', 'meat', 'bird'],
+  'tapli': ['honey', 'sweet', 'bee'],
+  'rdzе': ['milk', 'dairy', 'drink'],
+  'kveli': ['cheese', 'dairy', 'food'],
+  'xili': ['fruit', 'apple', 'food', 'fresh'],
+  'khili': ['fruit', 'apple', 'food', 'fresh'],
+  'vashli': ['apple', 'fruit', 'food'],
+  'msxali': ['pear', 'fruit', 'food'],
+  'yurdzeni': ['grape', 'fruit', 'wine'],
+  'bostneuli': ['vegetable', 'veggie', 'food'],
+  'sachmleli': ['food', 'meal', 'dish', 'cuisine'],
+  'qava': ['coffee', 'drink', 'cafe', 'cup'],
+  'chai': ['tea', 'drink', 'cup', 'hot'],
+  'tsqali': ['water', 'drink', 'liquid'],
+  'ludi': ['beer', 'drink', 'alcohol'],
+  'torti': ['cake', 'dessert', 'birthday', 'sweet'],
+  
+  // Nature
+  'mta': ['mountain', 'peak', 'summit', 'hill'],
+  'mdinare': ['river', 'water', 'stream', 'flow'],
+  'zghva': ['sea', 'ocean', 'water', 'wave'],
+  'tba': ['lake', 'water', 'pond'],
+  'tye': ['forest', 'tree', 'woods', 'green'],
+  'tke': ['forest', 'tree', 'woods', 'green'],
+  'xe': ['tree', 'plant', 'wood', 'forest'],
+  'yvavili': ['flower', 'bloom', 'plant', 'nature'],
+  'mze': ['sun', 'solar', 'light', 'sky'],
+  'mtvare': ['moon', 'lunar', 'night', 'sky'],
+  'varskvlavi': ['star', 'stellar', 'night', 'sky'],
+  'ca': ['sky', 'heaven', 'blue', 'cloud'],
+  'ghrubbeli': ['cloud', 'sky', 'weather'],
+  'wvima': ['rain', 'water', 'weather'],
+  'tovli': ['snow', 'winter', 'cold', 'white'],
+  
+  // Geography
+  'qalaqi': ['city', 'town', 'urban', 'skyline'],
+  'saqartvelo': ['georgia', 'country', 'flag', 'map'],
+  'tbilisi': ['tbilisi', 'city', 'capital', 'georgia'],
+  'batumi': ['batumi', 'city', 'sea', 'beach'],
+  'qveyana': ['country', 'nation', 'flag', 'map'],
+  'kontinenti': ['continent', 'world', 'globe'],
+  
+  // People/Professions
+  'mtscrali': ['writer', 'author', 'pen', 'book'],
+  'poeti': ['poet', 'poetry', 'verse', 'quill'],
+  'mxatvari': ['artist', 'painter', 'brush', 'art'],
+  'metsntieri': ['scientist', 'research', 'lab'],
+  'msakhiobi': ['actor', 'theater', 'stage', 'mask'],
+  'momgherali': ['singer', 'music', 'microphone'],
+  'musikosi': ['musician', 'music', 'instrument'],
+  'mefe': ['king', 'crown', 'royal', 'throne'],
+  'dedopali': ['queen', 'crown', 'royal', 'throne'],
+  'eqimi': ['doctor', 'medical', 'health', 'hospital'],
+  'maswavlebeli': ['teacher', 'school', 'education'],
+  
+  // Sports
+  'sporti': ['sport', 'athletics', 'game', 'ball'],
+  'fexburti': ['football', 'soccer', 'ball', 'goal'],
+  'kalatburti': ['basketball', 'ball', 'hoop'],
+  'chidaoba': ['wrestling', 'sport', 'fight'],
+  'chogburti': ['tennis', 'ball', 'racket'],
+  
+  // Technology
+  'kompiuteri': ['computer', 'laptop', 'tech', 'screen'],
+  'telefoni': ['phone', 'mobile', 'smartphone'],
+  'interneti': ['internet', 'web', 'online', 'wifi'],
+  'kamera': ['camera', 'photo', 'photography'],
+  
+  // Transport
+  'manqana': ['car', 'vehicle', 'automobile', 'drive'],
+  'tvitmprinavi': ['airplane', 'plane', 'flight', 'travel'],
+  'gemi': ['ship', 'boat', 'vessel', 'sea'],
+  'matarebeli': ['train', 'railway', 'transport'],
+  'velosipedi': ['bicycle', 'bike', 'cycling'],
+  'avtobusi': ['bus', 'transport', 'vehicle'],
+  
+  // Music
+  'musika': ['music', 'song', 'melody', 'note'],
+  'simghera': ['song', 'music', 'singing'],
+  'gitara': ['guitar', 'music', 'instrument'],
+  'pianino': ['piano', 'keyboard', 'music'],
+  
+  // Household
+  'tsigni': ['book', 'reading', 'literature'],
+  'wigni': ['book', 'reading', 'literature'],
+  'magida': ['table', 'desk', 'furniture'],
+  'skami': ['chair', 'seat', 'furniture'],
+  'saxli': ['house', 'home', 'building'],
+  'eklesia': ['church', 'cathedral', 'religion'],
+  'cixe': ['fortress', 'castle', 'tower'],
+  
+  // Family
+  'ojaxi': ['family', 'home', 'household'],
+  'deda': ['mother', 'mom', 'parent'],
+  'mama': ['father', 'dad', 'parent'],
+  'bavshvi': ['child', 'kid', 'baby'],
+  'dzma': ['brother', 'sibling', 'family'],
+  'da': ['sister', 'sibling', 'family'],
+  'bebia': ['grandmother', 'grandma', 'family'],
+  'babua': ['grandfather', 'grandpa', 'family'],
+  
+  // Weather (additional entries - wvima and tovli already defined above)
+  'amindi': ['weather', 'climate', 'forecast'],
+  'qari': ['wind', 'windy', 'breeze'],
+  
+  // Colors
+  'tsiteli': ['red', 'color', 'crimson'],
+  'lurji': ['blue', 'color', 'azure'],
+  'mtsvane': ['green', 'color', 'nature'],
+  'yviteli': ['yellow', 'color', 'gold'],
+  'shavi': ['black', 'color', 'dark'],
+  'tetri': ['white', 'color', 'light'],
+  
+  // Abstract/Common
+  'siyvaruli': ['love', 'heart', 'romance'],
+  'sicocxle': ['life', 'living', 'alive'],
+  'bedniеreba': ['happiness', 'joy', 'smile'],
+  'tamashi': ['game', 'play', 'gaming'],
+  'swavla': ['study', 'learn', 'education'],
+  'mushaoba': ['work', 'job', 'office'],
+  'mogzauroba': ['travel', 'trip', 'journey'],
+};
+
+// Phonetic variants for Latin-to-Georgian conversion
+// These map ambiguous Latin letters to all possible Georgian equivalents
+const LATIN_PHONETIC_AMBIGUITY: Record<string, string[]> = {
+  't': ['თ', 'ტ'],  // t can be თ (soft t) or ტ (hard t)
+  'k': ['კ', 'ქ'],  // k can be კ (hard k) or ქ (soft k)
+  'p': ['პ', 'ფ'],  // p can be პ (hard p) or ფ (soft p/f)
+  'c': ['ც', 'ჩ', 'კ'],  // c can be ც, ჩ, or even კ
+  'g': ['გ', 'ღ'],  // g can be გ or ღ (guttural)
+};
+
+// Generate all phonetic variants for Latin input -> Georgian possibilities
+function generatePhoneticVariants(latinInput: string): string[] {
+  const LATIN_TO_GEORGIAN_BASE: Record<string, string> = {
+    'a': 'ა', 'b': 'ბ', 'g': 'გ', 'd': 'დ', 'e': 'ე',
+    'v': 'ვ', 'z': 'ზ', 'i': 'ი', 'l': 'ლ', 'm': 'მ',
+    'n': 'ნ', 'o': 'ო', 'r': 'რ', 's': 'ს', 'u': 'უ',
+    'j': 'ჯ', 'h': 'ჰ', 'w': 'წ', 'x': 'ხ', 'q': 'ყ', 'f': 'ფ'
+  };
+  
+  // Start with the base conversion
+  const variants: string[] = [];
+  
+  // Helper to recursively generate all combinations
+  function generateCombinations(remaining: string, current: string): void {
+    if (remaining.length === 0) {
+      if (current.length > 0) {
+        variants.push(current);
+      }
+      return;
+    }
+    
+    // Check for digraphs first
+    const twoChar = remaining.substring(0, 2).toLowerCase();
+    if (twoChar === 'sh') { 
+      generateCombinations(remaining.slice(2), current + 'შ'); 
+      return;
+    }
+    if (twoChar === 'ch') { 
+      generateCombinations(remaining.slice(2), current + 'ჩ'); 
+      generateCombinations(remaining.slice(2), current + 'ჭ'); // aspirated ch
+      return;
+    }
+    if (twoChar === 'ts') { 
+      generateCombinations(remaining.slice(2), current + 'ც'); 
+      generateCombinations(remaining.slice(2), current + 'წ'); // aspirated ts
+      return;
+    }
+    if (twoChar === 'dz') { 
+      generateCombinations(remaining.slice(2), current + 'ძ'); 
+      return;
+    }
+    if (twoChar === 'kh') { 
+      generateCombinations(remaining.slice(2), current + 'ხ'); 
+      return;
+    }
+    if (twoChar === 'gh') { 
+      generateCombinations(remaining.slice(2), current + 'ღ'); 
+      return;
+    }
+    if (twoChar === 'zh') { 
+      generateCombinations(remaining.slice(2), current + 'ჟ'); 
+      return;
+    }
+    
+    const char = remaining[0].toLowerCase();
+    const rest = remaining.slice(1);
+    
+    // Check if this letter has ambiguous mappings
+    if (LATIN_PHONETIC_AMBIGUITY[char]) {
+      // Generate variant for each possible Georgian letter
+      for (const geoChar of LATIN_PHONETIC_AMBIGUITY[char]) {
+        generateCombinations(rest, current + geoChar);
+      }
+    } else {
+      // Use base mapping or keep original
+      const geoChar = LATIN_TO_GEORGIAN_BASE[char] || char;
+      generateCombinations(rest, current + geoChar);
+    }
+  }
+  
+  generateCombinations(latinInput.toLowerCase(), '');
+  
+  // Limit variants to avoid explosion (max 16 combinations)
+  return [...new Set(variants)].slice(0, 16);
+}
+
 // Generate phonetic variants (k->c, etc.)
 function getPhoneticVariants(transliterated: string): string[] {
   const variants = [transliterated];
@@ -583,8 +839,32 @@ serve(async (req) => {
       }
     } else {
       // For non-Georgian (English/Latin) queries, add synonyms and Georgian equivalents for better results
-      const queryLower = query.toLowerCase();
+      const queryLower = query.toLowerCase().trim();
       searchTerms.add(queryLower);
+      
+      // PRIORITY 1: Check direct Latin transliterations FIRST
+      // This handles cases like "kata" -> cat, "dzaghli" -> dog
+      const directTranslation = LATIN_TRANSLITERATIONS[queryLower];
+      if (directTranslation) {
+        console.log(`Direct Latin match: "${queryLower}" -> ${directTranslation.join(', ')}`);
+        directTranslation.forEach(t => searchTerms.add(t));
+      }
+      
+      // Also check partial matches in LATIN_TRANSLITERATIONS for typo tolerance
+      for (const [latinWord, translations] of Object.entries(LATIN_TRANSLITERATIONS)) {
+        if (queryLower.length >= 3 && latinWord.length >= 3) {
+          // Check if query starts with or is contained in the latin word
+          if (latinWord.startsWith(queryLower) || queryLower.startsWith(latinWord)) {
+            console.log(`Latin partial match: "${queryLower}" ~ "${latinWord}" -> ${translations.join(', ')}`);
+            translations.forEach(t => searchTerms.add(t));
+          }
+          // Fuzzy match for typos (Levenshtein distance <= 1 for short words)
+          if (isSimilar(queryLower, latinWord, 1)) {
+            console.log(`Latin fuzzy match: "${queryLower}" ~ "${latinWord}" -> ${translations.join(', ')}`);
+            translations.forEach(t => searchTerms.add(t));
+          }
+        }
+      }
       
       // Add English synonyms
       const synonyms = ENGLISH_SYNONYMS[queryLower];
@@ -604,9 +884,33 @@ serve(async (req) => {
         });
       }
       
-      // NEW: Reverse transliteration - convert Latin input to Georgian and lookup semantic meanings
-      // This handles cases like "zvigeni" -> "ზვიგენი" -> ["shark", "fish"]
-      const LATIN_TO_GEORGIAN: Record<string, string> = {
+      // PRIORITY 2: Generate phonetic variants and check Georgian dictionary
+      // This handles ambiguous Latin -> Georgian mappings (t -> თ/ტ, k -> კ/ქ)
+      const phoneticVariants = generatePhoneticVariants(queryLower);
+      console.log(`Phonetic variants for "${queryLower}":`, phoneticVariants);
+      
+      // Look up each variant in GEORGIAN_TO_ENGLISH
+      for (const variant of phoneticVariants) {
+        for (const [geoWord, translations] of Object.entries(GEORGIAN_TO_ENGLISH)) {
+          // Check exact match
+          if (variant === geoWord) {
+            console.log(`Phonetic exact match: variant "${variant}" = "${geoWord}" -> ${translations.join(', ')}`);
+            translations.forEach(t => searchTerms.add(t));
+          }
+          // Check with suffix stripped
+          const variantStripped = variant.replace(/ი$/, '');
+          const geoWordStripped = geoWord.replace(/ი$/, '');
+          if (variantStripped.length >= 3 && geoWordStripped.length >= 3) {
+            if (variantStripped === geoWordStripped) {
+              console.log(`Phonetic stripped match: "${variantStripped}" = "${geoWordStripped}" -> ${translations.join(', ')}`);
+              translations.forEach(t => searchTerms.add(t));
+            }
+          }
+        }
+      }
+      
+      // FALLBACK: Simple Latin to Georgian transliteration (single mapping)
+      const LATIN_TO_GEORGIAN_SIMPLE: Record<string, string> = {
         'a': 'ა', 'b': 'ბ', 'g': 'გ', 'd': 'დ', 'e': 'ე',
         'v': 'ვ', 'z': 'ზ', 't': 'თ', 'i': 'ი', 'k': 'კ',
         'l': 'ლ', 'm': 'მ', 'n': 'ნ', 'o': 'ო', 'p': 'პ',
@@ -614,12 +918,11 @@ serve(async (req) => {
         'j': 'ჯ', 'h': 'ჰ', 'c': 'ც', 'w': 'წ', 'x': 'ხ'
       };
       
-      // Transliterate Latin to Georgian
+      // Transliterate Latin to Georgian (simple version)
       const transliterateLatinToGeorgian = (text: string): string => {
         let result = '';
         let i = 0;
         while (i < text.length) {
-          // Handle common digraphs
           const twoChar = text.substring(i, i + 2).toLowerCase();
           if (twoChar === 'sh') { result += 'შ'; i += 2; continue; }
           if (twoChar === 'ch') { result += 'ჩ'; i += 2; continue; }
@@ -630,7 +933,7 @@ serve(async (req) => {
           if (twoChar === 'zh') { result += 'ჟ'; i += 2; continue; }
           
           const char = text[i].toLowerCase();
-          result += LATIN_TO_GEORGIAN[char] || char;
+          result += LATIN_TO_GEORGIAN_SIMPLE[char] || char;
           i++;
         }
         return result;
@@ -638,11 +941,10 @@ serve(async (req) => {
       
       // Try converting Latin query to Georgian and look up in GEORGIAN_TO_ENGLISH
       const potentialGeorgian = transliterateLatinToGeorgian(queryLower);
-      console.log(`Latin "${queryLower}" -> Georgian "${potentialGeorgian}"`);
+      console.log(`Latin "${queryLower}" -> Georgian (simple) "${potentialGeorgian}"`);
       
       // Look for exact or partial matches in Georgian dictionary
       for (const [geoWord, translations] of Object.entries(GEORGIAN_TO_ENGLISH)) {
-        // Check if the converted Georgian matches or is contained in dictionary words
         if (potentialGeorgian === geoWord || 
             potentialGeorgian.includes(geoWord) || 
             geoWord.includes(potentialGeorgian)) {
@@ -650,7 +952,6 @@ serve(async (req) => {
           console.log(`Found Georgian match: "${geoWord}" -> ${translations.join(', ')}`);
         }
         
-        // Also check with common suffix variations stripped (ი ending)
         const potentialWithoutSuffix = potentialGeorgian.replace(/ი$/, '');
         const geoWordWithoutSuffix = geoWord.replace(/ი$/, '');
         if (potentialWithoutSuffix.length >= 3 && geoWordWithoutSuffix.length >= 3) {
