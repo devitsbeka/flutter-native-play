@@ -1,200 +1,93 @@
 
 
-# Plan: Generate Relevant Room Icons with Matching Room Names
+# Plan: Fix Invite Button Visibility and Avatar Jump Issues
 
-## Problem Identified
+## Issues Identified from Screenshots
 
-Currently, the room creation flow generates:
-1. A creative **AI-generated room name** (e.g., "ტვინის გამოსაცდელი", "ცოდნის ასისი")  
-2. A completely **random icon** from the 9,000+ icon library
+1. **"მოიწვიე" button barely visible** - Current styling uses `bg-primary/20` which is too transparent against the background
+2. **Avatar jumps/decreases on button click** - The `whileTap={{ scale: 0.95 }}` animation affects the layout, causing avatar to appear smaller
+3. **Delete (X) button on avatar should be removed** - User explicitly requested to remove delete buttons from invited player avatars
 
-These two are **not connected** - the name might be "Brain Battle" but the icon could be a lollipop or shark fin hat. This creates a confusing and less engaging experience.
-
-## Solution: Two-Phase AI Generation
-
-Generate the name and icon **together** in a single AI call that produces both a thematic name AND a relevant icon search term. Then use that term to find a matching icon from the library.
-
-### How It Works
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│                    generate-room-name                        │
-├──────────────────────────────────────────────────────────────┤
-│  1. AI generates BOTH name + icon keyword together           │
-│     Prompt: "Create a room name AND a matching icon theme"   │
-│                                                              │
-│  2. Response example:                                        │
-│     { "name": "ტვინების ომი", "icon_keyword": "brain" }      │
-│                                                              │
-│  3. Search icon_library for icons matching that keyword      │
-│     SELECT * FROM icon_library                               │
-│     WHERE title ILIKE '%brain%' OR tags @> '["brain"]'       │
-│                                                              │
-│  4. Return matched name + icon pair                          │
-└──────────────────────────────────────────────────────────────┘
-```
+---
 
 ## Technical Changes
 
-### File: `supabase/functions/generate-room-name/index.ts`
+### File: `src/components/team/RoomScoreboard.tsx`
 
-**1. Update AI Prompt to Generate Both Name + Icon Keyword**
+**1. Make "მოიწვიე" button more visible**
 
-```typescript
-const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის და შესაბამისი აიკონის საძიებო სიტყვა.
-
-მოთხოვნები სახელისთვის:
-- მაქსიმუმ 18 სიმბოლო
-- 1-2 სიტყვა მაქსიმუმ  
-- კრეატიული და სახალისო
-- მხოლოდ ქართული (IQ შეიძლება)
-
-აიკონის სიტყვა უნდა იყოს:
-- ინგლისურად, 1 სიტყვა
-- რომელიც შეესაბამება სახელის თემას
-- მაგალითად: brain, trophy, star, book, lightning, rocket, crown, wizard
-
-დააბრუნე JSON ფორმატში:
-{"name": "სახელი აქ", "icon_keyword": "keyword"}
-
-მაგალითები:
-{"name": "ტვინების ომი", "icon_keyword": "brain"}
-{"name": "IQ გენიუსები", "icon_keyword": "lightbulb"}
-{"name": "მეცნიერები", "icon_keyword": "scientist"}
-{"name": "ვარსკვლავები", "icon_keyword": "star"}`;
-```
-
-**2. Parse JSON Response from AI**
+Replace the faint transparent button with a solid, clearly visible green button:
 
 ```typescript
-// Parse AI response as JSON
-let generatedName = getRandomFallbackName();
-let iconKeyword = null;
+// Before (barely visible)
+className="mt-2 px-3 py-1 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center gap-1.5 text-xs text-primary"
 
-try {
-  const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    const parsed = JSON.parse(jsonMatch[0]);
-    generatedName = validateAndCleanName(parsed.name || '');
-    iconKeyword = parsed.icon_keyword?.toLowerCase()?.trim() || null;
-  }
-} catch (e) {
-  console.error('Failed to parse AI JSON:', e);
-  // Fall back to treating response as plain name
-  generatedName = validateAndCleanName(rawResponse);
-}
+// After (clearly visible green button)  
+className="mt-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
 ```
 
-**3. Search Icon Library by Keyword**
+**2. Fix avatar jump on button click**
+
+Remove `whileTap={{ scale: 0.95 }}` from the invite button or change it to only affect the button itself, not the parent container. Also wrap the button in a fixed-height container to prevent layout shift:
 
 ```typescript
-// If we have a keyword, search for relevant icon
-let selectedIconUrl: string | null = null;
-
-if (iconKeyword) {
-  // Try to find icon matching the keyword in title or tags
-  const { data: matchingIcons, error } = await supabase
-    .from('icon_library')
-    .select('slug, icon_url, title, tags')
-    .not('icon_url', 'is', null)
-    .or(`title.ilike.%${iconKeyword}%,tags.cs.{${iconKeyword}}`)
-    .limit(10);
-  
-  if (!error && matchingIcons && matchingIcons.length > 0) {
-    // Pick random from matches for variety
-    const randomMatch = matchingIcons[Math.floor(Math.random() * matchingIcons.length)];
-    selectedIconUrl = randomMatch.icon_url;
-    console.log(`Matched icon "${randomMatch.slug}" for keyword "${iconKeyword}"`);
-  }
-}
-
-// Fallback to random if no match found
-if (!selectedIconUrl) {
-  const { data: randomIcon } = await supabase
-    .from('icon_library')
-    .select('slug, icon_url')
-    .not('icon_url', 'is', null)
-    .order('random()')
-    .limit(1);
-  
-  if (randomIcon?.[0]) {
-    selectedIconUrl = randomIcon[0].icon_url;
-  }
-}
+// Wrap button in stable container with fixed min-height
+<div className="min-h-[40px] flex flex-col items-center justify-center">
+  <motion.button
+    onClick={...}
+    className="..."
+    whileTap={{ scale: 0.95 }}  // Keep but ensure it doesn't affect parent
+  >
+    ...
+  </motion.button>
+</div>
 ```
 
-**4. Add Curated Keyword-to-Category Fallback Map**
+**3. Remove delete (X) button from avatar**
 
-For common trivia themes, provide reliable icon mappings:
+Remove the entire delete button block that appears on invited player avatars:
 
 ```typescript
-const THEME_ICON_FALLBACKS: Record<string, string> = {
-  // Knowledge themes
-  'brain': 'brain',
-  'smart': 'brain', 
-  'genius': 'lightbulb',
-  'lightbulb': 'lightbulb',
-  'idea': 'lightbulb',
-  
-  // Competition themes
-  'battle': 'sword',
-  'war': 'shield',
-  'champion': 'trophy',
-  'trophy': 'trophy',
-  'winner': 'medal',
-  'crown': 'crown',
-  
-  // Knowledge themes
-  'book': 'book',
-  'science': 'flask',
-  'scientist': 'scientist',
-  'wizard': 'wizard-hat',
-  'magic': 'magic-wand',
-  
-  // Speed/energy themes  
-  'lightning': 'lightning',
-  'fast': 'rocket',
-  'rocket': 'rocket',
-  'star': 'star',
-};
+// REMOVE this block (lines 115-127 and 219-231):
+{isHost && isInvited && (
+  <motion.button
+    onClick={(e) => {...}}
+    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500..."
+  >
+    <X className="w-3 h-3 text-white" />
+  </motion.button>
+)}
 ```
+
+Also remove delete button from the multi-player list view (lines 370-379).
+
+---
+
+## Changes Summary
+
+| Issue | Location | Fix |
+|-------|----------|-----|
+| Button barely visible | Lines 160, 264 | Change to solid green gradient button with shadow |
+| Avatar jumps on click | Lines 155-165, 259-269 | Add stable container wrapper with min-height |
+| Delete X on avatar | Lines 115-127, 219-231, 370-379 | Remove the delete button blocks entirely |
 
 ## Visual Result
 
-**Before (disconnected):**
-```text
-┌─────────────────────────────────┐
-│ 🔴 (buzzer)  ტვინის გამოსაცდელი │  ← Random buzzer icon
-└─────────────────────────────────┘
-
-┌─────────────────────────────────┐
-│ 🔴 (buzzer)  ცოდნის ასისი       │  ← Same random icon
-└─────────────────────────────────┘
+**Before:**
+```
+┌─────────────────────┐
+│  👤 (with X button) │
+│  "მოწვეული..."      │
+│  [faint button]     │  ← Hard to see
+└─────────────────────┘
 ```
 
-**After (thematically connected):**
-```text
-┌─────────────────────────────────┐
-│ 🧠 (brain)   ტვინის გამოსაცდელი │  ← Brain icon matches "brain test"
-└─────────────────────────────────┘
-
-┌─────────────────────────────────┐
-│ 📚 (books)   ცოდნის ასისი       │  ← Book/knowledge icon matches
-└─────────────────────────────────┘
-
-┌─────────────────────────────────┐
-│ ⚡ (lightning) IQ სპრინტი       │  ← Lightning for speed theme
-└─────────────────────────────────┘
+**After:**
 ```
-
-## Summary
-
-| Component | Change |
-|-----------|--------|
-| AI Prompt | Request JSON with both `name` and `icon_keyword` |
-| Response Parser | Extract keyword from JSON response |
-| Icon Selection | Search library by keyword (title/tags match) |
-| Fallback | Curated keyword-to-slug map + random fallback |
-
-This creates a cohesive experience where room names and icons are **meaningfully connected**, making room creation more engaging and fun.
+┌─────────────────────┐
+│  👤 (no X button)   │
+│  "მოწვეული..."      │
+│  [🟢 მოიწვიე]       │  ← Clear green button
+└─────────────────────┘
+```
 
