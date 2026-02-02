@@ -512,6 +512,7 @@ export default function Index() {
                 onMissionsClick={() => setShowMissionsModal(true)}
                 onChestClick={() => setIsChestModalOpen(true)}
                 onPowersClick={() => setShowMyPowersModal(true)}
+                onAdFreeClick={() => setIsAdFreeModalOpen(true)}
                 vertical
               />
             </motion.div>
