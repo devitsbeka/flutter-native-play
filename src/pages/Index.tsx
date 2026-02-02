@@ -721,6 +721,8 @@ export default function Index() {
                         xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                         hideStats={!user}
                         showAvatarPrompt={!!user && !profile?.animated_avatar_url}
+                        showMascotReminder={!!user && !profile?.avatar_url}
+                        userId={user?.id}
                       />
                     </div>
                   </motion.div>
@@ -808,6 +810,8 @@ export default function Index() {
                       xpCurrent={levelInfo.xpInCurrentLevel}
                       xpTotal={levelInfo.xpNeededForNextLevel}
                       showAvatarPrompt={!!user && !profile?.animated_avatar_url}
+                      showMascotReminder={!!user && !profile?.avatar_url}
+                      userId={user?.id}
                     />
                   </div>
                 </motion.div>
@@ -1079,6 +1083,8 @@ export default function Index() {
                       xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                       hideStats={!user}
                       showAvatarPrompt={!!user && !profile?.animated_avatar_url}
+                      showMascotReminder={!!user && !profile?.avatar_url}
+                      userId={user?.id}
                     />
                   </div>
                 </motion.div>
