@@ -325,19 +325,20 @@ function CollectionCard({
               {/* Collection Info */}
               <div className="p-4 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
-                    {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-lg">👤</span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground text-sm">{profile?.nickname || 'შენ'}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatGeorgianTimeAgo(new Date(collection.created_at))}
-                    </p>
-                  </div>
+                  {/* Add Round Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const nextRoundNumber = (quizzes?.length || roundsCount) + 1;
+                      onAddRound(collection.id, nextRoundNumber);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                               bg-muted/30 hover:bg-muted/50 transition-colors 
+                               flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm font-medium">დაამატე რაუნდი</span>
+                  </button>
                   {/* Visibility badge */}
                   <div className="bg-muted rounded-full h-8 px-3 text-xs text-muted-foreground flex items-center gap-1.5">
                     {collection.is_public ? (
@@ -493,20 +494,19 @@ function CollectionCard({
         {/* Info Row */}
         <div className="p-4">
           <div className="flex items-center gap-3">
-            {/* Simple Avatar without frame effects */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary flex items-center justify-center border-2 border-border flex-shrink-0">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-lg">👤</span>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground text-sm">{profile?.nickname || 'შენ'}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatGeorgianTimeAgo(new Date(collection.created_at))}
-              </p>
-            </div>
+            {/* Add Round Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddRound(collection.id, roundsCount + 1);
+              }}
+              className="flex-1 py-2.5 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                         bg-muted/30 hover:bg-muted/50 transition-colors 
+                         flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">დაამატე რაუნდი</span>
+            </button>
             {/* Expand/Collapse icon */}
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               {isExpanded ? (
