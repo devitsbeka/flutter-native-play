@@ -263,23 +263,23 @@ export function AddRoundToCollectionModal({
             className="space-y-5"
           >
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-                <Sparkles className="w-8 h-8 text-primary" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/20 mb-4">
+                <Sparkles className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-1">რაუნდი {roundNumber} ✨</h3>
-              <p className="text-sm text-muted-foreground">რა თემაზე გსურს კითხვები?</p>
+              <h3 className="text-xl font-bold text-white mb-1">რაუნდი {roundNumber} ✨</h3>
+              <p className="text-sm text-purple-200">რა თემაზე გსურს კითხვები?</p>
             </div>
 
             {/* Topic suggestions with refresh */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">💡 იდეები:</span>
+                <span className="text-xs text-purple-200">💡 იდეები:</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={fetchTopicSuggestions}
                   disabled={isLoadingTopics}
-                  className="h-6 px-2 text-xs hover:bg-muted"
+                  className="h-6 px-2 text-xs text-purple-200 hover:text-white hover:bg-white/10"
                 >
                   <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingTopics ? 'animate-spin' : ''}`} />
                   სხვა
@@ -289,9 +289,9 @@ export function AddRoundToCollectionModal({
               <div className="grid grid-cols-3 gap-2">
                 {isLoadingTopics ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="p-3 rounded-xl border-2 border-border">
-                      <div className="w-8 h-8 mx-auto mb-1 bg-muted/50 rounded-full animate-pulse" />
-                      <div className="w-12 h-3 mx-auto bg-muted/50 rounded animate-pulse" />
+                    <div key={i} className="p-3 rounded-xl border-2 border-white/20">
+                      <div className="w-8 h-8 mx-auto mb-1 bg-white/20 rounded-full animate-pulse" />
+                      <div className="w-12 h-3 mx-auto bg-white/20 rounded animate-pulse" />
                     </div>
                   ))
                 ) : (
@@ -301,16 +301,16 @@ export function AddRoundToCollectionModal({
                       onClick={() => setSubject(topic.value)}
                       className={`p-3 rounded-xl border-2 transition-all text-center ${
                         subject === topic.value
-                          ? "border-primary bg-primary/10 scale-105"
-                          : "border-border hover:border-primary/50 hover:bg-muted/50"
+                          ? "border-white bg-white/20 scale-105"
+                          : "border-white/20 hover:border-white/50 hover:bg-white/10"
                       }`}
                     >
                       {topic.icon_url ? (
                         <img src={topic.icon_url} alt={topic.label} className="w-8 h-8 mx-auto mb-1 object-contain" />
                       ) : (
-                        <div className="w-8 h-8 mx-auto mb-1 bg-muted/50 rounded-full" />
+                        <div className="w-8 h-8 mx-auto mb-1 bg-white/20 rounded-full" />
                       )}
-                      <span className="text-xs font-medium text-foreground">{topic.label}</span>
+                      <span className="text-xs font-medium text-white">{topic.label}</span>
                     </button>
                   ))
                 )}
@@ -319,10 +319,10 @@ export function AddRoundToCollectionModal({
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
+                <div className="w-full border-t border-white/20" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-background px-3 text-xs text-muted-foreground">ან ჩაწერე</span>
+                <span className="bg-transparent px-3 text-xs text-purple-200">ან ჩაწერე</span>
               </div>
             </div>
 
@@ -330,7 +330,7 @@ export function AddRoundToCollectionModal({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="მაგ: Friends TV Show, NBA, K-Pop..."
-              className="text-center text-lg h-14 rounded-xl"
+              className="text-center text-lg h-14 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-purple-300"
             />
 
             <ChunkyButton
@@ -353,8 +353,8 @@ export function AddRoundToCollectionModal({
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-foreground mb-1">რამდენი კითხვა? 🤔</h3>
-              <p className="text-sm text-muted-foreground">აირჩიე რაოდენობა</p>
+              <h3 className="text-xl font-bold text-white mb-1">რამდენი კითხვა? 🤔</h3>
+              <p className="text-sm text-purple-200">აირჩიე რაოდენობა</p>
             </div>
 
             <div className="flex justify-center gap-3">
@@ -366,8 +366,8 @@ export function AddRoundToCollectionModal({
                   onClick={() => setQuestionCount(count)}
                   className={`w-16 h-16 rounded-2xl font-bold text-xl transition-all relative overflow-hidden ${
                     questionCount === count
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      ? "bg-white text-purple-700 shadow-lg shadow-white/30"
+                      : "bg-white/20 text-white hover:bg-white/30"
                   }`}
                 >
                   {count}
@@ -376,7 +376,7 @@ export function AddRoundToCollectionModal({
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -397,8 +397,8 @@ export function AddRoundToCollectionModal({
             className="space-y-5"
           >
             <div className="text-center">
-              <h3 className="text-xl font-bold text-foreground mb-1">ფორმატი ⚡</h3>
-              <p className="text-sm text-muted-foreground">როგორი კითხვები გინდა?</p>
+              <h3 className="text-xl font-bold text-white mb-1">ფორმატი ⚡</h3>
+              <p className="text-sm text-purple-200">როგორი კითხვები გინდა?</p>
             </div>
 
             <div className="space-y-3">
@@ -408,19 +408,19 @@ export function AddRoundToCollectionModal({
                 onClick={() => setAnswerFormat("4_answers")}
                 className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 ${
                   answerFormat === "4_answers"
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
+                    ? "border-white bg-white/20"
+                    : "border-white/20 hover:border-white/50"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                   <span className="text-2xl">🎯</span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-foreground">4 ვარიანტი</div>
-                  <div className="text-sm text-muted-foreground">კლასიკური Quiz ფორმატი</div>
+                  <div className="font-semibold text-white">4 ვარიანტი</div>
+                  <div className="text-sm text-purple-200">კლასიკური Quiz ფორმატი</div>
                 </div>
                 {answerFormat === "4_answers" && (
-                  <Check className="w-5 h-5 text-primary" />
+                  <Check className="w-5 h-5 text-white" />
                 )}
               </motion.button>
 
@@ -430,25 +430,25 @@ export function AddRoundToCollectionModal({
                 onClick={() => setAnswerFormat("true_false")}
                 className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 ${
                   answerFormat === "true_false"
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:border-primary/50"
+                    ? "border-white bg-white/20"
+                    : "border-white/20 hover:border-white/50"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                   <span className="text-2xl">✅</span>
                 </div>
                 <div className="flex-1">
-                  <div className="font-semibold text-foreground">მართალი / მცდარი</div>
-                  <div className="text-sm text-muted-foreground">სწრაფი True/False</div>
+                  <div className="font-semibold text-white">მართალი / მცდარი</div>
+                  <div className="text-sm text-purple-200">სწრაფი True/False</div>
                 </div>
                 {answerFormat === "true_false" && (
-                  <Check className="w-5 h-5 text-primary" />
+                  <Check className="w-5 h-5 text-white" />
                 )}
               </motion.button>
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 უკან
               </Button>
@@ -483,16 +483,16 @@ export function AddRoundToCollectionModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900"
         >
           {/* Fixed Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
+          <div className="fixed top-0 left-0 right-0 z-50 bg-purple-900/90 backdrop-blur-md border-b border-white/10 safe-top">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center justify-between px-4 py-3">
               <button 
                 onClick={handleClose} 
-                className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
               >
-                <ChevronLeft className="w-5 h-5 text-foreground" />
+                <ChevronLeft className="w-5 h-5 text-white" />
               </button>
               
               {/* Progress dots */}
@@ -501,15 +501,15 @@ export function AddRoundToCollectionModal({
                   <div
                     key={s}
                     className={`h-2 rounded-full transition-all ${
-                      s === step ? "w-6 bg-primary" : s < step ? "w-2 bg-primary/50" : "w-2 bg-muted"
+                      s === step ? "w-6 bg-white" : s < step ? "w-2 bg-white/60" : "w-2 bg-white/30"
                     }`}
                   />
                 ))}
               </div>
               
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-xs font-semibold text-primary">AI</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full">
+                <Sparkles className="w-4 h-4 text-white" />
+                <span className="text-xs font-semibold text-white">AI</span>
               </div>
             </div>
           </div>
