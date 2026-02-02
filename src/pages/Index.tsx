@@ -436,11 +436,15 @@ export default function Index() {
               <MyTriviaLiveLogo size="sm" className="md:hidden" />
               <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
               <MyTriviaLiveLogo size="md" className="hidden lg:block" />
-              {/* Spotlight Search Bar - Hidden on mobile */}
-              <div className="hidden md:flex flex-1">
-                <SpotlightSearch />
-              </div>
             </div>
+            
+            {/* Right side: Search button + Notification - Hidden for guests */}
+            {user && (
+              <div className="hidden md:flex items-center gap-1">
+                {/* Search button */}
+                <SpotlightSearch variant="button" />
+              </div>
+            )}
             
             {/* Notification icons - Hidden for guests */}
             {user && (

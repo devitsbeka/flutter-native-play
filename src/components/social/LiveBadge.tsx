@@ -18,6 +18,7 @@ export function LiveBadge({ size = "md" }: LiveBadgeProps) {
     <motion.span
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
+      style={{ marginBottom: '2px' }}
       className="inline-flex items-center"
     >
       <span 
