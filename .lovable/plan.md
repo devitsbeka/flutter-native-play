@@ -1,14 +1,14 @@
 
 
-# Fix Mascot Avatar - Show Face Completely
+# Fix Mascot Avatar - Show Face with Crown
 
 ## Problem
-The current `translateY(15%)` still shows the mascot's feet/legs instead of the face. We need a larger offset to properly center the face in the circular frame.
+The current transform `translateY(28%)` is moving the video **downward**, which reveals the **bottom** of the video content (the mascot's feet). The mascot's face with the crown is at the **top** of the video, so we need to move the video in the opposite direction.
 
 ---
 
 ## Solution
-Increase the `translateY` value from `15%` to approximately `25-30%` to push the video content further down, revealing the mascot's face at the top.
+Change `translateY(28%)` to a **negative** value like `translateY(-15%)` to pull the video content **upward** within the container. This will show the **top** portion of the video where the mascot's face and crown are located.
 
 ---
 
@@ -16,28 +16,32 @@ Increase the `translateY` value from `15%` to approximately `25-30%` to push the
 
 ### File: `src/components/home/GuestWelcomePanel.tsx`
 
-**Line 133** - Increase the translateY value:
+**Line 133** - Change to negative translateY:
 
 ```tsx
-// Current (still shows feet):
-<div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(15%)' }}>
-
-// Fixed (shows face):
+// Current (WRONG - shows feet):
 <div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(28%)' }}>
-```
 
-The higher `translateY(28%)` pushes the video content further down within the clipping circle, ensuring the mascot's face (at the top of the video) is properly centered and visible.
+// Fixed (shows face with crown):
+<div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(-15%)' }}>
+```
 
 ---
 
-## Visual Explanation
+## How Transform Works
 
 ```text
-Before (15%):           After (28%):
-╭───────────╮           ╭───────────╮
-│   🦵 LEGS │           │   😊 FACE │
-╰───────────╯           ╰───────────╯
+translateY(+28%):           translateY(-15%):
+Pushes video DOWN           Pulls video UP
+↓                           ↑
+
+Video in frame:             Video in frame:
+╭───────────╮               ╭───────────╮
+│   🦵 FEET │               │   👑 FACE │
+╰───────────╯               ╰───────────╯
 ```
+
+A **negative** translateY value moves the element **upward**, which brings the **top** of the video (the face with crown) into the visible circular frame.
 
 ---
 
@@ -45,5 +49,5 @@ Before (15%):           After (28%):
 
 | File | Change |
 |------|--------|
-| `src/components/home/GuestWelcomePanel.tsx` | Line 133: Change `translateY(15%)` → `translateY(28%)` |
+| `src/components/home/GuestWelcomePanel.tsx` | Line 133: Change `translateY(28%)` → `translateY(-15%)` |
 
