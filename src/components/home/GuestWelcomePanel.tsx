@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { User, Lock, Sparkles, Loader2, Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCamera } from "@/hooks/useCamera";
@@ -54,6 +54,7 @@ export function GuestWelcomePanel({
   });
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [videoEnded, setVideoEnded] = useState(false);
   
   const { takePhoto, selectFromGallery, isLoading: isCameraLoading } = useCamera();
 
@@ -142,11 +143,13 @@ export function GuestWelcomePanel({
         className="flex flex-col items-center mb-2 sm:mb-3"
       >
         <span className="font-slackey text-foreground font-black text-2xl sm:text-3xl">
-          {isSignUp ? "გამარჯობა!" : "მობრძანდი!"}
+          გამარჯობა!
         </span>
-        <p className="mt-1 text-sm sm:text-base text-muted-foreground font-medium text-center leading-relaxed">
-          {isSignUp ? "შექმენი შენი პროფილი და ითამაშე უფასოდ!" : "შედი შენს ანგარიშზე"}
-        </p>
+        {isSignUp && (
+          <p className="mt-1 text-sm sm:text-base text-muted-foreground font-medium text-center leading-relaxed">
+            შექმენი შენი პროფილი და ითამაშე უფასოდ!
+          </p>
+        )}
       </motion.div>
 
       {/* Clickable Avatar */}
@@ -185,10 +188,11 @@ export function GuestWelcomePanel({
                     />
                   ) : (
                     /* Show mascot video with correct positioning */
-                    <PingPongVideo 
+                    <SinglePlayVideo 
                       src={guestWelcomeVideo}
                       className="w-full h-full object-cover"
                       style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+                      onEnded={() => setVideoEnded(true)}
                     />
                   )}
                   
@@ -199,10 +203,23 @@ export function GuestWelcomePanel({
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 </button>
                 
-                {/* Camera badge - OUTSIDE button to prevent clipping */}
-                <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform z-20">
-                  <Camera className="w-3.5 h-3.5 text-primary-foreground" />
-                </div>
+                {/* Camera badge - appears with animation after video ends */}
+                <motion.div 
+                  className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-20"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={videoEnded ? { 
+                    scale: [0, 1.3, 1],
+                    opacity: 1
+                  } : { scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  <motion.div
+                    animate={videoEnded ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 1.5, repeat: 2, ease: "easeInOut" }}
+                  >
+                    <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+                  </motion.div>
+                </motion.div>
               </div>
             </PopoverTrigger>
             
