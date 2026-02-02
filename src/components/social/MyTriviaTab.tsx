@@ -291,11 +291,6 @@ function CollectionCard({
                   <Pencil className="w-4 h-4 text-white" />
                 </button>
                 
-                {/* Collection Badge */}
-                <div className="absolute top-3 left-14 flex h-8 items-center gap-1.5 bg-purple-600/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>კოლექცია</span>
-                </div>
 
                 {/* Title */}
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -313,7 +308,10 @@ function CollectionCard({
               <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between">
                   {/* Collection Badge */}
-                  <div className="flex items-center gap-2 bg-purple-500 text-white rounded-full px-3 py-1.5">
+                  <div 
+                    className="flex items-center gap-2 text-white rounded-full px-3 py-1.5"
+                    style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
+                  >
                     <Layers className="w-4 h-4" />
                     <span className="text-sm font-medium">კოლექცია</span>
                   </div>
@@ -331,6 +329,21 @@ function CollectionCard({
 
               {/* Rounds List */}
               <div className="p-4 space-y-2">
+                {/* Add Round Button - At Top */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const nextRoundNumber = (quizzes?.length || 0) + 1;
+                    onAddRound(collection.id, nextRoundNumber);
+                  }}
+                  className="w-full py-3 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                             bg-muted/30 hover:bg-muted/50 transition-colors 
+                             flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium">რაუნდის დამატება</span>
+                </button>
+                
                 {isLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -350,21 +363,6 @@ function CollectionCard({
                     ამ კოლექციაში ჯერ არ არის ქვიზები
                   </p>
                 )}
-                
-                {/* Add More Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const nextRoundNumber = (quizzes?.length || 0) + 1;
-                    onAddRound(collection.id, nextRoundNumber);
-                  }}
-                  className="w-full py-3 rounded-xl border-2 border-dashed border-muted-foreground/30 
-                             bg-muted/30 hover:bg-muted/50 transition-colors 
-                             flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="text-sm font-medium">რაუნდის დამატება</span>
-                </button>
               </div>
             </div>
             
@@ -425,11 +423,6 @@ function CollectionCard({
             <Pencil className="w-4 h-4 text-white" />
           </button>
           
-          {/* Collection Badge */}
-          <div className="absolute top-3 left-14 flex h-8 items-center gap-1.5 bg-purple-600/90 text-white px-3 rounded-full text-xs font-semibold shadow-md">
-            <Layers className="w-3.5 h-3.5" />
-            <span>კოლექცია</span>
-          </div>
 
           {/* Visibility + rounds count (single pill like trivia cards) */}
           <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm rounded-full h-8 px-3 text-xs text-white flex items-center gap-1.5">
@@ -457,7 +450,10 @@ function CollectionCard({
         <div className="p-4">
           <div className="flex items-center justify-between">
             {/* Collection Badge */}
-            <div className="flex items-center gap-2 bg-purple-500 text-white rounded-full px-3 py-1.5">
+            <div 
+              className="flex items-center gap-2 text-white rounded-full px-3 py-1.5"
+              style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
+            >
               <Layers className="w-4 h-4" />
               <span className="text-sm font-medium">კოლექცია</span>
             </div>
@@ -511,6 +507,21 @@ function CollectionCard({
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
+              {/* Add Round Button - At Top */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const nextRoundNumber = (quizzes?.length || 0) + 1;
+                  onAddRound(collection.id, nextRoundNumber);
+                }}
+                className="w-full py-3 rounded-xl border-2 border-dashed border-muted-foreground/30 
+                           bg-muted/30 hover:bg-muted/50 transition-colors 
+                           flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">რაუნდის დამატება</span>
+              </button>
+              
               {isLoading ? (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -530,21 +541,6 @@ function CollectionCard({
                   ამ კოლექციაში ჯერ არ არის ქვიზები
                 </p>
               )}
-              
-              {/* Add More Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const nextRoundNumber = (quizzes?.length || 0) + 1;
-                  onAddRound(collection.id, nextRoundNumber);
-                }}
-                className="w-full py-3 rounded-xl border-2 border-dashed border-muted-foreground/30 
-                           bg-muted/30 hover:bg-muted/50 transition-colors 
-                           flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm font-medium">რაუნდის დამატება</span>
-              </button>
               
               {/* Play All Button - Mobile */}
               <ChunkyButton 
