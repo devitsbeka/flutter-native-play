@@ -1,160 +1,188 @@
 
-# Plan: Show Logo Above Profile on Non-Game Pages
 
-## Current Behavior
+# Plan: Update Room Filtering for Real Active Players
 
-| Page | Current Logo Position |
-|------|----------------------|
-| Index (Home) | Header bar (centered between menu and bell icon) |
-| TeamV2 (Online Game) | Header bar (left side) |
-| TV Pages | Top left corner overlay |
+## Overview
 
-## Desired Behavior
-
-| Page | Desired Logo Position |
-|------|----------------------|
-| Index (Home) | **Above profile avatar** (in main content) |
-| Other pages | **Above profile/content** where applicable |
-| TeamV2 (Online Game) | Keep in header (above players list) ✓ |
+Two changes are needed:
+1. Update "აქტიური" (active) filter to show rooms with at least one player active in the last 10 minutes
+2. Remove the "დალაგება" (sort) section from the filter dropdown - always sort by last activity
 
 ---
 
 ## Technical Changes
 
-### File 1: `src/pages/Index.tsx`
+### File 1: `src/hooks/useMyRooms.ts`
 
-**1. Remove logo from header (line 433-440):**
+**1. Add 10-minute activity tracking for each room**
+
+Currently, presence data is fetched with a 2-minute threshold. We need to:
+- Add a new field `has_recent_activity` to track if any participant was active in the last 10 minutes
+- Update the "active" filter logic to use this field
+
 ```typescript
-// Before:
-{/* Center: Logo */}
-<div className="flex-1 flex justify-center md:justify-start">
-  <MyTriviaLiveLogo responsive className="md:hidden" />
-  {/* Spotlight Search Bar - Hidden on mobile */}
-  <div className="hidden md:flex flex-1">
-    <SpotlightSearch />
-  </div>
-</div>
-
-// After:
-{/* Center: Spotlight only */}
-<div className="flex-1 flex justify-center md:justify-start">
-  {/* Spotlight Search Bar - Hidden on mobile */}
-  <div className="hidden md:flex flex-1">
-    <SpotlightSearch />
-  </div>
-</div>
+// Around line 207-222: Change presence fetch to use 10 minutes for activity tracking
+const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+const { data: recentPresenceData } = await supabase
+  .from("user_presence")
+  .select("user_id, status, last_seen, current_page")
+  .in("user_id", allParticipantUserIds)
+  .gte("last_seen", tenMinutesAgo);
 ```
 
-**2. Add logo above profile for logged-in users (mobile) - around line 878:**
-```typescript
-{/* Mobile only: LOGGED IN USERS */}
-{user && <motion.div 
-  className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-  ...
->
-  {/* NEW: Logo above avatar */}
-  <motion.div
-    initial={{ y: -10, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ delay: 0.15, type: "spring" }}
-    className="mb-4"
-  >
-    <MyTriviaLiveLogo responsive />
-  </motion.div>
+**2. Add `has_recent_activity` field to MyRoom interface**
 
-  {/* Existing avatar section */}
-  <div className="relative">
-    ...
-  </div>
-</motion.div>}
+```typescript
+// Add to MyRoom interface (around line 8-54)
+has_recent_activity: boolean;  // At least one participant was active in last 10 min
 ```
 
-**3. Add logo above profile for md-xl breakpoints (around line 566):**
+**3. Calculate `has_recent_activity` for each room**
+
 ```typescript
-{/* md to xl layout: Avatar centered */}
-{user && <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px]">
-  <motion.div className="flex flex-col items-center" ...>
-    {/* NEW: Logo above avatar */}
-    <div className="mb-6">
-      <MyTriviaLiveLogo responsive />
-    </div>
-    
-    {/* Existing avatar section */}
-    <div className="relative">
-      ...
-    </div>
-  </motion.div>
-</div>}
+// Inside the room mapping (around line 272-336)
+// Calculate which participants were active in last 10 minutes
+const recentActiveUserIds = new Set<string>();
+recentPresenceData?.forEach(p => {
+  recentActiveUserIds.add(p.user_id);
+});
+
+// Check if any participant (excluding self) was recently active
+const hasRecentActivity = participants.some(
+  p => p.user_id !== user.id && recentActiveUserIds.has(p.user_id)
+);
 ```
 
-**4. Add logo above profile for xl+ breakpoint (around line 785):**
+**4. Update "active" filter logic**
+
 ```typescript
-{/* xl+ layout: Avatar centered */}
-{user && <motion.div className="hidden xl:flex flex-col items-center w-full px-4" ...>
-  {/* NEW: Logo above avatar */}
-  <div className="mb-6">
-    <MyTriviaLiveLogo responsive />
-  </div>
-  
-  {/* Existing avatar section */}
-  <div className="relative">
-    ...
-  </div>
-</motion.div>}
+// Around line 432-435: Change the filter condition
+case "active":
+  result = result.filter((room) => room.has_recent_activity);
+  break;
+```
+
+**5. Remove sort option from hook**
+
+The `sort` option will be removed from the hook options since we always sort by "recent" (last_activity_at).
+
+---
+
+### File 2: `src/components/team/RoomFiltersBar.tsx`
+
+**1. Remove `sort` props completely**
+
+```typescript
+// Remove these from props:
+// sort: RoomSort;
+// onSortChange: (sort: RoomSort) => void;
+
+interface RoomFiltersBarProps {
+  filter: RoomFilter;
+  onFilterChange: (filter: RoomFilter) => void;
+  // sort and onSortChange REMOVED
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  onAddClick?: () => void;
+  addButtonText?: string;
+}
+```
+
+**2. Remove sortOptions array and related code**
+
+```typescript
+// DELETE these lines (38-41):
+// const sortOptions: { value: RoomSort; label: string }[] = [
+//   { value: "recent", label: "ბოლო აქტივობით" },
+//   { value: "created_date", label: "თარიღით" },
+// ];
+```
+
+**3. Remove "დალაგება" section from dropdown menu**
+
+```typescript
+// DELETE lines 130-144 (the sort section):
+// <DropdownMenuSeparator />
+// <DropdownMenuLabel className="text-xs text-muted-foreground">დალაგება</DropdownMenuLabel>
+// {sortOptions.map((option) => (...))}
 ```
 
 ---
 
-## Visual Layout
+### File 3: `src/pages/TeamV2.tsx` (or wherever RoomFiltersBar is used)
 
-**Before (Index/Home mobile):**
-```
-┌──────────────────────────┐
-│ ☰     MyTrivia LIVE   🔔 │  ← Logo in header
-├──────────────────────────┤
-│                          │
-│    🎁   🔮   📦   ⚡     │
-│         (avatar)         │
-│       TriviaMaste        │
-│       💰 1.4M  💎 170    │
-│                          │
-│      [ ითამაშე ]          │
-└──────────────────────────┘
+**1. Remove sort state and handlers**
+
+```typescript
+// Remove:
+// const [sort, setSort] = useState<RoomSort>("recent");
+
+// Remove from RoomFiltersBar props:
+// sort={sort}
+// onSortChange={setSort}
 ```
 
-**After (Index/Home mobile):**
-```
-┌──────────────────────────┐
-│ ☰                     🔔 │  ← Header without logo
-├──────────────────────────┤
-│                          │
-│     MyTrivia LIVE        │  ← Logo above profile
-│    🎁   🔮   📦   ⚡     │
-│         (avatar)         │
-│       TriviaMaste        │
-│       💰 1.4M  💎 170    │
-│                          │
-│      [ ითამაშე ]          │
-└──────────────────────────┘
-```
+---
 
-**TeamV2 (Online Game) - Unchanged:**
-```
-┌──────────────────────────┐
-│ MyTrivia LIVE    📷  🔔  │  ← Logo stays in header
-├──────────────────────────┤
-│ [ოთახები] [ექსპლორე] ... │
-│                          │
-│ Players list...          │
-└──────────────────────────┘
+## Data Flow
+
+```text
+Before (active filter):
+┌─────────────────────────────────────────────────┐
+│ Room with status = "waiting" or "playing"       │
+│ → Shown in "აქტიური" filter                      │
+│ (Even if no one was online for days)            │
+└─────────────────────────────────────────────────┘
+
+After (active filter):
+┌─────────────────────────────────────────────────┐
+│ Room where at least 1 participant               │
+│ has last_seen within last 10 minutes            │
+│ → Shown in "აქტიური" filter                      │
+│ (Reflects actual real-time activity)            │
+└─────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Summary
 
-| File | Changes |
-|------|---------|
-| `Index.tsx` | Remove logo from header, add above profile in 3 viewport sections (mobile, md-xl, xl+) |
+| File | Change |
+|------|--------|
+| `useMyRooms.ts` | Add `has_recent_activity` field, update filter logic to use 10-min window |
+| `RoomFiltersBar.tsx` | Remove sort props, remove "დალაგება" section from dropdown |
+| `TeamV2.tsx` | Remove sort state and props |
+| Type exports | Remove `RoomSort` type export (optional cleanup) |
 
-The TeamV2 (online game page) keeps the logo in its header position as currently implemented - no changes needed there.
+---
+
+## Visual Comparison
+
+**Before:**
+```
+┌──────────────────────────┐
+│ ფილტრი                    │
+│   ✓ ყველა                 │
+│   ჩემი შექმნილი           │
+│   მეგობრების              │
+│   აქტიური                 │
+│   დასრულებული             │
+├──────────────────────────┤
+│ დალაგება                  │  ← REMOVE
+│   ✓ ბოლო აქტივობით       │  ← REMOVE
+│   თარიღით                │  ← REMOVE
+└──────────────────────────┘
+```
+
+**After:**
+```
+┌──────────────────────────┐
+│ ფილტრი                    │
+│   ✓ ყველა                 │
+│   ჩემი შექმნილი           │
+│   მეგობრების              │
+│   აქტიური                 │
+│   დასრულებული             │
+└──────────────────────────┘
+```
+
