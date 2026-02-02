@@ -1,94 +1,66 @@
 
-# Plan: Fix PRO Carousel Benefits Layout & Mascot Video
+# Plan: Fix MyTrivia LIVE Logo Transparency
 
-## Overview
+## Problem
 
-Two issues to fix in `MobileProCarousel.tsx`:
-1. Benefits text should show 3 columns on first row, 1 on second row
-2. Mascot video is cropped at bottom - need to show full figure
+The current logo (`src/assets/mytrivia-live-logo.png`) is a PNG file with a **white background baked in**. When displayed on colored backgrounds (like the purple splash screen), the white rectangle is visible behind the logo.
 
----
+## Solution
+
+Replace the PNG-based logo with a **CSS/HTML text-based logo component** that is naturally transparent. The project already has:
+- `font-slackey` (Slackey font) configured in Tailwind
+- `LiveBadge` component with the pulsing red badge
 
 ## Changes
 
-### File: `src/components/shop/MobileProCarousel.tsx`
+### File: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-### 1. Benefits Layout - 3 columns + 1 row
+Replace the PNG image approach with a text-based approach:
 
-**Current (lines 133-143):**
-- Shows only 3 benefits with `tier.benefits.slice(0, 3)`
-- Uses flex-wrap which creates 2+1 layout currently
-
-**New layout:**
-- Show all 4 benefits
-- Use CSS Grid for precise 3-column layout on first row
-- Fourth benefit spans or starts new row
-
-```text
-Row 1: [Benefit 1] [Benefit 2] [Benefit 3]
-Row 2: [Benefit 4]
+**Current approach:**
+```tsx
+<img src={myTriviaLogo} alt="MyTrivia LIVE" />
 ```
 
-**Code change:**
+**New approach:**
 ```tsx
-{/* Benefits - Grid layout: 3 columns first row, 1 on second */}
-<div className="grid grid-cols-3 gap-x-3 gap-y-1.5 mb-4">
-  {tier.benefits.map((benefit, i) => (
-    <div 
-      key={i} 
-      className="flex items-center gap-1.5 text-sm text-white/90"
-    >
-      <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
-      <span className="text-xs">{benefit}</span>
-    </div>
-  ))}
+<div className="flex items-center gap-1.5">
+  <span className="font-slackey text-black" style={{ fontSize }}>
+    MyTrivia
+  </span>
+  <LiveBadge size={size} />
 </div>
 ```
 
-### 2. Mascot Video - Show Full Figure
+### Key Implementation Details:
 
-**Current (line 192):**
-```tsx
-className="absolute inset-0 w-full h-full object-cover object-top"
-```
+1. Remove the PNG import
+2. Use `font-slackey` class for the "MyTrivia" text
+3. Create a reusable `LiveBadge` that accepts size prop
+4. Support existing size variants (sm, md, lg) with appropriate font sizes
+5. Add `textColor` prop for light/dark background usage (black text on light, white text on dark)
 
-**Problem:** `object-top` aligns to top but mascot body is cropped at bottom
+### Size Mapping:
+| Size | Font Size | Badge Scale |
+|------|-----------|-------------|
+| sm   | 20px      | 0.8         |
+| md   | 28px      | 1.0         |
+| lg   | 40px      | 1.2         |
+| xl   | 48px      | 1.4         |
 
-**Solution:** Change to `object-center` to center the mascot vertically, showing the full figure
+### File: `src/components/social/LiveBadge.tsx`
 
-```tsx
-className="absolute inset-0 w-full h-full object-cover object-center"
-```
+Add a `size` prop to scale the badge appropriately:
+- Small: `text-[8px]`, dot `w-1 h-1`
+- Medium: `text-[9px]`, dot `w-1.5 h-1.5` (current default)
+- Large: `text-[11px]`, dot `w-2 h-2`
 
----
+### Files That Use Logo (will benefit automatically):
+- `src/pages/Loading.tsx`
+- `src/components/SplashScreen.tsx`
+- `src/components/tv/TVPairingScreenV3.tsx`
+- `src/components/tv/TVBrandingOverlay.tsx`
 
-## Visual Result
+## Result
 
-### Before:
-```text
-┌──────────────────────────────────┬─────────┐
-│ ✓ Benefit 1    ✓ Benefit 2       │  TOP    │
-│ ✓ Benefit 3                      │ (crown) │
-│                                  │ cropped │
-│ [Button]                         │  body   │
-└──────────────────────────────────┴─────────┘
-```
-
-### After:
-```text
-┌──────────────────────────────────┬─────────┐
-│ ✓ Benefit 1  ✓ Benefit 2  ✓ B3   │         │
-│ ✓ Benefit 4                      │ FULL    │
-│                                  │ MASCOT  │
-│ [Button]                         │         │
-└──────────────────────────────────┴─────────┘
-```
-
----
-
-## Summary of Changes
-
-| Line | Change |
-|------|--------|
-| 133-143 | Replace flex-wrap with CSS grid (grid-cols-3), show all 4 benefits |
-| 192 | Change `object-top` → `object-center` for video positioning |
+The logo will now render with a **transparent background**, blending naturally with any background color - purple splash screens, dark TV overlays, etc.
