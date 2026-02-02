@@ -723,31 +723,25 @@ export function GameStyleQuestionEditor({
       />
 
       {/* Navigation Arrows for All Devices */}
-      <div className="block">
+      <>
         {/* Left Arrow */}
         <button
           onClick={() => emblaApi?.scrollPrev()}
           disabled={currentIndex === 0}
-          className="fixed left-2 md:left-4 z-40 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
-          style={{ 
-            top: 'calc(50% - 80px)',
-          }}
+          className="fixed left-3 md:left-6 top-1/2 -translate-y-1/2 z-[60] w-11 h-11 md:w-14 md:h-14 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-black/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xl"
         >
-          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+          <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
         </button>
         
         {/* Right Arrow */}
         <button
           onClick={() => emblaApi?.scrollNext()}
           disabled={currentIndex >= questions.length - 1}
-          className="fixed right-2 md:right-4 z-40 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg"
-          style={{ 
-            top: 'calc(50% - 80px)',
-          }}
+          className="fixed right-3 md:right-6 top-1/2 -translate-y-1/2 z-[60] w-11 h-11 md:w-14 md:h-14 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center text-white hover:bg-black/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xl"
         >
-          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+          <ChevronRight className="w-6 h-6 md:w-7 md:h-7" />
         </button>
-      </div>
+      </>
 
       {/* Carousel */}
       <div className="flex-1 overflow-hidden" ref={emblaRef}>
