@@ -1,90 +1,77 @@
 
 
-# გეგმა: წინა მიდგომის აღდგენა - ოთახის სახელი/აიკონი
+# გეგმა: ლოგოს გაერთიანება და ნავიგაციის რესტრუქტურიზაცია
 
-## პრობლემა
+## პრობლემები
 
-ახალი "თემატური" მიდგომა ძალიან შეზღუდულია:
-- ყოველთვის ერთი და იგივე preset სახელები ("მცოდნეები", "ერუდიტები")
-- აიკონები მხოლოდ თემატურიდან ("brain", "lightbulb")
-- არ არის მრავალფეროვნება
+### 1. LIVE Badge-ს არ აქვს მრგვალი კიდეები
+- `LiveBadge.tsx` იყენებს `rounded` (მცირე რადიუსი)
+- `MyTriviaLiveLogo.tsx` იყენებს `rounded-md`
+- სკრინშოტზე ჩანს რომ უნდა იყოს `rounded-full` (pill shape)
+
+### 2. ლოგო ორჯერ ჩანს Desktop-ზე (Online Game Page)
+- ლოგო ჩანს მარცხენა ნავიგაციაში
+- ლოგო ასევე ჩანს TeamV2 header-ში
+- უნდა დავტოვოთ მხოლოდ header-ში
+
+### 3. მარცხენა ნავიგაციის რესტრუქტურიზაცია
+- ლოგოს ნაცვლად Profile button უნდა იყოს თავზე
+- ენა და "მეტი" დარჩეს ბოლოში
+
+---
 
 ## გადაწყვეტა
 
-დავაბრუნოთ წინა მიდგომა:
-1. **AI თავისუფლად აგენერირებს სახელებს** - არა preset სიიდან
-2. **შემთხვევითი აიკონი 9k ბიბლიოთეკიდან** - უფრო მრავალფეროვანი
+### ფაილი 1: `src/components/social/LiveBadge.tsx`
 
----
+**ცვლილება:** `rounded` → `rounded-full`
 
-## ფაილი 1: `supabase/functions/generate-room-name/index.ts`
-
-### ცვლილებები:
-
-1. **წავშალოთ THEMED_ROOMS სტრუქტურა** - აღარ გვჭირდება თემატური მაპინგი
-
-2. **შემთხვევითი აიკონი ბიბლიოთეკიდან:**
 ```typescript
-// Get random icon from library (the previous approach)
-const { data: randomIcon, error: iconError } = await supabase
-  .from('icon_library')
-  .select('slug, icon_url')
-  .not('icon_url', 'is', null)
-  .order('random()')  // Random selection
-  .limit(1);
+// ხაზი 11: rounded → rounded-full
+className="relative inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-white"
 ```
 
-3. **AI prompt განახლება** - თავისუფალი კრეატიულობა:
+### ფაილი 2: `src/components/shared/MyTriviaLiveLogo.tsx`
+
+**ცვლილება:** `rounded-md` → `rounded-full`
+
 ```typescript
-const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის.
-
-მოთხოვნები:
-- მაქსიმუმ 18 სიმბოლო
-- 1-2 სიტყვა
-- კრეატიული და სახალისო
-- მხოლოდ ქართული, არანაირი emoji
-
-მაგალითები: "გონიერები", "IQ კლუბი", "მეცნიერები", "ჭკვიანთა ბრძოლა"
-
-დაბრუნე მხოლოდ სახელი.`;
+// ხაზი 47: rounded-md → rounded-full
+className={`relative inline-flex items-center ${s.badge} rounded-full font-bold uppercase tracking-wider text-white`}
 ```
 
-4. **Fallback სახელები** - მარტივი სია (თემატური მაპინგის გარეშე):
-```typescript
-const FALLBACK_NAMES = [
-  "IQ ბრძოლა", "გენიოსები", "ჭკვიანები", "ერუდიტები",
-  "მცოდნეები", "მეცნიერები", "კვიზმანიები"
-];
+### ფაილი 3: `src/components/layout/UnifiedDesktopNav.tsx`
+
+**ცვლილებები:**
+
+1. **წავშალოთ ლოგო თავიდან** (ხაზები 141-182)
+2. **Profile button გადავიტანოთ თავზე** - ახლა ის ლოგოს ქვემოთაა, გავხადოთ პირველი ელემენტი
+3. **ენა და მეტი დარჩეს ბოლოში** - უკვე ბოლოშია `mt-auto`-თი
+
+**ახალი სტრუქტურა:**
 ```
-
----
-
-## ფაილი 2: `src/utils/roomNameGenerator.ts`
-
-### ცვლილებები:
-
-მარტივი fallback სახელების სია (თემატური სტრუქტურის გარეშე):
-
-```typescript
-const TRIVIA_NAMES = [
-  "IQ ბრძოლა", "გენიოსები", "ჭკვიანები", "ერუდიტები",
-  "მცოდნეები", "მეცნიერები", "კვიზმანიები", "ტვინები",
-  "გონიერები", "გამარჯვებულები", "ლიდერები"
-];
-
-export function generateRoomName(): string {
-  return TRIVIA_NAMES[Math.floor(Math.random() * TRIVIA_NAMES.length)];
-}
+┌─────────────────────┐
+│ [Profile Button]    │  ← ახლა თავზე (ლოგოს ნაცვლად)
+├─────────────────────┤
+│ მთავარი             │
+│ აღმოჩენა            │
+│ მაღაზია             │
+│ რეიტინგი            │
+│ ონლაინ თამაში       │
+├─────────────────────┤
+│ (empty space)       │
+├─────────────────────┤
+│ 🇬🇪 ქართული         │  ← ბოლოში (mt-auto)
+│ ≡ მეტი              │
+└─────────────────────┘
 ```
 
 ---
 
 ## შედეგი
 
-**ახლა (თემატური):**
-- "მცოდნეები" + 🧠 (ყოველთვის ტვინი ტიპის აიკონი)
-
-**შემდეგ (მრავალფეროვანი):**
-- AI-generated კრეატიული სახელი + შემთხვევითი აიკონი 9k ბიბლიოთეკიდან
-- მაგ: "IQ კლუბი" + 🎨 (ნებისმიერი აიკონი)
+- **LIVE badge** - pill shape (rounded-full) ყველგან
+- **Desktop Online Game Page** - ლოგო მხოლოდ ერთხელ (header-ში)
+- **Left Nav** - Profile button თავზე, ენა/მეტი ბოლოში
+- **კომპაქტური ნავიგაცია** - უფრო სუფთა UI
 
