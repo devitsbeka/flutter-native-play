@@ -8,7 +8,7 @@ import { useRewards } from "@/hooks/useRewards";
 import { useRewardTimers, useDailyRewardsClaim } from "@/hooks/useRewardTimers";
 import { useSound } from "@/contexts/SoundContext";
 import { useNotificationModal } from "@/hooks/useNotificationModal";
-import { REWARDS } from "@/config/rewardConfig";
+import { REWARDS, getRandomChestCoins, getChestGems } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
@@ -20,12 +20,14 @@ interface ChestRewardModalProps {
   onClaim: (newPoints?: number) => void;
 }
 
-// Rewards config - labels will be translated in component
-const rewardsConfig = [
-  { icon: coinIcon, isImage: true, type: "coins", value: REWARDS.CHEST_COINS, gradient: "from-amber-400 to-yellow-500" },
-  { icon: gemIcon, isImage: true, type: "gems", value: REWARDS.CHEST_GEMS, gradient: "from-purple-400 to-pink-500" },
-  { icon: "⭐", isImage: false, type: "xp", value: REWARDS.CHEST_XP, gradient: "from-blue-400 to-cyan-500" },
-];
+interface ChestReward {
+  icon: string;
+  isImage: boolean;
+  type: string;
+  value: number;
+  gradient: string;
+  label?: string;
+}
 
 // Timer display component - clean countdown only
 const ChestTimer = ({ timeLeft, t }: { timeLeft: string; t: (key: string) => string }) => (
@@ -46,7 +48,6 @@ const ChestTimer = ({ timeLeft, t }: { timeLeft: string; t: (key: string) => str
 );
 
 export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalProps) {
-  // Hook must be inside LanguageProvider (which wraps entire app in App.tsx)
   const { t } = useLanguage();
   const { recordChestReward } = useRewards();
   const { canClaimChest, chestTimeLeft, refreshTimers } = useRewardTimers();
@@ -56,17 +57,24 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
   const [isClaiming, setIsClaiming] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
+  const [chestRewards, setChestRewards] = useState<ChestReward[]>([]);
 
-  // Create rewards with translated labels
-  const rewards = rewardsConfig.map(r => ({
-    ...r,
-    label: r.type === "xp" 
-      ? `${r.value} XP` 
-      : `${r.value} ${t(`chest.${r.type === "coins" ? "coins" : "gems"}`)}`
-  }));
-
+  // Generate random rewards when modal opens and chest is claimable
   useEffect(() => {
     if (isOpen && canClaimChest) {
+      const coins = getRandomChestCoins();
+      const gems = getChestGems();
+      
+      const allRewards: ChestReward[] = [
+        { icon: coinIcon, isImage: true, type: "coins", value: coins, gradient: "from-amber-400 to-yellow-500" },
+        { icon: gemIcon, isImage: true, type: "gems", value: gems, gradient: "from-purple-400 to-pink-500" },
+      ];
+      
+      // Only show rewards with value > 0
+      const filteredRewards = allRewards.filter(r => r.value > 0);
+      setChestRewards(filteredRewards);
+
+      // Trigger confetti
       setTimeout(() => {
         confetti({
           particleCount: 100,
@@ -78,6 +86,12 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
       }, 300);
     }
   }, [isOpen, canClaimChest]);
+
+  // Create rewards with translated labels
+  const rewards = chestRewards.map(r => ({
+    ...r,
+    label: `${r.value} ${t(`chest.${r.type === "coins" ? "coins" : "gems"}`)}`
+  }));
 
   const handleClaim = async () => {
     if (isClaiming || !canClaimChest) return;
@@ -96,13 +110,16 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
 
     // Trigger flying currency animations
     setShowFlyingCoins(true);
-    setTimeout(() => setShowFlyingGems(true), 300);
+    const gemReward = chestRewards.find(r => r.type === "gems");
+    if (gemReward && gemReward.value > 0) {
+      setTimeout(() => setShowFlyingGems(true), 300);
+    }
 
     // Mark chest as claimed
     await claimChestReward();
 
     const result = await recordChestReward(
-      rewards.map(r => ({ type: r.type, value: r.value, label: r.label }))
+      rewards.map(r => ({ type: r.type, value: r.value, label: r.label || "" }))
     );
 
     if (result.success) {
@@ -127,6 +144,10 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
     <img src={chestTabletIcon} alt="" className="w-20 h-20 object-contain" />
   );
 
+  // Get reward values for flying currency
+  const coinReward = chestRewards.find(r => r.type === "coins");
+  const gemReward = chestRewards.find(r => r.type === "gems");
+
   return (
     <GameModal
       isOpen={isOpen}
@@ -145,7 +166,7 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
           <div className="space-y-2 mb-4">
             {rewards.map((reward, index) => (
               <motion.div
-                key={reward.label}
+                key={reward.type}
                 initial={{ opacity: 0, x: -20, scale: 0.9 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
@@ -185,8 +206,10 @@ export function ChestRewardModal({ isOpen, onClose, onClaim }: ChestRewardModalP
       )}
 
       {/* Flying Currency Animations */}
-      <FlyingCurrency type="coins" amount={REWARDS.CHEST_COINS} isActive={showFlyingCoins} />
-      <FlyingCurrency type="gems" amount={REWARDS.CHEST_GEMS} isActive={showFlyingGems} />
+      <FlyingCurrency type="coins" amount={coinReward?.value || 0} isActive={showFlyingCoins} />
+      {gemReward && gemReward.value > 0 && (
+        <FlyingCurrency type="gems" amount={gemReward.value} isActive={showFlyingGems} />
+      )}
     </GameModal>
   );
 }
