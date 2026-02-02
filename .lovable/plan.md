@@ -1,192 +1,146 @@
 
-# გეგმა: ქართული ტრანსლიტერაციის რუკის გაფართოება
+# გეგმა: ოთახის სახელების ოპტიმიზაცია (მაქს. 18 სიმბოლო)
 
-## რას გავაკეთებ
+## პრობლემა
+ამჟამად ოთახის სახელები ხშირად ძალიან გრძელია (22-23 სიმბოლო), რაც იწვევს UI-ში სახელების არასრულ ჩვენებას ("ვარსკვლავთფვრეტის..."). 
 
-ვამატებ 150+ ახალ ტრანსლიტერაციის მაპინგს `smart-icon-search` Edge Function-ში, რომლებიც მოიცავს აიკონის მოდალში გამოყენებულ კატეგორიებს და დამატებით ობიექტებს.
+**მაგალითები პრობლემური სახელებისა:**
+- "თავგადასავლის ფანჩატური" (23 სიმბოლო)
+- "გამარჯვებულთა გაგორება" (22 სიმბოლო)
+- "ვარსკვლავთა კავშირი" (18+ სიმბოლო)
+
+## გადაწყვეტა
+
+### 1. ახალი სახელების კონცეფცია
+**ფოკუსი ტრივიას კონტექსტზე:**
+- ინტელექტი/ჭკუა
+- ცოდნა/სწავლა
+- გამოწვევა/შეჯიბრი
+- სიჩქარე/სიზუსტე
+
+**წესები:**
+- მაქსიმუმ 18 სიმბოლო
+- 1-2 სიტყვა
+- მოკლე, დასამახსოვრებელი
+- ტრივია/quiz თემატიკაზე ორიენტირებული
+
+### 2. ახალი სახელების ბაზა (მაგალითები)
+```text
+// ინტელექტი (≤18 chars)
+"IQ არენა"           // 8
+"გენიოსთა კლუბი"     // 13
+"ჭკუის ბრძოლა"       // 12
+"ტვინის შტორმი"      // 13
+"ბრძენთა დუელი"      // 13
+"ცოდნის არენა"       // 12
+
+// გამოწვევა (≤18 chars)
+"ქვიზ არენა"         // 10
+"ტრივია დუელი"       // 12
+"გონების ბრძოლა"     // 14
+"ჭკუის ტესტი"        // 11
+"სწრაფი გონება"      // 13
+"მეცნიერთა კლუბი"    // 15
+
+// მეგობრობა + გამოწვევა (≤18 chars)
+"მეგობართა ქვიზი"    // 14
+"საოჯახო დუელი"      // 13
+"გუნდური ქვიზი"      // 13
+"კომპანიის ქვიზი"    // 15
+
+// მარტივი, მოკლე (≤12 chars)
+"ქვიზ ზონა"          // 9
+"ცოდნა+"             // 6
+"IQ ტესტი"           // 8
+"ბრძენი"             // 6
+"გონება"             // 6
+```
+
+### 3. AI პრომპტის განახლება
+```text
+შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის.
+
+კონტექსტი: მეგობრები/ოჯახი ეჯიბრებიან ერთმანეთს - ვინ უფრო ჭკვიანია, სწრაფი, მცოდნე.
+
+მოთხოვნები:
+- მაქსიმუმ 18 სიმბოლო (ჩათვლით სფეისი)
+- 1-2 სიტყვა მაქსიმუმ
+- თემა: ინტელექტი, ცოდნა, გამოწვევა, სწრაფი აზროვნება
+- მხოლოდ ქართული, არანაირი emoji
+
+კარგი მაგალითები: "ქვიზ არენა", "IQ ტესტი", "ბრძენთა დუელი", "გონების ბრძოლა"
+ცუდი მაგალითები: "ვარსკვლავთა კავშირი" (ძალიან გრძელი)
+```
+
+### 4. ვალიდაციის გაუმჯობესება
+- შეცვლა `if (cleaned.length > 35)` → `if (cleaned.length > 18)`
+- დამატება: თუ AI-ს პასუხი > 18 სიმბოლო, fallback-ზე გადასვლა
+- Fallback სია: მხოლოდ 18 სიმბოლოზე ნაკლები სახელები
 
 ---
 
-## დასამატებელი კატეგორიები
+## ფაილები რომლებშიც ცვლილებები იქნება
 
-### 1. ცხოველები (Animals) - გაფართოებული
+### 1. `supabase/functions/generate-room-name/index.ts`
+- `THEME_CONFIG` → ახალი, მოკლე სახელებით (ყველა ≤18 chars)
+- AI prompt → განახლებული ინსტრუქციებით
+- `validateAndCleanName()` → ლიმიტი 35→18
+
+### 2. `src/utils/roomNameGenerator.ts`
+- `INSPIRATIONAL_NAMES` → ახალი, მოკლე სახელები (fallback)
+
+---
+
+## ახალი სახელების სრული სია (≤18 სიმბოლო)
+
+### ინტელექტი/ცოდნა
 ```text
-txa, txis → goat, animal, farm
-gori, ghori → pig, swine, farm  
-khatami, qatami → chicken, poultry, bird
-chaki, chakhi → chicken, poultry, bird
-ardvi → otter, animal, water
-baykushi → owl, bird, night
-tsikani → kid, goat, baby
-tsxvari → sheep, wool, farm
-kurdgheli → rabbit, bunny, pet
-batka → duck, bird, water
-batkni → duckling, duck, baby
-indauri → turkey, bird, poultry
-vira → donkey, animal, farm
-irmis → deer, animal, forest
-tskupri → squirrel, rodent, animal
-bughri → hamster, rodent, pet
-tagvi → mouse, rodent, small
-mckhvrepi → cricket, insect, bug
-tsigani → bee, insect, honey
-priangi → butterfly, insect, wing
-xoxobi → pheasant, bird, georgian
+"IQ არენა"           // 8   - IQ Arena
+"ქვიზ არენა"         // 10  - Quiz Arena
+"გონების არენა"      // 13  - Mind Arena
+"ცოდნის არენა"       // 12  - Knowledge Arena
+"ტვინის შტორმი"      // 13  - Brain Storm
+"ბრძენთა კლუბი"      // 13  - Sages Club
+"გენიოსთა კლუბი"     // 14  - Geniuses Club
+"ჭკუის ტესტი"        // 11  - Wit Test
+"ცოდნის ტესტი"       // 12  - Knowledge Test
 ```
 
-### 2. გართობა (Entertainment)
+### გამოწვევა/დუელი
 ```text
-tamashi → game, play, gaming, entertainment
-satamashoebi → games, gaming, toys
-tamashebi → games, gaming, play
-satamasho → toy, plaything, game
-tomi → doll, toy, puppet
-satamashoe → toys, games, plaything
-tsekva → dance, dancing, ballet
-disneylandi → disney, theme park, fun
-karnavali → carnival, festival, parade
-cirki → circus, clown, performance
-teatri → theater, stage, drama
-opera → opera, music, theater
-baleti → ballet, dance, performance
-koncerti → concert, music, live
-festivali → festival, celebration, party
-garti → fun, entertainment, joy
-xumroba → joke, humor, funny
-anekdoti → joke, funny, humor
+"ტრივია დუელი"       // 12  - Trivia Duel
+"ბრძენთა დუელი"      // 13  - Sages Duel
+"გონების დუელი"      // 13  - Mind Duel
+"ქვიზ შეჯიბრი"       // 12  - Quiz Contest
+"ცოდნის ბრძოლა"      // 13  - Knowledge Battle
+"ჭკუის ბრძოლა"       // 12  - Wit Battle
+"IQ ბატალია"         // 10  - IQ Battle
 ```
 
-### 3. ტექნოლოგია (Technology)
+### გუნდი/მეგობრობა
 ```text
-telefoni → phone, mobile, smartphone
-kompiuteri → computer, laptop, desktop
-smartfoni → smartphone, mobile, phone
-tableti → tablet, ipad, device
-kamera → camera, photo, photography
-proeqtori → projector, screen, presentation
-monitari → monitor, screen, display
-klaviatura → keyboard, typing, computer
-tauchi → mouse, computer, device
-tausi → mouse, computer, cursor
-printeri → printer, office, document
-skaneri → scanner, office, document
-airtagi → airtag, tracker, tech
-dronei → drone, flying, camera
-roboti → robot, ai, technology
-xelovnuri inteleqti → AI, artificial intelligence, robot
-programireba → programming, code, developer
-programisti → programmer, developer, coder
-aplikacia → app, application, mobile
-saiti → website, site, web
-softveri → software, program, application
-harti → hard drive, storage, disk
-modemi → modem, internet, wifi
-routeri → router, wifi, internet
-naushniki → headphones, audio, music
-dinamiki → speaker, audio, sound
-mikrofoni → microphone, audio, recording
+"გუნდური ქვიზი"      // 13  - Team Quiz
+"მეგობართა ქვიზი"    // 14  - Friends' Quiz
+"ოჯახის ქვიზი"       // 12  - Family Quiz
+"კომპანიის ქვიზი"    // 15  - Company's Quiz
+"გუნდის არენა"       // 12  - Team Arena
 ```
 
-### 4. ტრანსპორტი (Transport)
+### მოკლე/უნივერსალური
 ```text
-manqana → car, vehicle, automobile
-avto → car, auto, vehicle
-avtomobili → automobile, car, vehicle
-motocikli → motorcycle, bike, motor
-velosipedi → bicycle, bike, cycling
-skuteri → scooter, vehicle, ride
-taksii → taxi, cab, ride
-avtobusi → bus, transport, public
-marshutka → minibus, van, transport
-tramvai → tram, trolley, rail
-metro → metro, subway, underground
-matarebeli → train, railway, transport
-gemi → ship, boat, vessel
-navti → boat, ship, vessel
-iaxta → yacht, boat, luxury
-katamari → catamaran, boat, sailing
-tvitmprinavi → airplane, plane, flight
-vertmprenei → helicopter, chopper, flying
-saraketoe → spaceship, rocket, space
-satyepo → cargo, truck, transport
-tirai → truck, lorry, transport
-gadasazidi → trailer, transport, haul
-ambulansi → ambulance, emergency, medical
-saxandzro → fire truck, emergency, rescue
-policia → police car, law, patrol
-```
-
-### 5. ბუნება (Nature)
-```text
-xe → tree, plant, forest
-yvavili → flower, bloom, plant
-balaki → grass, lawn, green
-bichi → beach, sand, sea
-mtsvane → green, nature, plant
-chikhvi → bird, tweet, avian
-mgeli → wolf, wild, animal
-datvi → bear, wild, forest
-iremi → deer, animal, forest
-titi → finger (typo: allow for "chiti" → bird)
-mta → mountain, peak, summit
-tba → lake, water, pond
-ghru → cloud, sky, weather
-varskvlavi → star, night, sky
-mze → sun, solar, light
-mtvare → moon, lunar, night
-wvima → rain, water, weather
-tovli → snow, winter, cold
-```
-
-### 6. სპორტი (Sports)
-```text
-burti → ball, sport, game
-fexburti → football, soccer, ball
-kalatburti → basketball, ball, hoop
-volei → volleyball, ball, net
-golfi → golf, club, ball
-tenisi → tennis, racket, ball
-biniliaridi → billiards, pool, cue
-basketboli → basketball, ball, hoop
-chidaoba → wrestling, sport, fight
-krivi → boxing, fight, sport
-machvi → fencing, sword, sport
-cekva → dance, ballet, sport
-cekvaa → skating, ice, sport
-tkhilam → ski, snow, winter
-korpi → hockey, ice, sport
-```
-
-### 7. საჭმელი (Food)
-```text
-xachapuri → khachapuri, cheese, bread
-xinkali → khinkali, dumpling, meat
-shashliki → shashlik, kebab, grill
-mtsvadi → barbecue, grill, meat
-lobio → beans, georgian, food
-ajapsandali → vegetable, stew, georgian
-badrijani → eggplant, vegetable, food
-churchxela → churchkhela, candy, georgian
-tqemali → plum sauce, georgian, condiment
-satsivi → walnut sauce, georgian, chicken
+"ქვიზ ზონა"          // 9   - Quiz Zone
+"გონება+"            // 7   - Mind+
+"ცოდნა+"             // 6   - Knowledge+
+"ტრივია+"            // 8   - Trivia+
+"IQ ზონა"            // 7   - IQ Zone
+"ბრძენი"             // 6   - Sage
+"გენიოსი"            // 7   - Genius
 ```
 
 ---
 
-## ტექნიკური დეტალები
-
-### ფაილი რომელშიც ცვლილებები იქნება
-`supabase/functions/smart-icon-search/index.ts`
-
-### ცვლილების ტიპი
-- `LATIN_TRANSLITERATIONS` ობიექტის გაფართოება 150+ ახალი ჩანაწერით
-- ტიპოების გათვალისწინება (მაგ. "chaki" და "chakhi" ორივე → chicken)
-- ვარიანტების დამატება (მაგ. "cxeni" და "tskheni" ორივე → horse)
-
-### შედეგი
-ძიების მაგალითები:
-- "txa" → თხა, თხის → goat აიკონები
-- "chakhi" → ქათამი → chicken აიკონები
-- "gori" → ღორი → pig აიკონები
-- "telefoni" → phone, smartphone აიკონები
-- "manqana" → car, vehicle აიკონები
+## შედეგი
+- ყველა სახელი ≤18 სიმბოლო
+- UI-ში სახელები სრულად ჩანს
+- ფოკუსი ტრივია/ინტელექტის თემატიკაზე
+- მოკლე, დასამახსოვრებელი სახელები
