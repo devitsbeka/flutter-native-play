@@ -1,64 +1,65 @@
 
 
-# Plan: Fix Logo Always on One Line
+# Plan: Reduce Gap Between Carousel and Shop Content on Tablet
 
 ## Problem
 
-The "MyTrivia LIVE" logo is wrapping to two lines because:
-1. The logo container doesn't have a fixed/auto width
-2. Parent flex containers with `flex-1` can squeeze the logo container
-3. Even with `flex-nowrap`, the container itself can be compressed
+The gap between the PRO carousel card and the "ძალები" (powers) section is too large on tablet. The recent increase to `md:min-h-[420px]` made it worse.
 
 ## Solution
 
-Add `w-auto` (width: auto) to the logo container to ensure it maintains its natural width and doesn't get compressed by parent flex layouts.
+Reduce the carousel container height on tablet to bring the content closer together. Target approximately 100px gap as requested.
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/shared/MyTriviaLiveLogo.tsx`
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-**Line 42** - Add `w-auto` to force auto width:
+**Line 75** - Reduce the tablet min-height:
 
 ```typescript
 // BEFORE:
-<div className={`flex items-center gap-2 flex-nowrap shrink-0 ${className}`}>
+<div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[420px]">
 
 // AFTER:
-<div className={`flex items-center gap-2 flex-nowrap shrink-0 w-auto ${className}`}>
+<div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[340px]">
 ```
 
-Additionally, add `min-w-fit` to ensure the container never shrinks below its content size:
-
-```typescript
-// FINAL:
-<div className={`flex items-center gap-2 flex-nowrap shrink-0 w-auto min-w-fit ${className}`}>
-```
+This reduces the tablet carousel height from `420px` back to `340px`, which should create a gap closer to 100px.
 
 ---
 
 ## Summary
 
-| Property | Purpose |
-|----------|---------|
-| `flex-nowrap` | Prevent internal flex items from wrapping |
-| `shrink-0` | Prevent container from shrinking in flex parent |
-| `w-auto` | Force container to take natural content width |
-| `min-w-fit` | Ensure minimum width fits the content |
+| Screen | Before | After | Change |
+|--------|--------|-------|--------|
+| Mobile (<768px) | 320px | 320px | No change |
+| Tablet (768px+) | 420px | 340px | -80px |
 
 ---
 
 ## Visual Result
 
-**Before:**
+**Before (420px):**
 ```text
-MyTrivia
-[LIVE]     ← Badge wraps to second line
+┌──────────────────────────────┐
+│      PRO Carousel (420px)    │
+└──────────────────────────────┘
+            ↓
+         ~200px gap (too big!)
+            ↓
+ძალები [40] [44] [6] [17]
 ```
 
-**After:**
+**After (340px):**
 ```text
-MyTrivia [LIVE]     ← Always stays on one line
+┌──────────────────────────────┐
+│      PRO Carousel (340px)    │
+└──────────────────────────────┘
+            ↓
+         ~100px gap ✓
+            ↓
+ძალები [40] [44] [6] [17]
 ```
 
