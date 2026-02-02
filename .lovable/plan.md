@@ -1,122 +1,41 @@
 
-# Add Loading Indicators for Interactive Action Buttons
+# Enhance Unread Notification Visual Distinction
 
 ## Overview
-Add consistent loading/sending indicators to buttons that currently lack proper visual feedback after being clicked. The goal is to standardize the user experience across all interactive elements with the pattern already established in the Add Friend button.
+Update the notification card background to use an explicit purple color with 10% opacity for unread notifications, making them more visually distinct from read notifications.
 
-## Current State Analysis
-
-| Component | Action | Current State | Needs Fix |
-|-----------|--------|---------------|-----------|
-| `InviteFriendsModal` | Add Friend (`+ დამატება`) | Spinner + "იგზავნება..." text | No - already good |
-| `InviteFriendsModal` | Invite (`მოწვევა`) | Spinner only, no text | **Yes** |
-| `CompactNotificationCard` | Accept/Decline | Shows "..." only | **Yes** |
-| `PlayerProfileModal` | Add Friend (`დამატება`) | Disabled only, no visual | **Yes** |
-| `PlayerProfileModal` | Challenge (`გამოწვევა`) | Navigates instantly | No - navigation is instant |
-
-## Technical Changes
-
-### 1. InviteFriendsModal.tsx - Invite Button (Lines ~477-500)
-
-**Current behavior:** When inviting a friend to a room, the button shows only a `Loader2` spinner.
-
-**Fix:** Add "იგზავნება..." text next to the spinner for consistency with Add Friend button.
-
+## Current State
+The `CompactNotificationCard` component already applies a background color for unread notifications:
 ```tsx
-// Before (around line 477-493)
-{isLoading ? (
-  <Loader2 className="w-4 h-4 animate-spin" />
-) : ...
-
-// After
-{isLoading ? (
-  <>
-    <Loader2 className="w-4 h-4 animate-spin" />
-    იგზავნება...
-  </>
-) : ...
+isUnread ? "bg-primary/10" : "bg-card/80"
 ```
 
-### 2. CompactNotificationCard.tsx - Accept/Decline Buttons (Lines 399-413)
+The `--primary` color is set to HSL `263 60% 59%` which is purple, so technically unread notifications already have a purple tint. However, using Tailwind's explicit `purple` color may provide a more consistent and vibrant visual distinction.
 
-**Current behavior:** Shows "..." when loading.
+## Proposed Change
 
-**Fix:** Show a more descriptive loading state with spinner.
-
-```tsx
-// Before (line 402)
-{isLoading ? "..." : isFriendRequest ? "მიღება" : "შესვლა"}
-
-// After - Accept button
-{isLoading ? (
-  <span className="flex items-center gap-1">
-    <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-  </span>
-) : isFriendRequest ? "მიღება" : "შესვლა"}
-
-// Similar for Decline button
-```
-
-### 3. PlayerProfileModal.tsx - Add Friend Button (Lines 308-318)
-
-**Current behavior:** Button only gets disabled when `addingFriend` is true.
-
-**Fix:** Add loading spinner and text feedback.
+Update the background class in `CompactNotificationCard.tsx` to use Tailwind's explicit purple color:
 
 ```tsx
-// Before
-<ChunkyButton
-  onClick={handleAddFriend}
-  disabled={addingFriend}
-  variant="secondary"
-  size="sm"
-  className="flex-1"
->
-  <UserPlus className="w-4 h-4 mr-1" />
-  დამატება
-</ChunkyButton>
+// Line 274 - Change from:
+isUnread ? "bg-primary/10" : "bg-card/80"
 
-// After
-<ChunkyButton
-  onClick={handleAddFriend}
-  disabled={addingFriend}
-  variant="secondary"
-  size="sm"
-  className="flex-1"
->
-  {addingFriend ? (
-    <>
-      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-      იგზავნება...
-    </>
-  ) : (
-    <>
-      <UserPlus className="w-4 h-4 mr-1" />
-      დამატება
-    </>
-  )}
-</ChunkyButton>
+// To:
+isUnread ? "bg-purple-500/10" : "bg-card/80"
 ```
 
-Also need to import `Loader2` from lucide-react in this file.
+This will apply Tailwind's purple-500 color at 10% opacity, providing a consistent purple tint regardless of theme configuration.
 
----
+## Technical Details
+
+| File | Change |
+|------|--------|
+| `src/components/notifications/CompactNotificationCard.tsx` | Update line 274 to use `bg-purple-500/10` instead of `bg-primary/10` |
+
+The change ensures:
+- Unread notifications have a distinct purple background (10% opacity)
+- Read notifications maintain the neutral `bg-card/80` background
+- Visual consistency across light and dark modes
 
 ## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/team/InviteFriendsModal.tsx` | Add "იგზავნება..." text to invite button loading state |
-| `src/components/notifications/CompactNotificationCard.tsx` | Add spinner to accept/decline loading states |
-| `src/components/profile/PlayerProfileModal.tsx` | Add loading state with spinner + text to Add Friend button |
-
----
-
-## Visual Consistency
-
-All action buttons will now follow the same pattern:
-1. **Default state**: Icon + text label
-2. **Loading state**: Spinning loader + "იგზავნება..." text (or just spinner for compact buttons)
-3. **Success state**: Check icon + confirmation text (where applicable)
-4. **Pending state**: Clock icon + "მოლოდინში" text (for friend requests)
-
+- `src/components/notifications/CompactNotificationCard.tsx`
