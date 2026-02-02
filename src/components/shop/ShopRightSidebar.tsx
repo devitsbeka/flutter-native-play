@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Sparkles, Users, ChevronRight, Check, Loader2 } from "lucide-react";
+import { Sparkles, Users, ChevronRight, Check, Loader2, Crown } from "lucide-react";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useMemo, useState } from "react";
 import shopBgVideo from "@/assets/shopbg.mp4";
+import crown3dIcon from "@/assets/crown-3d.png";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 
 // White particle component for sidebar
@@ -129,7 +130,7 @@ export function ShopRightSidebar() {
           {/* გახდი PRO Title - On video background */}
           <div className="text-center mb-3">
           <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
-            <Crown className="w-5 h-5 text-purple-400" />
+            <img src={crown3dIcon} alt="" className="w-6 h-6 object-contain" />
             <h2 className="text-lg font-bold text-white">გახდი PRO</h2>
           </div>
         </div>
