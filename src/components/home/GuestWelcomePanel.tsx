@@ -84,7 +84,7 @@ export function GuestWelcomePanel({
   const loading = isLoading || isSubmitting;
 
   return (
-    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 py-2 overflow-y-auto" style={{ marginTop: "-35px" }}>
+    <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 py-2 overflow-y-auto" style={{ marginTop: "-70px" }}>
       {/* Title */}
       <motion.div
         initial={{ y: -10, opacity: 0 }}
