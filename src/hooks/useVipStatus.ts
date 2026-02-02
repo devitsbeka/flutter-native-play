@@ -160,12 +160,22 @@ export function useVipStatus() {
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
+  // Helper methods for VIP benefits
+  const getXpMultiplier = (): number => isVip ? 2 : 1;
+  const getMaxDailySpins = (): number => isVip ? 4 : 1;
+  const shouldSkipGameStake = (): boolean => isVip;
+  const canAccessVipFrames = (): boolean => isVip;
+
   return {
     subscription,
     isVip,
     loading,
     activateVip,
     getDaysRemaining,
+    getXpMultiplier,
+    getMaxDailySpins,
+    shouldSkipGameStake,
+    canAccessVipFrames,
     benefits: VIP_BENEFITS,
     prices: VIP_PRICES,
   };

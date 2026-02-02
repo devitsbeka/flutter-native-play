@@ -2866,6 +2866,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_daily_vip_rewards: {
+        Row: {
+          created_at: string | null
+          id: string
+          powers_claimed: boolean | null
+          reward_date: string
+          spins_granted: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          powers_claimed?: boolean | null
+          reward_date?: string
+          spins_granted?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          powers_claimed?: boolean | null
+          reward_date?: string
+          spins_granted?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_fact_votes: {
         Row: {
           created_at: string | null
