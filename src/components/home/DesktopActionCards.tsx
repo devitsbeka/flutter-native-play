@@ -5,6 +5,7 @@ import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import missionCrystalIcon from "@/assets/icons/icon-mission-crystal.png";
 import chestBoxIcon from "@/assets/icons/icon-chest-box.png";
 import powersIcon from "@/assets/icons/icon-powers.png";
+import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
@@ -14,6 +15,7 @@ interface DesktopActionCardsProps {
   onMissionsClick: () => void;
   onChestClick: () => void;
   onPowersClick: () => void;
+  onAdFreeClick: () => void;
   vertical?: boolean;
 }
 
@@ -248,6 +250,7 @@ export function DesktopActionCards({
   onMissionsClick,
   onChestClick,
   onPowersClick,
+  onAdFreeClick,
   vertical = false,
 }: DesktopActionCardsProps) {
   const { canClaimDaily, dailyTimeLeft, canClaimChest, chestTimeLeft } = useRewardTimers();
@@ -317,6 +320,19 @@ export function DesktopActionCards({
         bgGradient=""
         particleColor=""
         delay={0.25}
+      />
+
+      {/* No-Ads Card */}
+      <ActionCard
+        iconSrc={adFreeIcon}
+        title="რეკლამის გარეშე"
+        statusText="პრემიუმ გამოცდილება"
+        expandedDetails="ითამაშე რეკლამების გარეშე და მიიღე ექსკლუზიური შეღავათები."
+        actionLabel="გახდი VIP"
+        onClick={onAdFreeClick}
+        bgGradient=""
+        particleColor=""
+        delay={0.3}
       />
     </div>
   );
