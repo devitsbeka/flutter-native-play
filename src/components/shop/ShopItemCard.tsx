@@ -115,9 +115,7 @@ export function ShopItemCard({
         </motion.div>
       )}
 
-      <motion.button
-        onClick={onClick}
-        disabled={isPurchased || isLoading}
+      <div
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
           "p-3 sm:p-4 md:p-5",
@@ -136,15 +134,14 @@ export function ShopItemCard({
             ? "0 3px 0 hsl(var(--border))"
             : undefined,
           border: isPurchased ? "2px solid hsl(145 70% 50%)" : undefined,
-          // Removed opacity reduction for unaffordable items - keep full visibility
         }}
-        whileHover={!isPurchased && canAfford ? { scale: 1.02, y: -2 } : {}}
-        whileTap={!isPurchased && canAfford ? { scale: 0.98, y: 0 } : {}}
       >
         {/* Icon - Top */}
         <motion.div
           className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-2 sm:mb-3"
-          whileHover={{ scale: 1.05 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.05 + 0.1 }}
         >
           <div className="[&>img]:w-full [&>img]:h-full [&>img]:object-contain [&>svg]:w-full [&>svg]:h-full">
             {icon}
@@ -172,18 +169,20 @@ export function ShopItemCard({
             <>
               {/* Price Display */}
               <span className="font-bold text-lg sm:text-xl text-green-600 dark:text-green-400">₾{price}</span>
-              {/* Buy Button */}
-              <motion.div
+              {/* Buy Button - only this is clickable */}
+              <motion.button
+                onClick={onClick}
+                disabled={isPurchased || isLoading}
                 className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
                 style={{
                   background: "linear-gradient(180deg, #4CAF50 0%, #388E3C 100%)",
                   boxShadow: "0 3px 0 #2E7D32",
                 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97, y: 2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95, y: 2 }}
               >
                 {t('shop.buy')}
-              </motion.div>
+              </motion.button>
             </>
           ) : (
             <>
@@ -192,22 +191,24 @@ export function ShopItemCard({
                 <img src={currencyIcon!} alt="" className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="font-bold text-base sm:text-lg text-gray-800">{price}</span>
               </div>
-              {/* Buy Button */}
-              <motion.div
+              {/* Buy Button - only this is clickable */}
+              <motion.button
+                onClick={onClick}
+                disabled={isPurchased || isLoading}
                 className="px-5 py-2 rounded-full font-bold text-xs sm:text-sm text-white"
                 style={{
                   background: "linear-gradient(180deg, #9359DD 0%, #7B3FC7 100%)",
                   boxShadow: "0 3px 0 #5D2DA3",
                 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97, y: 2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95, y: 2 }}
               >
                 {t('shop.buy')}
-              </motion.div>
+              </motion.button>
             </>
           )}
         </div>
-      </motion.button>
+      </div>
     </motion.div>
   );
 }
