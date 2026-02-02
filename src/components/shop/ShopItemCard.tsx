@@ -119,7 +119,7 @@ export function ShopItemCard({
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
           "p-3 sm:p-4 md:p-5",
-          "aspect-[1/1.16] sm:aspect-[1/1.45]",
+          "aspect-[1/1.35] sm:aspect-[1/1.45]",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
