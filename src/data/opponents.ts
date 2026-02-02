@@ -83,6 +83,7 @@ export const countries = [
   { code: "TH", name: "Thailand", flag: "🇹🇭" },
   { code: "VN", name: "Vietnam", flag: "🇻🇳" },
   { code: "PH", name: "Philippines", flag: "🇵🇭" },
+  { code: "GE", name: "Georgia", flag: "🇬🇪" },
 ];
 
 const avatarEmojis = ["😎", "🤓", "🧐", "😏", "🤔", "😊", "🙂", "🤠", "👻", "🦊", "🐱", "🐶", "🦁", "🐯", "🐼", "🐨", "🦄", "🐲", "👾", "🤖"];
