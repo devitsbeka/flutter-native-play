@@ -388,7 +388,7 @@ function CollectionCard({
                              flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="text-sm font-medium">კიდევ დამატება</span>
+                  <span className="text-sm font-medium">რაუნდის დამატება</span>
                 </button>
               </div>
             </div>
@@ -593,7 +593,7 @@ function CollectionCard({
                            flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
               >
                 <Plus className="w-4 h-4" />
-                <span className="text-sm font-medium">კიდევ დამატება</span>
+                <span className="text-sm font-medium">რაუნდის დამატება</span>
               </button>
               
               {/* Play All Button - Mobile */}
