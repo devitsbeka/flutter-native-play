@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, Share2, ChevronRight, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
+import { X, RotateCcw, Share2, ChevronRight, ChevronLeft, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmarkIcon from "@/assets/icons/bookmark-3d.png";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
@@ -376,6 +376,39 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
 
           {/* Content */}
           <div className="relative z-10 flex flex-col h-[calc(100vh-160px)] px-4 max-w-[700px] md:max-w-[520px] mx-auto">
+            {/* Left/Right Navigation Arrows - Desktop only */}
+            {!gameComplete && !roundComplete && !allRoundsComplete && questions.length > 1 && (
+              <>
+                {/* Left Arrow - Go to previous question (disabled if first or result shown) */}
+                <button
+                  onClick={() => {
+                    if (currentIndex > 0 && !showResult) {
+                      setCurrentIndex(prev => prev - 1);
+                      setResults(prev => prev.slice(0, -1));
+                    }
+                  }}
+                  disabled={currentIndex === 0 || showResult}
+                  className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ left: 'max(1rem, calc(50% - 340px))' }}
+                >
+                  <ChevronLeft className="w-6 h-6 text-white" />
+                </button>
+                
+                {/* Right Arrow - Skip to next question (disabled if last or result shown) */}
+                <button
+                  onClick={() => {
+                    if (currentIndex < questions.length - 1 && !showResult) {
+                      setCurrentIndex(prev => prev + 1);
+                    }
+                  }}
+                  disabled={currentIndex === questions.length - 1 || showResult}
+                  className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ right: 'max(1rem, calc(50% - 340px))' }}
+                >
+                  <ChevronRight className="w-6 h-6 text-white" />
+                </button>
+              </>
+            )}
             <AnimatePresence mode="wait">
               {/* Round Complete Screen - Ask to continue */}
               {roundComplete && !allRoundsComplete ? (
