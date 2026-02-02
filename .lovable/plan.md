@@ -1,33 +1,49 @@
 
 
-# Plan: Improve Collection Card UX with Centering and Play Button
+# Plan: Change "Add Round" Button Text
 
-## ✅ COMPLETED
+## Overview
 
-### Issues Fixed
-
-1. **✅ Round cards clickable**: The `CollectionQuizCard` container now has `onClick` to play the quiz
-2. **✅ Expanded collection centered**: Desktop/tablet shows fixed centered modal with proper scrolling
-3. **✅ Play button added**: "ითამაშე" button with play icon at bottom of modal
-4. **✅ Scroll issue fixed**: Modal uses `flex flex-col` with `overflow-y-auto` content area
+Update the "Add Round" button text from "კიდევ დამატება" (Add more) to "რაუნდის დამატება" (Add round) in both the desktop modal and mobile inline views.
 
 ---
 
-## Implementation Summary
+## Technical Changes
 
-### CollectionQuizCard (Lines 103-176)
-- Added `onClick={() => onPlay?.(quiz)}` to container
-- Added `cursor-pointer hover:bg-muted/70 transition-colors` classes
+### File: `src/components/social/MyTriviaTab.tsx`
 
-### CollectionCard Props
-- Added `isMobile?: boolean` prop
-- Added `handlePlayCollection` function
+#### Change 1: Desktop Modal View (Line 391)
 
-### Desktop Modal (when `isExpanded && !isMobile`)
-- Fixed centered modal with `fixed inset-0 z-50 flex items-center justify-center`
-- Scrollable content: `flex-1 overflow-y-auto min-h-0`
-- Fixed play button at bottom: `flex-shrink-0 border-t`
+```typescript
+// BEFORE (Line 391):
+<span className="text-sm font-medium">კიდევ დამატება</span>
 
-### Mobile Behavior
-- Unchanged inline expansion
-- Added play button to mobile expanded view as well
+// AFTER:
+<span className="text-sm font-medium">რაუნდის დამატება</span>
+```
+
+#### Change 2: Mobile Inline View (Line 596)
+
+```typescript
+// BEFORE (Line 596):
+<span className="text-sm font-medium">კიდევ დამატება</span>
+
+// AFTER:
+<span className="text-sm font-medium">რაუნდის დამატება</span>
+```
+
+---
+
+## Summary
+
+| Location | Line | Change |
+|----------|------|--------|
+| Desktop modal | 391 | "კიდევ დამატება" → "რაუნდის დამატება" |
+| Mobile inline | 596 | "კიდევ დამატება" → "რაუნდის დამატება" |
+
+---
+
+## Expected Result
+
+Both the expanded collection modal on desktop/tablet and the inline expanded collection on mobile will show "რაუნდის დამატება" (Add round) instead of "კიდევ დამატება" (Add more) for the button that adds new rounds to a collection.
+
