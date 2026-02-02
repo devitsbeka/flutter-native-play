@@ -430,10 +430,12 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Logo (mobile) + Spotlight (tablet/desktop) */}
+            {/* Center: Logo + Spotlight */}
             <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
-              {/* Logo - visible only on mobile */}
+              {/* Logo - sm on mobile/tablet, md on desktop */}
               <MyTriviaLiveLogo size="sm" className="md:hidden" />
+              <MyTriviaLiveLogo size="sm" className="hidden md:block lg:hidden" />
+              <MyTriviaLiveLogo size="md" className="hidden lg:block" />
               {/* Spotlight Search Bar - Hidden on mobile */}
               <div className="hidden md:flex flex-1">
                 <SpotlightSearch />
