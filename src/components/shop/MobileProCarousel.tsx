@@ -52,11 +52,11 @@ export function MobileProCarousel() {
   const { initiateProCheckout, isProcessing } = useProPurchase();
   const currentTier = subscription?.vip_tier as SimplifiedTier | undefined;
 
-  // Auto-rotate every 4 seconds
+  // Auto-rotate every 6 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % PRO_TIERS.length);
-    }, 4000);
+    }, 6000);
     return () => clearInterval(interval);
   }, []);
 
