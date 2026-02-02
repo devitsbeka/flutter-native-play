@@ -782,17 +782,40 @@ export function RoomLobbyV2() {
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center justify-center gap-3">
-              {/* Room Icon */}
-              {currentRoom.room_icon && (
-                <img 
-                  src={currentRoom.room_icon} 
-                  alt="Room icon" 
-                  className="w-8 h-8 object-contain"
-                />
+              {/* Room Icon + Name - clickable for host */}
+              {isHost ? (
+                <motion.button
+                  onClick={() => setShowIconPicker(true)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  title={t("team.editRoom")}
+                >
+                  {currentRoom.room_icon && (
+                    <img 
+                      src={currentRoom.room_icon} 
+                      alt="Room icon" 
+                      className="w-8 h-8 object-contain"
+                    />
+                  )}
+                  <h2 className="text-base font-bold text-white drop-shadow-lg">
+                    {roomName}
+                  </h2>
+                </motion.button>
+              ) : (
+                <>
+                  {currentRoom.room_icon && (
+                    <img 
+                      src={currentRoom.room_icon} 
+                      alt="Room icon" 
+                      className="w-8 h-8 object-contain"
+                    />
+                  )}
+                  <h2 className="text-base font-bold text-white drop-shadow-lg">
+                    {roomName}
+                  </h2>
+                </>
               )}
-              <h2 className="text-base font-bold text-white drop-shadow-lg">
-                {roomName}
-              </h2>
               {isHost && (
                 <div className="flex items-center gap-1">
                   <motion.button
@@ -800,7 +823,7 @@ export function RoomLobbyV2() {
                     className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                      title={t("team.editRoom")}
+                    title={t("team.editRoom")}
                   >
                     <Edit2 className="w-4 h-4" />
                   </motion.button>
@@ -809,7 +832,7 @@ export function RoomLobbyV2() {
                     className="w-8 h-8 text-white/70 hover:text-white transition-colors flex items-center justify-center"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                      title={t("team.changeBackground")}
+                    title={t("team.changeBackground")}
                   >
                     <Palette className="w-4 h-4" />
                   </motion.button>
