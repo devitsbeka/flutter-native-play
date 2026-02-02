@@ -1,165 +1,126 @@
 
+# Plan: Responsive Logo Size + Bolder LIVE Text
 
-# Plan: Make Room Names Fun & Thematically Connected to Icons
+## Issues to Address
 
-## Problem Analysis
+1. **Logo size not responsive** - Currently uses fixed `size="md"` on mobile, but doesn't scale up for tablet/desktop
+2. **"LIVE" text looks thin** - Currently uses `font-bold` (700 weight) but should be bolder for better visual impact
 
-Looking at the screenshot, the name "ჯკუის საკითხავი" (Quiz Reader) with a book icon is:
-1. **Boring and literal** - sounds like a study session, not an exciting game
-2. **Missing the social element** - trivia rooms are about friends gathering to compete
-3. **No energy or excitement** - doesn't convey the fun, competitive nature
+---
 
-## Better Naming Philosophy
+## Technical Changes
 
-Room names for trivia games should evoke:
-- **Competition & Battle** - It's a brain fight!
-- **Team Spirit** - People gathering together
-- **Fun & Energy** - Not a classroom, but a party
-- **Clever Wordplay** - Makes people smile
+### File 1: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-## Curated Theme Categories
-
-### 1. Battle/Competition Names (brain warfare)
-| Georgian Name | Meaning | Icon Keywords |
-|--------------|---------|---------------|
-| ტვინების არენა | Brain Arena | arena, colosseum, stadium |
-| IQ დუელი | IQ Duel | sword, duel, fencing |
-| გონების რინგი | Mind Ring | boxing, ring, fight |
-| ცოდნის ომი | Knowledge War | battle, war, shield |
-
-### 2. Team/Squad Names (gathering vibes)
-| Georgian Name | Meaning | Icon Keywords |
-|--------------|---------|---------------|
-| გენიოსთა კლუბი | Genius Club | group, friends, club |
-| ჭკვიანთა ბანდა | Smart Gang | gang, team, squad |
-| ერუდიტების ბრძოლა | Erudites' Battle | trophy, medal, crown |
-
-### 3. Fun/Energy Names (party atmosphere)
-| Georgian Name | Meaning | Icon Keywords |
-|--------------|---------|---------------|
-| IQ პარტი | IQ Party | party, celebration, confetti |
-| ტვინის ფეირვორკი | Brain Fireworks | fireworks, explosion, lightning |
-| გონების რეივი | Mind Rave | party, music, dance |
-
-### 4. Mythical/Epic Names (dramatic flair)
-| Georgian Name | Meaning | Icon Keywords |
-|--------------|---------|---------------|
-| ფენიქსის ბრძოლა | Phoenix Battle | phoenix, fire, dragon |
-| დრაკონთა კლუბი | Dragon Club | dragon, fire, knight |
-| ნინჯა ტვინები | Ninja Brains | ninja, samurai, warrior |
-
-## Technical Implementation
-
-### Update AI Prompt in `generate-room-name/index.ts`
-
-Replace the current generic prompt with a more creative, theme-focused one:
+Add a new **responsive** prop that automatically selects the right size based on screen width:
 
 ```typescript
-const prompt = `შექმენი კრეატიული და სახალისო ქართული სახელი ტრივია ოთახისთვის, სადაც მეგობრები იკრიბებიან გონებრივი ბრძოლისთვის.
-
-სახელის სტილი უნდა იყოს ერთ-ერთი:
-1. ბრძოლის თემა: "ტვინების არენა", "გონების რინგი", "IQ დუელი"
-2. გუნდის თემა: "გენიოსთა კლუბი", "ჭკვიანთა ბანდა", "ერუდიტები"
-3. წვეულების თემა: "IQ პარტი", "ტვინის ფეირვორკი", "გონების რეივი"
-4. მითიური თემა: "ფენიქსის ბრძოლა", "დრაკონთა კლუბი", "ნინჯა ტვინები"
-5. სპორტის თემა: "ჩემპიონთა ლიგა", "IQ ჩემპიონატი", "გონების ოლიმპიადა"
-
-მოთხოვნები:
-- მაქსიმუმ 18 სიმბოლო
-- 1-2 სიტყვა
-- სახალისო და ენერგიული
-- არ გამოიყენო მოსაწყენი სიტყვები: კვიზი, საკითხავი, ტესტი, გამოცდა
-
-აიკონის სიტყვა (ინგლისურად) უნდა შეესაბამებოდეს სახელის თემას:
-- ბრძოლა: sword, shield, arena, boxing, knight
-- გუნდი: friends, group, party, team, club
-- მითიური: dragon, phoenix, ninja, wizard, lion
-- სპორტი: trophy, medal, champion, crown, star
-
-დააბრუნე JSON: {"name": "სახელი", "icon_keyword": "keyword"}`;
+// Add responsive prop option
+interface MyTriviaLiveLogoProps {
+  size?: "sm" | "md" | "lg" | "xl";
+  responsive?: boolean;  // NEW: Auto-size based on breakpoint
+  textColor?: "light" | "dark";
+  className?: string;
+}
 ```
 
-### Update Fallback Names
-
-Replace boring fallbacks with exciting ones:
+When `responsive={true}`, the component uses the breakpoint hook to select:
+- **Mobile** (< 768px): `sm` (fontSize: 20px)
+- **Tablet** (768px - 1024px): `md` (fontSize: 28px)  
+- **Desktop** (> 1024px): `lg` (fontSize: 40px)
 
 ```typescript
-const FALLBACK_NAMES = [
-  // Battle themes
-  "ტვინების არენა",   // Brain Arena
-  "გონების რინგი",    // Mind Ring
-  "IQ დუელი",         // IQ Duel
-  // Team themes  
-  "გენიოსთა კლუბი",   // Genius Club
-  "ჭკვიანთა ბანდა",   // Smart Gang
-  // Fun themes
-  "IQ პარტი",         // IQ Party
-  "გონების რეივი",    // Mind Rave
-  // Epic themes
-  "დრაკონთა კლუბი",   // Dragon Club
-  "ნინჯა ტვინები",    // Ninja Brains
-  "ფენიქსის ბრძოლა",  // Phoenix Battle
-];
+import { useBreakpoint } from "@/hooks/use-breakpoint";
+
+export function MyTriviaLiveLogo({ 
+  size = "md", 
+  responsive = false,
+  textColor = "dark",
+  className = "" 
+}: MyTriviaLiveLogoProps) {
+  const breakpoint = useBreakpoint();
+  
+  // Auto-size based on breakpoint when responsive is enabled
+  let effectiveSize = size;
+  if (responsive) {
+    if (breakpoint === "xxs" || breakpoint === "xs" || breakpoint === "sm") {
+      effectiveSize = "sm";  // Mobile
+    } else if (breakpoint === "md") {
+      effectiveSize = "md";  // Tablet
+    } else {
+      effectiveSize = "lg";  // Desktop (lg, xl, 2xl)
+    }
+  }
+  
+  const config = sizeConfig[effectiveSize];
+  // ... rest of component
+}
 ```
 
-### Expand Icon Keyword Mappings
+---
 
-Add more fun and relevant icon search terms:
+### File 2: `src/components/social/LiveBadge.tsx`
+
+Make the "LIVE" text bolder by changing from `font-bold` to `font-black`:
 
 ```typescript
-const THEME_ICON_FALLBACKS: Record<string, string[]> = {
-  // Battle/Competition
-  'arena': ['arena', 'colosseum', 'stadium', 'ring'],
-  'duel': ['sword', 'fencing', 'swords', 'fight'],
-  'ring': ['boxing', 'ring', 'fight', 'arena'],
-  
-  // Team/Social  
-  'club': ['friends', 'group', 'party', 'team'],
-  'gang': ['group', 'friends', 'team'],
-  'party': ['party', 'celebration', 'confetti', 'fireworks'],
-  
-  // Mythical/Epic
-  'dragon': ['dragon', 'fire', 'knight'],
-  'phoenix': ['phoenix', 'fire', 'flame', 'bird'],
-  'ninja': ['ninja', 'samurai', 'warrior'],
-  'wizard': ['wizard', 'magic', 'wand', 'hat'],
-  'lion': ['lion', 'crown', 'king'],
-  'tiger': ['tiger', 'stripes', 'wild'],
-  'eagle': ['eagle', 'bird', 'flying'],
-  'wolf': ['wolf', 'pack', 'wild'],
-  
-  // Victory/Success
-  'champion': ['trophy', 'medal', 'crown', 'cup'],
-  'winner': ['trophy', 'medal', 'star', 'crown'],
-  'olympic': ['medal', 'torch', 'olympic'],
-};
+// Before:
+className={`... ${config.text} font-bold uppercase tracking-wider text-white`}
+
+// After:
+className={`... ${config.text} font-black uppercase tracking-wider text-white`}
 ```
 
-## Visual Examples
+**Font weights comparison:**
+- `font-bold` = 700 (current)
+- `font-extrabold` = 800
+- `font-black` = 900 (thickest, recommended)
 
-**Before (boring):**
-```text
-📚 ჯკუის საკითხავი    ← "Quiz Reading" with random book
-📚 კვიზის ოთახი        ← "Quiz Room" - sounds like homework
+---
+
+### File 3: `src/pages/Index.tsx`
+
+Update the header logo to use responsive sizing:
+
+```typescript
+// Before (line 435):
+<MyTriviaLiveLogo size="md" className="md:hidden" />
+
+// After:
+<MyTriviaLiveLogo responsive className="md:hidden" />
 ```
 
-**After (fun & matching):**
-```text
-🐉 დრაკონთა კლუბი     ← "Dragon Club" with dragon icon!
-⚔️ ტვინების არენა     ← "Brain Arena" with arena/colosseum icon
-🦁 ლომთა ბრძოლა       ← "Lions' Battle" with lion icon
-🎉 IQ პარტი            ← "IQ Party" with party/celebration icon
-🥷 ნინჯა ტვინები       ← "Ninja Brains" with ninja icon
+This shows:
+- **Mobile**: Small logo (20px)
+- **Tablet**: Medium logo (28px) - though hidden on md+ in current implementation
+- **Desktop**: Large logo (40px) - hidden by `md:hidden`, but if shown elsewhere it scales
+
+---
+
+## Visual Comparison
+
+**Before:**
 ```
+Mobile:    MyTrivia [LIVE]  ← 28px (md), thin "LIVE"
+Tablet:    MyTrivia [LIVE]  ← 28px (md), thin "LIVE"  
+Desktop:   MyTrivia [LIVE]  ← 28px (md), thin "LIVE"
+```
+
+**After:**
+```
+Mobile:    MyTrivia [LIVE]  ← 20px (sm), bold "LIVE"
+Tablet:    MyTrivia [LIVE]  ← 28px (md), bold "LIVE"  
+Desktop:   MyTrivia [LIVE]  ← 40px (lg), bold "LIVE"
+```
+
+---
 
 ## Summary
 
-| Change | Purpose |
-|--------|---------|
-| New AI prompt with theme categories | Generate exciting, thematic names |
-| Updated fallback names | No more boring "generic quiz" names |
-| Expanded icon keyword mappings | Better icon-to-name matching |
-| Banned boring words | No "კვიზი", "საკითხავი", "ტესტი" |
+| File | Change |
+|------|--------|
+| `MyTriviaLiveLogo.tsx` | Add `responsive` prop with breakpoint-based sizing |
+| `LiveBadge.tsx` | Change `font-bold` to `font-black` for bolder "LIVE" text |
+| `Index.tsx` | Use `responsive` prop on header logo |
 
-This creates room names that make people excited to join - like entering "Dragon Club" or "Ninja Brains" feels way more fun than "Quiz Reader"!
-
+The responsive approach keeps backwards compatibility - existing usages with explicit `size="sm"` or `size="lg"` still work, while new `responsive` prop enables automatic scaling.
