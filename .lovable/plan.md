@@ -1,62 +1,90 @@
 
-# გეგმა: მენიუს შეკეთება - გამოსვლა და კომპაქტური ლეიაუთი
 
-## პრობლემები
+# გეგმა: წინა მიდგომის აღდგენა - ოთახის სახელი/აიკონი
 
-### 1. გამოსვლა არ მუშაობს
-- `handleLogout` ფუნქცია async-ია, მაგრამ შეცდომის დამუშავება არ აქვს
-- თუ `signOut` წარუმატებელია, ნავიგაცია მაინც ხდება
+## პრობლემა
 
-### 2. გამოსვლის ღილაკი ჩაჭრილია
-- სქროლ კონტეინერს არ აქვს `safe-area-inset-bottom` 
-- მოწყობილობებზე home indicator-ით ქვედა შიგთავსი იჭრება
-
-### 3. ელემენტებს შორის ძალიან დიდი gap-ები
-- `gap-4` და `p-4` ძალიან ბევრ ადგილს იკავებს
-- პატარა ეკრანებზე შიგთავსი არ ეტევა
-
----
+ახალი "თემატური" მიდგომა ძალიან შეზღუდულია:
+- ყოველთვის ერთი და იგივე preset სახელები ("მცოდნეები", "ერუდიტები")
+- აიკონები მხოლოდ თემატურიდან ("brain", "lightbulb")
+- არ არის მრავალფეროვნება
 
 ## გადაწყვეტა
 
-### ფაილი: `src/components/home/SideMenuDrawer.tsx`
+დავაბრუნოთ წინა მიდგომა:
+1. **AI თავისუფლად აგენერირებს სახელებს** - არა preset სიიდან
+2. **შემთხვევითი აიკონი 9k ბიბლიოთეკიდან** - უფრო მრავალფეროვანი
 
-**ცვლილებები:**
+---
 
-1. **handleLogout შეკეთება (ხაზი 63-67)**
-   - დამატება error logging და checking
-   ```typescript
-   const handleLogout = async () => {
-     try {
-       const { error } = await signOut();
-       if (error) {
-         console.error('Logout error:', error);
-         return;
-       }
-       onClose();
-       navigate("/");
-     } catch (err) {
-       console.error('Logout exception:', err);
-     }
-   };
-   ```
+## ფაილი 1: `supabase/functions/generate-room-name/index.ts`
 
-2. **Scrollable content-ზე safe-area დამატება (ხაზი 164)**
-   - `overflow-y-auto` → `overflow-y-auto pb-safe` (ან `pb-[env(safe-area-inset-bottom)]`)
-   
-3. **Gap-ების შემცირება:**
-   - User profile section: `p-4` → `p-3`, `gap-4` → `gap-3`
-   - Play button height: 56 → 52
-   - Nav items: `p-4` → `p-3`, `gap-4` → `gap-3`
-   - Settings/Logout: `p-4` → `p-3`, `gap-4` → `gap-3`, `pb-4` → `pb-6`
+### ცვლილებები:
 
-4. **ქვედა safe-area padding (ხაზი 273)**
-   - `pb-4` → `pb-[calc(1rem+env(safe-area-inset-bottom))]`
+1. **წავშალოთ THEMED_ROOMS სტრუქტურა** - აღარ გვჭირდება თემატური მაპინგი
+
+2. **შემთხვევითი აიკონი ბიბლიოთეკიდან:**
+```typescript
+// Get random icon from library (the previous approach)
+const { data: randomIcon, error: iconError } = await supabase
+  .from('icon_library')
+  .select('slug, icon_url')
+  .not('icon_url', 'is', null)
+  .order('random()')  // Random selection
+  .limit(1);
+```
+
+3. **AI prompt განახლება** - თავისუფალი კრეატიულობა:
+```typescript
+const prompt = `შექმენი ქართული სახელი ტრივია თამაშის ოთახისთვის.
+
+მოთხოვნები:
+- მაქსიმუმ 18 სიმბოლო
+- 1-2 სიტყვა
+- კრეატიული და სახალისო
+- მხოლოდ ქართული, არანაირი emoji
+
+მაგალითები: "გონიერები", "IQ კლუბი", "მეცნიერები", "ჭკვიანთა ბრძოლა"
+
+დაბრუნე მხოლოდ სახელი.`;
+```
+
+4. **Fallback სახელები** - მარტივი სია (თემატური მაპინგის გარეშე):
+```typescript
+const FALLBACK_NAMES = [
+  "IQ ბრძოლა", "გენიოსები", "ჭკვიანები", "ერუდიტები",
+  "მცოდნეები", "მეცნიერები", "კვიზმანიები"
+];
+```
+
+---
+
+## ფაილი 2: `src/utils/roomNameGenerator.ts`
+
+### ცვლილებები:
+
+მარტივი fallback სახელების სია (თემატური სტრუქტურის გარეშე):
+
+```typescript
+const TRIVIA_NAMES = [
+  "IQ ბრძოლა", "გენიოსები", "ჭკვიანები", "ერუდიტები",
+  "მცოდნეები", "მეცნიერები", "კვიზმანიები", "ტვინები",
+  "გონიერები", "გამარჯვებულები", "ლიდერები"
+];
+
+export function generateRoomName(): string {
+  return TRIVIA_NAMES[Math.floor(Math.random() * TRIVIA_NAMES.length)];
+}
+```
 
 ---
 
 ## შედეგი
 
-- გამოსვლის ღილაკი იმუშავებს სწორად
-- ქვედა ელემენტები აღარ იქნება ჩაჭრილი
-- მენიუ კომპაქტური იქნება და პატარა ეკრანებზეც მოთავსდება
+**ახლა (თემატური):**
+- "მცოდნეები" + 🧠 (ყოველთვის ტვინი ტიპის აიკონი)
+
+**შემდეგ (მრავალფეროვანი):**
+- AI-generated კრეატიული სახელი + შემთხვევითი აიკონი 9k ბიბლიოთეკიდან
+- მაგ: "IQ კლუბი" + 🎨 (ნებისმიერი აიკონი)
+
