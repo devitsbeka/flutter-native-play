@@ -700,8 +700,8 @@ export function RoomLobbyV2() {
             </motion.button>
 
             <div className="flex items-center gap-2">
-              {/* Chat toggle */}
-              <motion.button
+              {/* TEMPORARILY HIDDEN - Chat toggle */}
+              {/* <motion.button
                 onClick={() => setShowChat(!showChat)}
                 className="flex items-center justify-center w-10 h-10 rounded-xl relative bg-white/10 backdrop-blur-sm border border-white/20"
                 whileHover={{ scale: 1.05 }}
@@ -713,7 +713,7 @@ export function RoomLobbyV2() {
                     {unreadMessageCount}
                   </span>
                 )}
-              </motion.button>
+              </motion.button> */}
 
               {/* Share button */}
               <motion.button
