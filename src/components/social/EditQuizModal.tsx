@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -419,8 +419,28 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex-1 flex flex-col"
+                className="flex-1 flex flex-col relative"
               >
+                {/* Left Arrow Navigation */}
+                {questions.length > 1 && currentQuestionIndex > 0 && (
+                  <button
+                    onClick={() => carouselApi?.scrollTo(currentQuestionIndex - 1)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                )}
+                
+                {/* Right Arrow Navigation */}
+                {questions.length > 1 && currentQuestionIndex < questions.length - 1 && (
+                  <button
+                    onClick={() => carouselApi?.scrollTo(currentQuestionIndex + 1)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                )}
+
                 {/* Swipe Carousel for Questions */}
                 <Carousel
                   setApi={setCarouselApi}
