@@ -430,8 +430,12 @@ export default function Index() {
               )}
             </div>
             
-            {/* Center: Spotlight only (logo moved above profile) */}
-            <div className="flex-1 flex justify-center md:justify-start">
+            {/* Center: Logo + Spotlight */}
+            <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
+              {/* Logo - visible on all screens, md size on desktop/tablet, sm on mobile */}
+              <MyTriviaLiveLogo size="sm" className="md:hidden" />
+              <MyTriviaLiveLogo size="md" className="hidden md:flex" />
+              
               {/* Spotlight Search Bar - Hidden on mobile */}
               <div className="hidden md:flex flex-1">
                 <SpotlightSearch />
@@ -570,15 +574,6 @@ export default function Index() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
               >
-                {/* Logo above profile */}
-                <motion.div
-                  initial={{ y: -10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.15, type: "spring" }}
-                  className="mb-6"
-                >
-                  <MyTriviaLiveLogo responsive />
-                </motion.div>
 
                 <div className="relative">
                   {/* Tablet portrait: use the same curved circular action buttons as mobile */}
@@ -796,15 +791,6 @@ export default function Index() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
-              {/* Logo above profile */}
-              <motion.div
-                initial={{ y: -10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.15, type: "spring" }}
-                className="mb-6"
-              >
-                <MyTriviaLiveLogo responsive />
-              </motion.div>
 
               <div className="relative">
                 <motion.div 
@@ -899,15 +885,6 @@ export default function Index() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
-              {/* Logo above profile */}
-              <motion.div
-                initial={{ y: -10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.15, type: "spring" }}
-                className="mb-4"
-              >
-                <MyTriviaLiveLogo responsive />
-              </motion.div>
               {/* Guest: Title and desc ABOVE avatar for mobile */}
               {!user && (
                 <motion.div
