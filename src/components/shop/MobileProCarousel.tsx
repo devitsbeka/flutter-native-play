@@ -70,7 +70,7 @@ export function MobileProCarousel() {
   const TierIcon = tier.icon;
 
   return (
-    <div className="px-4 pt-4 pb-[30px]">
+    <div className="px-4 pt-4 pb-0">
       {/* Combined PRO Card with Mascot */}
       <div className="relative overflow-hidden rounded-3xl min-h-[320px] md:min-h-[360px]">
         <AnimatePresence mode="wait">
@@ -104,8 +104,8 @@ export function MobileProCarousel() {
 
             {/* Left: Content */}
             <div className="w-[65%] p-5 z-10">
-              {/* Header - Icon + Title + Price on same row */}
-              <div className="flex items-center gap-3 mb-2">
+              {/* Header - Icon + Title (+ Price on md+) */}
+              <div className="flex flex-wrap items-center gap-3 mb-2">
                 <div 
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ 
@@ -115,17 +115,23 @@ export function MobileProCarousel() {
                 >
                   <TierIcon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-base md:text-lg font-bold text-white flex-1">
+                <h3 className="text-base md:text-lg font-bold text-white">
                   {tier.nameKa}
                 </h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl md:text-2xl font-black text-white">₾{tier.price}</span>
-                  <span className="text-xs md:text-sm text-white/70">/თვე</span>
+                {/* Price - md+: inline with header */}
+                <div className="hidden md:flex items-baseline gap-1 ml-auto">
+                  <span className="text-2xl font-black text-white">₾{tier.price}</span>
+                  <span className="text-sm text-white/70">/თვე</span>
                 </div>
               </div>
+              {/* Price - mobile only: below title */}
+              <div className="flex md:hidden items-baseline gap-1 mb-2">
+                <span className="text-xl font-black text-white">₾{tier.price}</span>
+                <span className="text-xs text-white/70">/თვე</span>
+              </div>
 
-              {/* Benefits - 2 column grid */}
-              <ul className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+              {/* Benefits - single column on mobile, 2 columns on md+ */}
+              <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mb-4">
                 {tier.benefits.map((benefit, i) => (
                   <li 
                     key={i} 
