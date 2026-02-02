@@ -116,7 +116,7 @@ export function QuizTrueFalseButton({
       animate={isRevealed ? state : "initial"}
       whileTap={!disabled ? "tap" : undefined}
       className={cn(
-        "w-full relative cursor-pointer h-[90px]",
+        "w-full relative cursor-pointer h-[120px]",
         disabled && "cursor-default",
         className
       )}
