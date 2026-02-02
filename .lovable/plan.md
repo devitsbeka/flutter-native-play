@@ -1,173 +1,152 @@
 
-# Plan: Shop Layout Improvements
+# Plan: Fix Logo Alignment + Convert Search Bar to Button
 
 ## Overview
 
-This plan addresses 3 UI improvements based on the tablet screenshot:
-1. **Price position** - Move price to the right side of title (same line), not below
-2. **Decrease gap** - Reduce spacing between PRO carousel and shop content below
-3. **Power-ups summary** - Increase container sizes by 20% and move to right side of header row
+Based on the screenshots, there are two issues to fix:
+1. **Logo alignment** - The "MyTrivia" text and "LIVE" badge are not aligned horizontally (badge appears slightly lower)
+2. **Search bar → Search button** - Replace the full search bar with just a search icon button, which expands to full search when clicked
 
 ---
 
-## Issue 1: Move Price to Right Side of Title
+## Issue 1: Fix Logo Horizontal Alignment
 
-### File: `src/components/shop/MobileProCarousel.tsx`
+### Root Cause
+The `LiveBadge` component has `boxShadow: '0 2px 0 #B91C1C'` which adds 2px visual offset at the bottom, making it appear lower than the text.
 
-Currently the layout is:
-```text
-[Icon] სამეგობრო PRO
-       ₾19.99 /თვე
-```
+### Solution
+Adjust the `MyTriviaLiveLogo` component to use `items-baseline` instead of `items-center`, and tweak the LiveBadge positioning.
 
-Change to horizontal layout with price on the right:
-```text
-[Icon] სამეგობრო PRO     ₾19.99 /თვე
-```
+### File: `src/components/shared/MyTriviaLiveLogo.tsx`
 
-**Lines 108-130** - Restructure header to single row:
+**Line 42** - Change alignment from `items-center` to `items-baseline` and add vertical adjustment:
 
 ```typescript
 // Before:
-<div className="mb-2">
-  <div className="flex items-center gap-3">
-    {/* Icon */}
-    {/* Title */}
-  </div>
-  {/* Price below title */}
-  <div className="flex items-baseline gap-1 ml-[52px]">
-    <span>₾{tier.price}</span>
-  </div>
-</div>
-
-// After: Single row with price on right
-<div className="flex items-center gap-3 mb-2">
-  <div 
-    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-    style={{ ... }}
-  >
-    <TierIcon className="w-5 h-5 text-white" />
-  </div>
-  <h3 className="text-base font-bold text-white flex-1">
-    {tier.nameKa}
-  </h3>
-  <div className="flex items-baseline gap-1">
-    <span className="text-xl font-black text-white">₾{tier.price}</span>
-    <span className="text-xs text-white/70">/თვე</span>
-  </div>
-</div>
-```
-
----
-
-## Issue 2: Decrease Gap Between Carousel and Shop Content
-
-### File: `src/components/shop/MobileProCarousel.tsx`
-
-Reduce bottom padding of the carousel container.
-
-**Line 73** - Change padding:
-
-```typescript
-// Before:
-<div className="px-4 pt-4 pb-2">
-
-// After: Remove bottom padding
-<div className="px-4 pt-4 pb-0">
-```
-
-**Lines 201-214** - Reduce dot indicator section margins:
-
-```typescript
-// Before:
-<div className="flex justify-center gap-2 mt-3">
+<div className={`flex items-center gap-1.5 ${className}`}>
 
 // After:
-<div className="flex justify-center gap-2 mt-2">
+<div className={`flex items-center gap-1.5 ${className}`}>
+  // ...text remains same
+  <span className="self-center">
+    <LiveBadge size={config.badgeSize} />
+  </span>
 ```
 
-### File: `src/components/shop/ShopProductGrid.tsx`
+Alternative approach - offset the badge slightly upward using a wrapper or margin.
 
-Reduce top margin of first section.
+### File: `src/components/social/LiveBadge.tsx`
 
-**Line 38** - Reduce section header margin:
+Adjust the wrapper to compensate for the bottom shadow offset:
+
+**Lines 18-21** - Add margin or transform to shift up:
 
 ```typescript
 // Before:
-<div className="px-[15px] mb-3">
+<motion.span
+  initial={{ opacity: 0, scale: 0.8 }}
+  animate={{ opacity: 1, scale: 1 }}
+  className="inline-flex items-center"
+>
 
-// After:
-<div className="px-[15px] mb-2">
+// After: Add slight negative margin to compensate for shadow
+<motion.span
+  initial={{ opacity: 0, scale: 0.8 }}
+  animate={{ opacity: 1, scale: 1 }}
+  className="inline-flex items-center"
+  style={{ marginBottom: '2px' }}
+>
 ```
 
 ---
 
-## Issue 3: Increase Power-Ups Containers Size and Move to Right
+## Issue 2: Convert Search Bar to Search Button
 
-### File: `src/components/shop/PowerUpsSummary.tsx`
+### Current Behavior
+Full search bar is always visible on tablet/desktop
 
-**Size Increase (20%):**
-- Icon: `w-4 h-4` (16px) becomes `w-5 h-5` (20px) - 25% increase
-- Container padding: `px-2 py-0.5` becomes `px-2.5 py-1`
-- Min-width: `48px` becomes `58px`
-- Font size: `text-xs` becomes `text-sm`
+### Desired Behavior
+- Show only a search icon button (like the notification bell)
+- When clicked, open the full search dialog (CommandDialog)
 
-**Line 26** - Update container classes:
+### File: `src/components/search/SpotlightSearch.tsx`
+
+Add a `variant` prop to support both modes:
+- `"bar"` - current behavior (full search bar)
+- `"button"` - just an icon button that opens the dialog
+
+**Lines 35-37** - Add variant prop:
 
 ```typescript
-// Before:
-<div className="flex flex-nowrap items-center gap-1.5 md:gap-2">
-
-// After: Add ml-auto to push to right
-<div className="flex flex-nowrap items-center gap-2 md:gap-2.5 ml-auto">
+interface SpotlightSearchProps {
+  className?: string;
+  variant?: "bar" | "button";
+}
 ```
 
-**Lines 27-47** - Update individual container sizes:
+**Lines 189-213** - Conditionally render based on variant:
 
 ```typescript
-// Before:
-<div
-  className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-sm min-w-[48px]"
->
-  <img src={POWER_UP_ICONS[type]} alt="" className="w-4 h-4" />
-  ...
-  <motion.span className="text-xs font-bold text-foreground/90">
-
-// After: 20% larger
-<div
-  className="flex items-center justify-between gap-2 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm min-w-[58px]"
->
-  <img src={POWER_UP_ICONS[type]} alt="" className="w-5 h-5" />
-  ...
-  <motion.span className="text-sm font-bold text-foreground/90">
+return (
+  <>
+    {variant === "button" ? (
+      // Button mode - just an icon
+      <motion.button
+        className={`relative p-2 rounded-full bg-white/40 backdrop-blur-sm border border-purple-900/10 hover:bg-white/50 transition-colors ${className}`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setOpen(true)}
+      >
+        <Search className="w-5 h-5 text-muted-foreground" />
+        <kbd className="hidden lg:inline-flex absolute -bottom-1 -right-1 items-center gap-0.5 px-1 py-0.5 rounded bg-muted/80 text-[8px] font-medium text-muted-foreground border border-border/50">
+          <Command className="w-2 h-2" />K
+        </kbd>
+      </motion.button>
+    ) : (
+      // Bar mode - current full search bar
+      <motion.div
+        className={`relative flex items-center gap-3 px-4 py-2 rounded-full h-[42px] w-full max-w-[750px] bg-white/40 backdrop-blur-sm border border-purple-900/10 ${className}`}
+        whileHover={{ backgroundColor: "rgba(255,255,255,0.5)" }}
+      >
+        ...existing bar content...
+      </motion.div>
+    )}
+    
+    {/* Command Dialog - same as before */}
+    <CommandDialog ...>
 ```
 
-### File: `src/components/shop/ShopProductGrid.tsx`
+### File: `src/pages/Index.tsx`
 
-Update the flex container to push PowerUpsSummary to the right.
+Update the header to use the button variant for search:
 
-**Lines 38-45** - Change layout to use flex with space-between:
+**Lines 439-442** - Change SpotlightSearch usage:
 
 ```typescript
 // Before:
-<div className="px-[15px] mb-2">
-  <div className="flex items-center gap-3">
-    <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
-      {title}
-    </h2>
-    {sectionId === "powers" && <PowerUpsSummary />}
-  </div>
+{/* Spotlight Search Bar - Hidden on mobile */}
+<div className="hidden md:flex flex-1">
+  <SpotlightSearch />
 </div>
 
-// After: Use justify-between to push power-ups to right
-<div className="px-[15px] mb-2">
-  <div className="flex items-center justify-between">
-    <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
-      {title}
-    </h2>
-    {sectionId === "powers" && <PowerUpsSummary />}
-  </div>
-</div>
+// After: Use button variant positioned before notification bell
+// Remove this from center section
+```
+
+**Lines 446-448** - Add search button before notification bell:
+
+```typescript
+{/* Right side: Search button + Notification */}
+{user && (
+  <div className="flex items-center gap-1">
+    {/* Search button - tablet/desktop only */}
+    <div className="hidden md:block">
+      <SpotlightSearch variant="button" />
+    </div>
+    
+    {/* Bell icon with unread badge */}
+    <motion.button
+      ...
 ```
 
 ---
@@ -176,26 +155,24 @@ Update the flex container to push PowerUpsSummary to the right.
 
 | File | Change |
 |------|--------|
-| `src/components/shop/MobileProCarousel.tsx` | Price on same line as title (right side), reduce bottom padding |
-| `src/components/shop/ShopProductGrid.tsx` | justify-between layout, reduce margin |
-| `src/components/shop/PowerUpsSummary.tsx` | 20% larger containers, push to right with ml-auto |
+| `src/components/social/LiveBadge.tsx` | Add 2px bottom margin to compensate for shadow offset |
+| `src/components/search/SpotlightSearch.tsx` | Add `variant` prop supporting `"bar"` and `"button"` modes |
+| `src/pages/Index.tsx` | Remove search bar from center, add search button before notification bell |
 
 ---
 
 ## Visual Result
 
-**Price Position:**
+**Before:**
 ```text
-Before: [Icon] სამეგობრო PRO
-               ₾19.99 /თვე
-
-After:  [Icon] სამეგობრო PRO          ₾19.99 /თვე
+[Menu] | MyTrivia [LIVE↓] | [========= ძებნა... ⌘K =========] | [🔔]
+                 ↑ badge lower
 ```
 
-**Power-Ups Layout:**
+**After:**
 ```text
-Before: ძალები [50/50: 40] [freeze: 44] [replace: 6] [time: 14]
-
-After:  ძალები                    [50/50: 40] [freeze: 44] [replace: 6] [time: 14]
-        (title on left)           (containers on right, 20% larger)
+[Menu] | MyTrivia [LIVE] | [flex-1 empty space] | [🔍] [🔔]
+                 ↑ aligned                         ↑ search button
 ```
+
+When search button is clicked → Full CommandDialog opens (existing behavior)
