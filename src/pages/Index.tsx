@@ -44,6 +44,8 @@ import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import { AvatarModal } from "@/components/home/AvatarModal";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
+import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
+import { lovable } from "@/integrations/lovable";
 
 import { t } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
@@ -161,7 +163,7 @@ const SideIconButton = ({
 
 export default function Index() {
   const navigate = useNavigate();
-  const { profile, user, fetchProfile } = useAuth();
+  const { profile, user, fetchProfile, signUpWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, setStep, hasCompletedOnboarding } = useOnboarding();
   const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
@@ -196,6 +198,9 @@ export default function Index() {
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
   
+  // Auth loading state for GuestWelcomePanel
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+
 
   // Handle play button click - check auth status and plays remaining
   const handlePlayClick = useCallback(async () => {
@@ -250,6 +255,39 @@ export default function Index() {
     await addCoins(REWARDS.AD_WATCH_COINS);
     setShowNotEnoughCoinsModal(false);
   }, [addCoins]);
+
+  // Guest welcome panel handlers
+  const handleGuestCreateAccount = useCallback(async (username: string, password: string) => {
+    setIsAuthLoading(true);
+    try {
+      const { error } = await signUpWithUsername(username, password);
+      if (error) throw error;
+    } finally {
+      setIsAuthLoading(false);
+    }
+  }, [signUpWithUsername]);
+
+  const handleGuestGoogleSignIn = useCallback(async () => {
+    setIsAuthLoading(true);
+    try {
+      await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+    } finally {
+      setIsAuthLoading(false);
+    }
+  }, []);
+
+  const handleGuestAppleSignIn = useCallback(async () => {
+    setIsAuthLoading(true);
+    try {
+      await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+    } finally {
+      setIsAuthLoading(false);
+    }
+  }, []);
 
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
@@ -461,10 +499,28 @@ export default function Index() {
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
+            {/* GUEST: Show unified welcome panel with video avatar + auth forms */}
+            {!user && (
+              <motion.div
+                className="w-full h-full flex items-center justify-center pointer-events-auto overflow-y-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, type: "spring" }}
+              >
+                <GuestWelcomePanel
+                  onCreateAccount={handleGuestCreateAccount}
+                  onGoogleSignIn={handleGuestGoogleSignIn}
+                  onAppleSignIn={handleGuestAppleSignIn}
+                  onPlayAsGuest={handlePlayClick}
+                  isLoading={isAuthLoading}
+                />
+              </motion.div>
+            )}
+            
             {/* xl+ layout: Cards moved to fixed right side */}
 
-            {/* md to xl layout: Avatar centered (cards now fixed on right side) */}
-            <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px]">
+            {/* md to xl layout: Avatar centered (cards now fixed on right side) - LOGGED IN USERS ONLY */}
+            {user && <div className="hidden md:flex xl:hidden items-start justify-center w-full px-4 pt-[73px]">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -472,29 +528,6 @@ export default function Index() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, type: "spring" }}
               >
-                {/* Guest: Title and desc ABOVE avatar - placed in flow, not absolute */}
-                {!user && (
-                  <motion.div
-                    initial={{ y: -10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="flex flex-col items-center mb-6 pointer-events-auto"
-                  >
-                    <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 28, fontWeight: 900 }}>
-                      გამარჯობა!
-                    </span>
-                    <motion.button
-                      onClick={() => navigate("/auth")}
-                      className="mt-2 text-center cursor-pointer"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <p className="text-base text-gray-600 font-medium text-center leading-relaxed whitespace-nowrap">
-                        შექმენი შენი პროფილი და ითამაშე უფასოდ!
-                      </p>
-                    </motion.button>
-                  </motion.div>
-                )}
 
                 <div className="relative">
                   {/* Tablet portrait: use the same curved circular action buttons as mobile */}
@@ -655,50 +688,38 @@ export default function Index() {
                   transition={{ delay: 0.3, type: "spring" }}
                   className="flex flex-col items-center mt-6 pointer-events-auto"
                 >
-                  {user && (
-                    <>
-                      <div className="flex items-center justify-center gap-2.5">
-                        {profile?.country_code && (
-                          <FlagIcon countryCode={profile.country_code} size="md" />
-                        )}
-                        <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
-                          {profile?.nickname || t("game.guest")}
-                        </span>
+                  <div className="flex items-center justify-center gap-2.5">
+                    {profile?.country_code && (
+                      <FlagIcon countryCode={profile.country_code} size="md" />
+                    )}
+                    <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 28 }}>
+                      {profile?.nickname || t("game.guest")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-6 mt-1">
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=coins")}
+                    >
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={coinIcon} alt="Coins" className="w-9 h-9" />
                       </div>
-                      <div className="flex items-center gap-6 mt-1">
-                        <motion.button
-                          className="flex items-center gap-2 cursor-pointer"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => navigate("/power-ups?section=coins")}
-                        >
-                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                            <img src={coinIcon} alt="Coins" className="w-9 h-9" />
-                          </div>
-                          <span className="font-bold text-gray-700 text-base">{formatCompactNumber(coins)}</span>
-                        </motion.button>
-                        <motion.button
-                          className="flex items-center gap-2 cursor-pointer"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => navigate("/power-ups?section=gems-lari")}
-                        >
-                          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                            <img src={gemIcon} alt="Gems" className="w-9 h-9" />
-                          </div>
-                          <span className="font-bold text-gray-700 text-base">{formatCompactNumber(gems)}</span>
-                        </motion.button>
+                      <span className="font-bold text-gray-700 text-base">{formatCompactNumber(coins)}</span>
+                    </motion.button>
+                    <motion.button
+                      className="flex items-center gap-2 cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate("/power-ups?section=gems-lari")}
+                    >
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <img src={gemIcon} alt="Gems" className="w-9 h-9" />
                       </div>
-                    </>
-                  )}
-                  {!user && (
-                    <div className="flex flex-col items-center mt-2">
-                      <p className="text-base text-gray-600 font-medium text-center">
-                        ან ითამაშე როგორც სტუმარმა
-                      </p>
-                      <HandDrawnArrow size={40} color="#9CA3AF" />
-                    </div>
-                  )}
+                      <span className="font-bold text-gray-700 text-base">{formatCompactNumber(gems)}</span>
+                    </motion.button>
+                  </div>
                   <div className="mt-14">
                     <DesktopPlayButtonLarge
                       onClick={handlePlayClick}
@@ -712,38 +733,15 @@ export default function Index() {
                 </motion.div>
               </motion.div>
 
-            </div>
+            </div>}
 
-            {/* xl+ layout: Avatar centered */}
-            <motion.div 
+            {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
+            {user && <motion.div 
               className="hidden xl:flex flex-col items-center w-full px-4"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
             >
-              {/* Guest: Title and desc ABOVE avatar */}
-              {!user && (
-                <motion.div
-                  initial={{ y: -10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                  className="flex flex-col items-center mb-8 pointer-events-auto"
-                >
-                  <span className="font-slackey text-gray-800 font-black" style={{ fontSize: 32, fontWeight: 900 }}>
-                    გამარჯობა!
-                  </span>
-                  <motion.button
-                    onClick={() => navigate("/auth")}
-                    className="mt-2 text-center cursor-pointer"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <p className="text-base text-gray-600 font-medium text-center leading-relaxed whitespace-nowrap">
-                      შექმენი შენი პროფილი და ითამაშე უფასოდ!
-                    </p>
-                  </motion.button>
-                </motion.div>
-              )}
 
               <div className="relative">
                 <motion.div 
@@ -753,19 +751,18 @@ export default function Index() {
                   <div 
                     data-walkthrough="avatar" 
                     className="pointer-events-auto cursor-pointer"
-                    onClick={() => user ? setIsAvatarModalOpen(true) : navigate("/auth")}
+                    onClick={() => setIsAvatarModalOpen(true)}
                   >
                     <AvatarCircle 
-                      avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
-                      animatedAvatarUrl={user ? profile?.animated_avatar_url : defaultGuestAvatarAnimated}
+                      avatarUrl={profile?.avatar_url} 
+                      animatedAvatarUrl={profile?.animated_avatar_url}
                       size={280} 
-                      coins={user ? coins : 0}
-                      gems={user ? gems : 0}
-                      level={user ? levelInfo.level : 1}
-                      xpProgress={user ? levelInfo.progress : 0}
-                      xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
-                      xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
-                      hideStats={!user}
+                      coins={coins}
+                      gems={gems}
+                      level={levelInfo.level}
+                      xpProgress={levelInfo.progress}
+                      xpCurrent={levelInfo.xpInCurrentLevel}
+                      xpTotal={levelInfo.xpNeededForNextLevel}
                     />
                   </div>
                 </motion.div>
@@ -778,54 +775,42 @@ export default function Index() {
                 transition={{ delay: 0.3, type: "spring" }}
                 className="flex flex-col items-center mt-11 pointer-events-auto"
               >
-                {user && (
-                  <>
-                    <div className="flex items-center justify-center gap-2.5">
-                      {profile?.country_code && (
-                        <FlagIcon countryCode={profile.country_code} size="md" />
-                      )}
-                      <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
-                        {profile?.nickname || t("game.guest")}
-                      </span>
+                <div className="flex items-center justify-center gap-2.5">
+                  {profile?.country_code && (
+                    <FlagIcon countryCode={profile.country_code} size="md" />
+                  )}
+                  <span className="font-slackey text-gray-800 capitalize" style={{ fontSize: 32 }}>
+                    {profile?.nickname || t("game.guest")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-6 mt-1">
+                  <motion.button
+                    className="flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/power-ups?section=coins")}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <img src={coinIcon} alt="Coins" className="w-10 h-10" />
                     </div>
-                    <div className="flex items-center gap-6 mt-1">
-                      <motion.button
-                        className="flex items-center gap-2 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate("/power-ups?section=coins")}
-                      >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          <img src={coinIcon} alt="Coins" className="w-10 h-10" />
-                        </div>
-                        <span className="font-bold text-gray-700 text-lg">
-                          {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
-                        </span>
-                      </motion.button>
-                      <motion.button
-                        className="flex items-center gap-2 cursor-pointer"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => navigate("/power-ups?section=gems-lari")}
-                      >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                          <img src={gemIcon} alt="Gems" className="w-10 h-10" />
-                        </div>
-                        <span className="font-bold text-gray-700 text-lg">
-                          {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
-                        </span>
-                      </motion.button>
+                    <span className="font-bold text-gray-700 text-lg">
+                      {coins >= 1000000 ? `${(coins / 1000000).toFixed(1)}M` : coins >= 1000 ? `${Math.floor(coins / 1000)}K` : coins}
+                    </span>
+                  </motion.button>
+                  <motion.button
+                    className="flex items-center gap-2 cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => navigate("/power-ups?section=gems-lari")}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                      <img src={gemIcon} alt="Gems" className="w-10 h-10" />
                     </div>
-                  </>
-                )}
-                {!user && (
-                  <div className="flex flex-col items-center mt-2">
-                    <p className="text-base text-gray-600 font-medium text-center">
-                      ან ითამაშე როგორც სტუმარმა
-                    </p>
-                    <HandDrawnArrow size={44} color="#9CA3AF" />
-                  </div>
-                )}
+                    <span className="font-bold text-gray-700 text-lg">
+                      {gems >= 1000000 ? `${(gems / 1000000).toFixed(1)}M` : gems >= 1000 ? `${Math.floor(gems / 1000)}K` : gems}
+                    </span>
+                  </motion.button>
+                </div>
 
                 <div className="mt-20">
                   <DesktopPlayButtonLarge
@@ -838,10 +823,10 @@ export default function Index() {
                   />
                 </div>
               </motion.div>
-            </motion.div>
+            </motion.div>}
 
-            {/* Mobile only: circular action buttons + avatar + info */}
-            <motion.div 
+            {/* Mobile only: circular action buttons + avatar + info - LOGGED IN USERS ONLY */}
+            {user && <motion.div 
               className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
               style={{ marginTop: -5 }}
               initial={{ scale: 0.8, opacity: 0 }}
@@ -1109,7 +1094,7 @@ export default function Index() {
                   </div>
                 )}
               </motion.div>
-            </motion.div>
+            </motion.div>}
         </div>
           </div>
 
