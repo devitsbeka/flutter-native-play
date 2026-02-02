@@ -297,7 +297,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             </div>
 
             {/* Content with horizontal lists */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto pb-[calc(80px+env(safe-area-inset-bottom))]">
               <SearchHorizontalLists
                 friends={filteredFriends}
                 rooms={filteredRooms}
