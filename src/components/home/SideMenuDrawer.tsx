@@ -61,9 +61,17 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    onClose();
-    navigate("/");
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        return;
+      }
+      onClose();
+      navigate("/");
+    } catch (err) {
+      console.error('Logout exception:', err);
+    }
   };
 
   if (!isOpen) return null;
@@ -161,11 +169,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             </div>
 
             {/* Scrollable Content */}
-            <div className="relative z-10 flex-1 overflow-y-auto">
+            <div className="relative z-10 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
               {/* User Profile Section */}
-              <div className="p-4 border-b border-border/30">
+              <div className="p-3 border-b border-border/30">
                 {user ? (
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
                     <button 
                       onClick={() => {
                         onClose();
@@ -208,14 +216,14 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Big Play Button - Simplified 3D Mint Style */}
-              <div className="px-4 pb-4" style={{ marginTop: "-5px" }}>
+              <div className="px-3 pb-3" style={{ marginTop: "-5px" }}>
                 <motion.button
                   onClick={handlePlayClick}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98, y: 2 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   className="relative w-full overflow-hidden rounded-2xl"
-                  style={{ height: 56 }}
+                  style={{ height: 52 }}
                 >
                   {/* Bottom shadow/depth layer */}
                   <div
@@ -247,7 +255,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Navigation Items (replacing bottom nav) */}
-              <div className="px-4 pb-2">
+              <div className="px-3 pb-2">
                 <div className="flex flex-col" style={{ gap: "2px" }}>
                   {navItemsConfig.map((item) => {
                     const Icon = item.icon;
@@ -255,9 +263,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                       <button
                         key={item.labelKey}
                         onClick={() => handleNavItemClick(item.route)}
-                        className="flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
+                        className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
                           <Icon className="w-5 h-5 text-primary" />
                         </div>
                         <span className="text-base font-medium text-foreground">
@@ -270,12 +278,12 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Settings and Logout */}
-              <div className="px-4 pb-4 pt-2 border-t border-border/30 mt-2 flex flex-col gap-1">
+              <div className="px-3 pb-6 pt-2 border-t border-border/30 mt-2 flex flex-col gap-1">
                 <button
                   onClick={() => handleNavItemClick("/settings")}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
                     <Settings className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <span className="text-base font-medium text-foreground flex-1 text-left">
@@ -288,9 +296,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 {user && (
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:bg-destructive/10 active:scale-95"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-destructive/10 active:scale-95"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center">
                       <LogOut className="w-5 h-5 text-destructive" />
                     </div>
                     <span className="text-base font-medium text-destructive flex-1 text-left">
