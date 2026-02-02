@@ -158,45 +158,48 @@ export function GuestWelcomePanel({
         >
           <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
             <PopoverTrigger asChild>
-              {/* Circular avatar container - clickable */}
-              <button 
-                type="button"
-                className="relative rounded-full overflow-hidden cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                style={{
-                  width: "clamp(100px, 28vw, 140px)",
-                  height: "clamp(100px, 28vw, 140px)",
-                  boxShadow: "0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08)",
-                  border: "3px solid hsl(var(--background))",
-                }}
-                disabled={isCameraLoading}
-              >
-                {selectedPhoto ? (
-                  /* Show selected photo */
-                  <img 
-                    src={selectedPhoto} 
-                    alt="Selected avatar" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  /* Show mascot video with correct positioning */
-                  <PingPongVideo 
-                    src={guestWelcomeVideo}
-                    className="w-full h-full object-cover"
-                    style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
-                  />
-                )}
+              {/* Wrapper for avatar + badge (badge outside button to avoid clipping) */}
+              <div className="relative group cursor-pointer">
+                {/* Circular avatar container */}
+                <button 
+                  type="button"
+                  className="relative rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  style={{
+                    width: "clamp(100px, 28vw, 140px)",
+                    height: "clamp(100px, 28vw, 140px)",
+                    boxShadow: "0 6px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08)",
+                    border: "3px solid hsl(var(--background))",
+                  }}
+                  disabled={isCameraLoading}
+                >
+                  {selectedPhoto ? (
+                    /* Show selected photo */
+                    <img 
+                      src={selectedPhoto} 
+                      alt="Selected avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    /* Show mascot video with correct positioning */
+                    <PingPongVideo 
+                      src={guestWelcomeVideo}
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+                    />
+                  )}
+                  
+                  {/* Fallback gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 -z-10" />
+                  
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                </button>
                 
-                {/* Fallback gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/10 -z-10" />
-                
-                {/* Camera badge overlay */}
-                <div className="absolute bottom-1 right-1 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform z-20">
+                {/* Camera badge - OUTSIDE button to prevent clipping */}
+                <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md group-hover:scale-110 transition-transform z-20">
                   <Camera className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
-                
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-              </button>
+              </div>
             </PopoverTrigger>
             
             <PopoverContent 
