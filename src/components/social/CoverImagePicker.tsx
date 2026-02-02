@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Sparkles, Loader2, X, Check, AlertTriangle } from "lucide-react";
+import { Upload, Sparkles, Loader2, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,9 +47,7 @@ export function CoverImagePicker({
   roundId
 }: CoverImagePickerProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
   const [previousGenerations, setPreviousGenerations] = useState<Generation[]>([]);
-  const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -106,7 +104,6 @@ export function CoverImagePicker({
     }
 
     setIsUploading(true);
-    setValidationWarning(null);
     
     try {
       const fileExt = file.name.split(".").pop();
@@ -121,28 +118,6 @@ export function CoverImagePicker({
       const { data: { publicUrl } } = supabase.storage
         .from("quiz-covers")
         .getPublicUrl(fileName);
-
-      // Validate the uploaded image
-      setIsValidating(true);
-      try {
-        const { data: validationResult } = await supabase.functions.invoke("validate-cover-image", {
-          body: {
-            imageUrl: publicUrl,
-            title: title || suggestPrompt || "Quiz",
-            subject: suggestPrompt || title || "trivia"
-          }
-        });
-
-        if (validationResult && !validationResult.isValid) {
-          setValidationWarning(validationResult.reason || "სურათი შეიძლება არ შეესაბამება თემატიკას");
-        } else if (validationResult?.relevanceScore < 30) {
-          setValidationWarning("სურათი შეიძლება არ შეესაბამება კვიზის თემატიკას");
-        }
-      } catch (validationError) {
-        console.log("Validation skipped:", validationError);
-      } finally {
-        setIsValidating(false);
-      }
 
       onImageChange(publicUrl);
       toast({
@@ -174,8 +149,6 @@ export function CoverImagePicker({
       });
       return;
     }
-
-    setValidationWarning(null);
     
     try {
       // Start background generation with skipNotification to auto-apply
@@ -216,12 +189,10 @@ export function CoverImagePicker({
 
   const handleSelectGeneration = (imageUrl: string) => {
     onImageChange(imageUrl);
-    setValidationWarning(null);
   };
 
   const handleRemoveImage = () => {
     onImageChange(null);
-    setValidationWarning(null);
   };
 
   return (
@@ -256,29 +227,13 @@ export function CoverImagePicker({
             <X className="w-4 h-4 text-white" />
           </button>
         )}
-
-        {/* Validating indicator */}
-        {isValidating && (
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm">
-            <Loader2 className="w-3 h-3 animate-spin text-white" />
-            <span className="text-xs text-white">მოწმდება...</span>
-          </div>
-        )}
       </div>
-
-      {/* Validation warning */}
-      {validationWarning && (
-        <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-500/10 px-3 py-2 rounded-lg">
-          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-          <span>{validationWarning}</span>
-        </div>
-      )}
 
       {/* Upload/Generate buttons */}
       <div className="flex gap-2">
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || isValidating}
+          disabled={isUploading}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-border hover:border-primary/50 transition-colors text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           {isUploading ? (
