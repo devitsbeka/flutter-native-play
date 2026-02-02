@@ -387,17 +387,19 @@ export default function Index() {
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
         <header className="relative z-20 px-4 py-3 safe-top border-b border-purple-900/10">
           <div className="flex items-center justify-between gap-3">
-            {/* Left side: Burger menu (mobile only) */}
+            {/* Left side: Burger menu (mobile only) - Hidden for guests */}
             <div className="flex items-center gap-2">
-              {/* Burger Menu - Mobile Only */}
-              <motion.button
-                className="md:hidden p-2 rounded-full hover:bg-white/30 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsSideMenuOpen(true)}
-              >
-                <Menu className="w-6 h-6 text-gray-600" />
-              </motion.button>
+              {/* Burger Menu - Mobile Only, Hidden for Guests */}
+              {user && (
+                <motion.button
+                  className="md:hidden p-2 rounded-full hover:bg-white/30 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsSideMenuOpen(true)}
+                >
+                  <Menu className="w-6 h-6 text-gray-600" />
+                </motion.button>
+              )}
             </div>
             
             {/* Center: Logo */}
@@ -409,68 +411,70 @@ export default function Index() {
               </div>
             </div>
             
-            {/* Notification icons */}
-            <div className="flex items-center gap-1">
-              {/* Ad-Free button */}
-              <motion.button
-                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate("/profile?tab=PRO")}
-              >
-                <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
-              </motion.button>
-              
-              {/* Bell icon with unread badge */}
-              <motion.button
-                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                {unreadCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-                      boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
-                    }}
-                  >
-                    <span className="text-[9px] font-bold text-white">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  </motion.div>
-                )}
-              </motion.button>
-              
-              {/* Messages icon with unread badge - TEMPORARILY HIDDEN */}
-              {/* <motion.button
-                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowRoomChatsPanel(true)}
-              >
-                <MessageCircle className="w-5 h-5 text-gray-600" />
-                {unreadMessagesCount > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-                      boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
-                    }}
-                  >
-                    <span className="text-[9px] font-bold text-white">
-                      {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
-                    </span>
-                  </motion.div>
-                )}
-              </motion.button> */}
-            </div>
+            {/* Notification icons - Hidden for guests */}
+            {user && (
+              <div className="flex items-center gap-1">
+                {/* Ad-Free button */}
+                <motion.button
+                  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate("/profile?tab=PRO")}
+                >
+                  <img src={adFreeIcon} alt="Ad-Free" className="w-6 h-6 object-contain" />
+                </motion.button>
+                
+                {/* Bell icon with unread badge */}
+                <motion.button
+                  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate('/notifications')}
+                >
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                        boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                      }}
+                    >
+                      <span className="text-[9px] font-bold text-white">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    </motion.div>
+                  )}
+                </motion.button>
+                
+                {/* Messages icon with unread badge - TEMPORARILY HIDDEN */}
+                {/* <motion.button
+                  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowRoomChatsPanel(true)}
+                >
+                  <MessageCircle className="w-5 h-5 text-gray-600" />
+                  {unreadMessagesCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
+                        boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                      }}
+                    >
+                      <span className="text-[9px] font-bold text-white">
+                        {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
+                      </span>
+                    </motion.div>
+                  )}
+                </motion.button> */}
+              </div>
+            )}
           </div>
         </header>
 
