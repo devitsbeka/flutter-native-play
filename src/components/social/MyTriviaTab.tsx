@@ -103,7 +103,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
   return (
     <div 
       className="flex gap-3 p-4 bg-muted/50 rounded-xl cursor-pointer hover:bg-muted/70 transition-colors"
-      onClick={() => onPlay?.(quiz)}
+      onClick={() => onEdit(quiz)}
     >
       {/* Round icon - shows cover image, icon, or fallback to round number */}
       <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative">
@@ -123,18 +123,30 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
       {/* 3-row layout */}
       <div className="flex-1 min-w-0 flex flex-col gap-2 relative">
         {/* 1) Trivia name */}
-        <p className="font-medium text-foreground text-sm truncate pr-10">{quiz.title}</p>
+        <p className="font-medium text-foreground text-sm truncate pr-16">{quiz.title}</p>
 
-        {/* Edit button (top-right) */}
+        {/* Edit button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onEdit(quiz);
           }}
-          className="absolute top-0 right-0 p-2 rounded-full hover:bg-muted transition-colors"
+          className="absolute top-0 right-8 p-2 rounded-full hover:bg-muted transition-colors"
           aria-label="Edit trivia"
         >
           <Pencil className="w-4 h-4" />
+        </button>
+
+        {/* Play button (purple) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onPlay?.(quiz);
+          }}
+          className="absolute top-0 right-0 p-2 rounded-full hover:bg-muted transition-colors text-purple-500"
+          aria-label="Play trivia"
+        >
+          <Play className="w-4 h-4 fill-current" />
         </button>
 
         {/* 2) X questions + Edit */}
