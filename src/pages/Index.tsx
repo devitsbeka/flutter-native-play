@@ -568,7 +568,7 @@ export default function Index() {
             {/* xl+ layout: Cards moved to fixed right side */}
 
             {/* md to xl layout: Avatar centered (cards now fixed on right side) - LOGGED IN USERS ONLY */}
-            {user && <div className="hidden md:flex xl:hidden items-center justify-center w-full h-full px-4">
+            {user && <div className="hidden md:flex xl:hidden items-center justify-center w-full h-full px-4 lg:-ml-[170px]">
               {/* Avatar + Info */}
               <motion.div 
                 className="flex flex-col items-center"
@@ -785,7 +785,7 @@ export default function Index() {
 
             {/* xl+ layout: Avatar centered - LOGGED IN USERS ONLY */}
             {user && <motion.div 
-              className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4"
+              className="hidden xl:flex flex-col items-center justify-center w-full h-full px-4 -ml-[170px]"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
