@@ -1,93 +1,165 @@
 
 
-# Plan: Fix Invite Button Visibility and Avatar Jump Issues
+# Plan: Make Room Names Fun & Thematically Connected to Icons
 
-## Issues Identified from Screenshots
+## Problem Analysis
 
-1. **"მოიწვიე" button barely visible** - Current styling uses `bg-primary/20` which is too transparent against the background
-2. **Avatar jumps/decreases on button click** - The `whileTap={{ scale: 0.95 }}` animation affects the layout, causing avatar to appear smaller
-3. **Delete (X) button on avatar should be removed** - User explicitly requested to remove delete buttons from invited player avatars
+Looking at the screenshot, the name "ჯკუის საკითხავი" (Quiz Reader) with a book icon is:
+1. **Boring and literal** - sounds like a study session, not an exciting game
+2. **Missing the social element** - trivia rooms are about friends gathering to compete
+3. **No energy or excitement** - doesn't convey the fun, competitive nature
 
----
+## Better Naming Philosophy
 
-## Technical Changes
+Room names for trivia games should evoke:
+- **Competition & Battle** - It's a brain fight!
+- **Team Spirit** - People gathering together
+- **Fun & Energy** - Not a classroom, but a party
+- **Clever Wordplay** - Makes people smile
 
-### File: `src/components/team/RoomScoreboard.tsx`
+## Curated Theme Categories
 
-**1. Make "მოიწვიე" button more visible**
+### 1. Battle/Competition Names (brain warfare)
+| Georgian Name | Meaning | Icon Keywords |
+|--------------|---------|---------------|
+| ტვინების არენა | Brain Arena | arena, colosseum, stadium |
+| IQ დუელი | IQ Duel | sword, duel, fencing |
+| გონების რინგი | Mind Ring | boxing, ring, fight |
+| ცოდნის ომი | Knowledge War | battle, war, shield |
 
-Replace the faint transparent button with a solid, clearly visible green button:
+### 2. Team/Squad Names (gathering vibes)
+| Georgian Name | Meaning | Icon Keywords |
+|--------------|---------|---------------|
+| გენიოსთა კლუბი | Genius Club | group, friends, club |
+| ჭკვიანთა ბანდა | Smart Gang | gang, team, squad |
+| ერუდიტების ბრძოლა | Erudites' Battle | trophy, medal, crown |
+
+### 3. Fun/Energy Names (party atmosphere)
+| Georgian Name | Meaning | Icon Keywords |
+|--------------|---------|---------------|
+| IQ პარტი | IQ Party | party, celebration, confetti |
+| ტვინის ფეირვორკი | Brain Fireworks | fireworks, explosion, lightning |
+| გონების რეივი | Mind Rave | party, music, dance |
+
+### 4. Mythical/Epic Names (dramatic flair)
+| Georgian Name | Meaning | Icon Keywords |
+|--------------|---------|---------------|
+| ფენიქსის ბრძოლა | Phoenix Battle | phoenix, fire, dragon |
+| დრაკონთა კლუბი | Dragon Club | dragon, fire, knight |
+| ნინჯა ტვინები | Ninja Brains | ninja, samurai, warrior |
+
+## Technical Implementation
+
+### Update AI Prompt in `generate-room-name/index.ts`
+
+Replace the current generic prompt with a more creative, theme-focused one:
 
 ```typescript
-// Before (barely visible)
-className="mt-2 px-3 py-1 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center gap-1.5 text-xs text-primary"
+const prompt = `შექმენი კრეატიული და სახალისო ქართული სახელი ტრივია ოთახისთვის, სადაც მეგობრები იკრიბებიან გონებრივი ბრძოლისთვის.
 
-// After (clearly visible green button)  
-className="mt-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
+სახელის სტილი უნდა იყოს ერთ-ერთი:
+1. ბრძოლის თემა: "ტვინების არენა", "გონების რინგი", "IQ დუელი"
+2. გუნდის თემა: "გენიოსთა კლუბი", "ჭკვიანთა ბანდა", "ერუდიტები"
+3. წვეულების თემა: "IQ პარტი", "ტვინის ფეირვორკი", "გონების რეივი"
+4. მითიური თემა: "ფენიქსის ბრძოლა", "დრაკონთა კლუბი", "ნინჯა ტვინები"
+5. სპორტის თემა: "ჩემპიონთა ლიგა", "IQ ჩემპიონატი", "გონების ოლიმპიადა"
+
+მოთხოვნები:
+- მაქსიმუმ 18 სიმბოლო
+- 1-2 სიტყვა
+- სახალისო და ენერგიული
+- არ გამოიყენო მოსაწყენი სიტყვები: კვიზი, საკითხავი, ტესტი, გამოცდა
+
+აიკონის სიტყვა (ინგლისურად) უნდა შეესაბამებოდეს სახელის თემას:
+- ბრძოლა: sword, shield, arena, boxing, knight
+- გუნდი: friends, group, party, team, club
+- მითიური: dragon, phoenix, ninja, wizard, lion
+- სპორტი: trophy, medal, champion, crown, star
+
+დააბრუნე JSON: {"name": "სახელი", "icon_keyword": "keyword"}`;
 ```
 
-**2. Fix avatar jump on button click**
+### Update Fallback Names
 
-Remove `whileTap={{ scale: 0.95 }}` from the invite button or change it to only affect the button itself, not the parent container. Also wrap the button in a fixed-height container to prevent layout shift:
+Replace boring fallbacks with exciting ones:
 
 ```typescript
-// Wrap button in stable container with fixed min-height
-<div className="min-h-[40px] flex flex-col items-center justify-center">
-  <motion.button
-    onClick={...}
-    className="..."
-    whileTap={{ scale: 0.95 }}  // Keep but ensure it doesn't affect parent
-  >
-    ...
-  </motion.button>
-</div>
+const FALLBACK_NAMES = [
+  // Battle themes
+  "ტვინების არენა",   // Brain Arena
+  "გონების რინგი",    // Mind Ring
+  "IQ დუელი",         // IQ Duel
+  // Team themes  
+  "გენიოსთა კლუბი",   // Genius Club
+  "ჭკვიანთა ბანდა",   // Smart Gang
+  // Fun themes
+  "IQ პარტი",         // IQ Party
+  "გონების რეივი",    // Mind Rave
+  // Epic themes
+  "დრაკონთა კლუბი",   // Dragon Club
+  "ნინჯა ტვინები",    // Ninja Brains
+  "ფენიქსის ბრძოლა",  // Phoenix Battle
+];
 ```
 
-**3. Remove delete (X) button from avatar**
+### Expand Icon Keyword Mappings
 
-Remove the entire delete button block that appears on invited player avatars:
+Add more fun and relevant icon search terms:
 
 ```typescript
-// REMOVE this block (lines 115-127 and 219-231):
-{isHost && isInvited && (
-  <motion.button
-    onClick={(e) => {...}}
-    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500..."
-  >
-    <X className="w-3 h-3 text-white" />
-  </motion.button>
-)}
+const THEME_ICON_FALLBACKS: Record<string, string[]> = {
+  // Battle/Competition
+  'arena': ['arena', 'colosseum', 'stadium', 'ring'],
+  'duel': ['sword', 'fencing', 'swords', 'fight'],
+  'ring': ['boxing', 'ring', 'fight', 'arena'],
+  
+  // Team/Social  
+  'club': ['friends', 'group', 'party', 'team'],
+  'gang': ['group', 'friends', 'team'],
+  'party': ['party', 'celebration', 'confetti', 'fireworks'],
+  
+  // Mythical/Epic
+  'dragon': ['dragon', 'fire', 'knight'],
+  'phoenix': ['phoenix', 'fire', 'flame', 'bird'],
+  'ninja': ['ninja', 'samurai', 'warrior'],
+  'wizard': ['wizard', 'magic', 'wand', 'hat'],
+  'lion': ['lion', 'crown', 'king'],
+  'tiger': ['tiger', 'stripes', 'wild'],
+  'eagle': ['eagle', 'bird', 'flying'],
+  'wolf': ['wolf', 'pack', 'wild'],
+  
+  // Victory/Success
+  'champion': ['trophy', 'medal', 'crown', 'cup'],
+  'winner': ['trophy', 'medal', 'star', 'crown'],
+  'olympic': ['medal', 'torch', 'olympic'],
+};
 ```
 
-Also remove delete button from the multi-player list view (lines 370-379).
+## Visual Examples
 
----
-
-## Changes Summary
-
-| Issue | Location | Fix |
-|-------|----------|-----|
-| Button barely visible | Lines 160, 264 | Change to solid green gradient button with shadow |
-| Avatar jumps on click | Lines 155-165, 259-269 | Add stable container wrapper with min-height |
-| Delete X on avatar | Lines 115-127, 219-231, 370-379 | Remove the delete button blocks entirely |
-
-## Visual Result
-
-**Before:**
-```
-┌─────────────────────┐
-│  👤 (with X button) │
-│  "მოწვეული..."      │
-│  [faint button]     │  ← Hard to see
-└─────────────────────┘
+**Before (boring):**
+```text
+📚 ჯკუის საკითხავი    ← "Quiz Reading" with random book
+📚 კვიზის ოთახი        ← "Quiz Room" - sounds like homework
 ```
 
-**After:**
+**After (fun & matching):**
+```text
+🐉 დრაკონთა კლუბი     ← "Dragon Club" with dragon icon!
+⚔️ ტვინების არენა     ← "Brain Arena" with arena/colosseum icon
+🦁 ლომთა ბრძოლა       ← "Lions' Battle" with lion icon
+🎉 IQ პარტი            ← "IQ Party" with party/celebration icon
+🥷 ნინჯა ტვინები       ← "Ninja Brains" with ninja icon
 ```
-┌─────────────────────┐
-│  👤 (no X button)   │
-│  "მოწვეული..."      │
-│  [🟢 მოიწვიე]       │  ← Clear green button
-└─────────────────────┘
-```
+
+## Summary
+
+| Change | Purpose |
+|--------|---------|
+| New AI prompt with theme categories | Generate exciting, thematic names |
+| Updated fallback names | No more boring "generic quiz" names |
+| Expanded icon keyword mappings | Better icon-to-name matching |
+| Banned boring words | No "კვიზი", "საკითხავი", "ტესტი" |
+
+This creates room names that make people excited to join - like entering "Dragon Club" or "Ninja Brains" feels way more fun than "Quiz Reader"!
 
