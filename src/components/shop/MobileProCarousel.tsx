@@ -105,42 +105,42 @@ export function MobileProCarousel() {
 
             {/* Left: Content */}
             <div className="flex-1 p-5 z-10">
-              {/* Header - Icon, Title, Price in one row */}
-              <div className="flex items-center gap-3 mb-3">
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ 
-                    background: "rgba(255,255,255,0.2)",
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
-                  }}
-                >
-                  <TierIcon className="w-5 h-5 text-white" />
+              {/* Header - Icon + Title, Price below */}
+              <div className="mb-3">
+                <div className="flex items-center gap-3 mb-1">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ 
+                      background: "rgba(255,255,255,0.2)",
+                      boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    <TierIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">
+                    {tier.nameKa}
+                  </h3>
                 </div>
                 
-                {/* Title - flex-1 to push price to right */}
-                <h3 className="flex-1 text-base font-bold text-white">
-                  {tier.nameKa}
-                </h3>
-                
-                {/* Price - right aligned */}
-                <div className="flex items-baseline gap-1 flex-shrink-0">
+                {/* Price below title */}
+                <div className="flex items-baseline gap-1 ml-[52px]">
                   <span className="text-xl font-black text-white">₾{tier.price}</span>
                   <span className="text-xs text-white/70">/თვე</span>
                 </div>
               </div>
 
-              {/* Benefits - Grid layout: 3 columns first row, 1 on second */}
-              <div className="grid grid-cols-3 gap-x-3 gap-y-1.5 mb-4">
+              {/* Benefits - Vertical list */}
+              <ul className="space-y-1.5 mb-4">
                 {tier.benefits.map((benefit, i) => (
-                  <div 
+                  <li 
                     key={i} 
-                    className="flex items-center gap-1.5 text-white/90"
+                    className="flex items-start gap-2 text-white/90"
                   >
-                    <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
-                    <span className="text-xs">{benefit}</span>
-                  </div>
+                    <Check className="w-3.5 h-3.5 text-white/80 flex-shrink-0 mt-0.5" />
+                    <span className="text-xs leading-tight">{benefit}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
 
               {/* CTA Button */}
               <button
@@ -183,7 +183,7 @@ export function MobileProCarousel() {
             </div>
 
             {/* Right: Video Background */}
-            <div className="w-[160px] flex-shrink-0 relative overflow-hidden">
+            <div className="w-[120px] flex-shrink-0 relative overflow-hidden">
               <video
                 autoPlay
                 loop
