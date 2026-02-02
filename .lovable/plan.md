@@ -1,64 +1,173 @@
 
-# Plan: Fix Logo, Font, and Flag Issues
+# Plan: Shop Layout Improvements
 
 ## Overview
 
-This plan fixes 3 issues visible in the mobile main page:
-1. **Logo missing from mobile header** - Add it back (was removed in previous change)
-2. **Username font** - Ensure Google Sans is working properly
-3. **Flag broken image** - Fix the flagcdn.com URL format (using `.svg` but needs `.png`)
+This plan addresses 3 UI improvements based on the tablet screenshot:
+1. **Price position** - Move price to the right side of title (same line), not below
+2. **Decrease gap** - Reduce spacing between PRO carousel and shop content below
+3. **Power-ups summary** - Increase container sizes by 20% and move to right side of header row
 
 ---
 
-## Issue 1: Show Logo on Mobile Header
+## Issue 1: Move Price to Right Side of Title
 
-### File: `src/pages/Index.tsx`
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-The logo was previously removed from the header. Add it back for mobile only.
+Currently the layout is:
+```text
+[Icon] სამეგობრო PRO
+       ₾19.99 /თვე
+```
 
-**Lines 433-434** - Add logo back to the center section:
+Change to horizontal layout with price on the right:
+```text
+[Icon] სამეგობრო PRO     ₾19.99 /თვე
+```
+
+**Lines 108-130** - Restructure header to single row:
 
 ```typescript
 // Before:
-{/* Center: Spotlight */}
-<div className="flex-1 flex justify-center md:justify-start items-center gap-4">
+<div className="mb-2">
+  <div className="flex items-center gap-3">
+    {/* Icon */}
+    {/* Title */}
+  </div>
+  {/* Price below title */}
+  <div className="flex items-baseline gap-1 ml-[52px]">
+    <span>₾{tier.price}</span>
+  </div>
+</div>
 
-// After: Add logo for mobile
-{/* Center: Logo (mobile) + Spotlight (tablet/desktop) */}
-<div className="flex-1 flex justify-center md:justify-start items-center gap-4">
-  {/* Logo - visible only on mobile */}
-  <MyTriviaLiveLogo size="sm" className="md:hidden" />
+// After: Single row with price on right
+<div className="flex items-center gap-3 mb-2">
+  <div 
+    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+    style={{ ... }}
+  >
+    <TierIcon className="w-5 h-5 text-white" />
+  </div>
+  <h3 className="text-base font-bold text-white flex-1">
+    {tier.nameKa}
+  </h3>
+  <div className="flex items-baseline gap-1">
+    <span className="text-xl font-black text-white">₾{tier.price}</span>
+    <span className="text-xs text-white/70">/თვე</span>
+  </div>
+</div>
 ```
 
 ---
 
-## Issue 2: Verify Username Font
+## Issue 2: Decrease Gap Between Carousel and Shop Content
 
-The username font was already changed to `font-sans font-bold` in the previous edit (lines 740 and 827 in Index.tsx). This should work correctly since `font-sans` is configured in tailwind to use "Google Sans" as the primary font.
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-However, the current code shows:
-```typescript
-<span className="font-sans text-gray-800 capitalize font-bold" style={{ fontSize: 28 }}>
-```
+Reduce bottom padding of the carousel container.
 
-This is correct - Google Sans is applied via the `font-sans` class. No changes needed here.
-
----
-
-## Issue 3: Fix Broken Flag Image
-
-### File: `src/components/shared/FlagIcon.tsx`
-
-**Root Cause:** The URL `https://flagcdn.com/w40/ge.svg` returns 404. The correct format is `.png` not `.svg`.
-
-**Line 20** - Change file extension:
+**Line 73** - Change padding:
 
 ```typescript
 // Before:
-src={`https://flagcdn.com/w40/${code}.svg`}
+<div className="px-4 pt-4 pb-2">
 
-// After: Use PNG format
-src={`https://flagcdn.com/w40/${code}.png`}
+// After: Remove bottom padding
+<div className="px-4 pt-4 pb-0">
+```
+
+**Lines 201-214** - Reduce dot indicator section margins:
+
+```typescript
+// Before:
+<div className="flex justify-center gap-2 mt-3">
+
+// After:
+<div className="flex justify-center gap-2 mt-2">
+```
+
+### File: `src/components/shop/ShopProductGrid.tsx`
+
+Reduce top margin of first section.
+
+**Line 38** - Reduce section header margin:
+
+```typescript
+// Before:
+<div className="px-[15px] mb-3">
+
+// After:
+<div className="px-[15px] mb-2">
+```
+
+---
+
+## Issue 3: Increase Power-Ups Containers Size and Move to Right
+
+### File: `src/components/shop/PowerUpsSummary.tsx`
+
+**Size Increase (20%):**
+- Icon: `w-4 h-4` (16px) becomes `w-5 h-5` (20px) - 25% increase
+- Container padding: `px-2 py-0.5` becomes `px-2.5 py-1`
+- Min-width: `48px` becomes `58px`
+- Font size: `text-xs` becomes `text-sm`
+
+**Line 26** - Update container classes:
+
+```typescript
+// Before:
+<div className="flex flex-nowrap items-center gap-1.5 md:gap-2">
+
+// After: Add ml-auto to push to right
+<div className="flex flex-nowrap items-center gap-2 md:gap-2.5 ml-auto">
+```
+
+**Lines 27-47** - Update individual container sizes:
+
+```typescript
+// Before:
+<div
+  className="flex items-center justify-between gap-2 px-2 py-0.5 rounded-full bg-background/80 backdrop-blur-sm min-w-[48px]"
+>
+  <img src={POWER_UP_ICONS[type]} alt="" className="w-4 h-4" />
+  ...
+  <motion.span className="text-xs font-bold text-foreground/90">
+
+// After: 20% larger
+<div
+  className="flex items-center justify-between gap-2 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-sm min-w-[58px]"
+>
+  <img src={POWER_UP_ICONS[type]} alt="" className="w-5 h-5" />
+  ...
+  <motion.span className="text-sm font-bold text-foreground/90">
+```
+
+### File: `src/components/shop/ShopProductGrid.tsx`
+
+Update the flex container to push PowerUpsSummary to the right.
+
+**Lines 38-45** - Change layout to use flex with space-between:
+
+```typescript
+// Before:
+<div className="px-[15px] mb-2">
+  <div className="flex items-center gap-3">
+    <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
+      {title}
+    </h2>
+    {sectionId === "powers" && <PowerUpsSummary />}
+  </div>
+</div>
+
+// After: Use justify-between to push power-ups to right
+<div className="px-[15px] mb-2">
+  <div className="flex items-center justify-between">
+    <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
+      {title}
+    </h2>
+    {sectionId === "powers" && <PowerUpsSummary />}
+  </div>
+</div>
 ```
 
 ---
@@ -67,13 +176,26 @@ src={`https://flagcdn.com/w40/${code}.png`}
 
 | File | Change |
 |------|--------|
-| `src/pages/Index.tsx` | Add `MyTriviaLiveLogo` back to mobile header |
-| `src/components/shared/FlagIcon.tsx` | Change flag URL from `.svg` to `.png` |
+| `src/components/shop/MobileProCarousel.tsx` | Price on same line as title (right side), reduce bottom padding |
+| `src/components/shop/ShopProductGrid.tsx` | justify-between layout, reduce margin |
+| `src/components/shop/PowerUpsSummary.tsx` | 20% larger containers, push to right with ml-auto |
 
 ---
 
-## Technical Notes
+## Visual Result
 
-- The `MyTriviaLiveLogo` component is already imported in Index.tsx
-- flagcdn.com's width-based paths (`/w40/`) only support PNG format, not SVG
-- The username font is already using Google Sans via `font-sans` class
+**Price Position:**
+```text
+Before: [Icon] სამეგობრო PRO
+               ₾19.99 /თვე
+
+After:  [Icon] სამეგობრო PRO          ₾19.99 /თვე
+```
+
+**Power-Ups Layout:**
+```text
+Before: ძალები [50/50: 40] [freeze: 44] [replace: 6] [time: 14]
+
+After:  ძალები                    [50/50: 40] [freeze: 44] [replace: 6] [time: 14]
+        (title on left)           (containers on right, 20% larger)
+```
