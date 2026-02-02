@@ -1,192 +1,48 @@
 
+# Fix Mascot Avatar to Show Face Instead of Feet
 
-# Add Login Option to Guest Welcome Panel
-
-## Overview
-Add the ability for existing users to log in from the home screen's guest panel, not just create a new account.
-
----
-
-## Current Problem
-- The GuestWelcomePanel only shows "შექმენი ანგარიში" (Create Account)
-- Existing users cannot enter their email/password to log in
-- Only registration flow is available
-
----
+## Problem
+The current CSS transform `translateY(-18%)` moves the video **upward**, which causes the **bottom portion (feet)** of the mascot to appear in the circular frame instead of the **top portion (face)**.
 
 ## Solution
-Add a toggle between **Sign Up** and **Sign In** modes, similar to the existing Auth.tsx page.
+Change `translateY(-18%)` to a **positive** value like `translateY(15%)` to shift the video **downward** within the container, bringing the face into view.
 
 ---
 
-## Technical Changes
+## Technical Change
 
 ### File: `src/components/home/GuestWelcomePanel.tsx`
 
-#### 1. Add `onSignIn` prop to interface
+**Line 133** - Update the transform:
 
 ```tsx
-interface GuestWelcomePanelProps {
-  onCreateAccount: (username: string, password: string) => Promise<void>;
-  onSignIn: (email: string, password: string) => Promise<void>;  // NEW
-  onGoogleSignIn: () => Promise<void>;
-  onAppleSignIn: () => Promise<void>;
-  onPlayAsGuest: () => void;
-  isLoading: boolean;
-}
+// Current (WRONG - shows feet):
+<div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(-18%)' }}>
+
+// Fixed (shows face):
+<div className="absolute inset-0" style={{ transform: 'scale(1.5) translateY(15%)' }}>
 ```
 
-#### 2. Add state for mode toggle
-
-```tsx
-const [isSignUp, setIsSignUp] = useState(true); // true = Create Account, false = Login
-```
-
-#### 3. Update the input field
-
-When in **Sign In mode**, show email field instead of username:
-
-```tsx
-<input
-  type={isSignUp ? "text" : "email"}
-  placeholder={isSignUp ? "სახელი" : "ელ. ფოსტა"}
-  ...
-/>
-```
-
-#### 4. Update the submit button
-
-```tsx
-<ChunkyButton type="submit" ...>
-  {isSignUp ? (
-    <>
-      <Sparkles className="w-4 h-4" />
-      შექმენი ანგარიში
-    </>
-  ) : (
-    <>
-      <Lock className="w-4 h-4" />
-      შესვლა
-    </>
-  )}
-</ChunkyButton>
-```
-
-#### 5. Update form submit handler
-
-```tsx
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  // ...validation...
-  
-  if (isSignUp) {
-    await onCreateAccount(username, password);
-  } else {
-    await onSignIn(username, password); // username holds email in login mode
-  }
-};
-```
-
-#### 6. Add toggle link below the button
-
-```tsx
-{/* Toggle between Sign Up and Sign In */}
-<motion.p className="text-sm text-muted-foreground text-center mt-2">
-  {isSignUp ? (
-    <>
-      უკვე გაქვს ანგარიში?{" "}
-      <button 
-        type="button" 
-        onClick={() => setIsSignUp(false)}
-        className="text-primary font-semibold hover:underline"
-      >
-        შედი
-      </button>
-    </>
-  ) : (
-    <>
-      არ გაქვს ანგარიში?{" "}
-      <button 
-        type="button" 
-        onClick={() => setIsSignUp(true)}
-        className="text-primary font-semibold hover:underline"
-      >
-        შექმენი
-      </button>
-    </>
-  )}
-</motion.p>
-```
-
-#### 7. Update title dynamically
-
-```tsx
-<span className="font-slackey text-foreground font-black text-2xl">
-  {isSignUp ? "გამარჯობა!" : "კეთილი იყოს შენი მობრუნება!"}
-</span>
-<p className="text-sm text-muted-foreground">
-  {isSignUp 
-    ? "შექმენი შენი პროფილი და ითამაშე უფასოდ!" 
-    : "შედი შენს ანგარიშზე"}
-</p>
-```
+The positive `translateY(15%)` pushes the video content **down** within the clipping circle, so the **top** of the video (where the mascot's face is) becomes visible instead of the bottom.
 
 ---
 
-### File: `src/pages/Index.tsx` (or parent component)
-
-Pass the new `onSignIn` handler to GuestWelcomePanel:
-
-```tsx
-<GuestWelcomePanel
-  onCreateAccount={handleCreateAccount}
-  onSignIn={handleSignIn}  // NEW - calls signIn from useAuth
-  onGoogleSignIn={handleGoogleSignIn}
-  onAppleSignIn={handleAppleSignIn}
-  onPlayAsGuest={handlePlayAsGuest}
-  isLoading={loading}
-/>
-```
-
----
-
-## Updated UI Flow
+## Visual Explanation
 
 ```text
-+----------------------------------+
-|      გამარჯობა!                  |  ← Changes to "კეთილი იყოს..." in login mode
-|  შექმენი შენი პროფილი...         |
-|                                  |
-|      ╭───────────╮              |
-|      │  [FACE]   │              |
-|      ╰───────────╯              |
-|                                  |
-|  ┌──────────────────────────┐   |
-|  │ 🙍 სახელი / ელ. ფოსტა     │   |  ← Placeholder changes based on mode
-|  └──────────────────────────┘   |
-|  ┌──────────────────────────┐   |
-|  │ 🔒 პაროლი                 │   |
-|  └──────────────────────────┘   |
-|                                  |
-|  ┌──────────────────────────┐   |
-|  │   ✨ შექმენი / შესვლა    │   |  ← Button text changes
-|  └──────────────────────────┘   |
-|                                  |
-|  უკვე გაქვს ანგარიში? შედი       |  ← Toggle link
-|                                  |
-|  ────────── ან ──────────       |
-|       [G]    []               |
-|                                  |
-|  ან ითამაშე როგორც სტუმარმა    |
-+----------------------------------+
+Video Content:          Circular Frame (what's visible):
+┌─────────────┐         
+│   😊 FACE   │  ←─────  With translateY(15%), the TOP shows
+│             │         
+│             │         ╭───────────╮
+│   🦵 FEET   │         │   😊      │
+└─────────────┘         ╰───────────╯
 ```
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/components/home/GuestWelcomePanel.tsx` | Add `isSignUp` state, dynamic title/button/placeholder, toggle link, call appropriate handler |
-| `src/pages/Index.tsx` (or parent) | Pass `onSignIn` prop that calls `signIn` from auth context |
-
+| File | Change |
+|------|--------|
+| `src/components/home/GuestWelcomePanel.tsx` | Line 133: Change `translateY(-18%)` → `translateY(15%)` |
