@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { User, Lock, Sparkles, Loader2, Camera, ImagePlus, Clock, UserX, Zap } from "lucide-react";
+import { User, Lock, Sparkles, Loader2, Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
@@ -388,7 +388,7 @@ export function DesktopGuestSplitLayout({
           transition={{ duration: 0.4, delay: 0.2, type: "spring" }}
           className="flex flex-col items-center justify-center h-full"
         >
-          {/* Guest Card */}
+          {/* Guest Card - Clean Design */}
           <div 
             className="w-full max-w-sm rounded-2xl p-6"
             style={{
@@ -397,11 +397,8 @@ export function DesktopGuestSplitLayout({
               boxShadow: "0 4px 0 hsl(var(--border))",
             }}
           >
-            {/* Header */}
+            {/* Header - No icon */}
             <div className="flex flex-col items-center mb-5">
-              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-3">
-                <UserX className="w-7 h-7 text-muted-foreground" />
-              </div>
               <h3 className="font-slackey text-xl text-foreground font-bold">
                 სტუმრის რეჟიმი
               </h3>
@@ -410,36 +407,21 @@ export function DesktopGuestSplitLayout({
               </p>
             </div>
 
-            {/* Limitations */}
+            {/* Limitations - Simple bullets */}
             <div className="space-y-3 mb-5">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">3 თამაში დღეში</p>
-                  <p className="text-xs text-muted-foreground">შეზღუდული თამაშების რაოდენობა</p>
-                </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">3 თამაში დღეში</p>
               </div>
               
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                  <UserX className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">არა პერსონალიზაცია</p>
-                  <p className="text-xs text-muted-foreground">პროგრესი არ ინახება</p>
-                </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">პროგრესი არ ინახება</p>
               </div>
               
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">შეზღუდული ფუნქციები</p>
-                  <p className="text-xs text-muted-foreground">ლიდერბორდი, მეგობრები...</p>
-                </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">შეზღუდული ფუნქციები</p>
               </div>
             </div>
 
@@ -451,7 +433,6 @@ export function DesktopGuestSplitLayout({
               className="w-full" 
               onClick={onPlayAsGuest}
             >
-              <UserX className="w-4 h-4" />
               ითამაშე როგორც სტუმარი
             </ChunkyButton>
           </div>
