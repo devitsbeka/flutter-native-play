@@ -1,133 +1,190 @@
 
-# Plan: Remove Avatar from Login Page & Add Avatar Reminder on Main Page
+# გეგმა: ავატარის ატვირთვის აღდგენა რეგისტრაციის გვერდზე
 
-## Overview
+## მიმოხილვა
 
-The user wants to:
-1. **Remove** the mascot avatar from the login/sign-in page (GuestWelcomePanel)
-2. **Add** an avatar reminder prompt on the main page for logged-in users who haven't set their animated avatar yet
-
----
-
-## Changes
-
-### File 1: `src/components/home/GuestWelcomePanel.tsx`
-
-**Remove the clickable avatar section** (lines 155-253)
-
-The current login page shows a mascot video with a camera badge for photo upload. This will be completely removed to simplify the login experience.
-
-**Before:**
-- Title "გამარჯობა!"
-- Mascot video avatar with camera badge
-- Login form
-
-**After:**
-- Title "გამარჯობა!"
-- Login form (immediately below title)
+მომხმარებელმა მოითხოვა:
+1. **შექმნის რეჟიმში** (რეგისტრაცია) - ავატარის ატვირთვის სექცია უნდა ჩანდეს
+2. **შესვლის რეჟიმში** (ლოგინი) - ავატარის სექცია არ უნდა ჩანდეს
+3. **მთავარ გვერდზე** - თუ მომხმარებელს ავატარი არ აქვს დაყენებული, ნაჩვენები უნდა იყოს მასკოტის ვიდეო (ერთჯერადი დაკვრა) შეხსენებად
 
 ---
 
-### File 2: `src/components/home/AvatarCircle.tsx`
+## ცვლილებები
 
-**Add a "Set Avatar" prompt badge** when the user has no custom avatar set.
+### ფაილი 1: `src/components/home/GuestWelcomePanel.tsx`
 
-Add a new prop `showAvatarPrompt` and display a sparkle/camera badge that pulses to remind users they can create their animated avatar.
+**აღვადგენთ ავატარის სექციას მხოლოდ რეგისტრაციის რეჟიმისთვის**
 
-**Changes:**
-- Add new prop: `showAvatarPrompt?: boolean`
-- When `showAvatarPrompt` is true and no animated avatar exists, show a pulsing badge with sparkles icon
-- The badge will be positioned on the avatar circle (similar to the animated avatar sparkle)
+ავატარის სექცია (მასკოტის ვიდეო + კამერის ღილაკი) უნდა გამოჩნდეს მხოლოდ მაშინ, როდესაც `isSignUp === true`.
 
-```typescript
-// New badge component for avatar prompt
-{showAvatarPrompt && !animatedAvatarUrl && (
+შესვლის რეჟიმში (`isSignUp === false`) ეს სექცია არ გამოჩნდება - მხოლოდ ფორმა იქნება ნაჩვენები.
+
+**დასამატებელი კოდი (ხაზი 153-ის შემდეგ):**
+```tsx
+{/* Avatar upload - only show in signup mode */}
+{isSignUp && (
   <motion.div
-    className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full p-2 shadow-lg z-20"
-    animate={{ scale: [1, 1.15, 1] }}
-    transition={{ duration: 2, repeat: Infinity }}
+    initial={{ scale: 0.8, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    transition={{ delay: 0.2, type: "spring" }}
+    className="relative mb-4"
   >
-    <Sparkles className="w-4 h-4 text-white" />
+    <motion.div
+      animate={{ y: [0, -5, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
+        <PopoverTrigger asChild>
+          <div className="relative group cursor-pointer">
+            <button 
+              type="button"
+              className="relative rounded-full overflow-hidden focus:outline-none"
+              style={{
+                width: 110,
+                height: 110,
+                boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
+                border: "3px solid hsl(var(--background))",
+              }}
+              disabled={isCameraLoading}
+            >
+              {selectedPhoto ? (
+                <img src={selectedPhoto} alt="Avatar" className="w-full h-full object-cover"/>
+              ) : (
+                <SinglePlayVideo 
+                  src={guestWelcomeVideo}
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+                  onEnded={() => setVideoEnded(true)}
+                />
+              )}
+            </button>
+            {/* Camera badge */}
+            <motion.div 
+              className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-20"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={videoEnded ? { scale: [0, 1.3, 1], opacity: 1 } : { scale: 0, opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+            </motion.div>
+          </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-48 p-2">
+          {/* Photo options */}
+        </PopoverContent>
+      </Popover>
+    </motion.div>
   </motion.div>
 )}
 ```
 
 ---
 
-### File 3: `src/pages/Index.tsx`
+### ფაილი 2: `src/components/home/AvatarCircle.tsx`
 
-**Pass the avatar prompt prop** to AvatarCircle for logged-in users without animated avatars.
+**დავამატოთ მასკოტის ვიდეოს ჩვენების ფუნქციონალი**
 
-```typescript
-<AvatarCircle 
-  avatarUrl={profile?.avatar_url} 
-  animatedAvatarUrl={profile?.animated_avatar_url}
-  // ... other props
-  showAvatarPrompt={user && !profile?.animated_avatar_url}
-/>
+ახალი prop-ის დამატება:
+- `showMascotReminder?: boolean` - თუ true და ავატარი არ არის, მასკოტის ვიდეო უკრავს ერთხელ
+
+```tsx
+interface AvatarCircleProps {
+  // ... არსებული props
+  showMascotReminder?: boolean; // Show mascot video as reminder to set avatar
+}
 ```
 
-This applies to all three breakpoint layouts (mobile, tablet/md-xl, xl+).
+როდესაც `showMascotReminder` არის true და `animatedAvatarUrl` არ არსებობს, ავატარის ადგილას მასკოტის ვიდეო უნდა ითამაშოს ერთხელ, შემდეგ კი სტატიკური ავატარი ჩანდეს.
 
 ---
 
-## Visual Result
+### ფაილი 3: `src/pages/Index.tsx`
 
-### Login Page (Before → After)
-```
-BEFORE:                          AFTER:
-┌─────────────────────┐         ┌─────────────────────┐
-│    გამარჯობა!       │         │    გამარჯობა!       │
-│   [Mascot Avatar]   │         │                     │
-│      📷 badge       │         │ [Username field]    │
-│ [Username field]    │   →     │ [Password field]    │
-│ [Password field]    │         │ [Login Button]      │
-│ [Login Button]      │         │ ──── ან ────        │
-│ ──── ან ────        │         │ [Google] [Apple]    │
-│ [Google] [Apple]    │         └─────────────────────┘
-└─────────────────────┘
+**პასაჟირო თვისების გადაცემა მთავარ გვერდზე**
+
+ყველა AvatarCircle-ს გადაეცემა:
+```tsx
+showMascotReminder={!!user && !profile?.avatar_url}
 ```
 
-### Main Page - Logged In User Without Animated Avatar
+ეს ნიშნავს: თუ მომხმარებელი შესულია და ავატარი არ აქვს, მასკოტი ერთხელ ითამაშებს.
+
+---
+
+## ვიზუალური შედეგი
+
+### რეგისტრაციის გვერდი (შექმენი)
+```
+┌─────────────────────────┐
+│      გამარჯობა!         │
+│ შექმენი შენი პროფილი... │
+│                         │
+│   ┌───────────────┐     │
+│   │   მასკოტი     │ 📷  │ ← ავატარის ვიდეო + კამერა
+│   │   (ვიდეო)     │     │
+│   └───────────────┘     │
+│                         │
+│ [სახელი___________]     │
+│ [პაროლი___________]     │
+│ [შექმენი ანგარიში]      │
+│                         │
+│ უკვე გაქვს? შესვლა      │
+└─────────────────────────┘
+```
+
+### შესვლის გვერდი (შესვლა)
+```
+┌─────────────────────────┐
+│      გამარჯობა!         │
+│                         │ ← ავატარი არ ჩანს
+│ [ელფოსტა/სახელი___]     │
+│ [პაროლი___________]     │
+│ [    შესვლა      ]      │
+│                         │
+│ არ გაქვს? შექმენი       │
+└─────────────────────────┘
+```
+
+### მთავარი გვერდი (ახალი მომხმარებელი ავატარის გარეშე)
 ```
 ┌─────────────────────────┐
 │                         │
 │   ┌─────────────────┐   │
-│   │                 │ ✨│  ← Sparkle badge prompting 
-│   │    Avatar       │   │    user to create animated
-│   │    Circle       │   │    avatar
-│   │                 │   │
+│   │                 │ ✨│
+│   │  მასკოტი ვიდეო  │   │ ← ერთხელ უკრავს
+│   │  (შემდეგ ავატ.) │   │   შემდეგ ნორმალური ავატარი
 │   └─────────────────┘   │
-│        დონე 63          │
-│     3,313 / 4,920 XP    │
+│        დონე 1           │
 │                         │
 └─────────────────────────┘
 ```
 
 ---
 
-## Files to Modify
+## ტექნიკური დეტალები
 
-| File | Change |
-|------|--------|
-| `src/components/home/GuestWelcomePanel.tsx` | Remove avatar/camera section (lines 155-253) |
-| `src/components/home/AvatarCircle.tsx` | Add `showAvatarPrompt` prop with sparkle badge |
-| `src/pages/Index.tsx` | Pass `showAvatarPrompt` prop to all AvatarCircle instances |
+### GuestWelcomePanel ცვლილებები:
+- ავატარის სექცია wrapped in `{isSignUp && (...)}`
+- Popover/Camera functionality აღდგენილი
+- videoEnded state უკვე არსებობს, გამოყენებული იქნება
+
+### AvatarCircle ცვლილებები:
+- ახალი `showMascotReminder` prop
+- Import გჭირდება: `SinglePlayVideo`, `guestWelcomeVideo`
+- State: `hasPlayedMascot` - ერთხელ დაკვრის კონტროლი
+- localStorage key: `mytrivia_mascot_shown_{userId}` - მომხმარებლისთვის ერთხელ აჩვენოს
+
+### Index.tsx ცვლილებები:
+- სამივე AvatarCircle ინსტანსს გადაეცემა `showMascotReminder`
+- პირობა: `!!user && !profile?.avatar_url`
 
 ---
 
-## Technical Details
+## შესაცვლელი ფაილები
 
-### GuestWelcomePanel Changes:
-- Remove the entire "Clickable Avatar" motion.div block
-- Keep all form validation and OAuth logic unchanged
-- Adjust spacing: reduce `marginTop` since avatar is removed
-
-### AvatarCircle Changes:
-- Import `Sparkles` from lucide-react
-- Add optional `showAvatarPrompt` prop
-- Render badge conditionally when user needs to set animated avatar
-
-### Index.tsx Changes:
-- Calculate condition: `user && !profile?.animated_avatar_url`
-- Apply to all 3 AvatarCircle instances (mobile, md-xl, xl+)
+| ფაილი | ცვლილება |
+|-------|----------|
+| `src/components/home/GuestWelcomePanel.tsx` | ავატარის სექციის აღდგენა `isSignUp` პირობით |
+| `src/components/home/AvatarCircle.tsx` | `showMascotReminder` prop-ის დამატება |
+| `src/pages/Index.tsx` | `showMascotReminder` გადაცემა AvatarCircle-ებზე |
