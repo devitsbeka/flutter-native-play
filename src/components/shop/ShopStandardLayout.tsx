@@ -80,6 +80,7 @@ export function ShopStandardLayout({
           transition={{ delay: index * 0.1 }}
         >
           <ShopProductGrid
+            sectionId={section.id}
             title={section.title}
             items={section.items}
             gems={gems}
