@@ -309,13 +309,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               
               console.log(`[MP] Non-host waiting for questions with game_id: ${expectedGameId}`);
               
-              // Wait briefly for questions to be fully committed by host
-              await new Promise(resolve => setTimeout(resolve, 500));
+              // Wait for questions to be fully committed by host (increased delay)
+              await new Promise(resolve => setTimeout(resolve, 800));
               
               // Fetch with retry logic AND game_id validation to handle race conditions
               let attempts = 0;
-              const MAX_ATTEMPTS = 5;
-              const RETRY_DELAY = 400;
+              const MAX_ATTEMPTS = 8;  // Increased from 5
+              const RETRY_DELAY = 600; // Increased from 400
               let roomQuestions: any[] | null = null;
               let validQuestionsFound = false;
               
@@ -1297,7 +1297,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           })
         ));
         
-        // Update room status
+        // CRITICAL: Wait for DB commit before updating room status
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Update room status (after questions are committed)
         await supabase
           .from("game_rooms")
           .update({
@@ -1406,7 +1409,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         })
       ));
       
-      // Update room status
+      // CRITICAL: Wait for DB commit before updating room status
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Update room status (after questions are committed)
       await supabase
         .from("game_rooms")
         .update({
@@ -1552,7 +1558,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             })
           ));
           
-          // Update room
+          // CRITICAL: Wait for DB commit before updating room status
+          await new Promise(resolve => setTimeout(resolve, 150));
+          
+          // Update room (after questions are committed)
           await supabase
             .from("game_rooms")
             .update({
@@ -1685,7 +1694,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         })
       ));
       
-      // Update room with new category and game info
+      // CRITICAL: Wait for DB commit before updating room status
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Update room with new category and game info (after questions are committed)
       await supabase
         .from("game_rooms")
         .update({
