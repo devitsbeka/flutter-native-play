@@ -1,160 +1,229 @@
 
-# Plan: Fix Multiplayer Game Flow Issues & Room Name Generation
 
-## Issues Identified
+# Plan: Fix Multiplayer Round Synchronization Issues
 
-### Issue 1: Repetitive Room Names ("IQ პარტი")
-The edge function uses AI to generate room names but the prompt is too restrictive, often returning the same result ("IQ პარტი"). The fallback list is also limited.
+## Problem Summary
 
-**Root Cause:** 
-- AI prompt has limited style examples that repeat
-- "IQ პარტი" is in both the fallback list and AI examples, causing high repetition
-- Icon selection tied to keyword from name ("party" → party-popper icon)
+Based on database analysis and user reports, there are critical synchronization bugs causing non-host players to see different questions than the host in subsequent rounds.
 
-### Issue 2: Game Flow Issues After First Round
-Based on the database inspection, second round questions are not being properly persisted/fetched for non-host players. The issue occurs in the `startNewRound` or `startNextFromQueue` flow.
+### Evidence from Database
 
-**Root Cause Analysis:**
-1. When transitioning from results to the next round, the non-host player relies on realtime subscription to detect `status: "playing"`
-2. The subscription handler then fetches `room_questions` and validates by `game_id`
-3. **Bug:** There's a race condition where:
-   - Host clears old questions and inserts new ones
-   - Non-host subscription fires before new questions are inserted
-   - Non-host gets empty/stale questions
+**Room: `20f315a1-ca09-4ee2-9e3c-ac76187e91aa`**
+- Room has `user_trivia_id: 90aa4473` (Disney - "დისნეის სამყარო")
+- **Game 1** (`12e904ab`): Questions are TikTok (from library) - NOT Disney!
+- **Game 2** (`a8e38790`): Only 1 of 3 Disney questions was inserted (index 2)
+- Old TikTok questions (indices 0, 1) still exist in table alongside new Disney question
 
-**Evidence:** Database shows only first game's questions (`game_id: 2963a338...`) are persisted, while subsequent games (`8cf65e0d...`, `dd05ac4e...`) don't have matching room_questions entries.
+**Current `room_questions` state:**
+| game_id | index | question |
+|---------|-------|----------|
+| 12e904ab | 0 | TikTok/Musical.ly (OLD - should be deleted) |
+| 12e904ab | 1 | TikTok content type (OLD - should be deleted) |
+| a8e38790 | 2 | Mary Poppins (ONLY 1 of 3 inserted) |
+
+---
+
+## Root Causes Identified
+
+### 1. `startNextFromQueue` Ignores Room's `user_trivia_id`
+
+When continuing after results, if the queue has items from a previous session, those get played instead of what the host currently has selected.
+
+**Current behavior:**
+```text
+handlePlayAgain() called
+  → queue.length > 0?
+    → YES: startNextFromQueue() uses queue item's data
+    → NO: startNewRound() uses room's user_trivia_id
+```
+
+The queue might contain stale library categories or trivias that don't match the current selection.
+
+### 2. Question Deletion/Insertion Race Condition
+
+The delete and insert operations aren't truly atomic:
+```typescript
+await supabase.from("room_questions").delete().eq("room_id", roomId);
+// GAP - non-host might fetch here and get 0 questions
+await Promise.all(questions.map((q, index) => 
+  supabase.from("room_questions").insert({...})
+));
+// Some inserts might fail silently
+```
+
+### 3. Non-Host Fallback Uses Stale Data
+
+When game_id validation fails after retries, the code falls back to "unvalidated questions":
+```typescript
+if (roomQuestions && roomQuestions.length > 0) {
+  console.warn("[MP] Using unvalidated questions as fallback");
+  // This might use questions from a PREVIOUS game!
+}
+```
 
 ---
 
 ## Technical Fixes
 
-### Fix 1: Improve Room Name Diversity (Edge Function)
+### Fix 1: Clear Stale Queue Items on Trivia Selection
 
-**File:** `supabase/functions/generate-room-name/index.ts`
+**File:** `src/components/team/RoomLobbyV2.tsx`
 
-**Changes:**
-1. Expand fallback names list with 25+ unique options
-2. Add randomization seed to AI prompt for variety  
-3. Improve prompt to request more creative, unique names
-4. Add error handling to retry once if same name generated twice
+When the host selects a new trivia via `handleSelectTrivia`, also clear the queue to prevent stale items from interfering:
 
 ```typescript
-// Expanded fallback list (replacing current 11 items with 25+)
-const FALLBACK_NAMES = [
-  // Battle themes
-  "ტვინების არენა", "გონების რინგი", "IQ დუელი", "ჭიდაობა გონებით",
-  // Team themes  
-  "გენიოსთა კლუბი", "ჭკვიანთა ბანდა", "ნერდთა კლანი", "ტრიბა IQ",
-  // Fun themes
-  "IQ პარტი", "გონების რეივი", "ტვინის დისკო", "კვიზ ფესტი",
-  // Epic themes
-  "დრაკონთა კლუბი", "ნინჯა ტვინები", "ფენიქსის ბრძოლა", "ლომთა ბრძოლა",
-  "მგლის ხრვა", "არწივის მზერა", "ვეფხვის გუნდი", "დათვის ბარი",
-  // Victory themes
-  "ჩემპიონთა რინგი", "მედლების კლუბი", "გამარჯვებულები", "თასის მეტოქენი",
-  // Smart themes
-  "ერუდიტების კლანი", "ინტელექტის ხიდი",
-];
-
-// Updated prompt with randomization
-const randomSeed = Math.floor(Math.random() * 1000);
-const prompt = `Generate a unique Georgian trivia room name (seed: ${randomSeed}).
-...
-IMPORTANT: Be creative and unique. Avoid common words like "IQ პარტი".
-`;
-```
-
-### Fix 2: Fix Round Transition Race Condition
-
-**File:** `src/contexts/MultiplayerContextV2.tsx`
-
-**Problem:** When host starts a new round, non-host may fetch stale questions because:
-1. Host deletes old questions
-2. Subscription fires for room status change
-3. Non-host fetches questions before host finishes inserting new ones
-
-**Solution:** Add retry logic with exponential backoff and ensure questions are fully committed before room status changes.
-
-**Changes to `startNewRound` and `startNextFromQueue`:**
-
-1. **Ensure atomic operation order:**
-   - First: Insert all new questions
-   - Second: Wait for insertion confirmation
-   - Third: Update room status to "playing"
-
-2. **Improve non-host question fetching (subscription handler around line 322-415):**
-   - Increase initial delay from 500ms to 800ms
-   - Increase MAX_ATTEMPTS from 5 to 8
-   - Increase RETRY_DELAY from 400ms to 600ms
-   - Add logging to help debug future issues
-
-```typescript
-// In subscription handler for non-host:
-await new Promise(resolve => setTimeout(resolve, 800)); // Increased from 500
-
-let attempts = 0;
-const MAX_ATTEMPTS = 8;  // Increased from 5
-const RETRY_DELAY = 600; // Increased from 400
-
-while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
-  // ... existing validation logic ...
+const handleSelectTrivia = async (trivia: { id: string; title: string }) => {
+  if (!currentRoom) return;
   
-  if (!validQuestionsFound) {
-    console.log(`[MP] Retry ${attempts + 1}/${MAX_ATTEMPTS}: waiting for questions...`);
-    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-    attempts++;
+  try {
+    // ... existing code ...
+    
+    // NEW: Clear the queue when making a direct selection
+    // This prevents stale queue items from overriding the current selection
+    await supabase
+      .from("room_category_queue")
+      .delete()
+      .eq("room_id", currentRoom.id);
+    
+    await supabase
+      .from("game_rooms")
+      .update({ 
+        category_id: null,
+        category_name: trivia.title,
+        total_questions: questions.length,
+        user_trivia_id: trivia.id,
+      })
+      .eq("id", currentRoom.id);
+    
+    // ... rest of existing code ...
   }
 }
 ```
 
-3. **Fix `startNewRound` function (lines 1206-1441):**
-   - Ensure questions are inserted BEFORE room status update
-   - Add small delay after question insertion to ensure DB commit
+Also apply same fix to `handleSelectCategory` and `handleSelectRandom`.
+
+### Fix 2: Ensure Atomic Delete + Insert in `startNextFromQueue`
+
+**File:** `src/contexts/MultiplayerContextV2.tsx`
+
+Change the delete/insert pattern to use a transaction-like approach with verification:
 
 ```typescript
-// After inserting questions, add brief wait for DB commit
-await Promise.all(questions.map((q, index) => 
-  supabase.from("room_questions").insert({...})
+// In startNextFromQueue (around line 1510):
+
+// Clear old data - WAIT for completion
+const deleteResult = await supabase
+  .from("room_questions")
+  .delete()
+  .eq("room_id", roomId);
+
+if (deleteResult.error) {
+  console.error("[MP] Failed to delete old questions:", deleteResult.error);
+}
+
+// Verify deletion before inserting
+await new Promise(resolve => setTimeout(resolve, 50));
+
+// Insert ALL questions and verify each succeeded
+const insertResults = await Promise.all(questions.map((q, index) => 
+  supabase.from("room_questions").insert({
+    room_id: roomId,
+    question_index: index,
+    // ... other fields
+  }).select()
 ));
 
-// Small delay to ensure questions are committed before status change
-await new Promise(resolve => setTimeout(resolve, 100));
+// Verify all inserts succeeded
+const failedInserts = insertResults.filter(r => r.error);
+if (failedInserts.length > 0) {
+  console.error("[MP] Some question inserts failed:", failedInserts);
+  // Retry failed inserts
+  for (const failed of failedInserts) {
+    // ... retry logic
+  }
+}
 
-// THEN update room status
-await supabase
-  .from("game_rooms")
-  .update({ status: "playing", ... })
-  .eq("id", roomId);
+// Verify question count matches expected
+const { data: verifyData } = await supabase
+  .from("room_questions")
+  .select("id")
+  .eq("room_id", roomId)
+  .eq("game_id", game?.id);
+
+if (!verifyData || verifyData.length !== questions.length) {
+  console.error(`[MP] Question count mismatch: expected ${questions.length}, got ${verifyData?.length}`);
+}
 ```
 
-4. **Fix `startNextFromQueue` function (lines 1443-1730):**
-   - Apply same atomic ordering fix
-   - Add delay between question insertion and status update
+Apply the same fix to:
+- `startGame` (lines 845-893)
+- `startNewRound` (lines 1264-1298)
+
+### Fix 3: Improve Non-Host Question Fetching
+
+**File:** `src/contexts/MultiplayerContextV2.tsx`
+
+Change the non-host question fetching to ONLY use game_id-validated questions, never falling back to stale data:
+
+```typescript
+// Around line 388-414
+if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
+  // ... existing success handling
+} else {
+  console.error("[MP] Failed to fetch valid questions - DO NOT use stale data");
+  
+  // Instead of using unvalidated questions, show error and wait
+  toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+  
+  // Set phase to waiting state, not playing with bad data
+  setState(prev => ({
+    ...prev,
+    phase: "lobby", // Return to lobby instead of playing with stale data
+    currentRoom: updated,
+  }));
+  return;
+}
+```
+
+### Fix 4: Filter Room Questions by game_id in All Fetches
+
+**File:** `src/contexts/MultiplayerContextV2.tsx`
+
+When fetching questions, always filter by the current game_id:
+
+```typescript
+// In the retry loop (line 323-327):
+const { data } = await supabase
+  .from("room_questions")
+  .select("*")
+  .eq("room_id", roomId)
+  .eq("game_id", expectedGameId) // ADD THIS FILTER
+  .order("question_index", { ascending: true });
+```
+
+This ensures we only get questions for the CURRENT game, not leftover questions from previous games.
 
 ---
 
-## Files to Modify
+## Summary of Files to Modify
 
-1. **`supabase/functions/generate-room-name/index.ts`**
-   - Expand FALLBACK_NAMES array (25+ unique names)
-   - Add randomization seed to AI prompt
-   - Improve prompt for more variety
+1. **`src/components/team/RoomLobbyV2.tsx`**
+   - `handleSelectTrivia`: Clear queue on selection
+   - `handleSelectCategory`: Clear queue on selection  
+   - `handleSelectRandom`: Clear queue on selection
 
 2. **`src/contexts/MultiplayerContextV2.tsx`**
-   - Increase retry delays in subscription handler (lines ~310-415)
-   - Add delay between question insertion and status update in `startNewRound` (lines ~1270-1310)
-   - Add delay between question insertion and status update in `startNextFromQueue` (lines ~1540-1700)
+   - Non-host question fetching: Add game_id filter, remove fallback
+   - `startGame`: Add insert verification
+   - `startNewRound`: Add insert verification
+   - `startNextFromQueue`: Add insert verification
 
 ---
 
 ## Expected Behavior After Fix
 
-### Room Names
-- Each new room gets a unique, creative Georgian name
-- Reduced repetition of "IQ პარტი" and similar common names
-- Icons properly match the generated name themes
+1. **Trivia Selection**: When host picks a trivia, queue is cleared so only that trivia plays
+2. **Question Sync**: All questions are verified to be inserted before room status changes
+3. **Non-Host**: Only sees questions for the current game_id, never stale data
+4. **Error Handling**: If sync fails, user returns to lobby with clear error message
 
-### Game Flow
-- Non-host players reliably receive questions on round 2+
-- No blank screens or missing questions during round transitions
-- Proper synchronization between host and guests
