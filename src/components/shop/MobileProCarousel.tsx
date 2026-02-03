@@ -36,14 +36,17 @@ const PRO_TIERS = [
 ];
 
 // Helper function to determine button text and state
-const getButtonText = (tierId: SimplifiedTier, currentTier: SimplifiedTier | undefined) => {
+const getButtonText = (tierId: SimplifiedTier, currentTier: string | undefined) => {
+  // Normalize tier: "standard" from DB maps to "solo" in UI
+  const normalizedTier = currentTier === "standard" ? "solo" : currentTier;
+  
   // User has Family PRO (top tier) - both cards show active
-  if (currentTier === "family") {
+  if (normalizedTier === "family" || normalizedTier === "pro_plus") {
     return { text: "აქტიური", isActive: true };
   }
   
-  // User has Solo PRO
-  if (currentTier === "solo") {
+  // User has Solo PRO (or "standard" from old system)
+  if (normalizedTier === "solo" || normalizedTier === "pro") {
     if (tierId === "solo") return { text: "აქტიური", isActive: true };
     if (tierId === "family") return { text: "გაუმჯობესება", isActive: false }; // Upgrade option
   }
@@ -63,7 +66,7 @@ export function MobileProCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
-  const currentTier = subscription?.vip_tier as SimplifiedTier | undefined;
+  const currentTier = subscription?.vip_tier;
 
   // Auto-rotate every 6 seconds
   useEffect(() => {
