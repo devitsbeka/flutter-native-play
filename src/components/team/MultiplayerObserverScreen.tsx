@@ -222,8 +222,8 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
         {/* Main Game Content - Same as player view */}
         <div className="flex-1 flex flex-col px-4 overflow-hidden min-h-0">
           {/* Question Icon - overlapping card */}
-          <div className="relative flex-shrink-0 mt-2">
-            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+          <div className="relative flex-shrink-0 h-10 mt-2">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
               <QuizCategoryIcon
                 iconSlug={currentQuestion?.iconSlug}
                 categoryId={currentRoom?.category_id || undefined}
@@ -233,7 +233,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
           </div>
 
           {/* Question Card */}
-          <div className="flex-shrink-0 mt-10">
+          <div className="flex-shrink-0 mt-8">
             <QuizQuestionCard
               questionText={currentQuestion?.question || ""}
               progressPercent={(localTimeRemaining / TIME_PER_QUESTION) * 100}
