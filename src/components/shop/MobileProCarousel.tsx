@@ -18,7 +18,6 @@ const PRO_TIERS = [
     ],
     gradient: "linear-gradient(135deg, #EC4899 0%, #DB2777 50%, #BE185D 100%)",
     shadow: "#9D174D",
-    ctaText: "გააქტიურება",
   },
   {
     id: "family" as const,
@@ -33,9 +32,25 @@ const PRO_TIERS = [
     gradient: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)",
     shadow: "#4C1D95",
     popular: true,
-    ctaText: "შეძენა",
   },
 ];
+
+// Helper function to determine button text and state
+const getButtonText = (tierId: SimplifiedTier, currentTier: SimplifiedTier | undefined) => {
+  // User has Family PRO (top tier) - both cards show active
+  if (currentTier === "family") {
+    return { text: "აქტიური", isActive: true };
+  }
+  
+  // User has Solo PRO
+  if (currentTier === "solo") {
+    if (tierId === "solo") return { text: "აქტიური", isActive: true };
+    if (tierId === "family") return { text: "გაუმჯობესება", isActive: false }; // Upgrade option
+  }
+  
+  // No subscription - show "შეძენა" for all
+  return { text: "შეძენა", isActive: false };
+};
 
 type SimplifiedTier = typeof PRO_TIERS[number]["id"];
 
@@ -64,7 +79,6 @@ export function MobileProCarousel() {
   };
 
   const tier = PRO_TIERS[currentIndex];
-  const isCurrentTier = currentTier === tier.id;
   const TierIcon = tier.icon;
 
   return (
@@ -85,7 +99,7 @@ export function MobileProCarousel() {
             }}
           >
             {/* Popular Badge */}
-            {tier.popular && !isCurrentTier && (
+            {tier.popular && currentTier !== "family" && (
               <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
                 <Sparkles className="w-3 h-3" />
                 TOP
@@ -93,7 +107,7 @@ export function MobileProCarousel() {
             )}
 
             {/* Active Badge */}
-            {isCurrentTier && (
+            {getButtonText(tier.id, currentTier).isActive && (
               <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-xl shadow-lg flex items-center gap-1 z-10">
                 <Check className="w-3 h-3" />
                 აქტიური
@@ -145,43 +159,48 @@ export function MobileProCarousel() {
               </ul>
 
               {/* CTA Button - mt-4 keeps spacing from benefits */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isCurrentTier && !isProcessing) {
-                    handleUpgrade(tier.id);
-                  }
-                }}
-                disabled={isCurrentTier || isProcessing}
-                className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
-                style={{
-                  background: isCurrentTier 
-                    ? "rgba(255,255,255,0.15)" 
-                    : "rgba(255,255,255,0.95)",
-                  color: isCurrentTier ? "rgba(255,255,255,0.6)" : tier.shadow,
-                  boxShadow: isCurrentTier 
-                    ? "none" 
-                    : "0 3px 0 rgba(0,0,0,0.15)",
-                }}
-              >
-                {isCurrentTier ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    აქტიურია
-                  </>
-                ) : isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    მუშავდება...
-                  </>
-                ) : (
-                  <>
-                    {tier.ctaText}
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+              {(() => {
+                const buttonState = getButtonText(tier.id, currentTier);
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!buttonState.isActive && !isProcessing) {
+                        handleUpgrade(tier.id);
+                      }
+                    }}
+                    disabled={buttonState.isActive || isProcessing}
+                    className="w-full py-3 md:py-4 px-4 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed mt-4"
+                    style={{
+                      background: buttonState.isActive 
+                        ? "rgba(255,255,255,0.15)" 
+                        : "rgba(255,255,255,0.95)",
+                      color: buttonState.isActive ? "rgba(255,255,255,0.6)" : tier.shadow,
+                      boxShadow: buttonState.isActive 
+                        ? "none" 
+                        : "0 3px 0 rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {buttonState.isActive ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        {buttonState.text}
+                      </>
+                    ) : isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        მუშავდება...
+                      </>
+                    ) : (
+                      <>
+                        {buttonState.text}
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Right: Video Background */}
