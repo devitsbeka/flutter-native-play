@@ -11,23 +11,44 @@ const BANNED_WORDS = [
 // Max character limit for room names
 const MAX_NAME_LENGTH = 18;
 
-// Fun fallback names for trivia rooms - exciting themes!
+// Fun fallback names for trivia rooms - exciting themes! (30+ unique options)
 const FALLBACK_NAMES = [
   // Battle themes
   "ტვინების არენა",   // Brain Arena
   "გონების რინგი",    // Mind Ring
   "IQ დუელი",         // IQ Duel
+  "ჭიდაობა გონებით",  // Wrestling with Mind
+  "გონების ბრძოლა",   // Mind Battle
   // Team themes  
   "გენიოსთა კლუბი",   // Genius Club
   "ჭკვიანთა ბანდა",   // Smart Gang
+  "ნერდთა კლანი",     // Nerd Clan
+  "ტრიბა IQ",         // IQ Tribe
+  "ერუდიტთა სახლი",   // Erudites House
   // Fun themes
-  "IQ პარტი",         // IQ Party
   "გონების რეივი",    // Mind Rave
+  "ტვინის დისკო",     // Brain Disco
+  "კვიზ ფესტი",       // Quiz Fest
+  "გონების ზეიმი",    // Mind Celebration
   // Epic themes
   "დრაკონთა კლუბი",   // Dragon Club
   "ნინჯა ტვინები",    // Ninja Brains
   "ფენიქსის ბრძოლა",  // Phoenix Battle
   "ლომთა ბრძოლა",     // Lions' Battle
+  "მგლის ხროვა",      // Wolf Pack
+  "არწივის მზერა",    // Eagle's Gaze
+  "ვეფხვის გუნდი",    // Tiger Team
+  "დათვის ბუნაგი",    // Bear's Den
+  // Victory themes
+  "ჩემპიონთა რინგი",  // Champions Ring
+  "მედლების კლუბი",   // Medals Club
+  "გამარჯვებულები",   // Winners
+  "თასის მეტოქენი",   // Cup Contenders
+  "გვირგვინის მცველი",// Crown Keeper
+  // Smart themes
+  "ერუდიტების კლანი", // Erudites Clan
+  "ინტელექტის ხიდი",  // Bridge of Intellect
+  "სიბრძნის კოშკი",   // Tower of Wisdom
 ];
 
 // Curated keyword-to-slug fallback map for fun trivia themes
@@ -303,18 +324,29 @@ serve(async (req) => {
     }
 
     // Use AI to generate fun, exciting names with matching icons
-    const prompt = `Generate a fun Georgian trivia room name. Pick ONE style:
-- Battle: ტვინების არენა, IQ დუელი, გონების რინგი
-- Team: გენიოსთა კლუბი, ჭკვიანთა ბანდა  
-- Epic: დრაკონთა კლუბი, ნინჯა ტვინები, ლომთა ბრძოლა
-- Party: IQ პარტი, გონების რეივი
+    // Add random seed to encourage variety
+    const randomSeed = Math.floor(Math.random() * 10000);
+    const styleIndex = Math.floor(Math.random() * 6);
+    const styles = ['Battle', 'Team', 'Epic', 'Victory', 'Animal', 'Smart'];
+    const preferredStyle = styles[styleIndex];
+    
+    const prompt = `[Seed: ${randomSeed}] Generate a UNIQUE Georgian trivia room name in ${preferredStyle} style.
+
+Styles:
+- Battle: გონების რინგი, ჭიდაობა გონებით, IQ დუელი
+- Team: ნერდთა კლანი, ტრიბა IQ, ერუდიტთა სახლი
+- Epic: ფენიქსის ბრძოლა, დრაკონთა კლუბი, ნინჯა ტვინები
+- Victory: ჩემპიონთა რინგი, მედლების კლუბი, თასის მეტოქენი
+- Animal: მგლის ხროვა, არწივის მზერა, ლომთა ბრძოლა, ვეფხვის გუნდი
+- Smart: სიბრძნის კოშკი, ინტელექტის ხიდი, ერუდიტების კლანი
 
 Rules: max 18 chars, 1-2 words, Georgian only (IQ allowed), NO boring words (კვიზი, ტესტი, საკითხავი)
+IMPORTANT: Be creative! Avoid repeating examples. Create something NEW and unique!
 
-Return ONLY valid JSON, nothing else:
+Return ONLY valid JSON:
 {"name": "ქართული_სახელი", "icon_keyword": "english_word"}
 
-icon_keyword must match theme: dragon, lion, ninja, sword, trophy, party, crown, phoenix, wolf, eagle, boxing, arena`;
+icon_keyword examples: dragon, lion, ninja, sword, trophy, crown, phoenix, wolf, eagle, boxing, arena, medal, shield, tiger, bear, wizard, knight, fire, star, brain`;
 
     console.log('Generating creative room name with matching icon...');
 
