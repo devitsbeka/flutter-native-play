@@ -1,116 +1,138 @@
 
-# Multiplayer Round Transition Bug Fix Plan
 
-## Problem Summary
-
-When starting round 2 after round 1 completes, the non-host player is returned to the lobby while the host continues playing. Console logs show:
-```
-[MP] Failed to fetch questions for game_id ec3fa676-8f45-4984-8ece-444506cbc3d0 after 8 attempts
-```
-
-The game_id `ec3fa676...` belongs to a **different room**, indicating a state contamination issue.
+# Fix: Non-Host Returned to Lobby After First Question of Round 2
 
 ## Root Cause Analysis
 
-After extensive investigation, I identified **two related issues**:
+The console logs reveal a **race condition** where multiple question fetch loops run in parallel:
 
-### Issue 1: Non-Host Status Handling Gap
+```
+Round 2 starts successfully:
+[MP] Non-host fetching questions with verified game_id: 5cf141f0-b98a-45f7-91e1-00394ab0d413  ✅
+[MP] Found 5 questions matching game_id: 5cf141f0-b98a-45f7-91e1-00394ab0d413  ✅
 
-When the host calls `continueInRoom()` from results screen (after adding to queue), it:
-1. Updates room `status: "waiting"` in database
-2. Sets local `phase: "lobby"` for host only
+STALE fetch from previous realtime event still running:
+[MP] Waiting for questions with game_id 5e49c539-0738-4a53-b29a-cec590dd325b (attempt 1/8)  ❌ OLD ID
+[MP] Failed to fetch questions for game_id 5e49c539-0738-4a53-b29a-cec590dd325b after 8 attempts
+→ Calls setState({ phase: "lobby" })  ❌ OVERWRITES GOOD STATE
+```
 
-The realtime subscription handler (lines 319-418) only handles:
-- `status === "playing"` → fetch questions and transition to playing
-- `status === "completed"` → transition to results
-- `status === "cancelled"` → reset and cleanup
+### Why This Happens
 
-**Missing**: Handler for `status === "waiting"` that transitions non-host to lobby phase.
+1. Realtime subscription receives multiple UPDATE events (for round 1 status changes, then round 2)
+2. Each triggers a new fetch loop with the game_id from that moment
+3. Old fetch loops continue running even after new ones succeed
+4. When stale fetch fails, it sets `phase: "lobby"` AFTER the new round already started
 
-**Impact**: Non-host stays in `phase: "results"` while `currentRoom.status` is "waiting". When host starts game, non-host's phase check `(currentPhase === "lobby" || currentPhase === "results")` passes, but they may have inconsistent state.
-
-### Issue 2: Cross-Room State Contamination
-
-The failed game_id `ec3fa676...` belongs to room `LNPULM`, but the players are in room `UTC3JH`. This indicates:
-
-1. Both users are participants in multiple rooms simultaneously
-2. A browser tab or session from the other room may have leaked state
-3. OR the realtime update payload captured a stale game_id before the new one was set
+---
 
 ## Solution
 
-### Change 1: Handle `status: "waiting"` for Non-Hosts
+### Change 1: Add Current Game ID Tracking Ref
+
+Create a ref to track the "expected" game_id so stale fetches can detect they're outdated and abort.
 
 **File**: `src/contexts/MultiplayerContextV2.tsx`
 
-Add handler for `waiting` status after the `cancelled` handler (after line 418):
+Add ref around line 250 (near other refs):
+```typescript
+const expectedGameIdRef = useRef<string | null>(null);
+```
+
+### Change 2: Guard Stale Fetch Completion
+
+Before returning to lobby on fetch failure, verify the game_id we were fetching is still the current one.
+
+**File**: `src/contexts/MultiplayerContextV2.tsx`
+
+Update the realtime handler (lines ~330-420):
 
 ```typescript
-} else if (updated.status === "waiting" && currentPhase === "results") {
-  // Host returned to lobby - non-host should follow
-  console.log(`[MP] Room returned to waiting state, transitioning to lobby`);
-  setState(prev => ({
-    ...prev,
-    phase: "lobby",
-    questions: [],
-    currentQuestionIndex: 0,
-    myScore: 0,
-    lastQuestionResult: null,
-    opponentAnswers: {},
-    currentRoom: updated,
-  }));
+// Before starting fetch, store expected game_id in ref
+expectedGameIdRef.current = expectedGameId;
+
+// ... existing fetch loop ...
+
+// Before setting phase back to lobby, check if this is still the current game
+if (expectedGameIdRef.current !== expectedGameId) {
+  console.log(`[MP] Aborting stale fetch - game_id changed from ${expectedGameId} to ${expectedGameIdRef.current}`);
+  return; // Exit without modifying state - new game already started
+}
+
+// Only set lobby if we're still looking for this game_id
+toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+setState(prev => ({
+  ...prev,
+  phase: "lobby",
+  currentRoom: updated,
+}));
+```
+
+### Change 3: Check Game ID During Fetch Loop
+
+Add early-exit check inside the retry loop:
+
+```typescript
+while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
+  // Check if a newer game has started
+  if (expectedGameIdRef.current !== expectedGameId) {
+    console.log(`[MP] Aborting fetch loop - newer game started`);
+    return;
+  }
+  
+  // ... existing fetch logic ...
 }
 ```
 
-This ensures non-hosts transition to lobby in sync with the host.
+### Change 4: Increase Delay in startNextFromQueue
 
-### Change 2: Add Game ID Freshness Validation
+Both paths in `startNextFromQueue` use 150ms delay, but `saveQuestionsAndStartGame` uses 300ms. Make them consistent.
 
 **File**: `src/contexts/MultiplayerContextV2.tsx`
 
-In the question fetch logic (around line 335), add a safeguard to re-fetch the room's current_game_id directly from DB instead of trusting the realtime payload:
-
+Line 1783 (user_trivia path):
 ```typescript
-// Get expected game_id FRESH from database (realtime payload could be stale)
-const { data: freshRoomCheck } = await supabase
-  .from("game_rooms")
-  .select("current_game_id")
-  .eq("id", roomId)
-  .single();
-
-const expectedGameId = freshRoomCheck?.current_game_id || updated.current_game_id;
-
-console.log(`[MP] Non-host fetching questions with verified game_id: ${expectedGameId}`);
+// CRITICAL: Wait for DB commit before updating room status
+await new Promise(resolve => setTimeout(resolve, 300)); // Changed from 150ms
 ```
 
-### Change 3: Clear Questions Before Status Update
-
-In `saveQuestionsAndStartGame` (around line 1190), ensure the room status update happens AFTER questions are fully inserted with a longer delay:
-
+Line 1940 (library path):
 ```typescript
-// CRITICAL: Wait longer for DB commit before updating room status
-await new Promise(resolve => setTimeout(resolve, 300)); // Increased from 150ms
+// CRITICAL: Wait for DB commit before updating room status
+await new Promise(resolve => setTimeout(resolve, 300)); // Changed from 150ms
 ```
+
+---
+
+## Summary of Changes
+
+| Location | Change |
+|----------|--------|
+| Line ~250 | Add `expectedGameIdRef` to track current game_id |
+| Line ~343 | Store expected game_id in ref before fetch |
+| Lines ~355-380 | Add early-exit check in fetch loop if game_id changed |
+| Lines ~405-415 | Guard lobby transition - abort if game_id changed |
+| Line ~1783 | Increase delay from 150ms to 300ms (user_trivia) |
+| Line ~1940 | Increase delay from 150ms to 300ms (library) |
+
+---
+
+## How This Fixes the Bug
+
+1. **Before** round 2 starts, ref holds round 1's game_id
+2. **When** round 2 starts, ref is updated to round 2's game_id
+3. **When** stale fetch for round 1's game_id fails, it checks ref
+4. Ref now holds round 2's game_id → mismatch detected → stale fetch aborted
+5. User stays in `phase: "playing"` with correct questions
+
+---
 
 ## Testing Checklist
 
-After implementation, verify:
+1. Play round 1 to completion
+2. Host adds category to queue → lobby opens
+3. Host starts round 2
+4. Both players should see questions and stay in playing phase
+5. Complete round 2 → both see results
+6. Repeat for round 3 to ensure stability
 
-1. **Round Transition**: Start round 1 → complete → host adds category to queue → both players go to lobby
-2. **Round Start**: Host starts round 2 → both players see questions simultaneously
-3. **Question Sync**: All players see same questions in same order
-4. **Multiple Tabs**: Test with user having multiple room tabs open - should not interfere
-5. **Edge Case**: Non-host refreshes page during round transition → should resync correctly
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/contexts/MultiplayerContextV2.tsx` | Add `status: "waiting"` handler, add game_id freshness check, increase sync delay |
-
-## Technical Notes
-
-- The 800ms initial delay + 8 attempts × 600ms = ~5.6s total wait time for question sync
-- New `waiting` handler ensures phase consistency between host and non-host
-- Fresh game_id fetch eliminates stale realtime payload issues
-- 300ms delay after insert gives more time for DB replication
