@@ -59,12 +59,12 @@ const QuizPowerUpButton = React.forwardRef<HTMLButtonElement, QuizPowerUpButtonP
         >
           {/* Just the icon - no container */}
           {isLoading ? (
-            <div className="w-16 h-16 rounded-full bg-white/20 animate-pulse" />
+            <div className="w-14 h-14 [@media(max-height:700px)]:w-12 [@media(max-height:700px)]:h-12 rounded-full bg-white/20 animate-pulse" />
           ) : (
             <motion.img
               src={config.image}
               alt={config.label}
-              className="w-16 h-16 object-contain"
+              className="w-14 h-14 [@media(max-height:700px)]:w-12 [@media(max-height:700px)]:h-12 object-contain"
               style={{
                 filter: isDisabled ? "none" : "drop-shadow(0 3px 6px rgba(0,0,0,0.3))",
               }}
