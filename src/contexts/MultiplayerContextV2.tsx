@@ -331,10 +331,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentRoom: updated, // Sync room state immediately
               }));
               
-              // Get expected game_id from room update for validation
-              const expectedGameId = updated.current_game_id;
+              // Get expected game_id FRESH from database (realtime payload could be stale)
+              const { data: freshRoomCheck } = await supabase
+                .from("game_rooms")
+                .select("current_game_id")
+                .eq("id", roomId)
+                .maybeSingle();
               
-              console.log(`[MP] Non-host waiting for questions with game_id: ${expectedGameId}`);
+              const expectedGameId = freshRoomCheck?.current_game_id || updated.current_game_id;
+              
+              console.log(`[MP] Non-host fetching questions with verified game_id: ${expectedGameId}`);
               
               // Wait for questions to be fully committed by host (increased delay)
               await new Promise(resolve => setTimeout(resolve, 800));
@@ -415,6 +421,19 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             toast.info("ოთახი დაიხურა");
             setState(initialState);
             cleanupChannels();
+          } else if (updated.status === "waiting" && currentPhase === "results") {
+            // Host returned to lobby - non-host should follow
+            console.log(`[MP] Room returned to waiting state, transitioning to lobby`);
+            setState(prev => ({
+              ...prev,
+              phase: "lobby",
+              questions: [],
+              currentQuestionIndex: 0,
+              myScore: 0,
+              lastQuestionResult: null,
+              opponentAnswers: {},
+              currentRoom: updated,
+            }));
           }
         }
       )
@@ -1175,8 +1194,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error(`[MP saveQuestionsAndStartGame] Question count mismatch: expected ${questions.length}, got ${insertedCount}`);
     }
     
-    // CRITICAL: Wait for DB commit before updating room status
-    await new Promise(resolve => setTimeout(resolve, 150));
+    // CRITICAL: Wait longer for DB commit before updating room status
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     // Reset all participants scores
     await supabase
