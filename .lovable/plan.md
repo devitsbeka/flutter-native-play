@@ -1,138 +1,142 @@
 
 
-# Fix: Non-Host Returned to Lobby After First Question of Round 2
+# Plan: Fix "Add to Queue" Flow to Show Picked Category in Lobby
 
-## Root Cause Analysis
+## Problem Summary
 
-The console logs reveal a **race condition** where multiple question fetch loops run in parallel:
+When clicking "რიგში დამატება" (Add to Queue) from the results screen:
+1. The picked category is added to the queue table
+2. User returns to lobby
+3. **But the lobby shows empty state** ("რისი თამაში გინდა?") instead of showing the picked category
+4. Adding more items should show them as round 2, 3, etc.
 
-```
-Round 2 starts successfully:
-[MP] Non-host fetching questions with verified game_id: 5cf141f0-b98a-45f7-91e1-00394ab0d413  ✅
-[MP] Found 5 questions matching game_id: 5cf141f0-b98a-45f7-91e1-00394ab0d413  ✅
+## Root Cause
 
-STALE fetch from previous realtime event still running:
-[MP] Waiting for questions with game_id 5e49c539-0738-4a53-b29a-cec590dd325b (attempt 1/8)  ❌ OLD ID
-[MP] Failed to fetch questions for game_id 5e49c539-0738-4a53-b29a-cec590dd325b after 8 attempts
-→ Calls setState({ phase: "lobby" })  ❌ OVERWRITES GOOD STATE
-```
+Two issues combine to cause this:
 
-### Why This Happens
+### Issue 1: Room Category Not Updated
+When adding to queue, the item goes to `room_category_queue` table but the room's `category_name`/`category_id`/`user_trivia_id` fields remain from the last played game.
 
-1. Realtime subscription receives multiple UPDATE events (for round 1 status changes, then round 2)
-2. Each triggers a new fetch loop with the game_id from that moment
-3. Old fetch loops continue running even after new ones succeed
-4. When stale fetch fails, it sets `phase: "lobby"` AFTER the new round already started
+### Issue 2: Lobby Hides Data After Results
+In `RoomLobbyV2.tsx` (lines 860-880), when `justReturnedFromResults && !madeNewSelection` is true:
+- `categoryName` is forced to `null`
+- `queue` is forced to `[]`
 
----
+This logic was intended to show empty state when queue is empty, but it incorrectly hides data when queue has items.
 
 ## Solution
 
-### Change 1: Add Current Game ID Tracking Ref
+### Change 1: Set First Queued Item as Current Round
 
-Create a ref to track the "expected" game_id so stale fetches can detect they're outdated and abort.
+When adding to queue from results screen, **also update the room's category data** with the item being added. This way, when returning to lobby, the first item displays as "round 1".
 
-**File**: `src/contexts/MultiplayerContextV2.tsx`
+**File**: `src/components/team/GameResultsScreenV2.tsx`
 
-Add ref around line 250 (near other refs):
+Update `handleAddToQueue` to also set the room's current category:
+
 ```typescript
-const expectedGameIdRef = useRef<string | null>(null);
+const handleAddToQueue = async (item: {
+  source_type: "category" | "random" | "user_trivia";
+  category_id?: string | null;
+  category_name?: string | null;
+  user_trivia_id?: string | null;
+  icon_slug?: string | null;
+}) => {
+  if (!currentRoom) return;
+  
+  // Add item to queue first
+  await addToQueue(item);
+  
+  // ALSO update the room's current category so lobby shows it as round 1
+  await supabase
+    .from("game_rooms")
+    .update({
+      category_id: item.source_type === "category" ? item.category_id : null,
+      category_name: item.category_name || (item.source_type === "random" ? "შემთხვევითი" : null),
+      user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
+    })
+    .eq("id", currentRoom.id);
+  
+  // Navigate to lobby so host can see and reorder the queue
+  continueInRoom();
+};
 ```
 
-### Change 2: Guard Stale Fetch Completion
+### Change 2: Don't Hide Queue When Items Exist
 
-Before returning to lobby on fetch failure, verify the game_id we were fetching is still the current one.
+Update the lobby's CategoryPickerSection props to show queue items even after returning from results.
+
+**File**: `src/components/team/RoomLobbyV2.tsx`
+
+Lines 856-880 - Change the queue prop to show items when queue has content:
+
+```typescript
+<CategoryPickerSection
+  categoryName={
+    // Show category if: user made new selection OR queue has items
+    (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
+      currentRoom.category_name ?? null
+    )
+  }
+  categoryId={
+    (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : 
+    currentRoom.category_id
+  }
+  iconSlug={/* same logic with queue.length === 0 check */}
+  isHost={isHost}
+  queue={queue}  // Always show queue - remove conditional hiding
+  // ... rest unchanged
+/>
+```
+
+### Change 3: Update continueInRoom to Keep Category When Queue Has Items
+
+The current `continueInRoom` already handles this correctly (keeps category data when queue has items), but we need to ensure the local state is also updated.
 
 **File**: `src/contexts/MultiplayerContextV2.tsx`
 
-Update the realtime handler (lines ~330-420):
+Modify `continueInRoom` (around line 1360) to NOT reset `justReturnedFromResults` flag when queue has items - this allows proper display:
 
 ```typescript
-// Before starting fetch, store expected game_id in ref
-expectedGameIdRef.current = expectedGameId;
-
-// ... existing fetch loop ...
-
-// Before setting phase back to lobby, check if this is still the current game
-if (expectedGameIdRef.current !== expectedGameId) {
-  console.log(`[MP] Aborting stale fetch - game_id changed from ${expectedGameId} to ${expectedGameIdRef.current}`);
-  return; // Exit without modifying state - new game already started
-}
-
-// Only set lobby if we're still looking for this game_id
-toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
 setState(prev => ({
   ...prev,
   phase: "lobby",
-  currentRoom: updated,
+  questions: [],
+  currentQuestionIndex: 0,
+  myScore: 0,
+  lastQuestionResult: null,
+  opponentAnswers: {},
+  lastPlayedTriviaId: justPlayedTriviaId || null,
+  justReturnedFromResults: !hasQueueItems, // Only set if queue is empty
+  // ... rest
 }));
 ```
 
-### Change 3: Check Game ID During Fetch Loop
+## Expected Result After Fix
 
-Add early-exit check inside the retry loop:
+1. Host completes a round
+2. Opens category picker → selects "გეოგრაფია" → clicks "რიგში დამატება"
+3. Returns to lobby showing:
+   - Main section: "გეოგრაფია" (მიმდინარე კატეგორია)
+   - Queue row shows: `[1] გეოგრაფია`
+4. Opens picker again → selects "ისტორია" → clicks "რიგში დამატება"
+5. Lobby now shows:
+   - Main section: "გეოგრაფია"
+   - Queue row: `[1] გეოგრაფია` `[2] ისტორია` (draggable)
+6. Host can drag to reorder
 
-```typescript
-while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
-  // Check if a newer game has started
-  if (expectedGameIdRef.current !== expectedGameId) {
-    console.log(`[MP] Aborting fetch loop - newer game started`);
-    return;
-  }
-  
-  // ... existing fetch logic ...
-}
-```
+## Files to Modify
 
-### Change 4: Increase Delay in startNextFromQueue
+| File | Change |
+|------|--------|
+| `src/components/team/GameResultsScreenV2.tsx` | Update room category when adding to queue |
+| `src/components/team/RoomLobbyV2.tsx` | Show queue/category data when queue has items |
+| `src/contexts/MultiplayerContextV2.tsx` | Set `justReturnedFromResults` based on queue state |
 
-Both paths in `startNextFromQueue` use 150ms delay, but `saveQuestionsAndStartGame` uses 300ms. Make them consistent.
+## Technical Notes
 
-**File**: `src/contexts/MultiplayerContextV2.tsx`
-
-Line 1783 (user_trivia path):
-```typescript
-// CRITICAL: Wait for DB commit before updating room status
-await new Promise(resolve => setTimeout(resolve, 300)); // Changed from 150ms
-```
-
-Line 1940 (library path):
-```typescript
-// CRITICAL: Wait for DB commit before updating room status
-await new Promise(resolve => setTimeout(resolve, 300)); // Changed from 150ms
-```
-
----
-
-## Summary of Changes
-
-| Location | Change |
-|----------|--------|
-| Line ~250 | Add `expectedGameIdRef` to track current game_id |
-| Line ~343 | Store expected game_id in ref before fetch |
-| Lines ~355-380 | Add early-exit check in fetch loop if game_id changed |
-| Lines ~405-415 | Guard lobby transition - abort if game_id changed |
-| Line ~1783 | Increase delay from 150ms to 300ms (user_trivia) |
-| Line ~1940 | Increase delay from 150ms to 300ms (library) |
-
----
-
-## How This Fixes the Bug
-
-1. **Before** round 2 starts, ref holds round 1's game_id
-2. **When** round 2 starts, ref is updated to round 2's game_id
-3. **When** stale fetch for round 1's game_id fails, it checks ref
-4. Ref now holds round 2's game_id → mismatch detected → stale fetch aborted
-5. User stays in `phase: "playing"` with correct questions
-
----
-
-## Testing Checklist
-
-1. Play round 1 to completion
-2. Host adds category to queue → lobby opens
-3. Host starts round 2
-4. Both players should see questions and stay in playing phase
-5. Complete round 2 → both see results
-6. Repeat for round 3 to ensure stability
+- The queue is stored in `room_category_queue` table with positions
+- The "current round" (shown as pill #1) comes from room's `category_name` field
+- Queue items (pills #2+) come from the hook's queue array
+- Position 1 in queue display = room category; positions 2+ = queue items
 
