@@ -446,6 +446,9 @@ export function RoomLobbyV2() {
       // Clear any existing room_questions from previous trivia selection
       await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
       
+      // CRITICAL: Clear stale queue items to prevent them from overriding this selection
+      await supabase.from("room_category_queue").delete().eq("room_id", currentRoom.id);
+      
       // Update room with new category and clear user_trivia_id
       await supabase
         .from("game_rooms")
@@ -477,6 +480,9 @@ export function RoomLobbyV2() {
     try {
       // Clear any existing room_questions from previous trivia selection
       await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+      
+      // CRITICAL: Clear stale queue items to prevent them from overriding this selection
+      await supabase.from("room_category_queue").delete().eq("room_id", currentRoom.id);
       
       // Update room with random category and clear user_trivia_id
       await supabase
@@ -523,6 +529,9 @@ export function RoomLobbyV2() {
       // SIMPLIFIED: Only update room metadata - questions will be fetched fresh on game start
       // This eliminates race conditions between lobby selection and game start
       await supabase.from("room_questions").delete().eq("room_id", currentRoom.id);
+      
+      // CRITICAL: Clear stale queue items to prevent them from overriding this selection
+      await supabase.from("room_category_queue").delete().eq("room_id", currentRoom.id);
       
       await supabase
         .from("game_rooms")

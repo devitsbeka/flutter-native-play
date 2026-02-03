@@ -305,7 +305,6 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               
               // Get expected game_id from room update for validation
               const expectedGameId = updated.current_game_id;
-              const expectedStartedAt = updated.started_at;
               
               console.log(`[MP] Non-host waiting for questions with game_id: ${expectedGameId}`);
               
@@ -320,44 +319,26 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               let validQuestionsFound = false;
               
               while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
+                // CRITICAL: Filter by game_id to ONLY get questions for current game
                 const { data } = await supabase
                   .from("room_questions")
                   .select("*")
                   .eq("room_id", roomId)
+                  .eq("game_id", expectedGameId) // Filter by current game_id
                   .order("question_index", { ascending: true });
                 
                 roomQuestions = data;
                 
                 if (roomQuestions && roomQuestions.length > 0) {
-                  const firstQuestion = roomQuestions[0];
-                  
-                  // PRIMARY VALIDATION: Check game_id matches expected game
-                  if (expectedGameId && firstQuestion.game_id === expectedGameId) {
-                    console.log(`[MP] Questions validated by game_id match: ${expectedGameId}`);
-                    validQuestionsFound = true;
-                    break;
-                  }
-                  
-                  // FALLBACK VALIDATION: Check created_at is within 10s of game start
-                  if (expectedStartedAt && firstQuestion.created_at) {
-                    const startedAtTime = new Date(expectedStartedAt).getTime();
-                    const questionCreatedAt = new Date(firstQuestion.created_at).getTime();
-                    const timeDiff = Math.abs(questionCreatedAt - startedAtTime);
-                    
-                    if (timeDiff < 10000) { // 10 second window
-                      console.log(`[MP] Questions validated by timestamp (diff: ${timeDiff}ms)`);
-                      validQuestionsFound = true;
-                      break;
-                    }
-                  }
-                  
-                  console.log(`[MP] Questions found but validation failed - stale data? (attempt ${attempts + 1}/${MAX_ATTEMPTS})`);
+                  console.log(`[MP] Found ${roomQuestions.length} questions matching game_id: ${expectedGameId}`);
+                  validQuestionsFound = true;
+                  break;
                 }
                 
                 // Wait and retry
                 await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
                 attempts++;
-                console.log(`[MP] Waiting for fresh questions (attempt ${attempts}/${MAX_ATTEMPTS})`);
+                console.log(`[MP] Waiting for questions with game_id ${expectedGameId} (attempt ${attempts}/${MAX_ATTEMPTS})`);
               }
               
               if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
@@ -375,7 +356,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   iconSlug: q.icon_slug || undefined, // Include icon for custom questions
                 }));
                 
-                console.log(`[MP] Non-host loaded ${questions.length} validated questions`);
+                console.log(`[MP] Non-host loaded ${questions.length} validated questions for game_id: ${expectedGameId}`);
                 
                 setState(prev => ({
                   ...prev,
@@ -386,32 +367,16 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   currentRoom: updated, // Ensure room state is synced
                 }));
               } else {
-                console.error("[MP] Failed to fetch valid questions after retries - game_id mismatch or timeout");
-                // Still try to proceed with whatever we have as last resort
-                if (roomQuestions && roomQuestions.length > 0) {
-                  console.warn("[MP] Using unvalidated questions as fallback");
-                  const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
-                    id: `${roomId}-${q.question_index}`,
-                    question: q.question_text,
-                    correctAnswer: q.correct_answer,
-                    incorrectAnswers: q.incorrect_answers,
-                    allAnswers: q.shuffled_answers && q.shuffled_answers.length > 0 
-                      ? q.shuffled_answers 
-                      : [...q.incorrect_answers, q.correct_answer],
-                    difficulty: q.difficulty || "medium",
-                    category: updated.category_name || "General",
-                    iconSlug: q.icon_slug || undefined,
-                  }));
-                  
-                  setState(prev => ({
-                    ...prev,
-                    questions,
-                    currentQuestionIndex: 0,
-                    myScore: 0,
-                    phase: "playing",
-                    currentRoom: updated,
-                  }));
-                }
+                // CRITICAL: Do NOT fallback to stale data - this causes the sync issue!
+                console.error(`[MP] Failed to fetch questions for game_id ${expectedGameId} after ${MAX_ATTEMPTS} attempts`);
+                toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+                
+                // Return to lobby instead of playing with stale/wrong data
+                setState(prev => ({
+                  ...prev,
+                  phase: "lobby",
+                  currentRoom: updated,
+                }));
               }
             }
           } else if (updated.status === "completed") {
