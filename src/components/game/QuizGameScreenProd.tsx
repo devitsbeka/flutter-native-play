@@ -359,7 +359,7 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card with Overlapping Icon */}
-      <div className="px-4 flex-shrink-0 mt-4 mb-0 [@media(max-height:700px)]:mt-2 [@media(max-height:700px)]:mb-0 relative">
+      <div className="px-4 flex-shrink-0 -mt-1 mb-0 [@media(max-height:700px)]:-mt-2 [@media(max-height:700px)]:mb-0 relative">
         {/* Category Icon - overlaps card by 50% (hide if media question) */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
