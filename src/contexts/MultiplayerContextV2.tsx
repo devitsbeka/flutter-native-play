@@ -843,7 +843,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .single();
         
         // Store in room_questions for sync WITH game_id for validation
-        await Promise.all(questions.map((q, index) => 
+        const insertResults = await Promise.all(questions.map((q, index) => 
           supabase.from("room_questions").insert({
             room_id: roomId,
             question_index: index,
@@ -854,8 +854,28 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             shuffled_answers: q.allAnswers,
             icon_slug: q.iconSlug || null,
             game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-          })
+          }).select()
         ));
+        
+        // Verify all inserts succeeded
+        const failedInserts = insertResults.filter(r => r.error);
+        if (failedInserts.length > 0) {
+          console.error("[MP startGame] Some question inserts failed:", failedInserts.map(f => f.error));
+        }
+        
+        // Verify question count matches expected
+        const { count: insertedCount } = await supabase
+          .from("room_questions")
+          .select("*", { count: "exact", head: true })
+          .eq("room_id", roomId)
+          .eq("game_id", game?.id);
+        
+        if (insertedCount !== questions.length) {
+          console.error(`[MP startGame] Question count mismatch: expected ${questions.length}, got ${insertedCount}`);
+        }
+        
+        // CRITICAL: Wait for DB commit before updating room status
+        await new Promise(resolve => setTimeout(resolve, 150));
         
         // Reset ALL participant scores for fair game start
         await supabase
@@ -990,7 +1010,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .single();
     
     // Store questions in parallel WITH shuffled_answers for sync AND game_id for validation
-    await Promise.all(questions.map((q, index) => 
+    const insertResults = await Promise.all(questions.map((q, index) => 
       supabase.from("room_questions").insert({
         room_id: roomId,
         question_index: index,
@@ -1001,8 +1021,28 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         difficulty: q.difficulty,
         icon_slug: q.iconSlug, // Store icon for display
         game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-      })
+      }).select()
     ));
+    
+    // Verify all inserts succeeded
+    const failedInserts = insertResults.filter(r => r.error);
+    if (failedInserts.length > 0) {
+      console.error("[MP saveQuestionsAndStartGame] Some question inserts failed:", failedInserts.map(f => f.error));
+    }
+    
+    // Verify question count matches expected
+    const { count: insertedCount } = await supabase
+      .from("room_questions")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId)
+      .eq("game_id", game?.id);
+    
+    if (insertedCount !== questions.length) {
+      console.error(`[MP saveQuestionsAndStartGame] Question count mismatch: expected ${questions.length}, got ${insertedCount}`);
+    }
+    
+    // CRITICAL: Wait for DB commit before updating room status
+    await new Promise(resolve => setTimeout(resolve, 150));
     
     // Reset all participants scores
     await supabase
@@ -1248,7 +1288,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .single();
         
         // Insert fresh questions with new game_id
-        await Promise.all(questions.map((q, index) => 
+        const insertResults1 = await Promise.all(questions.map((q, index) => 
           supabase.from("room_questions").insert({
             room_id: roomId,
             question_index: index,
@@ -1259,8 +1299,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             difficulty: q.difficulty,
             icon_slug: q.iconSlug || null,
             game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-          })
+          }).select()
         ));
+        
+        // Verify all inserts succeeded
+        const failedInserts1 = insertResults1.filter(r => r.error);
+        if (failedInserts1.length > 0) {
+          console.error("[MP startNewRound/userTrivia] Some question inserts failed:", failedInserts1.map(f => f.error));
+        }
+        
+        // Verify question count matches expected
+        const { count: insertedCount1 } = await supabase
+          .from("room_questions")
+          .select("*", { count: "exact", head: true })
+          .eq("room_id", roomId)
+          .eq("game_id", game?.id);
+        
+        if (insertedCount1 !== questions.length) {
+          console.error(`[MP startNewRound/userTrivia] Question count mismatch: expected ${questions.length}, got ${insertedCount1}`);
+        }
         
         // CRITICAL: Wait for DB commit before updating room status
         await new Promise(resolve => setTimeout(resolve, 150));
@@ -1360,7 +1417,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .single();
       
       // Store questions WITH shuffled_answers, icon_slug, AND game_id for validation
-      await Promise.all(questions.map((q, index) => 
+      const insertResults2 = await Promise.all(questions.map((q, index) => 
         supabase.from("room_questions").insert({
           room_id: roomId,
           question_index: index,
@@ -1371,8 +1428,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           difficulty: q.difficulty,
           icon_slug: q.iconSlug || null,
           game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-        })
+        }).select()
       ));
+      
+      // Verify all inserts succeeded
+      const failedInserts2 = insertResults2.filter(r => r.error);
+      if (failedInserts2.length > 0) {
+        console.error("[MP startNewRound/library] Some question inserts failed:", failedInserts2.map(f => f.error));
+      }
+      
+      // Verify question count matches expected
+      const { count: insertedCount2 } = await supabase
+        .from("room_questions")
+        .select("*", { count: "exact", head: true })
+        .eq("room_id", roomId)
+        .eq("game_id", game?.id);
+      
+      if (insertedCount2 !== questions.length) {
+        console.error(`[MP startNewRound/library] Question count mismatch: expected ${questions.length}, got ${insertedCount2}`);
+      }
       
       // CRITICAL: Wait for DB commit before updating room status
       await new Promise(resolve => setTimeout(resolve, 150));
@@ -1509,7 +1583,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .single();
           
           // Store in room_questions WITH game_id for validation
-          await Promise.all(questions.map((q, index) => 
+          const insertResults3 = await Promise.all(questions.map((q, index) => 
             supabase.from("room_questions").insert({
               room_id: roomId,
               question_index: index,
@@ -1520,8 +1594,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               shuffled_answers: q.allAnswers,
               icon_slug: q.iconSlug || null,
               game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-            })
+            }).select()
           ));
+          
+          // Verify all inserts succeeded
+          const failedInserts3 = insertResults3.filter(r => r.error);
+          if (failedInserts3.length > 0) {
+            console.error("[MP startNextFromQueue/userTrivia] Some question inserts failed:", failedInserts3.map(f => f.error));
+          }
+          
+          // Verify question count matches expected
+          const { count: insertedCount3 } = await supabase
+            .from("room_questions")
+            .select("*", { count: "exact", head: true })
+            .eq("room_id", roomId)
+            .eq("game_id", game?.id);
+          
+          if (insertedCount3 !== questions.length) {
+            console.error(`[MP startNextFromQueue/userTrivia] Question count mismatch: expected ${questions.length}, got ${insertedCount3}`);
+          }
           
           // CRITICAL: Wait for DB commit before updating room status
           await new Promise(resolve => setTimeout(resolve, 150));
@@ -1645,7 +1736,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .single();
       
       // Store questions with icon_slug AND game_id for validation
-      await Promise.all(questions.map((q, index) => 
+      const insertResults4 = await Promise.all(questions.map((q, index) => 
         supabase.from("room_questions").insert({
           room_id: roomId,
           question_index: index,
@@ -1656,8 +1747,25 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           difficulty: q.difficulty,
           icon_slug: q.iconSlug || null,
           game_id: game?.id, // CRITICAL: Link to current game for non-host validation
-        })
+        }).select()
       ));
+      
+      // Verify all inserts succeeded
+      const failedInserts4 = insertResults4.filter(r => r.error);
+      if (failedInserts4.length > 0) {
+        console.error("[MP startNextFromQueue/library] Some question inserts failed:", failedInserts4.map(f => f.error));
+      }
+      
+      // Verify question count matches expected
+      const { count: insertedCount4 } = await supabase
+        .from("room_questions")
+        .select("*", { count: "exact", head: true })
+        .eq("room_id", roomId)
+        .eq("game_id", game?.id);
+      
+      if (insertedCount4 !== questions.length) {
+        console.error(`[MP startNextFromQueue/library] Question count mismatch: expected ${questions.length}, got ${insertedCount4}`);
+      }
       
       // CRITICAL: Wait for DB commit before updating room status
       await new Promise(resolve => setTimeout(resolve, 150));
