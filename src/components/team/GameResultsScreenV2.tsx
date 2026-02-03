@@ -505,32 +505,19 @@ export function GameResultsScreenV2() {
           </motion.div>
         )}
 
-        {isHost ? (
-          queue.length > 0 ? (
-            // Host with queue - show continue button
-            <ChunkyButton
-              variant="mint"
-              size="lg"
-              className="w-full"
-              onClick={handlePlayAgain}
-              disabled={isStartingRematch}
-              icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
-            >
-              {isStartingRematch ? t("game.starting") : "გაგრძელება"}
-            </ChunkyButton>
-          ) : (
-            // Host with no queue - open category picker directly
-            <ChunkyButton
-              variant="mint"
-              size="lg"
-              className="w-full"
-              onClick={() => setShowCategoryPicker(true)}
-              disabled={isStartingRematch}
-              icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
-            >
-              {isStartingRematch ? t("game.starting") : "აირჩიე კატეგორია"}
-            </ChunkyButton>
-          )
+        {/* Strict host check: ensure user.id is defined and matches host_user_id */}
+        {isHost && user?.id && currentRoom?.host_user_id === user.id ? (
+          // Host - always show category picker button
+          <ChunkyButton
+            variant="mint"
+            size="lg"
+            className="w-full"
+            onClick={() => setShowCategoryPicker(true)}
+            disabled={isStartingRematch}
+            icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+          >
+            {isStartingRematch ? t("game.starting") : "კატეგორიის დამატება"}
+          </ChunkyButton>
         ) : (
           // Non-host - always show waiting indicator
           <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
