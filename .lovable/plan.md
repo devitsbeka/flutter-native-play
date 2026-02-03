@@ -1,108 +1,105 @@
 
-# Plan: Fix PRO Card Logic, Hide No-Ads for VIP Users, and Fix 404
+# Plan: Fix Game Screen Layout for Small Viewports
 
-## Issues Identified
+## Problem Analysis
 
-### Issue 1: "გახდი VIP" Button Goes to 404
-**Root Cause**: In `src/pages/Index.tsx` line 515, `onAdFreeClick={() => navigate("/shop")}` navigates to `/shop`, but this route doesn't exist. The shop is at `/power-ups`.
+From the screenshots, the 4th answer option is being cut off at the bottom:
+- **Image 1**: The "დ" (D) answer option overlaps with power-up icons
+- **Image 2**: After answering, the "შემდეგი კითხვა" button appears at the very bottom edge
 
-### Issue 2: No-Ads Card Shows for VIP Users  
-**Root Cause**: The `DesktopActionCards` component doesn't check VIP status. It always renders the "რეკლამის გარეშე" card.
-
-### Issue 3: Button Text Logic Wrong
-**Current Behavior**: When user has Solo PRO, Family card shows "გაუმჯობესება" (Upgrade)
-**Expected Behavior**: When user has Solo PRO, Family card should show "შეძენა" (Purchase)
+The current layout issues:
+1. Answer buttons area uses `flex-1` but has `overflow-visible` which doesn't constrain content
+2. Power-up icons are 64px tall with additional 24px badge = ~88px total height
+3. Combined with safe area and padding, the bottom section takes ~110-120px
+4. No responsive height adjustments for small screens (under 700px height)
 
 ---
 
-## Technical Changes
+## Technical Solution
 
-### File 1: `src/pages/Index.tsx`
-**Fix**: Change navigation from `/shop` to `/power-ups`
+### File: `src/components/game/QuizGameScreenProd.tsx`
+
+#### 1. Answer Buttons Area (lines 437-466)
+
+Change from `flex-1 overflow-visible` to `flex-1 overflow-y-auto` with proper constraints:
 
 ```text
-Line 515: Change navigate("/shop") → navigate("/power-ups")
+Current:
+flex-1 px-4 mt-0 flex flex-col gap-4 [@media(max-height:700px)]:gap-2.5 overflow-visible min-h-0 pb-2
+
+Change to:
+flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-y-auto min-h-0 pb-2
 ```
 
-### File 2: `src/components/home/DesktopActionCards.tsx`
-**Fix**: Add VIP status check to hide the "რეკლამის გარეშე" card when user is VIP/PRO
+This allows scrolling if answers don't fit, while reducing gaps.
 
-1. Import `useVipStatus` hook
-2. Add `isVip` check inside the component
-3. Conditionally render the No-Ads card only when `!isVip`
+#### 2. Reduce Question Card Spacing (line 362)
 
-```typescript
-import { useVipStatus } from "@/hooks/useVipStatus";
-
-export function DesktopActionCards({ ... }) {
-  const { isVip } = useVipStatus();
-  // ...
-  
-  return (
-    <div>
-      {/* Other cards */}
-      
-      {/* No-Ads Card - only show if not VIP */}
-      {!isVip && (
-        <ActionCard
-          iconSrc={adFreeIcon}
-          title="რეკლამის გარეშე"
-          ...
-        />
-      )}
-    </div>
-  );
-}
+```text
+Current: mt-5 mb-0 [@media(max-height:700px)]:mt-4
+Change to: mt-4 mb-0 [@media(max-height:700px)]:mt-2
 ```
 
-### File 3: `src/components/shop/MobileProCarousel.tsx`
-**Fix**: Update button text logic
+#### 3. Progress Dots Spacing (line 401)
 
-**Current Logic:**
-- Solo PRO user → Solo: "აქტიური", Family: "გაუმჯობესება"
-
-**New Logic:**
-- Solo PRO user → Solo: "აქტიური", Family: "შეძენა"
-
-```typescript
-// Update getButtonText function
-const getButtonText = (tierId: SimplifiedTier, currentTier: string | undefined) => {
-  const normalizedTier = currentTier === "standard" ? "solo" : currentTier;
-  
-  // User has Family PRO (top tier) - both cards show active
-  if (normalizedTier === "family" || normalizedTier === "pro_plus") {
-    return { text: "აქტიური", isActive: true };
-  }
-  
-  // User has Solo PRO - Solo active, Family shows "შეძენა" (not upgrade)
-  if (normalizedTier === "solo" || normalizedTier === "pro") {
-    if (tierId === "solo") return { text: "აქტიური", isActive: true };
-    if (tierId === "family") return { text: "შეძენა", isActive: false };
-  }
-  
-  // No subscription
-  return { text: "შეძენა", isActive: false };
-};
+```text
+Current: py-4 [@media(max-height:700px)]:py-2
+Change to: py-2 [@media(max-height:700px)]:py-1.5
 ```
 
 ---
 
-## Expected Behavior After Fix
+### File: `src/components/ui/quiz-power-up-button.tsx`
 
-| Scenario | No-Ads Card | Solo Card Button | Family Card Button |
-|----------|-------------|------------------|-------------------|
-| No PRO | ✅ Visible | შეძენა | შეძენა |
-| Has Solo PRO | ❌ Hidden | აქტიური | შეძენა |
-| Has Family PRO | ❌ Hidden | აქტიური | აქტიური |
+#### 4. Reduce Power-Up Icon Size (lines 62-67)
 
-| Button | Current Navigation | Fixed Navigation |
-|--------|-------------------|------------------|
-| "გახდი VIP" (No-Ads card) | /shop → 404 | /power-ups ✅ |
+Add responsive sizing for small viewports:
+
+```text
+Current: w-16 h-16 (64px)
+Change to: w-14 h-14 [@media(max-height:700px)]:w-12 [@media(max-height:700px)]:h-12
+```
+
+This reduces icons from 64px to 56px, or 48px on very small screens.
+
+---
+
+### File: `src/components/ui/quiz-answer-button.tsx`
+
+#### 5. Reduce Answer Button Min-Height (line 116)
+
+```text
+Current: min-h-[68px] [@media(max-height:700px)]:min-h-[60px]
+Change to: min-h-[60px] [@media(max-height:700px)]:min-h-[52px]
+```
+
+---
+
+## Space Savings Summary
+
+| Element | Before | After (Small) | Saved |
+|---------|--------|---------------|-------|
+| Question card margin-top | 16px | 8px | 8px |
+| Progress dots padding | 8px × 2 = 16px | 6px × 2 = 12px | 4px |
+| Answer gaps (3 gaps) | 10px × 3 = 30px | 8px × 3 = 24px | 6px |
+| Answer buttons (4 cards) | 60px × 4 = 240px | 52px × 4 = 208px | 32px |
+| Power-up icons | 64px + 24px badge | 48px + 24px badge | 16px |
+| **Total Saved** | | | **~66px** |
+
+---
+
+## Expected Result
+
+After these changes:
+- All 4 answer options will be fully visible on small mobile screens
+- Power-up bar will not overlap with the last answer
+- Content will scroll if needed on extremely small viewports (under 600px)
+- Layout will feel less cramped while maintaining touch-friendly button sizes
 
 ---
 
 ## Files to Modify
 
-1. **src/pages/Index.tsx** - Fix navigation path
-2. **src/components/home/DesktopActionCards.tsx** - Add VIP check to hide No-Ads card  
-3. **src/components/shop/MobileProCarousel.tsx** - Update button text logic
+1. **src/components/game/QuizGameScreenProd.tsx** - Reduce spacing, enable scroll
+2. **src/components/ui/quiz-power-up-button.tsx** - Reduce icon size on small screens
+3. **src/components/ui/quiz-answer-button.tsx** - Reduce minimum button height
