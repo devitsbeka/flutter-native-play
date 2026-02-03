@@ -309,14 +309,18 @@ export function GameResultsScreenV2() {
     }
   };
 
-  const handleAddToQueue = (item: {
+  const handleAddToQueue = async (item: {
     source_type: "category" | "random" | "user_trivia";
     category_id?: string | null;
     category_name?: string | null;
     user_trivia_id?: string | null;
     icon_slug?: string | null;
   }) => {
-    addToQueue(item);
+    // Add item to queue first
+    await addToQueue(item);
+    
+    // Navigate to lobby so host can see and reorder the queue
+    continueInRoom();
   };
 
   return (
