@@ -1,73 +1,77 @@
 
-# Plan: Update Profile Page UI to Match Reference Screen
+# Plan: Fix VIP Tier Value Mismatch
 
-## Overview
-Redesign the Profile page tabs and layout to match the reference design (screen #4), replacing the current tab labels with "სტატისტიკა" and "გახდი PRO".
+## Root Cause
+The `getButtonText` function in `MobileProCarousel.tsx` checks for `currentTier === "solo"` or `currentTier === "family"`, but the database stores `vip_tier` as `"standard"`.
 
----
+**Current flow:**
+```
+Database: vip_tier = "standard"
+           ↓
+Code checks: currentTier === "solo" or "family"
+           ↓
+Result: No match → Shows "შეძენა" for everyone
+```
 
-## UI Changes Summary
-
-### Current State
-- Tabs: "სტატისტიკა" / dynamic PRO label (already using Georgian labels)
-- Tab keys: "Stats" / "PRO"
-- Tab style: Pill buttons with flex-1 distribution
-
-### Target State (from images)
-- Tabs: "სტატისტიკა" / "გახდი PRO" (with dynamic "ჩემი PRO" when subscribed)
-- Tab style: Two equal-width pill buttons matching reference design
-- Statistics content: Card rows with Georgian labels (ნათამაშები, მოგებული, მოგების %, საუკეთესო სერია)
+## Solution
+Update the `getButtonText` function to also recognize `"standard"` as an active VIP tier. Since "standard" is the basic VIP tier stored in the database, it should be treated as equivalent to "solo" PRO.
 
 ---
 
 ## Technical Changes
 
-### File: `src/pages/Profile.tsx`
+### File: `src/components/shop/MobileProCarousel.tsx`
 
-#### 1. Update Tab Labels (lines 39-42)
+#### Update `getButtonText` function (lines 38-53)
 
-Change tab configuration to use direct Georgian text matching the reference:
+Add logic to recognize "standard" as the Solo PRO tier:
 
 ```typescript
-const tabs = [
-  { key: "Stats", label: "სტატისტიკა" },
-  { key: "PRO", label: getProTabLabel() },
-];
+// Helper function to determine button text and state
+const getButtonText = (tierId: SimplifiedTier, currentTier: string | undefined) => {
+  // Normalize tier: "standard" from DB maps to "solo" in UI
+  const normalizedTier = currentTier === "standard" ? "solo" : currentTier;
+  
+  // User has Family PRO (top tier) - both cards show active
+  if (normalizedTier === "family" || normalizedTier === "pro_plus") {
+    return { text: "აქტიური", isActive: true };
+  }
+  
+  // User has Solo PRO (or "standard" from old system)
+  if (normalizedTier === "solo" || normalizedTier === "pro") {
+    if (tierId === "solo") return { text: "აქტიური", isActive: true };
+    if (tierId === "family") return { text: "გაუმჯობესება", isActive: false }; // Upgrade option
+  }
+  
+  // No subscription - show "შეძენა" for all
+  return { text: "შეძენა", isActive: false };
+};
 ```
 
-Where `getProTabLabel()` returns:
-- "ჩემი PRO" if user has active subscription
-- "გახდი PRO" if no subscription
+#### Update `currentTier` type (line 66)
 
-#### 2. Update Statistics Content Labels (lines 166-186)
+Change from `SimplifiedTier | undefined` to `string | undefined` to accept database values:
 
-Update the Georgian labels to match the reference exactly:
-- "ნათამაშები" (Games Played) 
-- "მოგებული" (Games Won)
-- "მოგების %" (Win Rate %)
-- "საუკეთესო სერია" (Best Streak)
-
-Currently using translation keys - will update to use direct Georgian text that matches the reference image exactly.
+```typescript
+const currentTier = subscription?.vip_tier;
+```
 
 ---
 
-## Visual Reference Match
+## Tier Mapping
 
-| Reference Image | Implementation |
-|-----------------|----------------|
-| Tab 1: "სტატისტიკა" (purple when active) | ✅ Already styled correctly |
-| Tab 2: "გახდი PRO" (white when inactive) | ✅ Update label text |
-| Stats cards with rounded borders | ✅ Already using `rounded-2xl` |
-| Georgian stat labels | ✅ Will use exact text from image |
-
----
-
-## Files to Modify
-
-1. **src/pages/Profile.tsx** - Update tab labels and stat row labels
+| Database Value | UI Tier | Button Behavior |
+|----------------|---------|-----------------|
+| `"standard"` | Solo PRO | Solo: აქტიური, Family: გაუმჯობესება |
+| `"solo"` | Solo PRO | Solo: აქტიური, Family: გაუმჯობესება |
+| `"pro"` | Solo PRO | Solo: აქტიური, Family: გაუმჯობესება |
+| `"family"` | Family PRO | Both: აქტიური |
+| `"pro_plus"` | Family PRO | Both: აქტიური |
+| `undefined` | No PRO | Both: შეძენა |
 
 ---
 
-## No Backend Changes Required
-
-This is a UI-only change affecting text labels and styling. All data fetching and PRO logic remains unchanged.
+## Expected Result
+Users with `vip_tier = "standard"` will now see:
+- **სოლო PRO card**: "აქტიური" (disabled)
+- **სამეგობრო PRO card**: "გაუმჯობესება" (clickable)
