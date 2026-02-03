@@ -8,6 +8,7 @@ interface DynamicIconProps {
   categoryId?: string; // ASCII category_id from database - fallback lookup
   slug?: string; // Direct icon slug (highest priority) - from icon_slug column
   questionId?: string; // Question ID for unique fallback icons per question
+  seedText?: string; // Deterministic seed text (e.g., question text) - ensures same icon across all clients
   size?: number;
   className?: string;
   hideIfEmpty?: boolean; // Don't render anything if no icon found
@@ -42,6 +43,7 @@ export function DynamicIcon({
   categoryId,
   slug,
   questionId,
+  seedText,
   size = 128,
   className,
   hideIfEmpty = false,
@@ -55,12 +57,12 @@ export function DynamicIcon({
   
   const { findIcon, getIconBySlug, fetchIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
 
-  // Use stable seed based on questionId (unique per question), then slug, then categoryId
-  // This ensures each question gets a DIFFERENT fallback icon even when library isn't loaded
+  // Use stable seed based on seedText (question text - same across all clients), then questionId, slug, categoryId
+  // This ensures each question gets a DIFFERENT fallback icon and it's CONSISTENT across all players
   const stableSeed = React.useMemo(() => {
-    const seedSource = questionId || slug || categoryId || '';
+    const seedSource = seedText || questionId || slug || categoryId || '';
     return seedSource ? hashString(seedSource) : 0;
-  }, [questionId, slug, categoryId]);
+  }, [seedText, questionId, slug, categoryId]);
 
   // Resolve icon URL using the icon library - but DON'T use random fallback if we have a slug
   const iconUrl = React.useMemo(() => {

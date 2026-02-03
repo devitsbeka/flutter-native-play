@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Plus } from "lucide-react";
+import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2 } from "lucide-react";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -18,6 +18,7 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
 import { toast } from "sonner";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
+import { CategoryPickerModal } from "./CategoryPickerModal";
 
 interface RankedParticipant {
   user_id: string;
@@ -46,11 +47,13 @@ export function GameResultsScreenV2() {
     startNewRound,
     startNextFromQueue,
     isHost,
+    startGame,
   } = useMultiplayerV2();
 
-  const { queue } = useRoomCategoryQueue(currentRoom?.id || null);
+  const { queue, addToQueue } = useRoomCategoryQueue(currentRoom?.id || null);
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   // Sort participants by score and assign ranks
   const rankedParticipants: RankedParticipant[] = [...participants]
@@ -225,6 +228,95 @@ export function GameResultsScreenV2() {
     } finally {
       setIsStartingRematch(false);
     }
+  };
+
+  // Category picker handlers - directly from results screen
+  const handleSelectCategory = async (category: { id: string; name: string; iconSlug?: string | null }) => {
+    setShowCategoryPicker(false);
+    setIsStartingRematch(true);
+    try {
+      // Update room with selected category
+      await supabase
+        .from("game_rooms")
+        .update({
+          category_id: category.id,
+          category_name: category.name,
+          user_trivia_id: null, // Clear any previous trivia selection
+        })
+        .eq("id", currentRoom?.id);
+      
+      await startGame();
+    } catch (error) {
+      console.error("Error starting game with category:", error);
+      toast.error(t("game.couldNotStartRound"));
+    } finally {
+      setIsStartingRematch(false);
+    }
+  };
+
+  const handleSelectRandom = async () => {
+    setShowCategoryPicker(false);
+    setIsStartingRematch(true);
+    try {
+      // Fetch a random category
+      const { data: categories } = await supabase
+        .from("categories")
+        .select("id, name, icon_slug")
+        .eq("is_active", true);
+      
+      if (categories && categories.length > 0) {
+        const randomCat = categories[Math.floor(Math.random() * categories.length)];
+        // Update room with random category
+        await supabase
+          .from("game_rooms")
+          .update({
+            category_id: randomCat.id,
+            category_name: randomCat.name,
+            user_trivia_id: null,
+          })
+          .eq("id", currentRoom?.id);
+        
+        await startGame();
+      }
+    } catch (error) {
+      console.error("Error starting random game:", error);
+      toast.error(t("game.couldNotStartRound"));
+    } finally {
+      setIsStartingRematch(false);
+    }
+  };
+
+  const handleSelectTrivia = async (trivia: { id: string; title: string }) => {
+    setShowCategoryPicker(false);
+    setIsStartingRematch(true);
+    try {
+      // Update room with user trivia
+      await supabase
+        .from("game_rooms")
+        .update({
+          user_trivia_id: trivia.id,
+          category_name: trivia.title,
+          category_id: null,
+        })
+        .eq("id", currentRoom?.id);
+      
+      await startGame();
+    } catch (error) {
+      console.error("Error starting trivia game:", error);
+      toast.error(t("game.couldNotStartRound"));
+    } finally {
+      setIsStartingRematch(false);
+    }
+  };
+
+  const handleAddToQueue = (item: {
+    source_type: "category" | "random" | "user_trivia";
+    category_id?: string | null;
+    category_name?: string | null;
+    user_trivia_id?: string | null;
+    icon_slug?: string | null;
+  }) => {
+    addToQueue(item);
   };
 
   return (
@@ -413,33 +505,36 @@ export function GameResultsScreenV2() {
           </motion.div>
         )}
 
-        {queue.length > 0 ? (
-          // Has queue - show continue button
-          <ChunkyButton
-            variant="mint"
-            size="lg"
-            className="w-full"
-            onClick={handlePlayAgain}
-            disabled={isStartingRematch}
-            icon={<ChevronRight className="w-5 h-5" />}
-          >
-            {isStartingRematch ? t("game.starting") : "გაგრძელება"}
-          </ChunkyButton>
-        ) : isHost ? (
-          // No queue, is host - add category button
-          <ChunkyButton
-            variant="mint"
-            size="lg"
-            className="w-full"
-            onClick={handleBackToRoom}
-            icon={<Plus className="w-5 h-5" />}
-          >
-            კატეგორიის დამატება
-          </ChunkyButton>
+        {isHost ? (
+          queue.length > 0 ? (
+            // Host with queue - show continue button
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full"
+              onClick={handlePlayAgain}
+              disabled={isStartingRematch}
+              icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+            >
+              {isStartingRematch ? t("game.starting") : "გაგრძელება"}
+            </ChunkyButton>
+          ) : (
+            // Host with no queue - open category picker directly
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full"
+              onClick={() => setShowCategoryPicker(true)}
+              disabled={isStartingRematch}
+              icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+            >
+              {isStartingRematch ? t("game.starting") : "აირჩიე კატეგორია"}
+            </ChunkyButton>
+          )
         ) : (
-          // No queue, not host - waiting indicator
+          // Non-host - always show waiting indicator
           <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <p className="text-white/70 font-medium">ველოდებით მასპინძელს...</p>
+            <p className="text-white/70 font-medium">ველოდებით ჰოსტს</p>
           </div>
         )}
 
@@ -453,6 +548,19 @@ export function GameResultsScreenV2() {
         {t("game.backToRoom")}
         </ChunkyButton>
       </motion.div>
+
+      {/* Category Picker Modal */}
+      <CategoryPickerModal
+        isOpen={showCategoryPicker}
+        onClose={() => setShowCategoryPicker(false)}
+        onSelectCategory={handleSelectCategory}
+        onSelectRandom={handleSelectRandom}
+        onSelectTrivia={handleSelectTrivia}
+        onAddToQueue={handleAddToQueue}
+        showQueueOption={true}
+        roomGradient={currentRoom?.background_gradient || undefined}
+        excludeTriviaId={currentRoom?.user_trivia_id}
+      />
       </div>
     </div>
   );

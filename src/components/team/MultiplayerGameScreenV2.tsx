@@ -304,6 +304,8 @@ export function MultiplayerGameScreenV2() {
               // Only use categoryId for fallback if we have an explicit iconSlug
               categoryId={currentQuestion?.iconSlug ? currentRoom?.category_id : undefined}
               questionId={currentQuestion?.id}
+              // Use question text as seed to ensure same icon across all players
+              seedText={currentQuestion?.question}
               size={112}
               className="drop-shadow-lg"
               hideIfEmpty={true}
