@@ -25,7 +25,7 @@ const PRO_TIERS = [
     price: 19.99,
     icon: Users,
     benefits: [
-      "SOLO PRO + 5 მეგობარი",
+      "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
       "ყველა PRO ფუნქცია",
       "რეკლამის გარეშე",
     ],
