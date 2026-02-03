@@ -906,13 +906,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const questionCount = freshRoom.total_questions || 5;
     const usedIds = (freshRoom.used_question_ids as string[]) || [];
     
-    // Set host_is_observer in database
-    if (hostShouldObserve) {
-      await supabase
-        .from("game_rooms")
-        .update({ host_is_observer: true })
-        .eq("id", roomId);
-    }
+    // Set host_is_observer in database (ALWAYS reset to match current game mode)
+    // This prevents stale observer flag from previous user trivia affecting library category games
+    await supabase
+      .from("game_rooms")
+      .update({ host_is_observer: hostShouldObserve })
+      .eq("id", roomId);
     
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), ALWAYS fetch fresh from user_trivia_id
