@@ -37,7 +37,7 @@ export default function Profile() {
   };
 
   const tabs = [
-    { key: "Stats", label: t("profile.stats") },
+    { key: "Stats", label: "სტატისტიკა" },
     { key: "PRO", label: getProTabLabel() },
   ];
 
@@ -164,15 +164,15 @@ export default function Profile() {
                 className="space-y-4"
               >
                 <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">{t("profile.gamesPlayed")}</span>
+                  <span className="text-foreground">ნათამაშები</span>
                   <span className="font-bold text-foreground">{profile.games_played}</span>
                 </div>
                 <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">{t("profile.gamesWon")}</span>
+                  <span className="text-foreground">მოგებული</span>
                   <span className="font-bold text-foreground">{profile.games_won}</span>
                 </div>
                 <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">{t("profile.winRate")}</span>
+                  <span className="text-foreground">მოგების %</span>
                   <span className="font-bold text-foreground">
                     {profile.games_played > 0
                       ? Math.round((profile.games_won / profile.games_played) * 100)
@@ -180,7 +180,7 @@ export default function Profile() {
                   </span>
                 </div>
                 <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">{t("profile.bestStreak")}</span>
+                  <span className="text-foreground">საუკეთესო სერია</span>
                   <span className="font-bold text-foreground">{profile.best_streak}</span>
                 </div>
               </motion.div>
