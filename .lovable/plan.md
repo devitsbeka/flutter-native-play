@@ -1,201 +1,115 @@
 
 
-# Plan: Fix Non-Host Not Transitioning to Game Screen
+# Plan: Fix Game Start Blocked by Missing RLS DELETE Policy
 
 ## Problem Summary
 
-When the host starts a game (especially with their own trivia where they observe), the non-host player remains stuck in the lobby while the host sees the game screen. This is a state desynchronization issue.
+When clicking "Start Game", the button shows "ინწყება..." (Starting...) but the game never starts. The `safeDeleteRoomQuestions` function fails silently because the `room_questions` table is missing a DELETE policy, causing the verification loop to fail after 3 retries.
 
 ## Root Cause
 
-The `roomChannel` subscription in `MultiplayerContextV2.tsx` only listens for **future** room updates. It doesn't check the **current** room status when the subscription is first established.
+The `room_questions` table has RLS policies for:
+- **SELECT**: Participants can view room questions
+- **INSERT**: Host can insert room questions
 
-**Current problematic flow:**
+**BUT NO DELETE POLICY EXISTS!**
+
+When `safeDeleteRoomQuestions` runs:
+```typescript
+await supabase.from("room_questions").delete().eq("room_id", roomId);
+```
+
+The delete silently fails due to RLS. The verification loop then detects 5 questions still exist, retries 3 times, and returns `false`. The game start aborts with a toast error.
+
+## Database Evidence
+
 ```text
-1. Non-host joins room (room.status = "waiting")
-2. Room subscription starts connecting
-3. Host starts game (room.status → "playing")  
-4. Room subscription fully connects
-5. ❌ Non-host missed the update event
-6. Non-host stuck in "lobby" phase
+room_questions table still has 5 questions:
+- game_id: 3c9407ce... (OLD game from previous round)
+- question_index: 0-4
 ```
 
-The `participantsChannel` already has this pattern correctly implemented (lines 431-435), but `roomChannel` does not.
-
----
-
-## Technical Solution
-
-### Fix Location: `src/contexts/MultiplayerContextV2.tsx`
-
-### Change 1: Add Initial State Sync to Room Subscription
-
-Replace the simple `.subscribe()` call with a callback that checks the current room status when the subscription is ready:
-
-**Current code (line 421):**
-```typescript
-.subscribe();
+Current RLS policies from query:
 ```
-
-**Fixed code:**
-```typescript
-.subscribe(async (status) => {
-  // When subscription is ready, check if room is already playing
-  if (status === 'SUBSCRIBED') {
-    // Fetch fresh room data to check current status
-    const { data: freshRoom } = await supabase
-      .from("game_rooms")
-      .select("*")
-      .eq("id", roomId)
-      .single();
-    
-    if (freshRoom && freshRoom.status === "playing") {
-      const currentPhase = phaseRef.current;
-      const currentIsHost = isHostRef.current;
-      
-      // Only handle if we're in lobby/results and NOT the host
-      if ((currentPhase === "lobby" || currentPhase === "results") && !currentIsHost) {
-        console.log(`[MP] Subscription connected, room already playing. Fetching questions...`);
-        
-        // Same logic as the UPDATE handler
-        setState(prev => ({
-          ...prev,
-          questions: [],
-          currentQuestionIndex: 0,
-          myScore: 0,
-          opponentAnswers: {},
-          lastQuestionResult: null,
-          currentRoom: freshRoom as GameRoom,
-        }));
-        
-        const expectedGameId = freshRoom.current_game_id;
-        
-        // Wait for questions to be fully committed
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Fetch with retry logic
-        let attempts = 0;
-        const MAX_ATTEMPTS = 8;
-        const RETRY_DELAY = 600;
-        let roomQuestions: any[] | null = null;
-        let validQuestionsFound = false;
-        
-        while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
-          const { data } = await supabase
-            .from("room_questions")
-            .select("*")
-            .eq("room_id", roomId)
-            .eq("game_id", expectedGameId)
-            .order("question_index", { ascending: true });
-          
-          roomQuestions = data;
-          
-          if (roomQuestions && roomQuestions.length > 0) {
-            validQuestionsFound = true;
-            break;
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-          attempts++;
-        }
-        
-        if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
-          const questions = roomQuestions.map((q: any) => ({
-            id: `${roomId}-${q.question_index}`,
-            question: q.question_text,
-            correctAnswer: q.correct_answer,
-            incorrectAnswers: q.incorrect_answers,
-            allAnswers: q.shuffled_answers?.length > 0 
-              ? q.shuffled_answers 
-              : [...q.incorrect_answers, q.correct_answer],
-            difficulty: q.difficulty || "medium",
-            category: freshRoom.category_name || "General",
-            iconSlug: q.icon_slug || undefined,
-          }));
-          
-          setState(prev => ({
-            ...prev,
-            questions,
-            currentQuestionIndex: 0,
-            myScore: 0,
-            phase: "playing",
-            lastQuestionResult: null,
-            opponentAnswers: {},
-            currentRoom: freshRoom as GameRoom,
-          }));
-        } else {
-          toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
-          setState(prev => ({
-            ...prev,
-            phase: "lobby",
-            currentRoom: freshRoom as GameRoom,
-          }));
-        }
-      }
-    }
-  }
-});
+cmd: INSERT  -> "Host can insert room questions"
+cmd: SELECT  -> "Participants can view room questions"
+(NO DELETE policy exists!)
 ```
 
 ---
 
-## Alternative Approach: Extract Shared Logic
+## Solution: Add Missing DELETE Policy
 
-To avoid code duplication, we could extract the question-fetching logic into a helper function:
+### Migration SQL
 
-```typescript
-const handlePlayingTransition = async (
-  roomId: string, 
-  roomData: GameRoom
-) => {
-  // Clear local state
-  setState(prev => ({
-    ...prev,
-    questions: [],
-    currentQuestionIndex: 0,
-    myScore: 0,
-    opponentAnswers: {},
-    lastQuestionResult: null,
-    currentRoom: roomData,
-  }));
-  
-  const expectedGameId = roomData.current_game_id;
-  
-  // ... rest of question fetching logic
-};
+```sql
+-- Add DELETE policy for room_questions
+-- Allows the room host to delete questions from their room
+CREATE POLICY "Host can delete room questions" 
+ON public.room_questions
+FOR DELETE 
+USING (
+  EXISTS (
+    SELECT 1 FROM public.game_rooms gr 
+    WHERE gr.id = room_questions.room_id 
+    AND gr.host_user_id = auth.uid()
+  )
+);
 ```
 
-Then use this in both:
-1. The room UPDATE subscription handler
-2. The initial SUBSCRIBED callback
+---
+
+## Secondary Issue: Reset `host_is_observer` on Library Category Switch
+
+When switching from a user trivia (where host was observer) to a library category (where host should play normally), the `host_is_observer` flag is not being reset.
+
+Current database state shows:
+```text
+category_id: b352d1cf... (გეოგრაფია - library category)
+host_is_observer: true  <- STALE! Should be false for library categories
+```
+
+### Fix Location: `startGame` function
+
+Add a reset of `host_is_observer` to `false` when starting a library category game:
+
+```typescript
+// In startGame, when hostShouldObserve is false (default for library categories):
+if (!hostShouldObserve) {
+  await supabase
+    .from("game_rooms")
+    .update({ host_is_observer: false })  // Reset stale observer flag
+    .eq("id", roomId);
+}
+```
 
 ---
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/contexts/MultiplayerContextV2.tsx` | Add initial state sync callback to room subscription |
+| Type | Path | Change |
+|------|------|--------|
+| Migration | `supabase/migrations/...` | Add DELETE policy for room_questions |
+| Code | `src/contexts/MultiplayerContextV2.tsx` | Reset host_is_observer to false when starting non-observer game |
 
 ---
 
 ## Expected Behavior After Fix
 
-1. Non-host joins room while room is in "waiting" status
-2. Subscription starts connecting
-3. Host starts game (room becomes "playing")
-4. If subscription catches the UPDATE event → transition works normally
-5. If subscription connects AFTER the update → initial sync checks room status and transitions to playing
-6. Both host and non-host see the game screen
+1. Host clicks "Start Game" for library category
+2. `safeDeleteRoomQuestions` successfully deletes old questions (DELETE policy works)
+3. New questions are inserted for the new game
+4. `host_is_observer` is reset to `false`
+5. Room status updates to "playing"
+6. Both host and guest transition to game screen
 
 ---
 
-## Testing Recommendations
+## Testing Checklist
 
-1. Host creates room with their own trivia
-2. Non-host joins room
-3. Host starts game (becomes observer)
-4. Verify both players see game screen
-5. Test with slight network delays to ensure sync works
-6. Test rapid game start (within 1-2 seconds of join)
+- Verify DELETE policy is applied successfully
+- Test starting a game after returning from previous round
+- Test switching from user trivia (observer mode) to library category
+- Confirm host can play normally after switching to library category
+- Confirm non-host receives questions and transitions correctly
 
