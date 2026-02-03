@@ -1,157 +1,80 @@
 
-# Plan: Direct Category Picker Flow and Consistent Icons
 
-## Overview
+# Plan: Update Empty Queue Text in Category Picker Section
 
-When the host clicks "გაგრძელება" (Continue) on the results screen, show the category picker directly instead of going to the lobby first. Non-host players should see "ველოდებით ჰოსტს" instead of the continue button. Also ensure question icons are consistent across all players.
+## Summary
 
----
-
-## Current Behavior
-
-1. **Results Screen (`GameResultsScreenV2.tsx`)**:
-   - When there's a queue: Host clicks "გაგრძელება" → starts next queued game
-   - When queue is empty: Host clicks "კატეგორიის დამატება" → goes to lobby → opens picker
-   - Non-host sees "ველოდებით მასპინძელს..." when queue is empty ✅ (already correct)
-   - Non-host can also click "გაგრძელება" when queue has items ❌ (should not be able to)
-
-2. **Icon Consistency Issue**:
-   - Host stores `icon_slug` in `room_questions` table when seeding questions
-   - Non-hosts fetch `icon_slug` from `room_questions` and pass to `DynamicIcon`
-   - `DynamicIcon` uses `hideIfEmpty={true}` to hide when no icon assigned
-   - Issue: If `icon_slug` is missing, `DynamicIcon` falls back to `getRandomIconForCategory` with a `stableSeed` based on `questionId` - but the `questionId` differs between host and guests!
+Update the text shown in the room lobby when no category is selected to use the new Georgian labels with appropriate font sizes.
 
 ---
 
-## Technical Solution
-
-### Part 1: Direct Category Picker from Results Screen
-
-**File: `src/components/team/GameResultsScreenV2.tsx`**
-
-1. Add state for showing the category picker modal directly in results screen
-2. Import `CategoryPickerModal` component
-3. When host clicks "გაგრძელება" (continue) with queue:
-   - Keep current behavior (auto-start next queue item)
-4. When host clicks "კატეგორიის დამატება" (no queue):
-   - Instead of `continueInRoom()` which goes to lobby → Open `CategoryPickerModal` directly
-5. When non-host sees queue has items:
-   - Show "ველოდებით ჰოსტს" instead of clickable button
-6. Add handlers for category selection that update room and start game
-
-**Changes Summary**:
-```text
-- Import CategoryPickerModal, handlers from RoomLobbyV2 pattern
-- Add state: showCategoryPicker, startAfterPick
-- Add handlers: handleSelectCategory, handleSelectRandom, handleSelectTrivia
-- Modify button logic:
-  - Host with queue → "გაგრძელება" (starts next)
-  - Host without queue → "აირჩიე კატეგორია" → opens picker
-  - Non-host → "ველოდებით ჰოსტს" (always waiting)
-- After category selection: start game directly without going to lobby
-```
-
-### Part 2: Consistent Icons Across All Players
-
-**Issue Analysis**:
-The `questionId` used for seeding random fallback icons differs:
-- Host creates questions with `id: q.id` (actual database ID)
-- Guests receive questions with `id: ${roomId}-${question_index}` (synthetic ID)
-
-**Solution 1: Store deterministic seed in database**
-
-**File: `src/contexts/MultiplayerContextV2.tsx`**
-
-When inserting questions to `room_questions`, generate and store a stable seed value that will be used by all clients for icon fallback:
-
-```typescript
-// When inserting questions
-const iconSeed = hashCode(q.question + q.correctAnswer); // Deterministic from content
-supabase.from("room_questions").insert({
-  ...
-  icon_seed: iconSeed, // New column
-});
-```
-
-**Alternative Solution 2 (Simpler): Use question_text as seed source**
-
-Since the question text is identical across all clients, we can use it as the seed source without adding a database column.
-
-**File: `src/components/shared/DynamicIcon.tsx`**
-
-Add a new prop `seedText` that takes precedence over `questionId` for generating the stable seed:
-
-```typescript
-interface DynamicIconProps {
-  ...
-  seedText?: string; // Use question text for deterministic seeding
-}
-
-const stableSeed = React.useMemo(() => {
-  // Priority: seedText → questionId → slug → categoryId
-  const seedSource = seedText || questionId || slug || categoryId || '';
-  return seedSource ? hashString(seedSource) : 0;
-}, [seedText, questionId, slug, categoryId]);
-```
-
-**File: `src/components/team/MultiplayerGameScreenV2.tsx`**
-
-Pass question text as the seed:
+## Current State (Lines 63-83 in CategoryPickerSection.tsx)
 
 ```tsx
-<DynamicIcon 
-  slug={currentQuestion?.iconSlug}
-  seedText={currentQuestion?.question} // Ensures same seed for all players
-  categoryId={...}
-  size={112}
-  hideIfEmpty={true}
-/>
+<p className="text-white font-semibold text-[18px] leading-tight">
+  {hasCategory ? categoryName : "აირჩიე კატეგორია"}
+</p>
+...
+<p className="text-white/60 text-[14px] leading-snug">
+  {isAlreadyPlayed && hasCategory
+    ? "აირჩიე ახალი კატეგორია"
+    : hasCategory 
+      ? "მიმდინარე კატეგორია" 
+      : "დააჭირე არჩევისთვის"}
+</p>
 ```
 
 ---
 
-## Files to Modify
+## Requested Changes
 
-| File | Changes |
-|------|---------|
-| `src/components/team/GameResultsScreenV2.tsx` | Add CategoryPickerModal, modify button logic for host/non-host |
-| `src/components/shared/DynamicIcon.tsx` | Add `seedText` prop for deterministic icon fallback |
-| `src/components/team/MultiplayerGameScreenV2.tsx` | Pass `seedText={currentQuestion?.question}` to DynamicIcon |
+| Line | Current | New |
+|------|---------|-----|
+| 64 | `"აირჩიე კატეგორია"` (font 18px) | `"რისი თამაში გინდა?"` (font **14px**) |
+| 82 | `"დააჭირე არჩევისთვის"` (font 14px) | `"დაამატე კატეგორია სათამაშოდ"` (font **12px**) |
 
 ---
 
-## Detailed Button Logic After Changes
+## Technical Implementation
 
-### Results Screen Button Matrix
+Update the `CategoryPickerSection.tsx` file:
 
-| Player | Queue Status | Button Text | Action |
-|--------|-------------|-------------|--------|
-| Host | Has items | გაგრძელება | Start next from queue |
-| Host | Empty | აირჩიე კატეგორია | Open picker modal |
-| Non-Host | Has items | ველოდებით ჰოსტს | No action (waiting) |
-| Non-Host | Empty | ველოდებით ჰოსტს | No action (waiting) |
+1. **Line 63-64**: Change the main title text when no category is selected
+   - Update text from "აირჩიე კატეგორია" to "რისი თამაში გინდა?"
+   - Reduce font size from `text-[18px]` to `text-[14px]` when empty
 
-### Category Picker Flow (Host Only)
+2. **Line 77-82**: Change the subtitle text when no category is selected
+   - Update text from "დააჭირე არჩევისთვის" to "დაამატე კატეგორია სათამაშოდ"
+   - Reduce font size from `text-[14px]` to `text-[12px]` when empty
 
-```text
-1. Host clicks "აირჩიე კატეგორია"
-2. CategoryPickerModal opens (main view shows: შემთხვევითი, ბიბლიოთეკა, ჩემი ტრივიები)
-3. Host selects category/trivia
-4. Room is updated with new selection
-5. Game starts immediately (skip lobby)
-6. All players transition to playing phase
+**Updated code structure:**
+```tsx
+{/* Main title */}
+<p className={cn(
+  "text-white font-semibold leading-tight",
+  hasCategory ? "text-[18px]" : "text-[14px]"
+)}>
+  {hasCategory ? categoryName : "რისი თამაში გინდა?"}
+</p>
+
+{/* Subtitle */}
+<p className={cn(
+  "leading-snug",
+  hasCategory ? "text-white/60 text-[14px]" : "text-white/60 text-[12px]"
+)}>
+  {isAlreadyPlayed && hasCategory
+    ? "აირჩიე ახალი კატეგორია"
+    : hasCategory 
+      ? "მიმდინარე კატეგორია" 
+      : "დაამატე კატეგორია სათამაშოდ"}
+</p>
 ```
 
 ---
 
-## Testing Checklist
+## File to Modify
 
-1. Host finishes round with queue items:
-   - Clicks "გაგრძელება" → next game starts
-2. Host finishes round with empty queue:
-   - Clicks "აირჩიე კატეგორია" → picker opens (NOT lobby)
-   - Selects category → game starts immediately
-3. Non-host always sees "ველოდებით ჰოსტს" on results screen
-4. Icons are identical on all devices for the same question
-5. No icon flicker or mismatch between host and guests
+| File | Change |
+|------|--------|
+| `src/components/team/CategoryPickerSection.tsx` | Update empty state text and font sizes |
 
