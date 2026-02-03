@@ -44,6 +44,33 @@ const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
   }
 };
 
+// Helper to safely delete room questions with verification (prevents race condition)
+const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
+  await supabase.from("room_questions").delete().eq("room_id", roomId);
+  await supabase.from("player_answers").delete().eq("room_id", roomId);
+  
+  let verified = false;
+  for (let i = 0; i < 3; i++) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const { count } = await supabase
+      .from("room_questions")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId);
+    
+    if (!count || count === 0) {
+      verified = true;
+      console.log(`[MP] Questions deleted and verified (attempt ${i + 1})`);
+      break;
+    }
+    
+    console.warn(`[MP] ${count} questions still exist, retrying delete...`);
+    await supabase.from("room_questions").delete().eq("room_id", roomId);
+  }
+  
+  return verified;
+};
+
 // Simplified 4-phase system
 export type GamePhase = "idle" | "lobby" | "playing" | "results";
 
@@ -811,12 +838,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         const customQuestions = triviaPost.questions as any[];
         const categoryName = triviaPost.title || freshRoom.category_name || "Custom";
         
-        // CRITICAL: Clear ALL old questions before inserting new ones
-        await supabase.from("room_questions").delete().eq("room_id", roomId);
-        await supabase.from("player_answers").delete().eq("room_id", roomId);
-        
-        // Wait for delete to commit before inserting (prevents duplicate key errors)
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // CRITICAL: Clear ALL old questions before inserting new ones (with verification)
+        const deleteSuccess1 = await safeDeleteRoomQuestions(roomId);
+        if (!deleteSuccess1) {
+          console.error("[MP startGame] Failed to delete old questions after retries");
+          toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+          return;
+        }
         
         // Build questions with proper format
         const questions: TriviaQuestion[] = customQuestions.map((q: any, index: number) => {
@@ -1000,12 +1028,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     questions: TriviaQuestion[],
     hostShouldObserve: boolean = false
   ) => {
-    // Clear old questions/answers
-    await supabase.from("room_questions").delete().eq("room_id", roomId);
-    await supabase.from("player_answers").delete().eq("room_id", roomId);
-    
-    // Wait for delete to commit before inserting (prevents duplicate key errors)
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Clear old questions/answers with verification
+    const deleteSuccess2 = await safeDeleteRoomQuestions(roomId);
+    if (!deleteSuccess2) {
+      console.error("[MP saveQuestionsAndStartGame] Failed to delete old questions after retries");
+      toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+      return;
+    }
     
     // Create room_game record FIRST to get game_id
     const { data: game } = await supabase
@@ -1275,12 +1304,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           };
         });
         
-        // Clear old answers and questions
-        await supabase.from("player_answers").delete().eq("room_id", roomId);
-        await supabase.from("room_questions").delete().eq("room_id", roomId);
-        
-        // Wait for delete to commit before inserting (prevents duplicate key errors)
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Clear old answers and questions with verification
+        const deleteSuccess3 = await safeDeleteRoomQuestions(roomId);
+        if (!deleteSuccess3) {
+          console.error("[MP startNewRound/userTrivia] Failed to delete old questions after retries");
+          toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+          return;
+        }
         
         // FIX: Reset ALL participants' scores (not just caller)
         await supabase
@@ -1397,12 +1427,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         iconSlug: q.iconSlug,
       }));
       
-      // Clear old questions/answers for this room
-      await supabase.from("room_questions").delete().eq("room_id", roomId);
-      await supabase.from("player_answers").delete().eq("room_id", roomId);
-      
-      // Wait for delete to commit before inserting (prevents duplicate key errors)
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Clear old questions/answers with verification
+      const deleteSuccess4 = await safeDeleteRoomQuestions(roomId);
+      if (!deleteSuccess4) {
+        console.error("[MP startNewRound/library] Failed to delete old questions after retries");
+        toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+        return;
+      }
       
       // Update used_question_ids on game_rooms
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
@@ -1560,12 +1591,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           const customQuestions = triviaPost.questions as any[];
           const categoryName = triviaPost.title || nextItem.category_name || "Custom";
           
-          // Clear old data
-          await supabase.from("room_questions").delete().eq("room_id", roomId);
-          await supabase.from("player_answers").delete().eq("room_id", roomId);
-          
-          // Wait for delete to commit before inserting (prevents duplicate key errors)
-          await new Promise(resolve => setTimeout(resolve, 50));
+          // Clear old data with verification
+          const deleteSuccess5 = await safeDeleteRoomQuestions(roomId);
+          if (!deleteSuccess5) {
+            console.error("[MP startNextFromQueue/userTrivia] Failed to delete old questions after retries");
+            toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+            return;
+          }
           
           // Build questions with proper format
           const questions: TriviaQuestion[] = customQuestions.map((q: any, index: number) => {
@@ -1726,12 +1758,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         iconSlug: q.iconSlug,
       }));
       
-      // Clear old data
-      await supabase.from("room_questions").delete().eq("room_id", roomId);
-      await supabase.from("player_answers").delete().eq("room_id", roomId);
-      
-      // Wait for delete to commit before inserting (prevents duplicate key errors)
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Clear old data with verification
+      const deleteSuccess6 = await safeDeleteRoomQuestions(roomId);
+      if (!deleteSuccess6) {
+        console.error("[MP startNextFromQueue/library] Failed to delete old questions after retries");
+        toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
+        return;
+      }
       
       // Update used_question_ids
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
