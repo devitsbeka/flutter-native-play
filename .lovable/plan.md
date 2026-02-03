@@ -1,105 +1,160 @@
 
-# Plan: Fix Game Screen Layout for Small Viewports
+# Plan: Fix Multiplayer Game Flow Issues & Room Name Generation
 
-## Problem Analysis
+## Issues Identified
 
-From the screenshots, the 4th answer option is being cut off at the bottom:
-- **Image 1**: The "დ" (D) answer option overlaps with power-up icons
-- **Image 2**: After answering, the "შემდეგი კითხვა" button appears at the very bottom edge
+### Issue 1: Repetitive Room Names ("IQ პარტი")
+The edge function uses AI to generate room names but the prompt is too restrictive, often returning the same result ("IQ პარტი"). The fallback list is also limited.
 
-The current layout issues:
-1. Answer buttons area uses `flex-1` but has `overflow-visible` which doesn't constrain content
-2. Power-up icons are 64px tall with additional 24px badge = ~88px total height
-3. Combined with safe area and padding, the bottom section takes ~110-120px
-4. No responsive height adjustments for small screens (under 700px height)
+**Root Cause:** 
+- AI prompt has limited style examples that repeat
+- "IQ პარტი" is in both the fallback list and AI examples, causing high repetition
+- Icon selection tied to keyword from name ("party" → party-popper icon)
 
----
+### Issue 2: Game Flow Issues After First Round
+Based on the database inspection, second round questions are not being properly persisted/fetched for non-host players. The issue occurs in the `startNewRound` or `startNextFromQueue` flow.
 
-## Technical Solution
+**Root Cause Analysis:**
+1. When transitioning from results to the next round, the non-host player relies on realtime subscription to detect `status: "playing"`
+2. The subscription handler then fetches `room_questions` and validates by `game_id`
+3. **Bug:** There's a race condition where:
+   - Host clears old questions and inserts new ones
+   - Non-host subscription fires before new questions are inserted
+   - Non-host gets empty/stale questions
 
-### File: `src/components/game/QuizGameScreenProd.tsx`
-
-#### 1. Answer Buttons Area (lines 437-466)
-
-Change from `flex-1 overflow-visible` to `flex-1 overflow-y-auto` with proper constraints:
-
-```text
-Current:
-flex-1 px-4 mt-0 flex flex-col gap-4 [@media(max-height:700px)]:gap-2.5 overflow-visible min-h-0 pb-2
-
-Change to:
-flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-y-auto min-h-0 pb-2
-```
-
-This allows scrolling if answers don't fit, while reducing gaps.
-
-#### 2. Reduce Question Card Spacing (line 362)
-
-```text
-Current: mt-5 mb-0 [@media(max-height:700px)]:mt-4
-Change to: mt-4 mb-0 [@media(max-height:700px)]:mt-2
-```
-
-#### 3. Progress Dots Spacing (line 401)
-
-```text
-Current: py-4 [@media(max-height:700px)]:py-2
-Change to: py-2 [@media(max-height:700px)]:py-1.5
-```
+**Evidence:** Database shows only first game's questions (`game_id: 2963a338...`) are persisted, while subsequent games (`8cf65e0d...`, `dd05ac4e...`) don't have matching room_questions entries.
 
 ---
 
-### File: `src/components/ui/quiz-power-up-button.tsx`
+## Technical Fixes
 
-#### 4. Reduce Power-Up Icon Size (lines 62-67)
+### Fix 1: Improve Room Name Diversity (Edge Function)
 
-Add responsive sizing for small viewports:
+**File:** `supabase/functions/generate-room-name/index.ts`
 
-```text
-Current: w-16 h-16 (64px)
-Change to: w-14 h-14 [@media(max-height:700px)]:w-12 [@media(max-height:700px)]:h-12
+**Changes:**
+1. Expand fallback names list with 25+ unique options
+2. Add randomization seed to AI prompt for variety  
+3. Improve prompt to request more creative, unique names
+4. Add error handling to retry once if same name generated twice
+
+```typescript
+// Expanded fallback list (replacing current 11 items with 25+)
+const FALLBACK_NAMES = [
+  // Battle themes
+  "ტვინების არენა", "გონების რინგი", "IQ დუელი", "ჭიდაობა გონებით",
+  // Team themes  
+  "გენიოსთა კლუბი", "ჭკვიანთა ბანდა", "ნერდთა კლანი", "ტრიბა IQ",
+  // Fun themes
+  "IQ პარტი", "გონების რეივი", "ტვინის დისკო", "კვიზ ფესტი",
+  // Epic themes
+  "დრაკონთა კლუბი", "ნინჯა ტვინები", "ფენიქსის ბრძოლა", "ლომთა ბრძოლა",
+  "მგლის ხრვა", "არწივის მზერა", "ვეფხვის გუნდი", "დათვის ბარი",
+  // Victory themes
+  "ჩემპიონთა რინგი", "მედლების კლუბი", "გამარჯვებულები", "თასის მეტოქენი",
+  // Smart themes
+  "ერუდიტების კლანი", "ინტელექტის ხიდი",
+];
+
+// Updated prompt with randomization
+const randomSeed = Math.floor(Math.random() * 1000);
+const prompt = `Generate a unique Georgian trivia room name (seed: ${randomSeed}).
+...
+IMPORTANT: Be creative and unique. Avoid common words like "IQ პარტი".
+`;
 ```
 
-This reduces icons from 64px to 56px, or 48px on very small screens.
+### Fix 2: Fix Round Transition Race Condition
 
----
+**File:** `src/contexts/MultiplayerContextV2.tsx`
 
-### File: `src/components/ui/quiz-answer-button.tsx`
+**Problem:** When host starts a new round, non-host may fetch stale questions because:
+1. Host deletes old questions
+2. Subscription fires for room status change
+3. Non-host fetches questions before host finishes inserting new ones
 
-#### 5. Reduce Answer Button Min-Height (line 116)
+**Solution:** Add retry logic with exponential backoff and ensure questions are fully committed before room status changes.
 
-```text
-Current: min-h-[68px] [@media(max-height:700px)]:min-h-[60px]
-Change to: min-h-[60px] [@media(max-height:700px)]:min-h-[52px]
+**Changes to `startNewRound` and `startNextFromQueue`:**
+
+1. **Ensure atomic operation order:**
+   - First: Insert all new questions
+   - Second: Wait for insertion confirmation
+   - Third: Update room status to "playing"
+
+2. **Improve non-host question fetching (subscription handler around line 322-415):**
+   - Increase initial delay from 500ms to 800ms
+   - Increase MAX_ATTEMPTS from 5 to 8
+   - Increase RETRY_DELAY from 400ms to 600ms
+   - Add logging to help debug future issues
+
+```typescript
+// In subscription handler for non-host:
+await new Promise(resolve => setTimeout(resolve, 800)); // Increased from 500
+
+let attempts = 0;
+const MAX_ATTEMPTS = 8;  // Increased from 5
+const RETRY_DELAY = 600; // Increased from 400
+
+while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
+  // ... existing validation logic ...
+  
+  if (!validQuestionsFound) {
+    console.log(`[MP] Retry ${attempts + 1}/${MAX_ATTEMPTS}: waiting for questions...`);
+    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    attempts++;
+  }
+}
 ```
 
----
+3. **Fix `startNewRound` function (lines 1206-1441):**
+   - Ensure questions are inserted BEFORE room status update
+   - Add small delay after question insertion to ensure DB commit
 
-## Space Savings Summary
+```typescript
+// After inserting questions, add brief wait for DB commit
+await Promise.all(questions.map((q, index) => 
+  supabase.from("room_questions").insert({...})
+));
 
-| Element | Before | After (Small) | Saved |
-|---------|--------|---------------|-------|
-| Question card margin-top | 16px | 8px | 8px |
-| Progress dots padding | 8px × 2 = 16px | 6px × 2 = 12px | 4px |
-| Answer gaps (3 gaps) | 10px × 3 = 30px | 8px × 3 = 24px | 6px |
-| Answer buttons (4 cards) | 60px × 4 = 240px | 52px × 4 = 208px | 32px |
-| Power-up icons | 64px + 24px badge | 48px + 24px badge | 16px |
-| **Total Saved** | | | **~66px** |
+// Small delay to ensure questions are committed before status change
+await new Promise(resolve => setTimeout(resolve, 100));
 
----
+// THEN update room status
+await supabase
+  .from("game_rooms")
+  .update({ status: "playing", ... })
+  .eq("id", roomId);
+```
 
-## Expected Result
-
-After these changes:
-- All 4 answer options will be fully visible on small mobile screens
-- Power-up bar will not overlap with the last answer
-- Content will scroll if needed on extremely small viewports (under 600px)
-- Layout will feel less cramped while maintaining touch-friendly button sizes
+4. **Fix `startNextFromQueue` function (lines 1443-1730):**
+   - Apply same atomic ordering fix
+   - Add delay between question insertion and status update
 
 ---
 
 ## Files to Modify
 
-1. **src/components/game/QuizGameScreenProd.tsx** - Reduce spacing, enable scroll
-2. **src/components/ui/quiz-power-up-button.tsx** - Reduce icon size on small screens
-3. **src/components/ui/quiz-answer-button.tsx** - Reduce minimum button height
+1. **`supabase/functions/generate-room-name/index.ts`**
+   - Expand FALLBACK_NAMES array (25+ unique names)
+   - Add randomization seed to AI prompt
+   - Improve prompt for more variety
+
+2. **`src/contexts/MultiplayerContextV2.tsx`**
+   - Increase retry delays in subscription handler (lines ~310-415)
+   - Add delay between question insertion and status update in `startNewRound` (lines ~1270-1310)
+   - Add delay between question insertion and status update in `startNextFromQueue` (lines ~1540-1700)
+
+---
+
+## Expected Behavior After Fix
+
+### Room Names
+- Each new room gets a unique, creative Georgian name
+- Reduced repetition of "IQ პარტი" and similar common names
+- Icons properly match the generated name themes
+
+### Game Flow
+- Non-host players reliably receive questions on round 2+
+- No blank screens or missing questions during round transitions
+- Proper synchronization between host and guests
