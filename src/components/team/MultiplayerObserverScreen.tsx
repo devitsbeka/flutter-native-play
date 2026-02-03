@@ -31,14 +31,12 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     awardObserverBonus,
     nextQuestion,
     currentRoom,
+    opponentAnswers,
   } = useMultiplayerV2();
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [bonusEarnedThisRound, setBonusEarnedThisRound] = useState(0);
   const processedAnswerIdsRef = useRef<Set<string>>(new Set());
-  
-  // Minimum delay before observer can advance (to read the question)
-  const [minDelayPassed, setMinDelayPassed] = useState(false);
 
   // Get current question for display
   const currentQuestion = questions[currentQuestionIndex];
@@ -49,23 +47,8 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
   // Sort participants by score for leaderboard (include host)
   const sortedParticipants = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
 
-  // Check if this is the last question
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
-
-  // Observer can advance after minimum delay (1.5s to read question)
-  // No need to wait for players or timer!
-  const canAdvance = minDelayPassed;
-
-  // Minimum delay effect - allows observer to read the question before advancing
-  useEffect(() => {
-    setMinDelayPassed(false);
-    
-    const minDelay = setTimeout(() => {
-      setMinDelayPassed(true);
-    }, 1500); // 1.5 seconds to read the question
-    
-    return () => clearTimeout(minDelay);
-  }, [currentQuestionIndex]);
+  // Count how many players have answered current question
+  const answeredCount = players.filter(p => opponentAnswers[p.user_id]).length;
 
   // Poll for ALL incorrect answers across ALL questions (catches skipped ones)
   useEffect(() => {
@@ -106,12 +89,22 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     return () => clearInterval(interval);
   }, [currentRoom?.id, players.length, awardObserverBonus]);
 
-
-  const handleNextQuestion = () => {
-    playSound("button-click");
-    vibrate(30);
-    nextQuestion();
-  };
+  // Auto-advance observer when ALL players have moved to next question
+  useEffect(() => {
+    const otherPlayers = participants.filter(p => p.user_id !== user?.id);
+    if (otherPlayers.length === 0) return;
+    
+    // Check if all players have advanced past current question
+    const allPlayersAdvanced = otherPlayers.every(
+      p => (p.current_question || 0) > currentQuestionIndex
+    );
+    
+    if (allPlayersAdvanced) {
+      console.log(`[Observer] All players at question ${otherPlayers[0].current_question}, auto-advancing from ${currentQuestionIndex}`);
+      playSound("button-click");
+      nextQuestion();
+    }
+  }, [participants, currentQuestionIndex, user?.id, nextQuestion, playSound]);
 
   return (
     <div className="w-full h-[100dvh] bg-[#7E7BDC] overflow-hidden">
@@ -276,57 +269,19 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             )}
           </motion.div>
 
-          {/* Players count */}
-          {players.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-4"
-            >
-              <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-white/10">
-                <span className="text-white/80 text-sm">
-                  {players.length} მოთამაშე
-                </span>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Waiting indicator - only show while waiting for min delay */}
-          {!minDelayPassed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="mt-4 flex items-center gap-2 text-white/60"
-            >
-              <span className="text-sm">კითხვის წაკითხვა...</span>
-            </motion.div>
-          )}
         </div>
 
-        {/* Bottom Area - Next Button */}
+        {/* Bottom Area - Status Indicator (no button for observer) */}
         <div className="px-4 pb-6 pt-4 flex-shrink-0">
           <div className="pb-[env(safe-area-inset-bottom)]">
-            <AnimatePresence mode="wait">
-              {canAdvance && (
-                <motion.div
-                  key="next-button"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <ChunkyButton
-                    variant="secondary"
-                    size="xl"
-                    onClick={handleNextQuestion}
-                    className="w-full"
-                  >
-                    {isLastQuestion ? t("game.viewResults") : t("game.nextQuestion")}
-                  </ChunkyButton>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="bg-white/10 rounded-2xl py-4 px-6 text-center">
+              <p className="text-white/70 text-sm">
+                {players.length > 0 
+                  ? `მოთამაშეები პასუხობენ... (${answeredCount}/${players.length})`
+                  : "ველოდები მოთამაშეებს..."
+                }
+              </p>
+            </div>
           </div>
         </div>
       </div>
