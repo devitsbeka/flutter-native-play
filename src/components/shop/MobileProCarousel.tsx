@@ -48,7 +48,7 @@ const getButtonText = (tierId: SimplifiedTier, currentTier: string | undefined) 
   // User has Solo PRO (or "standard" from old system)
   if (normalizedTier === "solo" || normalizedTier === "pro") {
     if (tierId === "solo") return { text: "აქტიური", isActive: true };
-    if (tierId === "family") return { text: "გაუმჯობესება", isActive: false }; // Upgrade option
+    if (tierId === "family") return { text: "შეძენა", isActive: false };
   }
   
   // No subscription - show "შეძენა" for all
