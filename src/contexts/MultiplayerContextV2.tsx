@@ -300,6 +300,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                 currentQuestionIndex: 0,
                 myScore: 0,
                 opponentAnswers: {},
+                lastQuestionResult: null, // CRITICAL: Reset to prevent answer reveal on new round
                 currentRoom: updated, // Sync room state immediately
               }));
               
@@ -364,6 +365,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   currentQuestionIndex: 0,
                   myScore: 0,
                   phase: "playing",
+                  lastQuestionResult: null, // CRITICAL: Reset to prevent answer reveal on new round
+                  opponentAnswers: {}, // Reset opponent answers for fresh round
                   currentRoom: updated, // Ensure room state is synced
                 }));
               } else {
@@ -812,6 +815,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         await supabase.from("room_questions").delete().eq("room_id", roomId);
         await supabase.from("player_answers").delete().eq("room_id", roomId);
         
+        // Wait for delete to commit before inserting (prevents duplicate key errors)
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         // Build questions with proper format
         const questions: TriviaQuestion[] = customQuestions.map((q: any, index: number) => {
           const allAnswers = [q.correct_answer || q.correctAnswer, ...(q.incorrect_answers || q.incorrectAnswers || [])];
@@ -997,6 +1003,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     // Clear old questions/answers
     await supabase.from("room_questions").delete().eq("room_id", roomId);
     await supabase.from("player_answers").delete().eq("room_id", roomId);
+    
+    // Wait for delete to commit before inserting (prevents duplicate key errors)
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     // Create room_game record FIRST to get game_id
     const { data: game } = await supabase
@@ -1270,6 +1279,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         await supabase.from("player_answers").delete().eq("room_id", roomId);
         await supabase.from("room_questions").delete().eq("room_id", roomId);
         
+        // Wait for delete to commit before inserting (prevents duplicate key errors)
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         // FIX: Reset ALL participants' scores (not just caller)
         await supabase
           .from("room_participants")
@@ -1388,6 +1400,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Clear old questions/answers for this room
       await supabase.from("room_questions").delete().eq("room_id", roomId);
       await supabase.from("player_answers").delete().eq("room_id", roomId);
+      
+      // Wait for delete to commit before inserting (prevents duplicate key errors)
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       // Update used_question_ids on game_rooms
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
@@ -1548,6 +1563,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           // Clear old data
           await supabase.from("room_questions").delete().eq("room_id", roomId);
           await supabase.from("player_answers").delete().eq("room_id", roomId);
+          
+          // Wait for delete to commit before inserting (prevents duplicate key errors)
+          await new Promise(resolve => setTimeout(resolve, 50));
           
           // Build questions with proper format
           const questions: TriviaQuestion[] = customQuestions.map((q: any, index: number) => {
@@ -1711,6 +1729,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Clear old data
       await supabase.from("room_questions").delete().eq("room_id", roomId);
       await supabase.from("player_answers").delete().eq("room_id", roomId);
+      
+      // Wait for delete to commit before inserting (prevents duplicate key errors)
+      await new Promise(resolve => setTimeout(resolve, 50));
       
       // Update used_question_ids
       const newUsedIds = [...usedIds, ...questions.map(q => q.id)];
