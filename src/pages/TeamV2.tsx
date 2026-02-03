@@ -509,8 +509,8 @@ function TeamContentV2() {
                   {/* Left placeholder for symmetry - matches Index.tsx structure */}
                   <div className="flex items-center gap-2 w-0" />
                   
-                  {/* Center: Logo - same flex-1 + justify-start as Index */}
-                  <div className="flex-1 flex justify-center md:justify-start items-center gap-4">
+                  {/* Left: Logo - aligned left on all screen sizes */}
+                  <div className="flex-1 flex justify-start items-center gap-4">
                     <MyTriviaLiveLogo responsive />
                   </div>
 
