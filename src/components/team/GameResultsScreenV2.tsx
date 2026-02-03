@@ -316,8 +316,20 @@ export function GameResultsScreenV2() {
     user_trivia_id?: string | null;
     icon_slug?: string | null;
   }) => {
+    if (!currentRoom) return;
+    
     // Add item to queue first
     await addToQueue(item);
+    
+    // ALSO update the room's current category so lobby shows it as round 1
+    await supabase
+      .from("game_rooms")
+      .update({
+        category_id: item.source_type === "category" ? item.category_id : null,
+        category_name: item.category_name || (item.source_type === "random" ? "შემთხვევითი" : null),
+        user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
+      })
+      .eq("id", currentRoom.id);
     
     // Navigate to lobby so host can see and reorder the queue
     continueInRoom();

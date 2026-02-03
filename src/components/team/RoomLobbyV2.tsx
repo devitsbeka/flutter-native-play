@@ -855,18 +855,17 @@ export function RoomLobbyV2() {
         {/* Category Picker Section */}
         <CategoryPickerSection
           categoryName={
-            // Don't show room name as category - only show actual category selections
-            // Once user makes a new selection, show the current category again
-            (justReturnedFromResults && !madeNewSelection) ? null : (
+            // Show category if: user made new selection OR queue has items
+            (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
               currentRoom.category_name ??
               (((currentRoom as any).game_mode?.startsWith('trivia:') || (currentRoom as any).game_mode?.startsWith('collection:'))
                 ? null  // Don't use room_name as category fallback
                 : null)
             )
           }
-          categoryId={(justReturnedFromResults && !madeNewSelection) ? null : currentRoom.category_id}
+          categoryId={(justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : currentRoom.category_id}
           iconSlug={
-            (justReturnedFromResults && !madeNewSelection) ? null : (
+            (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
               currentRoom.category_name === "შემთხვევითი" 
                 ? null
                 : currentRoom.category_id 
@@ -877,7 +876,7 @@ export function RoomLobbyV2() {
             )
           }
           isHost={isHost}
-          queue={(justReturnedFromResults && !madeNewSelection) ? [] : queue}  // Hide queue when returned from game until new selection
+          queue={queue}  // Always show queue - remove conditional hiding
           onOpenPicker={() => setShowCategoryPicker(true)}
           onRemoveQueueItem={removeFromQueue}
           onReorderQueue={reorderQueue}

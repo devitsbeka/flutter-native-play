@@ -1366,7 +1366,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       lastQuestionResult: null,
       opponentAnswers: {},
       lastPlayedTriviaId: justPlayedTriviaId || null, // Store for "already played" indicator
-      justReturnedFromResults: true, // Flag to show "Continue Playing" button
+      justReturnedFromResults: !hasQueueItems, // Only set if queue is empty - allows proper display when queue has items
       // Also clear in local state if queue is empty
       ...(hasQueueItems ? {} : {
         currentRoom: prev.currentRoom ? {
