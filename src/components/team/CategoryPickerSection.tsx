@@ -1,5 +1,6 @@
 import { motion, Reorder } from "framer-motion";
 import { Plus, Shuffle, X, GripVertical, Library, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
 
 interface CategoryPickerSectionProps {
@@ -60,8 +61,11 @@ export function CategoryPickerSection({
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-white font-semibold text-[18px] leading-tight">
-                {hasCategory ? categoryName : "აირჩიე კატეგორია"}
+              <p className={cn(
+                "text-white font-semibold leading-tight",
+                hasCategory ? "text-[18px]" : "text-[14px]"
+              )}>
+                {hasCategory ? categoryName : "რისი თამაში გინდა?"}
               </p>
               {isAlreadyPlayed && hasCategory && (
                 <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
@@ -74,12 +78,15 @@ export function CategoryPickerSection({
                 </span>
               )}
             </div>
-            <p className="text-white/60 text-[14px] leading-snug">
+            <p className={cn(
+              "leading-snug",
+              hasCategory ? "text-white/60 text-[14px]" : "text-white/60 text-[12px]"
+            )}>
               {isAlreadyPlayed && hasCategory
                 ? "აირჩიე ახალი კატეგორია"
                 : hasCategory 
                   ? "მიმდინარე კატეგორია" 
-                  : "დააჭირე არჩევისთვის"}
+                  : "დაამატე კატეგორია სათამაშოდ"}
             </p>
           </div>
         </div>
