@@ -1,155 +1,201 @@
 
-# Plan: Fix First Round Not Starting (Delete Race Condition)
+
+# Plan: Fix Non-Host Not Transitioning to Game Screen
 
 ## Problem Summary
 
-The first round is not starting properly because **question deletion fails silently**, leaving old questions in the database that block new question inserts due to a unique constraint violation.
-
-## Evidence
-
-Database query results show:
-- Room `20f315a1` has `current_game_id: a8e38790` (Disney trivia - round 2)
-- But `room_questions` table contains:
-  - **Index 0**: `game_id: 12e904ab` (OLD TikTok question - should be deleted!)
-  - **Index 1**: `game_id: 12e904ab` (OLD TikTok question - should be deleted!)
-  - **Index 2**: `game_id: a8e38790` (NEW Disney question - only one inserted)
-
-The unique constraint `room_questions_room_id_question_index_key` on `(room_id, question_index)` is blocking inserts at indices 0 and 1 because old rows still exist.
-
-## Why the 50ms Delay Isn't Working
-
-The current code:
-```typescript
-await supabase.from("room_questions").delete().eq("room_id", roomId);
-await new Promise(resolve => setTimeout(resolve, 50));
-// Insert new questions...
-```
-
-**Problem**: The `delete()` call returns immediately after sending the request to Supabase, but the actual deletion may not be committed yet. The 50ms delay is a guess that doesn't guarantee the delete has completed.
+When the host starts a game (especially with their own trivia where they observe), the non-host player remains stuck in the lobby while the host sees the game screen. This is a state desynchronization issue.
 
 ## Root Cause
 
-1. Delete is issued but not verified
-2. 50ms passes but delete hasn't committed
-3. Insert starts, but indices 0, 1 still exist → duplicate key error
-4. Only index 2 (new) succeeds
-5. Room status updates to "playing" with only 1 question
-6. Non-host fetches 1 question, plays it, game completes immediately with 0 scores
+The `roomChannel` subscription in `MultiplayerContextV2.tsx` only listens for **future** room updates. It doesn't check the **current** room status when the subscription is first established.
 
-## Technical Fix
-
-### Solution: Verify Deletion Before Inserting
-
-Add explicit verification that ALL old questions were deleted before proceeding with inserts. If not deleted, retry deletion with a longer delay.
-
-**Pattern to apply in all 6 locations:**
-
-```typescript
-// Step 1: Delete old questions
-await supabase.from("room_questions").delete().eq("room_id", roomId);
-await supabase.from("player_answers").delete().eq("room_id", roomId);
-
-// Step 2: VERIFY deletion completed - this is the missing piece!
-let deleteVerified = false;
-let retryCount = 0;
-const MAX_DELETE_RETRIES = 3;
-
-while (!deleteVerified && retryCount < MAX_DELETE_RETRIES) {
-  await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
-  
-  const { count } = await supabase
-    .from("room_questions")
-    .select("*", { count: "exact", head: true })
-    .eq("room_id", roomId);
-  
-  if (count === 0 || count === null) {
-    deleteVerified = true;
-    console.log(`[MP] Delete verified after ${retryCount + 1} attempt(s)`);
-  } else {
-    console.warn(`[MP] Delete not complete, ${count} questions remain. Retrying...`);
-    await supabase.from("room_questions").delete().eq("room_id", roomId);
-    retryCount++;
-  }
-}
-
-if (!deleteVerified) {
-  console.error("[MP] Failed to delete old questions after retries!");
-  toast.error("თამაშის დაწყება ვერ მოხერხდა. ცადე თავიდან.");
-  return; // Don't proceed with stale data
-}
-
-// Step 3: Now safe to insert new questions
-const insertResults = await Promise.all(questions.map((q, index) => ...));
+**Current problematic flow:**
+```text
+1. Non-host joins room (room.status = "waiting")
+2. Room subscription starts connecting
+3. Host starts game (room.status → "playing")  
+4. Room subscription fully connects
+5. ❌ Non-host missed the update event
+6. Non-host stuck in "lobby" phase
 ```
 
-## Files to Modify
+The `participantsChannel` already has this pattern correctly implemented (lines 431-435), but `roomChannel` does not.
 
-**`src/contexts/MultiplayerContextV2.tsx`**
+---
 
-Apply the verification pattern in all 6 delete+insert locations:
+## Technical Solution
 
-| Lines | Function | Current Pattern | Fix |
-|-------|----------|----------------|-----|
-| 815-819 | `startGame` (user trivia) | delete + 50ms + insert | Add verification loop |
-| 1003-1008 | `saveQuestionsAndStartGame` | delete + 50ms + insert | Add verification loop |
-| 1279-1283 | `startNewRound` (user trivia) | delete + 50ms + insert | Add verification loop |
-| 1401-1405 | `startNewRound` (library) | delete + 50ms + insert | Add verification loop |
-| 1563-1567 | `startNextFromQueue` (user trivia) | delete + 50ms + insert | Add verification loop |
-| 1730-1734 | `startNextFromQueue` (library) | delete + 50ms + insert | Add verification loop |
+### Fix Location: `src/contexts/MultiplayerContextV2.tsx`
 
-## Implementation Details
+### Change 1: Add Initial State Sync to Room Subscription
 
-### Create a reusable helper function:
+Replace the simple `.subscribe()` call with a callback that checks the current room status when the subscription is ready:
+
+**Current code (line 421):**
+```typescript
+.subscribe();
+```
+
+**Fixed code:**
+```typescript
+.subscribe(async (status) => {
+  // When subscription is ready, check if room is already playing
+  if (status === 'SUBSCRIBED') {
+    // Fetch fresh room data to check current status
+    const { data: freshRoom } = await supabase
+      .from("game_rooms")
+      .select("*")
+      .eq("id", roomId)
+      .single();
+    
+    if (freshRoom && freshRoom.status === "playing") {
+      const currentPhase = phaseRef.current;
+      const currentIsHost = isHostRef.current;
+      
+      // Only handle if we're in lobby/results and NOT the host
+      if ((currentPhase === "lobby" || currentPhase === "results") && !currentIsHost) {
+        console.log(`[MP] Subscription connected, room already playing. Fetching questions...`);
+        
+        // Same logic as the UPDATE handler
+        setState(prev => ({
+          ...prev,
+          questions: [],
+          currentQuestionIndex: 0,
+          myScore: 0,
+          opponentAnswers: {},
+          lastQuestionResult: null,
+          currentRoom: freshRoom as GameRoom,
+        }));
+        
+        const expectedGameId = freshRoom.current_game_id;
+        
+        // Wait for questions to be fully committed
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Fetch with retry logic
+        let attempts = 0;
+        const MAX_ATTEMPTS = 8;
+        const RETRY_DELAY = 600;
+        let roomQuestions: any[] | null = null;
+        let validQuestionsFound = false;
+        
+        while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
+          const { data } = await supabase
+            .from("room_questions")
+            .select("*")
+            .eq("room_id", roomId)
+            .eq("game_id", expectedGameId)
+            .order("question_index", { ascending: true });
+          
+          roomQuestions = data;
+          
+          if (roomQuestions && roomQuestions.length > 0) {
+            validQuestionsFound = true;
+            break;
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+          attempts++;
+        }
+        
+        if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
+          const questions = roomQuestions.map((q: any) => ({
+            id: `${roomId}-${q.question_index}`,
+            question: q.question_text,
+            correctAnswer: q.correct_answer,
+            incorrectAnswers: q.incorrect_answers,
+            allAnswers: q.shuffled_answers?.length > 0 
+              ? q.shuffled_answers 
+              : [...q.incorrect_answers, q.correct_answer],
+            difficulty: q.difficulty || "medium",
+            category: freshRoom.category_name || "General",
+            iconSlug: q.icon_slug || undefined,
+          }));
+          
+          setState(prev => ({
+            ...prev,
+            questions,
+            currentQuestionIndex: 0,
+            myScore: 0,
+            phase: "playing",
+            lastQuestionResult: null,
+            opponentAnswers: {},
+            currentRoom: freshRoom as GameRoom,
+          }));
+        } else {
+          toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+          setState(prev => ({
+            ...prev,
+            phase: "lobby",
+            currentRoom: freshRoom as GameRoom,
+          }));
+        }
+      }
+    }
+  }
+});
+```
+
+---
+
+## Alternative Approach: Extract Shared Logic
+
+To avoid code duplication, we could extract the question-fetching logic into a helper function:
 
 ```typescript
-// Helper to safely delete room questions with verification
-const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
-  await supabase.from("room_questions").delete().eq("room_id", roomId);
-  await supabase.from("player_answers").delete().eq("room_id", roomId);
+const handlePlayingTransition = async (
+  roomId: string, 
+  roomData: GameRoom
+) => {
+  // Clear local state
+  setState(prev => ({
+    ...prev,
+    questions: [],
+    currentQuestionIndex: 0,
+    myScore: 0,
+    opponentAnswers: {},
+    lastQuestionResult: null,
+    currentRoom: roomData,
+  }));
   
-  let verified = false;
-  for (let i = 0; i < 3; i++) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    const { count } = await supabase
-      .from("room_questions")
-      .select("*", { count: "exact", head: true })
-      .eq("room_id", roomId);
-    
-    if (!count || count === 0) {
-      verified = true;
-      console.log(`[MP] Questions deleted and verified (attempt ${i + 1})`);
-      break;
-    }
-    
-    console.warn(`[MP] ${count} questions still exist, retrying delete...`);
-    await supabase.from("room_questions").delete().eq("room_id", roomId);
-  }
+  const expectedGameId = roomData.current_game_id;
   
-  return verified;
+  // ... rest of question fetching logic
 };
 ```
 
-### Replace all occurrences of:
-```typescript
-await supabase.from("room_questions").delete().eq("room_id", roomId);
-await supabase.from("player_answers").delete().eq("room_id", roomId);
-await new Promise(resolve => setTimeout(resolve, 50));
-```
+Then use this in both:
+1. The room UPDATE subscription handler
+2. The initial SUBSCRIBED callback
 
-### With:
-```typescript
-const deleteSuccess = await safeDeleteRoomQuestions(roomId);
-if (!deleteSuccess) {
-  toast.error("თამაშის დაწყება ვერ მოხერხდა");
-  return;
-}
-```
+---
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/contexts/MultiplayerContextV2.tsx` | Add initial state sync callback to room subscription |
+
+---
 
 ## Expected Behavior After Fix
 
-1. **Delete verification**: Ensures old questions are fully removed before inserting new ones
-2. **Retry mechanism**: Handles slow database commits with multiple retry attempts
-3. **Graceful failure**: If delete truly fails after retries, show error instead of proceeding with broken state
-4. **All questions sync**: With clean delete, all new questions insert at indices 0, 1, 2, etc.
-5. **Both players**: Host and non-host see the same questions and can play normally
+1. Non-host joins room while room is in "waiting" status
+2. Subscription starts connecting
+3. Host starts game (room becomes "playing")
+4. If subscription catches the UPDATE event → transition works normally
+5. If subscription connects AFTER the update → initial sync checks room status and transitions to playing
+6. Both host and non-host see the game screen
+
+---
+
+## Testing Recommendations
+
+1. Host creates room with their own trivia
+2. Non-host joins room
+3. Host starts game (becomes observer)
+4. Verify both players see game screen
+5. Test with slight network delays to ensure sync works
+6. Test rapid game start (within 1-2 seconds of join)
+
