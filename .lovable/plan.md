@@ -1,243 +1,194 @@
 
+# Plan: Fix Host Observer Mode for All Game Start Paths
 
-# Plan: Observer Screen with Full Game UI and Answer Visibility
+## Problem Summary
 
-## Summary
+The host is playing their own trivia instead of observing because:
+1. Observer check logic ONLY exists in `RoomLobbyV2.tsx`'s `handleStartGame`
+2. Games started from `GameResultsScreenV2.tsx` bypass this check entirely
+3. `startNewRound()` and `startNextFromQueue()` never set `hostIsObserver`
 
-Transform the observer screen to show the same game layout as regular players (question card, icon, answers), but with the observer-specific feature of seeing which players picked which answer in real-time.
+## Root Cause
 
-## Current State
+Multiple code paths can start a game, but only ONE path has the observer mode check:
 
-**Observer Screen** (`MultiplayerObserverScreen.tsx`):
-- Simplified view with a star icon
-- Question shown in a small text box
-- No answer buttons visible
-- Score card with bonus tracking
-- Status text showing "Players are answering..."
+| Start Path | File | Has Observer Check |
+|-----------|------|-------------------|
+| `handleStartGame` → `startGame()` | RoomLobbyV2.tsx | Yes |
+| `handleSelectCategory` → `startGame()` | GameResultsScreenV2.tsx | No |
+| `handleSelectTrivia` → `startGame()` | GameResultsScreenV2.tsx | No |
+| `handlePlayAgain` → `startNewRound()` | GameResultsScreenV2.tsx | No |
+| `handlePlayAgain` → `startNextFromQueue()` | GameResultsScreenV2.tsx | No |
 
-**Player Game Screen** (`MultiplayerGameScreen.tsx`):
-- Full question card with timer
-- Player avatars with scores
-- Answer buttons with Georgian labels (ა, ბ, გ, დ)
-- After reveal: shows opponent avatars on answers they picked
+## Solution: Move Observer Detection INTO the Context
 
-## Proposed Design
+Instead of requiring every caller to check and pass the observer flag, the context functions should auto-detect it.
 
-The observer will see:
-1. Same header (back button, question counter, leaderboard toggle)
-2. Question card with timer (showing remaining time for players)
-3. Progress dots
-4. Answer buttons (disabled - observer can't click)
-5. Player avatars overlaid on answers they pick **in real-time** (not just after reveal)
-6. Observer info badge showing they're in observer mode + bonus earned
+### Change 1: Create Helper Function for Observer Detection
 
-## Technical Changes
+**File**: `src/contexts/MultiplayerContextV2.tsx`
 
-### File: `src/components/team/MultiplayerObserverScreen.tsx`
+Add a helper function that checks if the host should observe:
 
-**Change 1: Import Required Components**
 ```typescript
-import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
-import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
-import { QuizAnswerButton } from "@/components/ui/quiz-answer-button";
-import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
-import { SafeAvatar } from "@/components/shared/SafeAvatar";
-```
-
-**Change 2: Add Timer State**
-Track time remaining locally for display purposes.
-```typescript
-const [timeRemaining, setTimeRemaining] = useState(TIME_PER_QUESTION);
-
-// Reset timer on question change
-useEffect(() => {
-  setTimeRemaining(TIME_PER_QUESTION);
-}, [currentQuestionIndex]);
-
-// Countdown timer (visual only)
-useEffect(() => {
-  const timer = setInterval(() => {
-    setTimeRemaining(prev => Math.max(0, prev - 0.1));
-  }, 100);
-  return () => clearInterval(timer);
-}, [currentQuestionIndex]);
-```
-
-**Change 3: Replace Main Content Section**
-
-Replace the current simplified view (star icon, compact question box) with the full game layout:
-
-```tsx
-{/* Question Icon - overlapping card */}
-<div className="px-4 flex-shrink-0 relative">
-  <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
-    <QuizCategoryIcon
-      iconSlug={currentQuestion?.iconSlug || currentRoom?.category_id}
-      categoryId={currentRoom?.category_id}
-      size={72}
-    />
-  </div>
+// Helper to determine if host should observe (knows answers)
+const shouldHostObserve = async (
+  userTriviaId: string | null,
+  hostUserId: string
+): Promise<boolean> => {
+  if (!userTriviaId) return false; // Library/random categories: host plays
   
-  <QuizQuestionCard
-    questionText={currentQuestion?.question || ""}
-    progressPercent={(timeRemaining / TIME_PER_QUESTION) * 100}
-    state="default"
-    timerSeconds={Math.ceil(timeRemaining)}
-    timerMaxSeconds={TIME_PER_QUESTION}
-    reserveTopSpace
-  />
-</div>
-
-{/* Progress Dots */}
-<div className="flex justify-center my-2 flex-shrink-0">
-  <QuizProgressDots
-    total={questions.length}
-    current={currentQuestionIndex}
-    results={[]}
-  />
-</div>
-
-{/* Answer Buttons with Real-time Player Avatars */}
-<div className="flex-1 px-4 flex flex-col gap-1.5 overflow-hidden min-h-0">
-  {currentQuestion?.allAnswers.map((answer, index) => {
-    // Find players who chose this answer (show in real-time for observer)
-    const playersWhoChoseThis = Object.entries(opponentAnswers)
-      .filter(([_, ans]) => ans.answer === answer)
-      .map(([userId]) => participants.find(p => p.user_id === userId))
-      .filter(Boolean);
-    
-    // Determine answer state (show correct after everyone answers)
-    const allAnswered = players.every(p => opponentAnswers[p.user_id]);
-    const isCorrect = answer === currentQuestion.correctAnswer;
-    const answerState = allAnswered && isCorrect ? "correct" : "default";
-    
-    return (
-      <motion.div key={`${currentQuestionIndex}-${index}`} className="relative">
-        <QuizAnswerButton
-          label={ANSWER_LABELS[index]}
-          text={answer}
-          state={answerState}
-          disabled={true}  // Observer can't click
-          showLabel={true}
-        />
-        
-        {/* Player avatars who picked this answer */}
-        {playersWhoChoseThis.length > 0 && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5">
-            {playersWhoChoseThis.slice(0, 4).map((p) => (
-              <SafeAvatar
-                key={p?.id}
-                avatarUrl={p?.avatar_url}
-                fallback={p?.nickname || "?"}
-                className="w-7 h-7 border-2 border-white/50"
-                fallbackClassName="bg-purple-500 text-white text-[10px]"
-              />
-            ))}
-            {playersWhoChoseThis.length > 4 && (
-              <div className="w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-[10px]">
-                +{playersWhoChoseThis.length - 4}
-              </div>
-            )}
-          </div>
-        )}
-      </motion.div>
-    );
-  })}
-</div>
+  const { data: trivia } = await supabase
+    .from("user_quiz_posts")
+    .select("user_id, is_blind, plays_count")
+    .eq("id", userTriviaId)
+    .maybeSingle();
+  
+  if (!trivia) return false;
+  
+  // Host knows answers if: they own it AND (it's not blind OR they've already played it)
+  return trivia.user_id === hostUserId && 
+    (!trivia.is_blind || (trivia.plays_count || 0) > 0);
+};
 ```
 
-**Change 4: Add Observer Info Banner**
+### Change 2: Update `startGame` to Auto-Detect Observer Mode
 
-Add a compact banner at the bottom showing observer status and bonus:
+**File**: `src/contexts/MultiplayerContextV2.tsx`
 
-```tsx
-{/* Observer Status Bar */}
-<div className="px-4 pb-4 pt-2 flex-shrink-0">
-  <div className="pb-[env(safe-area-inset-bottom)]">
-    <div className="bg-white/10 backdrop-blur-sm rounded-xl py-3 px-4 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-        <span className="text-white/80 text-sm">
-          შენი ტრივიაა — აკვირდები
-        </span>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="text-white font-bold">{myScore}</span>
-        {bonusEarnedThisRound > 0 && (
-          <motion.span
-            key={bonusEarnedThisRound}
-            initial={{ scale: 1.3 }}
-            animate={{ scale: 1 }}
-            className="text-green-400 text-sm font-bold"
-          >
-            +{bonusEarnedThisRound}
-          </motion.span>
-        )}
-      </div>
-    </div>
-  </div>
-</div>
-```
+Modify `startGame` to auto-detect when no explicit flag is passed:
 
-**Change 5: Update Answer Labels Constant**
-
-Add Georgian answer labels at the top:
 ```typescript
-const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
+const startGame = useCallback(async (hostShouldObserve?: boolean) => {
+  if (!state.currentRoom || !isHost || !user) return;
+  
+  const roomId = state.currentRoom.id;
+  
+  // Fetch fresh room data
+  const { data: freshRoom } = await supabase
+    .from("game_rooms")
+    .select("*")
+    .eq("id", roomId)
+    .single();
+  
+  if (!freshRoom) return;
+  
+  // Auto-detect observer mode if not explicitly provided
+  const shouldObserve = hostShouldObserve ?? 
+    await shouldHostObserve(freshRoom.user_trivia_id, user.id);
+  
+  // ... rest of function uses shouldObserve instead of hostShouldObserve
+});
 ```
 
-## Visual Layout Comparison
+### Change 3: Update `startNewRound` to Handle Observer Mode
 
-**Before (Observer):**
-```text
-┌─────────────────────────┐
-│ ←    1/5    [avatars]   │ Header
-├─────────────────────────┤
-│         ⭐               │ Star Icon
-│    შენი ტრივიაა!        │ Title
-│  [Question in small box] │ Compact question
-│     ┌───────────┐        │
-│     │  Score: X │        │ Score card
-│     └───────────┘        │
-│                          │
-│ [Players answering...]   │ Status text
-└─────────────────────────┘
+**File**: `src/contexts/MultiplayerContextV2.tsx`
+
+Add observer detection to `startNewRound`:
+
+```typescript
+const startNewRound = useCallback(async () => {
+  if (!state.currentRoom || !user) return;
+  
+  const roomId = state.currentRoom.id;
+  const { data: freshRoom } = await supabase
+    .from("game_rooms")
+    .select("*")
+    .eq("id", roomId)
+    .single();
+  
+  if (!freshRoom) return;
+  
+  // Determine if host should observe this round
+  const hostShouldObserve = isHost ? 
+    await shouldHostObserve(freshRoom.user_trivia_id, user.id) : false;
+  
+  // Update host_is_observer in database
+  await supabase
+    .from("game_rooms")
+    .update({ host_is_observer: hostShouldObserve })
+    .eq("id", roomId);
+  
+  // ... rest of function
+  
+  // When setting state, include hostIsObserver:
+  setState(prev => ({
+    ...prev,
+    // ... existing fields
+    hostIsObserver: hostShouldObserve,
+    // ...
+  }));
+});
 ```
 
-**After (Observer with full game UI):**
-```text
-┌─────────────────────────┐
-│ ←    1/5    [avatars]   │ Header
-├─────────────────────────┤
-│        [Icon]           │ Question Icon
-│  ┌─────────────────┐    │
-│  │ 15  Question?   │    │ Question Card
-│  │ ════════════    │    │ with timer
-│  └─────────────────┘    │
-│      • • • • •          │ Progress dots
-│  ┌─────────────────┐    │
-│  │ ა │ Answer 1   👤│    │ Answers with
-│  │ ბ │ Answer 2    │    │ player avatars
-│  │ გ │ Answer 3 👤👤│    │ in real-time
-│  │ დ │ Answer 4    │    │
-│  └─────────────────┘    │
-│ ⭐ შენი ტრივიაა  42 +15 │ Observer bar
-└─────────────────────────┘
+### Change 4: Update `startNextFromQueue` to Handle Observer Mode
+
+**File**: `src/contexts/MultiplayerContextV2.tsx`
+
+Add observer detection to `startNextFromQueue`:
+
+```typescript
+const startNextFromQueue = useCallback(async () => {
+  // ... existing queue logic
+  
+  // After determining the next item, check if host should observe
+  const hostShouldObserve = isHost && nextItem.source_type === "user_trivia" ? 
+    await shouldHostObserve(nextItem.user_trivia_id, user.id) : false;
+  
+  // Update host_is_observer in database
+  await supabase
+    .from("game_rooms")
+    .update({ host_is_observer: hostShouldObserve })
+    .eq("id", roomId);
+  
+  // ... when setting state, include hostIsObserver
+});
 ```
 
-## Key Differences from Player View
+### Change 5: Non-Host Must Read `host_is_observer` from Room
 
-| Feature | Player | Observer |
-|---------|--------|----------|
-| Answer buttons clickable | Yes | No (disabled) |
-| See player picks | After reveal only | Real-time |
-| Timer controls game | Yes | Visual only |
-| Correct answer highlight | After own answer | After all answered |
-| Bottom area | "Next Question" button | Score + bonus bar |
+**File**: `src/contexts/MultiplayerContextV2.tsx`
 
-## Files Modified
+When non-hosts detect a game starting, they must read the `host_is_observer` flag:
+
+```typescript
+// In the realtime subscription handler for room status = "playing"
+if (!currentIsHost) {
+  // ... existing question fetch logic
+  
+  // Read host_is_observer from room data
+  setState(prev => ({
+    ...prev,
+    questions,
+    // ... existing fields
+    hostIsObserver: updated.host_is_observer || false, // Read from room
+  }));
+}
+```
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/team/MultiplayerObserverScreen.tsx` | Complete UI overhaul to match game screen with observer features |
+| `src/contexts/MultiplayerContextV2.tsx` | Add `shouldHostObserve` helper, update `startGame`, `startNewRound`, `startNextFromQueue` to auto-detect and set observer mode, update non-host subscription to read `host_is_observer` |
+| `src/components/team/RoomLobbyV2.tsx` | Can simplify since observer detection moves to context (optional) |
 
+## Technical Details
+
+- The `host_is_observer` column in `game_rooms` table already exists
+- The `hostIsObserver` state in context already exists
+- We just need to:
+  1. Auto-detect when host should observe (based on trivia ownership)
+  2. Save to database for non-hosts to read
+  3. Set in local state for host
+  4. Non-hosts read from database when game starts
+
+## Expected Result After Fix
+
+1. Host starts their own trivia from ANY screen (lobby or results)
+2. Context auto-detects they own the trivia
+3. `host_is_observer: true` is saved to database
+4. `hostIsObserver: true` is set in host's local state
+5. `MultiplayerGameScreenV2` checks `isHost && hostIsObserver` → shows observer screen
+6. Guest reads `host_is_observer` from room data → knows host is observing
