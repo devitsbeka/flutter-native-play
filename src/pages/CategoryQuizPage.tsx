@@ -1028,6 +1028,7 @@ export default function CategoryQuizPage() {
           difficultyColor={DIFFICULTY_COLORS[difficultyKey]}
           freezeTimeLeft={freezeTimeRemaining}
           reserveTopSpace={!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url}
+          hideQuestionText={!!currentQuestion?.image_url}
         />
       </div>
 
