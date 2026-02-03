@@ -198,8 +198,13 @@ export function CategoryPickerModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex flex-col"
-        style={{ background: backgroundStyle }}
+        style={{ background: `#1a1a2e` }}
       >
+        {/* Opaque gradient overlay */}
+        <div 
+          className="absolute inset-0 -z-10" 
+          style={{ background: backgroundStyle }}
+        />
         {/* Glass header */}
         <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm">
           {view !== "main" ? (
