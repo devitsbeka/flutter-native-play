@@ -6,10 +6,14 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSound } from "@/contexts/SoundContext";
-import { ChunkyButton } from "@/components/ui/chunky-button";
 import { cn } from "@/lib/utils";
 import { calculateObserverBonus } from "@/utils/tvScoring";
 import { supabase } from "@/integrations/supabase/client";
+import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
+import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
+import { QuizAnswerButton } from "@/components/ui/quiz-answer-button";
+import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
+import { SafeAvatar } from "@/components/shared/SafeAvatar";
 
 interface MultiplayerObserverScreenProps {
   timeRemaining: number;
@@ -17,16 +21,16 @@ interface MultiplayerObserverScreenProps {
 }
 
 const TIME_PER_QUESTION = 15;
+const ANSWER_LABELS = ["ა", "ბ", "გ", "დ"];
 
 export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { playSound, vibrate } = useSound();
+  const { playSound } = useSound();
   const {
     questions,
     currentQuestionIndex,
     myScore,
-    observerBonusThisRound,
     participants,
     awardObserverBonus,
     nextQuestion,
@@ -36,6 +40,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [bonusEarnedThisRound, setBonusEarnedThisRound] = useState(0);
+  const [localTimeRemaining, setLocalTimeRemaining] = useState(TIME_PER_QUESTION);
   const processedAnswerIdsRef = useRef<Set<string>>(new Set());
 
   // Get current question for display
@@ -49,6 +54,22 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
 
   // Count how many players have answered current question
   const answeredCount = players.filter(p => opponentAnswers[p.user_id]).length;
+  
+  // Check if all players answered (to show correct answer)
+  const allAnswered = players.length > 0 && players.every(p => opponentAnswers[p.user_id]);
+
+  // Reset timer on question change
+  useEffect(() => {
+    setLocalTimeRemaining(TIME_PER_QUESTION);
+  }, [currentQuestionIndex]);
+
+  // Countdown timer (visual only for observer)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLocalTimeRemaining(prev => Math.max(0, prev - 0.1));
+    }, 100);
+    return () => clearInterval(timer);
+  }, [currentQuestionIndex]);
 
   // Poll for ALL incorrect answers across ALL questions (catches skipped ones)
   useEffect(() => {
@@ -105,6 +126,14 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
       nextQuestion();
     }
   }, [participants, currentQuestionIndex, user?.id, nextQuestion, playSound]);
+
+  // Helper to find players who picked a specific answer
+  const getPlayersWhoChoseAnswer = (answer: string) => {
+    return Object.entries(opponentAnswers)
+      .filter(([_, ans]) => ans.answer === answer)
+      .map(([userId]) => participants.find(p => p.user_id === userId))
+      .filter(Boolean);
+  };
 
   return (
     <div className="w-full h-[100dvh] bg-[#7E7BDC] overflow-hidden">
@@ -190,97 +219,118 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
           )}
         </AnimatePresence>
 
-        {/* Main Observer Content */}
-        <div className="flex-1 flex flex-col items-center px-4 pt-4 overflow-y-auto">
-          {/* Compact Header with Star */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", duration: 0.6 }}
-            className="mb-3"
-          >
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg">
-              <Star className="w-8 h-8 text-white fill-white" />
+        {/* Main Game Content - Same as player view */}
+        <div className="flex-1 flex flex-col px-4 overflow-hidden min-h-0">
+          {/* Question Icon - overlapping card */}
+          <div className="relative flex-shrink-0 mt-2">
+            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 z-10">
+              <QuizCategoryIcon
+                iconSlug={currentQuestion?.iconSlug}
+                categoryId={currentRoom?.category_id || undefined}
+                size={72}
+              />
             </div>
-          </motion.div>
+          </div>
 
-          {/* Title */}
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl font-bold text-white mb-1"
-          >
-            შენი ტრივიაა!
-          </motion.h2>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-white/70 text-sm mb-4 text-center"
-          >
-            ამიტომ ამ რაუნდში აკვირდები • გადახტი შემდეგზე ნებისმიერ დროს
-          </motion.p>
+          {/* Question Card */}
+          <div className="flex-shrink-0 mt-10">
+            <QuizQuestionCard
+              questionText={currentQuestion?.question || ""}
+              progressPercent={(localTimeRemaining / TIME_PER_QUESTION) * 100}
+              state="default"
+              timerSeconds={Math.ceil(localTimeRemaining)}
+              timerMaxSeconds={TIME_PER_QUESTION}
+              reserveTopSpace
+            />
+          </div>
 
-          {/* Current Question Display */}
-          {currentQuestion && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 w-full max-w-sm mb-4"
-            >
-              <p className="text-white/50 text-xs mb-1 text-center">მიმდინარე კითხვა</p>
-              <p className="text-white font-medium text-center text-sm leading-snug">
-                {currentQuestion.question}
-              </p>
-            </motion.div>
-          )}
+          {/* Progress Dots */}
+          <div className="flex justify-center my-3 flex-shrink-0">
+            <QuizProgressDots
+              total={questions.length}
+              current={currentQuestionIndex}
+              results={[]}
+            />
+          </div>
 
-          {/* Score Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 w-full max-w-xs"
-          >
-            <p className="text-white/60 text-sm mb-1">შენი ქულა</p>
-            <motion.p
-              key={myScore}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
-              className="text-4xl font-bold text-white mb-2"
-            >
-              {myScore}
-            </motion.p>
-            <p className="text-amber-300 text-sm font-medium">
-              იღებ ქულებს შეცდომებზე 💡
-            </p>
-            {bonusEarnedThisRound > 0 && (
-              <motion.p
-                key={bonusEarnedThisRound}
-                initial={{ opacity: 0, scale: 1.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-green-300 text-sm mt-2 font-bold"
-              >
-                +{bonusEarnedThisRound} ბონუსი! 🎉
-              </motion.p>
-            )}
-          </motion.div>
-
+          {/* Answer Buttons with Real-time Player Avatars */}
+          <div className="flex-1 flex flex-col gap-1.5 overflow-y-auto min-h-0 pb-2">
+            {currentQuestion?.allAnswers.map((answer, index) => {
+              // Find players who chose this answer (show in real-time for observer)
+              const playersWhoChoseThis = getPlayersWhoChoseAnswer(answer);
+              
+              // Determine answer state (show correct after everyone answers)
+              const isCorrect = answer === currentQuestion.correctAnswer;
+              const answerState = allAnswered && isCorrect ? "correct" : "default";
+              
+              return (
+                <motion.div 
+                  key={`${currentQuestionIndex}-${index}`} 
+                  className="relative flex-shrink-0"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <QuizAnswerButton
+                    label={ANSWER_LABELS[index]}
+                    text={answer}
+                    state={answerState}
+                    disabled={true}
+                    showLabel={true}
+                  />
+                  
+                  {/* Player avatars who picked this answer */}
+                  {playersWhoChoseThis.length > 0 && (
+                    <motion.div 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex -space-x-1.5"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      {playersWhoChoseThis.slice(0, 4).map((p) => (
+                        <SafeAvatar
+                          key={p?.id}
+                          avatarUrl={p?.avatar_url}
+                          fallback={p?.nickname || "?"}
+                          className="w-7 h-7 border-2 border-white shadow-sm"
+                          fallbackClassName="text-[10px]"
+                        />
+                      ))}
+                      {playersWhoChoseThis.length > 4 && (
+                        <div className="w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-[10px] font-bold text-gray-600 border-2 border-white shadow-sm">
+                          +{playersWhoChoseThis.length - 4}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Bottom Area - Status Indicator (no button for observer) */}
-        <div className="px-4 pb-6 pt-4 flex-shrink-0">
+        {/* Observer Status Bar */}
+        <div className="px-4 pb-4 pt-2 flex-shrink-0">
           <div className="pb-[env(safe-area-inset-bottom)]">
-            <div className="bg-white/10 rounded-2xl py-4 px-6 text-center">
-              <p className="text-white/70 text-sm">
-                {players.length > 0 
-                  ? `მოთამაშეები პასუხობენ... (${answeredCount}/${players.length})`
-                  : "ველოდები მოთამაშეებს..."
-                }
-              </p>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl py-3 px-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                <span className="text-white/80 text-sm">
+                  შენი ტრივიაა — აკვირდები ({answeredCount}/{players.length})
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-white font-bold">{myScore}</span>
+                {bonusEarnedThisRound > 0 && (
+                  <motion.span
+                    key={bonusEarnedThisRound}
+                    initial={{ scale: 1.3 }}
+                    animate={{ scale: 1 }}
+                    className="text-green-400 text-sm font-bold"
+                  >
+                    +{bonusEarnedThisRound}
+                  </motion.span>
+                )}
+              </div>
             </div>
           </div>
         </div>
