@@ -1,142 +1,106 @@
 
 
-# Plan: Fix "Add to Queue" Flow to Show Picked Category in Lobby
+# Plan: Observer Auto-Sync with Player Question Progression
 
 ## Problem Summary
 
-When clicking "რიგში დამატება" (Add to Queue) from the results screen:
-1. The picked category is added to the queue table
-2. User returns to lobby
-3. **But the lobby shows empty state** ("რისი თამაში გინდა?") instead of showing the picked category
-4. Adding more items should show them as round 2, 3, etc.
+When the host is observing (skipping their own trivia):
+1. The observer sees a "შემდეგი კითხვა" (Next Question) button - **this is incorrect behavior**
+2. When regular players click "Next Question" and advance, the observer stays stuck on the old question
+3. The observer should automatically follow the players' progression
 
 ## Root Cause
 
-Two issues combine to cause this:
-
-### Issue 1: Room Category Not Updated
-When adding to queue, the item goes to `room_category_queue` table but the room's `category_name`/`category_id`/`user_trivia_id` fields remain from the last played game.
-
-### Issue 2: Lobby Hides Data After Results
-In `RoomLobbyV2.tsx` (lines 860-880), when `justReturnedFromResults && !madeNewSelection` is true:
-- `categoryName` is forced to `null`
-- `queue` is forced to `[]`
-
-This logic was intended to show empty state when queue is empty, but it incorrectly hides data when queue has items.
+The `MultiplayerObserverScreen` component currently:
+- Shows a "Next Question" button with manual control for the observer
+- The observer's `currentQuestionIndex` is only advanced when THEY click the button
+- No synchronization mechanism exists to follow other players' progression
 
 ## Solution
 
-### Change 1: Set First Queued Item as Current Round
+### Change 1: Remove "Next Question" Button from Observer Screen
 
-When adding to queue from results screen, **also update the room's category data** with the item being added. This way, when returning to lobby, the first item displays as "round 1".
+The observer should NOT manually control question progression. Instead, they should passively follow the players.
 
-**File**: `src/components/team/GameResultsScreenV2.tsx`
+**File**: `src/components/team/MultiplayerObserverScreen.tsx`
 
-Update `handleAddToQueue` to also set the room's current category:
+Remove the entire bottom button section (lines 308-330) and replace with a passive status indicator showing "მოთამაშეები პასუხობენ..." (Players are answering...) or similar.
 
-```typescript
-const handleAddToQueue = async (item: {
-  source_type: "category" | "random" | "user_trivia";
-  category_id?: string | null;
-  category_name?: string | null;
-  user_trivia_id?: string | null;
-  icon_slug?: string | null;
-}) => {
-  if (!currentRoom) return;
-  
-  // Add item to queue first
-  await addToQueue(item);
-  
-  // ALSO update the room's current category so lobby shows it as round 1
-  await supabase
-    .from("game_rooms")
-    .update({
-      category_id: item.source_type === "category" ? item.category_id : null,
-      category_name: item.category_name || (item.source_type === "random" ? "შემთხვევითი" : null),
-      user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
-    })
-    .eq("id", currentRoom.id);
-  
-  // Navigate to lobby so host can see and reorder the queue
-  continueInRoom();
-};
-```
+### Change 2: Auto-Advance Observer When Players Progress
 
-### Change 2: Don't Hide Queue When Items Exist
+Add an effect that monitors `participants` state. When ALL non-observer players have `current_question > currentQuestionIndex`, the observer should automatically advance.
 
-Update the lobby's CategoryPickerSection props to show queue items even after returning from results.
+**File**: `src/components/team/MultiplayerObserverScreen.tsx`
 
-**File**: `src/components/team/RoomLobbyV2.tsx`
-
-Lines 856-880 - Change the queue prop to show items when queue has content:
+Add new effect after the bonus polling effect:
 
 ```typescript
-<CategoryPickerSection
-  categoryName={
-    // Show category if: user made new selection OR queue has items
-    (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : (
-      currentRoom.category_name ?? null
-    )
+// Auto-advance observer when ALL players have moved to next question
+useEffect(() => {
+  // Only run for observer
+  const otherPlayers = participants.filter(p => p.user_id !== user?.id);
+  if (otherPlayers.length === 0) return;
+  
+  // Check if all players have advanced past current question
+  const allPlayersAdvanced = otherPlayers.every(
+    p => (p.current_question || 0) > currentQuestionIndex
+  );
+  
+  if (allPlayersAdvanced) {
+    // All players have moved on - auto-advance observer
+    console.log(`[Observer] All players at question ${otherPlayers[0].current_question}, auto-advancing from ${currentQuestionIndex}`);
+    nextQuestion();
   }
-  categoryId={
-    (justReturnedFromResults && !madeNewSelection && queue.length === 0) ? null : 
-    currentRoom.category_id
-  }
-  iconSlug={/* same logic with queue.length === 0 check */}
-  isHost={isHost}
-  queue={queue}  // Always show queue - remove conditional hiding
-  // ... rest unchanged
-/>
+}, [participants, currentQuestionIndex, user?.id, nextQuestion]);
 ```
 
-### Change 3: Update continueInRoom to Keep Category When Queue Has Items
+### Change 3: Update UI to Show Passive State
 
-The current `continueInRoom` already handles this correctly (keeps category data when queue has items), but we need to ensure the local state is also updated.
+Replace the button with a passive waiting indicator:
 
-**File**: `src/contexts/MultiplayerContextV2.tsx`
-
-Modify `continueInRoom` (around line 1360) to NOT reset `justReturnedFromResults` flag when queue has items - this allows proper display:
-
-```typescript
-setState(prev => ({
-  ...prev,
-  phase: "lobby",
-  questions: [],
-  currentQuestionIndex: 0,
-  myScore: 0,
-  lastQuestionResult: null,
-  opponentAnswers: {},
-  lastPlayedTriviaId: justPlayedTriviaId || null,
-  justReturnedFromResults: !hasQueueItems, // Only set if queue is empty
-  // ... rest
-}));
+```tsx
+{/* Bottom Area - Status Indicator (no button for observer) */}
+<div className="px-4 pb-6 pt-4 flex-shrink-0">
+  <div className="pb-[env(safe-area-inset-bottom)]">
+    <div className="bg-white/10 rounded-2xl py-4 px-6 text-center">
+      <p className="text-white/70 text-sm">
+        {players.length > 0 
+          ? `მოთამაშეები პასუხობენ... (${players.filter(p => opponentAnswers[p.user_id]).length}/${players.length})`
+          : "ველოდები მოთამაშეებს..."
+        }
+      </p>
+    </div>
+  </div>
+</div>
 ```
 
-## Expected Result After Fix
+## Technical Details
 
-1. Host completes a round
-2. Opens category picker → selects "გეოგრაფია" → clicks "რიგში დამატება"
-3. Returns to lobby showing:
-   - Main section: "გეოგრაფია" (მიმდინარე კატეგორია)
-   - Queue row shows: `[1] გეოგრაფია`
-4. Opens picker again → selects "ისტორია" → clicks "რიგში დამატება"
-5. Lobby now shows:
-   - Main section: "გეოგრაფია"
-   - Queue row: `[1] გეოგრაფია` `[2] ისტორია` (draggable)
-6. Host can drag to reorder
+- The `participants` array is already being fetched via realtime subscription in `MultiplayerContextV2`
+- Each participant's `current_question` is updated when they call `nextQuestion()` (line 1282)
+- The observer can access `participants` from the context
+- Need to import `opponentAnswers` from the context to show answer progress
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/team/GameResultsScreenV2.tsx` | Update room category when adding to queue |
-| `src/components/team/RoomLobbyV2.tsx` | Show queue/category data when queue has items |
-| `src/contexts/MultiplayerContextV2.tsx` | Set `justReturnedFromResults` based on queue state |
+| `src/components/team/MultiplayerObserverScreen.tsx` | Remove manual button, add auto-advance effect, show passive status |
 
-## Technical Notes
+## Expected Behavior After Fix
 
-- The queue is stored in `room_category_queue` table with positions
-- The "current round" (shown as pill #1) comes from room's `category_name` field
-- Queue items (pills #2+) come from the hook's queue array
-- Position 1 in queue display = room category; positions 2+ = queue items
+1. Observer enters observer mode (skipping their trivia)
+2. Observer sees: current question text, their score, and "Players are answering..." status
+3. Players answer and click "Next Question" → their `current_question` updates in DB
+4. Realtime subscription triggers `fetchParticipants` → participants state updates
+5. Observer's new effect detects ALL players have advanced
+6. Observer auto-advances to next question
+7. Repeat until game ends
+
+## Edge Cases Handled
+
+- **Single player room**: If no other players, observer waits forever (correct - needs players)
+- **Player disconnect**: Uses `current_question` from DB, not ephemeral state
+- **Timer expires for player**: Player's answer is auto-submitted, `current_question` still updates
+- **Last question**: Auto-advance to results screen works via existing `nextQuestion()` logic
 
