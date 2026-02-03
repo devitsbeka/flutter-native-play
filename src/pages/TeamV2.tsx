@@ -506,11 +506,8 @@ function TeamContentV2() {
           <div className="bg-background w-full max-w-full">
               <div className="px-4 py-3 border-b border-purple-900/10">
                 <div className="flex items-center justify-between gap-3">
-                  {/* Left placeholder for symmetry - matches Index.tsx structure */}
-                  <div className="flex items-center gap-2 w-0" />
-                  
-                  {/* Left: Logo - aligned left on all screen sizes */}
-                  <div className="flex-1 flex justify-start items-center gap-4">
+                  {/* Left: Logo - aligned to left edge */}
+                  <div className="flex items-center gap-4">
                     <MyTriviaLiveLogo responsive />
                   </div>
 
