@@ -418,7 +418,104 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }
         }
       )
-      .subscribe();
+      .subscribe(async (status) => {
+        // When subscription is ready, check if room is already playing (handle race condition)
+        if (status === 'SUBSCRIBED') {
+          const { data: freshRoom } = await supabase
+            .from("game_rooms")
+            .select("*")
+            .eq("id", roomId)
+            .single();
+          
+          if (freshRoom && freshRoom.status === "playing") {
+            const currentPhase = phaseRef.current;
+            const currentIsHost = isHostRef.current;
+            
+            // Only handle if we're in lobby/results and NOT the host
+            if ((currentPhase === "lobby" || currentPhase === "results") && !currentIsHost) {
+              console.log(`[MP] Subscription connected, room already playing. Fetching questions...`);
+              
+              // Clear local state first
+              setState(prev => ({
+                ...prev,
+                questions: [],
+                currentQuestionIndex: 0,
+                myScore: 0,
+                opponentAnswers: {},
+                lastQuestionResult: null,
+                currentRoom: freshRoom as GameRoom,
+              }));
+              
+              const expectedGameId = freshRoom.current_game_id;
+              
+              // Wait for questions to be fully committed
+              await new Promise(resolve => setTimeout(resolve, 800));
+              
+              // Fetch with retry logic
+              let attempts = 0;
+              const MAX_ATTEMPTS = 8;
+              const RETRY_DELAY = 600;
+              let roomQuestions: any[] | null = null;
+              let validQuestionsFound = false;
+              
+              while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
+                const { data } = await supabase
+                  .from("room_questions")
+                  .select("*")
+                  .eq("room_id", roomId)
+                  .eq("game_id", expectedGameId)
+                  .order("question_index", { ascending: true });
+                
+                roomQuestions = data;
+                
+                if (roomQuestions && roomQuestions.length > 0) {
+                  validQuestionsFound = true;
+                  break;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                attempts++;
+              }
+              
+              if (validQuestionsFound && roomQuestions && roomQuestions.length > 0) {
+                const questions = roomQuestions.map((q: any) => ({
+                  id: `${roomId}-${q.question_index}`,
+                  question: q.question_text,
+                  correctAnswer: q.correct_answer,
+                  incorrectAnswers: q.incorrect_answers,
+                  allAnswers: q.shuffled_answers?.length > 0 
+                    ? q.shuffled_answers 
+                    : [...q.incorrect_answers, q.correct_answer],
+                  difficulty: q.difficulty || "medium",
+                  category: freshRoom.category_name || "General",
+                  iconSlug: q.icon_slug || undefined,
+                }));
+                
+                console.log(`[MP] Initial sync: loaded ${questions.length} questions for game_id: ${expectedGameId}`);
+                
+                setState(prev => ({
+                  ...prev,
+                  questions,
+                  currentQuestionIndex: 0,
+                  myScore: 0,
+                  phase: "playing",
+                  lastQuestionResult: null,
+                  opponentAnswers: {},
+                  currentRoom: freshRoom as GameRoom,
+                }));
+              } else {
+                console.error(`[MP] Initial sync: failed to fetch questions after ${MAX_ATTEMPTS} attempts`);
+                toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
+                setState(prev => ({
+                  ...prev,
+                  phase: "lobby",
+                  currentRoom: freshRoom as GameRoom,
+                }));
+              }
+            }
+          }
+        }
+      });
     
     // Subscribe to participants with callback to handle status
     const participantsChannel = supabase
