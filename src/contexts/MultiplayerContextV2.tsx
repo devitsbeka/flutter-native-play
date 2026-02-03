@@ -260,6 +260,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     currentQuestionIndexRef.current = state.currentQuestionIndex;
   }, [state.currentQuestionIndex]);
 
+  // Ref to track expected game_id - prevents stale fetch loops from overwriting state
+  const expectedGameIdRef = useRef<string | null>(null);
+
   // Cleanup channels
   const cleanupChannels = useCallback(() => {
     channelsRef.current.forEach(channel => {
@@ -340,6 +343,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               
               const expectedGameId = freshRoomCheck?.current_game_id || updated.current_game_id;
               
+              // CRITICAL: Store expected game_id in ref so stale fetches can detect they're outdated
+              expectedGameIdRef.current = expectedGameId;
+              
               console.log(`[MP] Non-host fetching questions with verified game_id: ${expectedGameId}`);
               
               // Wait for questions to be fully committed by host (increased delay)
@@ -353,6 +359,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               let validQuestionsFound = false;
               
               while (attempts < MAX_ATTEMPTS && !validQuestionsFound) {
+                // CRITICAL: Check if a newer game has started - abort this stale fetch
+                if (expectedGameIdRef.current !== expectedGameId) {
+                  console.log(`[MP] Aborting fetch loop - newer game started (was: ${expectedGameId}, now: ${expectedGameIdRef.current})`);
+                  return;
+                }
+                
                 // CRITICAL: Filter by game_id to ONLY get questions for current game
                 const { data } = await supabase
                   .from("room_questions")
@@ -403,6 +415,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   currentRoom: updated, // Ensure room state is synced
                 }));
               } else {
+                // CRITICAL: Check if game_id changed before returning to lobby
+                // This prevents stale fetch loops from overwriting new game state
+                if (expectedGameIdRef.current !== expectedGameId) {
+                  console.log(`[MP] Aborting stale fetch failure handler - game_id changed from ${expectedGameId} to ${expectedGameIdRef.current}`);
+                  return; // Exit without modifying state - new game already started
+                }
+                
                 // CRITICAL: Do NOT fallback to stale data - this causes the sync issue!
                 console.error(`[MP] Failed to fetch questions for game_id ${expectedGameId} after ${MAX_ATTEMPTS} attempts`);
                 toast.error("კითხვების სინქრონიზაცია ვერ მოხერხდა. ცადე თავიდან.");
@@ -1780,7 +1799,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           }
           
           // CRITICAL: Wait for DB commit before updating room status
-          await new Promise(resolve => setTimeout(resolve, 150));
+          await new Promise(resolve => setTimeout(resolve, 300)); // Increased from 150ms for better DB sync
           
           // Update room (after questions are committed)
           await supabase
@@ -1937,7 +1956,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
       
       // CRITICAL: Wait for DB commit before updating room status
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 300)); // Increased from 150ms for better DB sync
       
       // Update room with new category and game info (after questions are committed)
       await supabase
