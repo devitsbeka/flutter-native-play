@@ -225,9 +225,9 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-white/70 text-sm mb-4"
+            className="text-white/70 text-sm mb-4 text-center"
           >
-            ამიტომ ამ რაუნდში აკვირდები
+            ამიტომ ამ რაუნდში აკვირდები • გადახტი შემდეგზე ნებისმიერ დროს
           </motion.p>
 
           {/* Current Question Display */}
