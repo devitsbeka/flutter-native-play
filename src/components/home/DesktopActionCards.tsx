@@ -9,6 +9,7 @@ import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { useUserPowerUps } from "@/hooks/useUserPowerUps";
+import { useVipStatus } from "@/hooks/useVipStatus";
 
 interface DesktopActionCardsProps {
   onDailyRewardsClick: () => void;
@@ -256,6 +257,7 @@ export function DesktopActionCards({
   const { canClaimDaily, dailyTimeLeft, canClaimChest, chestTimeLeft } = useRewardTimers();
   const { completedCount, totalCount, overallProgress } = useMissions();
   const { powerUps } = useUserPowerUps();
+  const { isVip } = useVipStatus();
   
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
   const incompleteMissions = totalCount - completedCount;
@@ -322,18 +324,20 @@ export function DesktopActionCards({
         delay={0.25}
       />
 
-      {/* No-Ads Card */}
-      <ActionCard
-        iconSrc={adFreeIcon}
-        title="რეკლამის გარეშე"
-        statusText="პრემიუმ გამოცდილება"
-        expandedDetails="ითამაშე რეკლამების გარეშე და მიიღე ექსკლუზიური შეღავათები."
-        actionLabel="გახდი VIP"
-        onClick={onAdFreeClick}
-        bgGradient=""
-        particleColor=""
-        delay={0.3}
-      />
+      {/* No-Ads Card - only show if not VIP */}
+      {!isVip && (
+        <ActionCard
+          iconSrc={adFreeIcon}
+          title="რეკლამის გარეშე"
+          statusText="პრემიუმ გამოცდილება"
+          expandedDetails="ითამაშე რეკლამების გარეშე და მიიღე ექსკლუზიური შეღავათები."
+          actionLabel="გახდი VIP"
+          onClick={onAdFreeClick}
+          bgGradient=""
+          particleColor=""
+          delay={0.3}
+        />
+      )}
     </div>
   );
 }
