@@ -1,103 +1,73 @@
 
-# Plan: Update PRO Card Button Text Logic
+# Plan: Update Profile Page UI to Match Reference Screen
 
-## Requirements
+## Overview
+Redesign the Profile page tabs and layout to match the reference design (screen #4), replacing the current tab labels with "სტატისტიკა" and "გახდი PRO".
 
-| Card | User Has Solo PRO | User Has Family PRO | No PRO |
-|------|-------------------|---------------------|--------|
-| **სოლო PRO (Pink)** | გაუმჯობესება | - | შეძენა |
-| **სამეგობრო PRO (Purple)** | შეძენა | აქტიური | შეძენა |
+---
+
+## UI Changes Summary
+
+### Current State
+- Tabs: "სტატისტიკა" / dynamic PRO label (already using Georgian labels)
+- Tab keys: "Stats" / "PRO"
+- Tab style: Pill buttons with flex-1 distribution
+
+### Target State (from images)
+- Tabs: "სტატისტიკა" / "გახდი PRO" (with dynamic "ჩემი PRO" when subscribed)
+- Tab style: Two equal-width pill buttons matching reference design
+- Statistics content: Card rows with Georgian labels (ნათამაშები, მოგებული, მოგების %, საუკეთესო სერია)
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/shop/MobileProCarousel.tsx`
+### File: `src/pages/Profile.tsx`
 
-#### 1. Update ctaText values (lines 21 and 36)
+#### 1. Update Tab Labels (lines 39-42)
 
-Both tiers should have "შეძენა" as the default CTA text:
-
-```typescript
-// Line 21: Solo PRO
-ctaText: "შეძენა",
-
-// Line 36: Family PRO  
-ctaText: "შეძენა",
-```
-
-#### 2. Update button rendering logic (lines 167-183)
-
-Replace the current button text logic with a new function that determines the correct text:
+Change tab configuration to use direct Georgian text matching the reference:
 
 ```typescript
-// Add helper function to get button text
-const getButtonText = (tierId: SimplifiedTier, currentTier: SimplifiedTier | undefined) => {
-  // User has Family PRO (top tier)
-  if (currentTier === "family") {
-    if (tierId === "family") return { text: "აქტიური", isActive: true };
-    if (tierId === "solo") return { text: "აქტიური", isActive: true }; // Solo is included in Family
-  }
-  
-  // User has Solo PRO
-  if (currentTier === "solo") {
-    if (tierId === "solo") return { text: "აქტიური", isActive: true };
-    if (tierId === "family") return { text: "გაუმჯობესება", isActive: false }; // Upgrade option
-  }
-  
-  // No subscription - show "შეძენა" for all
-  return { text: "შეძენა", isActive: false };
-};
+const tabs = [
+  { key: "Stats", label: "სტატისტიკა" },
+  { key: "PRO", label: getProTabLabel() },
+];
 ```
 
-#### 3. Update button JSX to use the helper function
+Where `getProTabLabel()` returns:
+- "ჩემი PRO" if user has active subscription
+- "გახდი PRO" if no subscription
 
-```typescript
-{(() => {
-  const buttonState = getButtonText(tier.id, currentTier);
-  
-  if (buttonState.isActive) {
-    return (
-      <>
-        <Check className="w-4 h-4" />
-        {buttonState.text}
-      </>
-    );
-  }
-  
-  if (isProcessing) {
-    return (
-      <>
-        <Loader2 className="w-4 h-4 animate-spin" />
-        მუშავდება...
-      </>
-    );
-  }
-  
-  return (
-    <>
-      {buttonState.text}
-      <ChevronRight className="w-4 h-4" />
-    </>
-  );
-})()}
-```
+#### 2. Update Statistics Content Labels (lines 166-186)
 
-#### 4. Update button disabled state and styling
+Update the Georgian labels to match the reference exactly:
+- "ნათამაშები" (Games Played) 
+- "მოგებული" (Games Won)
+- "მოგების %" (Win Rate %)
+- "საუკეთესო სერია" (Best Streak)
 
-The button should be disabled only when it shows "აქტიური", and should remain clickable for "გაუმჯობესება":
-
-```typescript
-// Update disabled condition
-disabled={getButtonText(tier.id, currentTier).isActive || isProcessing}
-```
+Currently using translation keys - will update to use direct Georgian text that matches the reference image exactly.
 
 ---
 
-## Button State Matrix
+## Visual Reference Match
 
-| Scenario | Solo Card Button | Family Card Button |
-|----------|------------------|-------------------|
-| No subscription | შეძენა (clickable) | შეძენა (clickable) |
-| Has Solo PRO | აქტიური (disabled) | გაუმჯობესება (clickable) |
-| Has Family PRO | აქტიური (disabled) | აქტიური (disabled) |
+| Reference Image | Implementation |
+|-----------------|----------------|
+| Tab 1: "სტატისტიკა" (purple when active) | ✅ Already styled correctly |
+| Tab 2: "გახდი PRO" (white when inactive) | ✅ Update label text |
+| Stats cards with rounded borders | ✅ Already using `rounded-2xl` |
+| Georgian stat labels | ✅ Will use exact text from image |
+
+---
+
+## Files to Modify
+
+1. **src/pages/Profile.tsx** - Update tab labels and stat row labels
+
+---
+
+## No Backend Changes Required
+
+This is a UI-only change affecting text labels and styling. All data fetching and PRO logic remains unchanged.
