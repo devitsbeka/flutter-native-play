@@ -406,6 +406,14 @@ export const TVLobbyScreenV2: React.FC = () => {
         </div>
       </div>
 
+      {/* Game Code - Below header */}
+      <div className="mb-3">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+          <span className="text-purple-300 text-sm">კოდი:</span>
+          <span className="text-2xl font-mono font-bold text-white tracking-widest">{code}</span>
+        </div>
+      </div>
+
       {/* Central Category/Rounds Display - Left aligned */}
       <div className="mb-4">
         {hasMultiRound ? (
@@ -659,9 +667,6 @@ export const TVLobbyScreenV2: React.FC = () => {
           <div className="mt-3 text-center">
             <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
             <p className="text-sm font-bold text-white">mytrivia.io/join</p>
-            <div className="mt-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
-              <span className="text-xl font-mono font-bold text-white tracking-widest">{code}</span>
-            </div>
           </div>
         </div>
       </div>
