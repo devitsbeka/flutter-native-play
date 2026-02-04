@@ -170,7 +170,7 @@ export const TVPairingScreenV3: React.FC = () => {
               transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
             />
           </div>
-          <p className="text-purple-300/60 mt-3 text-sm">მოლოდინი მოთამაშეების...</p>
+          <p className="text-purple-300/60 mt-3 text-sm">ველოდებით მოთამაშეებს...</p>
         </motion.div>
       </div>
     </div>
