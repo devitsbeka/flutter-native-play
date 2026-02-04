@@ -300,7 +300,11 @@ export default function Leaderboards() {
                   leaderboard.map((entry, index) => {
                     const isCurrentUser = entry.user_id === user?.id;
                     return (
-                      <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+                      <div 
+                        key={entry.user_id} 
+                        ref={isCurrentUser ? userRowRef : undefined}
+                        className={isCurrentUser ? "relative z-10" : ""}
+                      >
                         <LeaguePlayerRow
                           entry={entry}
                           isCurrentUser={isCurrentUser}
