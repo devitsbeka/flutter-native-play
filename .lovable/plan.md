@@ -1,111 +1,89 @@
 
-# Move User Row to Top + Fix Trophy Cropping
+# Fix Leaderboard: Static Background, Transparent Leagues, Single User Row
 
-## Current Issues
+## Issues from Screenshots
 
-From the screenshot:
-1. **User's avatar/username/coins row** is at the **bottom** of the screen, below the trophy
-2. **Trophy is cropped** - the bottom portion of the trophy is cut off by the user row container
-3. The layout should show the user info at the **top** (below league nav), with the trophy/background taking full remaining space
+1. **Background scrolls with content** - Should be fixed/static behind everything
+2. **League navigation is opaque** - Should be transparent to see trophy background
+3. **User avatar appears 3 times** when list is expanded:
+   - Once in the sticky header (top)
+   - Once in the scrollable list (correct position)
+   - Once in the fixed bottom bar (redundant)
 
----
+## Solution
 
-## Solution Overview
-
-### New Layout Structure:
-```
-┌─────────────────────────────┐
-│ Header: რეიტინგი    🔔       │
-├─────────────────────────────┤
-│ < ოქროს ლიგა      >         │  ← League nav
-├─────────────────────────────┤
-│ [Avatar] Username    🪙123   │  ← User row at TOP
-├─────────────────────────────┤
-│                             │
-│   Background with Trophy    │
-│   (fullscreen, no crop)     │
-│                             │
-│                             │
-└─────────────────────────────┘
-```
-
----
-
-## Implementation Plan
-
-### Part 1: Move User Row to Top
-
-**File: `src/pages/Leaderboards.tsx`**
-
-Move the collapsed user row from the bottom section (lines 242-295) to inside the sticky header area, directly below the league navigation.
-
-**Changes:**
-1. Add user row section inside the sticky header (after line 224)
-2. Remove the bottom "collapsed" section that shows only user row
-3. Keep the bottom section only for the expanded list (when tapped)
-
-**New code structure for lines 183-250:**
-```tsx
-<div className="sticky top-0 left-0 right-0 z-50">
-  {/* Header */}
-  <div className="px-4 pt-4 pb-3 bg-background/95 backdrop-blur-md">
-    ...
-  </div>
-  
-  {/* League Navigation */}
-  <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border/20">
-    ...
-  </div>
-  
-  {/* User Row - Mobile only, at TOP below league nav */}
-  <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border/20 px-3">
-    {isLoading ? (
-      <SkeletonRow />
-    ) : userEntry ? (
-      <button onClick={() => setIsExpanded(true)} className="w-full">
-        <LeaguePlayerRow entry={userEntry} isCurrentUser={true} ... />
-      </button>
-    ) : (
-      <EmptyState />
-    )}
-  </div>
-</div>
-```
-
----
-
-### Part 2: Fix Trophy Cropping
+### Part 1: Make Background Fixed (Not Scrolling)
 
 **File: `src/components/leaderboard/LeaderboardHeroBackground.tsx`**
 
-The trophy is being cropped because:
-- `object-cover object-top` positions the image from the top, cropping the bottom
-- The `-mt-4` overlap from the bottom container also clips the trophy
+Change the container position from `relative` to `fixed` for mobile, so the background stays in place while content scrolls over it.
 
-**Fix:**
-1. Change `object-top` to `object-center` so the trophy (which is centered) is fully visible
-2. Since user row moves to top, remove the overlapping bottom container that was cropping the image
+| Line | Change |
+|------|--------|
+| 77-84 | Change mobile container to use `fixed inset-0` positioning |
 
-**Change on line 96:**
 ```tsx
 // Before
-className="w-full h-full object-cover object-top transition-opacity duration-500"
+className={`relative w-full overflow-hidden...`}
 
-// After
-className="w-full h-full object-cover object-center transition-opacity duration-500"
+// After (mobile)
+className={`${isMobile ? 'fixed inset-0' : 'relative w-full'} overflow-hidden...`}
 ```
+
+Also need to add a spacer in the parent component so content flows properly.
 
 ---
 
-### Part 3: Simplify Bottom Section
+### Part 2: Make League Navigation Transparent
 
 **File: `src/pages/Leaderboards.tsx`**
 
-Since the user row is now at the top:
-1. Remove the collapsed state logic from the bottom section
-2. The bottom section only shows when `isExpanded` is true (full leaderboard list)
-3. Remove the `-mt-4` overlap that was causing cropping
-4. Keep the pill handle for opening/closing the full list
+Remove the opaque background from the league navigation and user row containers.
+
+| Location | Current | Change To |
+|----------|---------|-----------|
+| Line 194 | `bg-background/95 backdrop-blur-md` | `bg-transparent` |
+| Line 227 | `bg-background/95 backdrop-blur-md border-b...` | Remove entirely (see Part 3) |
+
+---
+
+### Part 3: Show User Only Once in Leaderboard List
+
+Remove the user row from the sticky header entirely. The user should only appear:
+- In the leaderboard list at their actual rank position (when expanded)
+
+**Changes to `src/pages/Leaderboards.tsx`:**
+
+1. **Delete lines 226-260**: Remove the entire "User Row - Mobile only, at TOP" section from the sticky header
+2. **Keep lines 322-338**: The user row inside the leaderboard list (this is the correct place)
+3. **Keep lines 347-378**: The fixed bottom bar that appears only when user scrolls past their row (this is a navigation aid)
+
+**New collapsed state behavior:**
+- When collapsed: Show only the background with trophy + transparent league navigation at top
+- Tapping anywhere on the background or a "See Rankings" button expands the list
+- When expanded: Show the full leaderboard list with user at their correct position
+
+---
+
+### Part 4: Add Tap Target for Expanding List
+
+Since we're removing the user row from the top, add a clear call-to-action to expand the list.
+
+Add a floating button at the bottom of the background (when collapsed):
+```tsx
+{!isExpanded && (
+  <button 
+    onClick={() => setIsExpanded(true)}
+    className="absolute bottom-20 left-1/2 -translate-x-1/2 
+               bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 
+               shadow-lg border border-border/30"
+  >
+    <span className="text-sm font-medium text-foreground">
+      ნახე რეიტინგი
+    </span>
+  </button>
+)}
+```
 
 ---
 
@@ -113,15 +91,37 @@ Since the user row is now at the top:
 
 | File | Changes |
 |------|---------|
-| `src/pages/Leaderboards.tsx` | Move user row to sticky header, simplify bottom section |
-| `src/components/leaderboard/LeaderboardHeroBackground.tsx` | Change `object-top` to `object-center` for full trophy visibility |
+| `src/components/leaderboard/LeaderboardHeroBackground.tsx` | Make background `fixed` for mobile |
+| `src/pages/Leaderboards.tsx` | Remove user row from header, make league nav transparent, add expand button |
 
 ---
 
 ## Visual Result
 
-After these changes:
-- **User row at top**: Avatar, username, rank, and coins appear right below the league navigation
-- **Trophy fully visible**: The background image centers the trophy so it's not cropped
-- **Tap to expand**: Tapping the user row or swipe-up opens the full leaderboard list from bottom
-- **Cleaner layout**: Header → League Nav → User Stats → Full Trophy Background
+**Collapsed State:**
+```
+┌─────────────────────────────┐
+│ რეიტინგი            🔔       │ ← Header (opaque)
+├─────────────────────────────┤
+│ < ოქროს ლიგა      >         │ ← League nav (transparent)
+│                             │
+│                             │
+│     🏆 (Fixed Background)   │
+│                             │
+│       [ნახე რეიტინგი]       │ ← Tap to expand
+│                             │
+└─────────────────────────────┘
+```
+
+**Expanded State:**
+```
+┌─────────────────────────────┐
+│ რეიტინგი            🔔       │
+├─────────────────────────────┤
+│ ─────── (drag handle) ───── │
+│ 1. User A         🪙 1,411K │
+│ 2. User B         🪙 56,373 │
+│ 3. User C         🪙 52,342 │ ← List with user at correct rank
+│ ...                         │
+└─────────────────────────────┘
+```
