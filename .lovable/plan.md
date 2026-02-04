@@ -1,114 +1,114 @@
 
-# Lock App Screen Orientation (Portrait Only)
+# Empty State UI Improvements for Rooms and Trivias
 
 ## Overview
 
-To prevent the app from rotating when the device is rotated, we need to lock the orientation to portrait mode. This requires changes at multiple levels:
+When users have no rooms or no trivias, the current UI still shows the search/filter bar at the top, which is unnecessary. The empty state should be cleaner with the "Add" button integrated into the empty state below the icon and message.
 
-1. **Capacitor config** - For native iOS/Android apps
-2. **Web manifest** - For PWA/browser
-3. **CSS fallback** - As a visual safeguard
+## Changes Summary
 
----
+### 1. Rooms Tab Empty State (`src/components/team/MyRoomsSection.tsx`)
+- **Icon**: Replace `glitchIcon` with `dance-floor.png` 
+- **Text**: Update to "ოთახები ჯერ არ გაქვს" for the "all" filter
+- **Add Button**: Include a "+ ოთახი" button inside the empty state
 
-## Technical Changes
+### 2. My Trivia Tab Empty State (`src/components/social/MyTriviaTab.tsx`)
+- **Icon**: Use `trivia-buzzer.png` for trivia context (already have `glitchIcon`, need trivia-specific)
+- **Text**: Update to "ტრივიები ჯერ არ გაქვს"
+- **Add Button**: Include a "+ ტრივია" button inside the empty state
 
-### 1. Update Capacitor Config (`capacitor.config.ts`)
+### 3. Hide Filter Bar When Empty (`src/pages/TeamV2.tsx`)
+- Pass `hasContent` information from `MyRoomsSection` and `MyTriviaTab` back to parent
+- Conditionally hide `UnifiedFiltersBar` when there's no content
 
-Add iOS and Android orientation settings to lock to portrait mode:
+## Technical Implementation
 
-```typescript
-ios: {
-  minVersion: '14.0',
-  contentInset: 'automatic',
-  preferredContentMode: 'mobile',
-  infoPlist: {
-    // Lock orientation to portrait
-    UISupportedInterfaceOrientations: ['UIInterfaceOrientationPortrait'],
-    'UISupportedInterfaceOrientations~ipad': ['UIInterfaceOrientationPortrait'],
-    // ... existing entries
-  },
-},
-android: {
-  // Lock to portrait mode
-  overrideUserAgent: 'MyTrivia Android App',
-},
+### File: `src/components/team/MyRoomsSection.tsx`
+
+1. Import `dance-floor.png` asset
+2. Replace `glitchIcon` with `danceFloor` in empty state
+3. Update empty state message for "all" filter
+4. Add callback prop to notify parent about room count
+5. Add "+ ოთახი" button inside empty state
+
+```tsx
+// Import dance-floor asset
+import danceFloor from "@/assets/dance-floor.png";
+
+// In empty state render (when not showing onboarding)
+<motion.div className="flex flex-col items-center py-12 px-6">
+  <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
+    <img src={danceFloor} alt="" className="w-full h-full object-contain" />
+  </div>
+  <p className="text-muted-foreground text-sm text-center mb-6">
+    {activeFilter === "all" && "ოთახები ჯერ არ გაქვს"}
+    {/* ... other filter messages */}
+  </p>
+  {onCreateRoom && activeFilter === "all" && (
+    <ChunkyButton onClick={onCreateRoom}>+ ოთახი</ChunkyButton>
+  )}
+</motion.div>
 ```
 
-### 2. Native Platform Files (Manual Steps)
+### File: `src/components/social/MyTriviaTab.tsx`
 
-After syncing, you'll need to manually verify these settings in the native projects:
+1. Import `trivia-buzzer.png` asset  
+2. Replace `glitchIcon` with `triviaBuzzer` in empty state
+3. Update empty state text to "ტრივიები ჯერ არ გაქვს"
+4. Add "+ ტრივია" button inside empty state
 
-**iOS** (`ios/App/App/Info.plist`):
-- `UISupportedInterfaceOrientations` should only contain `UIInterfaceOrientationPortrait`
+```tsx
+// Import trivia-buzzer asset
+import triviaBuzzer from "@/assets/trivia-buzzer.png";
 
-**Android** (`android/app/src/main/AndroidManifest.xml`):
-- Add `android:screenOrientation="portrait"` to the main activity
-
-### 3. Add Web App Manifest for PWA (`public/manifest.json`)
-
-Create or update the web manifest to specify portrait orientation:
-
-```json
-{
-  "name": "MyTrivia",
-  "short_name": "MyTrivia",
-  "orientation": "portrait",
-  "display": "standalone",
-  ...
-}
+// In empty state render
+<motion.div className="flex flex-col items-center py-16 px-6">
+  <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
+    <img src={triviaBuzzer} alt="" className="w-full h-full object-contain" />
+  </div>
+  <h3 className="text-lg font-semibold mb-2">ტრივიები ჯერ არ გაქვს</h3>
+  <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
+    {description}
+  </p>
+  {onCreateQuiz && (
+    <ChunkyButton onClick={onCreateQuiz}>+ ტრივია</ChunkyButton>
+  )}
+</motion.div>
 ```
 
-### 4. Update `index.html`
+### File: `src/pages/TeamV2.tsx`
 
-Link the manifest and add orientation meta tag:
+1. Add hooks to track if rooms/trivias are empty
+2. Conditionally render `UnifiedFiltersBar` only when there's content
 
-```html
-<link rel="manifest" href="/manifest.json" />
-<meta name="screen-orientation" content="portrait" />
+```tsx
+// Import hooks for checking content
+import { useMyRooms } from "@/hooks/useMyRooms";
+import { useMyQuizPosts } from "@/hooks/useSocialFeed";
+import { useMyCollections } from "@/hooks/useCollections";
+
+// In component
+const { rooms } = useMyRooms({ limit: 1 }); // Just need to check if any exist
+const { data: myPosts } = useMyQuizPosts();
+const { data: myCollections } = useMyCollections();
+
+const hasRooms = rooms.length > 0;
+const hasTrivias = (myPosts?.length || 0) > 0 || (myCollections?.length || 0) > 0;
+
+// Conditional render of filter bar
+{activeTab === "rooms" && hasRooms && (
+  <UnifiedFiltersBar ... />
+)}
+
+{activeTab === "my-content" && hasTrivias && (
+  <UnifiedFiltersBar ... />
+)}
 ```
 
-### 5. CSS Fallback (`src/index.css`)
+## Files to Modify
 
-Add a visual safeguard that shows a "please rotate" message if somehow landscape is detected:
-
-```css
-@media screen and (orientation: landscape) and (max-height: 500px) {
-  body::before {
-    content: "Please rotate your device to portrait mode";
-    position: fixed;
-    inset: 0;
-    background: hsl(var(--background));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
-    font-size: 1.25rem;
-    text-align: center;
-    padding: 2rem;
-  }
-}
-```
-
----
-
-## Files to Modify/Create
-
-| File | Action | Description |
-|------|--------|-------------|
-| `capacitor.config.ts` | Modify | Add iOS orientation lock settings |
-| `public/manifest.json` | Create | Web app manifest with portrait orientation |
-| `index.html` | Modify | Link manifest, add orientation meta |
-| `src/index.css` | Modify | Add landscape fallback warning |
-
----
-
-## Post-Implementation Steps
-
-After implementation, you need to:
-
-1. Run `npx cap sync` to apply Capacitor changes
-2. **For iOS**: Open Xcode, go to target → General → Deployment Info → check only "Portrait"
-3. **For Android**: Edit `AndroidManifest.xml` to add `android:screenOrientation="portrait"` to the MainActivity
-
-This ensures the app stays in portrait mode on both native platforms and web/PWA.
+| File | Changes |
+|------|---------|
+| `src/components/team/MyRoomsSection.tsx` | Import dance-floor icon, update empty state with new icon, text, and add button |
+| `src/components/social/MyTriviaTab.tsx` | Import trivia-buzzer icon, update empty state with new icon, text, and add button |
+| `src/pages/TeamV2.tsx` | Add content hooks, conditionally hide filter bar when empty |
