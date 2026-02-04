@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboardsSkeleton } from "@/components/leaderboard/LeaderboardSkeleton";
 import { HeaderActions } from "@/components/shared/HeaderActions";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import {
   Carousel,
@@ -43,6 +44,10 @@ export default function Leaderboards() {
   const { region, language } = useLanguage();
   const [viewingTier, setViewingTier] = useState<number | undefined>(undefined);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Check if user is a guest
+  const isGuest = !user;
   
   // For mobile, we fetch one tier at a time
   const {
@@ -131,8 +136,22 @@ export default function Leaderboards() {
     };
   }, [carouselApi, viewingTier]);
 
+  // Show auth modal for guests on mount
+  useEffect(() => {
+    if (isGuest) {
+      setShowAuthModal(true);
+    }
+  }, [isGuest]);
+
   return (
     <MainLayout showPlayButton={false}>
+    {/* Auth Required Modal for guests */}
+    <AuthRequiredModal
+      isOpen={showAuthModal}
+      onClose={() => setShowAuthModal(false)}
+      returnToPath="/leaderboards"
+      message="შედი ანგარიშზე რეიტინგის სანახავად"
+    />
     <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden bg-background">
       {/* Header Bar - sticky with white background */}
       <div className="sticky top-0 left-0 right-0 z-50">

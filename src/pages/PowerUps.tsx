@@ -14,6 +14,7 @@ import { useGemPurchase } from "@/hooks/useGemPurchase";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { PowerUpTutorialModal } from "@/components/game/PowerUpTutorialModal";
 import { PowerUpShopModal } from "@/components/map/PowerUpShopModal";
@@ -80,10 +81,11 @@ export default function PowerUps() {
     setShowExchangeModal(true);
   };
 
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   const handlePurchase = async (item: ShopItem) => {
     if (!user) {
-      notify.error(t("shop.loginRequired"));
-      navigate("/auth");
+      setShowAuthModal(true);
       return;
     }
 
@@ -319,6 +321,14 @@ export default function PowerUps() {
         onClose={() => setShowNotEnoughGemsModal(false)}
         currentGems={gems}
         requiredGems={requiredGems}
+      />
+
+      {/* Auth Required Modal */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        returnToPath="/power-ups"
+        message="შედი ანგარიშზე შესყიდვისთვის"
       />
     </MainLayout>
   );
