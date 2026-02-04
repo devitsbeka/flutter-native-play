@@ -504,45 +504,6 @@ export function VSScreen() {
             </AnimatePresence>
           </motion.div>
 
-          {/* Player - Bottom Right */}
-          <motion.div 
-            className="flex justify-end relative z-10"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <div className="flex items-center gap-3">
-              {/* Text Info - Left of avatar */}
-              <div className="flex flex-col items-end">
-                <h3
-                  className="text-2xl font-black text-white"
-                  style={{
-                    fontFamily: "'TASolivare', sans-serif",
-                    textShadow: "0 2px 10px rgba(0,0,0,0.4)",
-                  }}
-                >
-                  {profile?.nickname || t("game.you")}
-                </h3>
-                <p className="text-white/70 text-sm">
-                  {t("common.level")} {playerLevelInfo.level}
-                </p>
-                <p className="text-amber-300 text-sm font-medium">
-                  {playerPoints.toLocaleString()}
-                </p>
-              </div>
-              {/* Avatar container - fixed size */}
-              <div className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <SmartAvatar
-                  avatarUrl={profile?.avatar_url?.trim() ? profile.avatar_url : defaultGuestAvatar}
-                  animatedAvatarUrl={profile?.animated_avatar_url?.trim() ? profile.animated_avatar_url : defaultGuestAvatarAnimated}
-                  fallback={profile?.nickname || "P"}
-                  size="2xl"
-                  autoPlay={true}
-                  showSparkle={false}
-                />
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
 
