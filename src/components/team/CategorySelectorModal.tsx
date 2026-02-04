@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +8,18 @@ import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { GameModal } from "@/components/ui/game-modal";
 import { buildBilingualSearchTerms } from "@/utils/transliteration";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
+
+// Mixed category constants
+const MIXED_CATEGORY = {
+  id: "__mixed__",
+  category_id: "__mixed__",
+  name: "სხვადასხვა კატეგორიები",
+  icon: "🎁",
+  color: "#8B5CF6",
+  icon_slug: "mystery-box",
+  total_levels: 0,
+} as const;
 
 interface Category {
   id: string;
@@ -71,6 +83,14 @@ export function CategorySelectorModal({
     onOpenChange(false);
   };
 
+  // Check if mixed category should show in search results
+  const showMixedCategory = useMemo(() => {
+    if (!searchQuery.trim()) return true;
+    const searchTerms = buildBilingualSearchTerms(searchQuery);
+    const mixedName = MIXED_CATEGORY.name.toLowerCase();
+    return searchTerms.some(term => mixedName.includes(term));
+  }, [searchQuery]);
+
   return (
     <GameModal
       isOpen={open}
@@ -104,12 +124,69 @@ export function CategorySelectorModal({
                 className="aspect-[4/3] rounded-2xl bg-gray-100 animate-pulse"
               />
             ))
-          ) : filteredCategories.length === 0 ? (
+          ) : filteredCategories.length === 0 && !showMixedCategory ? (
             <div className="col-span-2 lg:col-span-4 py-8 text-center text-gray-500 text-sm">
               კატეგორია ვერ მოიძებნა
             </div>
           ) : (
-            filteredCategories.map((category) => {
+            <>
+            {/* Mixed Questions - always first */}
+            {showMixedCategory && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleSelect({
+                  id: MIXED_CATEGORY.id,
+                  category_id: MIXED_CATEGORY.category_id,
+                  name: MIXED_CATEGORY.name,
+                  icon: MIXED_CATEGORY.icon,
+                  color: MIXED_CATEGORY.color,
+                  total_levels: MIXED_CATEGORY.total_levels,
+                })}
+                className={`relative aspect-[4/3] rounded-2xl overflow-hidden transition-all ${
+                  selectedCategoryId === MIXED_CATEGORY.id
+                    ? "ring-2 ring-primary ring-offset-2"
+                    : ""
+                }`}
+                style={{
+                  boxShadow: "0 3px 0 rgba(0,0,0,0.1)",
+                }}
+              >
+                {/* Background - gradient for mixed */}
+                <div className="absolute inset-0">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(135deg, #8B5CF6, #EC4899)`,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                </div>
+
+                {/* Icon */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                  <DynamicIcon slug="mystery-box" size={60} />
+                </div>
+
+                {/* Content */}
+                <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                  <span className="text-sm font-semibold text-white truncate drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                    {MIXED_CATEGORY.name}
+                  </span>
+                  <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                    ყველა კატეგორიიდან
+                  </p>
+                </div>
+
+                {/* Selected check */}
+                {selectedCategoryId === MIXED_CATEGORY.id && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                    <Check className="w-4 h-4 text-purple-600" />
+                  </div>
+                )}
+              </motion.button>
+            )}
+            {filteredCategories.map((category) => {
               const videoUrl = CATEGORY_VIDEOS[category.category_id];
               // Fallback gradient colors
               const fallbackColors = [
@@ -169,7 +246,8 @@ export function CategorySelectorModal({
                   </div>
                 </motion.button>
               );
-            })
+            })}
+            </>
           )}
           </div>
         </div>
