@@ -345,18 +345,22 @@ export default function Leaderboards() {
           isFullscreen={!isExpanded}
         />
         
-        {/* Floating "See Rankings" button when collapsed */}
+        {/* Floating "See Rankings" button with badge when collapsed */}
         {!isExpanded && (
-          <button 
-            onClick={() => setIsExpanded(true)}
-            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-20
-                       bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 
-                       shadow-lg border border-border/30 active:scale-95 transition-transform"
-          >
-            <span className="text-sm font-medium text-foreground">
-              ნახე რეიტინგი
-            </span>
-          </button>
+          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+            {activeTier === userTier && (
+              <AnimatedLeagueBadge tier={userTier} />
+            )}
+            <button 
+              onClick={() => setIsExpanded(true)}
+              className="bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 
+                         shadow-lg border border-border/30 active:scale-95 transition-transform"
+            >
+              <span className="text-sm font-medium text-foreground">
+                ნახე რეიტინგი
+              </span>
+            </button>
+          </div>
         )}
 
         {/* Bottom section: Expandable list */}
@@ -566,9 +570,8 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-10 py-4 
                        shadow-lg border border-border/30 active:scale-95 transition-transform
-                       hover:bg-background flex items-center gap-2"
+                       hover:bg-background"
           >
-            <img src={awardCeremonyIcon} alt="" className="w-6 h-6 object-contain" />
             <span className="text-lg font-semibold text-foreground">
               {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
             </span>
@@ -726,9 +729,8 @@ function TabletLeaderboards({
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
                        shadow-lg border border-border/30 active:scale-95 transition-transform
-                       hover:bg-background flex items-center gap-2"
+                       hover:bg-background"
           >
-            <img src={awardCeremonyIcon} alt="" className="w-6 h-6 object-contain" />
             <span className="text-base font-semibold text-foreground">
               {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
             </span>
