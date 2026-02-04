@@ -1376,20 +1376,31 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     const hasQueueItems = queueItems && queueItems.length > 0;
     
-    // Reset room status to waiting
-    // If queue is empty, clear category so lobby shows "აირჩიე კატეგორია"
-    await supabase
+    // CRITICAL FIX: Check current room status - if already "waiting", skip the DB update
+    // This prevents redundant writes when handleAddToQueue already set status atomically
+    const { data: currentRoomState } = await supabase
       .from("game_rooms")
-      .update({ 
-        status: "waiting",
-        // Clear category data only if queue is empty (forces new selection)
-        ...(hasQueueItems ? {} : {
-          category_id: null,
-          category_name: null,
-          user_trivia_id: null,
-        }),
-      })
-      .eq("id", roomId);
+      .select("status")
+      .eq("id", roomId)
+      .single();
+    
+    // Only update DB if not already in waiting state
+    if (currentRoomState?.status !== "waiting") {
+      // Reset room status to waiting
+      // If queue is empty, clear category so lobby shows "აირჩიე კატეგორია"
+      await supabase
+        .from("game_rooms")
+        .update({ 
+          status: "waiting",
+          // Clear category data only if queue is empty (forces new selection)
+          ...(hasQueueItems ? {} : {
+            category_id: null,
+            category_name: null,
+            user_trivia_id: null,
+          }),
+        })
+        .eq("id", roomId);
+    }
     
     setState(prev => ({
       ...prev,
