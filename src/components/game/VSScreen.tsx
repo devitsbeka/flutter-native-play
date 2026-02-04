@@ -453,9 +453,6 @@ export function VSScreen() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ delay: 0.2 }}
                 >
-{selectedCategory?.id === "__mixed__" && (
-                    <img src={mysteryBoxIcon} alt="" className="w-[68px] h-[68px] object-contain drop-shadow-lg" />
-                  )}
                   <span
                     className="text-white font-bold text-lg"
                     style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
