@@ -1010,25 +1010,27 @@ export default function Index() {
                       />
                     </motion.div>
 
-                    <motion.div 
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.45, type: "spring" }}
-                      style={{ marginBottom: 32 }}
-                    >
-                      <ActionButtonWithParticles
-                        iconSrc={adFreeIcon}
-                        alt="Shop"
-                        onClick={() => navigate("/power-ups")}
-                        background="linear-gradient(180deg, #FEF9C3 0%, #FDE047 100%)"
-                        shadowColor="#FACC15"
-                        delay={0.64}
-                        particleColor="rgba(250, 204, 21, 0.9)"
-                        glowColor="rgba(250, 204, 21, 0.5)"
-                        idleOffset={2.1}
-                        size={62}
-                      />
-                    </motion.div>
+                    {!isVip && (
+                      <motion.div 
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.45, type: "spring" }}
+                        style={{ marginBottom: 32 }}
+                      >
+                        <ActionButtonWithParticles
+                          iconSrc={adFreeIcon}
+                          alt="Shop"
+                          onClick={() => navigate("/power-ups")}
+                          background="linear-gradient(180deg, #FEF9C3 0%, #FDE047 100%)"
+                          shadowColor="#FACC15"
+                          delay={0.64}
+                          particleColor="rgba(250, 204, 21, 0.9)"
+                          glowColor="rgba(250, 204, 21, 0.5)"
+                          idleOffset={2.1}
+                          size={62}
+                        />
+                      </motion.div>
+                    )}
 
                     <motion.div 
                       initial={{ scale: 0, opacity: 0 }}
