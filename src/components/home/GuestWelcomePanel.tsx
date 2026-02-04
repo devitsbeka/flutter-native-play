@@ -200,13 +200,13 @@ export function GuestWelcomePanel({
                   </motion.div>
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="center">
+              <PopoverContent className="w-auto p-2" align="center">
                 <div className="flex flex-col gap-1">
                   <button
                     type="button"
                     onClick={handleTakePhoto}
                     disabled={isCameraLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium whitespace-nowrap"
                   >
                     <Camera className="w-4 h-4" />
                     გადაიღე ფოტო
@@ -215,7 +215,7 @@ export function GuestWelcomePanel({
                     type="button"
                     onClick={handleSelectFromGallery}
                     disabled={isCameraLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-colors text-sm font-medium whitespace-nowrap"
                   >
                     <ImagePlus className="w-4 h-4" />
                     აირჩიე გალერიიდან
