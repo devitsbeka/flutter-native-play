@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Crown, Trophy, ChevronRight, Sparkles, Zap, Shield, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { WeeklyChallengeModal } from "@/components/challenge/WeeklyChallengeModal";
 
 const PRO_BENEFITS = [
   { icon: Zap, text: "2x XP ბონუსი" },
@@ -13,8 +15,11 @@ const PRO_BENEFITS = [
 export function ProfileRightSidebar() {
   const navigate = useNavigate();
   const { isVip } = useVipStatus();
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
 
   return (
+    <>
+      <WeeklyChallengeModal open={showChallengeModal} onOpenChange={setShowChallengeModal} />
     <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] h-full border-l border-border/50 bg-background/50 backdrop-blur-sm">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* PRO Benefits Widget */}
@@ -104,7 +109,10 @@ export function ProfileRightSidebar() {
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-muted/50 border border-border/50">
+          <button 
+            onClick={() => setShowChallengeModal(true)}
+            className="w-full p-4 rounded-2xl bg-muted/50 border border-border/50 hover:bg-muted/70 transition-colors text-left"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
@@ -120,7 +128,7 @@ export function ProfileRightSidebar() {
             <div className="w-full h-2 bg-border rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: "30%" }} />
             </div>
-          </div>
+          </button>
         </motion.div>
 
         {/* Quick Stats Widget */}
@@ -161,5 +169,6 @@ export function ProfileRightSidebar() {
         }
       `}</style>
     </aside>
+    </>
   );
 }

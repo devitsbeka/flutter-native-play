@@ -30,7 +30,7 @@ interface TVMirrorModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type Step = 'choose' | 'mirror-instructions' | 'manual-code' | 'connecting' | 'connected';
+type Step = 'choose' | 'manual-code' | 'connecting' | 'connected';
 
 export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
   const navigate = useNavigate();
@@ -143,32 +143,7 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-4"
           >
-            {/* Option 1: Screen Mirror (Primary for native apps) */}
-            <button
-              onClick={() => setStep('mirror-instructions')}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 hover:border-purple-400 transition-all group"
-            >
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                {platform === 'ios' ? (
-                  <Airplay className="w-7 h-7 text-white" />
-                ) : platform === 'android' ? (
-                  <Cast className="w-7 h-7 text-white" />
-                ) : (
-                  <MonitorSmartphone className="w-7 h-7 text-white" />
-                )}
-              </div>
-              <div className="flex-1 text-left">
-                <p className="font-bold text-slate-800 text-lg">
-                  {platform === 'ios' ? 'AirPlay' : platform === 'android' ? 'Smart View' : 'Screen Mirror'}
-                </p>
-                <p className="text-sm text-slate-600">
-                  {t('tv.mirrorDescription')}
-                </p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all" />
-            </button>
-
-            {/* Option 2: Start hosting (if TV already has browser open) */}
+            {/* Start hosting (if TV already has browser open) */}
             <button
               onClick={handleStartMirrorMode}
               disabled={isCreatingSession}
@@ -223,115 +198,6 @@ export function TVMirrorModal({ open, onOpenChange }: TVMirrorModalProps) {
             >
               <Keyboard className="w-4 h-4" />
               {t('tv.enterCodeManually')}
-            </button>
-          </motion.div>
-        );
-
-      case 'mirror-instructions':
-        return (
-          <motion.div
-            key="mirror-instructions"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-5"
-          >
-            {/* Visual illustration */}
-            <div className="flex items-center justify-center gap-6 py-4">
-              <motion.div
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="relative"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                  <Smartphone className="w-8 h-8 text-white" />
-                </div>
-                <motion.div
-                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <Wifi className="w-3 h-3 text-white" />
-                </motion.div>
-              </motion.div>
-              
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.4 }}
-                className="flex items-center gap-1"
-              >
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-purple-400"
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                  />
-                ))}
-                <ArrowRight className="w-5 h-5 text-purple-400 mx-1" />
-              </motion.div>
-
-              <motion.div
-                initial={{ x: 20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="w-20 h-14 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg border-2 border-slate-600"
-              >
-                <img src={retroTvIcon} alt="TV" className="w-10 h-10 object-contain" />
-              </motion.div>
-            </div>
-
-            {/* Instructions */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-slate-800 text-center">{instructions.title}</h3>
-              
-              <div className="space-y-2">
-                {instructions.steps.map((step, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-slate-50"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                      {index + 1}
-                    </div>
-                    <p className="text-slate-700 text-sm pt-0.5">{step}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* After connecting, start hosting */}
-            <div className="pt-2">
-              <ChunkyButton
-                variant="primary"
-                onClick={handleStartMirrorMode}
-                disabled={isCreatingSession}
-                className="w-full"
-              >
-                {isCreatingSession ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    {t('tv.creating')}
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    {t('tv.imConnected')}
-                  </>
-                )}
-              </ChunkyButton>
-            </div>
-
-            <button
-              onClick={() => setStep('choose')}
-              className="w-full text-center text-slate-500 text-sm hover:text-slate-700 py-2"
-            >
-              {t('common.back')}
             </button>
           </motion.div>
         );
