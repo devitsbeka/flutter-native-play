@@ -61,6 +61,7 @@ export function QuizGameScreenProd() {
     answerQuestion,
     nextQuestion,
     usePowerUp,
+    selectedCategoryId,
   } = useGame();
   
   // Database power-ups for persistent inventory
@@ -365,8 +366,13 @@ export function QuizGameScreenProd() {
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
             <DynamicIcon 
               slug={currentQuestion.questionIconSlug || aiData?.slugs?.[0] || currentQuestion.categoryIconSlug}
-              // Only use categoryId for fallback if we have an explicit icon slug - prevent random different icons
-              categoryId={(currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? currentQuestion.categoryId : undefined}
+              // For mixed category: don't use category fallback - only show icon if question has explicit icon
+              // For regular category: use category fallback only if we have an explicit icon slug
+              categoryId={
+                selectedCategoryId === "__mixed__" 
+                  ? undefined // Never use category fallback for mixed mode
+                  : (currentQuestion.questionIconSlug || aiData?.slugs?.[0]) ? currentQuestion.categoryId : undefined
+              }
               questionId={currentQuestion.id}
               size={opponent ? 80 : 64}
               className="drop-shadow-lg"
