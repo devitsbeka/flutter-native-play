@@ -36,6 +36,8 @@ import { PreRoomQueuePreview } from "@/components/team/PreRoomQueuePreview";
 import { getRandomGradient } from "@/config/roomGradients";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Json } from "@/integrations/supabase/types";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 // Inspirational topics for trivia creation
 const INSPIRATIONAL_TOPICS = [
@@ -921,7 +923,7 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                       >
                         <div className="relative">
                           <img 
-                            src={friend.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.friendId}`} 
+                            src={resolveAvatarUrl(friend.avatarUrl) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.friendId}`} 
                             alt={friend.nickname}
                             className="w-[52px] h-[52px] rounded-full object-cover"
                           />
@@ -1028,6 +1030,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <p className="text-xs text-white/80">
                             რანდომ კატეგორია თამაშისთვის
                           </p>
+                          {/* Inline queue preview */}
+                          {queuedRounds.length > 0 && (
+                            <p className="text-xs text-white/70 mt-1 truncate">
+                              შემდეგი რაუნდები: {queuedRounds.map((r, i) => 
+                                `${i + 1}. ${r.category_name || "შემთხვევითი"}`
+                              ).join(" ")}
+                            </p>
+                          )}
                         </div>
                         {/* Re-roll button */}
                         <button 
@@ -1116,7 +1126,17 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     className="relative w-full aspect-video"
                   >
                     {/* Video/Gradient Background */}
-                    {CATEGORY_VIDEOS[selectedCategory.category_id] ? (
+                    {selectedCategory.category_id === "__mixed__" ? (
+                      // Special handling for mixed category - show mystery-box icon
+                      <div 
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ background: "linear-gradient(135deg, #8B5CF6, #EC4899)" }}
+                      >
+                        <div className="opacity-40">
+                          <DynamicIcon slug="mystery-box" size={80} />
+                        </div>
+                      </div>
+                    ) : CATEGORY_VIDEOS[selectedCategory.category_id] ? (
                       <>
                         <PingPongVideo
                           src={CATEGORY_VIDEOS[selectedCategory.category_id]}
@@ -1135,7 +1155,11 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                          <img src={secretBookcase} alt="" className="w-6 h-6 object-contain" />
+                          {selectedCategory.category_id === "__mixed__" ? (
+                            <DynamicIcon slug="mystery-box" size={24} />
+                          ) : (
+                            <img src={secretBookcase} alt="" className="w-6 h-6 object-contain" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate drop-shadow-lg">
@@ -1144,6 +1168,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <p className="text-xs text-white/80">
                             არჩეული კატეგორია
                           </p>
+                          {/* Inline queue preview */}
+                          {queuedRounds.length > 0 && (
+                            <p className="text-xs text-white/70 mt-1 truncate">
+                              შემდეგი რაუნდები: {queuedRounds.map((r, i) => 
+                                `${i + 1}. ${r.category_name || "შემთხვევითი"}`
+                              ).join(" ")}
+                            </p>
+                          )}
                         </div>
                         {/* Add to queue */}
                         <button
@@ -1216,6 +1248,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           <p className="text-xs text-white/80">
                             {challengeTrivia.type === "collection" ? "კოლექცია" : "ტრივია"}
                           </p>
+                          {/* Inline queue preview */}
+                          {queuedRounds.length > 0 && (
+                            <p className="text-xs text-white/70 mt-1 truncate">
+                              შემდეგი რაუნდები: {queuedRounds.map((r, i) => 
+                                `${i + 1}. ${r.category_name || "შემთხვევითი"}`
+                              ).join(" ")}
+                            </p>
+                          )}
                         </div>
                         <button 
                           onClick={() => setShowMyTriviasModal(true)}
@@ -1276,12 +1316,14 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
           </div>
         </div>
 
-        {/* Pre-room queued rounds preview */}
-        <PreRoomQueuePreview
-          items={queuedRounds}
-          onRemove={removeQueuedRound}
-          onClear={() => setQueuedRounds([])}
-        />
+        {/* Pre-room queued rounds preview - only show when no category selected */}
+        {!selectedCategory && !challengeTrivia && (
+          <PreRoomQueuePreview
+            items={queuedRounds}
+            onRemove={removeQueuedRound}
+            onClear={() => setQueuedRounds([])}
+          />
+        )}
 
         {/* Custom Trivia Preview */}
         <AnimatePresence>
