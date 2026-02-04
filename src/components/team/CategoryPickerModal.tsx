@@ -322,14 +322,15 @@ export function CategoryPickerModal({
               ) : (
                 <>
                   {/* Mixed Questions - Featured Card */}
-                  {(!search.trim() || "სხვადასხვა კატეგორიები".toLowerCase().includes(search.toLowerCase())) && (
+                  {(!search.trim() || "სხვადასხვა".toLowerCase().includes(search.toLowerCase())) && (
                     <motion.button
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
                       onClick={() => setSelectedItem({
                         type: "category",
                         id: "__mixed__",
-                        name: "სხვადასხვა კატეგორიები",
+                        name: "სხვადასხვა",
                         iconSlug: "mystery-box",
                       })}
                       className={`w-full mb-4 relative overflow-hidden rounded-2xl transition-all ${

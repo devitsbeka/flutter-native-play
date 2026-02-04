@@ -87,7 +87,7 @@ export function VSScreen() {
   // Mixed category constant
   const MIXED_CATEGORY = {
     id: "__mixed__",
-    name: "სხვადასხვა კატეგორიები",
+    name: "სხვადასხვა",
     image_url: null,
     icon_slug: "mystery-box",
   };

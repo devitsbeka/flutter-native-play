@@ -1991,7 +1991,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       const newCategoryName = nextItem.source_type === "random" 
         ? "შემთხვევითი" 
         : isMixedCategory
-          ? "სხვადასხვა კატეგორიები"
+          ? "სხვადასხვა"
           : (nextItem.category_name || "კატეგორია");
       
       // Get used question IDs
