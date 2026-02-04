@@ -69,6 +69,13 @@ const shouldHostObserve = async (
   return ownsTrivia && knowsAnswers;
 };
 
+// Check if a room is stale (inactive for more than 1 hour)
+const isRoomStale = (lastActivityAt: string | null, createdAt: string): boolean => {
+  const oneHourAgo = Date.now() - 60 * 60 * 1000; // 1 hour in ms
+  const activityTime = new Date(lastActivityAt || createdAt).getTime();
+  return activityTime < oneHourAgo;
+};
+
 // Helper to safely delete room questions with verification (prevents race condition)
 const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
   await supabase.from("room_questions").delete().eq("room_id", roomId);
@@ -771,6 +778,38 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       if (room.status === "cancelled") {
         toast.error("ეს ოთახი დაიხურა");
         return false;
+      }
+      
+      // Check if room is stale (1+ hour of inactivity) and needs reset
+      const stale = isRoomStale(room.last_activity_at, room.created_at);
+      
+      if (stale && (room.status === "playing" || room.status === "completed")) {
+        console.log(`[MP] Room ${room.room_code} is stale (${room.status}), resetting to lobby`);
+        
+        // Reset room to waiting state
+        await supabase
+          .from("game_rooms")
+          .update({ 
+            status: "waiting", 
+            current_game_id: null,
+            last_activity_at: new Date().toISOString() 
+          })
+          .eq("id", room.id);
+          
+        // Reset participant progress for new round
+        await supabase
+          .from("room_participants")
+          .update({ 
+            current_question: 0, 
+            score: 0, 
+            has_seen_results: false,
+            status: "joined" 
+          })
+          .eq("room_id", room.id);
+        
+        // Update local room object
+        room.status = "waiting";
+        room.current_game_id = null;
       }
       
       // Check if already participant
