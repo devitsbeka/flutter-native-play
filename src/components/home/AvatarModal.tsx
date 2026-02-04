@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock } from "lucide-react";
+
+// Import 3D icons for avatar flow
+import iconScissors from '@/assets/icons/icon-scissors.png';
+import iconAiSparkle from '@/assets/icons/icon-ai-sparkle.png';
+import iconPhotoUpload from '@/assets/icons/icon-photo-upload.png';
+import iconHourglass from '@/assets/icons/icon-hourglass.png';
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -635,9 +641,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-primary" />
-                </div>
+                <img 
+                  src={iconPhotoUpload} 
+                  alt="Upload" 
+                  className="w-10 h-10 object-contain"
+                />
                 <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
               </motion.button>
             </div>
@@ -798,7 +806,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   onClick={generateAvatar}
                   disabled={isLoading}
                   className="flex-1"
-                  icon={<Wand2 className="w-4 h-4" />}
+                  icon={<img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />}
                 >
                   {t("avatar.generate")}
                 </ChunkyButton>
@@ -826,8 +834,8 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 className="w-full p-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
+                    <img src={iconAiSparkle} alt="" className="w-6 h-6 object-contain" />
                   </div>
                   <div>
                     <p className="font-bold text-sm">AI ავატარის გენერაცია</p>
@@ -908,29 +916,36 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       return (
         <div className="flex flex-col items-center gap-4 py-4">
           <div className="relative">
+            {/* Background circle with uploaded image */}
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 opacity-50">
               <img src={uploadedImage || ""} alt="Uploading" className="w-full h-full object-cover" />
             </div>
+            
+            {/* Spinning border */}
             <motion.div
               className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent"
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             />
+            
+            {/* Hourglass icon in center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 bg-background rounded-full shadow-lg flex items-center justify-center">
+                <motion.img 
+                  src={iconHourglass} 
+                  alt="Loading" 
+                  className="w-8 h-8 object-contain"
+                  animate={{ rotate: [0, 180, 360] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+            </div>
           </div>
+          
           <div className="text-center">
             <p className="font-semibold text-foreground">{t("avatar.generating")}</p>
             <p className="text-sm text-muted-foreground">{t("avatar.generatingTime")}</p>
           </div>
-          <motion.div className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                className="w-2 h-2 rounded-full bg-primary"
-                animate={{ scale: [1, 1.5, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.2 }}
-              />
-            ))}
-          </motion.div>
         </div>
       );
     }
@@ -958,7 +973,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               }}
               disabled={isLoading}
               className="flex-1 min-w-0"
-              icon={<RefreshCw className="w-4 h-4 shrink-0" />}
+              icon={<img src={iconScissors} alt="" className="w-5 h-5 object-contain shrink-0" />}
             >
               <span className="truncate">{t("avatar.regenerate")}</span>
             </ChunkyButton>
