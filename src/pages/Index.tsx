@@ -533,13 +533,15 @@ export default function Index() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, type: "spring" }}
                 >
-                  <DesktopGuestSplitLayout
+                <DesktopGuestSplitLayout
                     onCreateAccount={handleGuestCreateAccount}
                     onSignIn={handleGuestSignIn}
                     onGoogleSignIn={handleGuestGoogleSignIn}
                     onAppleSignIn={handleGuestAppleSignIn}
                     onPlayAsGuest={handlePlayClick}
                     isLoading={isAuthLoading}
+                    guestPlaysRemaining={guestPlaysRemaining}
+                    maxGuestPlays={MAX_GUEST_PLAYS_COUNT}
                   />
                 </motion.div>
                 
