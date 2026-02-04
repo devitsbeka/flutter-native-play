@@ -455,8 +455,13 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
         {/* Spacer - trophies visible in background */}
         <div className="flex-1" />
         
-        {/* View Rating button at bottom */}
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20">
+        {/* View Rating button at bottom with "შენი ლიგა" label */}
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+          {activeTier === userTier && (
+            <span className="text-sm font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
+              შენი ლიგა
+            </span>
+          )}
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-10 py-4 
@@ -616,8 +621,13 @@ function TabletLeaderboards({
         {/* Spacer - trophy is already visible in the background */}
         <div className="flex-1" />
         
-        {/* View Rating button at bottom with safe spacing */}
-        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20">
+        {/* View Rating button at bottom with "შენი ლიგა" label */}
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+          {currentTier === userTier && (
+            <span className="text-sm font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
+              შენი ლიგა
+            </span>
+          )}
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
