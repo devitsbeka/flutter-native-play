@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2 } from "lucide-react";
+import { Camera, Upload, RefreshCw, Loader2, Check, ImageIcon, Wand2, Sparkles, Play, Trash2, Crown, Lock } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { useNavigate } from "react-router-dom";
 
 // Import default bot avatars
 import botAvatar1 from '@/assets/avatars/bot-avatar-1.png';
@@ -63,6 +65,8 @@ interface AvatarGeneration {
 
 export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const { user, profile, updateProfile } = useAuth();
+  const { isVip } = useVipStatus();
+  const navigate = useNavigate();
   const [step, setStep] = useState<"gallery" | "upload" | "camera" | "generating" | "preview">("gallery");
   const [generations, setGenerations] = useState<AvatarGeneration[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
@@ -306,6 +310,44 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
   };
 
+  // Save original photo without AI generation
+  const saveOriginalPhoto = async () => {
+    if (!uploadedImage || !user) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(uploadedImage);
+      const blob = await response.blob();
+      
+      const fileName = `${user.id}/avatar_${Date.now()}.png`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, blob, { 
+          upsert: true,
+          contentType: 'image/png'
+        });
+
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(fileName);
+
+      await updateProfile({ avatar_url: urlData.publicUrl });
+
+      toast.success(t("avatar.avatarSaved"));
+      onClose();
+
+    } catch (error) {
+      console.error("Error saving photo:", error);
+      toast.error(t("errors.generic"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const selectPreviousAvatar = async (avatarUrl: string) => {
     if (!user) return;
     
@@ -530,27 +572,44 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             </div>
             <p className="text-sm text-muted-foreground">{t("avatar.currentAvatar")}</p>
             
-            {/* Animate Avatar Button */}
+            {/* Animate Avatar Button - PRO gated */}
             {profile?.avatar_url && (
-              <motion.button
-                onClick={animateAvatar}
-                disabled={isAnimating}
-                className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 text-xs font-medium text-primary hover:from-primary/30 hover:to-accent/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {isAnimating ? (
-                  <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span>{t("avatar.animating")}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3 h-3" />
-                    <span>{profile?.animated_avatar_url ? t("avatar.reAnimate") : t("avatar.animateAvatar")}</span>
-                  </>
-                )}
-              </motion.button>
+              isVip ? (
+                <motion.button
+                  onClick={animateAvatar}
+                  disabled={isAnimating}
+                  className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 text-xs font-medium text-primary hover:from-primary/30 hover:to-accent/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isAnimating ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>{t("avatar.animating")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      <span>{profile?.animated_avatar_url ? t("avatar.reAnimate") : t("avatar.animateAvatar")}</span>
+                    </>
+                  )}
+                </motion.button>
+              ) : (
+                // Non-PRO: Show locked animation button
+                <motion.button
+                  onClick={() => {
+                    onClose();
+                    navigate("/profile?tab=PRO");
+                  }}
+                  className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-xs font-medium text-muted-foreground"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Lock className="w-3 h-3" />
+                  <span>ანიმაცია (PRO)</span>
+                  <Crown className="w-3 h-3 text-amber-500" />
+                </motion.button>
+              )
             )}
           </div>
 
@@ -717,33 +776,85 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
           </div>
           
-          <p className="text-sm text-muted-foreground text-center">
-            {t("avatar.description")}
-          </p>
-
-          <div className="flex gap-2 w-full">
-            <ChunkyButton
-              variant="secondary"
-              size="md"
-              onClick={() => {
-                setUploadedImage(null);
-                setStep("gallery");
-              }}
-              className="flex-1"
-              icon={<RefreshCw className="w-4 h-4" />}
-            >
-              {t("avatar.change")}
-            </ChunkyButton>
-            <ChunkyButton
-              variant="primary"
-              size="md"
-              onClick={generateAvatar}
-              className="flex-1"
-              icon={<Wand2 className="w-4 h-4" />}
-            >
-              {t("avatar.generate")}
-            </ChunkyButton>
-          </div>
+          {isVip ? (
+            // PRO USER: Show both options
+            <>
+              <p className="text-sm text-muted-foreground text-center">
+                {t("avatar.description")}
+              </p>
+              <div className="flex gap-2 w-full">
+                <ChunkyButton
+                  variant="secondary"
+                  size="md"
+                  onClick={saveOriginalPhoto}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  ორიგინალი
+                </ChunkyButton>
+                <ChunkyButton
+                  variant="primary"
+                  size="md"
+                  onClick={generateAvatar}
+                  disabled={isLoading}
+                  className="flex-1"
+                  icon={<Wand2 className="w-4 h-4" />}
+                >
+                  {t("avatar.generate")}
+                </ChunkyButton>
+              </div>
+            </>
+          ) : (
+            // NON-PRO USER: Show save option + PRO upsell
+            <>
+              <ChunkyButton
+                variant="secondary"
+                size="md"
+                onClick={saveOriginalPhoto}
+                disabled={isLoading}
+                className="w-full"
+              >
+                შენახვა ფოტოდ
+              </ChunkyButton>
+              
+              <div className="w-full h-px bg-border my-2" />
+              
+              {/* PRO Upsell Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full p-4 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">AI ავატარის გენერაცია</p>
+                    <p className="text-xs text-muted-foreground">PRO ფუნქცია</p>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-muted-foreground mb-3">
+                  გადააქციე ფოტო ულამაზეს 3D ავატარად! 
+                  ანიმაციის საშუალებაც გექნება ✨
+                </p>
+                
+                <ChunkyButton
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    navigate("/profile?tab=PRO");
+                  }}
+                  className="w-full"
+                  icon={<Crown className="w-4 h-4" />}
+                >
+                  გახდი PRO - ₾9.99/თვე
+                </ChunkyButton>
+              </motion.div>
+            </>
+          )}
         </div>
       );
     }
@@ -862,6 +973,26 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               {t("avatar.useAsProfile")}
             </ChunkyButton>
           </div>
+          
+          {/* Animation Hint for PRO users */}
+          {isVip && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="w-full p-3 rounded-xl bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/30"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                  <Play className="w-4 h-4 text-accent" fill="currentColor" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-medium">შეგიძლია გააცოცხლო!</p>
+                  <p className="text-xs text-muted-foreground">შენახვის შემდეგ ანიმაცია ხელმისაწვდომია</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       );
     }
