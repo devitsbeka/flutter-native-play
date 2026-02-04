@@ -259,6 +259,31 @@ export function usePlayerFeedItems(
         });
       }
 
+      // Helper to interleave items from different creators (round-robin)
+      const interleaveByCreator = (items: PlayerFeedItem[]): PlayerFeedItem[] => {
+        const byCreator = new Map<string, PlayerFeedItem[]>();
+        items.forEach(item => {
+          const userId = item.player.user_id;
+          if (!byCreator.has(userId)) {
+            byCreator.set(userId, []);
+          }
+          byCreator.get(userId)!.push(item);
+        });
+
+        const result: PlayerFeedItem[] = [];
+        const queues = Array.from(byCreator.values());
+        
+        while (queues.some(q => q.length > 0)) {
+          for (const queue of queues) {
+            if (queue.length > 0) {
+              result.push(queue.shift()!);
+            }
+          }
+        }
+        
+        return result;
+      };
+
       // Apply sorting
       switch (sort) {
         case "most_played":
@@ -286,6 +311,8 @@ export function usePlayerFeedItems(
         case "recent":
         default:
           filteredItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          // Interleave to prevent same-creator clustering
+          filteredItems = interleaveByCreator(filteredItems);
           break;
       }
 
