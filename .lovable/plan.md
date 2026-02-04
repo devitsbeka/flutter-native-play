@@ -1,307 +1,144 @@
 
+# Plan: Fix Leaderboard Background Display Issues
 
-# Plan: Creative Icon-Based Room Name Generation
+## Problems Identified
 
-## Problem
+### 1. Mobile Background Issues
+- **Container height is too restrictive**: `h-[35vh]` creates inconsistent sizing across devices
+- **`backgroundSize: 'cover'`** zooms/crops the image to fill, causing quality loss
+- **Inconsistent positioning**: Gold tier uses `-55px` offset, others use `-105px`
 
-Current room names are repetitive - too many names use similar patterns like "გონების...", "ტვინების...", etc. The AI generates from a limited set of styles and the fallback names also lack diversity.
+### 2. Desktop/Tablet Background Issues
+- **`backgroundSize: '100% auto'`** doesn't account for aspect ratio - on wide screens the image appears short, on narrow screens it overflows
+- **No tablet breakpoint**: Tablets (768px-1024px) incorrectly use mobile layout
 
-## Solution Overview
-
-Create a completely new naming system where:
-1. Each room name is generated based on a **randomly selected themed icon**
-2. Names match the icon's theme but with huge variety
-3. Multiple distinct naming patterns per theme (not just one word + "გონების")
+### 3. General Quality Issues
+- Using CSS `background-image` instead of `<img>` loses browser optimizations
+- No responsive image loading (no srcset/sizes)
+- Images may be compressed artifacts from being scaled improperly
 
 ---
 
-## Implementation Strategy
+## Solution
 
-### Step 1: Expand Icon Theme Categories
+Replace the CSS background approach with a proper `<img>` element and use `object-fit: contain` to preserve aspect ratio while ensuring the image looks crisp.
 
-Instead of 6 generic styles, create 15+ thematic groups with 8-10 diverse name templates each:
+### Strategy by Device
 
-**Theme Groups (each with paired icon keywords):**
-
-| Theme | Icon Keywords | Sample Names (diverse patterns) |
-|-------|--------------|--------------------------------|
-| **Champion** | trophy, medal, crown | ოქროს თასი, ვარსკვლავთა კლუბი, პირველობის რინგი |
-| **Adventure** | rocket, compass, map | კოსმოსის მოგზაური, ექსპედიცია X, აღმოჩენის გზა |
-| **Creature** | dragon, phoenix, unicorn | ცეცხლის მცველი, მითიური ბუნაგი, ლეგენდის კვალი |
-| **Animal** | lion, wolf, eagle, bear, tiger | მტაცებლის ხროვა, ბუნაგის მეფე, მფრინავი მხედარი |
-| **Battle** | sword, shield, boxing | ჯავშნის რინგი, კლინკის ჟღერა, მეომრის ბილიკი |
-| **Magic** | wizard, wand, crystal | ჯადოქართა სახლი, კრისტალის კოშკი, მოჯადოე კლანი |
-| **Party** | balloon, confetti, cake | ზეიმის მოედანი, ფეიერვერკი, სახალისო ბუდე |
-| **Nature** | tree, mountain, sun | მწვერვალის ჯგუფი, მზის ხეობა, ტყის კლანი |
-| **Tech** | robot, chip, gamepad | კიბერ არენა, პიქსელების ომი, დიჯიტალ გვარდია |
-| **Music** | guitar, piano, headphones | რიტმის კლუბი, ნოტების ბრძოლა, ჰარმონია |
-| **Mystery** | detective, mask, key | საიდუმლო კლუბი, გამოცანის სახლი, დეტექტივები |
-| **Speed** | racing, lightning, flame | მეხის სიჩქარე, ელვის გუნდი, თავგადასავალი |
-| **Ocean** | shark, anchor, wave | ზღვის მგლები, ოკეანის კლანი, ტალღის მხედარი |
-| **Food** | pizza, burger, chef | გემოვნების ბრძოლა, შეფთა დუელი, გურმანთა კლუბი |
-| **Space** | astronaut, planet, star | გალაქტიკის რინგი, ვარსკვლავთა ჯგუფი, კოსმიური ჯგუფი |
-
-### Step 2: Name Generation Logic
-
-```text
-1. Pick random theme group (15 options)
-2. Pick random icon keyword from that group
-3. Pick random name template from that group
-4. Search icon_library for matching icon
-5. Return name + icon_url
-```
-
-### Step 3: Ensure No Repetition
-
-- Use 8-10 unique name templates per theme
-- Avoid reusing same words across templates
-- Add slight randomization with adjective prefixes
+| Device | Approach |
+|--------|----------|
+| **Mobile** (< 768px) | Use `<img>` with `object-fit: contain` and `object-position: top center` in a taller container |
+| **Tablet** (768px - 1024px) | Use `<img>` with `object-fit: cover` centered, with controlled max-height |
+| **Desktop** (> 1024px) | Use `<img>` with `object-fit: cover` and `object-position: top center` |
 
 ---
 
 ## Technical Changes
 
-### File: `supabase/functions/generate-room-name/index.ts`
+### File: `src/components/leaderboard/LeaderboardHeroBackground.tsx`
 
-**Replace** the existing prompt + fallback logic with new icon-themed name generation:
+**Key Changes:**
 
-```typescript
-// Theme-based room names (15 themes × 8-10 names each = 120+ options)
-const THEMED_ROOM_NAMES: Record<string, { names: string[], iconKeywords: string[] }> = {
-  champion: {
-    names: [
-      "ოქროს თასი",        // Golden Cup
-      "ვარსკვლავთა ბრძოლა", // Stars Battle
-      "მედლების კლუბი",    // Medals Club
-      "ჩემპიონები",        // Champions
-      "პირველობის რინგი",   // Championship Ring
-      "გამარჯვებულთა ზონა", // Winners Zone
-      "ტრიუმფის არენა",     // Triumph Arena
-      "პოდიუმის გზა",       // Podium Way
-    ],
-    iconKeywords: ['trophy', 'medal', 'crown', 'cup', 'winner', 'gold']
-  },
-  adventure: {
-    names: [
-      "კოსმოსის მოგზაური",  // Space Traveler
-      "ექსპედიცია X",       // Expedition X
-      "აღმოჩენის გზა",      // Discovery Path
-      "მკვლევართა კლანი",   // Explorers Clan
-      "ჰორიზონტის მიღმა",   // Beyond Horizon
-      "საზღვრების მიღმა",   // Beyond Borders
-      "ძიების ბილიკი",      // Search Trail
-      "ახალი ტერიტორია",    // New Territory
-    ],
-    iconKeywords: ['rocket', 'compass', 'map', 'telescope', 'binoculars']
-  },
-  creature: {
-    names: [
-      "ცეცხლის მცველი",     // Fire Guardian
-      "მითიური ბუნაგი",     // Mythical Den
-      "ლეგენდის კვალი",     // Legend's Trail
-      "ჯადოსნური არსება",   // Magical Creature
-      "ფანტასტიური კლუბი",  // Fantastic Club
-      "მონსტრების ლიგა",    // Monsters League
-      "ზღაპრის სამყარო",    // Fairytale World
-      "ფრთოსანთა კლანი",    // Winged Clan
-    ],
-    iconKeywords: ['dragon', 'phoenix', 'unicorn', 'griffin', 'pegasus']
-  },
-  animal: {
-    names: [
-      "მტაცებლის ხროვა",    // Predator Pack
-      "ბუნაგის მეფე",       // Den King
-      "მფრინავი მხედარი",   // Flying Rider
-      "ველური კლანი",       // Wild Clan
-      "ბუნების ძალა",       // Nature's Power
-      "თათების ლიგა",       // Paws League
-      "ფოლადის კლანჭა",     // Steel Claw
-      "სწრაფი ნადირი",      // Swift Hunter
-    ],
-    iconKeywords: ['lion', 'wolf', 'eagle', 'bear', 'tiger', 'shark', 'panther']
-  },
-  battle: {
-    names: [
-      "ჯავშნის რინგი",      // Armor Ring
-      "კლინკის ჟღერა",      // Blade Clang
-      "მეომრის ბილიკი",     // Warrior's Path
-      "ფარების კედელი",     // Shield Wall
-      "გლადიატორები",       // Gladiators
-      "რაინდთა კლანი",      // Knights Clan
-      "ბრძოლის მოედანი",    // Battle Arena
-      "ფოლადის გუნდი",      // Steel Team
-    ],
-    iconKeywords: ['sword', 'shield', 'boxing', 'knight', 'armor', 'battle']
-  },
-  magic: {
-    names: [
-      "ჯადოქართა სახლი",    // Wizards House
-      "კრისტალის კოშკი",    // Crystal Tower
-      "მოჯადოე კლანი",      // Enchanted Clan
-      "შელოცვის წრე",       // Spell Circle
-      "მაგიური ბროლი",      // Magic Orb
-      "ალქიმიკოსები",       // Alchemists
-      "ჯადოს სკოლა",        // Magic School
-      "მისტიკის კლუბი",     // Mystic Club
-    ],
-    iconKeywords: ['wizard', 'wand', 'crystal', 'magic', 'potion', 'hat']
-  },
-  party: {
-    names: [
-      "ზეიმის მოედანი",     // Celebration Square
-      "ფეიერვერკი",         // Fireworks
-      "სახალისო ბუდე",      // Fun Nest
-      "წვეულების კლუბი",    // Party Club
-      "ბალონების ომი",      // Balloon War
-      "კონფეტის წვიმა",     // Confetti Rain
-      "დღესასწაული",        // Holiday
-      "ფესტივალი",          // Festival
-    ],
-    iconKeywords: ['balloon', 'confetti', 'cake', 'party', 'gift', 'fireworks']
-  },
-  nature: {
-    names: [
-      "მწვერვალის ჯგუფი",   // Summit Group
-      "მზის ხეობა",         // Sun Valley
-      "ტყის კლანი",         // Forest Clan
-      "მთის მგლები",        // Mountain Wolves
-      "ბუნების ძალა",       // Nature's Force
-      "მწვანე ლიგა",        // Green League
-      "ხეობის მცველი",      // Valley Guardian
-      "კლდის არწივები",     // Rock Eagles
-    ],
-    iconKeywords: ['tree', 'mountain', 'sun', 'leaf', 'forest', 'flower']
-  },
-  tech: {
-    names: [
-      "კიბერ არენა",        // Cyber Arena
-      "პიქსელების ომი",     // Pixel War
-      "დიჯიტალ გვარდია",    // Digital Guard
-      "კოდის მეომრები",     // Code Warriors
-      "ტექნო კლანი",        // Techno Clan
-      "რობოტების ლიგა",     // Robots League
-      "ჩიპის ჯგუფი",        // Chip Squad
-      "მატრიცის რინგი",     // Matrix Ring
-    ],
-    iconKeywords: ['robot', 'chip', 'gamepad', 'laptop', 'console', 'controller']
-  },
-  music: {
-    names: [
-      "რიტმის კლუბი",       // Rhythm Club
-      "ნოტების ბრძოლა",     // Notes Battle
-      "ჰარმონია",           // Harmony
-      "მელოდიის კლანი",     // Melody Clan
-      "კონცერტის ზონა",     // Concert Zone
-      "ბითების არენა",      // Beats Arena
-      "როკის ბუნაგი",       // Rock Den
-      "ჯაზის კლუბი",        // Jazz Club
-    ],
-    iconKeywords: ['guitar', 'piano', 'headphones', 'microphone', 'music', 'drum']
-  },
-  mystery: {
-    names: [
-      "საიდუმლო კლუბი",     // Secret Club
-      "გამოცანის სახლი",    // Riddle House
-      "დეტექტივები",        // Detectives
-      "შერლოკის კლანი",     // Sherlock Clan
-      "მისტერიის ზონა",     // Mystery Zone
-      "გასაღების მფლობელი", // Key Holder
-      "ნიღბის უკან",        // Behind the Mask
-      "საიდუმლო საზოგადო",  // Secret Society
-    ],
-    iconKeywords: ['detective', 'mask', 'key', 'magnifier', 'mystery', 'spy']
-  },
-  speed: {
-    names: [
-      "მეხის სიჩქარე",      // Thunder Speed
-      "ელვის გუნდი",        // Lightning Team
-      "თავგადასავალი",      // Thrill
-      "რბოლის კლუბი",       // Racing Club
-      "ტურბო არენა",        // Turbo Arena
-      "სწრაფი და ფოლადი",   // Fast & Steel
-      "ნიტროს რინგი",       // Nitro Ring
-      "სიჩქარის ეშმაკი",    // Speed Demon
-    ],
-    iconKeywords: ['racing', 'lightning', 'flame', 'car', 'motorcycle', 'bolt']
-  },
-  ocean: {
-    names: [
-      "ზღვის მგლები",       // Sea Wolves
-      "ოკეანის კლანი",      // Ocean Clan
-      "ტალღის მხედარი",     // Wave Rider
-      "მეკობრეები",         // Pirates
-      "წყალქვეშა ლიგა",     // Underwater League
-      "ზვიგენის კბილი",     // Shark Tooth
-      "ნავთსადგური",        // Harbor
-      "კაპიტნის ხიდი",      // Captain's Bridge
-    ],
-    iconKeywords: ['shark', 'anchor', 'wave', 'ship', 'pirate', 'whale', 'octopus']
-  },
-  food: {
-    names: [
-      "გემოვნების ბრძოლა",  // Taste Battle
-      "შეფთა დუელი",        // Chefs Duel
-      "გურმანთა კლუბი",     // Gourmets Club
-      "რეცეპტის საიდუმლო",  // Recipe Secret
-      "სამზარეულოს ომი",    // Kitchen War
-      "დეგუსტაცია",         // Tasting
-      "ფლეივერის ზონა",     // Flavor Zone
-      "გასტრო არენა",       // Gastro Arena
-    ],
-    iconKeywords: ['pizza', 'burger', 'chef', 'cooking', 'cake', 'food']
-  },
-  space: {
-    names: [
-      "გალაქტიკის რინგი",   // Galaxy Ring
-      "ვარსკვლავთა ჯგუფი", // Stars Group
-      "კოსმიური კლანი",     // Cosmic Clan
-      "ასტრონავტები",       // Astronauts
-      "ორბიტის მცველი",     // Orbit Guardian
-      "პლანეტების ლიგა",    // Planets League
-      "მეტეორის გზა",       // Meteor Path
-      "კოსმოსის კაპიტანი",  // Space Captain
-    ],
-    iconKeywords: ['astronaut', 'planet', 'star', 'moon', 'satellite', 'ufo']
-  }
-};
+1. **Replace CSS backgrounds with `<img>` elements**
+   - Better browser optimization and native lazy loading
+   - Proper scaling with `object-fit`
+
+2. **Use `object-fit: contain` on mobile** to prevent cropping/zooming
+   - Image will scale to fit without distortion
+   - Add background color to fill empty space
+
+3. **Add tablet breakpoint handling**
+   - Tablets should get desktop background but with adjusted sizing
+
+4. **Increase mobile container height** 
+   - Change from `h-[35vh]` to `h-[45vh] min-h-[280px]` for better proportions
+
+5. **Consistent positioning**
+   - Remove the tier-specific offset calculations that cause inconsistency
+
+### Code Structure:
+
+```tsx
+// Mobile: <img> with object-contain for crisp display
+{isMobile ? (
+  <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/10 to-background">
+    <img
+      src={TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver}
+      alt=""
+      className="w-full h-full object-contain object-top"
+      loading="eager"
+    />
+  </div>
+) : (
+  // Desktop/Tablet: <img> with object-cover + mask for fade
+  <div className="absolute inset-0 w-full h-full">
+    <img
+      src={leaderboardBgDesktop}
+      alt=""
+      className="w-full h-full object-cover object-top"
+      loading="eager"
+      style={{
+        maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+      }}
+    />
+  </div>
+)}
 ```
 
-**New generation flow:**
+### Container Height Adjustments:
 
-```typescript
-function generateThemedRoomName(): { name: string, iconKeyword: string } {
-  // Get all theme keys
-  const themes = Object.keys(THEMED_ROOM_NAMES);
-  
-  // Pick random theme
-  const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-  const themeData = THEMED_ROOM_NAMES[randomTheme];
-  
-  // Pick random name from that theme
-  const randomName = themeData.names[Math.floor(Math.random() * themeData.names.length)];
-  
-  // Pick random icon keyword from that theme
-  const randomKeyword = themeData.iconKeywords[Math.floor(Math.random() * themeData.iconKeywords.length)];
-  
-  return { name: randomName, iconKeyword: randomKeyword };
-}
+```tsx
+// Before:
+className={`relative w-full overflow-hidden ${isMobile ? 'h-[35vh]' : 'min-h-screen'}`}
+
+// After:
+className={`relative w-full overflow-hidden ${
+  isMobile 
+    ? 'h-[45vh] min-h-[280px] max-h-[400px]' 
+    : 'min-h-screen'
+}`}
 ```
-
-### File: `src/utils/roomNameGenerator.ts`
-
-**Update** fallback names to use the same diverse themed approach (in case edge function fails).
 
 ---
 
-## Result
+## Visual Comparison
 
-| Before | After |
-|--------|-------|
-| 12 fallback names | 120+ themed names |
-| 6 style categories | 15 distinct themes |
-| Repetitive "გონების..." | Diverse themed names |
-| AI with limited examples | Pure random from curated list |
-| Names don't match icons | Names always match icon theme |
+```text
+BEFORE (Mobile):
+┌─────────────────────┐
+│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│  ← Image zoomed/cropped
+│▓▓  TROPHY  ▓▓▓▓▓▓▓▓▓│    to fill container
+│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
+└─────────────────────┘
+
+AFTER (Mobile):
+┌─────────────────────┐
+│                     │  ← Gradient background fills gaps
+│    ┌──────────┐     │
+│    │  TROPHY  │     │  ← Image contained, crisp
+│    └──────────┘     │
+│                     │
+└─────────────────────┘
+```
+
+---
+
+## Additional Optimizations
+
+### 1. Add Smooth Transitions
+Keep the existing `transition-all duration-500` for tier switching but apply to the `<img>` opacity.
+
+### 2. Preload Critical Images
+Add preload hints for the background images to improve perceived performance:
+
+```tsx
+// In the component or via link tags
+<link rel="preload" href={leaderboardBgDesktop} as="image" />
+```
+
+### 3. Consider WebP Format
+If the PNG files are large, consider converting to WebP for better compression without quality loss.
 
 ---
 
@@ -309,6 +146,13 @@ function generateThemedRoomName(): { name: string, iconKeyword: string } {
 
 | File | Changes |
 |------|---------|
-| `supabase/functions/generate-room-name/index.ts` | Replace AI prompt with themed name generation |
-| `src/utils/roomNameGenerator.ts` | Update fallback names to match new themes |
+| `src/components/leaderboard/LeaderboardHeroBackground.tsx` | Replace CSS backgrounds with `<img>`, adjust container sizing, use `object-fit` properly |
 
+---
+
+## Expected Results
+
+- **Mobile**: Images display at their natural aspect ratio without zoom/crop distortion
+- **Tablet**: Properly scaled background matching desktop style
+- **Desktop**: Crisp full-width background with proper mask fade
+- **All devices**: Consistent visual quality, no pixelation or blur from improper scaling
