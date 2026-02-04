@@ -7,6 +7,7 @@ import leaderboardBgDesktop from "@/assets/bgleader.png";
 interface LeaderboardHeroBackgroundProps {
   children?: ReactNode;
   isMobile?: boolean;
+  isTablet?: boolean;
   currentTier?: number;
   onTierChange?: (tier: number) => void;
   isFullscreen?: boolean;
@@ -22,6 +23,7 @@ const TIER_BACKGROUNDS: Record<number, string> = {
 export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground({ 
   children,
   isMobile = false,
+  isTablet = false,
   currentTier = 2,
   onTierChange,
   isFullscreen = false,
@@ -86,9 +88,9 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     >
       {/* Background images */}
       {isMobile ? (
-        // Mobile: <img> with object-contain for crisp display without cropping
+        // Mobile: <img> with tier-specific background
         <div className="absolute inset-0 w-full h-full">
-        <img
+          <img
             src={TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver}
             alt=""
             className="w-full h-full object-cover object-center transition-opacity duration-500"
@@ -96,8 +98,19 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
             draggable={false}
           />
         </div>
+      ) : isTablet ? (
+        // Tablet: Full desktop background without mask
+        <div className="absolute inset-0 w-full h-full">
+          <img
+            src={leaderboardBgDesktop}
+            alt=""
+            className="w-full h-full object-cover object-top"
+            loading="eager"
+            draggable={false}
+          />
+        </div>
       ) : (
-        // Desktop/Tablet: <img> with object-cover + mask for fade
+        // Desktop: <img> with object-cover + mask for fade
         <div className="absolute inset-0 w-full h-full">
           <img
             src={leaderboardBgDesktop}
