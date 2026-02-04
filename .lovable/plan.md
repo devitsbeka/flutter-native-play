@@ -1,130 +1,135 @@
 
-# Add Animated League Stroke to "შენი ლიგა" Label
 
-## Overview
+# Fix Old Room Entry & Complete Search Navigation
 
-Add a rotating/pulsing stroke animation to the "შენი ლიგა" (Your League) label that changes color based on the user's current league tier:
-- **Bronze League (tier 1)**: Bronze/copper gradient stroke
-- **Gold League (tier 2)**: Gold gradient stroke  
-- **Silver League (tier 3)**: Silver gradient stroke
+## Problem Summary
+
+When entering an old room (inactive for 1+ hour) that was left in "playing" status, the app incorrectly loads the game screen with timer. User wants to see the room lobby with game history instead.
 
 ---
 
-## Implementation Approach
+## Implementation Plan
 
-Use a CSS conic-gradient rotating border effect to create a shimmering animated stroke around the label. This creates an elegant "glowing" border that rotates around the element.
+### 1. Add Room Staleness Check in `enterRoom` Function
 
----
+**File**: `src/contexts/MultiplayerContextV2.tsx`
 
-## Technical Changes
+Add a helper function to check if a room is stale (inactive for more than 1 hour) and modify the `enterRoom` function to:
 
-### 1. Add New Keyframe Animation (`tailwind.config.ts`)
+1. Check if room's `last_activity_at` is older than 1 hour
+2. If stale AND room is in "playing" status:
+   - Reset room status to "waiting" 
+   - Clear stale game data (reset `current_game_id`)
+   - Send user to lobby phase instead of playing phase
+3. This ensures old rooms show the lobby with game history
 
-Add a new keyframe for rotating border:
+```text
+Before (lines ~797-803):
+- If room.status === "playing" → go to playing phase
 
-```ts
-keyframes: {
-  // existing...
-  'border-rotate': {
-    '0%': { '--border-angle': '0deg' },
-    '100%': { '--border-angle': '360deg' }
-  }
-},
-animation: {
-  // existing...
-  'border-rotate': 'border-rotate 3s linear infinite'
-}
+After:
+- Check if room is stale (last_activity_at > 1 hour ago)
+- If stale AND room.status === "playing":
+  → Reset room status to "waiting"
+  → Clear player scores/progress for fresh start
+  → Go to lobby phase
+- If NOT stale AND room.status === "playing":
+  → Keep existing behavior (resume game)
 ```
 
-### 2. Create League Stroke Wrapper Component (`src/pages/Leaderboards.tsx`)
+### 2. Create Room Staleness Helper
 
-Create a styled wrapper that uses a pseudo-element with rotating gradient:
+**File**: `src/contexts/MultiplayerContextV2.tsx`
 
-```tsx
-const LEAGUE_STROKE_COLORS = {
-  1: { // Bronze
-    from: '#CD7F32',
-    via: '#B87333', 
-    to: '#8B4513'
-  },
-  2: { // Gold
-    from: '#FFD700',
-    via: '#FFA500',
-    to: '#DAA520'
-  },
-  3: { // Silver
-    from: '#C0C0C0',
-    via: '#A8A8A8',
-    to: '#D3D3D3'
-  }
+Add a helper function near the top of the file:
+
+```typescript
+// Check if a room is stale (inactive for more than 1 hour)
+const isRoomStale = (lastActivityAt: string | null, createdAt: string): boolean => {
+  const oneHourAgo = Date.now() - 60 * 60 * 1000; // 1 hour in ms
+  const activityTime = new Date(lastActivityAt || createdAt).getTime();
+  return activityTime < oneHourAgo;
 };
 ```
 
-### 3. Implementation with CSS Variables
+### 3. Modify `enterRoom` Logic
 
-Use inline styles to set the gradient colors dynamically based on userTier:
+**File**: `src/contexts/MultiplayerContextV2.tsx` (around lines 797-853)
 
-```tsx
-// Desktop & Tablet - "შენი ლიგა" label
-{activeTier === userTier && (
-  <div 
-    className="relative p-[2px] rounded-full animate-spin-slow"
-    style={{
-      background: `conic-gradient(from var(--border-angle, 0deg), ${strokeColors.from}, ${strokeColors.via}, ${strokeColors.to}, ${strokeColors.from})`
-    }}
-  >
-    <span className="block text-sm font-medium text-foreground bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full">
-      შენი ლიგა
-    </span>
-  </div>
-)}
-```
+Update the phase determination logic:
 
-### 4. Alternative: Simple Framer Motion Animation
+```typescript
+// Check if room is stale (1+ hour of inactivity)
+const stale = isRoomStale(room.last_activity_at, room.created_at);
 
-Since we already use framer-motion, we can use it for the rotation:
+// If room is stale and in playing/completed state, reset to lobby
+if (stale && (room.status === "playing" || room.status === "completed")) {
+  console.log(`[MP] Room ${room.room_code} is stale, resetting to lobby`);
+  
+  // Reset room to waiting state
+  await supabase
+    .from("game_rooms")
+    .update({ 
+      status: "waiting", 
+      current_game_id: null,
+      last_activity_at: new Date().toISOString() 
+    })
+    .eq("id", room.id);
+    
+  // Reset participant progress for new round
+  await supabase
+    .from("room_participants")
+    .update({ 
+      current_question: 0, 
+      score: 0, 
+      has_seen_results: false,
+      status: "joined" 
+    })
+    .eq("room_id", room.id);
+  
+  // Go to lobby
+  setState(prev => ({
+    ...prev,
+    phase: "lobby",
+    currentRoom: { ...room, status: "waiting", current_game_id: null } as GameRoom,
+  }));
+  
+  return true; // Early return after handling stale room
+}
 
-```tsx
-<motion.div
-  className="relative p-[2px] rounded-full"
-  style={{
-    background: `linear-gradient(${angle}deg, ${strokeColors.from}, ${strokeColors.via}, ${strokeColors.to})`
-  }}
-  animate={{ 
-    backgroundImage: [
-      `linear-gradient(0deg, ${colors.from}, ${colors.via}, ${colors.to})`,
-      `linear-gradient(360deg, ${colors.from}, ${colors.via}, ${colors.to})`
-    ]
-  }}
-  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
->
-  <span className="...">შენი ლიგა</span>
-</motion.div>
+// ... rest of existing logic for non-stale rooms
 ```
 
 ---
 
-## Files to Modify
+## Summary of Changes
 
-| File | Changes |
-|------|---------|
-| `src/pages/Leaderboards.tsx` | Add LEAGUE_STROKE_COLORS constant, update "შენი ლიგა" label in both Desktop and Tablet components to use animated gradient border |
-| `tailwind.config.ts` | Add `border-rotate` keyframe animation (optional - may use existing `spin-slow`) |
+| File | Change |
+|------|--------|
+| `src/contexts/MultiplayerContextV2.tsx` | Add `isRoomStale` helper function (1 hour threshold) |
+| `src/contexts/MultiplayerContextV2.tsx` | Modify `enterRoom` to check for stale rooms and reset them to lobby |
 
 ---
 
-## Visual Result
+## Expected Behavior After Fix
 
-```text
-Before:
-+-------------------+
-| შენი ლიგა         |  <- Plain white/bg badge
-+-------------------+
+| Scenario | Before | After |
+|----------|--------|-------|
+| Enter room inactive <1 hour in "playing" status | Resumes game | Resumes game (no change) |
+| Enter room inactive >1 hour in "playing" status | Shows game with timer | Shows lobby with game history |
+| Enter room inactive >1 hour in "completed" status | Shows results | Shows lobby (fresh start) |
+| Enter room in "waiting" status | Shows lobby | Shows lobby (no change) |
 
-After (Gold league example):
-+----🟡---🟡---🟡----+
-|    შენი ლიგა      |  <- Animated gold gradient stroke rotating
-+----🟡---🟡---🟡----+
-```
+---
 
-The stroke will smoothly rotate around the label, creating a premium "glowing ring" effect that matches the user's league color.
+## Note on Search Navigation
+
+After reviewing the code, the search navigation is already correctly implemented:
+
+- **Friends** → `/profile/{friendId}` (opens profile page) ✓
+- **Rooms** → `/room/{code}` → redirects to `/team?join={code}` (opens room lobby) ✓
+- **Trivias** → `/trivia/{id}` (opens TriviaLobby with play/leaderboard) ✓
+- **Collections** → `/collection/{id}` (opens CollectionLobby with rounds) ✓
+
+All click handlers are wired correctly in `SpotlightSearch.tsx` and `SearchHorizontalLists.tsx`. The issue you're experiencing with rooms is specifically the stale room entering game mode, which will be fixed by the above changes.
+
