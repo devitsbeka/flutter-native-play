@@ -1,141 +1,76 @@
 
+# Plan: Fix Broken Preset Avatar Display
 
-# Plan: Fix Player List Cropping & Mixed Category TV Game Start
+## Problem Identified
+When users select preset avatars from the avatar library (10 cartoon-style avatars), the system stores paths like `/src/assets/avatars/bot-avatar-7.png` in the database. These are "canonical paths" that need to be converted to actual bundled asset URLs at runtime.
 
-## Overview
-This plan addresses two user-reported issues:
-1. **Player/list cropping** in TV Lobby screens - both the category picker and player list are getting cut off
-2. **"სხვადასხვა" (Mixed) category can't start game** - clicking "Start Game" doesn't work after selecting the mixed category
+**The issue**: Many components throughout the app use `avatar_url` directly as an image source without calling `resolveAvatarUrl()` to convert these canonical paths. This causes the browser to try loading `/src/assets/...` paths directly, which fails, and users see the fallback "?" instead of their chosen avatar.
 
----
+## Current Architecture
+- **`avatarUtils.ts`**: Contains `resolveAvatarUrl()` function that converts canonical paths like `/src/assets/avatars/bot-avatar-X.png` to valid bundled URLs
+- **Components that work correctly**: `SmartAvatar`, `SafeAvatar`, `Avatar` (from shared), `AvatarCircle` - all call `resolveAvatarUrl()`
+- **Components that are broken**: 13+ files with 100+ instances using `AvatarImage src={avatar_url}` directly
 
-## Issue 1: Player List Cropping
+## Solution
 
-### Problem
-In `TVLobbyScreenV2.tsx`, the player grid uses a fixed grid layout (`grid grid-cols-4`) without proper scroll containment. When there are many players, the list gets cropped instead of scrolling.
+### Option A: Fix Each Component (Many Changes)
+Update all 13+ files to wrap `avatar_url` with `resolveAvatarUrl()`. This is error-prone and requires changes across many files.
 
-Similarly, in `ControllerLobby.tsx`, the player list already has `max-h-[50vh]` and `overflow-y-auto`, but the container structure may still cause cropping on smaller screens.
+### Option B: Create a Centralized Solution (Recommended)
+Create a new `ResolvedAvatarImage` component that automatically resolves avatar URLs, then replace `AvatarImage` usage with it. This provides:
+- Single point of fix
+- Prevents future bugs
+- Cleaner API
 
-### Solution
+### Implementation Plan
 
-#### File: `src/components/tv/TVLobbyScreenV2.tsx`
+#### Step 1: Create `ResolvedAvatarImage` Component
+Create a drop-in replacement for `AvatarImage` that automatically calls `resolveAvatarUrl()`:
 
-Wrap the players grid in a scrollable container with proper flex and overflow handling:
-
-**Current (line 531-536):**
 ```tsx
-<div className="flex-1 flex flex-col min-h-0">
-  <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
-    ...
-  </h2>
+// src/components/ui/resolved-avatar-image.tsx
+import { AvatarImage } from "@/components/ui/avatar";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { ComponentProps } from "react";
 
-  <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
-```
-
-**Changed to:**
-```tsx
-<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-  <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
-    ...
-  </h2>
-
-  <div className="flex-1 overflow-y-auto min-h-0">
-    <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
-```
-
-Add a closing `</div>` after the grid to properly wrap the scrollable area.
-
----
-
-## Issue 2: Mixed Category ("სხვადასხვა") Start Game Not Working
-
-### Problem Analysis
-Based on console logs, when "__mixed__" category is selected:
-- First attempt works: `State category: __mixed__`
-- Second attempt fails: `State category: null`
-
-The root cause is in the `startGame` function in `TVGameContext.tsx`. At lines 2276-2280:
-
-```typescript
-if (!categoryId && !userTriviaId) {
-  tvLogError('startGame', 'No category ID or user trivia ID provided');
-  return;
+export function ResolvedAvatarImage({ src, ...props }: ComponentProps<typeof AvatarImage>) {
+  const resolvedSrc = resolveAvatarUrl(src as string | null | undefined) || src;
+  return <AvatarImage src={resolvedSrc} {...props} />;
 }
 ```
 
-When queue items have `source_type: "random"`, they have `category_id: null`, so `startGame(null)` returns early without doing anything. This is the correct behavior for random.
+#### Step 2: Update Affected Files
+Replace `AvatarImage` with `ResolvedAvatarImage` in all affected files:
 
-However, the actual issue is in `handleStartGame()` in `TVHostController.tsx` when trying to use queue items. Looking at lines 474-477:
+| File | Instances |
+|------|-----------|
+| `src/components/team/MultiplayerGameScreenV2.tsx` | 3 |
+| `src/components/team/MultiplayerObserverScreen.tsx` | 2 |
+| `src/components/team/RoomChatsPanel.tsx` | 2 |
+| `src/components/team/AddFriendModal.tsx` | 1 |
+| `src/components/team/FriendsList.tsx` | 1 |
+| `src/components/team/RecentRoomsSection.tsx` | 1 |
+| `src/pages/admin/Reports.tsx` | 3 |
+| `src/pages/admin/OnlineUsers.tsx` | 1 |
+| `src/components/admin/PalantirAnalyticsWidget.tsx` | 3 |
+| `src/components/category/CategoryLeaderboard.tsx` | 1 |
+| `src/components/team/RoomLobbyV2.tsx` | 1 |
+| `src/components/team/RoomLobby.tsx` | 1 |
+| `src/components/team/GameHistoryTable.tsx` | 1 |
 
-```typescript
-} else if (firstQueued.category_id) {
-  await startGame(firstQueued.category_id);
-} else {
-  toast.error('არასწორი რაუნდის ტიპი');
-```
-
-The problem: When `source_type === "random"`, `category_id` is `null`, so neither the `user_trivia_id` nor `category_id` branch is triggered, causing the toast error.
-
-### Solution
-
-#### File: `src/pages/TVHostController.tsx`
-
-Update `handleStartGame` to properly handle "random" source type by fetching a random category before starting:
-
-**Current logic (around line 467-486):**
-```typescript
-if (hasQueue && queue.length > 0) {
-  const firstQueued = queue[0];
-  
-  if (firstQueued.user_trivia_id) {
-    await startGame(undefined, firstQueued.user_trivia_id);
-  } else if (firstQueued.category_id) {
-    await startGame(firstQueued.category_id);
-  } else {
-    toast.error('არასწორი რაუნდის ტიპი');
-    return;
-  }
-```
-
-**Changed to:**
-```typescript
-if (hasQueue && queue.length > 0) {
-  const firstQueued = queue[0];
-  
-  if (firstQueued.user_trivia_id) {
-    await startGame(undefined, firstQueued.user_trivia_id);
-  } else if (firstQueued.category_id) {
-    await startGame(firstQueued.category_id);
-  } else if (firstQueued.source_type === "random") {
-    // Random mode - fetch random category and start
-    const randomCat = categories[Math.floor(Math.random() * categories.length)];
-    if (randomCat) {
-      await startGame(randomCat.id);
-    } else {
-      toast.error('კატეგორიები ვერ მოიძებნა');
-      return;
-    }
-  } else {
-    toast.error('არასწორი რაუნდის ტიპი');
-    return;
-  }
-```
-
-This ensures that when "შემთხვევითი" (random) is in the queue, it picks a random category from the loaded categories list.
-
----
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/tv/TVLobbyScreenV2.tsx` | Add scroll container around player grid |
-| `src/pages/TVHostController.tsx` | Handle "random" source_type in handleStartGame |
+#### Step 3: Also Fix Direct `<img>` Usage
+Some files use `<img src={avatar_url}>` directly. These need `resolveAvatarUrl()` calls added:
+- `src/pages/admin/OnlineUsers.tsx`
+- `src/components/category/CategoryLeaderboard.tsx`
+- `src/components/team/RoomLobbyV2.tsx`
+- `src/components/team/RoomLobby.tsx`
+- `src/components/team/GameHistoryTable.tsx`
 
 ---
 
 ## Summary
+1. **Create** new `ResolvedAvatarImage` component that auto-resolves avatar URLs
+2. **Update** 13 files to use the new component instead of raw `AvatarImage`
+3. **Fix** direct `<img>` usages to call `resolveAvatarUrl()`
 
-1. **TV Lobby Player Grid**: Wrap the 4-column player grid in a scrollable container with `overflow-y-auto` and `flex-1 min-h-0` to prevent cropping
-2. **Mixed Category Start**: Add handling for `source_type === "random"` queue items to pick a random category from the available list when starting the game
-
+This will ensure preset avatars display correctly everywhere in the app.
