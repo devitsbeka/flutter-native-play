@@ -36,6 +36,21 @@ class AdService {
   private isAdLoading = false;
   private isAdLoaded = false;
   private listeners: any[] = [];
+  private isVipUser = false;
+
+  /**
+   * Set VIP status - VIP users skip ads and get rewards automatically
+   */
+  setVipStatus(isVip: boolean) {
+    this.isVipUser = isVip;
+  }
+
+  /**
+   * Check if ads should be shown (returns false for VIP users)
+   */
+  shouldShowAd(): boolean {
+    return !this.isVipUser;
+  }
 
   async initialize(): Promise<boolean> {
     if (this.isInitialized) return true;
@@ -226,6 +241,14 @@ class AdService {
     // Initialize if needed
     if (!this.isInitialized) {
       await this.initialize();
+    }
+
+    // VIP users skip ads and get rewards automatically
+    if (this.isVipUser) {
+      callbacks?.onAdShowed?.();
+      callbacks?.onRewardEarned?.({ type: 'vip_skip', amount: 1 });
+      callbacks?.onAdDismissed?.();
+      return true;
     }
 
     // Load and show in one call

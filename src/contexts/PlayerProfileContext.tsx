@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
+import { useVipBenefitsAutoGrant } from "@/hooks/useVipBenefitsAutoGrant";
 
 interface PlayerProfileContextType {
   openProfile: (userId: string) => void;
@@ -25,6 +26,9 @@ export function usePlayerProfile() {
 
 export function PlayerProfileProvider({ children }: { children: React.ReactNode }) {
   const [currentProfileUserId, setCurrentProfileUserId] = useState<string | null>(null);
+
+  // Auto-grant VIP daily power-ups on login
+  useVipBenefitsAutoGrant();
 
   const openProfile = useCallback((userId: string) => {
     setCurrentProfileUserId(userId);
