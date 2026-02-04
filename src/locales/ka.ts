@@ -66,6 +66,36 @@ export const ka = {
     accountCreated: "ანგარიში შეიქმნა!",
     welcomeBack: "კეთილი იყოს შენი დაბრუნება!",
     signInRequired: "შესვლა საჭიროა",
+    usernameOrEmail: "მომხმარებელი ან ელფოსტა",
+    usernameOrEmailPlaceholder: "შეიყვანე მომხმარებელი ან ელფოსტა",
+  },
+
+  // ==========================================
+  // Forgot Password / პაროლის აღდგენა
+  // ==========================================
+  forgotPassword: {
+    title: "პაროლის აღდგენა",
+    link: "პაროლი დამავიწყდა?",
+    enterUsername: "შეიყვანე შენი მომხმარებლის სახელი",
+    answerQuestion: "უპასუხე უსაფრთხოების შეკითხვას",
+    setNewPassword: "დააყენე ახალი პაროლი",
+    securityQuestion: "უსაფრთხოების შეკითხვა",
+    yourAnswer: "შენი პასუხი",
+    answerPlaceholder: "შეიყვანე პასუხი",
+    verify: "შემოწმება",
+    changePassword: "პაროლის შეცვლა",
+    success: "პაროლი შეიცვალა!",
+    successMessage: "ახლა შეგიძლია შეხვიდე ახალი პაროლით",
+    passwordChanged: "პაროლი წარმატებით შეიცვალა!",
+    wrongAnswer: "პასუხი არასწორია",
+    attemptsRemaining: "დარჩენილია {count} მცდელობა",
+    tooManyAttempts: "ძალიან ბევრი მცდელობა",
+    tryAgainLater: "სცადე 1 საათის შემდეგ",
+    noSecurityQuestion: "უსაფრთხოების შეკითხვა არ არის დაყენებული",
+    contactSupport: "დაუკავშირდი მხარდაჭერას",
+    backToLogin: "შესვლაზე დაბრუნება",
+    selectQuestion: "აირჩიე უსაფრთხოების შეკითხვა",
+    answerHint: "მინიმუმ 2 სიმბოლო",
   },
 
   // ==========================================

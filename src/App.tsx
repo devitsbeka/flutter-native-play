@@ -28,6 +28,7 @@ import NotFound from "./pages/NotFound";
 import Loading from "./pages/Loading";
 
 // Lazy loaded pages (reduces initial bundle)
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const PowerUps = lazy(() => import("./pages/PowerUps"));
 const Leaderboards = lazy(() => import("./pages/Leaderboards"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -123,6 +124,7 @@ const App = () => (
                 <Route path="/category/:categoryId" element={<CategoryPage />} />
                 <Route path="/play/:categoryId/:levelId" element={<CategoryQuizPage />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/leaderboards" element={<Leaderboards />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/world" element={<WorldHome />} />
