@@ -89,11 +89,11 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
       {/* Background images */}
       {isMobile ? (
         // Mobile: <img> with object-contain for crisp display without cropping
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/10 to-background">
+        <div className="absolute inset-0 w-full h-full">
           <img
             src={TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver}
             alt=""
-            className="w-full h-full object-contain object-center transition-opacity duration-500"
+            className="w-full h-full object-cover object-top transition-opacity duration-500"
             loading="eager"
             draggable={false}
           />
