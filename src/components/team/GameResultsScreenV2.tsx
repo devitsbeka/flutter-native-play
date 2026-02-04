@@ -321,17 +321,20 @@ export function GameResultsScreenV2() {
     // Add item to queue first
     await addToQueue(item);
     
-    // ALSO update the room's current category so lobby shows it as round 1
+    // CRITICAL FIX: Combine status reset AND category update into ONE atomic operation
+    // This prevents race condition where non-host sees status="playing" with new category
+    // and incorrectly tries to load questions from the old game
     await supabase
       .from("game_rooms")
       .update({
+        status: "waiting", // Reset status FIRST to prevent non-host from fetching old game
         category_id: item.source_type === "category" ? item.category_id : null,
         category_name: item.category_name || (item.source_type === "random" ? "შემთხვევითი" : null),
         user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
       })
       .eq("id", currentRoom.id);
     
-    // Navigate to lobby so host can see and reorder the queue
+    // Navigate to lobby (continueInRoom will see status is already "waiting" and skip redundant DB update)
     continueInRoom();
   };
 
