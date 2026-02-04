@@ -1074,10 +1074,10 @@ const TVHostController: React.FC = () => {
         </motion.div>
 
         {/* Start Game Button */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-40 pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-[100]">
           <ChunkyButton
             variant="primary"
-            className="w-full pointer-events-auto"
+            className="w-full"
             onClick={() => handleStartGame()}
             disabled={players.length < 1 || queue.length === 0}
           >
