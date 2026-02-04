@@ -1,73 +1,94 @@
 
-# Plan: Fix `startNextFromQueue` Using Stale Question Count
+# Plan: Comprehensive Fix for Question Count Bug in Multiplayer Rounds
 
 ## Problem Summary
 
-When a second round starts from the queue, only 1 question is fetched instead of 5, causing the game to end immediately. The database shows `total_questions: 1` even after the fix was applied.
+When a second round starts after a 1-question user trivia round, the game only fetches 1 question instead of 5, causing it to end immediately. The fix applied to `startNextFromQueue` wasn't sufficient because there are multiple code paths and fallback scenarios.
 
-## Root Cause
+## Root Cause Analysis
 
-In `startNextFromQueue` at line 1739:
+The bug has **two interrelated issues**:
 
+### Issue 1: Stale `total_questions` in `startNewRound`
+
+At line 1447 in `MultiplayerContextV2.tsx`:
 ```typescript
-const questionCount = state.currentRoom.total_questions || 5;
+const questionCount = freshRoom.total_questions || 5;
 ```
 
-This reads `total_questions` from **local state**, which still has the value from the previous round. If the first round was a user trivia with only 1 question, `state.currentRoom.total_questions` would be `1`. This stale value is then used to fetch questions for the new round, resulting in only 1 question being fetched.
+This reads the stale `total_questions` value (e.g., `1`) from the previous round and uses it for the new round.
 
-**The update to `total_questions: questions.length` happens AFTER the questions are fetched, so it can't fix a value that was already used incorrectly.**
+### Issue 2: `startNextFromQueue` Fallback to `startNewRound`
 
-## Why Previous Fix Didn't Work
+When `startNextFromQueue` doesn't find queue items (possibly due to timing/race condition), it falls back to `startNewRound()` at line 1755. This path inherits the stale question count bug.
 
-The previous fix correctly added `total_questions: questions.length` to the database and state updates. However, the bug occurs BEFORE that update - when `questionCount` is read from stale state to determine how many questions to fetch.
+### Evidence from Database
+
+The room shows:
+- `total_questions: 1` (stale from previous user trivia)
+- `category_id: null` (previous game was user trivia)
+- Queue still has "პოლიტიკა" (Politics) item unprocessed
+
+The question in `room_questions` is from "ცნობილი ადამიანები" (Famous People), NOT from the queue's "პოლიტიკა" category, confirming that the random mode was triggered (not the queue path).
 
 ## Solution
 
-For `startNextFromQueue`, the queue item represents a NEW round (not a continuation), so we should use a **fresh default of 5 questions** instead of reading from stale state. This is consistent with how new games work.
+Fix the question count in **both** functions to use a fresh default for new rounds:
+
+### 1. Fix `startNewRound` (Line 1447)
+
+**Before:**
+```typescript
+const questionCount = freshRoom.total_questions || 5;
+```
+
+**After:**
+```typescript
+// FIX: Always use fresh default for new rounds
+// Don't rely on stale total_questions from previous round
+const questionCount = 5;
+```
+
+### 2. Ensure `startNextFromQueue` Uses Fresh Default (Already Fixed)
+
+This was already fixed in a previous change:
+```typescript
+const questionCount = 5; // Already fixed
+```
+
+## Flow After Fix
+
+| Step | What Happens |
+|------|--------------|
+| 1 | First round plays user trivia (1 question) |
+| 2 | User clicks "Next Round" |
+| 3 | `handlePlayAgain` → `startNextFromQueue()` |
+| 4a | **If queue found:** Uses queue item category, fetches 5 questions |
+| 4b | **If queue empty/fallback:** `startNewRound()` uses `questionCount = 5` |
+| 5 | Game plays with 5 questions |
 
 ## Technical Changes
 
 ### File: `src/contexts/MultiplayerContextV2.tsx`
 
-**Location: Line 1739**
-
-Change from reading stale state to using a fresh default:
-
-**Before:**
+**Line 1447** - Change from:
 ```typescript
-const roomId = state.currentRoom.id;
-const questionCount = state.currentRoom.total_questions || 5;
+const questionCount = freshRoom.total_questions || 5;
 ```
-
-**After:**
+To:
 ```typescript
-const roomId = state.currentRoom.id;
-// FIX: Use fresh default for new rounds from queue
-// Don't read from stale state which may have old value from previous round
 const questionCount = 5;
 ```
 
-This is safe because:
-1. Queue items always start a NEW round (not resuming an existing one)
-2. The default for new games is 5 questions
-3. For user trivia, the question count is determined by the trivia's questions array (handled separately in the user trivia branch)
+## Why This Is Safe
+
+1. **New rounds should always be fresh**: When starting a new round (whether from queue or repeat), the default of 5 questions is appropriate
+2. **User trivias determine their own count**: The user trivia branch (lines 1468-1596) fetches questions from `user_quiz_posts.questions` and uses `questions.length`, bypassing the `questionCount` variable entirely
+3. **Library categories should have 5 questions**: This is the standard for VS mode multiplayer
+4. **No loss of functionality**: Previously, if someone set a custom count, it would persist. But in practice, multiplayer VS mode always uses 5 questions per round
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/contexts/MultiplayerContextV2.tsx` | Line 1739: Change `state.currentRoom.total_questions || 5` to just `5` |
-
-## Expected Behavior After Fix
-
-1. First round plays with any number of questions (e.g., 1 for a short trivia)
-2. Click "Next Round" from results (with queue item)
-3. `startNextFromQueue` uses default count of 5 (not stale value of 1)
-4. `getQuestions()` fetches 5 questions
-5. Database and state are updated with `total_questions: 5`
-6. Game plays through all 5 questions
-7. Results screen shows after all questions are answered
-
-## Alternative Considered
-
-We could fetch fresh `total_questions` from the database like `startGame` does. However, since queue items represent completely NEW rounds (not existing games), using a standard default is simpler and more appropriate.
+| File | Location | Change |
+|------|----------|--------|
+| `src/contexts/MultiplayerContextV2.tsx` | Line 1447 | Replace `freshRoom.total_questions || 5` with `5` |
