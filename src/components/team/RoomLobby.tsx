@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Copy, Share2, Users, LogOut, Check, Edit2, Crown, MessageCircle, Send, X, Gamepad2, Trash2 } from "lucide-react";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -453,7 +454,7 @@ export function RoomLobby() {
                       >
                         <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
                           {msg.avatar_url ? (
-                            <img src={msg.avatar_url} alt="" className="w-full h-full object-cover" />
+                            <img src={resolveAvatarUrl(msg.avatar_url) || msg.avatar_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                               {msg.nickname?.charAt(0).toUpperCase()}

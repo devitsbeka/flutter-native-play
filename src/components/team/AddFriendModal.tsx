@@ -5,7 +5,8 @@ import { GameModal } from "@/components/ui/game-modal";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -222,7 +223,7 @@ function SearchResultCard({ result, onSendRequest, isSent, isPending }: SearchRe
       className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
     >
       <Avatar className="w-12 h-12 border-2 border-white/20">
-        <AvatarImage src={result.avatar_url || undefined} />
+        <ResolvedAvatarImage src={result.avatar_url || undefined} />
         <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
           {result.nickname.charAt(0).toUpperCase()}
         </AvatarFallback>

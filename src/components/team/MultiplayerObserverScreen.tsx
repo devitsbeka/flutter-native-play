@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ChevronUp, ChevronDown, ArrowLeft } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -166,7 +167,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
             <div className="flex -space-x-2">
               {players.slice(0, 3).map((p, i) => (
                 <Avatar key={p.id} className="w-6 h-6 border border-white/30" style={{ zIndex: 3 - i }}>
-                  <AvatarImage src={p.avatar_url || undefined} />
+                  <ResolvedAvatarImage src={p.avatar_url || undefined} />
                   <AvatarFallback className="bg-purple-500 text-white text-[10px]">
                     {p.nickname?.charAt(0) || "?"}
                   </AvatarFallback>
@@ -203,7 +204,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
                       {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                     </span>
                     <Avatar className="w-6 h-6">
-                      <AvatarImage src={p.avatar_url || undefined} />
+                      <ResolvedAvatarImage src={p.avatar_url || undefined} />
                       <AvatarFallback className="bg-purple-500 text-white text-[10px]">
                         {p.nickname?.charAt(0) || "?"}
                       </AvatarFallback>

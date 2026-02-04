@@ -13,7 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserModeration } from "@/hooks/useUserModeration";
 import { useConversationPreviews, ConversationPreview } from "@/hooks/useConversationPreviews";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { UserActionMenu } from "@/components/shared/UserActionMenu";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { MAP_VIDEOS } from "@/config/videoConfig";
@@ -562,7 +563,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                           </div>
                         ) : (
                           <>
-                            <AvatarImage src={selectedConversation.avatarUrl || undefined} />
+                            <ResolvedAvatarImage src={selectedConversation.avatarUrl || undefined} />
                             <AvatarFallback 
                               className="font-bold text-primary-foreground"
                               style={{
@@ -661,7 +662,7 @@ export function RoomChatsPanel({ isOpen, onClose }: RoomChatsPanelProps) {
                               <div className="flex items-end gap-2 max-w-[75%]">
                                 {!isOwn && selectedConversation.type === "room" && (
                                   <Avatar className="w-8 h-8 flex-shrink-0">
-                                    <AvatarImage src={msg.avatar_url} />
+                                    <ResolvedAvatarImage src={msg.avatar_url} />
                                     <AvatarFallback className="bg-muted text-xs">
                                       {(msg.nickname || "?").charAt(0).toUpperCase()}
                                     </AvatarFallback>

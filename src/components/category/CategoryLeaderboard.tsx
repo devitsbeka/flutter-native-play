@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WeeklyRewardsPreview } from "@/components/leaderboard/WeeklyRewardsPreview";
 import { getDaysRemainingInWeek } from "@/config/leaderboardRewards";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -249,7 +250,7 @@ export function CategoryLeaderboard({
                     }`}>
                       {entry.avatar_url ? (
                         <img
-                          src={entry.avatar_url}
+                          src={resolveAvatarUrl(entry.avatar_url) || entry.avatar_url}
                           alt={entry.nickname}
                           className="w-full h-full object-cover"
                         />

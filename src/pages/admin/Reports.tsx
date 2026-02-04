@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import {
   Select,
   SelectContent,
@@ -268,7 +269,7 @@ export default function AdminReports() {
                   <div className="flex items-start gap-3">
                     {/* Reported User */}
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={report.reported?.avatar_url || undefined} />
+                      <ResolvedAvatarImage src={report.reported?.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary/20 text-primary">
                         {report.reported?.nickname?.charAt(0).toUpperCase() || '?'}
                       </AvatarFallback>
@@ -325,7 +326,7 @@ export default function AdminReports() {
                 <p className="text-xs text-muted-foreground mb-2">რეპორტირებული მომხმარებელი</p>
                 <div className="flex items-center gap-2">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={selectedReport.reported?.avatar_url || undefined} />
+                    <ResolvedAvatarImage src={selectedReport.reported?.avatar_url || undefined} />
                     <AvatarFallback className="bg-red-100 text-red-800">
                       {selectedReport.reported?.nickname?.charAt(0).toUpperCase() || '?'}
                     </AvatarFallback>
@@ -339,7 +340,7 @@ export default function AdminReports() {
                 <p className="text-xs text-muted-foreground mb-2">რეპორტერი</p>
                 <div className="flex items-center gap-2">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={selectedReport.reporter?.avatar_url || undefined} />
+                    <ResolvedAvatarImage src={selectedReport.reporter?.avatar_url || undefined} />
                     <AvatarFallback className="bg-blue-100 text-blue-800">
                       {selectedReport.reporter?.nickname?.charAt(0).toUpperCase() || '?'}
                     </AvatarFallback>
