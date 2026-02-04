@@ -382,6 +382,7 @@ export default function Leaderboards() {
 // Desktop: All 3 leaderboards side by side with hero background
 function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: string }) {
   const { language } = useLanguage();
+  const [activeTier, setActiveTier] = useState(2); // Default to Silver
   
   // Fetch all 3 tiers
   const tier1 = useLeagueLeaderboard(1, region);
@@ -393,13 +394,64 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
     { tier: 3, data: tier3, name: "Gold League", nameKa: "ოქროს ლიგა" },
     { tier: 1, data: tier1, name: "Bronze League", nameKa: "ბრინჯაოს ლიგა" },
   ];
+  
+  const LEAGUE_NAMES: Record<number, string> = {
+    1: "ბრინჯაოს ლიგა",
+    2: "ვერცხლის ლიგა",
+    3: "ოქროს ლიგა",
+  };
+  
+  const handlePrevTier = useCallback(() => {
+    setActiveTier(t => {
+      if (t === 1) return 3;
+      if (t === 3) return 2;
+      return 1;
+    });
+  }, []);
+  
+  const handleNextTier = useCallback(() => {
+    setActiveTier(t => {
+      if (t === 2) return 3;
+      if (t === 3) return 1;
+      return 2;
+    });
+  }, []);
 
   return (
     <LeaderboardHeroBackground>
-      {/* Countdown - hidden for now */}
-      {/* <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
-        <LeagueCountdown />
-      </div> */}
+      {/* League Navigation Header with blur */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
+        <div className="bg-white/30 backdrop-blur-xl rounded-2xl p-3 px-5 border border-white/20 shadow-lg">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handlePrevTier}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+              aria-label="Previous tier"
+            >
+              <ChevronLeft className="w-5 h-5 text-white" />
+            </button>
+            
+            <div className="flex items-center gap-2.5 min-w-[180px] justify-center">
+              <img 
+                src={TROPHY_IMAGES[activeTier]} 
+                alt="" 
+                className="w-7 h-7 object-contain"
+              />
+              <span className="text-white font-bold text-lg drop-shadow-md whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                {LEAGUE_NAMES[activeTier]?.toUpperCase()}
+              </span>
+            </div>
+            
+            <button
+              onClick={handleNextTier}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+              aria-label="Next tier"
+            >
+              <ChevronRight className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Content area - leaderboards overlap hero image */}
       <div className="pt-[420px]">
@@ -415,6 +467,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
                 isLoading={data.isLoading}
                 userTier={userTier}
                 previousRank={data.previousRank}
+                isActive={tier === activeTier}
               />
             ))}
           </div>
@@ -462,49 +515,47 @@ function TabletLeaderboards({
   return (
     <LeaderboardHeroBackground isTablet currentTier={currentTier}>
       <div className="flex flex-col h-[calc(100vh-120px)]">
-        {/* League Navigation at top */}
-        <div className="flex items-center justify-between py-4 px-6">
-          <button
-            onClick={onPrevTier}
-            className="p-3 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:bg-background/50 transition-all"
-            aria-label="Previous tier"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          
-          <div className="text-center flex-1 min-w-0">
-            <h2 className="text-2xl text-foreground font-bold whitespace-nowrap drop-shadow-lg" style={{ fontFamily: "'Google Sans', sans-serif" }}>
-              {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
-            </h2>
-            {currentTier === userTier && (
-              <p className="text-sm text-primary font-medium drop-shadow-sm mt-1">შენი ლიგა</p>
-            )}
+        {/* League Navigation at top with blur container */}
+        <div className="mx-6 mt-4">
+          <div className="bg-white/30 backdrop-blur-xl rounded-2xl p-3 border border-white/20">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={onPrevTier}
+                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+                aria-label="Previous tier"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+              
+              <div className="flex items-center gap-2.5">
+                <img 
+                  src={TROPHY_IMAGES[currentTier]} 
+                  alt="" 
+                  className="w-7 h-7 object-contain"
+                />
+                <div className="text-center">
+                  <h2 className="text-xl text-white font-bold whitespace-nowrap drop-shadow-lg" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                    {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
+                  </h2>
+                  {currentTier === userTier && (
+                    <p className="text-xs text-white/80 font-medium">შენი ლიგა</p>
+                  )}
+                </div>
+              </div>
+              
+              <button
+                onClick={onNextTier}
+                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+                aria-label="Next tier"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
-          
-          <button
-            onClick={onNextTier}
-            className="p-3 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:bg-background/50 transition-all"
-            aria-label="Next tier"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
         </div>
         
-        {/* Center trophy */}
-        <div className="flex-1 flex items-center justify-center">
-          <motion.img
-            key={currentTier}
-            src={TROPHY_IMAGES[currentTier]}
-            alt="Trophy"
-            className="w-48 h-auto drop-shadow-2xl"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            style={{
-              filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))',
-            }}
-          />
-        </div>
+        {/* Spacer - trophy is already visible in the background */}
+        <div className="flex-1" />
         
         {/* View Rating button */}
         <div className="pb-32 flex justify-center">
@@ -595,6 +646,7 @@ function DesktopLeagueColumn({
   isLoading,
   userTier,
   previousRank,
+  isActive,
 }: {
   tier: number;
   name: string;
@@ -602,6 +654,7 @@ function DesktopLeagueColumn({
   isLoading: boolean;
   userTier: number;
   previousRank: number | null;
+  isActive?: boolean;
 }) {
   const { user } = useAuth();
   const isUserTier = tier === userTier;
@@ -612,8 +665,12 @@ function DesktopLeagueColumn({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: tier * 0.1 }}
     >
-      <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl ${
-        isUserTier ? 'bg-white/80 border-primary/50 ring-2 ring-primary/20' : 'bg-white/80 border-border/30'
+      <Card className={`backdrop-blur-sm overflow-hidden flex flex-col rounded-3xl transition-all ${
+        isActive 
+          ? 'bg-white/90 border-primary/60 ring-2 ring-primary/30 scale-[1.02] shadow-xl' 
+          : isUserTier 
+            ? 'bg-white/80 border-primary/50 ring-2 ring-primary/20' 
+            : 'bg-white/80 border-border/30'
       }`}>
         <CardHeader className="py-4 px-4 bg-gradient-to-b from-primary/5 to-transparent text-center">
           <CardTitle className="text-lg text-foreground" style={{ fontFamily: "'Google Sans', sans-serif", fontWeight: 700 }}>{name.toUpperCase()}</CardTitle>
