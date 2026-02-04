@@ -1,112 +1,110 @@
 
-# Plan: Fix Duplicate Category Display When Adding to Queue
+# Plan: Fix Missing `total_questions` Update in `startNextFromQueue`
 
-## Problem
+## Problem Summary
 
-When clicking "რიგში დამატება" (Add to Queue) on the results screen, the selected category (e.g., "ფსიქოლოგია") appears twice:
-1. As the main title with "მიმდინარე" subtitle
-2. As item #2 in the queue section
-
-This happens because `handleAddToQueue` in `GameResultsScreenV2.tsx`:
-1. Adds the item to `room_category_queue` table
-2. **Also** updates `game_rooms.category_name` to the same value
-
-## Expected Behavior
-
-When adding to queue:
-- Item should ONLY appear in the queue (not as "current")
-- Queue items should be numbered starting from 1 (since there's no "current" category)
-- User can keep adding more items to queue
-- The "current" category is only set when game starts (first queue item becomes current)
+When a second round starts from the queue (library category), the game ends after just 1 question and shows the results page. This happens because the room's `total_questions` field is not being updated when starting a round with a library category from the queue.
 
 ## Root Cause
 
-In `GameResultsScreenV2.tsx`, lines 327-335:
-```typescript
-await supabase
-  .from("game_rooms")
-  .update({
-    status: "waiting",
-    category_id: item.source_type === "category" ? item.category_id : null,
-    category_name: item.category_name || ...,  // ← Sets same category as current!
-    user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
-  })
-```
+In `MultiplayerContextV2.tsx`, the `startNextFromQueue` function has two code paths:
 
-This update should NOT set the category fields - it should clear them so the lobby shows "აირჩიე რაუნდი" (empty state) while the queue shows the pending items.
+1. **User trivia branch** (lines 1885-1896): Correctly updates `total_questions: questions.length` in the database
+2. **Library/random category branch** (lines 2044-2055): **Missing** `total_questions` update
+
+When the library category branch runs, the room keeps its old `total_questions` value from the previous game. If the previous game had only 1 question, the stale value persists and the new round also thinks it should have only 1 question.
+
+## Database Evidence
+
+Current room state shows:
+- `total_questions: 1` (stale from previous game)
+- Only 1 question in `room_questions` table
 
 ## Solution
 
-### File: `src/components/team/GameResultsScreenV2.tsx`
+Add `total_questions: questions.length` to the database update in the library/random category branch of `startNextFromQueue`.
 
-Update `handleAddToQueue` to NOT set category fields when adding to queue:
+## Technical Changes
 
+### File: `src/contexts/MultiplayerContextV2.tsx`
+
+**Location: Lines 2044-2055 (library/random category update)**
+
+Add `total_questions: questions.length` to both:
+1. The database update (supabase `.update()` call)
+2. The local state update (`setState()` call)
+
+**Before:**
 ```typescript
-const handleAddToQueue = async (item: {...}) => {
-  if (!currentRoom) return;
-  
-  // Add item to queue first
-  await addToQueue(item);
-  
-  // Reset room status to waiting, but DON'T set category
-  // The queue items will be shown separately, and the first item
-  // will become "current" only when the game starts
-  await supabase
-    .from("game_rooms")
-    .update({
-      status: "waiting",
-      category_id: null,      // ← Clear - no current category
-      category_name: null,    // ← Clear - show empty state
-      user_trivia_id: null,   // ← Clear - no current trivia
-    })
-    .eq("id", currentRoom.id);
-  
-  continueInRoom();
-};
+// Update room with new category and game info (after questions are committed)
+await supabase
+  .from("game_rooms")
+  .update({
+    category_id: newCategoryId,
+    category_name: newCategoryName,
+    used_question_ids: newUsedIds,
+    status: "playing",
+    started_at: new Date().toISOString(),
+    current_game_id: game?.id,
+  })
+  .eq("id", roomId);
+
+// Update state with new category and questions
+setState(prev => ({
+  ...prev,
+  currentRoom: prev.currentRoom ? {
+    ...prev.currentRoom,
+    category_id: newCategoryId,
+    category_name: newCategoryName,  // <-- Missing total_questions!
+  } : null,
+  // ...
+}));
 ```
 
-### File: `src/components/team/CategoryPickerSection.tsx`
-
-Update numbering logic - when there's no current category, queue items should start from 1:
-
-Currently:
+**After:**
 ```typescript
-{hasCategory ? index + 2 : index + 1}
+// Update room with new category and game info (after questions are committed)
+await supabase
+  .from("game_rooms")
+  .update({
+    category_id: newCategoryId,
+    category_name: newCategoryName,
+    used_question_ids: newUsedIds,
+    total_questions: questions.length,  // <-- ADD THIS
+    status: "playing",
+    started_at: new Date().toISOString(),
+    current_game_id: game?.id,
+  })
+  .eq("id", roomId);
+
+// Update state with new category and questions
+setState(prev => ({
+  ...prev,
+  currentRoom: prev.currentRoom ? {
+    ...prev.currentRoom,
+    category_id: newCategoryId,
+    category_name: newCategoryName,
+    total_questions: questions.length,  // <-- ADD THIS
+  } : null,
+  // ...
+}));
 ```
-
-This is already correct! When `hasCategory` is false (no current selection), it shows `index + 1`.
-
-## Updated Flow
-
-| Step | Category Section | Queue Section |
-|------|------------------|---------------|
-| Initial (no selection) | "რისი თამაში გინდა?" | Empty |
-| After adding "ფსიქოლოგია" to queue | "რისი თამაში გინდა?" | `[1] ფსიქოლოგია` |
-| After adding "ისტორია" to queue | "რისი თამაში გინდა?" | `[1] ფსიქოლოგია → [2] ისტორია` |
-| Game starts | "ფსიქოლოგია" + "მიმდინარე" | `[2] ისტორია` |
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/team/GameResultsScreenV2.tsx` | Clear category fields (set to null) instead of setting them when adding to queue |
+| `src/contexts/MultiplayerContextV2.tsx` | Add `total_questions: questions.length` to database and state updates in library/random category branch (around lines 2047 and 2063) |
 
-## Visual Comparison
+## Expected Behavior After Fix
 
-**Before (Bug):**
-```text
-ფსიქოლოგია      ← Current (from game_rooms.category_name)
-მიმდინარე
+1. First round plays with 5 questions
+2. Click "Next Round" from results (with queue item)
+3. `startNextFromQueue` fetches 5 new questions
+4. **Room's `total_questions` is updated to `5`** (instead of staying at stale value)
+5. Game plays through all 5 questions
+6. Results screen shows after all questions are answered
 
-რიგი:
-[2 ფსიქოლოგია ×]  ← Duplicate (from room_category_queue)
-```
+## Why This Bug Occurred
 
-**After (Fixed):**
-```text
-რისი თამაში გინდა?    ← Empty state (category_name is null)
-დაამატე კატეგორია
-
-რიგი:
-[1 ფსიქოლოგია ×]      ← Only in queue, numbered from 1
-```
+The user trivia branch was implemented correctly with `total_questions: questions.length`, but when the library category branch was added later, the `total_questions` field was inadvertently omitted from both the database update and state update.
