@@ -60,23 +60,30 @@ const LEAGUE_STROKE_COLORS: Record<number, { from: string; via: string; to: stri
   }
 };
 
-// Animated league badge component - only the border rotates, text stays static
+// Animated league badge component - subtle shimmer effect on border stroke
 const AnimatedLeagueBadge = ({ tier, size = 'default' }: { tier: number; size?: 'default' | 'small' }) => {
   const colors = LEAGUE_STROKE_COLORS[tier] || LEAGUE_STROKE_COLORS[1];
   const padding = size === 'small' ? 2 : 2.5;
   
   return (
     <div className="relative inline-flex items-center justify-center">
-      {/* Rotating gradient border - positioned behind text */}
+      {/* Animated gradient border with shimmer effect */}
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `conic-gradient(from 0deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.from})`
+          background: `linear-gradient(90deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.via}, ${colors.from})`,
+          backgroundSize: '200% 100%'
         }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        animate={{ 
+          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+        }}
+        transition={{ 
+          duration: 3, 
+          repeat: Infinity, 
+          ease: "easeInOut" 
+        }}
       />
-      {/* Static text layer - stays on top and doesn't rotate */}
+      {/* Static text layer - stays on top */}
       <span 
         className={`relative z-10 block ${size === 'small' ? 'text-xs px-2.5 py-0.5' : 'text-sm px-3 py-1'} font-medium text-foreground bg-background/90 backdrop-blur-sm rounded-full`}
         style={{ margin: padding }}
