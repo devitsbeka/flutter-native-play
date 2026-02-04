@@ -11,98 +11,203 @@ const BANNED_WORDS = [
 // Max character limit for room names
 const MAX_NAME_LENGTH = 18;
 
-// Fun fallback names for trivia rooms - exciting themes! (30+ unique options)
-const FALLBACK_NAMES = [
-  // Battle themes
-  "ტვინების არენა",   // Brain Arena
-  "გონების რინგი",    // Mind Ring
-  "IQ დუელი",         // IQ Duel
-  "ჭიდაობა გონებით",  // Wrestling with Mind
-  "გონების ბრძოლა",   // Mind Battle
-  // Team themes  
-  "გენიოსთა კლუბი",   // Genius Club
-  "ჭკვიანთა ბანდა",   // Smart Gang
-  "ნერდთა კლანი",     // Nerd Clan
-  "ტრიბა IQ",         // IQ Tribe
-  "ერუდიტთა სახლი",   // Erudites House
-  // Fun themes
-  "გონების რეივი",    // Mind Rave
-  "ტვინის დისკო",     // Brain Disco
-  "კვიზ ფესტი",       // Quiz Fest
-  "გონების ზეიმი",    // Mind Celebration
-  // Epic themes
-  "დრაკონთა კლუბი",   // Dragon Club
-  "ნინჯა ტვინები",    // Ninja Brains
-  "ფენიქსის ბრძოლა",  // Phoenix Battle
-  "ლომთა ბრძოლა",     // Lions' Battle
-  "მგლის ხროვა",      // Wolf Pack
-  "არწივის მზერა",    // Eagle's Gaze
-  "ვეფხვის გუნდი",    // Tiger Team
-  "დათვის ბუნაგი",    // Bear's Den
-  // Victory themes
-  "ჩემპიონთა რინგი",  // Champions Ring
-  "მედლების კლუბი",   // Medals Club
-  "გამარჯვებულები",   // Winners
-  "თასის მეტოქენი",   // Cup Contenders
-  "გვირგვინის მცველი",// Crown Keeper
-  // Smart themes
-  "ერუდიტების კლანი", // Erudites Clan
-  "ინტელექტის ხიდი",  // Bridge of Intellect
-  "სიბრძნის კოშკი",   // Tower of Wisdom
-];
-
-// Curated keyword-to-slug fallback map for fun trivia themes
-const THEME_ICON_FALLBACKS: Record<string, string[]> = {
-  // Battle/Competition themes
-  'arena': ['arena', 'colosseum', 'stadium', 'ring', 'amphitheater'],
-  'duel': ['sword', 'fencing', 'swords', 'fight', 'crossed-swords'],
-  'ring': ['boxing', 'ring', 'fight', 'arena', 'wrestling'],
-  'battle': ['sword', 'swords', 'fight', 'battle', 'shield'],
-  'war': ['shield', 'sword', 'battle', 'helmet', 'warrior'],
-  'boxing': ['boxing', 'gloves', 'fight', 'punch'],
-  'knight': ['knight', 'armor', 'sword', 'shield', 'helmet'],
-  'sword': ['sword', 'swords', 'blade', 'fight', 'crossed-swords'],
-  'shield': ['shield', 'defense', 'armor', 'knight'],
-  
-  // Team/Social themes  
-  'club': ['friends', 'group', 'party', 'team', 'people'],
-  'gang': ['group', 'friends', 'team', 'squad', 'people'],
-  'team': ['team', 'group', 'friends', 'people', 'squad'],
-  'friends': ['friends', 'group', 'people', 'team'],
-  'party': ['party', 'celebration', 'confetti', 'fireworks', 'balloon'],
-  
-  // Mythical/Epic themes
-  'dragon': ['dragon', 'fire', 'knight', 'monster', 'creature'],
-  'phoenix': ['phoenix', 'fire', 'flame', 'bird', 'rebirth'],
-  'ninja': ['ninja', 'samurai', 'warrior', 'mask', 'shuriken'],
-  'samurai': ['samurai', 'ninja', 'warrior', 'sword', 'katana'],
-  'wizard': ['wizard', 'magic', 'wand', 'hat', 'sorcerer'],
-  'lion': ['lion', 'crown', 'king', 'beast', 'mane'],
-  'tiger': ['tiger', 'stripes', 'wild', 'beast', 'cat'],
-  'eagle': ['eagle', 'bird', 'flying', 'hawk', 'wings'],
-  'wolf': ['wolf', 'pack', 'wild', 'howl', 'beast'],
-  'bear': ['bear', 'beast', 'wild', 'grizzly'],
-  
-  // Victory/Success themes
-  'champion': ['trophy', 'medal', 'crown', 'cup', 'winner'],
-  'trophy': ['trophy', 'cup', 'award', 'prize', 'winner'],
-  'winner': ['medal', 'trophy', 'star', 'crown', 'champion'],
-  'crown': ['crown', 'king', 'queen', 'royal', 'throne'],
-  'medal': ['medal', 'award', 'badge', 'gold', 'winner'],
-  'olympic': ['medal', 'torch', 'olympic', 'rings', 'flame'],
-  
-  // Fun/Energy themes
-  'fireworks': ['fireworks', 'explosion', 'spark', 'celebration'],
-  'lightning': ['lightning', 'bolt', 'thunder', 'flash', 'electric'],
-  'fire': ['fire', 'flame', 'hot', 'burning'],
-  'explosion': ['explosion', 'boom', 'blast', 'fireworks'],
-  'rocket': ['rocket', 'spaceship', 'space', 'launch'],
-  'star': ['star', 'stars', 'sparkle', 'shine'],
-  
-  // Brain/Smart themes
-  'brain': ['brain', 'head', 'mind', 'thinking', 'smart'],
-  'genius': ['lightbulb', 'brain', 'star', 'smart'],
-  'lightbulb': ['lightbulb', 'bulb', 'idea', 'smart'],
+// Theme-based room names (15 themes × 8 names each = 120+ options)
+const THEMED_ROOM_NAMES: Record<string, { names: string[], iconKeywords: string[] }> = {
+  champion: {
+    names: [
+      "ოქროს თასი",        // Golden Cup
+      "ვარსკვლავთა ბრძოლა", // Stars Battle
+      "მედლების კლუბი",    // Medals Club
+      "ჩემპიონები",        // Champions
+      "პირველობის რინგი",   // Championship Ring
+      "გამარჯვებულთა ზონა", // Winners Zone
+      "ტრიუმფის არენა",     // Triumph Arena
+      "პოდიუმის გზა",       // Podium Way
+    ],
+    iconKeywords: ['trophy', 'medal', 'crown', 'cup', 'winner', 'gold']
+  },
+  adventure: {
+    names: [
+      "კოსმოსის მოგზაური",  // Space Traveler
+      "ექსპედიცია X",       // Expedition X
+      "აღმოჩენის გზა",      // Discovery Path
+      "მკვლევართა კლანი",   // Explorers Clan
+      "ჰორიზონტის მიღმა",   // Beyond Horizon
+      "საზღვრების მიღმა",   // Beyond Borders
+      "ძიების ბილიკი",      // Search Trail
+      "ახალი ტერიტორია",    // New Territory
+    ],
+    iconKeywords: ['rocket', 'compass', 'map', 'telescope', 'binoculars']
+  },
+  creature: {
+    names: [
+      "ცეცხლის მცველი",     // Fire Guardian
+      "მითიური ბუნაგი",     // Mythical Den
+      "ლეგენდის კვალი",     // Legend's Trail
+      "ჯადოსნური არსება",   // Magical Creature
+      "ფანტასტიური კლუბი",  // Fantastic Club
+      "მონსტრების ლიგა",    // Monsters League
+      "ზღაპრის სამყარო",    // Fairytale World
+      "ფრთოსანთა კლანი",    // Winged Clan
+    ],
+    iconKeywords: ['dragon', 'phoenix', 'unicorn', 'griffin', 'pegasus']
+  },
+  animal: {
+    names: [
+      "მტაცებლის ხროვა",    // Predator Pack
+      "ბუნაგის მეფე",       // Den King
+      "მფრინავი მხედარი",   // Flying Rider
+      "ველური კლანი",       // Wild Clan
+      "ბუნების ძალა",       // Nature's Power
+      "თათების ლიგა",       // Paws League
+      "ფოლადის კლანჭა",     // Steel Claw
+      "სწრაფი ნადირი",      // Swift Hunter
+    ],
+    iconKeywords: ['lion', 'wolf', 'eagle', 'bear', 'tiger', 'shark', 'panther']
+  },
+  battle: {
+    names: [
+      "ჯავშნის რინგი",      // Armor Ring
+      "კლინკის ჟღერა",      // Blade Clang
+      "მეომრის ბილიკი",     // Warrior's Path
+      "ფარების კედელი",     // Shield Wall
+      "გლადიატორები",       // Gladiators
+      "რაინდთა კლანი",      // Knights Clan
+      "ბრძოლის მოედანი",    // Battle Arena
+      "ფოლადის გუნდი",      // Steel Team
+    ],
+    iconKeywords: ['sword', 'shield', 'boxing', 'knight', 'armor', 'battle']
+  },
+  magic: {
+    names: [
+      "ჯადოქართა სახლი",    // Wizards House
+      "კრისტალის კოშკი",    // Crystal Tower
+      "მოჯადოე კლანი",      // Enchanted Clan
+      "შელოცვის წრე",       // Spell Circle
+      "მაგიური ბროლი",      // Magic Orb
+      "ალქიმიკოსები",       // Alchemists
+      "ჯადოს სკოლა",        // Magic School
+      "მისტიკის კლუბი",     // Mystic Club
+    ],
+    iconKeywords: ['wizard', 'wand', 'crystal', 'magic', 'potion', 'hat']
+  },
+  party: {
+    names: [
+      "ზეიმის მოედანი",     // Celebration Square
+      "ფეიერვერკი",         // Fireworks
+      "სახალისო ბუდე",      // Fun Nest
+      "წვეულების კლუბი",    // Party Club
+      "ბალონების ომი",      // Balloon War
+      "კონფეტის წვიმა",     // Confetti Rain
+      "დღესასწაული",        // Holiday
+      "ფესტივალი",          // Festival
+    ],
+    iconKeywords: ['balloon', 'confetti', 'cake', 'party', 'gift', 'fireworks']
+  },
+  nature: {
+    names: [
+      "მწვერვალის ჯგუფი",   // Summit Group
+      "მზის ხეობა",         // Sun Valley
+      "ტყის კლანი",         // Forest Clan
+      "მთის მგლები",        // Mountain Wolves
+      "ბუნების ძალა",       // Nature's Force
+      "მწვანე ლიგა",        // Green League
+      "ხეობის მცველი",      // Valley Guardian
+      "კლდის არწივები",     // Rock Eagles
+    ],
+    iconKeywords: ['tree', 'mountain', 'sun', 'leaf', 'forest', 'flower']
+  },
+  tech: {
+    names: [
+      "კიბერ არენა",        // Cyber Arena
+      "პიქსელების ომი",     // Pixel War
+      "დიჯიტალ გვარდია",    // Digital Guard
+      "კოდის მეომრები",     // Code Warriors
+      "ტექნო კლანი",        // Techno Clan
+      "რობოტების ლიგა",     // Robots League
+      "ჩიპის ჯგუფი",        // Chip Squad
+      "მატრიცის რინგი",     // Matrix Ring
+    ],
+    iconKeywords: ['robot', 'chip', 'gamepad', 'laptop', 'console', 'controller']
+  },
+  music: {
+    names: [
+      "რიტმის კლუბი",       // Rhythm Club
+      "ნოტების ბრძოლა",     // Notes Battle
+      "ჰარმონია",           // Harmony
+      "მელოდიის კლანი",     // Melody Clan
+      "კონცერტის ზონა",     // Concert Zone
+      "ბითების არენა",      // Beats Arena
+      "როკის ბუნაგი",       // Rock Den
+      "ჯაზის კლუბი",        // Jazz Club
+    ],
+    iconKeywords: ['guitar', 'piano', 'headphones', 'microphone', 'music', 'drum']
+  },
+  mystery: {
+    names: [
+      "საიდუმლო კლუბი",     // Secret Club
+      "გამოცანის სახლი",    // Riddle House
+      "დეტექტივები",        // Detectives
+      "შერლოკის კლანი",     // Sherlock Clan
+      "მისტერიის ზონა",     // Mystery Zone
+      "გასაღების მფლობელი", // Key Holder
+      "ნიღბის უკან",        // Behind the Mask
+      "საიდუმლო საზოგადო",  // Secret Society
+    ],
+    iconKeywords: ['detective', 'mask', 'key', 'magnifier', 'mystery', 'spy']
+  },
+  speed: {
+    names: [
+      "მეხის სიჩქარე",      // Thunder Speed
+      "ელვის გუნდი",        // Lightning Team
+      "თავგადასავალი",      // Thrill
+      "რბოლის კლუბი",       // Racing Club
+      "ტურბო არენა",        // Turbo Arena
+      "სწრაფი და ფოლადი",   // Fast & Steel
+      "ნიტროს რინგი",       // Nitro Ring
+      "სიჩქარის ეშმაკი",    // Speed Demon
+    ],
+    iconKeywords: ['racing', 'lightning', 'flame', 'car', 'motorcycle', 'bolt']
+  },
+  ocean: {
+    names: [
+      "ზღვის მგლები",       // Sea Wolves
+      "ოკეანის კლანი",      // Ocean Clan
+      "ტალღის მხედარი",     // Wave Rider
+      "მეკობრეები",         // Pirates
+      "წყალქვეშა ლიგა",     // Underwater League
+      "ზვიგენის კბილი",     // Shark Tooth
+      "ნავთსადგური",        // Harbor
+      "კაპიტნის ხიდი",      // Captain's Bridge
+    ],
+    iconKeywords: ['shark', 'anchor', 'wave', 'ship', 'pirate', 'whale', 'octopus']
+  },
+  food: {
+    names: [
+      "გემოვნების ბრძოლა",  // Taste Battle
+      "შეფთა დუელი",        // Chefs Duel
+      "გურმანთა კლუბი",     // Gourmets Club
+      "რეცეპტის საიდუმლო",  // Recipe Secret
+      "სამზარეულოს ომი",    // Kitchen War
+      "დეგუსტაცია",         // Tasting
+      "ფლეივერის ზონა",     // Flavor Zone
+      "გასტრო არენა",       // Gastro Arena
+    ],
+    iconKeywords: ['pizza', 'burger', 'chef', 'cooking', 'cake', 'food']
+  },
+  space: {
+    names: [
+      "გალაქტიკის რინგი",   // Galaxy Ring
+      "ვარსკვლავთა ჯგუფი", // Stars Group
+      "კოსმიური კლანი",     // Cosmic Clan
+      "ასტრონავტები",       // Astronauts
+      "ორბიტის მცველი",     // Orbit Guardian
+      "პლანეტების ლიგა",    // Planets League
+      "მეტეორის გზა",       // Meteor Path
+      "კოსმოსის კაპიტანი",  // Space Captain
+    ],
+    iconKeywords: ['astronaut', 'planet', 'star', 'moon', 'satellite', 'ufo']
+  }
 };
 
 // Icon library row type
@@ -113,44 +218,29 @@ interface IconRow {
   tags?: string[];
 }
 
-// Get random fallback name
-function getRandomFallbackName(): string {
-  return FALLBACK_NAMES[Math.floor(Math.random() * FALLBACK_NAMES.length)];
+// Generate themed room name and icon keyword
+function generateThemedRoomName(): { name: string, iconKeyword: string } {
+  const themes = Object.keys(THEMED_ROOM_NAMES);
+  const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+  const themeData = THEMED_ROOM_NAMES[randomTheme];
+  
+  const randomName = themeData.names[Math.floor(Math.random() * themeData.names.length)];
+  const randomKeyword = themeData.iconKeywords[Math.floor(Math.random() * themeData.iconKeywords.length)];
+  
+  console.log(`Generated themed name: "${randomName}" from theme "${randomTheme}" with keyword "${randomKeyword}"`);
+  
+  return { name: randomName, iconKeyword: randomKeyword };
 }
 
 // Validate and clean generated name
-function validateAndCleanName(name: string): string {
-  if (!name) return getRandomFallbackName();
+function validateName(name: string): boolean {
+  if (!name || name.length > MAX_NAME_LENGTH) return false;
   
-  // Remove quotes
-  let cleaned = name.replace(/^["']|["']$/g, '').trim();
-  
-  // Remove emojis - comprehensive pattern using Unicode properties + keep only Georgian letters, spaces, and basic Latin
-  cleaned = cleaned.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim();
-  // Filter to keep only Georgian letters, Latin letters (for IQ etc), digits, spaces, and + symbol
-  cleaned = cleaned.replace(/[^\u10A0-\u10FFa-zA-Z0-9\s+]/g, '').trim();
-  
-  // Check for banned words
   const containsBanned = BANNED_WORDS.some(word => 
-    cleaned.toLowerCase().includes(word.toLowerCase())
+    name.toLowerCase().includes(word.toLowerCase())
   );
   
-  if (containsBanned) {
-    return getRandomFallbackName();
-  }
-  
-  // Ensure max 2 words
-  const words = cleaned.split(/\s+/).filter(w => w.length > 0);
-  if (words.length > 2) {
-    cleaned = words.slice(0, 2).join(' ');
-  }
-  
-  // If too long or empty, use fallback
-  if (!cleaned || cleaned.length > MAX_NAME_LENGTH) {
-    return getRandomFallbackName();
-  }
-  
-  return cleaned;
+  return !containsBanned;
 }
 
 // Search for icons matching keywords - prioritizes exact matches
@@ -220,26 +310,6 @@ async function searchIconByKeyword(
     return randomMatch.icon_url;
   }
   
-  // Try fallback keywords from theme map
-  const fallbackKeywords = THEME_ICON_FALLBACKS[normalizedKeyword];
-  if (fallbackKeywords) {
-    for (const fallbackKw of fallbackKeywords) {
-      const { data: fallbackMatches, error: fallbackError } = await supabase
-        .from('icon_library')
-        .select('slug, icon_url, title')
-        .not('icon_url', 'is', null)
-        .ilike('title', `%${fallbackKw}%`)
-        .limit(5);
-      
-      if (!fallbackError && fallbackMatches && fallbackMatches.length > 0) {
-        const matches = fallbackMatches as IconRow[];
-        const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-        console.log(`Found icon by fallback: "${randomMatch.slug}" for keyword "${keyword}" -> "${fallbackKw}"`);
-        return randomMatch.icon_url;
-      }
-    }
-  }
-  
   console.log(`No icon found for keyword "${keyword}"`);
   return null;
 }
@@ -273,7 +343,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -283,12 +352,12 @@ serve(async (req) => {
       const body = await req.json();
       iconSlug = body?.iconSlug || null;
     } catch {
-      // No body or invalid JSON, use AI generation
+      // No body or invalid JSON, use themed generation
     }
 
     let selectedIconUrl: string | null = null;
 
-    // If specific icon requested, find it by slug
+    // If specific icon requested, find it by slug and return with themed name
     if (iconSlug) {
       const { data: specificIcon, error: specificError } = await supabase
         .from('icon_library')
@@ -300,10 +369,11 @@ serve(async (req) => {
         selectedIconUrl = specificIcon.icon_url;
         console.log(`Using requested icon: ${iconSlug}`);
         
-        // Return early with fallback name if icon is specified
+        // Return with themed name
+        const { name } = generateThemedRoomName();
         return new Response(
           JSON.stringify({ 
-            name: getRandomFallbackName(), 
+            name, 
             icon_url: selectedIconUrl 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -311,110 +381,39 @@ serve(async (req) => {
       }
     }
 
-    // If no AI key, return fallback name with random icon
-    if (!lovableApiKey) {
-      selectedIconUrl = await getRandomIcon(supabase);
-      return new Response(
-        JSON.stringify({ 
-          name: getRandomFallbackName(), 
-          icon_url: selectedIconUrl 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Use AI to generate fun, exciting names with matching icons
-    // Add random seed to encourage variety
-    const randomSeed = Math.floor(Math.random() * 10000);
-    const styleIndex = Math.floor(Math.random() * 6);
-    const styles = ['Battle', 'Team', 'Epic', 'Victory', 'Animal', 'Smart'];
-    const preferredStyle = styles[styleIndex];
+    // Generate themed name and matching icon
+    const { name, iconKeyword } = generateThemedRoomName();
     
-    const prompt = `[Seed: ${randomSeed}] Generate a UNIQUE Georgian trivia room name in ${preferredStyle} style.
-
-Styles:
-- Battle: გონების რინგი, ჭიდაობა გონებით, IQ დუელი
-- Team: ნერდთა კლანი, ტრიბა IQ, ერუდიტთა სახლი
-- Epic: ფენიქსის ბრძოლა, დრაკონთა კლუბი, ნინჯა ტვინები
-- Victory: ჩემპიონთა რინგი, მედლების კლუბი, თასის მეტოქენი
-- Animal: მგლის ხროვა, არწივის მზერა, ლომთა ბრძოლა, ვეფხვის გუნდი
-- Smart: სიბრძნის კოშკი, ინტელექტის ხიდი, ერუდიტების კლანი
-
-Rules: max 18 chars, 1-2 words, Georgian only (IQ allowed), NO boring words (კვიზი, ტესტი, საკითხავი)
-IMPORTANT: Be creative! Avoid repeating examples. Create something NEW and unique!
-
-Return ONLY valid JSON:
-{"name": "ქართული_სახელი", "icon_keyword": "english_word"}
-
-icon_keyword examples: dragon, lion, ninja, sword, trophy, crown, phoenix, wolf, eagle, boxing, arena, medal, shield, tiger, bear, wizard, knight, fire, star, brain`;
-
-    console.log('Generating creative room name with matching icon...');
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      console.error('AI API error:', response.status);
-      selectedIconUrl = await getRandomIcon(supabase);
-      return new Response(
-        JSON.stringify({ 
-          name: getRandomFallbackName(), 
-          icon_url: selectedIconUrl 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await response.json();
-    const rawResponse = data.choices?.[0]?.message?.content?.trim() || '';
-    
-    // Parse AI response as JSON
-    let generatedName = getRandomFallbackName();
-    let iconKeyword: string | null = null;
-
-    try {
-      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        generatedName = validateAndCleanName(parsed.name || '');
-        iconKeyword = parsed.icon_keyword?.toLowerCase()?.trim() || null;
-        console.log(`Parsed AI response: name="${generatedName}", keyword="${iconKeyword}"`);
-      } else {
-        // Fallback: treat entire response as name (legacy behavior)
-        generatedName = validateAndCleanName(rawResponse);
-        console.log(`No JSON found, using raw response as name: "${generatedName}"`);
+    // Validate name (should always pass for our curated names)
+    if (!validateName(name)) {
+      console.error(`Invalid generated name: ${name}`);
+      const fallback = generateThemedRoomName();
+      selectedIconUrl = await searchIconByKeyword(supabase, fallback.iconKeyword);
+      if (!selectedIconUrl) {
+        selectedIconUrl = await getRandomIcon(supabase);
       }
-    } catch (e) {
-      console.error('Failed to parse AI JSON:', e);
-      generatedName = validateAndCleanName(rawResponse);
+      return new Response(
+        JSON.stringify({ 
+          name: fallback.name, 
+          icon_url: selectedIconUrl 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Search for matching icon based on keyword
-    if (iconKeyword) {
-      selectedIconUrl = await searchIconByKeyword(supabase, iconKeyword);
-    }
+    selectedIconUrl = await searchIconByKeyword(supabase, iconKeyword);
     
     // Ultimate fallback to random icon
     if (!selectedIconUrl) {
       selectedIconUrl = await getRandomIcon(supabase);
     }
 
-    console.log(`Final result: name="${generatedName}", icon_url="${selectedIconUrl?.substring(0, 50)}..."`);
+    console.log(`Final result: name="${name}", icon_url="${selectedIconUrl?.substring(0, 50)}..."`);
 
     return new Response(
       JSON.stringify({ 
-        name: generatedName, 
+        name, 
         icon_url: selectedIconUrl 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -423,9 +422,13 @@ icon_keyword examples: dragon, lion, ninja, sword, trophy, crown, phoenix, wolf,
   } catch (error) {
     console.error('Error generating room name:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Even on error, return a themed name
+    const { name } = generateThemedRoomName();
+    
     return new Response(
       JSON.stringify({ 
-        name: getRandomFallbackName(), 
+        name, 
         icon_url: null,
         error: errorMessage 
       }),
