@@ -83,6 +83,14 @@ export function VSScreen() {
   const [currentAvatar, setCurrentAvatar] = useState<string>(slotAvatars[0]);
   const opponentIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Mixed category constant
+  const MIXED_CATEGORY = {
+    id: "__mixed__",
+    name: "სხვადასხვა კატეგორიები",
+    image_url: null,
+    icon_slug: "mystery-box",
+  };
+
   // Category slot state
   const [categoryPool, setCategoryPool] = useState<typeof categories>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
@@ -99,11 +107,13 @@ export function VSScreen() {
   const currentCategory = categoryPool[currentCategoryIndex];
   const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "") : "";
 
-  // Initialize category pool when categories load
+  // Initialize category pool when categories load - includes Mixed Category
   useEffect(() => {
     if (categories.length > 0 && categoryPool.length === 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      setCategoryPool(shuffled.slice(0, Math.min(8, shuffled.length)));
+      // Include Mixed Category in the pool
+      const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
+      setCategoryPool(poolWithMixed);
     }
   }, [categories, categoryPool.length]);
 
@@ -238,10 +248,11 @@ export function VSScreen() {
     setCurrentCategoryIndex(0);
     setStakeDeducted(false);
     
-    // Shuffle category pool for new selection
+    // Shuffle category pool for new selection - includes Mixed Category
     if (categories.length > 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      setCategoryPool(shuffled.slice(0, Math.min(8, shuffled.length)));
+      const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
+      setCategoryPool(poolWithMixed);
     }
     
     // Re-trigger matchmaking
