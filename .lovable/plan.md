@@ -1,162 +1,120 @@
 
-# Plan: Fix TV Lobby Screen Issues
 
-## Issues to Address
+# Plan: Redesign Profile Page Tabs & Add Stat Icons
 
-Based on the screenshots:
-
-### Issue 1: Avatar Strokes - Should be Inside (Inset Border)
-**File:** `src/components/tv/TVLobbyScreenV2.tsx`
-
-**Current (line 573-579):**
-```tsx
-className={`... border-2 border-purple-400/50 ...`}
-```
-
-Border is currently default `border-box` which places stroke on the outside.
-
-**Fix:** Use CSS `box-shadow: inset` to create an inner border effect instead of regular border, or add `outline` with negative offset.
-
-Best approach: Use `ring-inset` or shadow inset:
-```tsx
-className="... ring-2 ring-inset ring-purple-400/50 ..."
-```
+## Overview
+Restructure the Profile page to show "გახდი PRO" (Become PRO) as a title section with a crown icon rather than a tab button, and add visual icons to each statistic in the Statistics tab.
 
 ---
 
-### Issue 2: Host Crown z-index Issue
-**File:** `src/components/tv/TVLobbyScreenV2.tsx`
+## Changes Summary
 
-**Current (line 584-592):**
-```tsx
-<motion.div className="absolute -top-1 -right-1 w-5 h-5 ...">
-  <Crown className="w-3 h-3 text-yellow-900" />
-</motion.div>
-```
+### 1. Tab Structure Change
+**Current:** Two equal tabs - "სტატისტიკა" and "გახდი PRO" 
+**New:** Only "სტატისტიკა" as a tab, with "გახდი PRO" shown as a title/section header with crown icon
 
-The crown appears behind content because parent has no `z-index` control.
+### 2. Statistics Icons
+Add 3D icons before each stat label:
 
-**Fix:** Add `z-10` to ensure crown stays in front:
-```tsx
-<motion.div className="absolute -top-1 -right-1 w-5 h-5 z-10 ...">
-```
+| Stat | Georgian | Icon |
+|------|----------|------|
+| Games Played | ნათამაშები | trivia-buzzer-8.png |
+| Games Won | მოგებული | trophy-2.png |
+| Win Rate | მოგების % | percentage-discount.png |
+| Best Streak | საუკეთესო სერია | trophy-shelf.png |
 
 ---
 
-### Issue 3: Category Pills Full Width + No Cropping
-**File:** `src/components/tv/TVLobbyScreenV2.tsx`
+## Technical Implementation
 
-**Current (lines 409-434):**
-- Container has `pr-[240px]` which leaves space for QR but limits width
-- Pills container has `overflow-x-auto` but still can crop
+### Step 1: Copy New Assets to Project
+Copy the user-uploaded icons to `src/assets/icons/`:
+- `trivia-buzzer-8.png` → `src/assets/icons/trivia-buzzer-8.png`
+- `trophy-2.png` → `src/assets/icons/trophy-2.png`
+- `percentage-discount.png` → `src/assets/icons/percentage-discount.png`
+- `trophy-shelf.png` → `src/assets/icons/trophy-shelf.png`
+- `crown-5.png` → `src/assets/icons/crown-5.png`
 
-The second screenshot shows categories being cropped on wide screens.
+### Step 2: Update Profile.tsx
 
-**Fix:**
-1. Remove or reduce the `pr-[240px]` padding restriction
-2. Use `flex-wrap` instead of `overflow-x-auto` so categories wrap to next line
-3. Ensure pills span full width of available space (excluding QR code area)
+**Remove the two-tab system and create new layout:**
 
+```text
++------------------------------------------+
+|  [სტატისტიკა Tab]  |  👑 გახდი PRO       |
++------------------------------------------+
+```
+
+**Changes:**
+1. Remove `tabs` array - no longer needed as dual tabs
+2. Change `activeTab` to track if we're viewing stats or PRO section
+3. Add crown icon next to "გახდი PRO" title that acts as a clickable header
+4. Add icon imports for the stat icons
+5. Update stat cards to include icon images before labels
+
+**New Stats Section Structure:**
 ```tsx
-<div className="mb-4"> {/* Remove pr-[240px] */}
-  <div className="flex flex-wrap gap-2 py-3 pr-60">
-    {/* Pills will wrap, QR code positioned absolutely */}
-  </div>
+<div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
+  <img src={triviaIcon} alt="" className="w-8 h-8" />
+  <span className="text-foreground flex-1">ნათამაშები</span>
+  <span className="font-bold text-foreground">{profile.games_played}</span>
 </div>
 ```
 
----
-
-### Issue 4: MyTriviaLive Logo - Centered, QR in Bottom-Right
-**File:** `src/components/tv/TVLobbyScreenV2.tsx`
-
-**Current (lines 748-766):**
-- Logo is positioned `absolute bottom-4 right-4` (bottom-right)
-- User wants: Logo centered at bottom, QR/code stays bottom-right
-
-**Fix:** 
-1. Move the MyTriviaLiveLogo to be **centered** at the bottom
-2. Keep QR code section in the right area (it's already there in the main layout)
-3. Move the code display below the QR in the right panel
-
-New layout:
-```
-+------------------------------------------+
-|  [QR Code]    <- right side panel        |
-|  mytrivia.io/join                        |
-|  [CODE: 1234]                            |
-+------------------------------------------+
-|        [MyTrivia LIVE] <- centered       |
-+------------------------------------------+
-```
-
----
-
-## Implementation Details
-
-### Changes to `src/components/tv/TVLobbyScreenV2.tsx`
-
-**1. Fix avatar strokes (inset border)**
+**New Tab/Header Layout:**
 ```tsx
-// Line ~573-579: Change from border-2 to ring-inset
-className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 ${
-  isActivePlayer 
-    ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30 ring-2 ring-inset ring-purple-400/50' 
-    : isInvited
-      ? 'bg-white/5 border-2 border-dashed border-purple-400/30'
-      : 'bg-white/5 border-2 border-dashed border-purple-500/30'
-}`}
-```
-
-**2. Fix host crown z-index**
-```tsx
-// Line ~585-591: Add z-10
-<motion.div
-  initial={{ scale: 0 }}
-  animate={{ scale: 1 }}
-  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
->
-```
-
-**3. Fix category pills full width**
-```tsx
-// Line ~409: Remove pr-[240px] restriction, allow wrapping
-<div className="mb-4">
-  {hasMultiRound ? (
-    <div
-      className="flex flex-wrap gap-2 py-3"
-      // Remove overflow-x-auto, allow natural wrapping
-    >
-```
-
-**4. Center MyTriviaLive logo**
-```tsx
-// Lines 748-766: Replace with centered logo
-<div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-  <MyTriviaLiveLogo size="md" textColor="light" />
+{/* Tab and PRO Header */}
+<div className="flex gap-2 mb-6">
+  {/* Statistics Tab */}
+  <button
+    onClick={() => setActiveTab("Stats")}
+    className={cn(
+      "flex-1 py-3 rounded-full font-semibold text-sm transition-colors",
+      activeTab === "Stats"
+        ? "bg-primary text-primary-foreground"
+        : "bg-secondary text-secondary-foreground"
+    )}
+  >
+    სტატისტიკა
+  </button>
+  
+  {/* PRO Title with Crown - clickable */}
+  <button
+    onClick={() => setActiveTab("PRO")}
+    className="flex-1 flex items-center justify-center gap-2 py-3"
+  >
+    <img src={crownIcon} alt="" className="w-6 h-6" />
+    <span className="font-semibold text-sm text-foreground">
+      {currentTier ? "ჩემი PRO" : "გახდი PRO"}
+    </span>
+  </button>
 </div>
-```
-
-Also need to import `MyTriviaLiveLogo`:
-```tsx
-import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 ```
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/components/tv/TVLobbyScreenV2.tsx` | Import MyTriviaLiveLogo, fix inset borders, z-index for crown, full-width categories, centered logo |
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/pages/Profile.tsx` | Modify | Update tab structure, add icon imports, update stat cards |
+| `src/assets/icons/` | Add files | Copy 5 new icon assets |
 
 ---
 
-## Summary
+## Visual Result
 
-| Issue | Current | Fix |
-|-------|---------|-----|
-| Avatar strokes | `border-2` (outside) | `ring-2 ring-inset` (inside) |
-| Host crown | No z-index | Add `z-10` |
-| Category pills | `pr-[240px]`, `overflow-x-auto` | `flex-wrap`, no truncation |
-| Logo position | Bottom-right | Bottom-center, use `MyTriviaLiveLogo` component |
+**Tab Area:**
+- Left side: "სტატისტიკა" as a pill button (active state = purple)
+- Right side: Crown icon + "გახდი PRO" as text (not button-styled)
+
+**Statistics Tab (when active):**
+```text
+[🎮] ნათამაშები                     625
+[🏆] მოგებული                       339
+[%]  მოგების %                      54%
+[🏅] საუკეთესო სერია                 12
+```
+
+Each stat card shows the 3D icon on the left, label in middle, value on right.
+
