@@ -528,13 +528,14 @@ export const TVLobbyScreenV2: React.FC = () => {
       {/* Main Content - Split Layout (Players Left, QR Right) */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left Side - Players Grid */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
             <Users className="w-4 h-4" />
             მოთამაშეები
           </h2>
 
-          <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
             {playerSlots.map((player, index) => {
               // Check if this is an invited guest
               const isInvited = player && 'status' in player && player.status === 'invited';
@@ -633,6 +634,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                 </motion.div>
               );
             })}
+            </div>
           </div>
         </div>
 
