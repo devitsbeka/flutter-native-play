@@ -9,6 +9,7 @@ import glitchIcon from "@/assets/glitch.png";
 import trophyBronze from "@/assets/trophy-bronze.png";
 import trophySilver from "@/assets/trophy-silver.png";
 import trophyGold from "@/assets/trophy-gold.png";
+import awardCeremonyIcon from "@/assets/award-ceremony.png";
 
 import { LeaguePlayerRow } from "@/components/leaderboard/LeaguePlayerRow";
 import { LeagueCountdown } from "@/components/leaderboard/LeagueCountdown";
@@ -62,26 +63,22 @@ const LEAGUE_STROKE_COLORS: Record<number, { from: string; via: string; to: stri
 
 // Premium metallic league badge with light sweep animation
 const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
-  // Metallic color schemes for each tier
+  // Metallic color schemes for each tier - all with WHITE text for visibility
   const metallicStyles: Record<number, { 
     gradient: string; 
     shadow: string;
-    textColor: string;
   }> = {
     1: { // Bronze
       gradient: 'linear-gradient(135deg, #CD7F32 0%, #E8B066 25%, #CD7F32 50%, #8B4513 75%, #CD7F32 100%)',
-      shadow: '0 2px 8px rgba(205, 127, 50, 0.4)',
-      textColor: '#5D3A1A'
+      shadow: '0 2px 12px rgba(205, 127, 50, 0.5), inset 0 1px 2px rgba(255,255,255,0.3)'
     },
     2: { // Silver  
-      gradient: 'linear-gradient(135deg, #C0C0C0 0%, #F0F0F0 25%, #E8E8E8 50%, #A8A8A8 75%, #C0C0C0 100%)',
-      shadow: '0 2px 8px rgba(192, 192, 192, 0.4)',
-      textColor: '#4A4A4A'
+      gradient: 'linear-gradient(135deg, #A8A8A8 0%, #E0E0E0 25%, #C0C0C0 50%, #808080 75%, #A8A8A8 100%)',
+      shadow: '0 2px 12px rgba(192, 192, 192, 0.5), inset 0 1px 2px rgba(255,255,255,0.3)'
     },
     3: { // Gold
-      gradient: 'linear-gradient(135deg, #FFD700 0%, #FFF4B0 25%, #FFD700 50%, #DAA520 75%, #FFD700 100%)',
-      shadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
-      textColor: '#5C4800'
+      gradient: 'linear-gradient(135deg, #DAA520 0%, #FFD700 25%, #FFC000 50%, #B8860B 75%, #DAA520 100%)',
+      shadow: '0 2px 12px rgba(255, 215, 0, 0.5), inset 0 1px 2px rgba(255,255,255,0.3)'
     }
   };
   
@@ -110,7 +107,7 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)',
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%)',
             backgroundSize: '200% 100%'
           }}
           animate={{
@@ -124,10 +121,12 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
           }}
         />
         
-        {/* Text */}
+        {/* Text - WHITE with text shadow for visibility */}
         <span 
-          className="relative z-10 block text-sm px-4 py-1.5 font-bold"
-          style={{ color: style.textColor }}
+          className="relative z-10 block text-sm px-4 py-1.5 font-bold text-white"
+          style={{ 
+            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+          }}
         >
           შენი ლიგა
         </span>
@@ -567,8 +566,9 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-10 py-4 
                        shadow-lg border border-border/30 active:scale-95 transition-transform
-                       hover:bg-background"
+                       hover:bg-background flex items-center gap-2"
           >
+            <img src={awardCeremonyIcon} alt="" className="w-6 h-6 object-contain" />
             <span className="text-lg font-semibold text-foreground">
               {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
             </span>
@@ -726,8 +726,9 @@ function TabletLeaderboards({
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
                        shadow-lg border border-border/30 active:scale-95 transition-transform
-                       hover:bg-background"
+                       hover:bg-background flex items-center gap-2"
           >
+            <img src={awardCeremonyIcon} alt="" className="w-6 h-6 object-contain" />
             <span className="text-base font-semibold text-foreground">
               {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
             </span>
