@@ -1444,7 +1444,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     console.log('[startNewRound] Fresh category:', freshRoom.category_id, freshRoom.category_name);
     
-    const questionCount = freshRoom.total_questions || 5;
+    // FIX: Always use fresh default for new rounds
+    // Don't rely on stale total_questions from previous round
+    const questionCount = 5;
     
     // Determine if host should observe (only applies if current user is host)
     const currentUserIsHost = freshRoom.host_user_id === user.id;
