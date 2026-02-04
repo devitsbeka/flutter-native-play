@@ -42,6 +42,7 @@ import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -256,6 +257,17 @@ function TeamContentV2() {
 
   // Feature onboarding state
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => hasSeenFeatureOnboarding());
+  
+  // Guest auth modal
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const isGuest = !user;
+  
+  // Show auth modal for guests on mount
+  useEffect(() => {
+    if (isGuest) {
+      setShowAuthModal(true);
+    }
+  }, [isGuest]);
 
   const { unreadCount } = useNotifications();
   const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
@@ -1062,6 +1074,14 @@ function TeamContentV2() {
       <QRScannerModal
         open={showQRScanner}
         onClose={() => setShowQRScanner(false)}
+      />
+      
+      {/* Auth Required Modal for guests */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        returnToPath="/team"
+        message="შედი ანგარიშზე ონლაინ თამაშისთვის"
       />
     </MainLayout>
   );

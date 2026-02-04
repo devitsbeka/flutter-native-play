@@ -9,6 +9,7 @@ import {
   Trophy, 
   Users, 
   Menu,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { MoreMenuModal } from "@/components/home/MoreMenuModal";
 import { LanguageSelectorModal } from "@/components/layout/LanguageSelectorModal";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 
 interface UnifiedDesktopNavProps {
@@ -34,6 +36,9 @@ interface UnifiedDesktopNavProps {
   isVip?: boolean;
   showPlayButton?: boolean;
 }
+
+// Items that require authentication
+const LOCKED_FOR_GUESTS = ["shop", "rank", "team"];
 
 const navItems = [
   { id: "home", label: "მთავარი", icon: Home, path: "/" },
@@ -53,16 +58,21 @@ export function UnifiedDesktopNav({
 }: UnifiedDesktopNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile, signOut } = useAuth();
+  const { profile, user, signOut } = useAuth();
   const { pendingChallenges } = usePendingChallenges();
   const pendingCount = pendingChallenges?.length || 0;
   const { prefetchRoute } = useNavigationPrefetch();
 
   const { currentLanguage } = useLanguage();
   
+  // Guest detection
+  const isGuest = !user && !profile;
+  
   // Modal states
   const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingNavPath, setPendingNavPath] = useState<string | null>(null);
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -79,6 +89,33 @@ export function UnifiedDesktopNav({
     prefetchRoute(path);
   }, [prefetchRoute]);
 
+  // Handle locked nav click
+  const handleNavClick = (item: typeof navItems[0]) => {
+    const isLocked = isGuest && LOCKED_FOR_GUESTS.includes(item.id);
+    
+    if (isLocked) {
+      setPendingNavPath(item.path);
+      setShowAuthModal(true);
+      return;
+    }
+    
+    if (isActive(item.path)) {
+      // Already on this page - scroll to top
+      if (item.path === "/team") {
+        const mainEl = document.getElementById("team-main-content");
+        if (mainEl) {
+          mainEl.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+      navigate(item.path);
+    }
+  };
+
   // NavButton component for consistency - all icons use strokeWidth 1.5
   const NavButton = ({
     icon: Icon,
@@ -87,6 +124,7 @@ export function UnifiedDesktopNav({
     active = false,
     badge,
     children,
+    isLocked = false,
   }: {
     icon?: React.ElementType;
     label: string;
@@ -94,6 +132,7 @@ export function UnifiedDesktopNav({
     active?: boolean;
     badge?: number;
     children?: React.ReactNode;
+    isLocked?: boolean;
   }) => (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
@@ -107,6 +146,7 @@ export function UnifiedDesktopNav({
                 ? 'text-foreground font-medium' 
                 : 'text-muted-foreground hover:text-foreground'
               }
+              ${isLocked ? 'opacity-60' : ''}
             `}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -118,7 +158,12 @@ export function UnifiedDesktopNav({
                   strokeWidth={active ? 2 : 1.5}
                 />
               ) : null}
-              {badge !== undefined && badge > 0 && (
+              {isLocked && (
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-muted flex items-center justify-center">
+                  <Lock className="w-2.5 h-2.5 text-muted-foreground" />
+                </span>
+              )}
+              {badge !== undefined && badge > 0 && !isLocked && (
                 <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
                   {badge > 99 ? "99+" : badge}
                 </span>
@@ -130,7 +175,7 @@ export function UnifiedDesktopNav({
         </TooltipTrigger>
         {/* Tooltip only shows on small tablet (md) where label is hidden */}
         <TooltipContent side="right" className="lg:hidden">
-          {label}
+          {isLocked ? `${label} 🔒` : label}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -198,37 +243,25 @@ export function UnifiedDesktopNav({
 
         {/* Main Navigation */}
         <div className="px-2 lg:px-3 space-y-1">
-          {navItems.map((item) => (
-            <div 
-              key={item.id}
-              onMouseEnter={() => handleNavHover(item.path)}
-              onFocus={() => handleNavHover(item.path)}
-            >
-              <NavButton
-                icon={item.icon}
-                label={item.label}
-                onClick={() => {
-                  if (isActive(item.path)) {
-                    // Already on this page - scroll to top
-                    if (item.path === "/team") {
-                      const mainEl = document.getElementById("team-main-content");
-                      if (mainEl) {
-                        mainEl.scrollTo({ top: 0, behavior: "smooth" });
-                      } else {
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    } else {
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }
-                  } else {
-                    navigate(item.path);
-                  }
-                }}
-                active={isActive(item.path)}
-                badge={item.id === "team" ? pendingCount : undefined}
-              />
-            </div>
-          ))}
+          {navItems.map((item) => {
+            const isLockedItem = isGuest && LOCKED_FOR_GUESTS.includes(item.id);
+            return (
+              <div 
+                key={item.id}
+                onMouseEnter={() => !isLockedItem && handleNavHover(item.path)}
+                onFocus={() => !isLockedItem && handleNavHover(item.path)}
+              >
+                <NavButton
+                  icon={item.icon}
+                  label={item.label}
+                  onClick={() => handleNavClick(item)}
+                  active={isActive(item.path)}
+                  badge={item.id === "team" ? pendingCount : undefined}
+                  isLocked={isLockedItem}
+                />
+              </div>
+            );
+          })}
 
         </div>
 
@@ -312,6 +345,17 @@ export function UnifiedDesktopNav({
       <LanguageSelectorModal
         isOpen={isLanguageModalOpen}
         onClose={() => setIsLanguageModalOpen(false)}
+      />
+
+      {/* Auth Required Modal */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingNavPath(null);
+        }}
+        returnToPath={pendingNavPath || undefined}
+        message="შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ"
       />
     </>
   );

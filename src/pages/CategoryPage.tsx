@@ -12,6 +12,7 @@ import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
 import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { CATEGORY_VIDEOS, MAP_VIDEOS } from "@/config/videoConfig";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -53,6 +54,10 @@ export default function CategoryPage() {
 
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Check if user is a guest
+  const isGuest = !user;
 
   // Find category from database
   const category = useMemo(() => 
@@ -99,14 +104,10 @@ export default function CategoryPage() {
   }, [refetch]);
 
   const handlePlayFromLeaderboard = () => {
-    if (!user) {
-      toast.info(t('category.loginToSaveProgress'), {
-        description: t('category.resultsWillSave'),
-        action: {
-          label: t('auth.signIn'),
-          onClick: () => navigate("/auth"),
-        },
-      });
+    // Require authentication to play
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
     }
     navigate(`/play/${categoryId}/${currentLevel}`);
   };
@@ -159,20 +160,23 @@ export default function CategoryPage() {
   const handleLevelClick = (level: number, isUnlocked: boolean) => {
     if (!isUnlocked) return;
     
-    if (!user) {
-      toast.info(t('category.loginToSaveProgress'), {
-        description: t('category.resultsWillSave'),
-        action: {
-          label: t('auth.signIn'),
-          onClick: () => navigate("/auth"),
-        },
-      });
+    // Require authentication to play
+    if (isGuest) {
+      setShowAuthModal(true);
+      return;
     }
     navigate(`/play/${categoryId}/${level}`);
   };
 
   return (
     <PageTransition>
+      {/* Auth Required Modal */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        returnToPath={`/category/${categoryId}`}
+        message="შედი ანგარიშზე თამაშის დასაწყებად"
+      />
       {/* Level Unlock Animation */}
       <LevelUnlockAnimation
         isVisible={showUnlockAnimation}
