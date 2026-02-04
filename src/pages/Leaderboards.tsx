@@ -189,6 +189,39 @@ export default function Leaderboards() {
             <HeaderActions />
           </div>
         </div>
+        
+        {/* League Navigation - Mobile only, at TOP */}
+        <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border/20">
+          <div className="flex items-center justify-between py-3 px-4">
+            {/* Left Arrow */}
+            <button
+              onClick={handlePrevTier}
+              className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+              aria-label="Previous tier"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            
+            {/* Title */}
+            <div className="text-center flex-1 min-w-0">
+              <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                {LEAGUE_NAMES[activeTier || 1]?.toUpperCase() || 'LEAGUE'}
+              </h2>
+              {activeTier === userTier && (
+                <p className="text-xs text-primary font-medium">შენი ლიგა</p>
+              )}
+            </div>
+            
+            {/* Right Arrow */}
+            <button
+              onClick={handleNextTier}
+              className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+              aria-label="Next tier"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Desktop: Show all 3 leaderboards side by side */}
@@ -206,48 +239,14 @@ export default function Leaderboards() {
           isFullscreen={!isExpanded}
         />
 
-        {/* Bottom section: League title + User row / Full list */}
+        {/* Bottom section: User row / Full list */}
         <div className="-mt-4 relative z-30 flex-1 flex flex-col">
-          {/* League Name Header - tappable to expand/collapse */}
+          {/* Tappable header to expand/collapse */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="bg-background/95 backdrop-blur-md rounded-t-3xl shadow-lg"
+            className="bg-background/95 backdrop-blur-md rounded-t-3xl shadow-lg py-3 px-4"
           >
-            <div className="flex items-center justify-between py-4 px-4">
-              {/* Left Arrow */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePrevTier();
-                }}
-                className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
-                aria-label="Previous tier"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </div>
-              
-              {/* Title */}
-              <div className="text-center flex-1 min-w-0">
-                <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
-                  {LEAGUE_NAMES[activeTier || 1]?.toUpperCase() || 'LEAGUE'}
-                </h2>
-                {activeTier === userTier && (
-                  <p className="text-xs text-primary font-medium">შენი ლიგა</p>
-                )}
-              </div>
-              
-              {/* Right Arrow */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNextTier();
-                }}
-                className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
-                aria-label="Next tier"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </div>
-            </div>
+            <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
           </button>
 
           {/* Content: Either just user row (collapsed) or full list (expanded) */}
