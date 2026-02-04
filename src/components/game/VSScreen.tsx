@@ -447,14 +447,14 @@ export function VSScreen() {
             <AnimatePresence>
               {isCategoryLocked && (
                 <motion.div
-                  className="flex items-center gap-2"
+                  className="flex flex-col items-center gap-1"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ delay: 0.2 }}
                 >
                   {selectedCategory?.id === "__mixed__" && (
-                    <img src={mysteryBoxIcon} alt="" className="w-8 h-8 object-contain" />
+                    <img src={mysteryBoxIcon} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
                   )}
                   <span
                     className="text-white font-bold text-lg"
@@ -464,6 +464,11 @@ export function VSScreen() {
                       ? "სხვადასხვა" 
                       : (selectedCategory?.name || currentCategory?.name || t("game.category"))}
                   </span>
+                  {selectedCategory?.id === "__mixed__" && (
+                    <span className="text-white/70 text-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
+                      შერეული კითხვები
+                    </span>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

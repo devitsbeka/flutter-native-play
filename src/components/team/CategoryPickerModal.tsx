@@ -365,8 +365,8 @@ export function CategoryPickerModal({
                         
                         {/* Text */}
                         <div className="mt-4 text-center">
-                          <p className="font-bold text-white text-lg">სხვადასხვა კატეგორიები</p>
-                          <p className="text-white/70 text-sm mt-1">ყველა კატეგორიიდან</p>
+                          <p className="font-bold text-white text-lg">სხვადასხვა</p>
+                          <p className="text-white/70 text-sm mt-1">შერეული კითხვები</p>
                         </div>
                         
                         {/* Selected indicator */}
