@@ -106,16 +106,20 @@ export function DynamicIcon({
       }
     }
     
-    // Priority 3: Random icon from category as final fallback (only when no slug provided)
-    if (!slug) {
-      const fallbackUrl = getRandomIconForCategory(categoryId || 'general', stableSeed);
+    // Priority 3: Random icon from category as final fallback
+    // ONLY use random fallback when:
+    // 1. No explicit slug was provided
+    // 2. hideIfEmpty is false (caller wants some icon to show)
+    // 3. A categoryId is available (otherwise random general icons are irrelevant)
+    if (!slug && !hideIfEmpty && categoryId) {
+      const fallbackUrl = getRandomIconForCategory(categoryId, stableSeed);
       if (fallbackUrl && shouldRetryUrl(fallbackUrl)) {
         return fallbackUrl;
       }
     }
 
     return null;
-  }, [slug, categoryId, isLoaded, stableSeed, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
+  }, [slug, categoryId, isLoaded, stableSeed, hideIfEmpty, findIcon, getIconBySlug, getIconForCategory, getRandomIconForCategory]);
 
   // Reset error when URL changes or slug changes
   React.useEffect(() => {
