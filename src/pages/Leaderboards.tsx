@@ -45,6 +45,7 @@ export default function Leaderboards() {
   const [viewingTier, setViewingTier] = useState<number | undefined>(undefined);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Check if user is a guest
   const isGuest = !user;
@@ -91,7 +92,7 @@ export default function Leaderboards() {
 
   // Use IntersectionObserver to detect when user's row is visible
   useEffect(() => {
-    if (!userEntry) return;
+    if (!userEntry || !isExpanded) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -105,9 +106,16 @@ export default function Leaderboards() {
     return () => {
       if (currentRef) observer.unobserve(currentRef);
     };
-  }, [userEntry]);
+  }, [userEntry, isExpanded]);
 
   const activeTier = viewingTier ?? userTier;
+
+  // League names in Georgian
+  const LEAGUE_NAMES: Record<number, string> = {
+    1: "ბრინჯაოს ლიგა",
+    2: "ვერცხლის ლიგა",
+    3: "ოქროს ლიგა",
+  };
 
   const handleSelectTier = useCallback((tier: number) => {
     if (tier >= 1 && tier <= LEAGUES.length) {
@@ -117,6 +125,24 @@ export default function Leaderboards() {
       }
     }
   }, [carouselApi]);
+
+  const handlePrevTier = useCallback(() => {
+    const getPrevTier = (t: number) => {
+      if (t === 1) return 3;
+      if (t === 3) return 2;
+      return 1;
+    };
+    handleSelectTier(getPrevTier(activeTier || 1));
+  }, [activeTier, handleSelectTier]);
+
+  const handleNextTier = useCallback(() => {
+    const getNextTier = (t: number) => {
+      if (t === 2) return 3;
+      if (t === 3) return 1;
+      return 2;
+    };
+    handleSelectTier(getNextTier(activeTier || 1));
+  }, [activeTier, handleSelectTier]);
 
   // Sync carousel slide changes with the background
   useEffect(() => {
@@ -170,45 +196,40 @@ export default function Leaderboards() {
         <DesktopLeaderboards userTier={userTier} region={region} />
       </div>
 
-      {/* Mobile/Tablet: Single leaderboard with swipeable cards */}
-      <div id="leaderboard-scroll-container" className="lg:hidden h-[calc(100vh-56px)] overflow-y-auto">
-        {/* Background Hero - fixed height, shows trophy */}
+      {/* Mobile/Tablet: Fullscreen league view with collapsed/expanded */}
+      <div id="leaderboard-scroll-container" className="lg:hidden flex-1 flex flex-col overflow-hidden">
+        {/* Background Hero - fullscreen when collapsed, smaller when expanded */}
         <LeaderboardHeroBackground 
           isMobile 
           currentTier={activeTier} 
           onTierChange={handleSelectTier}
+          isFullscreen={!isExpanded}
         />
 
-        {/* Countdown - hidden for now */}
-        {/* <div className="-mt-8 relative z-35 flex justify-center pb-4">
-          <LeagueCountdown />
-        </div> */}
-
-        {/* Sticky League Header + Scrollable List Container */}
-        <div className="-mt-4 relative z-30">
-          {/* Sticky League Name Header */}
-          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md rounded-t-3xl shadow-lg">
+        {/* Bottom section: League title + User row / Full list */}
+        <div className="-mt-4 relative z-30 flex-1 flex flex-col">
+          {/* League Name Header - tappable to expand/collapse */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="bg-background/95 backdrop-blur-md rounded-t-3xl shadow-lg"
+          >
             <div className="flex items-center justify-between py-4 px-4">
               {/* Left Arrow */}
-              <button
-                onClick={() => {
-                  const getPrevTier = (t: number) => {
-                    if (t === 1) return 3;
-                    if (t === 3) return 2;
-                    return 1;
-                  };
-                  handleSelectTier(getPrevTier(activeTier || 1));
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrevTier();
                 }}
                 className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
                 aria-label="Previous tier"
               >
                 <ChevronLeft className="w-5 h-5" />
-              </button>
+              </div>
               
               {/* Title */}
               <div className="text-center flex-1 min-w-0">
                 <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
-                  {LEAGUES.find(l => l.tier === activeTier)?.[language === 'ka' ? 'nameKa' : 'name']?.toUpperCase() || 'LEAGUE'}
+                  {LEAGUE_NAMES[activeTier || 1]?.toUpperCase() || 'LEAGUE'}
                 </h2>
                 {activeTier === userTier && (
                   <p className="text-xs text-primary font-medium">შენი ლიგა</p>
@@ -216,75 +237,124 @@ export default function Leaderboards() {
               </div>
               
               {/* Right Arrow */}
-              <button
-                onClick={() => {
-                  const getNextTier = (t: number) => {
-                    if (t === 2) return 3;
-                    if (t === 3) return 1;
-                    return 2;
-                  };
-                  handleSelectTier(getNextTier(activeTier || 1));
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextTier();
                 }}
                 className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
                 aria-label="Next tier"
               >
                 <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Scrollable Player List */}
-          <div className="bg-background px-3 pt-3 pb-32 min-h-[50vh]">
-            {isLoading && leaderboard.length === 0 ? (
-              // Show skeleton rows while loading
-              Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
-                  <div className="relative shrink-0">
-                    <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="h-5 w-24 bg-muted animate-pulse rounded" />
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
-                    <div className="h-5 w-12 bg-muted animate-pulse rounded" />
-                  </div>
-                </div>
-              ))
-            ) : leaderboard.length === 0 ? (
-              <div className="text-center py-8">
-                <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
               </div>
-            ) : (
-              leaderboard.map((entry, index) => {
-                const isCurrentUser = entry.user_id === user?.id;
-                return (
-                  <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+            </div>
+          </button>
+
+          {/* Content: Either just user row (collapsed) or full list (expanded) */}
+          <AnimatePresence mode="wait">
+            {!isExpanded ? (
+              // Collapsed: Show only current user's row
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-background px-3 pb-28"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-3 py-4 px-3">
+                    <div className="h-14 w-14 rounded-full bg-muted animate-pulse" />
+                    <div className="flex-1">
+                      <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                      <div className="h-5 w-16 bg-muted animate-pulse rounded" />
+                    </div>
+                  </div>
+                ) : userEntry ? (
+                  <button
+                    onClick={() => setIsExpanded(true)}
+                    className="w-full text-left"
+                  >
                     <LeaguePlayerRow
-                      entry={entry}
-                      isCurrentUser={isCurrentUser}
-                      index={index}
-                      previousRank={isCurrentUser ? previousRank : null}
+                      entry={userEntry}
+                      isCurrentUser={true}
+                      index={0}
+                      previousRank={previousRank}
                       shouldAnimate={false}
                       totalPlayers={leaderboard.length}
-                      isPromotionZone={(activeTier || 1) < 5 && entry.rank <= 10}
-                      isDemotionZone={(activeTier || 1) > 1 && entry.rank > leaderboard.length - 10}
+                      isPromotionZone={(activeTier || 1) < 5 && userEntry.rank <= 10}
+                      isDemotionZone={(activeTier || 1) > 1 && userEntry.rank > leaderboard.length - 10}
                     />
+                  </button>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">ჯერ არ ხარ ლიდერბორდზე</p>
                   </div>
-                );
-              })
+                )}
+              </motion.div>
+            ) : (
+              // Expanded: Show full scrollable list
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-background flex-1 overflow-y-auto px-3 pb-32"
+              >
+                {isLoading && leaderboard.length === 0 ? (
+                  // Show skeleton rows while loading
+                  Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
+                      <div className="relative shrink-0">
+                        <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                        <div className="h-5 w-12 bg-muted animate-pulse rounded" />
+                      </div>
+                    </div>
+                  ))
+                ) : leaderboard.length === 0 ? (
+                  <div className="text-center py-8">
+                    <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                  </div>
+                ) : (
+                  leaderboard.map((entry, index) => {
+                    const isCurrentUser = entry.user_id === user?.id;
+                    return (
+                      <div key={entry.user_id} ref={isCurrentUser ? userRowRef : undefined}>
+                        <LeaguePlayerRow
+                          entry={entry}
+                          isCurrentUser={isCurrentUser}
+                          index={index}
+                          previousRank={isCurrentUser ? previousRank : null}
+                          shouldAnimate={false}
+                          totalPlayers={leaderboard.length}
+                          isPromotionZone={(activeTier || 1) < 5 && entry.rank <= 10}
+                          isDemotionZone={(activeTier || 1) > 1 && entry.rank > leaderboard.length - 10}
+                        />
+                      </div>
+                    );
+                  })
+                )}
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Fixed User Position Bar (Mobile only) - Click to scroll to position */}
+      {/* Fixed User Position Bar (Mobile only) - Only in expanded mode */}
       <AnimatePresence>
-        {userEntry && !isLeagueLocked && showFixedBar && (
+        {isExpanded && userEntry && !isLeagueLocked && showFixedBar && (
           <motion.div
-            className="fixed bottom-28 left-0 right-0 z-40 px-4 md:hidden"
+            className="fixed bottom-28 left-0 right-0 z-40 px-4 lg:hidden"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 50, opacity: 0 }}

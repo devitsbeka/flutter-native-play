@@ -9,6 +9,7 @@ interface LeaderboardHeroBackgroundProps {
   isMobile?: boolean;
   currentTier?: number;
   onTierChange?: (tier: number) => void;
+  isFullscreen?: boolean;
 }
 
 // Map tier to background image (mobile only)
@@ -23,6 +24,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
   isMobile = false,
   currentTier = 2,
   onTierChange,
+  isFullscreen = false,
 }: LeaderboardHeroBackgroundProps) {
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -68,11 +70,16 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
     }
   }, [onTierChange]);
 
+  // Update ref when tier changes from parent
+  lastTierRef.current = currentTier;
+
   return (
     <div 
-      className={`relative w-full overflow-hidden ${
+      className={`relative w-full overflow-hidden transition-all duration-300 ${
         isMobile 
-          ? 'h-[45vh] min-h-[280px] max-h-[400px]' 
+          ? isFullscreen 
+            ? 'h-[65vh] min-h-[400px]' 
+            : 'h-[35vh] min-h-[200px]'
           : 'min-h-screen'
       }`}
       onTouchStart={isMobile ? handleTouchStart : undefined}
@@ -86,7 +93,7 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
           <img
             src={TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver}
             alt=""
-            className="w-full h-full object-contain object-top transition-opacity duration-500"
+            className="w-full h-full object-contain object-center transition-opacity duration-500"
             loading="eager"
             draggable={false}
           />
