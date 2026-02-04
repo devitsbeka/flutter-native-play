@@ -222,6 +222,42 @@ export default function Leaderboards() {
             </button>
           </div>
         </div>
+        
+        {/* User Row - Mobile only, at TOP below league nav */}
+        <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border/20 px-3">
+          {isLoading ? (
+            <div className="flex items-center gap-3 py-3 px-3">
+              <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+              <div className="flex-1">
+                <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                <div className="h-5 w-16 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          ) : userEntry ? (
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="w-full text-left"
+            >
+              <LeaguePlayerRow
+                entry={userEntry}
+                isCurrentUser={true}
+                index={0}
+                previousRank={previousRank}
+                shouldAnimate={false}
+                totalPlayers={leaderboard.length}
+                isPromotionZone={(activeTier || 1) < 5 && userEntry.rank <= 10}
+                isDemotionZone={(activeTier || 1) > 1 && userEntry.rank > leaderboard.length - 10}
+              />
+            </button>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-muted-foreground">ჯერ არ ხარ ლიდერბორდზე</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Desktop: Show all 3 leaderboards side by side */}
@@ -239,69 +275,27 @@ export default function Leaderboards() {
           isFullscreen={!isExpanded}
         />
 
-        {/* Bottom section: User row / Full list */}
-        <div className="-mt-4 relative z-30 flex-1 flex flex-col">
-          {/* Tappable header to expand/collapse */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="bg-background/95 backdrop-blur-md rounded-t-3xl shadow-lg py-3 px-4"
-          >
-            <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
-          </button>
+        {/* Bottom section: Expandable list */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div 
+              className="absolute bottom-0 left-0 right-0 z-30 flex flex-col"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              style={{ maxHeight: "70vh" }}
+            >
+              {/* Tappable header to collapse */}
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="bg-background/95 backdrop-blur-md rounded-t-3xl shadow-lg py-3 px-4"
+              >
+                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
+              </button>
 
-          {/* Content: Either just user row (collapsed) or full list (expanded) */}
-          <AnimatePresence mode="wait">
-            {!isExpanded ? (
-              // Collapsed: Show only current user's row
-              <motion.div
-                key="collapsed"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="bg-background px-3 pb-28"
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-3 py-4 px-3">
-                    <div className="h-14 w-14 rounded-full bg-muted animate-pulse" />
-                    <div className="flex-1">
-                      <div className="h-5 w-24 bg-muted animate-pulse rounded" />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
-                      <div className="h-5 w-16 bg-muted animate-pulse rounded" />
-                    </div>
-                  </div>
-                ) : userEntry ? (
-                  <button
-                    onClick={() => setIsExpanded(true)}
-                    className="w-full text-left"
-                  >
-                    <LeaguePlayerRow
-                      entry={userEntry}
-                      isCurrentUser={true}
-                      index={0}
-                      previousRank={previousRank}
-                      shouldAnimate={false}
-                      totalPlayers={leaderboard.length}
-                      isPromotionZone={(activeTier || 1) < 5 && userEntry.rank <= 10}
-                      isDemotionZone={(activeTier || 1) > 1 && userEntry.rank > leaderboard.length - 10}
-                    />
-                  </button>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground">ჯერ არ ხარ ლიდერბორდზე</p>
-                  </div>
-                )}
-              </motion.div>
-            ) : (
-              // Expanded: Show full scrollable list
-              <motion.div
-                key="expanded"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="bg-background flex-1 overflow-y-auto px-3 pb-32"
-              >
+              {/* Full scrollable list */}
+              <div className="bg-background flex-1 overflow-y-auto px-3 pb-32">
                 {isLoading && leaderboard.length === 0 ? (
                   // Show skeleton rows while loading
                   Array.from({ length: 10 }).map((_, i) => (
@@ -343,10 +337,10 @@ export default function Leaderboards() {
                     );
                   })
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Fixed User Position Bar (Mobile only) - Only in expanded mode */}
