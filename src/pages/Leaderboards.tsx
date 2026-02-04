@@ -190,8 +190,8 @@ export default function Leaderboards() {
           </div>
         </div>
         
-        {/* League Navigation - Mobile only, at TOP - TRANSPARENT */}
-        <div className="lg:hidden">
+        {/* League Navigation - Mobile only, at TOP - with blur */}
+        <div className="lg:hidden bg-background/70 backdrop-blur-md">
           <div className="flex items-center justify-between py-3 px-4">
             {/* Left Arrow */}
             <button
