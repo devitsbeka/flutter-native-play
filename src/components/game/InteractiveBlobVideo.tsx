@@ -185,16 +185,16 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
               />
             ) : (
               <motion.div
-                key={slotIndex}
+                key={isLocked ? "locked-icon" : slotIndex}
                 className="w-full h-full flex items-center justify-center"
                 initial={{ y: -80, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 80, opacity: 0 }}
                 transition={{ duration: 0.08, ease: "easeOut" }}
               >
-                {currentIconUrl && (
+                {(isLocked ? iconUrl : currentIconUrl) && (
                   <img 
-                    src={currentIconUrl} 
+                    src={isLocked ? iconUrl : currentIconUrl} 
                     alt="" 
                     className="w-20 h-20 object-contain drop-shadow-lg"
                   />
