@@ -969,7 +969,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     console.log('[startGame] State category:', state.currentRoom.category_id, '| Fresh category:', freshRoom.category_id, freshRoom.category_name);
     
-    const questionCount = freshRoom.total_questions || 5;
+    // FIX: Always use fresh default for new games
+    // Don't rely on stale total_questions from previous round
+    const questionCount = 5;
     const usedIds = (freshRoom.used_question_ids as string[]) || [];
     
     // AUTO-DETECT observer mode if not explicitly provided
