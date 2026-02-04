@@ -303,7 +303,7 @@ export default function Leaderboards() {
                       <div 
                         key={entry.user_id} 
                         ref={isCurrentUser ? userRowRef : undefined}
-                        className={isCurrentUser ? "relative z-10" : ""}
+                        className={isCurrentUser ? "relative z-10 my-2" : ""}
                       >
                         <LeaguePlayerRow
                           entry={entry}
