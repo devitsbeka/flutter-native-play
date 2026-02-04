@@ -1736,7 +1736,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (!state.currentRoom || !user) return;
     
     const roomId = state.currentRoom.id;
-    const questionCount = state.currentRoom.total_questions || 5;
+    // FIX: Use fresh default for new rounds from queue
+    // Don't read from stale state which may have old value from previous round
+    const questionCount = 5;
     
     // Fetch first queue item
     const { data: queueItems } = await supabase
