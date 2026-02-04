@@ -1,105 +1,94 @@
 
-# Fix: TV Mode `__mixed__` Category Handling
 
-## Problem Summary
-The "დაწყება (1 რაუნდი)" button IS clickable, but the game fails to start because the TV mode doesn't handle the special `__mixed__` category marker correctly.
+# Fix: Allow Username-Only Login on Auth Page
 
-When a room is set up with "სხვადასხვა" (Mixed/Random categories), the `category_id` is `"__mixed__"`, but the `startGame` function in `TVGameContext.tsx` tries to resolve this as a real category UUID, which fails.
+## Problem
+The auth page (`/auth`) requires an email with '@' symbol, but the app is designed to support **username-only** login. When you enter "Mascot" as a username, the browser shows "Please include an '@' in the email address".
 
 ## Root Cause
-- `TVHostController.tsx` passes `"__mixed__"` to `startGame(categoryId)`
-- `TVGameContext.tsx` calls `resolveCategoryUuid("__mixed__")` 
-- This returns `null` because there's no category with slug `__mixed__`
-- Game fails with error: "Failed to resolve category UUID"
+1. The email input uses `type="email"` which triggers browser validation
+2. Zod validation schema requires `z.string().email()` format
+3. The page only uses `signIn()` instead of also supporting `signInWithUsername()`
 
 ## Solution
-Add special handling for `__mixed__` category in `TVGameContext.tsx`'s `startGame` function, similar to how `MultiplayerContextV2.tsx` handles it.
+Update the Auth page to accept both username and email (like Index.tsx does):
 
 ---
 
 ## Technical Changes
 
-### File: `src/contexts/TVGameContext.tsx`
+### File: `src/pages/Auth.tsx`
 
-**Location:** Around line 2423-2435 (inside `startGame` function)
-
-**Current Code:**
+#### 1. Change input type from `email` to `text`
 ```tsx
-} else if (categoryId) {
-  // Use unified questionService for category questions
-  const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
-  const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+// Before (line 284)
+type="email"
 
-  // Resolve category UUID
-  const categoryUUID = await resolveCategoryUuid(categoryId);
-  if (!categoryUUID) {
-    tvLogError('startGame', 'Failed to resolve category UUID');
-    return;
-  }
-  // ...
-}
+// After
+type="text"
 ```
 
-**Updated Code:**
+#### 2. Update Zod validation for sign-in
 ```tsx
-} else if (categoryId) {
-  const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
-  const { markQuestionsAsAsked } = await import('@/services/questionTracker');
+// Before (lines 39-42)
+const signInSchema = z.object({
+  email: z.string().email(t("auth.invalidCredentials")),
+  password: z.string().min(1, t("auth.passwordRequired")),
+});
 
-  // Handle __mixed__ category - random questions from all categories
-  const isMixedCategory = categoryId === "__mixed__";
-  
-  if (isMixedCategory) {
-    tvLog('Using mixed category mode for TV', { categoryId });
-    
-    // Fetch random questions without category filter
-    const result = await getQuestions({
-      mode: 'tv',
-      count: 10,
-      // No categoryUuid = fetch from all categories
-    });
-
-    if (result.questions.length === 0) {
-      tvLogError('startGame', 'No questions available');
-      return;
-    }
-
-    formattedQuestions = result.questions.map(q => ({
-      id: q.id,
-      question_text: q.question,
-      correct_answer: q.correctAnswer,
-      options: q.allAnswers,
-      icon_slug: q.iconSlug,
-      image_url: q.imageUrl,
-      video_url: q.videoUrl,
-      audio_url: q.audioUrl,
-    }));
-
-    categoryName = 'სხვადასხვა';
-    categoryIcon = 'mystery-box';
-  } else {
-    // Standard category - resolve UUID
-    const categoryUUID = await resolveCategoryUuid(categoryId);
-    if (!categoryUUID) {
-      tvLogError('startGame', 'Failed to resolve category UUID');
-      return;
-    }
-    
-    // ... rest of existing category handling
-  }
-}
+// After - allow username or email
+const signInSchema = z.object({
+  email: z.string().min(1, t("auth.invalidCredentials")),
+  password: z.string().min(1, t("auth.passwordRequired")),
+});
 ```
 
-### Key Logic Changes
+#### 3. Import `signInWithUsername` from useAuth
+```tsx
+// Before (line 28)
+const { signIn, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
 
-1. **Check for `__mixed__`** before trying to resolve UUID
-2. **Call `getQuestions` without `categoryUuid`** for mixed mode (triggers random category fetch)
-3. **Set appropriate metadata**: `categoryName = 'სხვადასხვა'`, `categoryIcon = 'mystery-box'`
+// After
+const { signIn, signInWithUsername, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
+```
+
+#### 4. Handle both username and email in sign-in logic
+```tsx
+// Before (lines 141-148)
+const { error } = await signIn(email, password);
+
+// After - check if it's email or username
+const isEmail = email.includes('@');
+let result;
+if (isEmail) {
+  result = await signIn(email, password);
+} else {
+  result = await signInWithUsername(email, password);
+}
+const { error } = result;
+```
+
+#### 5. Update placeholder text
+```tsx
+// Before (line 285)
+placeholder="you@example.com"
+
+// After - indicate both options
+placeholder="username or email"
+```
+
+#### 6. Update label (optional)
+Change "ელფოსტა" (email) to something like "მომხმარებელი ან ელფოსტა" (username or email)
 
 ---
 
-## Implementation Notes
+## Summary of Changes
+| What | Change |
+|------|--------|
+| Input type | `email` -> `text` |
+| Validation | Remove email format requirement for login |
+| Auth method | Use `signInWithUsername()` for usernames without '@' |
+| Placeholder | Update to show both options |
 
-- The `questionService.getQuestions()` already supports fetching from random categories when no `categoryUuid` is provided
-- This mirrors the existing pattern in `MultiplayerContextV2.tsx` (line 1189)
-- The fix is isolated to `TVGameContext.tsx` - no changes needed elsewhere
+This mirrors the existing pattern in `Index.tsx` (lines 275-296) which already handles this correctly.
+
