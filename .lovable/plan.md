@@ -1,238 +1,314 @@
 
 
-# Plan: Add "Mixed Questions" Feature
+# Plan: Creative Icon-Based Room Name Generation
 
-## Overview
+## Problem
 
-Add a new "სხვადასხვა კატეგორიები" (Mixed Questions) option that appears **first in the Library view** within the category picker. When selected, this option mixes questions from **all categories** together, creating a surprise experience where each question could be from any category.
+Current room names are repetitive - too many names use similar patterns like "გონების...", "ტვინების...", etc. The AI generates from a limited set of styles and the fallback names also lack diversity.
 
----
+## Solution Overview
 
-## Technical Approach
-
-### How It Differs From Current "შემთხვევითი" (Random)
-
-| Feature | შემთხვევითი (Random) | სხვადასხვა (Mixed) |
-|---------|---------------------|-------------------|
-| What it does | Picks a random **single category** for the game | Mixes questions from **all categories** together |
-| User experience | All 5 questions are from one unknown category | Each question could be from a different category |
-| Location | Main menu (top level) | Inside Library view (first item) |
-
-The current "Random" feature selects ONE random category at game start. The new "Mixed" feature will use the **existing `getMultiCategoryVSQuestions`** function which already fetches one question per category from all available categories.
+Create a completely new naming system where:
+1. Each room name is generated based on a **randomly selected themed icon**
+2. Names match the icon's theme but with huge variety
+3. Multiple distinct naming patterns per theme (not just one word + "გონების")
 
 ---
 
 ## Implementation Strategy
 
-### 1. Define Mixed Category Constant
+### Step 1: Expand Icon Theme Categories
 
-Create a special "virtual category" identifier that triggers multi-category mode:
+Instead of 6 generic styles, create 15+ thematic groups with 8-10 diverse name templates each:
+
+**Theme Groups (each with paired icon keywords):**
+
+| Theme | Icon Keywords | Sample Names (diverse patterns) |
+|-------|--------------|--------------------------------|
+| **Champion** | trophy, medal, crown | ოქროს თასი, ვარსკვლავთა კლუბი, პირველობის რინგი |
+| **Adventure** | rocket, compass, map | კოსმოსის მოგზაური, ექსპედიცია X, აღმოჩენის გზა |
+| **Creature** | dragon, phoenix, unicorn | ცეცხლის მცველი, მითიური ბუნაგი, ლეგენდის კვალი |
+| **Animal** | lion, wolf, eagle, bear, tiger | მტაცებლის ხროვა, ბუნაგის მეფე, მფრინავი მხედარი |
+| **Battle** | sword, shield, boxing | ჯავშნის რინგი, კლინკის ჟღერა, მეომრის ბილიკი |
+| **Magic** | wizard, wand, crystal | ჯადოქართა სახლი, კრისტალის კოშკი, მოჯადოე კლანი |
+| **Party** | balloon, confetti, cake | ზეიმის მოედანი, ფეიერვერკი, სახალისო ბუდე |
+| **Nature** | tree, mountain, sun | მწვერვალის ჯგუფი, მზის ხეობა, ტყის კლანი |
+| **Tech** | robot, chip, gamepad | კიბერ არენა, პიქსელების ომი, დიჯიტალ გვარდია |
+| **Music** | guitar, piano, headphones | რიტმის კლუბი, ნოტების ბრძოლა, ჰარმონია |
+| **Mystery** | detective, mask, key | საიდუმლო კლუბი, გამოცანის სახლი, დეტექტივები |
+| **Speed** | racing, lightning, flame | მეხის სიჩქარე, ელვის გუნდი, თავგადასავალი |
+| **Ocean** | shark, anchor, wave | ზღვის მგლები, ოკეანის კლანი, ტალღის მხედარი |
+| **Food** | pizza, burger, chef | გემოვნების ბრძოლა, შეფთა დუელი, გურმანთა კლუბი |
+| **Space** | astronaut, planet, star | გალაქტიკის რინგი, ვარსკვლავთა ჯგუფი, კოსმიური ჯგუფი |
+
+### Step 2: Name Generation Logic
+
+```text
+1. Pick random theme group (15 options)
+2. Pick random icon keyword from that group
+3. Pick random name template from that group
+4. Search icon_library for matching icon
+5. Return name + icon_url
+```
+
+### Step 3: Ensure No Repetition
+
+- Use 8-10 unique name templates per theme
+- Avoid reusing same words across templates
+- Add slight randomization with adjective prefixes
+
+---
+
+## Technical Changes
+
+### File: `supabase/functions/generate-room-name/index.ts`
+
+**Replace** the existing prompt + fallback logic with new icon-themed name generation:
 
 ```typescript
-// Special identifier - not a real database category
-const MIXED_CATEGORY_ID = '__mixed__';
-const MIXED_CATEGORY_NAME = 'სხვადასხვა კატეგორიები';
-const MIXED_CATEGORY_ICON_SLUG = 'mystery-box';
+// Theme-based room names (15 themes × 8-10 names each = 120+ options)
+const THEMED_ROOM_NAMES: Record<string, { names: string[], iconKeywords: string[] }> = {
+  champion: {
+    names: [
+      "ოქროს თასი",        // Golden Cup
+      "ვარსკვლავთა ბრძოლა", // Stars Battle
+      "მედლების კლუბი",    // Medals Club
+      "ჩემპიონები",        // Champions
+      "პირველობის რინგი",   // Championship Ring
+      "გამარჯვებულთა ზონა", // Winners Zone
+      "ტრიუმფის არენა",     // Triumph Arena
+      "პოდიუმის გზა",       // Podium Way
+    ],
+    iconKeywords: ['trophy', 'medal', 'crown', 'cup', 'winner', 'gold']
+  },
+  adventure: {
+    names: [
+      "კოსმოსის მოგზაური",  // Space Traveler
+      "ექსპედიცია X",       // Expedition X
+      "აღმოჩენის გზა",      // Discovery Path
+      "მკვლევართა კლანი",   // Explorers Clan
+      "ჰორიზონტის მიღმა",   // Beyond Horizon
+      "საზღვრების მიღმა",   // Beyond Borders
+      "ძიების ბილიკი",      // Search Trail
+      "ახალი ტერიტორია",    // New Territory
+    ],
+    iconKeywords: ['rocket', 'compass', 'map', 'telescope', 'binoculars']
+  },
+  creature: {
+    names: [
+      "ცეცხლის მცველი",     // Fire Guardian
+      "მითიური ბუნაგი",     // Mythical Den
+      "ლეგენდის კვალი",     // Legend's Trail
+      "ჯადოსნური არსება",   // Magical Creature
+      "ფანტასტიური კლუბი",  // Fantastic Club
+      "მონსტრების ლიგა",    // Monsters League
+      "ზღაპრის სამყარო",    // Fairytale World
+      "ფრთოსანთა კლანი",    // Winged Clan
+    ],
+    iconKeywords: ['dragon', 'phoenix', 'unicorn', 'griffin', 'pegasus']
+  },
+  animal: {
+    names: [
+      "მტაცებლის ხროვა",    // Predator Pack
+      "ბუნაგის მეფე",       // Den King
+      "მფრინავი მხედარი",   // Flying Rider
+      "ველური კლანი",       // Wild Clan
+      "ბუნების ძალა",       // Nature's Power
+      "თათების ლიგა",       // Paws League
+      "ფოლადის კლანჭა",     // Steel Claw
+      "სწრაფი ნადირი",      // Swift Hunter
+    ],
+    iconKeywords: ['lion', 'wolf', 'eagle', 'bear', 'tiger', 'shark', 'panther']
+  },
+  battle: {
+    names: [
+      "ჯავშნის რინგი",      // Armor Ring
+      "კლინკის ჟღერა",      // Blade Clang
+      "მეომრის ბილიკი",     // Warrior's Path
+      "ფარების კედელი",     // Shield Wall
+      "გლადიატორები",       // Gladiators
+      "რაინდთა კლანი",      // Knights Clan
+      "ბრძოლის მოედანი",    // Battle Arena
+      "ფოლადის გუნდი",      // Steel Team
+    ],
+    iconKeywords: ['sword', 'shield', 'boxing', 'knight', 'armor', 'battle']
+  },
+  magic: {
+    names: [
+      "ჯადოქართა სახლი",    // Wizards House
+      "კრისტალის კოშკი",    // Crystal Tower
+      "მოჯადოე კლანი",      // Enchanted Clan
+      "შელოცვის წრე",       // Spell Circle
+      "მაგიური ბროლი",      // Magic Orb
+      "ალქიმიკოსები",       // Alchemists
+      "ჯადოს სკოლა",        // Magic School
+      "მისტიკის კლუბი",     // Mystic Club
+    ],
+    iconKeywords: ['wizard', 'wand', 'crystal', 'magic', 'potion', 'hat']
+  },
+  party: {
+    names: [
+      "ზეიმის მოედანი",     // Celebration Square
+      "ფეიერვერკი",         // Fireworks
+      "სახალისო ბუდე",      // Fun Nest
+      "წვეულების კლუბი",    // Party Club
+      "ბალონების ომი",      // Balloon War
+      "კონფეტის წვიმა",     // Confetti Rain
+      "დღესასწაული",        // Holiday
+      "ფესტივალი",          // Festival
+    ],
+    iconKeywords: ['balloon', 'confetti', 'cake', 'party', 'gift', 'fireworks']
+  },
+  nature: {
+    names: [
+      "მწვერვალის ჯგუფი",   // Summit Group
+      "მზის ხეობა",         // Sun Valley
+      "ტყის კლანი",         // Forest Clan
+      "მთის მგლები",        // Mountain Wolves
+      "ბუნების ძალა",       // Nature's Force
+      "მწვანე ლიგა",        // Green League
+      "ხეობის მცველი",      // Valley Guardian
+      "კლდის არწივები",     // Rock Eagles
+    ],
+    iconKeywords: ['tree', 'mountain', 'sun', 'leaf', 'forest', 'flower']
+  },
+  tech: {
+    names: [
+      "კიბერ არენა",        // Cyber Arena
+      "პიქსელების ომი",     // Pixel War
+      "დიჯიტალ გვარდია",    // Digital Guard
+      "კოდის მეომრები",     // Code Warriors
+      "ტექნო კლანი",        // Techno Clan
+      "რობოტების ლიგა",     // Robots League
+      "ჩიპის ჯგუფი",        // Chip Squad
+      "მატრიცის რინგი",     // Matrix Ring
+    ],
+    iconKeywords: ['robot', 'chip', 'gamepad', 'laptop', 'console', 'controller']
+  },
+  music: {
+    names: [
+      "რიტმის კლუბი",       // Rhythm Club
+      "ნოტების ბრძოლა",     // Notes Battle
+      "ჰარმონია",           // Harmony
+      "მელოდიის კლანი",     // Melody Clan
+      "კონცერტის ზონა",     // Concert Zone
+      "ბითების არენა",      // Beats Arena
+      "როკის ბუნაგი",       // Rock Den
+      "ჯაზის კლუბი",        // Jazz Club
+    ],
+    iconKeywords: ['guitar', 'piano', 'headphones', 'microphone', 'music', 'drum']
+  },
+  mystery: {
+    names: [
+      "საიდუმლო კლუბი",     // Secret Club
+      "გამოცანის სახლი",    // Riddle House
+      "დეტექტივები",        // Detectives
+      "შერლოკის კლანი",     // Sherlock Clan
+      "მისტერიის ზონა",     // Mystery Zone
+      "გასაღების მფლობელი", // Key Holder
+      "ნიღბის უკან",        // Behind the Mask
+      "საიდუმლო საზოგადო",  // Secret Society
+    ],
+    iconKeywords: ['detective', 'mask', 'key', 'magnifier', 'mystery', 'spy']
+  },
+  speed: {
+    names: [
+      "მეხის სიჩქარე",      // Thunder Speed
+      "ელვის გუნდი",        // Lightning Team
+      "თავგადასავალი",      // Thrill
+      "რბოლის კლუბი",       // Racing Club
+      "ტურბო არენა",        // Turbo Arena
+      "სწრაფი და ფოლადი",   // Fast & Steel
+      "ნიტროს რინგი",       // Nitro Ring
+      "სიჩქარის ეშმაკი",    // Speed Demon
+    ],
+    iconKeywords: ['racing', 'lightning', 'flame', 'car', 'motorcycle', 'bolt']
+  },
+  ocean: {
+    names: [
+      "ზღვის მგლები",       // Sea Wolves
+      "ოკეანის კლანი",      // Ocean Clan
+      "ტალღის მხედარი",     // Wave Rider
+      "მეკობრეები",         // Pirates
+      "წყალქვეშა ლიგა",     // Underwater League
+      "ზვიგენის კბილი",     // Shark Tooth
+      "ნავთსადგური",        // Harbor
+      "კაპიტნის ხიდი",      // Captain's Bridge
+    ],
+    iconKeywords: ['shark', 'anchor', 'wave', 'ship', 'pirate', 'whale', 'octopus']
+  },
+  food: {
+    names: [
+      "გემოვნების ბრძოლა",  // Taste Battle
+      "შეფთა დუელი",        // Chefs Duel
+      "გურმანთა კლუბი",     // Gourmets Club
+      "რეცეპტის საიდუმლო",  // Recipe Secret
+      "სამზარეულოს ომი",    // Kitchen War
+      "დეგუსტაცია",         // Tasting
+      "ფლეივერის ზონა",     // Flavor Zone
+      "გასტრო არენა",       // Gastro Arena
+    ],
+    iconKeywords: ['pizza', 'burger', 'chef', 'cooking', 'cake', 'food']
+  },
+  space: {
+    names: [
+      "გალაქტიკის რინგი",   // Galaxy Ring
+      "ვარსკვლავთა ჯგუფი", // Stars Group
+      "კოსმიური კლანი",     // Cosmic Clan
+      "ასტრონავტები",       // Astronauts
+      "ორბიტის მცველი",     // Orbit Guardian
+      "პლანეტების ლიგა",    // Planets League
+      "მეტეორის გზა",       // Meteor Path
+      "კოსმოსის კაპიტანი",  // Space Captain
+    ],
+    iconKeywords: ['astronaut', 'planet', 'star', 'moon', 'satellite', 'ufo']
+  }
+};
 ```
 
-### 2. Update CategoryPickerModal (Library View)
+**New generation flow:**
 
-Add the "Mixed" option as the **first item** in the Library grid, before fetched categories:
-
+```typescript
+function generateThemedRoomName(): { name: string, iconKeyword: string } {
+  // Get all theme keys
+  const themes = Object.keys(THEMED_ROOM_NAMES);
+  
+  // Pick random theme
+  const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+  const themeData = THEMED_ROOM_NAMES[randomTheme];
+  
+  // Pick random name from that theme
+  const randomName = themeData.names[Math.floor(Math.random() * themeData.names.length)];
+  
+  // Pick random icon keyword from that theme
+  const randomKeyword = themeData.iconKeywords[Math.floor(Math.random() * themeData.iconKeywords.length)];
+  
+  return { name: randomName, iconKeyword: randomKeyword };
+}
 ```
-┌─────────────────────────────────────────┐
-│  🔍 Search...                           │
-├─────────────────────────────────────────┤
-│ ┌─────────────┐  ┌─────────────┐        │
-│ │  🎁 Mixed   │  │  📚 History │  ...   │
-│ │ სხვადასხვა   │  │ ისტორია     │        │
-│ └─────────────┘  └─────────────┘        │
-│                                         │
-│ ... other categories ...                │
-└─────────────────────────────────────────┘
-```
 
-### 3. Handle Mixed Selection in Game Start Logic
+### File: `src/utils/roomNameGenerator.ts`
 
-When `category_id === '__mixed__'`:
-- Call `getQuestions({ mode: 'vs', categorySlug: undefined, count: 5 })`
-- This already triggers `getMultiCategoryVSQuestions()` which fetches from all categories
+**Update** fallback names to use the same diverse themed approach (in case edge function fails).
 
-### 4. Files to Modify
+---
+
+## Result
+
+| Before | After |
+|--------|-------|
+| 12 fallback names | 120+ themed names |
+| 6 style categories | 15 distinct themes |
+| Repetitive "გონების..." | Diverse themed names |
+| AI with limited examples | Pure random from curated list |
+| Names don't match icons | Names always match icon theme |
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/team/CategoryPickerModal.tsx` | Add Mixed option as first item in Library grid |
-| `src/components/team/CategorySelectorModal.tsx` | Add Mixed option as first item (used in other flows) |
-| `src/contexts/MultiplayerContextV2.tsx` | Handle `__mixed__` category_id in startGame/startNextFromQueue |
-| `src/components/team/RoomLobbyV2.tsx` | Display "Mixed" properly in lobby UI |
-| `src/components/team/GameResultsScreenV2.tsx` | Handle Mixed display in queue items |
-
----
-
-## Detailed Changes
-
-### File 1: `src/components/team/CategoryPickerModal.tsx`
-
-**Location: Library view grid (around line 323)**
-
-Insert a "Mixed Questions" card as the first item before mapping categories:
-
-```tsx
-{/* Mixed Questions - always first */}
-<motion.button
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  onClick={() => setSelectedItem({
-    type: "category",
-    id: "__mixed__",
-    name: "სხვადასხვა კატეგორიები",
-    iconSlug: "mystery-box",
-  })}
-  className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
-    selectedItem?.id === "__mixed__"
-      ? "bg-white/20 border-2 border-white/50"
-      : "bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-white/30 hover:from-purple-500/40 hover:to-pink-500/40"
-  }`}
->
-  <div className="flex items-center gap-3">
-    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
-      <DynamicIcon slug="mystery-box" size={22} />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="font-medium text-white text-sm truncate">სხვადასხვა კატეგორიები</p>
-      <p className="text-white/50 text-xs">ყველა კატეგორიიდან</p>
-    </div>
-    {selectedItem?.id === "__mixed__" && (
-      <Check className="w-4 h-4 text-white flex-shrink-0" />
-    )}
-  </div>
-</motion.button>
-```
-
-### File 2: `src/contexts/MultiplayerContextV2.tsx`
-
-**Location: startNextFromQueue (around line 1947)**
-
-Update the logic that fetches questions to handle `__mixed__`:
-
-```typescript
-// Line 1947 - Handle __mixed__ as categorySlug undefined
-const newCategoryId = nextItem.source_type === "random" 
-  ? null 
-  : nextItem.category_id === "__mixed__" 
-    ? undefined  // This triggers getMultiCategoryVSQuestions
-    : nextItem.category_id;
-    
-const newCategoryName = nextItem.source_type === "random" 
-  ? "შემთხვევითი" 
-  : nextItem.category_id === "__mixed__"
-    ? "სხვადასხვა კატეგორიები"
-    : (nextItem.category_name || "კატეგორია");
-```
-
-**Location: startGame (around line 1130-1160)**
-
-Similarly update to handle `__mixed__` category:
-
-```typescript
-// Check if this is the mixed category
-const isMixedCategory = freshRoom.category_id === "__mixed__";
-
-// Fetch questions - undefined categorySlug triggers multi-category mode
-const result = await getQuestions({
-  mode: 'vs',
-  categorySlug: isMixedCategory ? undefined : resolvedCategorySlug,
-  count: questionCount,
-  excludeIds: usedIds,
-});
-```
-
-### File 3: `src/components/team/CategorySelectorModal.tsx`
-
-Add the same Mixed option as first item in the grid (similar to CategoryPickerModal changes).
-
-### File 4: Queue Display Updates
-
-In `RoomLobbyV2.tsx` and `GameResultsScreenV2.tsx`, add logic to display a special icon for Mixed:
-
-```tsx
-{item.category_id === "__mixed__" ? (
-  <DynamicIcon slug="mystery-box" size={20} />
-) : item.source_type === "random" ? (
-  <Shuffle className="w-5 h-5 text-purple-300" />
-) : (
-  <DynamicIcon slug={item.icon_slug} categoryId={item.category_id} size={20} />
-)}
-```
-
----
-
-## Visual Design
-
-The Mixed category card will have:
-- **Rainbow/gradient background**: `from-purple-500/30 to-pink-500/30`
-- **Icon**: `mystery-box` from the 9k icon library (rendered via DynamicIcon)
-- **Title**: "სხვადასხვა კატეგორიები" 
-- **Subtitle**: "ყველა კატეგორიიდან" (From all categories)
-
----
-
-## Flow Diagram
-
-```text
-User opens Category Picker
-         ↓
-     Main Menu
-   ┌──────────────┐
-   │ შემთხვევითი   │ → Picks random single category
-   │ ბიბლიოთეკა   │ → Opens Library view
-   │ ჩემი ტრივიები │
-   └──────────────┘
-         ↓
-   User clicks "ბიბლიოთეკა"
-         ↓
-    Library View
-   ┌──────────────────────────┐
-   │ 🎁 სხვადასხვა (FIRST)    │ → NEW: Mixed from all
-   │ 📚 საქართველოს ისტორია  │
-   │ 🌍 მსოფლიო ისტორია      │
-   │ ...other categories...   │
-   └──────────────────────────┘
-         ↓
-   User selects Mixed
-         ↓
-   category_id = "__mixed__"
-         ↓
-   startGame() detects __mixed__
-         ↓
-   Calls getQuestions({ categorySlug: undefined })
-         ↓
-   getMultiCategoryVSQuestions() fetches
-   one question from each random category
-         ↓
-   Game plays with diverse questions!
-```
-
----
-
-## Edge Cases Handled
-
-1. **Search filter**: Mixed option will appear only when search is empty (or always if matches "სხვადასხვა")
-2. **Queue display**: Special handling for `__mixed__` category_id to show correct icon/name
-3. **Room state**: `category_name` stored as "სხვადასხვა კატეგორიები" for display
-4. **Question icons**: Each question shows its own category's icon (already handled by icon_slug)
-
----
-
-## Files Summary
-
-| File | Type of Change |
-|------|----------------|
-| `src/components/team/CategoryPickerModal.tsx` | Add Mixed card to Library grid |
-| `src/components/team/CategorySelectorModal.tsx` | Add Mixed card to selector grid |
-| `src/contexts/MultiplayerContextV2.tsx` | Handle `__mixed__` in startGame & startNextFromQueue |
-| `src/components/team/RoomLobbyV2.tsx` | Display Mixed icon in category picker section |
-| `src/components/team/GameResultsScreenV2.tsx` | Display Mixed icon in queue items |
-| `src/components/challenge/LibraryCategoryPicker.tsx` | Add Mixed option (if used elsewhere) |
+| `supabase/functions/generate-room-name/index.ts` | Replace AI prompt with themed name generation |
+| `src/utils/roomNameGenerator.ts` | Update fallback names to match new themes |
 
