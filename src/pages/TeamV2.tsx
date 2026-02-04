@@ -50,6 +50,8 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
+import { useProGating } from "@/hooks/useProGating";
+import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import {
   UnifiedFiltersBar,
   roomFilterOptions,
@@ -90,6 +92,7 @@ function TeamContentV2() {
   } = useGameInvitations();
   const { createRoom } = useMultiplayerV2();
   const queryClient = useQueryClient();
+  const { requirePro, showProModal, setShowProModal, gatedFeature } = useProGating();
 
   // Auto-open PersonalTrivia from navigation state
   const [autoOpenPersonalTrivia, setAutoOpenPersonalTrivia] = useState(false);
@@ -652,7 +655,7 @@ function TeamContentV2() {
                   filterOptions={roomFilterOptions}
                   searchQuery={roomsSearchQuery}
                   onSearchQueryChange={setRoomsSearchQuery}
-                  onAddClick={() => setShowCreateModal(true)}
+                  onAddClick={() => requirePro("rooms", () => setShowCreateModal(true))}
                   addButtonText="+ ოთახი"
                 />
               )}
@@ -667,7 +670,7 @@ function TeamContentV2() {
                   sortOptions={exploreSortOptions}
                   searchQuery={exploreSearchQuery}
                   onSearchQueryChange={setExploreSearchQuery}
-                  onAddClick={() => setShowCreateTypeModal(true)}
+                  onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
                   addButtonText="შექმენი ტრივია"
                 />
               )}
@@ -679,7 +682,7 @@ function TeamContentV2() {
                   filterOptions={myTriviaFilterOptions}
                   searchQuery={searchQuery}
                   onSearchQueryChange={setSearchQuery}
-                  onAddClick={() => setShowCreateTypeModal(true)}
+                  onAddClick={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
                   addButtonText="+ ტრივია"
                 />
               )}
@@ -700,7 +703,7 @@ function TeamContentV2() {
               {activeTab === "rooms" && (
                 <MyRoomsSection
                   hideTV 
-                  onCreateRoom={() => setShowCreateModal(true)}
+                  onCreateRoom={() => requirePro("rooms", () => setShowCreateModal(true))}
                   onShowAllRooms={() => setShowAllGamesModal(true)}
                   vertical
                   filter={roomsFilter}
@@ -724,7 +727,7 @@ function TeamContentV2() {
               {/* My Trivia Tab */}
               {activeTab === "my-content" && (
                 <MyTriviaTab
-                  onCreateQuiz={() => setShowCreateTypeModal(true)}
+                  onCreateQuiz={() => requirePro("trivia", () => setShowCreateTypeModal(true))}
                   onPlay={(post, collectionPosts) => {
                     setPlayingQuiz({ post, collectionPosts });
                   }}
@@ -1095,6 +1098,13 @@ function TeamContentV2() {
         onClose={() => setShowAuthModal(false)}
         returnToPath="/team"
         message="შედი ანგარიშზე ონლაინ თამაშისთვის"
+      />
+      
+      {/* PRO Required Modal */}
+      <ProRequiredModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        feature={gatedFeature}
       />
     </MainLayout>
   );
