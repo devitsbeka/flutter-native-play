@@ -1,119 +1,116 @@
 
-# Password Reset via Security Question
+# Plan: Remove Screen Mirror Option & Make Weekly Challenge Clickable
 
 ## Overview
-Since your app uses **username-only authentication** (without real emails), traditional email-based password reset won't work. I'll implement a **security question** system that allows users to reset their password by answering a question they set during signup.
-
-## How It Works
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                        SIGNUP FLOW                                  │
-├─────────────────────────────────────────────────────────────────────┤
-│  1. User creates account with username + password                   │
-│  2. User selects a security question from a list                    │
-│  3. User provides their own secret answer                           │
-│  4. Answer is hashed and stored securely in the database            │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│                      PASSWORD RESET FLOW                            │
-├─────────────────────────────────────────────────────────────────────┤
-│  1. User clicks "Forgot Password" on login screen                   │
-│  2. User enters their username                                      │
-│  3. System shows their security question                            │
-│  4. User types the answer                                           │
-│  5. If correct: User can set a new password                         │
-│  6. If wrong: "Incorrect answer" error (3 attempts max)             │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-## Security Questions (Predefined List)
-
-Users will choose from these Georgian questions:
-1. შენი პირველი შინაური ცხოველის სახელი? (Your first pet's name?)
-2. რომელ ქალაქში დაიბადე? (Which city were you born in?)
-3. შენი საყვარელი მასწავლებლის სახელი? (Your favorite teacher's name?)
-4. შენი საყვარელი ფილმი? (Your favorite movie?)
-5. შენი საყვარელი სპორტული გუნდი? (Your favorite sports team?)
+This plan addresses three changes:
+1. Remove the "Screen Mirror" option from the TV Mode modal
+2. Ensure TV mode is started from the Room Lobby (already works correctly)
+3. Make the "კვირის გამოწვევა" (Weekly Challenge) widget clickable
 
 ---
 
-## Technical Implementation
+## Change 1: Remove Screen Mirror from TVMirrorModal
 
-### 1. Database Changes
+### Current State
+The `TVMirrorModal.tsx` shows two options when opened:
+- **Screen Mirror** (AirPlay/Smart View) - shows instructions for native screen mirroring
+- **მასპინძლობის დანწყება** (Start Hosting) - creates a TV session
 
-**Add to `profiles` table:**
-```sql
-ALTER TABLE profiles ADD COLUMN security_question_id INTEGER;
-ALTER TABLE profiles ADD COLUMN security_answer_hash TEXT;
-```
+### What to Change
+Remove the Screen Mirror option entirely. The modal will only show:
+- **მასპინძლობის დანწყება** (Start Hosting) option - for quick TV session creation
+- Manual code entry option at the bottom
 
-### 2. New Page: `/forgot-password`
-
-A new page with 3 steps:
-- **Step 1**: Enter username
-- **Step 2**: Show security question, enter answer
-- **Step 3**: Set new password (if answer correct)
-
-### 3. Edge Function: `reset-password-with-security`
-
-A secure backend function that:
-- Validates the security answer
-- Uses admin API to reset the user's password
-- Limits attempts (3 max per hour)
-
-### 4. Update Signup Flow
-
-During account creation, ask users to:
-- Select a security question
-- Provide an answer (min 2 characters)
-
-### 5. Add "Forgot Password?" Link
-
-Add link on login screen: "პაროლი დამავიწყდა?" (Forgot password?)
+### File: `src/components/tv/TVMirrorModal.tsx`
+- Delete the Screen Mirror button (lines 146-169)
+- Delete the 'mirror-instructions' step entirely (lines 230-337)
+- Simplify the step flow: `'choose' | 'manual-code' | 'connecting' | 'connected'`
 
 ---
 
-## Files to Create/Modify
+## Change 2: TV Mode Flow (Already Working)
 
+### Current State
+The Room Lobby already has the correct flow:
+1. Host creates a room
+2. In room lobby, host sees "TV რეჟიმი" toggle
+3. When enabled, `TVSetupInline` appears asking for the 4-digit code
+4. Host enters code from TV → gets connected to TV session
+
+**No changes needed** - this flow is already implemented correctly in `RoomLobbyV2.tsx`.
+
+---
+
+## Change 3: Make Weekly Challenge Clickable
+
+### Current State
+The Weekly Challenge widget in both sidebars is static and non-interactive:
+- Shows hardcoded text: "10 თამაში ითამაშე" (Play 10 games)
+- Shows hardcoded progress: "3/10 შესრულებულია" (3/10 completed)
+- Has a ChevronRight icon but no click handler
+
+### What to Create
+
+#### A. New Modal: `WeeklyChallengeModal.tsx`
+Create a modal that shows:
+- Challenge title and description
+- Current progress (e.g., 3/10 games played)
+- Reward info (XP, coins, etc.)
+- Time remaining until reset
+- Call-to-action button to play
+
+#### B. Update `TeamRightSidebar.tsx`
+- Make the Weekly Challenge widget clickable
+- Open the new modal when clicked
+
+#### C. Update `ProfileRightSidebar.tsx`
+- Same changes as above
+
+### Files to Create/Modify
 | File | Action |
 |------|--------|
-| `src/pages/ForgotPassword.tsx` | **Create** - New password reset page |
-| `supabase/functions/reset-password-with-security/index.ts` | **Create** - Backend logic |
-| `src/pages/Index.tsx` | **Modify** - Add security question to signup |
-| `src/pages/Auth.tsx` | **Modify** - Add "Forgot Password" link |
-| `src/locales/ka.ts` + other locales | **Modify** - Add translations |
-| `src/contexts/AuthContext.tsx` | **Modify** - Add reset function |
-| `src/App.tsx` | **Modify** - Add route |
-| Database migration | **Create** - Add columns to profiles |
+| `src/components/challenge/WeeklyChallengeModal.tsx` | **Create** - Modal showing challenge details |
+| `src/components/team/TeamRightSidebar.tsx` | **Modify** - Add onClick to open modal |
+| `src/components/profile/ProfileRightSidebar.tsx` | **Modify** - Add onClick to open modal |
 
 ---
 
-## User Experience
+## Technical Details
 
-### On Signup (New Step)
-After username/password, user sees:
-> "აირჩიე უსაფრთხოების შეკითხვა" (Choose a security question)
-> [Dropdown with 5 questions]
-> "პასუხი" (Answer): [Input field]
+### WeeklyChallengeModal Content
+```text
+┌─────────────────────────────────────────┐
+│  🏆  კვირის გამოწვევა                    │
+│                                          │
+│  ──────────────────────────────────────  │
+│                                          │
+│  📋 დავალება:                            │
+│     ითამაშე 10 თამაში ამ კვირაში         │
+│                                          │
+│  📊 პროგრესი:                            │
+│     ████████░░░░░░░░░░░░  3/10          │
+│                                          │
+│  🎁 ჯილდო:                              │
+│     500 XP + 100 ქულა                   │
+│                                          │
+│  ⏰ დარჩენილია: 5 დღე                   │
+│                                          │
+│  ┌──────────────────────────────────┐   │
+│  │        ითამაშე ახლავე            │   │
+│  └──────────────────────────────────┘   │
+└─────────────────────────────────────────┘
+```
 
-### On Login Screen
-New link appears:
-> "პაროლი დამავიწყდა?" (Forgot password?) → Goes to `/forgot-password`
-
-### On Forgot Password Page
-1. Enter username → "გაგრძელება" (Continue)
-2. See question, enter answer → "შემოწმება" (Verify)
-3. If correct: Enter new password twice → "პაროლის შეცვლა" (Change Password)
-4. Success: Redirect to login with success message
+### Data Source
+For now, the modal will use hardcoded data (matching the current widget). In the future, this can be connected to a `weekly_challenges` database table to track actual progress.
 
 ---
 
-## Security Measures
+## Summary of Changes
 
-1. **Hashed answers**: Security answers are hashed before storage (like passwords)
-2. **Rate limiting**: Max 3 attempts per hour per username
-3. **Admin API**: Password change uses Supabase admin API (not client)
-4. **Case-insensitive**: Answers compared in lowercase
-5. **Minimum length**: Answer must be at least 2 characters
+| Component | Change |
+|-----------|--------|
+| `TVMirrorModal.tsx` | Remove Screen Mirror option and related step |
+| `WeeklyChallengeModal.tsx` | Create new modal for challenge details |
+| `TeamRightSidebar.tsx` | Make Weekly Challenge widget clickable |
+| `ProfileRightSidebar.tsx` | Make Weekly Challenge widget clickable |
