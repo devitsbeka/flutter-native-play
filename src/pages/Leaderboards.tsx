@@ -257,7 +257,7 @@ export default function Leaderboards() {
         <AnimatePresence>
           {isExpanded && (
             <motion.div 
-              className="absolute bottom-0 left-0 right-0 z-30 flex flex-col"
+              className="absolute bottom-0 left-0 right-0 z-30 flex flex-col bg-background rounded-t-3xl shadow-lg overflow-hidden"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -267,13 +267,13 @@ export default function Leaderboards() {
               {/* Tappable header to collapse */}
               <button
                 onClick={() => setIsExpanded(false)}
-                className="bg-background/95 backdrop-blur-md rounded-t-3xl shadow-lg py-3 px-4"
+                className="py-3 px-4 w-full"
               >
                 <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
               </button>
 
               {/* Full scrollable list */}
-              <div className="bg-background flex-1 overflow-y-auto px-3 pb-32">
+              <div className="flex-1 overflow-y-auto px-3 pb-32">
                 {isLoading && leaderboard.length === 0 ? (
                   // Show skeleton rows while loading
                   Array.from({ length: 10 }).map((_, i) => (
