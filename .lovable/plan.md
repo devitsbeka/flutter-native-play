@@ -1,110 +1,73 @@
 
-# Plan: Fix Missing `total_questions` Update in `startNextFromQueue`
+# Plan: Fix `startNextFromQueue` Using Stale Question Count
 
 ## Problem Summary
 
-When a second round starts from the queue (library category), the game ends after just 1 question and shows the results page. This happens because the room's `total_questions` field is not being updated when starting a round with a library category from the queue.
+When a second round starts from the queue, only 1 question is fetched instead of 5, causing the game to end immediately. The database shows `total_questions: 1` even after the fix was applied.
 
 ## Root Cause
 
-In `MultiplayerContextV2.tsx`, the `startNextFromQueue` function has two code paths:
+In `startNextFromQueue` at line 1739:
 
-1. **User trivia branch** (lines 1885-1896): Correctly updates `total_questions: questions.length` in the database
-2. **Library/random category branch** (lines 2044-2055): **Missing** `total_questions` update
+```typescript
+const questionCount = state.currentRoom.total_questions || 5;
+```
 
-When the library category branch runs, the room keeps its old `total_questions` value from the previous game. If the previous game had only 1 question, the stale value persists and the new round also thinks it should have only 1 question.
+This reads `total_questions` from **local state**, which still has the value from the previous round. If the first round was a user trivia with only 1 question, `state.currentRoom.total_questions` would be `1`. This stale value is then used to fetch questions for the new round, resulting in only 1 question being fetched.
 
-## Database Evidence
+**The update to `total_questions: questions.length` happens AFTER the questions are fetched, so it can't fix a value that was already used incorrectly.**
 
-Current room state shows:
-- `total_questions: 1` (stale from previous game)
-- Only 1 question in `room_questions` table
+## Why Previous Fix Didn't Work
+
+The previous fix correctly added `total_questions: questions.length` to the database and state updates. However, the bug occurs BEFORE that update - when `questionCount` is read from stale state to determine how many questions to fetch.
 
 ## Solution
 
-Add `total_questions: questions.length` to the database update in the library/random category branch of `startNextFromQueue`.
+For `startNextFromQueue`, the queue item represents a NEW round (not a continuation), so we should use a **fresh default of 5 questions** instead of reading from stale state. This is consistent with how new games work.
 
 ## Technical Changes
 
 ### File: `src/contexts/MultiplayerContextV2.tsx`
 
-**Location: Lines 2044-2055 (library/random category update)**
+**Location: Line 1739**
 
-Add `total_questions: questions.length` to both:
-1. The database update (supabase `.update()` call)
-2. The local state update (`setState()` call)
+Change from reading stale state to using a fresh default:
 
 **Before:**
 ```typescript
-// Update room with new category and game info (after questions are committed)
-await supabase
-  .from("game_rooms")
-  .update({
-    category_id: newCategoryId,
-    category_name: newCategoryName,
-    used_question_ids: newUsedIds,
-    status: "playing",
-    started_at: new Date().toISOString(),
-    current_game_id: game?.id,
-  })
-  .eq("id", roomId);
-
-// Update state with new category and questions
-setState(prev => ({
-  ...prev,
-  currentRoom: prev.currentRoom ? {
-    ...prev.currentRoom,
-    category_id: newCategoryId,
-    category_name: newCategoryName,  // <-- Missing total_questions!
-  } : null,
-  // ...
-}));
+const roomId = state.currentRoom.id;
+const questionCount = state.currentRoom.total_questions || 5;
 ```
 
 **After:**
 ```typescript
-// Update room with new category and game info (after questions are committed)
-await supabase
-  .from("game_rooms")
-  .update({
-    category_id: newCategoryId,
-    category_name: newCategoryName,
-    used_question_ids: newUsedIds,
-    total_questions: questions.length,  // <-- ADD THIS
-    status: "playing",
-    started_at: new Date().toISOString(),
-    current_game_id: game?.id,
-  })
-  .eq("id", roomId);
-
-// Update state with new category and questions
-setState(prev => ({
-  ...prev,
-  currentRoom: prev.currentRoom ? {
-    ...prev.currentRoom,
-    category_id: newCategoryId,
-    category_name: newCategoryName,
-    total_questions: questions.length,  // <-- ADD THIS
-  } : null,
-  // ...
-}));
+const roomId = state.currentRoom.id;
+// FIX: Use fresh default for new rounds from queue
+// Don't read from stale state which may have old value from previous round
+const questionCount = 5;
 ```
+
+This is safe because:
+1. Queue items always start a NEW round (not resuming an existing one)
+2. The default for new games is 5 questions
+3. For user trivia, the question count is determined by the trivia's questions array (handled separately in the user trivia branch)
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/contexts/MultiplayerContextV2.tsx` | Add `total_questions: questions.length` to database and state updates in library/random category branch (around lines 2047 and 2063) |
+| `src/contexts/MultiplayerContextV2.tsx` | Line 1739: Change `state.currentRoom.total_questions || 5` to just `5` |
 
 ## Expected Behavior After Fix
 
-1. First round plays with 5 questions
+1. First round plays with any number of questions (e.g., 1 for a short trivia)
 2. Click "Next Round" from results (with queue item)
-3. `startNextFromQueue` fetches 5 new questions
-4. **Room's `total_questions` is updated to `5`** (instead of staying at stale value)
-5. Game plays through all 5 questions
-6. Results screen shows after all questions are answered
+3. `startNextFromQueue` uses default count of 5 (not stale value of 1)
+4. `getQuestions()` fetches 5 questions
+5. Database and state are updated with `total_questions: 5`
+6. Game plays through all 5 questions
+7. Results screen shows after all questions are answered
 
-## Why This Bug Occurred
+## Alternative Considered
 
-The user trivia branch was implemented correctly with `total_questions: questions.length`, but when the library category branch was added later, the `total_questions` field was inadvertently omitted from both the database update and state update.
+We could fetch fresh `total_questions` from the database like `startGame` does. However, since queue items represent completely NEW rounds (not existing games), using a standard default is simpler and more appropriate.
