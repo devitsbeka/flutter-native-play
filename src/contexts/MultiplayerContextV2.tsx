@@ -44,6 +44,31 @@ const notifyTriviaCreator = async (userTriviaId: string, playerId: string) => {
   }
 };
 
+// Helper to determine if host should observe (knows answers)
+// Policy: Host observes if they own the trivia AND (it's not blind OR they've already played it)
+const shouldHostObserve = async (
+  userTriviaId: string | null,
+  hostUserId: string
+): Promise<boolean> => {
+  if (!userTriviaId) return false; // Library/random categories: host always plays
+  
+  const { data: trivia } = await supabase
+    .from("user_quiz_posts")
+    .select("user_id, is_blind, plays_count")
+    .eq("id", userTriviaId)
+    .maybeSingle();
+  
+  if (!trivia) return false;
+  
+  // Host knows answers if: they own it AND (it's not blind OR they've already played it)
+  const ownsTrivia = trivia.user_id === hostUserId;
+  const knowsAnswers = !trivia.is_blind || (trivia.plays_count || 0) > 0;
+  
+  console.log(`[MP] shouldHostObserve check: owns=${ownsTrivia}, knowsAnswers=${knowsAnswers}, isBlind=${trivia.is_blind}, playsCount=${trivia.plays_count}`);
+  
+  return ownsTrivia && knowsAnswers;
+};
+
 // Helper to safely delete room questions with verification (prevents race condition)
 const safeDeleteRoomQuestions = async (roomId: string): Promise<boolean> => {
   await supabase.from("room_questions").delete().eq("room_id", roomId);
@@ -114,6 +139,7 @@ export interface GameRoom {
   tv_session_id?: string | null;
   user_trivia_id?: string | null; // Track which user trivia is being played
   last_activity_at?: string | null; // Track last activity for room staleness detection
+  host_is_observer?: boolean | null; // Track if host is in observer mode
 }
 
 export interface RoomGame {
@@ -402,7 +428,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   iconSlug: q.icon_slug || undefined, // Include icon for custom questions
                 }));
                 
-                console.log(`[MP] Non-host loaded ${questions.length} validated questions for game_id: ${expectedGameId}`);
+                console.log(`[MP] Non-host loaded ${questions.length} validated questions for game_id: ${expectedGameId}, host_is_observer: ${updated.host_is_observer}`);
                 
                 setState(prev => ({
                   ...prev,
@@ -413,6 +439,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
                   lastQuestionResult: null, // CRITICAL: Reset to prevent answer reveal on new round
                   opponentAnswers: {}, // Reset opponent answers for fresh round
                   currentRoom: updated, // Ensure room state is synced
+                  hostIsObserver: updated.host_is_observer || false, // FIX: Read from room for non-hosts
+                  observerBonusThisRound: 0,
                 }));
               } else {
                 // CRITICAL: Check if game_id changed before returning to lobby
@@ -919,9 +947,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
   }, []);
 
   // Start game (host only)
-  // hostShouldObserve: when true, host enters observer mode (can't answer, but earns points from mistakes)
-  const startGame = useCallback(async (hostShouldObserve: boolean = false) => {
-    if (!state.currentRoom || !isHost) return;
+  // hostShouldObserve: when undefined, auto-detect based on trivia ownership
+  const startGame = useCallback(async (hostShouldObserve?: boolean) => {
+    if (!state.currentRoom || !isHost || !user) return;
     
     const roomId = state.currentRoom.id;
     
@@ -944,11 +972,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const questionCount = freshRoom.total_questions || 5;
     const usedIds = (freshRoom.used_question_ids as string[]) || [];
     
+    // AUTO-DETECT observer mode if not explicitly provided
+    const shouldObserve = hostShouldObserve ?? 
+      await shouldHostObserve(freshRoom.user_trivia_id, user.id);
+    
+    console.log(`[startGame] Observer mode: provided=${hostShouldObserve}, detected=${shouldObserve}`);
+    
     // Set host_is_observer in database (ALWAYS reset to match current game mode)
     // This prevents stale observer flag from previous user trivia affecting library category games
     await supabase
       .from("game_rooms")
-      .update({ host_is_observer: hostShouldObserve })
+      .update({ host_is_observer: shouldObserve })
       .eq("id", roomId);
     
     try {
@@ -1075,7 +1109,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           myScore: 0,
           lastQuestionResult: null,
           opponentAnswers: {},
-          hostIsObserver: hostShouldObserve,
+          hostIsObserver: shouldObserve,
           observerBonusThisRound: 0,
           justReturnedFromResults: false,
           lastPlayedTriviaId: freshRoom.user_trivia_id,
@@ -1145,7 +1179,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // Mark questions as seen globally (unified tracking)
       markQuestionsAsSeen(questions.map(q => q.id));
       
-      await saveQuestionsAndStartGame(roomId, questions, hostShouldObserve);
+      await saveQuestionsAndStartGame(roomId, questions, shouldObserve);
       
       // Consume matching queue item if it exists (prevents "next round" showing played category)
       await consumeMatchingQueueItem(roomId, freshRoom.category_id, null);
@@ -1154,7 +1188,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       console.error("Error starting game:", error);
       toast.error("თამაშის დაწყება ვერ მოხერხდა");
     }
-  }, [state.currentRoom, isHost]);
+  }, [state.currentRoom, isHost, user]);
 
   // Helper to save questions and update room status
   const saveQuestionsAndStartGame = useCallback(async (
@@ -1401,6 +1435,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     const questionCount = freshRoom.total_questions || 5;
     
+    // Determine if host should observe (only applies if current user is host)
+    const currentUserIsHost = freshRoom.host_user_id === user.id;
+    const hostShouldObserve = currentUserIsHost
+      ? await shouldHostObserve(freshRoom.user_trivia_id, user.id)
+      : false;
+    
+    console.log(`[startNewRound] Observer mode: isHost=${currentUserIsHost}, shouldObserve=${hostShouldObserve}`);
+    
+    // Update host_is_observer in database (so non-hosts can read it)
+    if (currentUserIsHost) {
+      await supabase
+        .from("game_rooms")
+        .update({ host_is_observer: hostShouldObserve })
+        .eq("id", roomId);
+    }
+    
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), ALWAYS fetch fresh from user_trivia_id
       // This prevents stale questions from previous rounds when user switches trivia
@@ -1515,6 +1565,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           myScore: 0,
           lastQuestionResult: null,
           opponentAnswers: {},
+          hostIsObserver: hostShouldObserve, // FIX: Set observer mode
+          observerBonusThisRound: 0,
           lastPlayedTriviaId: freshRoom.user_trivia_id,
           currentGame: game ? {
             id: game.id,
@@ -1648,6 +1700,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         myScore: 0,
         lastQuestionResult: null,
         opponentAnswers: {},
+        hostIsObserver: hostShouldObserve, // FIX: Set observer mode (always false for library categories)
+        observerBonusThisRound: 0,
         currentGame: game ? {
           id: game.id,
           room_id: game.room_id,
@@ -1711,6 +1765,22 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               .eq("id", item.id)
           )
         );
+      }
+      
+      // Determine if host should observe (only for user trivia, not library categories)
+      const currentUserIsHost = state.currentRoom.host_user_id === user.id;
+      const hostShouldObserve = currentUserIsHost && nextItem.source_type === "user_trivia" && nextItem.user_trivia_id
+        ? await shouldHostObserve(nextItem.user_trivia_id, user.id)
+        : false;
+      
+      console.log(`[startNextFromQueue] Observer mode: isHost=${currentUserIsHost}, sourceType=${nextItem.source_type}, shouldObserve=${hostShouldObserve}`);
+      
+      // Update host_is_observer in database (so non-hosts can read it)
+      if (currentUserIsHost) {
+        await supabase
+          .from("game_rooms")
+          .update({ host_is_observer: hostShouldObserve })
+          .eq("id", roomId);
       }
       
       // Handle custom trivia separately
@@ -1828,6 +1898,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             myScore: 0,
             lastQuestionResult: null,
             opponentAnswers: {},
+            hostIsObserver: hostShouldObserve, // FIX: Set observer mode
+            observerBonusThisRound: 0,
             currentGame: game ? {
               id: game.id,
               room_id: game.room_id,
@@ -1984,6 +2056,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         myScore: 0,
         lastQuestionResult: null,
         opponentAnswers: {},
+        hostIsObserver: hostShouldObserve, // FIX: Set observer mode (always false for library categories)
+        observerBonusThisRound: 0,
         currentGame: game ? {
           id: game.id,
           room_id: game.room_id,
