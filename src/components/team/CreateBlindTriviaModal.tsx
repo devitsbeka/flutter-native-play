@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, Edit3, Users, CheckCircle, Plus } from "lucide-react";
+import { ChevronLeft, Sparkles, ChevronRight, Check, Loader2, RefreshCw, Globe, Lock, CheckCircle, Plus } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
+import pencilIcon from "@/assets/classic-yellow-pencil.png";
+import lockIcon from "@/assets/lock-icon.png";
+import bullseyeIcon from "@/assets/bullseye.png";
+import checkmarkIcon from "@/assets/checkmark.png";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -336,8 +340,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 onClick={() => handleModeSelect("edit")}
                 className="p-4 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left flex items-center gap-4"
               >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Edit3 className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div>
                   <h4 className="font-bold text-white text-base">ღია</h4>
@@ -352,8 +356,8 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                 onClick={() => handleModeSelect("play")}
                 className="p-4 rounded-2xl bg-white/15 border border-white/20 hover:bg-white/25 transition-all text-left flex items-center gap-4"
               >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Users className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div>
                   <h4 className="font-bold text-white text-base">დახურული</h4>
@@ -499,7 +503,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                     : "border-white/30 bg-white/10"
                 }`}
               >
-                <span className="text-2xl">🎯</span>
+                <img src={bullseyeIcon} alt="" className="w-10 h-10 object-contain" />
                 <span className="text-white font-medium text-sm">4 ვარიანტი</span>
               </motion.button>
               
@@ -513,7 +517,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                     : "border-white/30 bg-white/10"
                 }`}
               >
-                <span className="text-2xl">✅</span>
+                <img src={checkmarkIcon} alt="" className="w-10 h-10 object-contain" />
                 <span className="text-white font-medium text-sm">მართალი/მცდარი</span>
               </motion.button>
             </div>
