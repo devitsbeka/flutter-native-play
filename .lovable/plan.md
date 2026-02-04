@@ -1,168 +1,162 @@
 
-# Plan: Complete the PRO Benefits Implementation
+# Plan: Fix TV Lobby Screen Issues
 
-## Overview
-Fix the gaps between promised and implemented PRO benefits to ensure users get everything they're paying for.
+## Issues to Address
 
----
+Based on the screenshots:
 
-## Issues to Fix
+### Issue 1: Avatar Strokes - Should be Inside (Inset Border)
+**File:** `src/components/tv/TVLobbyScreenV2.tsx`
 
-### Issue 1: Daily Free Power-ups Not Working
-**Status:** Hook exists but unused
-
-**Solution:** Integrate `useDailyVipRewards` into the app flow
-- Option A: Auto-claim on app open/login
-- Option B: Add a claimable UI element in rewards section
-
-**Files to modify:**
-- `src/App.tsx` or `src/hooks/useAuth.ts` - Add auto-claim on login
-- Alternative: `src/components/home/DailyRewardsModal.tsx` - Show VIP power-ups section
-
----
-
-### Issue 2: Ads Not Skipped for VIP
-**Status:** Not implemented
-
-**Solution:** Add VIP check in ad service
-
-**File to modify:** `src/services/adService.ts`
-
-Add method:
-```typescript
-async shouldShowAd(isVip: boolean): Promise<boolean> {
-  return !isVip;
-}
+**Current (line 573-579):**
+```tsx
+className={`... border-2 border-purple-400/50 ...`}
 ```
 
-Then modify `showRewardedAd` and `showRewardedAdWithPreload` to check VIP status before showing.
+Border is currently default `border-box` which places stroke on the outside.
+
+**Fix:** Use CSS `box-shadow: inset` to create an inner border effect instead of regular border, or add `outline` with negative offset.
+
+Best approach: Use `ring-inset` or shadow inset:
+```tsx
+className="... ring-2 ring-inset ring-purple-400/50 ..."
+```
 
 ---
 
-### Issue 3: Tier-Specific Benefits Not Differentiated
-**Status:** All VIP users get same benefits regardless of tier
+### Issue 2: Host Crown z-index Issue
+**File:** `src/components/tv/TVLobbyScreenV2.tsx`
 
-**Problem:** `pro_plus` promises extra features:
-- "VIP ბეჯი + ფრეიმები" (implies more/better frames)
-- "ყოველდღიური ჯილდოები" (implies special daily rewards)
+**Current (line 584-592):**
+```tsx
+<motion.div className="absolute -top-1 -right-1 w-5 h-5 ...">
+  <Crown className="w-3 h-3 text-yellow-900" />
+</motion.div>
+```
 
-**Solutions:**
-1. **Update VIP_BENEFITS to be tier-aware** - Show different lists per tier
-2. **Add PRO Plus exclusive frames** - More frames for higher tier
-3. **Enhance daily rewards for PRO Plus** - Better daily rewards (more coins/gems/power-ups)
+The crown appears behind content because parent has no `z-index` control.
+
+**Fix:** Add `z-10` to ensure crown stays in front:
+```tsx
+<motion.div className="absolute -top-1 -right-1 w-5 h-5 z-10 ...">
+```
+
+---
+
+### Issue 3: Category Pills Full Width + No Cropping
+**File:** `src/components/tv/TVLobbyScreenV2.tsx`
+
+**Current (lines 409-434):**
+- Container has `pr-[240px]` which leaves space for QR but limits width
+- Pills container has `overflow-x-auto` but still can crop
+
+The second screenshot shows categories being cropped on wide screens.
+
+**Fix:**
+1. Remove or reduce the `pr-[240px]` padding restriction
+2. Use `flex-wrap` instead of `overflow-x-auto` so categories wrap to next line
+3. Ensure pills span full width of available space (excluding QR code area)
+
+```tsx
+<div className="mb-4"> {/* Remove pr-[240px] */}
+  <div className="flex flex-wrap gap-2 py-3 pr-60">
+    {/* Pills will wrap, QR code positioned absolutely */}
+  </div>
+</div>
+```
+
+---
+
+### Issue 4: MyTriviaLive Logo - Centered, QR in Bottom-Right
+**File:** `src/components/tv/TVLobbyScreenV2.tsx`
+
+**Current (lines 748-766):**
+- Logo is positioned `absolute bottom-4 right-4` (bottom-right)
+- User wants: Logo centered at bottom, QR/code stays bottom-right
+
+**Fix:** 
+1. Move the MyTriviaLiveLogo to be **centered** at the bottom
+2. Keep QR code section in the right area (it's already there in the main layout)
+3. Move the code display below the QR in the right panel
+
+New layout:
+```
++------------------------------------------+
+|  [QR Code]    <- right side panel        |
+|  mytrivia.io/join                        |
+|  [CODE: 1234]                            |
++------------------------------------------+
+|        [MyTrivia LIVE] <- centered       |
++------------------------------------------+
+```
 
 ---
 
 ## Implementation Details
 
-### Step 1: Enable Daily Power-up Auto-Claim
+### Changes to `src/components/tv/TVLobbyScreenV2.tsx`
 
-**File:** `src/contexts/PlayerProfileContext.tsx` or create new `src/hooks/useVipBenefitsAutoGrant.ts`
-
-```typescript
-// On user login and isVip change:
-useEffect(() => {
-  if (user && isVip) {
-    const { canClaimPowerUps, claimDailyPowerUps } = useDailyVipRewards();
-    if (canClaimPowerUps) {
-      claimDailyPowerUps();
-    }
-  }
-}, [user, isVip]);
+**1. Fix avatar strokes (inset border)**
+```tsx
+// Line ~573-579: Change from border-2 to ring-inset
+className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 ${
+  isActivePlayer 
+    ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30 ring-2 ring-inset ring-purple-400/50' 
+    : isInvited
+      ? 'bg-white/5 border-2 border-dashed border-purple-400/30'
+      : 'bg-white/5 border-2 border-dashed border-purple-500/30'
+}`}
 ```
 
-### Step 2: Add VIP Check to Ad Service
-
-**File:** `src/services/adService.ts`
-
-Add at class level:
-```typescript
-private isVipUser = false;
-
-setVipStatus(isVip: boolean) {
-  this.isVipUser = isVip;
-}
-
-async showRewardedAdWithPreload(callbacks?: AdServiceCallbacks): Promise<boolean> {
-  // Skip ad for VIP users
-  if (this.isVipUser) {
-    callbacks?.onRewardEarned?.({ type: 'vip_skip', amount: 1 });
-    return true; // Return success without showing ad
-  }
-  // ... existing logic
-}
+**2. Fix host crown z-index**
+```tsx
+// Line ~585-591: Add z-10
+<motion.div
+  initial={{ scale: 0 }}
+  animate={{ scale: 1 }}
+  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
+>
 ```
 
-### Step 3: Create Tier-Aware Benefits Hook
-
-**File:** `src/hooks/useVipStatus.ts`
-
-Add tier-specific benefits:
-```typescript
-export const VIP_BENEFITS_BY_TIER = {
-  pro: [
-    { icon: "⭐", title: "2x XP", description: "..." },
-    { icon: "🚫", title: "რეკლამების გარეშე", description: "..." },
-    { icon: "👑", title: "VIP ბეჯი", description: "..." },
-    { icon: "👥", title: "1 მეგობრის მოწვევა", description: "..." },
-  ],
-  pro_plus: [
-    { icon: "⭐", title: "2x XP", description: "..." },
-    { icon: "🚫", title: "რეკლამების გარეშე", description: "..." },
-    { icon: "👑", title: "VIP ბეჯი", description: "..." },
-    { icon: "🎨", title: "ექსკლუზიური ჩარჩოები", description: "3 VIP ჩარჩო" },
-    { icon: "⚡", title: "უფასო ძალები", description: "ყოველდღე 4 ძალა" },
-    { icon: "🎁", title: "გაძლიერებული ჯილდოები", description: "+50% ყოველდღიური ჯილდო" },
-    { icon: "👥", title: "5 მეგობრის მოწვევა", description: "..." },
-  ],
-};
+**3. Fix category pills full width**
+```tsx
+// Line ~409: Remove pr-[240px] restriction, allow wrapping
+<div className="mb-4">
+  {hasMultiRound ? (
+    <div
+      className="flex flex-wrap gap-2 py-3"
+      // Remove overflow-x-auto, allow natural wrapping
+    >
 ```
 
-### Step 4: Enhance Daily Rewards for PRO Plus
+**4. Center MyTriviaLive logo**
+```tsx
+// Lines 748-766: Replace with centered logo
+<div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+  <MyTriviaLiveLogo size="md" textColor="light" />
+</div>
+```
 
-**File:** `src/components/home/DailyRewardsModal.tsx`
-
-Add VIP bonus multiplier:
-```typescript
-const vipBonusMultiplier = subscription?.vip_tier === 'pro_plus' ? 1.5 : 1;
-const finalCoins = Math.floor(baseCoins * vipBonusMultiplier);
+Also need to import `MyTriviaLiveLogo`:
+```tsx
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 ```
 
 ---
 
-## Files Summary
+## Files to Modify
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/services/adService.ts` | Modify | Add VIP ad skip |
-| `src/hooks/useVipStatus.ts` | Modify | Add tier-aware benefits |
-| `src/components/home/DailyRewardsModal.tsx` | Modify | VIP bonus for PRO Plus |
-| `src/contexts/PlayerProfileContext.tsx` | Modify | Auto-grant daily VIP power-ups |
-| `src/hooks/useDailyVipRewards.ts` | Keep | Already implemented, just needs integration |
-
----
-
-## Decision Points for You
-
-1. **Daily Power-ups Delivery:** 
-   - Auto-claim silently on login? 
-   - Or show toast notification "VIP: მიღებულია 4 ძალა! ⚡"?
-
-2. **PRO Plus Enhanced Rewards:**
-   - +50% daily rewards?
-   - Or entirely separate reward track?
-
-3. **Ad Skipping:**
-   - Skip all ads completely?
-   - Or auto-reward without watching (give reward immediately)?
+| File | Changes |
+|------|---------|
+| `src/components/tv/TVLobbyScreenV2.tsx` | Import MyTriviaLiveLogo, fix inset borders, z-index for crown, full-width categories, centered logo |
 
 ---
 
 ## Summary
 
-The core benefits (2x XP, spins, frames, badge) ARE implemented. The gaps are:
-1. **Daily power-ups** - Code exists, just not connected
-2. **Ad-free** - Missing VIP check in ad service  
-3. **Tier differentiation** - PRO Plus should get more than basic PRO
-
-These can be fixed without major rewrites - mostly integration work.
+| Issue | Current | Fix |
+|-------|---------|-----|
+| Avatar strokes | `border-2` (outside) | `ring-2 ring-inset` (inside) |
+| Host crown | No z-index | Add `z-10` |
+| Category pills | `pr-[240px]`, `overflow-x-auto` | `flex-wrap`, no truncation |
+| Logo position | Bottom-right | Bottom-center, use `MyTriviaLiveLogo` component |
