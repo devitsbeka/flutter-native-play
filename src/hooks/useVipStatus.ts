@@ -22,6 +22,7 @@ export const VIP_PRICES: Record<VipDuration, number> = {
   month: 35,
 };
 
+// Base benefits for all PRO users
 export const VIP_BENEFITS = [
   { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
   { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
@@ -30,6 +31,25 @@ export const VIP_BENEFITS = [
   { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
   { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
 ];
+
+// Tier-specific benefits for different VIP levels
+export const VIP_BENEFITS_BY_TIER = {
+  pro: [
+    { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
+    { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
+    { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
+    { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
+  ],
+  pro_plus: [
+    { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
+    { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
+    { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
+    { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
+    { icon: "🎨", title: "ექსკლუზიური ჩარჩოები", description: "3 VIP-ისთვის განკუთვნილი ჩარჩო" },
+    { icon: "⚡", title: "უფასო ძალები", description: "ყოველდღიურად 4 უფასო power-up" },
+    { icon: "🎁", title: "გაძლიერებული ჯილდოები", description: "+50% ყოველდღიური ჯილდო" },
+  ],
+};
 
 // Cache key for localStorage
 const VIP_CACHE_KEY = "cached_vip_status";
@@ -166,6 +186,18 @@ export function useVipStatus() {
   const shouldSkipGameStake = (): boolean => isVip;
   const canAccessVipFrames = (): boolean => isVip;
 
+  // Get tier-specific benefits
+  const getTierBenefits = () => {
+    if (!subscription?.vip_tier) return VIP_BENEFITS_BY_TIER.pro;
+    return VIP_BENEFITS_BY_TIER[subscription.vip_tier as keyof typeof VIP_BENEFITS_BY_TIER] || VIP_BENEFITS_BY_TIER.pro;
+  };
+
+  // Check if user is PRO Plus tier (for enhanced rewards)
+  const isProPlus = (): boolean => subscription?.vip_tier === 'pro_plus';
+
+  // Get daily reward multiplier (1.5x for PRO Plus)
+  const getDailyRewardMultiplier = (): number => isProPlus() ? 1.5 : 1;
+
   return {
     subscription,
     isVip,
@@ -177,6 +209,9 @@ export function useVipStatus() {
     shouldSkipGameStake,
     canAccessVipFrames,
     benefits: VIP_BENEFITS,
+    tierBenefits: getTierBenefits(),
+    isProPlus,
+    getDailyRewardMultiplier,
     prices: VIP_PRICES,
   };
 }

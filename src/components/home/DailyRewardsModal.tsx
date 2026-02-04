@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Check, Lock, Flame, Clock } from "lucide-react";
+import { Sparkles, Check, Lock, Flame, Clock, Crown } from "lucide-react";
 import giftBottleIcon from "@/assets/icons/icon-coin-purse.png";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
@@ -11,6 +11,7 @@ import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import { FlyingCurrency } from "@/components/shared/FlyingCurrency";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useVipStatus } from "@/hooks/useVipStatus";
 
 interface DailyRewardsModalProps {
   isOpen: boolean;
@@ -189,12 +190,14 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
   const { playSound, vibrate } = useSound();
   const { canClaimDaily, dailyTimeLeft, refreshTimers } = useRewardTimers();
   const { claimDailyReward } = useDailyRewardsClaim();
+  const { isVip, getDailyRewardMultiplier, isProPlus } = useVipStatus();
   const [claimedToday, setClaimedToday] = useState(false);
   const [showFlyingCoins, setShowFlyingCoins] = useState(false);
   const [showFlyingGems, setShowFlyingGems] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const currentDay = Math.min(((currentStreak - 1) % 7), 6);
+  const vipMultiplier = getDailyRewardMultiplier();
 
   // Sync claimed state with timer hook
   useEffect(() => {
@@ -217,6 +220,11 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     if (claimedToday || !canClaimDaily) return;
 
     const reward = dailyRewards[currentDay];
+    
+    // Apply VIP multiplier for PRO Plus users (+50% rewards)
+    const finalCoins = Math.floor(reward.coins * vipMultiplier);
+    const finalGems = Math.floor((reward.gems || 0) * vipMultiplier);
+    
     playSound("reward");
     vibrate([50, 30, 50]);
     celebrateClaim();
@@ -225,7 +233,7 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
     const success = await claimDailyReward();
     if (!success) return;
 
-    await addCurrency(reward.coins, reward.gems || 0);
+    await addCurrency(finalCoins, finalGems);
 
     setShowFlyingCoins(true);
     if (reward.gems > 0) {
@@ -265,6 +273,13 @@ export function DailyRewardsModal({ isOpen, onClose, currentStreak, onClaim }: D
           <StreakBadge streak={currentStreak} t={t} />
           {!canClaimDaily && (
             <TimerBadge timeLeft={dailyTimeLeft} />
+          )}
+          {/* VIP Bonus indicator for PRO Plus */}
+          {isProPlus() && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg">
+              <Crown className="w-4 h-4 text-white" />
+              <span className="text-sm font-bold text-white">+50% ბონუსი</span>
+            </div>
           )}
         </div>
 
