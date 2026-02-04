@@ -85,8 +85,12 @@ export default function Profile() {
               className="mb-6"
             >
               <div className="flex flex-col items-center">
-                <div 
-                  className="relative"
+                {/* Entire avatar area is clickable */}
+                <motion.button
+                  onClick={() => setShowAvatarGenerator(true)}
+                  className="relative cursor-pointer group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onMouseEnter={() => {
                     if (profile.animated_avatar_url && videoRef.current) {
                       setShowVideo(true);
@@ -97,7 +101,7 @@ export default function Profile() {
                   onMouseLeave={() => setShowVideo(false)}
                 >
                   {/* Static Avatar */}
-                  <div className="relative w-36 h-36 rounded-full ring-4 ring-primary overflow-hidden">
+                  <div className="relative w-36 h-36 rounded-full ring-4 ring-primary overflow-hidden transition-all group-hover:ring-primary/80">
                     <img 
                       src={profile.avatar_url || "/placeholder.svg"}
                       alt="Avatar"
@@ -117,16 +121,18 @@ export default function Profile() {
                         preload="auto"
                       />
                     )}
+                    
+                    {/* Hover overlay with edit hint */}
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Sparkles className="w-8 h-8 text-white" />
+                    </div>
                   </div>
                   
-                  
-                  <button
-                    onClick={() => setShowAvatarGenerator(true)}
-                    className="absolute -bottom-1 -right-1 p-2 bg-primary rounded-full shadow-lg hover:scale-110 transition-transform"
-                  >
+                  {/* Edit badge - always visible */}
+                  <div className="absolute -bottom-1 -right-1 p-2 bg-primary rounded-full shadow-lg">
                     <Sparkles className="w-4 h-4 text-primary-foreground" />
-                  </button>
-                </div>
+                  </div>
+                </motion.button>
                 <h2 className="text-xl font-bold text-foreground mt-4">
                   {profile.nickname}
                 </h2>
