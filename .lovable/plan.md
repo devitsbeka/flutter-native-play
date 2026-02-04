@@ -1,114 +1,245 @@
 
-# Empty State UI Improvements for Rooms and Trivias
+
+# Played Indicator & Play Mode Selection for Trivias
 
 ## Overview
 
-When users have no rooms or no trivias, the current UI still shows the search/filter bar at the top, which is unnecessary. The empty state should be cleaner with the "Add" button integrated into the empty state below the icon and message.
+This plan addresses two related features:
+1. **Played Indicator**: Show users which trivias they've already played vs. new ones
+2. **Play Mode Selection Modal**: When clicking "Play" on a locked (დახურული) trivia, show options for how to play instead of immediately starting
 
-## Changes Summary
+## Current State Analysis
 
-### 1. Rooms Tab Empty State (`src/components/team/MyRoomsSection.tsx`)
-- **Icon**: Replace `glitchIcon` with `dance-floor.png` 
-- **Text**: Update to "ოთახები ჯერ არ გაქვს" for the "all" filter
-- **Add Button**: Include a "+ ოთახი" button inside the empty state
+### Existing Infrastructure
+- **`quiz_post_plays` table**: Already tracks when users play trivias (user_id, post_id, score, played_at)
+- **`useSocialFeed` hook**: Already provides `userPlays` array with IDs of played trivias
+- **`FeedPost` component**: Already shows "played" visual state with checkmark for explore feed
+- **`is_blind` field**: Indicates "locked" (დახურული) trivias where creator hasn't seen answers
 
-### 2. My Trivia Tab Empty State (`src/components/social/MyTriviaTab.tsx`)
-- **Icon**: Use `trivia-buzzer.png` for trivia context (already have `glitchIcon`, need trivia-specific)
-- **Text**: Update to "ტრივიები ჯერ არ გაქვს"
-- **Add Button**: Include a "+ ტრივია" button inside the empty state
+### Current Gaps
+- My Trivia tab cards (`StandaloneQuizCard`, `PersonalTriviaCard`, `CollectionQuizCard`) don't show played status
+- No modal asking how user wants to play locked trivias - it just starts immediately
+- Portfolio cards (`TriviaPortfolioCard`) don't show played status
 
-### 3. Hide Filter Bar When Empty (`src/pages/TeamV2.tsx`)
-- Pass `hasContent` information from `MyRoomsSection` and `MyTriviaTab` back to parent
-- Conditionally hide `UnifiedFiltersBar` when there's no content
+---
 
 ## Technical Implementation
 
-### File: `src/components/team/MyRoomsSection.tsx`
+### Part 1: Played Indicator on Trivia Cards
 
-1. Import `dance-floor.png` asset
-2. Replace `glitchIcon` with `danceFloor` in empty state
-3. Update empty state message for "all" filter
-4. Add callback prop to notify parent about room count
-5. Add "+ ოთახი" button inside empty state
-
-```tsx
-// Import dance-floor asset
-import danceFloor from "@/assets/dance-floor.png";
-
-// In empty state render (when not showing onboarding)
-<motion.div className="flex flex-col items-center py-12 px-6">
-  <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
-    <img src={danceFloor} alt="" className="w-full h-full object-contain" />
-  </div>
-  <p className="text-muted-foreground text-sm text-center mb-6">
-    {activeFilter === "all" && "ოთახები ჯერ არ გაქვს"}
-    {/* ... other filter messages */}
-  </p>
-  {onCreateRoom && activeFilter === "all" && (
-    <ChunkyButton onClick={onCreateRoom}>+ ოთახი</ChunkyButton>
-  )}
-</motion.div>
-```
-
-### File: `src/components/social/MyTriviaTab.tsx`
-
-1. Import `trivia-buzzer.png` asset  
-2. Replace `glitchIcon` with `triviaBuzzer` in empty state
-3. Update empty state text to "ტრივიები ჯერ არ გაქვს"
-4. Add "+ ტრივია" button inside empty state
-
-```tsx
-// Import trivia-buzzer asset
-import triviaBuzzer from "@/assets/trivia-buzzer.png";
-
-// In empty state render
-<motion.div className="flex flex-col items-center py-16 px-6">
-  <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
-    <img src={triviaBuzzer} alt="" className="w-full h-full object-contain" />
-  </div>
-  <h3 className="text-lg font-semibold mb-2">ტრივიები ჯერ არ გაქვს</h3>
-  <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
-    {description}
-  </p>
-  {onCreateQuiz && (
-    <ChunkyButton onClick={onCreateQuiz}>+ ტრივია</ChunkyButton>
-  )}
-</motion.div>
-```
-
-### File: `src/pages/TeamV2.tsx`
-
-1. Add hooks to track if rooms/trivias are empty
-2. Conditionally render `UnifiedFiltersBar` only when there's content
-
-```tsx
-// Import hooks for checking content
-import { useMyRooms } from "@/hooks/useMyRooms";
-import { useMyQuizPosts } from "@/hooks/useSocialFeed";
-import { useMyCollections } from "@/hooks/useCollections";
-
-// In component
-const { rooms } = useMyRooms({ limit: 1 }); // Just need to check if any exist
-const { data: myPosts } = useMyQuizPosts();
-const { data: myCollections } = useMyCollections();
-
-const hasRooms = rooms.length > 0;
-const hasTrivias = (myPosts?.length || 0) > 0 || (myCollections?.length || 0) > 0;
-
-// Conditional render of filter bar
-{activeTab === "rooms" && hasRooms && (
-  <UnifiedFiltersBar ... />
-)}
-
-{activeTab === "my-content" && hasTrivias && (
-  <UnifiedFiltersBar ... />
-)}
-```
-
-## Files to Modify
+#### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/team/MyRoomsSection.tsx` | Import dance-floor icon, update empty state with new icon, text, and add button |
-| `src/components/social/MyTriviaTab.tsx` | Import trivia-buzzer icon, update empty state with new icon, text, and add button |
-| `src/pages/TeamV2.tsx` | Add content hooks, conditionally hide filter bar when empty |
+| `src/components/social/MyTriviaTab.tsx` | Add played indicator to `StandaloneQuizCard`, `PersonalTriviaCard`, `CollectionQuizCard` |
+| `src/components/social/TriviaPortfolioCard.tsx` | Add played indicator prop and badge |
+| `src/components/social/PlayerFeedItem.tsx` | Add played indicator (if not already present) |
+| `src/hooks/useSocialFeed.ts` | Ensure `userPlays` is exported and available |
+
+#### Visual Design
+
+For played trivias, show a small badge/indicator:
+- **Played**: Checkmark badge with "ითამაშე" text in green/muted style
+- **New/Unplayed**: No special indicator (or optionally "ახალი" badge in purple)
+
+**Badge placement options:**
+1. Top-left corner overlay on cover image
+2. Next to the play button
+3. Small indicator near stats row
+
+**Recommended approach:** Small pill badge in top-left corner of cover:
+```text
+┌──────────────────────────┐
+│ ✓ ნათამაშები            │  ← Played badge
+│                          │
+│     Trivia Title         │
+│                          │
+└──────────────────────────┘
+```
+
+#### Code Changes for MyTriviaTab.tsx
+
+1. Import `userPlays` from `useSocialFeed` in the parent component
+2. Pass `isPlayed` prop to card components
+3. Add visual indicator in card render
+
+```tsx
+// In StandaloneQuizCard / CollectionQuizCard
+// Add prop: isPlayed?: boolean
+
+// In cover section, add badge:
+{isPlayed && (
+  <div className="absolute top-3 left-14 z-10 flex items-center gap-1 bg-green-500/90 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+    <Check className="w-3 h-3" />
+    <span>ნათამაშები</span>
+  </div>
+)}
+```
+
+---
+
+### Part 2: Play Mode Selection Modal for Locked Trivias
+
+#### New Component: `TriviaPlayModeModal.tsx`
+
+Create a new modal that appears when user clicks "Play" on a locked (is_blind=true) trivia they own.
+
+**Modal Options:**
+1. **ითამაშე მარტო** (Play Solo) - Starts solo game immediately
+2. **შექმენი ოთახი** (Create Room) - Creates multiplayer room
+3. **TV რეჟიმში** (TV Mode) - Starts TV mode with friends
+
+#### File Structure
+
+```
+src/components/social/TriviaPlayModeModal.tsx (new)
+```
+
+#### Modal Design
+
+```text
+┌────────────────────────────────────┐
+│              ×                     │
+│                                    │
+│         🎮 (trivia icon)          │
+│                                    │
+│    "90-იანი წლების მუსიკა"        │
+│    5 კითხვა • დახურული             │
+│                                    │
+│  ┌────────────────────────────┐   │
+│  │ 🎯  ითამაშე მარტო          │   │
+│  │     პირადად, სწრაფად        │   │
+│  └────────────────────────────┘   │
+│                                    │
+│  ┌────────────────────────────┐   │
+│  │ 👥  ოთახის შექმნა          │   │
+│  │     მეგობრებთან ერთად       │   │
+│  └────────────────────────────┘   │
+│                                    │
+│  ┌────────────────────────────┐   │
+│  │ 📺  TV რეჟიმი              │   │
+│  │     დიდ ეკრანზე            │   │
+│  └────────────────────────────┘   │
+│                                    │
+└────────────────────────────────────┘
+```
+
+#### Props Interface
+
+```tsx
+interface TriviaPlayModeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  trivia: {
+    id: string;
+    title: string;
+    questionCount: number;
+    coverImage?: string;
+    coverGradient?: string;
+    isBlind?: boolean;
+  };
+  onPlaySolo: () => void;
+  onCreateRoom: () => void;
+  onPlayTV: () => void;
+}
+```
+
+#### Integration Points
+
+1. **MyTriviaTab.tsx** - For user's own trivias:
+   - When clicking Play on a locked trivia, show modal instead of navigating
+   - Check `post.is_blind === true` condition
+
+2. **TriviaPreviewModal.tsx** - For explore feed:
+   - When clicking Play on locked trivia from other users, show play mode modal
+   - This gives user choice before "using up" the locked trivia
+
+3. **TriviaPortfolioCard.tsx** - Portfolio card play button:
+   - Same logic as above
+
+#### Logic Flow
+
+```text
+User clicks "ითამაშე" on trivia
+        │
+        ▼
+Is trivia locked (is_blind = true)?
+        │
+    ┌───┴───┐
+    No      Yes
+    │       │
+    ▼       ▼
+Navigate   Show TriviaPlayModeModal
+directly   │
+to solo    ├─► Solo: Navigate to /trivia/{id}
+game       ├─► Room: Create room & navigate
+           └─► TV: Create room with TV mode
+```
+
+---
+
+### Part 3: Files to Create/Modify
+
+#### New File: `src/components/social/TriviaPlayModeModal.tsx`
+
+```tsx
+// Key structure:
+- Uses GameModal or custom animated modal
+- Shows trivia info (title, question count, cover)
+- Three chunky button options:
+  1. Play Solo - navigates to /trivia/{id}
+  2. Create Room - calls createRoom from MultiplayerContextV2
+  3. TV Mode - calls createRoom with TV parameter
+
+// Uses existing icons or custom 3D icons for each option
+```
+
+#### Modified: `src/components/social/MyTriviaTab.tsx`
+
+Changes to make:
+1. Add state for play mode modal: `const [playModeTrivia, setPlayModeTrivia] = useState<any>(null)`
+2. Modify play button handlers to check `is_blind` before action
+3. Add `TriviaPlayModeModal` component at bottom of render
+4. Pass `userPlays` to child cards for played indicator
+
+#### Modified: `src/components/social/TriviaPortfolioCard.tsx`
+
+1. Add `isPlayed` prop
+2. Show played indicator badge on card
+3. Integrate play mode modal for locked trivias
+
+#### Modified: `src/components/social/TriviaPreviewModal.tsx`
+
+1. Add play mode selection when trivia is locked
+2. Pass through handlers for different play modes
+
+---
+
+## Implementation Order
+
+1. **Create TriviaPlayModeModal.tsx** - New modal component
+2. **Add played indicator to TriviaPortfolioCard** - Simple badge addition
+3. **Update MyTriviaTab.tsx** - Add modal integration + played indicators
+4. **Update TriviaPreviewModal.tsx** - Add play mode selection for locked trivias
+5. **Test end-to-end** - Verify flow works correctly
+
+---
+
+## Visual Assets Needed
+
+The modal can use existing Lucide icons or 3D icons from the assets library:
+- **Solo**: `User` or `Gamepad2` icon
+- **Room**: `Users` icon  
+- **TV Mode**: `Monitor` or `Tv` icon
+
+Alternatively, could use emoji-style icons: 🎯 👥 📺
+
+---
+
+## Edge Cases to Handle
+
+1. **Already played locked trivia**: Still show modal but maybe indicate it's been played
+2. **Non-logged-in user**: Standard login prompt before any action
+3. **Open (ღია) trivias**: Skip modal, go directly to solo play (creator already knows answers)
+4. **Collection trivias**: Apply same logic per-round within collections
+
