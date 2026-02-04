@@ -9,7 +9,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2, Gift } from "lucide-react";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -505,11 +506,15 @@ export function GameResultsScreenV2() {
             <p className="text-white/50 text-xs mb-2">შემდეგი რაუნდი:</p>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                {nextQueueItem.source_type === "random" ? (
+                {nextQueueItem.category_id === "__mixed__" ? (
+                  <DynamicIcon slug="mystery-box" size={20} />
+                ) : nextQueueItem.source_type === "random" ? (
                   <Shuffle className="w-5 h-5 text-purple-300" />
+                ) : nextQueueItem.icon_slug ? (
+                  <DynamicIcon slug={nextQueueItem.icon_slug} size={20} />
                 ) : (
                   <Library className="w-5 h-5 text-purple-300" />
-                )}
+                  )}
               </div>
               <span className="flex-1 text-white font-medium truncate">
                 {nextQueueItem.source_type === "random" 

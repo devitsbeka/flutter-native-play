@@ -320,7 +320,38 @@ export function CategoryPickerModal({
                   <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                  {/* Mixed Questions - always first when no search or matches search */}
+                  {(!search.trim() || "სხვადასხვა კატეგორიები".toLowerCase().includes(search.toLowerCase())) && (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={() => setSelectedItem({
+                        type: "category",
+                        id: "__mixed__",
+                        name: "სხვადასხვა კატეგორიები",
+                        iconSlug: "mystery-box",
+                      })}
+                      className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
+                        selectedItem?.id === "__mixed__"
+                          ? "bg-white/20 border-2 border-white/50"
+                          : "bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-white/30 hover:from-purple-500/40 hover:to-pink-500/40"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
+                          <DynamicIcon slug="mystery-box" size={22} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-white text-sm truncate">სხვადასხვა კატეგორიები</p>
+                          <p className="text-white/50 text-xs">ყველა კატეგორიიდან</p>
+                        </div>
+                        {selectedItem?.id === "__mixed__" && (
+                          <Check className="w-4 h-4 text-white flex-shrink-0" />
+                        )}
+                      </div>
+                    </motion.button>
+                  )}
                   {filteredCategories.map((cat, index) => (
                     <motion.button
                       key={cat.id}

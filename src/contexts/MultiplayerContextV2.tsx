@@ -1146,10 +1146,12 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
       
       // Standard category-based room: fetch from database using FRESH data
-      console.log('[startGame] Fetching questions for category:', freshRoom.category_id, freshRoom.category_name);
+      // Handle __mixed__ category - triggers multi-category mode (getMultiCategoryVSQuestions)
+      const isMixedCategory = freshRoom.category_id === "__mixed__";
+      console.log('[startGame] Fetching questions for category:', freshRoom.category_id, freshRoom.category_name, 'isMixed:', isMixedCategory);
       const result = await getQuestions({
         mode: 'vs',
-        categorySlug: freshRoom.category_id || undefined,
+        categorySlug: isMixedCategory ? undefined : (freshRoom.category_id || undefined),
         count: questionCount,
         excludeIds: usedIds,
       });
@@ -1944,8 +1946,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       }
       
       // Regular category or random - fetch new questions directly with correct category
-      const newCategoryId = nextItem.source_type === "random" ? null : nextItem.category_id;
-      const newCategoryName = nextItem.source_type === "random" ? "შემთხვევითი" : (nextItem.category_name || "კატეგორია");
+      // Handle __mixed__ category - triggers multi-category mode
+      const isMixedCategory = nextItem.category_id === "__mixed__";
+      const newCategoryId = nextItem.source_type === "random" ? null : (isMixedCategory ? undefined : nextItem.category_id);
+      const newCategoryName = nextItem.source_type === "random" 
+        ? "შემთხვევითი" 
+        : isMixedCategory
+          ? "სხვადასხვა კატეგორიები"
+          : (nextItem.category_name || "კატეგორია");
       
       // Get used question IDs
       const { data: freshRoom } = await supabase

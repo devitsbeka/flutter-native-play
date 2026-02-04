@@ -2,6 +2,7 @@ import { motion, Reorder } from "framer-motion";
 import { Plus, Shuffle, X, GripVertical, Library, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface CategoryPickerSectionProps {
   categoryName: string | null;
@@ -51,7 +52,9 @@ export function CategoryPickerSection({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
-            {categoryName === "შემთხვევითი" || !categoryName ? (
+            {categoryId === "__mixed__" ? (
+              <DynamicIcon slug="mystery-box" size={24} />
+            ) : categoryName === "შემთხვევითი" || !categoryName ? (
               <Shuffle className="w-6 h-6 text-purple-400" />
             ) : categoryId ? (
               <Library className="w-6 h-6 text-purple-400" />
@@ -127,7 +130,9 @@ export function CategoryPickerSection({
                   >
                     <span className="text-white/40 text-xs font-bold mr-0.5">{hasCategory ? index + 2 : index + 1}</span>
                     <GripVertical className="w-[18px] h-[18px] text-white/40" />
-                    {item.source_type === "random" ? (
+                    {item.category_id === "__mixed__" ? (
+                      <DynamicIcon slug="mystery-box" size={18} />
+                    ) : item.source_type === "random" ? (
                       <Shuffle className="w-[18px] h-[18px] text-purple-400" />
                     ) : item.source_type === "category" ? (
                       <Library className="w-[18px] h-[18px] text-purple-400" />
@@ -172,7 +177,9 @@ export function CategoryPickerSection({
                   className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0 h-9"
                 >
                   <span className="text-white/40 text-xs font-bold mr-0.5">{hasCategory ? index + 2 : index + 1}</span>
-                  {item.source_type === "random" ? (
+                  {item.category_id === "__mixed__" ? (
+                    <DynamicIcon slug="mystery-box" size={18} />
+                  ) : item.source_type === "random" ? (
                     <Shuffle className="w-[18px] h-[18px] text-purple-400" />
                   ) : item.source_type === "category" ? (
                     <Library className="w-[18px] h-[18px] text-purple-400" />
