@@ -248,7 +248,11 @@ export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult
     case 'category':
       return getCategoryQuestions(categoryUuid!, ctx.levelNumber || 1, count, language, ctx.excludeIds);
     case 'tv':
-      return getTVQuestions(categoryUuid!, count, language);
+      // If no categoryUuid, use multi-category mode (mixed category)
+      if (!categoryUuid) {
+        return getMultiCategoryVSQuestions(count, language);
+      }
+      return getTVQuestions(categoryUuid, count, language);
     case 'vs':
       return getVSQuestions(categoryUuid, count, language);
     default:
