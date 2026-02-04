@@ -68,6 +68,36 @@ export const en: KaTranslations = {
     accountCreated: "Account created!",
     welcomeBack: "Welcome back!",
     signInRequired: "Sign in required",
+    usernameOrEmail: "Username or Email",
+    usernameOrEmailPlaceholder: "Enter username or email",
+  },
+
+  // ==========================================
+  // Forgot Password
+  // ==========================================
+  forgotPassword: {
+    title: "Reset Password",
+    link: "Forgot password?",
+    enterUsername: "Enter your username",
+    answerQuestion: "Answer your security question",
+    setNewPassword: "Set a new password",
+    securityQuestion: "Security Question",
+    yourAnswer: "Your Answer",
+    answerPlaceholder: "Enter your answer",
+    verify: "Verify",
+    changePassword: "Change Password",
+    success: "Password Changed!",
+    successMessage: "You can now sign in with your new password",
+    passwordChanged: "Password changed successfully!",
+    wrongAnswer: "Incorrect answer",
+    attemptsRemaining: "{count} attempts remaining",
+    tooManyAttempts: "Too many attempts",
+    tryAgainLater: "Try again in 1 hour",
+    noSecurityQuestion: "No security question set",
+    contactSupport: "Contact support for help",
+    backToLogin: "Back to login",
+    selectQuestion: "Choose a security question",
+    answerHint: "At least 2 characters",
   },
 
   // ==========================================

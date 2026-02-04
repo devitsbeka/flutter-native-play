@@ -1332,6 +1332,27 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          success: boolean
+          username: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          success?: boolean
+          username: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          success?: boolean
+          username?: string
+        }
+        Relationships: []
+      }
       player_answers: {
         Row: {
           answer: string
@@ -1403,6 +1424,8 @@ export type Database = {
           preferred_language: string
           referred_by_invite_id: string | null
           region: string | null
+          security_answer_hash: string | null
+          security_question_id: number | null
           total_points: number | null
           updated_at: string
           user_id: string
@@ -1423,6 +1446,8 @@ export type Database = {
           preferred_language?: string
           referred_by_invite_id?: string | null
           region?: string | null
+          security_answer_hash?: string | null
+          security_question_id?: number | null
           total_points?: number | null
           updated_at?: string
           user_id: string
@@ -1443,6 +1468,8 @@ export type Database = {
           preferred_language?: string
           referred_by_invite_id?: string | null
           region?: string | null
+          security_answer_hash?: string | null
+          security_question_id?: number | null
           total_points?: number | null
           updated_at?: string
           user_id?: string

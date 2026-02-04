@@ -313,6 +313,15 @@ export default function Auth() {
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
             )}
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-primary text-sm hover:underline mt-1"
+              >
+                {t("forgotPassword.link")}
+              </button>
+            )}
           </div>
 
           <ChunkyButton
