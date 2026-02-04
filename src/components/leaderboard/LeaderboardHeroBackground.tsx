@@ -70,34 +70,42 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   return (
     <div 
-      className={`relative w-full overflow-hidden ${isMobile ? 'h-[35vh]' : 'min-h-screen'}`}
+      className={`relative w-full overflow-hidden ${
+        isMobile 
+          ? 'h-[45vh] min-h-[280px] max-h-[400px]' 
+          : 'min-h-screen'
+      }`}
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchMove={isMobile ? handleTouchMove : undefined}
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
       {/* Background images */}
       {isMobile ? (
-        // Mobile: Single background that switches based on current tier
-        <div 
-          className="absolute inset-0 w-full h-full bg-no-repeat transition-all duration-500 ease-out"
-          style={{
-            backgroundImage: `url(${TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver})`,
-            backgroundPosition: currentTier === 3 ? 'center calc(50% - 55px)' : 'center calc(50% - 105px)',
-            backgroundSize: 'cover',
-          }}
-        />
+        // Mobile: <img> with object-contain for crisp display without cropping
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/10 to-background">
+          <img
+            src={TIER_BACKGROUNDS[currentTier] ?? leaderboardBgSilver}
+            alt=""
+            className="w-full h-full object-contain object-top transition-opacity duration-500"
+            loading="eager"
+            draggable={false}
+          />
+        </div>
       ) : (
-        // Desktop/Tablet: Single unified background image with mask fade
-        <div 
-          className="absolute inset-0 w-full h-full bg-no-repeat"
-          style={{
-            backgroundImage: `url(${leaderboardBgDesktop})`,
-            backgroundSize: '100% auto',
-            backgroundPosition: 'top center',
-            maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
-          }}
-        />
+        // Desktop/Tablet: <img> with object-cover + mask for fade
+        <div className="absolute inset-0 w-full h-full">
+          <img
+            src={leaderboardBgDesktop}
+            alt=""
+            className="w-full h-full object-cover object-top"
+            loading="eager"
+            draggable={false}
+            style={{
+              maskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 70%, transparent 100%)',
+            }}
+          />
+        </div>
       )}
 
       {/* Content container - full width on desktop */}
