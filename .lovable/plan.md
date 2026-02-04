@@ -1,136 +1,161 @@
 
-# Fix Signup Modal UI & Password Recovery Implementation
+# Replace Avatar Modal Icons with 3D Images
 
-## Issues Identified
+## Overview
 
-### Issue 1: Remove "ეს სახელი ყველა მოთამაშეს დაანახებს" Text
-The `SignupOnboardingModal` displays this text via `t("onboarding.usernameHint")` as a subtitle in the modal header. This needs to be removed.
+Replace the Lucide icons in the AvatarModal with the 3D images you provided for a more visually appealing experience:
 
-**Current Code (SignupOnboardingModal.tsx, line 238):**
-```tsx
-subtitle: t("onboarding.usernameHint"),
+| Icon | 3D Image | Usage |
+|------|----------|-------|
+| Scissors | `tailors-scissors.png` | Crop/edit photo functionality |
+| Sparkle | `ai-sparkle.png` | AI generation button, PRO upsell card |
+| Photo upload | `photo-technology-editing-technology-app.png` | Upload photo button |
+| Hourglass | `hourglass-timer.png` | Generating step (loading animation) |
+
+---
+
+## Implementation Steps
+
+### Step 1: Copy Images to Assets
+
+Copy the uploaded icons to `src/assets/icons/`:
+
+```
+src/assets/icons/
+├── icon-scissors.png
+├── icon-ai-sparkle.png
+├── icon-photo-upload.png
+└── icon-hourglass.png
 ```
 
-**Fix:** Set `subtitle: undefined` to hide this text.
-
 ---
 
-### Issue 2: Fix Button Text Cropping (Image 35)
-The "გამოიყენე" button text is being cropped at the right edge. This is visible in the preview step of the AvatarModal.
-
-**Root Cause:** The button text is too long for the available space in a `flex-1` container with a sibling.
-
-**Fix:** 
-1. Use shorter text for the button: "გამოყენება" instead of full translation
-2. Ensure proper min-width on buttons
-3. Add `whitespace-nowrap` and adjust text sizes
-
----
-
-### Issue 3: Password Recovery Problem
-
-**Current Situation:**
-The app uses "username-only" authentication via `signUpWithUsername()` which internally creates a pseudo-email:
-```typescript
-const pseudoEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@mytrivia.local`;
-```
-
-This means users **cannot reset passwords via email** because:
-1. `@mytrivia.local` is not a real email domain
-2. Supabase password reset requires a verified email address
-
-**Solution Options:**
-
-| Option | Pros | Cons |
-|--------|------|------|
-| A. Add real email during signup | Standard password reset works | Changes signup flow |
-| B. Support code (manual reset) | Simple | Not self-service |
-| C. Admin password reset tool | Works for current users | Requires manual intervention |
-
-**Recommended Approach:** Option A - Add optional email field
-
-This allows:
-- Users who provide email → can reset password via email
-- Users without email → must contact support
-
----
-
-## Implementation Plan
-
-### Part 1: Remove Username Hint Text
-
-**File: `src/components/onboarding/SignupOnboardingModal.tsx`**
-
-| Line | Change |
-|------|--------|
-| 238 | Change `subtitle: t("onboarding.usernameHint"),` to `subtitle: undefined,` |
-
----
-
-### Part 2: Fix Button Text Cropping in AvatarModal
+### Step 2: Import Icons in AvatarModal
 
 **File: `src/components/home/AvatarModal.tsx`**
 
-The preview step buttons (lines 950-975) have long Georgian text that gets cropped.
-
-**Changes:**
-1. Add `whitespace-nowrap` to button text
-2. Adjust button sizes: use `size="sm"` for mobile compatibility
-3. Make buttons stack vertically on small screens
+Add imports at the top of the file:
 
 ```tsx
-// Lines 950-975 - Update button container
-<div className="flex flex-col sm:flex-row gap-2 w-full">
-  <ChunkyButton
-    variant="secondary"
-    size="md"
-    onClick={...}
-    disabled={isLoading}
-    className="flex-1 min-w-0"
-    icon={<RefreshCw className="w-4 h-4 shrink-0" />}
-  >
-    <span className="truncate">{t("avatar.regenerate")}</span>
-  </ChunkyButton>
-  <ChunkyButton
-    variant="success"
-    size="md"
-    onClick={() => saveAvatar()}
-    disabled={isLoading}
-    className="flex-1 min-w-0"
-    icon={...}
-  >
-    <span className="truncate">{t("avatar.useAsProfile")}</span>
-  </ChunkyButton>
+// Import 3D icons for avatar flow
+import iconScissors from '@/assets/icons/icon-scissors.png';
+import iconAiSparkle from '@/assets/icons/icon-ai-sparkle.png';
+import iconPhotoUpload from '@/assets/icons/icon-photo-upload.png';
+import iconHourglass from '@/assets/icons/icon-hourglass.png';
+```
+
+---
+
+### Step 3: Replace Icons in Gallery Step
+
+**Upload Photo Button (lines 632-642):**
+```tsx
+<motion.button
+  onClick={() => fileInputRef.current?.click()}
+  className="flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all"
+  whileHover={{ scale: 1.02 }}
+  whileTap={{ scale: 0.98 }}
+>
+  <img 
+    src={iconPhotoUpload} 
+    alt="Upload" 
+    className="w-10 h-10 object-contain"
+  />
+  <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
+</motion.button>
+```
+
+---
+
+### Step 4: Replace AI Generate Button Icon
+
+**In Upload Preview step (lines 795-804):**
+```tsx
+<ChunkyButton
+  variant="primary"
+  size="md"
+  onClick={generateAvatar}
+  disabled={isLoading}
+  className="flex-1"
+  icon={<img src={iconAiSparkle} alt="" className="w-5 h-5 object-contain" />}
+>
+  {t("avatar.generate")}
+</ChunkyButton>
+```
+
+**In PRO Upsell Card (lines 828-831):**
+```tsx
+<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
+  <img src={iconAiSparkle} alt="" className="w-6 h-6 object-contain" />
 </div>
 ```
 
 ---
 
-### Part 3: Fix Modal Content Spacing (GameModal)
+### Step 5: Replace Generating Step Animation
 
-**File: `src/components/ui/game-modal.tsx`**
+**In Generating step (lines 907-934):**
 
-The modal content area padding needs adjustment to prevent content from touching edges.
+Replace the spinner animation with the hourglass icon:
 
-**Changes:**
-- Increase padding on content area: `px-5` → `px-6`
-- Add safe area insets for mobile
+```tsx
+if (step === "generating") {
+  return (
+    <div className="flex flex-col items-center gap-4 py-4">
+      <div className="relative">
+        {/* Background circle with uploaded image */}
+        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 opacity-50">
+          <img src={uploadedImage || ""} alt="Uploading" className="w-full h-full object-cover" />
+        </div>
+        
+        {/* Spinning border */}
+        <motion.div
+          className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+        
+        {/* Hourglass icon in center */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
+            <motion.img 
+              src={iconHourglass} 
+              alt="Loading" 
+              className="w-8 h-8 object-contain"
+              animate={{ rotate: [0, 180, 360] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="text-center">
+        <p className="font-semibold text-foreground">{t("avatar.generating")}</p>
+        <p className="text-sm text-muted-foreground">{t("avatar.generatingTime")}</p>
+      </div>
+    </div>
+  );
+}
+```
 
 ---
 
-### Part 4: Password Recovery (Future Enhancement)
+### Step 6: Replace Regenerate Button Icon (Optional)
 
-**Summary:**
-Currently, password reset is **not possible** for username-only accounts because they use fake `@mytrivia.local` emails. 
+In the Preview step, replace the `RefreshCw` icon with scissors for "regenerate":
 
-**To enable password recovery, you would need to:**
-1. Add an optional "email" field during signup
-2. Store real email in user metadata
-3. Implement password reset flow that sends to real email
-
-**For now, the workaround is:**
-- Users who forgot password must contact support
-- Admin can manually reset password in Supabase dashboard
+```tsx
+<ChunkyButton
+  variant="secondary"
+  size="md"
+  onClick={...}
+  disabled={isLoading}
+  className="flex-1 min-w-0"
+  icon={<img src={iconScissors} alt="" className="w-5 h-5 object-contain shrink-0" />}
+>
+  <span className="truncate">{t("avatar.regenerate")}</span>
+</ChunkyButton>
+```
 
 ---
 
@@ -138,20 +163,16 @@ Currently, password reset is **not possible** for username-only accounts because
 
 | File | Changes |
 |------|---------|
-| `src/components/onboarding/SignupOnboardingModal.tsx` | Remove `usernameHint` subtitle |
-| `src/components/home/AvatarModal.tsx` | Fix button text cropping with better sizing and truncation |
-| `src/components/ui/game-modal.tsx` | Adjust content padding for better spacing |
+| `src/assets/icons/` | Add 4 new icon images |
+| `src/components/home/AvatarModal.tsx` | Import icons, replace Lucide icons with 3D images |
 
 ---
 
-## Technical Notes
+## Visual Result
 
-1. **Password Recovery Limitation:** This is an architectural issue, not a bug. The username-only signup was designed for simplicity but sacrifices password recovery functionality.
-
-2. **To Add Password Recovery Later:**
-   - Add email collection during signup (optional field)
-   - Create `/reset-password` page
-   - Use Supabase's `resetPasswordForEmail()` API
-   - Send real password reset emails
-
-3. **Button Text:** Georgian text is often longer than English equivalents. The fix ensures text never truncates and goes on two lines.
+After these changes:
+- **Gallery step**: Photo upload button shows 3D photo icon
+- **Upload preview**: AI generate button shows sparkle icon
+- **Generating step**: Animated hourglass icon in center of loading circle
+- **Preview step**: Regenerate button shows scissors icon
+- **PRO upsell card**: Sparkle icon instead of Lucide Sparkles
