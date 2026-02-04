@@ -16,7 +16,7 @@ import roomCoverPlaceholder from "@/assets/room-cover-placeholder.png";
 import { formatDistanceToNow } from "date-fns";
 import { ka } from "date-fns/locale";
 import { LiveBadge } from "@/components/social/LiveBadge";
-import glitchIcon from "@/assets/glitch.png";
+import danceFloorIcon from "@/assets/dance-floor.png";
 import { GradientBackground, ROOM_GRADIENT_PRESETS } from "@/components/ui/noisy-gradient-backgrounds";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
@@ -222,18 +222,21 @@ export function MyRoomsSection({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mx-4 flex flex-col items-center py-8 rounded-2xl bg-card border border-border"
+            className="mx-4 flex flex-col items-center py-12 px-6 rounded-2xl bg-card border border-border"
           >
-            <div className="w-16 h-16 rounded-2xl overflow-hidden mb-3">
-              <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+            <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
+              <img src={danceFloorIcon} alt="" className="w-full h-full object-contain" />
             </div>
-            <p className="text-muted-foreground text-sm text-center">
+            <p className="text-muted-foreground text-sm text-center mb-6">
               {activeFilter === "my_rooms" && "შენ ჯერ ოთახი არ შეგიქმნია"}
               {activeFilter === "friends_rooms" && "მეგობრებს ოთახები არ აქვთ"}
               {activeFilter === "active" && "აქტიური ოთახები არ არის"}
               {activeFilter === "completed" && "დასრულებული ოთახები არ არის"}
-              {activeFilter === "all" && t('team.noActiveRooms')}
+              {activeFilter === "all" && "ოთახები ჯერ არ გაქვს"}
             </p>
+            {onCreateRoom && activeFilter === "all" && (
+              <ChunkyButton onClick={onCreateRoom}>+ ოთახი</ChunkyButton>
+            )}
           </motion.div>
         )
       ) : vertical ? (
