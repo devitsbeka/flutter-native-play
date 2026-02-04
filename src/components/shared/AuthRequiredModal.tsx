@@ -191,25 +191,26 @@ export function AuthRequiredModal({
             <div className="flex flex-col items-center mb-4">
               <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
                 <PopoverTrigger asChild>
-                  <button 
-                    type="button"
-                    className="w-[90px] h-[90px] rounded-full overflow-hidden relative border-4 border-primary/20 shadow-lg"
-                  >
-                    {selectedPhoto ? (
-                      <img 
-                        src={selectedPhoto} 
-                        alt="Selected avatar" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <SinglePlayVideo 
-                        src={guestWelcomeVideo} 
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    {/* Camera badge */}
-                    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md">
-                      <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+                  <button type="button" className="relative">
+                    {/* Circle container with overflow-hidden */}
+                    <div className="w-[90px] h-[90px] rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
+                      {selectedPhoto ? (
+                        <img 
+                          src={selectedPhoto} 
+                          alt="Selected avatar" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <SinglePlayVideo 
+                          src={guestWelcomeVideo} 
+                          className="w-full h-full"
+                          style={{ objectPosition: 'center 30%' }}
+                        />
+                      )}
+                    </div>
+                    {/* Camera badge - OUTSIDE the overflow-hidden div */}
+                    <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-2 shadow-md border-2 border-background">
+                      <Camera className="w-4 h-4 text-primary-foreground" />
                     </div>
                   </button>
                 </PopoverTrigger>
