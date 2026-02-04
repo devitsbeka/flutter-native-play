@@ -123,14 +123,9 @@ export function TeamRightSidebar({
             className="w-full p-4 rounded-2xl bg-muted/50 border border-border/50 hover:bg-muted/70 transition-colors text-left"
           >
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                  <Trophy className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground text-sm">10 თამაში ითამაშე</p>
-                  <p className="text-xs text-muted-foreground">3/10 შესრულებულია</p>
-                </div>
+              <div>
+                <p className="font-semibold text-foreground text-sm">ითამაშე 10 თამაში</p>
+                <p className="text-xs text-muted-foreground">3/10 შესრულებულია</p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </div>

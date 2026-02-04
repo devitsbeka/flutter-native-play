@@ -15,7 +15,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
   
   // Hardcoded challenge data for now
   const challenge = {
-    title: "10 თამაში ითამაშე",
+    title: "ითამაშე 10 თამაში",
     description: "ითამაშე 10 თამაში ამ კვირაში და მიიღე ჯილდო",
     current: 3,
     target: 10,
