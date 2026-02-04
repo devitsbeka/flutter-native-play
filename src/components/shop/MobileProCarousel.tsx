@@ -26,7 +26,7 @@ const PRO_TIERS = [
     icon: Users,
     benefits: [
       "ყველა Solo PRO ფუნქცია + 5 მეგობრის მოწვევა",
-      "ყველა PRO ფუნქცია",
+      "უფასო თამაში",
       "რეკლამის გარეშე",
     ],
     gradient: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #5B21B6 100%)",
@@ -148,8 +148,8 @@ export function MobileProCarousel() {
                 </div>
               </div>
 
-              {/* Benefits - add mt-10 (40px) for spacing */}
-              <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mt-10 mb-auto">
+              {/* Benefits - add mt-5 (20px) for spacing */}
+              <ul className="flex flex-col gap-1.5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 mt-5 mb-auto">
                 {tier.benefits.map((benefit, i) => (
                   <li 
                     key={i} 
