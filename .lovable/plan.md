@@ -1,90 +1,139 @@
 
-# Plan: Fix Mascot Avatar Display and Camera Badge Position
 
-## Issues Identified
+# Plan: Centered Single-Column Layout with Play Button
 
-1. **Mascot Head Cropped**: The video uses `object-cover` centered alignment, cropping the mascot's head at the top
-2. **Camera Badge Clipped**: The camera icon is positioned inside the `overflow-hidden` container, causing it to be cut off
+## Current State
 
-## Solution
+The desktop guest view shows a **split layout** with:
+- **Left side**: Auth form (mascot + login/signup)
+- **Right side**: "სტუმრის რეჟიმი" guest mode card with limitations and "ითამაშე როგორც სტუმარი" button
 
-### Fix 1: Move Video Down to Show Full Head
+## Requested Changes
 
-Use `object-position: center 30%` to shift the video content down, keeping the mascot's head fully visible while cropping more from the bottom.
+1. Remove the right-side guest mode panel completely
+2. Add "ითამაშე" button with 5/5 badge below the auth form
+3. Center all elements in a single column
 
-### Fix 2: Move Camera Badge Outside the Overflow Container
+## Visual Comparison
 
-Restructure the button to have a wrapper div where the camera badge can be positioned outside the clipped area.
-
----
-
-## Code Changes
-
-**File: `src/components/shared/AuthRequiredModal.tsx`**
-
-**Current Code (lines 191-214):**
-```tsx
-<Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
-  <PopoverTrigger asChild>
-    <button 
-      type="button"
-      className="w-[90px] h-[90px] rounded-full overflow-hidden relative border-4 border-primary/20 shadow-lg"
-    >
-      {selectedPhoto ? (
-        <img ... />
-      ) : (
-        <SinglePlayVideo ... />
-      )}
-      {/* Camera badge - INSIDE the overflow-hidden button */}
-      <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md">
-        <Camera className="w-3.5 h-3.5 text-primary-foreground" />
-      </div>
-    </button>
-  </PopoverTrigger>
-</Popover>
+**Current Layout:**
+```text
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│    [გამარჯობა!]              [სტუმრის რეჟიმი]          │
+│    [  Mascot  ]              ┌──────────────────┐       │
+│                              │ • 3 თამაში დღეში │       │
+│    [სახელი input]            │ • პროგრესი...    │       │
+│    [პაროლი input]            │ • შეზღუდული...   │       │
+│    [შექმენი ანგარიში]        │                  │       │
+│                              │ [ითამაშე სტუმარი]│       │
+│    ან                        └──────────────────┘       │
+│    [G] [🍎]                                             │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-**New Code:**
-```tsx
-<Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
-  <PopoverTrigger asChild>
-    {/* Outer wrapper for camera badge positioning */}
-    <button type="button" className="relative">
-      {/* Circle container with overflow-hidden */}
-      <div className="w-[90px] h-[90px] rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
-        {selectedPhoto ? (
-          <img 
-            src={selectedPhoto} 
-            alt="Selected avatar" 
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <SinglePlayVideo 
-            src={guestWelcomeVideo} 
-            className="w-full h-full"
-            style={{ objectPosition: 'center 30%' }}
-          />
-        )}
-      </div>
-      {/* Camera badge - OUTSIDE the overflow-hidden div */}
-      <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-2 shadow-md border-2 border-background">
-        <Camera className="w-4 h-4 text-primary-foreground" />
-      </div>
-    </button>
-  </PopoverTrigger>
-</Popover>
+**New Layout:**
+```text
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│                     [გამარჯობა!]                        │
+│                     [  Mascot  ]                        │
+│                                                         │
+│                   [სახელი input]                        │
+│                   [პაროლი input]                        │
+│                   [შექმენი ანგარიში]                    │
+│                                                         │
+│                          ან                             │
+│                       [G] [🍎]                          │
+│                                                         │
+│                       ─────────                         │
+│                                                         │
+│                      ┌─ 5/5 ─┐                          │
+│                   ▶  ითამაშე   ← Green chunky button    │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
----
+## Implementation Details
 
-## Key Changes Summary
+**File: `src/components/home/DesktopGuestSplitLayout.tsx`**
 
-| Issue | Fix |
-|-------|-----|
-| Mascot head cropped | Add `style={{ objectPosition: 'center 30%' }}` to shift video content down |
-| Camera badge clipped | Move badge div outside the `overflow-hidden` container, use `-bottom-1 -right-1` positioning |
-| Badge too small | Increase padding to `p-2` and icon size to `w-4 h-4` for better visibility |
-| Badge blends in | Add `border-2 border-background` for contrast against the avatar |
+### Key Changes
+
+1. **Remove 2-column grid**: Change from `grid grid-cols-2` to single-column `flex flex-col items-center`
+
+2. **Remove entire right side panel**: Delete the second `<motion.div>` containing "სტუმრის რეჟიმი"
+
+3. **Add Play Button section**: After the OAuth buttons, add a divider and the `DesktopPlayButtonLarge` component
+
+4. **Pass required props**: The component already receives `onPlayAsGuest`, but needs to accept plays data for the badge
+
+### Props Changes
+
+Add new props to `DesktopGuestSplitLayoutProps`:
+```typescript
+interface DesktopGuestSplitLayoutProps {
+  // ... existing props
+  guestPlaysRemaining?: number;
+  maxGuestPlays?: number;
+}
+```
+
+### Component Structure
+
+```tsx
+export function DesktopGuestSplitLayout({
+  // ... existing props
+  guestPlaysRemaining = 3,
+  maxGuestPlays = 3,
+}: DesktopGuestSplitLayoutProps) {
+  return (
+    <div className="w-full max-w-md mx-auto px-6 py-8">
+      <div className="flex flex-col items-center">
+        
+        {/* Title: გამარჯობა! */}
+        {/* Avatar with mascot */}
+        {/* Auth form (inputs + submit) */}
+        {/* Toggle sign-up/sign-in */}
+        {/* Divider */}
+        {/* OAuth buttons */}
+        
+        {/* NEW: Divider before play button */}
+        <div className="w-full max-w-xs my-6 border-t border-border/50" />
+        
+        {/* NEW: Play button with badge */}
+        <DesktopPlayButtonLarge
+          onClick={onPlayAsGuest}
+          playsRemaining={guestPlaysRemaining}
+          maxPlays={maxGuestPlays}
+          canPlay={guestPlaysRemaining > 0}
+          isVip={false}
+          isGuest={true}
+        />
+        
+      </div>
+    </div>
+  );
+}
+```
+
+### Index.tsx Update
+
+Pass guest plays data to the component:
+
+```tsx
+<DesktopGuestSplitLayout
+  onCreateAccount={handleGuestCreateAccount}
+  onSignIn={handleGuestSignIn}
+  onGoogleSignIn={handleGuestGoogleSignIn}
+  onAppleSignIn={handleGuestAppleSignIn}
+  onPlayAsGuest={handlePlayClick}
+  isLoading={isAuthLoading}
+  guestPlaysRemaining={guestPlaysRemaining}
+  maxGuestPlays={MAX_GUEST_PLAYS_COUNT}
+/>
+```
 
 ---
 
@@ -92,12 +141,15 @@ Restructure the button to have a wrapper div where the camera badge can be posit
 
 | File | Changes |
 |------|---------|
-| `src/components/shared/AuthRequiredModal.tsx` | Restructure avatar button layout, fix video positioning, move camera badge outside overflow area |
+| `src/components/home/DesktopGuestSplitLayout.tsx` | Remove 2-column grid, delete right panel, add centered play button with badge |
+| `src/pages/Index.tsx` | Pass guest plays data to DesktopGuestSplitLayout |
 
 ---
 
-## Expected Result
+## Technical Notes
 
-- Mascot's full head visible in the circle (cropping only at the bottom)
-- Camera badge fully visible and floating outside the circle border
-- Matches the reference image provided by user
+- Reuses existing `DesktopPlayButtonLarge` component which already has the 5/5 badge styling
+- The badge will show `3/3` for guest users (based on `MAX_GUEST_PLAYS_COUNT`)
+- Maintains all existing auth functionality (form validation, OAuth, mode toggle)
+- Simpler, cleaner layout focused on conversion
+
