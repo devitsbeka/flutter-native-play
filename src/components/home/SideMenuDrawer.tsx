@@ -140,14 +140,14 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                 style={{ filter: "blur(8px)" }}
               >
                 <source src="/videos/floating-blob.mp4" type="video/mp4" />
               </video>
               {/* White radial overlay */}
               <div 
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   background: "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, transparent 40%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.6) 80%, rgba(255,255,255,1) 100%)",
                 }}
