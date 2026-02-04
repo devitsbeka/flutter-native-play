@@ -41,6 +41,45 @@ const TROPHY_SIZES = {
   mobile: 100,
 };
 
+// Animated stroke colors for league indicator
+const LEAGUE_STROKE_COLORS: Record<number, { from: string; via: string; to: string }> = {
+  1: { // Bronze
+    from: '#CD7F32',
+    via: '#B87333',
+    to: '#8B4513'
+  },
+  2: { // Silver
+    from: '#C0C0C0',
+    via: '#E8E8E8',
+    to: '#A8A8A8'
+  },
+  3: { // Gold
+    from: '#FFD700',
+    via: '#FFA500',
+    to: '#DAA520'
+  }
+};
+
+// Animated league badge component
+const AnimatedLeagueBadge = ({ tier, size = 'default' }: { tier: number; size?: 'default' | 'small' }) => {
+  const colors = LEAGUE_STROKE_COLORS[tier] || LEAGUE_STROKE_COLORS[1];
+  
+  return (
+    <motion.div
+      className={`relative ${size === 'small' ? 'p-[1.5px]' : 'p-[2px]'} rounded-full`}
+      style={{
+        background: `conic-gradient(from 0deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.from})`
+      }}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+    >
+      <span className={`block ${size === 'small' ? 'text-xs px-2.5 py-0.5' : 'text-sm px-3 py-1'} font-medium text-foreground bg-background/90 backdrop-blur-sm rounded-full`}>
+        შენი ლიგა
+      </span>
+    </motion.div>
+  );
+};
+
 export default function Leaderboards() {
   const { user } = useAuth();
   const { region, language } = useLanguage();
@@ -211,7 +250,7 @@ export default function Leaderboards() {
                 {LEAGUE_NAMES[activeTier || 1]?.toUpperCase() || 'LEAGUE'}
               </h2>
               {activeTier === userTier && (
-                <p className="text-xs text-primary font-medium drop-shadow-sm">შენი ლიგა</p>
+                <AnimatedLeagueBadge tier={userTier} size="small" />
               )}
             </div>
             
@@ -469,9 +508,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
         {/* View Rating button at bottom with "შენი ლიგა" label */}
         <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
           {activeTier === userTier && (
-            <span className="text-sm font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
-              შენი ლიგა
-            </span>
+            <AnimatedLeagueBadge tier={userTier} />
           )}
           <button 
             onClick={() => setIsModalOpen(true)}
@@ -613,7 +650,7 @@ function TabletLeaderboards({
                     {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
                   </h2>
                   {currentTier === userTier && (
-                    <p className="text-xs text-primary font-medium">შენი ლიგა</p>
+                    <AnimatedLeagueBadge tier={userTier} size="small" />
                   )}
                 </div>
               </div>
@@ -635,9 +672,7 @@ function TabletLeaderboards({
         {/* View Rating button at bottom with "შენი ლიგა" label */}
         <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
           {currentTier === userTier && (
-            <span className="text-sm font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
-              შენი ლიგა
-            </span>
+            <AnimatedLeagueBadge tier={userTier} />
           )}
           <button 
             onClick={() => setIsModalOpen(true)}
