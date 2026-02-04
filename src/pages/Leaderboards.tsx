@@ -379,21 +379,19 @@ export default function Leaderboards() {
   );
 }
 
-// Desktop: All 3 leaderboards side by side with hero background
+// Desktop: Match tablet layout with league nav and View Rating button
 function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: string }) {
+  const { user } = useAuth();
   const { language } = useLanguage();
   const [activeTier, setActiveTier] = useState(2); // Default to Silver
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Fetch all 3 tiers
-  const tier1 = useLeagueLeaderboard(1, region);
-  const tier2 = useLeagueLeaderboard(2, region);
-  const tier3 = useLeagueLeaderboard(3, region);
-  
-  const tiers = [
-    { tier: 2, data: tier2, name: "Silver League", nameKa: "ვერცხლის ლიგა" },
-    { tier: 3, data: tier3, name: "Gold League", nameKa: "ოქროს ლიგა" },
-    { tier: 1, data: tier1, name: "Bronze League", nameKa: "ბრინჯაოს ლიგა" },
-  ];
+  const {
+    leaderboard,
+    isLoading,
+    userEntry,
+    previousRank,
+  } = useLeagueLeaderboard(activeTier, region);
   
   const LEAGUE_NAMES: Record<number, string> = {
     1: "ბრინჯაოს ლიგა",
@@ -419,60 +417,121 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
 
   return (
     <LeaderboardHeroBackground>
-      {/* League Navigation Header with blur */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
-        <div className="bg-white/30 backdrop-blur-xl rounded-2xl p-3 px-5 border border-white/20 shadow-lg">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handlePrevTier}
-              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
-              aria-label="Previous tier"
-            >
-              <ChevronLeft className="w-5 h-5 text-white" />
-            </button>
-            
-            <div className="flex items-center gap-2.5 min-w-[180px] justify-center">
-              <img 
-                src={TROPHY_IMAGES[activeTier]} 
-                alt="" 
-                className="w-7 h-7 object-contain"
-              />
-              <span className="text-white font-bold text-lg drop-shadow-md whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
-                {LEAGUE_NAMES[activeTier]?.toUpperCase()}
-              </span>
+      <div className="relative flex flex-col h-[calc(100vh-120px)]">
+        {/* League Navigation Header with blur - DARK text for visibility */}
+        <div className="mx-6 mt-6 flex justify-center">
+          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-3 px-5 border border-white/40 shadow-lg">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handlePrevTier}
+                className="p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-all"
+                aria-label="Previous tier"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </button>
+              
+              <div className="flex items-center gap-2.5 min-w-[200px] justify-center">
+                <img 
+                  src={TROPHY_IMAGES[activeTier]} 
+                  alt="" 
+                  className="w-7 h-7 object-contain"
+                />
+                <span className="text-foreground font-bold text-lg whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                  {LEAGUE_NAMES[activeTier]?.toUpperCase()}
+                </span>
+              </div>
+              
+              <button
+                onClick={handleNextTier}
+                className="p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-all"
+                aria-label="Next tier"
+              >
+                <ChevronRight className="w-5 h-5 text-foreground" />
+              </button>
             </div>
-            
-            <button
-              onClick={handleNextTier}
-              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
-              aria-label="Next tier"
-            >
-              <ChevronRight className="w-5 h-5 text-white" />
-            </button>
           </div>
         </div>
-      </div>
-
-      {/* Content area - leaderboards overlap hero image */}
-      <div className="pt-[420px]">
-        {/* 3 Column Layout - full width */}
-        <div className="w-full px-3">
-          <div className="grid grid-cols-3 gap-3">
-            {tiers.map(({ tier, data, name, nameKa }) => (
-              <DesktopLeagueColumn
-                key={tier}
-                tier={tier}
-                name={language === 'ka' ? nameKa : name}
-                leaderboard={data.leaderboard}
-                isLoading={data.isLoading}
-                userTier={userTier}
-                previousRank={data.previousRank}
-                isActive={tier === activeTier}
-              />
-            ))}
-          </div>
+        
+        {/* Spacer - trophies visible in background */}
+        <div className="flex-1" />
+        
+        {/* View Rating button at bottom */}
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-background/90 backdrop-blur-sm rounded-full px-10 py-4 
+                       shadow-lg border border-border/30 active:scale-95 transition-transform
+                       hover:bg-background"
+          >
+            <span className="text-lg font-semibold text-foreground">
+              {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
+            </span>
+          </button>
         </div>
       </div>
+      
+      {/* Rating Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent 
+          className="max-w-lg max-h-[80vh] p-0 overflow-hidden"
+          onInteractOutside={() => setIsModalOpen(false)}
+          onEscapeKeyDown={() => setIsModalOpen(false)}
+        >
+          <DialogHeader className="p-4 pb-2 border-b border-border/30">
+            <DialogTitle className="text-center font-bold" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+              {LEAGUE_NAMES[activeTier]?.toUpperCase() || 'LEAGUE'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <ScrollArea className="flex-1 max-h-[60vh]">
+            <div className="px-3 pb-4">
+              {isLoading && leaderboard.length === 0 ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
+                    <div className="relative shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                      <div className="h-5 w-12 bg-muted animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))
+              ) : leaderboard.length === 0 ? (
+                <div className="text-center py-8">
+                  <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                </div>
+              ) : (
+                leaderboard.map((entry, index) => {
+                  const isCurrentUser = entry.user_id === user?.id;
+                  return (
+                    <div 
+                      key={entry.user_id}
+                      className={isCurrentUser ? "relative z-10 my-3 mx-1" : ""}
+                    >
+                      <LeaguePlayerRow
+                        entry={entry}
+                        isCurrentUser={isCurrentUser}
+                        index={index}
+                        previousRank={isCurrentUser ? previousRank : null}
+                        shouldAnimate={false}
+                        totalPlayers={leaderboard.length}
+                        isPromotionZone={activeTier < 5 && entry.rank <= 10}
+                        isDemotionZone={activeTier > 1 && entry.rank > leaderboard.length - 10}
+                      />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </LeaderboardHeroBackground>
   );
 }
@@ -514,41 +573,41 @@ function TabletLeaderboards({
   
   return (
     <LeaderboardHeroBackground isTablet currentTier={currentTier}>
-      <div className="flex flex-col h-[calc(100vh-120px)]">
-        {/* League Navigation at top with blur container */}
-        <div className="mx-6 mt-4">
-          <div className="bg-white/30 backdrop-blur-xl rounded-2xl p-3 border border-white/20">
-            <div className="flex items-center justify-between">
+      <div className="relative flex flex-col h-[calc(100vh-120px)]">
+        {/* League Navigation at top with blur container - DARK text for visibility */}
+        <div className="mx-6 mt-4 flex justify-center">
+          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-3 px-5 border border-white/40 shadow-lg">
+            <div className="flex items-center gap-4">
               <button
                 onClick={onPrevTier}
-                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+                className="p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-all"
                 aria-label="Previous tier"
               >
-                <ChevronLeft className="w-5 h-5 text-white" />
+                <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
               
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-[180px] justify-center">
                 <img 
                   src={TROPHY_IMAGES[currentTier]} 
                   alt="" 
                   className="w-7 h-7 object-contain"
                 />
                 <div className="text-center">
-                  <h2 className="text-xl text-white font-bold whitespace-nowrap drop-shadow-lg" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                  <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                     {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
                   </h2>
                   {currentTier === userTier && (
-                    <p className="text-xs text-white/80 font-medium">შენი ლიგა</p>
+                    <p className="text-xs text-primary font-medium">შენი ლიგა</p>
                   )}
                 </div>
               </div>
               
               <button
                 onClick={onNextTier}
-                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+                className="p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 transition-all"
                 aria-label="Next tier"
               >
-                <ChevronRight className="w-5 h-5 text-white" />
+                <ChevronRight className="w-5 h-5 text-foreground" />
               </button>
             </div>
           </div>
@@ -557,8 +616,8 @@ function TabletLeaderboards({
         {/* Spacer - trophy is already visible in the background */}
         <div className="flex-1" />
         
-        {/* View Rating button */}
-        <div className="pb-32 flex justify-center">
+        {/* View Rating button at bottom with safe spacing */}
+        <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20">
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
