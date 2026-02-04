@@ -75,12 +75,10 @@ export const LeaderboardHeroBackground = memo(function LeaderboardHeroBackground
 
   return (
     <div 
-      className={`relative w-full overflow-hidden transition-all duration-300 ${
+      className={`overflow-hidden transition-all duration-300 ${
         isMobile 
-          ? isFullscreen 
-            ? 'h-[65vh] min-h-[400px]' 
-            : 'h-[35vh] min-h-[200px]'
-          : 'min-h-screen'
+          ? 'fixed inset-0 z-0'
+          : 'relative w-full min-h-screen'
       }`}
       onTouchStart={isMobile ? handleTouchStart : undefined}
       onTouchMove={isMobile ? handleTouchMove : undefined}
