@@ -64,9 +64,13 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isTriviaLikedOrSaved = ['trivia_liked', 'trivia_saved'].includes(notification.type);
   const isTriviaPlayed = notification.type === 'trivia_played';
 
+  // Check if action was already taken on this notification
+  const actionTaken = notification.data?.action_taken as 'accepted' | 'declined' | undefined;
+  const hasActionTaken = !!actionTaken;
+
   // Friend requests and game invites ALWAYS show action buttons (accept/decline) until acted upon
   // The buttons should remain visible even after marking as read
-  const hasDualActions = isFriendRequest || isGameInvite;
+  const hasDualActions = (isFriendRequest || isGameInvite) && !hasActionTaken;
   const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved || isTriviaPlayed) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
@@ -419,6 +423,28 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
                   </span>
                 ) : "უარყოფა"}
               </button>
+            </div>
+          )}
+
+          {/* Show action taken status for friend requests */}
+          {hasActionTaken && isFriendRequest && (
+            <div className={cn(
+              "mt-2 px-4 py-2 rounded-full text-xs font-semibold inline-flex items-center gap-1.5",
+              actionTaken === 'accepted' 
+                ? "bg-emerald-500/20 text-emerald-600" 
+                : "bg-muted text-muted-foreground"
+            )}>
+              {actionTaken === 'accepted' ? (
+                <>
+                  <span className="text-base">✓</span>
+                  <span>მიღებულია</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-base">✗</span>
+                  <span>უარყოფილია</span>
+                </>
+              )}
             </div>
           )}
 
