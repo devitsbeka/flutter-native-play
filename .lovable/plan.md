@@ -1,66 +1,120 @@
 
-# Fix Leaderboard List Container: Corners and Gaps
+# Desktop & Tablet Leaderboard Redesign
 
-## Issues Identified
+## Current Behavior
 
-From the screenshots:
-1. **Corner mismatch**: The drag handle header has `rounded-t-3xl` but the list body has no rounded corners - creating a visible corner mismatch at the top
-2. **Gap between elements**: The header (handle bar) and list body are separate containers causing a visible gap/seam
-3. **First row corners**: The first player row has sharp corners but should respect the parent container's rounded corners
+| Screen | Breakpoint | Current Implementation |
+|--------|------------|------------------------|
+| Desktop | `lg:` (1024px+) | Big background with all trophies + 3 cards side-by-side |
+| Tablet | `md-lg` (768-1023px) | Same as mobile - single tier background, swipe to change |
+| Mobile | `< md` (< 768px) | Single tier background + expandable list from bottom |
+
+## Requested Changes
+
+Based on the reference screenshots:
+
+**Desktop (lg+):** Keep as-is - background with all trophies + 3 league cards side-by-side
+
+**Tablet (md to lg):** New layout:
+- Full background image (`bgleader.png`) showing all 3 trophies
+- League navigation at top (like mobile) with left/right arrows
+- Large centered trophy for the selected tier (overlaid on background)
+- "View Rating" button that opens a modal/slide-up panel with the leaderboard list
 
 ---
 
-## Solution
+## Implementation Plan
 
-Unify the container structure so the header and body share the same rounded container with proper overflow clipping.
+### 1. Update LeaderboardHeroBackground Component
 
-### File: `src/pages/Leaderboards.tsx`
+Modify to support 3 modes:
+- **Mobile** (`isMobile=true`): Current tier-specific backgrounds
+- **Tablet** (`isTablet=true`): Full desktop background (`bgleader.png`)  
+- **Desktop** (default): Full desktop background with fade mask
 
-**Current Structure (lines 260-318):**
-```tsx
-<motion.div className="...">
-  {/* Separate header container */}
-  <button className="bg-background/95 ... rounded-t-3xl ...">
-    <div className="handle bar" />
-  </button>
-  
-  {/* Separate body container - no rounding! */}
-  <div className="bg-background ...">
-    {/* Player rows */}
-  </div>
-</motion.div>
+```text
+File: src/components/leaderboard/LeaderboardHeroBackground.tsx
+
+Changes:
+- Add isTablet prop
+- When isTablet=true, show bgleader.png without fade mask
 ```
 
-**Fixed Structure:**
-```tsx
-<motion.div className="bg-background rounded-t-3xl shadow-lg overflow-hidden ...">
-  {/* Handle integrated into same container */}
-  <button className="py-3 px-4 w-full">
-    <div className="handle bar" />
-  </button>
-  
-  {/* List in same container - inherits rounding via overflow-hidden */}
-  <div className="overflow-y-auto px-3 pb-32">
-    {/* Player rows */}
-  </div>
-</motion.div>
+### 2. Restructure Leaderboards.tsx Breakpoints
+
+Create a dedicated tablet layout between mobile and desktop:
+
+```text
+Current structure:
+- Desktop (lg:): DesktopLeaderboards (3 columns)
+- Mobile/Tablet (lg:hidden): Fullscreen with expandable list
+
+New structure:
+- Desktop (lg:): DesktopLeaderboards (3 columns) - unchanged
+- Tablet (md:block lg:hidden): New tablet layout with:
+  - Full bgleader.png background
+  - League nav at top (arrows + title)
+  - Large trophy overlay for selected tier (centered)
+  - "View Rating" button
+  - Modal/sheet for leaderboard list when opened
+- Mobile (md:hidden): Current mobile implementation
 ```
 
+### 3. Create TabletLeaderboards Component
+
+New component features:
+- Uses `bgleader.png` as full background
+- League navigation header (same as mobile - arrows + league name)
+- Large trophy image centered on screen (from individual trophy PNGs)
+- "View Rating" button at bottom
+- Opens a Dialog/Sheet with the full leaderboard list when clicked
+
+```text
+Layout:
++----------------------------------+
+|  < SILVER LEAGUE >               |  <- League nav with arrows
++----------------------------------+
+|                                  |
+|    [Background: bgleader.png]    |
+|                                  |
+|        [Large Trophy]            |  <- Trophy overlay for selected tier
+|                                  |
+|     [ View Rating Button ]       |
+|                                  |
++----------------------------------+
+```
+
+### 4. Create Tablet Leaderboard Modal
+
+When "View Rating" is clicked, show a dialog/sheet containing:
+- League header
+- Scrollable list of players (same as mobile expanded view)
+- Close button
+
 ---
 
-## Specific Changes
+## Files to Modify
 
-| Line | Current | Change |
-|------|---------|--------|
-| 259-266 | Outer motion.div has no bg/rounded | Add `bg-background rounded-t-3xl shadow-lg overflow-hidden` |
-| 268-273 | Button has its own `bg-background/95 rounded-t-3xl` | Remove bg and rounded, keep only padding/button behavior |
-| 276 | Body has `bg-background` | Remove `bg-background` (inherited from parent) |
+| File | Changes |
+|------|---------|
+| `src/pages/Leaderboards.tsx` | Add tablet breakpoint, create TabletLeaderboards component |
+| `src/components/leaderboard/LeaderboardHeroBackground.tsx` | Add isTablet mode for full background without mask |
 
----
+## Technical Details
 
-## Visual Result
+### Breakpoint Strategy
+```text
+- md:hidden lg:hidden  -> Mobile only
+- hidden md:block lg:hidden -> Tablet only  
+- hidden lg:block -> Desktop only
+```
 
-- **Unified container** with consistent `rounded-t-3xl` corners
-- **No gap** between header and list body
-- **First row clips** to container's rounded corners via `overflow-hidden`
-- **Seamless appearance** matching the expected design
+### Trophy Overlay Sizing
+- Use the individual trophy images (trophy-silver.png, trophy-gold.png, trophy-bronze.png)
+- Center on screen with size ~40-50% of viewport width
+- Add subtle shadow/glow effect
+
+### Modal Implementation
+- Use existing Dialog or Sheet component
+- Same player row rendering as mobile expanded view
+- ScrollArea for the list
