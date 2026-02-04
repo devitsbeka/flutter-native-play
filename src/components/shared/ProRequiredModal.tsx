@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
-import { Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useProPurchase } from "@/hooks/useProPurchase";
 import { Capacitor } from "@capacitor/core";
 import type { ProFeature } from "@/hooks/useProGating";
+import crownIcon from "@/assets/icons/crown-2.png";
 
 const FEATURE_MESSAGES: Record<ProFeature, string> = {
   rooms: "ოთახების შესაქმნელად",
@@ -42,18 +42,30 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[320px] p-0 overflow-hidden bg-gradient-to-b from-accent/20 to-background border-accent/30">
+      <DialogContent className="max-w-[320px] p-0 overflow-hidden bg-gradient-to-b from-purple-500/15 via-background to-background border-purple-500/30">
         <DialogTitle className="sr-only">PRO ფუნქცია</DialogTitle>
         
         <div className="flex flex-col items-center px-6 py-8">
           {/* Crown Icon */}
           <motion.div
             initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center mb-5 shadow-lg shadow-accent/30"
+            animate={{ 
+              scale: 1, 
+              rotate: 0,
+              y: [0, -6, 0]
+            }}
+            transition={{ 
+              scale: { type: "spring", stiffness: 300, damping: 20 },
+              rotate: { type: "spring", stiffness: 300, damping: 20 },
+              y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 via-fuchsia-500 to-pink-500 flex items-center justify-center mb-5 shadow-[0_0_30px_rgba(168,85,247,0.5)]"
           >
-            <Crown className="w-10 h-10 text-white" />
+            <img 
+              src={crownIcon} 
+              alt="Crown" 
+              className="w-14 h-14 object-contain drop-shadow-lg"
+            />
           </motion.div>
 
           {/* Title */}
@@ -84,10 +96,13 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
             className="w-full"
           >
             <ChunkyButton
-              variant="secondary"
+              variant="primary"
+              size="lg"
               className="w-full"
               onClick={handleUpgrade}
               disabled={isProcessing}
+              showParticles={true}
+              icon={<img src={crownIcon} alt="" className="w-5 h-5 object-contain" />}
             >
               {isProcessing ? "იტვირთება..." : "გახდი PRO"}
             </ChunkyButton>
