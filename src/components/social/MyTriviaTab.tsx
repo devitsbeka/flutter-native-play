@@ -16,6 +16,7 @@ import { useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 
 import { EditQuizModal } from "./EditQuizModal";
 import { EditRoundModal } from "./EditRoundModal";
+import { TriviaPlayModeModal } from "./TriviaPlayModeModal";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { AddRoundToCollectionModal } from "./AddRoundToCollectionModal";
 import { useDrafts } from "@/hooks/useDrafts";
@@ -729,12 +730,42 @@ function PersonalTriviaCard({ post, profile, index, onEdit, onPlay, onPost, isNe
 }
 
 // Standalone quiz card (not in a collection)
-function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNew, isPosting }: { post: any; profile: any; index: number; onEdit: (post: any) => void; onPlay?: (post: any) => void; onPost?: (post: any) => void; isNew?: boolean; isPosting?: boolean }) {
+function StandaloneQuizCard({ 
+  post, 
+  profile, 
+  index, 
+  onEdit, 
+  onPlay, 
+  onPost, 
+  isNew, 
+  isPosting,
+  onPlayModeSelect
+}: { 
+  post: any; 
+  profile: any; 
+  index: number; 
+  onEdit: (post: any) => void; 
+  onPlay?: (post: any) => void; 
+  onPost?: (post: any) => void; 
+  isNew?: boolean; 
+  isPosting?: boolean;
+  onPlayModeSelect?: (post: any) => void;
+}) {
   const navigate = useNavigate();
   const gradientProps = getGradientProps(post.cover_gradient);
 
   // Tilt animation for new items - random left or right tilt
   const tiltDirection = post.id.charCodeAt(0) % 2 === 0 ? 15 : -15;
+
+  const handlePlayClick = () => {
+    // If trivia is "blind" (locked/დახურული), show play mode selection
+    if (post.is_blind) {
+      onPlayModeSelect?.(post);
+    } else {
+      // Open trivia - navigate directly
+      navigate(`/trivia/${post.id}`);
+    }
+  };
 
   return (
     <motion.div
@@ -848,7 +879,7 @@ function StandaloneQuizCard({ post, profile, index, onEdit, onPlay, onPost, isNe
             size="sm" 
             variant="outline" 
             className="flex-1 h-10 text-sm"
-            onClick={() => navigate(`/trivia/${post.id}`)}
+            onClick={handlePlayClick}
           >
             <Play className="w-4 h-4" />
             <span>ითამაშე</span>
@@ -864,10 +895,16 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
   const { drafts, isLoading: draftsLoading, deleteDraft } = useDrafts();
   const { profile } = useAuth();
+  const navigate = useNavigate();
+  const { createRoom } = useMultiplayerV2();
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
   const [editingRound, setEditingRound] = useState<any>(null);
   const [expandedCollectionId, setExpandedCollectionId] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  
+  // Play mode modal state for locked trivias
+  const [playModeTrivia, setPlayModeTrivia] = useState<any>(null);
+  const [isStartingRoom, setIsStartingRoom] = useState(false);
   
   // Notify parent when editing round state changes
   useEffect(() => {
@@ -937,6 +974,105 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const handleToggleCollectionVisibility = (collection: any) => {
     const currentlyPublic = collection.is_public !== false;
     toggleVisibilityMutation.mutate({ id: collection.id, type: 'collection', newPublicState: !currentlyPublic });
+  };
+
+  // Play mode handlers for locked trivias
+  const handlePlaySolo = () => {
+    if (!playModeTrivia) return;
+    navigate(`/trivia/${playModeTrivia.id}`);
+    setPlayModeTrivia(null);
+  };
+
+  const handleCreateRoom = async () => {
+    if (!playModeTrivia || isStartingRoom) return;
+    setIsStartingRoom(true);
+    try {
+      const { data, error } = await supabase
+        .from("user_quiz_posts")
+        .select("questions, title, cover_image")
+        .eq("id", playModeTrivia.id)
+        .single();
+
+      if (error || !data?.questions) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      const customQuestions = (data.questions as any[]) || [];
+      if (!customQuestions.length) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      const room = await createRoom(
+        "custom",
+        data.title || playModeTrivia.title || "My Trivia",
+        customQuestions,
+        "Trivia Room",
+        (data.cover_image as string | null) || null
+      );
+
+      if (room?.id && room?.room_code) {
+        await supabase
+          .from("game_rooms")
+          .update({ user_trivia_id: playModeTrivia.id })
+          .eq("id", room.id);
+
+        navigate(`/team?join=${room.room_code}`);
+      }
+    } catch (e) {
+      console.error("Create room error:", e);
+      toast.error("ოთახის შექმნა ვერ მოხერხდა");
+    } finally {
+      setIsStartingRoom(false);
+      setPlayModeTrivia(null);
+    }
+  };
+
+  const handlePlayTV = async () => {
+    if (!playModeTrivia || isStartingRoom) return;
+    setIsStartingRoom(true);
+    try {
+      const { data, error } = await supabase
+        .from("user_quiz_posts")
+        .select("questions, title, cover_image")
+        .eq("id", playModeTrivia.id)
+        .single();
+
+      if (error || !data?.questions) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      const customQuestions = (data.questions as any[]) || [];
+      if (!customQuestions.length) {
+        toast.error("ტრივიის კითხვები ვერ მოიძებნა");
+        return;
+      }
+
+      const room = await createRoom(
+        "custom",
+        data.title || playModeTrivia.title || "My Trivia",
+        customQuestions,
+        "TV Trivia",
+        (data.cover_image as string | null) || null
+      );
+
+      if (room?.id && room?.room_code) {
+        await supabase
+          .from("game_rooms")
+          .update({ user_trivia_id: playModeTrivia.id })
+          .eq("id", room.id);
+
+        navigate(`/team?join=${room.room_code}&tv=1`);
+      }
+    } catch (e) {
+      console.error("TV mode error:", e);
+      toast.error("TV რეჟიმის დაწყება ვერ მოხერხდა");
+    } finally {
+      setIsStartingRoom(false);
+      setPlayModeTrivia(null);
+    }
   };
 
   // Track known item IDs to detect new items for tilt animation
@@ -1253,6 +1389,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
               onPost={handleToggleQuizVisibility}
               isNew={newItemIds.has(item.data.id)}
               isPosting={postingItemId === item.data.id}
+              onPlayModeSelect={setPlayModeTrivia}
             />
           )
         ))}
@@ -1283,6 +1420,23 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         collectionId={addingToCollection?.collectionId || ""}
         roundNumber={addingToCollection?.roundNumber || 1}
         onRoundCreated={() => setAddingToCollection(null)}
+      />
+
+      {/* Play Mode Selection Modal for Locked Trivias */}
+      <TriviaPlayModeModal
+        isOpen={!!playModeTrivia}
+        onClose={() => setPlayModeTrivia(null)}
+        trivia={playModeTrivia ? {
+          id: playModeTrivia.id,
+          title: playModeTrivia.title,
+          questionCount: Array.isArray(playModeTrivia.questions) ? playModeTrivia.questions.length : (playModeTrivia.question_count || 0),
+          coverImage: playModeTrivia.cover_image,
+          coverGradient: playModeTrivia.cover_gradient,
+          isBlind: playModeTrivia.is_blind,
+        } : null}
+        onPlaySolo={handlePlaySolo}
+        onCreateRoom={handleCreateRoom}
+        onPlayTV={handlePlayTV}
       />
     </motion.div>
   );

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play } from "lucide-react";
+import { Play, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SamplePost } from "@/data/samplePosts";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ interface TriviaPortfolioCardProps {
   onSave?: (trivia: SamplePost) => void;
   isLiked?: boolean;
   isSaved?: boolean;
+  isPlayed?: boolean;
   className?: string;
 }
 
@@ -48,6 +49,7 @@ export function TriviaPortfolioCard({
   onSave, 
   isLiked = false, 
   isSaved = false, 
+  isPlayed = false,
   className 
 }: TriviaPortfolioCardProps) {
   const navigate = useNavigate();
@@ -101,6 +103,14 @@ export function TriviaPortfolioCard({
             <div className={`absolute inset-0 ${gradientProps.className}`} style={gradientProps.style} />
             <div className="absolute inset-0 bg-black/20" />
           </>
+        )}
+        
+        {/* Played Badge - top left */}
+        {isPlayed && (
+          <div className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            <span>ნათამაშები</span>
+          </div>
         )}
         
         {/* Centered Title - white with drop shadow */}
