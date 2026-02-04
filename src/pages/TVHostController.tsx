@@ -473,6 +473,15 @@ const TVHostController: React.FC = () => {
           await startGame(undefined, firstQueued.user_trivia_id);
         } else if (firstQueued.category_id) {
           await startGame(firstQueued.category_id);
+        } else if (firstQueued.source_type === "random") {
+          // Random mode - pick a random category and start
+          const randomCat = categories[Math.floor(Math.random() * categories.length)];
+          if (randomCat) {
+            await startGame(randomCat.id);
+          } else {
+            toast.error('კატეგორიები ვერ მოიძებნა');
+            return;
+          }
         } else {
           toast.error('არასწორი რაუნდის ტიპი');
           return;
