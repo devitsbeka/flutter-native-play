@@ -271,71 +271,82 @@ export default function Leaderboards() {
         {/* Bottom section: Expandable list */}
         <AnimatePresence>
           {isExpanded && (
-            <motion.div 
-              className="absolute bottom-0 left-0 right-0 z-30 flex flex-col bg-background rounded-t-3xl shadow-lg overflow-hidden"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              style={{ maxHeight: "70vh" }}
-            >
-              {/* Tappable header to collapse */}
-              <button
+            <>
+              {/* Overlay to close when clicking outside */}
+              <motion.div 
+                className="absolute inset-0 z-20 bg-black/20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 onClick={() => setIsExpanded(false)}
-                className="py-3 px-4 w-full"
+              />
+              
+              <motion.div 
+                className="absolute bottom-0 left-0 right-0 z-30 flex flex-col bg-background rounded-t-3xl shadow-lg overflow-hidden"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                style={{ maxHeight: "70vh" }}
               >
-                <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
-              </button>
+                {/* Tappable header to collapse */}
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="py-3 px-4 w-full"
+                >
+                  <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
+                </button>
 
-              {/* Full scrollable list */}
-              <div className="flex-1 overflow-y-auto px-3 pb-32">
-                {isLoading && leaderboard.length === 0 ? (
-                  // Show skeleton rows while loading
-                  Array.from({ length: 10 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
-                      <div className="relative shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                {/* Full scrollable list */}
+                <div className="flex-1 overflow-y-auto px-3 pb-32">
+                  {isLoading && leaderboard.length === 0 ? (
+                    // Show skeleton rows while loading
+                    Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
+                        <div className="relative shrink-0">
+                          <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                          <div className="h-5 w-12 bg-muted animate-pulse rounded" />
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="h-5 w-24 bg-muted animate-pulse rounded" />
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
-                        <div className="h-5 w-12 bg-muted animate-pulse rounded" />
-                      </div>
+                    ))
+                  ) : leaderboard.length === 0 ? (
+                    <div className="text-center py-8">
+                      <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
                     </div>
-                  ))
-                ) : leaderboard.length === 0 ? (
-                  <div className="text-center py-8">
-                    <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
-                  </div>
-                ) : (
-                  leaderboard.map((entry, index) => {
-                    const isCurrentUser = entry.user_id === user?.id;
-                    return (
-                      <div 
-                        key={entry.user_id} 
-                        ref={isCurrentUser ? userRowRef : undefined}
-                        className={isCurrentUser ? "relative z-10 my-3 mx-1" : ""}
-                      >
-                        <LeaguePlayerRow
-                          entry={entry}
-                          isCurrentUser={isCurrentUser}
-                          index={index}
-                          previousRank={isCurrentUser ? previousRank : null}
-                          shouldAnimate={false}
-                          totalPlayers={leaderboard.length}
-                          isPromotionZone={(activeTier || 1) < 5 && entry.rank <= 10}
-                          isDemotionZone={(activeTier || 1) > 1 && entry.rank > leaderboard.length - 10}
-                        />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </motion.div>
+                  ) : (
+                    leaderboard.map((entry, index) => {
+                      const isCurrentUser = entry.user_id === user?.id;
+                      return (
+                        <div 
+                          key={entry.user_id} 
+                          ref={isCurrentUser ? userRowRef : undefined}
+                          className={isCurrentUser ? "relative z-10 my-3 mx-1" : ""}
+                        >
+                          <LeaguePlayerRow
+                            entry={entry}
+                            isCurrentUser={isCurrentUser}
+                            index={index}
+                            previousRank={isCurrentUser ? previousRank : null}
+                            shouldAnimate={false}
+                            totalPlayers={leaderboard.length}
+                            isPromotionZone={(activeTier || 1) < 5 && entry.rank <= 10}
+                            isDemotionZone={(activeTier || 1) > 1 && entry.rank > leaderboard.length - 10}
+                          />
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>
