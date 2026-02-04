@@ -1,88 +1,238 @@
 
-# Multiplayer Flow Analysis & Fix
 
-## Summary of Current State
+# Plan: Add "Mixed Questions" Feature
 
-After reviewing the complete multiplayer flow, I found that **most of the critical fixes are already in place**:
+## Overview
 
-| Component | Status |
-|-----------|--------|
-| `startNextFromQueue` (line 1743) | ✅ Fixed - uses `questionCount = 5` |
-| `startNewRound` (line 1449) | ✅ Fixed - uses `questionCount = 5` |
-| Guest synchronization | ✅ Robust - 8 retries, 600ms delay, game_id validation |
-| Delete-verify-insert pattern | ✅ Implemented - 3 retries with verification |
-| UI layout stability | ✅ Fixed - answered indicator uses fixed-height container |
-| Observer auto-progression | ✅ Working - advances when all players complete |
+Add a new "სხვადასხვა კატეგორიები" (Mixed Questions) option that appears **first in the Library view** within the category picker. When selected, this option mixes questions from **all categories** together, creating a surprise experience where each question could be from any category.
 
-## Remaining Issue Found
+---
 
-There's **one remaining edge case** in the `startGame` function at line 972:
+## Technical Approach
+
+### How It Differs From Current "შემთხვევითი" (Random)
+
+| Feature | შემთხვევითი (Random) | სხვადასხვა (Mixed) |
+|---------|---------------------|-------------------|
+| What it does | Picks a random **single category** for the game | Mixes questions from **all categories** together |
+| User experience | All 5 questions are from one unknown category | Each question could be from a different category |
+| Location | Main menu (top level) | Inside Library view (first item) |
+
+The current "Random" feature selects ONE random category at game start. The new "Mixed" feature will use the **existing `getMultiCategoryVSQuestions`** function which already fetches one question per category from all available categories.
+
+---
+
+## Implementation Strategy
+
+### 1. Define Mixed Category Constant
+
+Create a special "virtual category" identifier that triggers multi-category mode:
 
 ```typescript
-const questionCount = freshRoom.total_questions || 5;
+// Special identifier - not a real database category
+const MIXED_CATEGORY_ID = '__mixed__';
+const MIXED_CATEGORY_NAME = 'სხვადასხვა კატეგორიები';
+const MIXED_CATEGORY_ICON_SLUG = 'mystery-box';
 ```
 
-This reads `total_questions` from the database which could still have a stale value of `1` from a previous 1-question user trivia.
+### 2. Update CategoryPickerModal (Library View)
 
-**Scenario where this matters:**
-1. Host plays a 1-question user trivia → `total_questions` becomes `1`
-2. Returns to lobby
-3. Selects a new library category directly (not via queue)
-4. Clicks "Start Game" 
-5. `questionCount` = `1` (from stale database value)
-6. Only 1 question is fetched → game ends immediately
+Add the "Mixed" option as the **first item** in the Library grid, before fetched categories:
 
-## Database Evidence
+```
+┌─────────────────────────────────────────┐
+│  🔍 Search...                           │
+├─────────────────────────────────────────┤
+│ ┌─────────────┐  ┌─────────────┐        │
+│ │  🎁 Mixed   │  │  📚 History │  ...   │
+│ │ სხვადასხვა   │  │ ისტორია     │        │
+│ └─────────────┘  └─────────────┘        │
+│                                         │
+│ ... other categories ...                │
+└─────────────────────────────────────────┘
+```
 
-Current rooms show mixed `total_questions` values - some at `5` (after recent fixes), others still at `1`:
+### 3. Handle Mixed Selection in Game Start Logic
+
+When `category_id === '__mixed__'`:
+- Call `getQuestions({ mode: 'vs', categorySlug: undefined, count: 5 })`
+- This already triggers `getMultiCategoryVSQuestions()` which fetches from all categories
+
+### 4. Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/team/CategoryPickerModal.tsx` | Add Mixed option as first item in Library grid |
+| `src/components/team/CategorySelectorModal.tsx` | Add Mixed option as first item (used in other flows) |
+| `src/contexts/MultiplayerContextV2.tsx` | Handle `__mixed__` category_id in startGame/startNextFromQueue |
+| `src/components/team/RoomLobbyV2.tsx` | Display "Mixed" properly in lobby UI |
+| `src/components/team/GameResultsScreenV2.tsx` | Handle Mixed display in queue items |
+
+---
+
+## Detailed Changes
+
+### File 1: `src/components/team/CategoryPickerModal.tsx`
+
+**Location: Library view grid (around line 323)**
+
+Insert a "Mixed Questions" card as the first item before mapping categories:
+
+```tsx
+{/* Mixed Questions - always first */}
+<motion.button
+  initial={{ opacity: 0, scale: 0.9 }}
+  animate={{ opacity: 1, scale: 1 }}
+  onClick={() => setSelectedItem({
+    type: "category",
+    id: "__mixed__",
+    name: "სხვადასხვა კატეგორიები",
+    iconSlug: "mystery-box",
+  })}
+  className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
+    selectedItem?.id === "__mixed__"
+      ? "bg-white/20 border-2 border-white/50"
+      : "bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-white/30 hover:from-purple-500/40 hover:to-pink-500/40"
+  }`}
+>
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
+      <DynamicIcon slug="mystery-box" size={22} />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="font-medium text-white text-sm truncate">სხვადასხვა კატეგორიები</p>
+      <p className="text-white/50 text-xs">ყველა კატეგორიიდან</p>
+    </div>
+    {selectedItem?.id === "__mixed__" && (
+      <Check className="w-4 h-4 text-white flex-shrink-0" />
+    )}
+  </div>
+</motion.button>
+```
+
+### File 2: `src/contexts/MultiplayerContextV2.tsx`
+
+**Location: startNextFromQueue (around line 1947)**
+
+Update the logic that fetches questions to handle `__mixed__`:
+
+```typescript
+// Line 1947 - Handle __mixed__ as categorySlug undefined
+const newCategoryId = nextItem.source_type === "random" 
+  ? null 
+  : nextItem.category_id === "__mixed__" 
+    ? undefined  // This triggers getMultiCategoryVSQuestions
+    : nextItem.category_id;
+    
+const newCategoryName = nextItem.source_type === "random" 
+  ? "შემთხვევითი" 
+  : nextItem.category_id === "__mixed__"
+    ? "სხვადასხვა კატეგორიები"
+    : (nextItem.category_name || "კატეგორია");
+```
+
+**Location: startGame (around line 1130-1160)**
+
+Similarly update to handle `__mixed__` category:
+
+```typescript
+// Check if this is the mixed category
+const isMixedCategory = freshRoom.category_id === "__mixed__";
+
+// Fetch questions - undefined categorySlug triggers multi-category mode
+const result = await getQuestions({
+  mode: 'vs',
+  categorySlug: isMixedCategory ? undefined : resolvedCategorySlug,
+  count: questionCount,
+  excludeIds: usedIds,
+});
+```
+
+### File 3: `src/components/team/CategorySelectorModal.tsx`
+
+Add the same Mixed option as first item in the grid (similar to CategoryPickerModal changes).
+
+### File 4: Queue Display Updates
+
+In `RoomLobbyV2.tsx` and `GameResultsScreenV2.tsx`, add logic to display a special icon for Mixed:
+
+```tsx
+{item.category_id === "__mixed__" ? (
+  <DynamicIcon slug="mystery-box" size={20} />
+) : item.source_type === "random" ? (
+  <Shuffle className="w-5 h-5 text-purple-300" />
+) : (
+  <DynamicIcon slug={item.icon_slug} categoryId={item.category_id} size={20} />
+)}
+```
+
+---
+
+## Visual Design
+
+The Mixed category card will have:
+- **Rainbow/gradient background**: `from-purple-500/30 to-pink-500/30`
+- **Icon**: `mystery-box` from the 9k icon library (rendered via DynamicIcon)
+- **Title**: "სხვადასხვა კატეგორიები" 
+- **Subtitle**: "ყველა კატეგორიიდან" (From all categories)
+
+---
+
+## Flow Diagram
 
 ```text
-total_questions: 5 ← Recent room (fix working)
-total_questions: 1 ← Older rooms (before fix)
-total_questions: 1 ← Older rooms (before fix)
+User opens Category Picker
+         ↓
+     Main Menu
+   ┌──────────────┐
+   │ შემთხვევითი   │ → Picks random single category
+   │ ბიბლიოთეკა   │ → Opens Library view
+   │ ჩემი ტრივიები │
+   └──────────────┘
+         ↓
+   User clicks "ბიბლიოთეკა"
+         ↓
+    Library View
+   ┌──────────────────────────┐
+   │ 🎁 სხვადასხვა (FIRST)    │ → NEW: Mixed from all
+   │ 📚 საქართველოს ისტორია  │
+   │ 🌍 მსოფლიო ისტორია      │
+   │ ...other categories...   │
+   └──────────────────────────┘
+         ↓
+   User selects Mixed
+         ↓
+   category_id = "__mixed__"
+         ↓
+   startGame() detects __mixed__
+         ↓
+   Calls getQuestions({ categorySlug: undefined })
+         ↓
+   getMultiCategoryVSQuestions() fetches
+   one question from each random category
+         ↓
+   Game plays with diverse questions!
 ```
 
-## Solution
+---
 
-Apply the same fix to `startGame` that was applied to `startNewRound` and `startNextFromQueue`.
+## Edge Cases Handled
 
-### Technical Change
+1. **Search filter**: Mixed option will appear only when search is empty (or always if matches "სხვადასხვა")
+2. **Queue display**: Special handling for `__mixed__` category_id to show correct icon/name
+3. **Room state**: `category_name` stored as "სხვადასხვა კატეგორიები" for display
+4. **Question icons**: Each question shows its own category's icon (already handled by icon_slug)
 
-**File:** `src/contexts/MultiplayerContextV2.tsx`
+---
 
-**Line 972** - Change from:
-```typescript
-const questionCount = freshRoom.total_questions || 5;
-```
+## Files Summary
 
-To:
-```typescript
-// FIX: Always use fresh default for new games
-// Don't rely on stale total_questions from previous round
-const questionCount = 5;
-```
+| File | Type of Change |
+|------|----------------|
+| `src/components/team/CategoryPickerModal.tsx` | Add Mixed card to Library grid |
+| `src/components/team/CategorySelectorModal.tsx` | Add Mixed card to selector grid |
+| `src/contexts/MultiplayerContextV2.tsx` | Handle `__mixed__` in startGame & startNextFromQueue |
+| `src/components/team/RoomLobbyV2.tsx` | Display Mixed icon in category picker section |
+| `src/components/team/GameResultsScreenV2.tsx` | Display Mixed icon in queue items |
+| `src/components/challenge/LibraryCategoryPicker.tsx` | Add Mixed option (if used elsewhere) |
 
-## Why This Is Safe
-
-1. **Library categories always use 5 questions** - This is the standard for VS mode
-2. **User trivias bypass this variable** - They use `customQuestions.length` directly (lines 1006-1034)
-3. **Consistent behavior** - All three game-start paths now use the same default
-4. **No loss of functionality** - The room's `total_questions` is always updated with the actual count after questions are fetched
-
-## Complete Fix Summary
-
-After this change, all game-start paths will use fresh defaults:
-
-| Function | Line | Fixed Value |
-|----------|------|-------------|
-| `startGame` | 972 | `const questionCount = 5;` |
-| `startNewRound` | 1449 | `const questionCount = 5;` ✅ Already done |
-| `startNextFromQueue` | 1743 | `const questionCount = 5;` ✅ Already done |
-
-## Expected Outcome
-
-Players can now play continuously without experiencing:
-- Games ending after 1 question (regardless of which game-start path is used)
-- UI jumping when opponents answer (fixed with reserved-height container)
-- Icon flashing in category picker (fixed with overflow-hidden)
-- Stale questions from previous rounds (game_id validation in place)
