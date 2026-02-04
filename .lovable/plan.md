@@ -1,94 +1,137 @@
 
-# Plan: Comprehensive Fix for Question Count Bug in Multiplayer Rounds
+# Plan: Fix UI Jumping/Flashing Issues
 
 ## Problem Summary
 
-When a second round starts after a 1-question user trivia round, the game only fetches 1 question instead of 5, causing it to end immediately. The fix applied to `startNextFromQueue` wasn't sufficient because there are multiple code paths and fallback scenarios.
+Two separate layout instability issues:
 
-## Root Cause Analysis
+1. **Category Picker Icon Flashing**: On the library view, category icons flash/jump as they load (skeleton → icon transition with scale animation)
+2. **Game Screen Content Shifting**: When opponents answer, the "answered indicator" appears and pushes all content down, causing visible layout shift
 
-The bug has **two interrelated issues**:
+---
 
-### Issue 1: Stale `total_questions` in `startNewRound`
+## Issue 1: Category Picker Icon Flash
 
-At line 1447 in `MultiplayerContextV2.tsx`:
-```typescript
-const questionCount = freshRoom.total_questions || 5;
+### Root Cause
+
+In `CategoryPickerModal.tsx` (line 348), `DynamicIcon` components:
+- Start with a pulsing skeleton placeholder
+- Animate in with `opacity: 0 → 1` and `scale: 0.9 → 1`
+- This creates a visual "pop" effect multiplied across all category cards
+
+### Solution
+
+Set a **fixed container size** for the icon area in the category cards, so the skeleton and the loaded icon occupy the same space without layout shift. The icons already have a fixed container (`w-10 h-10`), but the `DynamicIcon` animation is causing the flash.
+
+**Change**: Remove or reduce the scale animation on `DynamicIcon` when used in lists, or ensure the icon container clips overflow to prevent visual expansion.
+
+**Files to modify:**
+- `src/components/team/CategoryPickerModal.tsx` - Add `overflow-hidden` to icon container
+
+---
+
+## Issue 2: Game Screen Layout Shift
+
+### Root Cause
+
+In `MultiplayerGameScreenV2.tsx` (lines 278-291), the answered indicator appears/disappears dynamically:
+
+```jsx
+{answeredCount > 0 && !answerRevealed && (
+  <motion.div className="px-4 mb-2">
+    ...
+  </motion.div>
+)}
 ```
 
-This reads the stale `total_questions` value (e.g., `1`) from the previous round and uses it for the new round.
+When this element appears/disappears:
+- Question card shifts down/up by ~30px
+- Answer buttons follow, causing a jump
 
-### Issue 2: `startNextFromQueue` Fallback to `startNewRound`
+### Solution
 
-When `startNextFromQueue` doesn't find queue items (possibly due to timing/race condition), it falls back to `startNewRound()` at line 1755. This path inherits the stale question count bug.
+**Reserve fixed space** for the answered indicator so it doesn't shift content. Use opacity/visibility instead of conditionally rendering, OR place it in a position that doesn't affect the main layout flow (e.g., absolutely positioned).
 
-### Evidence from Database
+**Option A (Recommended)**: Keep the indicator in the flow but always reserve its height. When hidden, show a transparent placeholder of the same size.
 
-The room shows:
-- `total_questions: 1` (stale from previous user trivia)
-- `category_id: null` (previous game was user trivia)
-- Queue still has "პოლიტიკა" (Politics) item unprocessed
+**Option B**: Absolutely position the indicator overlay so it doesn't affect layout.
 
-The question in `room_questions` is from "ცნობილი ადამიანები" (Famous People), NOT from the queue's "პოლიტიკა" category, confirming that the random mode was triggered (not the queue path).
+**Files to modify:**
+- `src/components/team/MultiplayerGameScreenV2.tsx` - Change answered indicator to use fixed height container
 
-## Solution
-
-Fix the question count in **both** functions to use a fresh default for new rounds:
-
-### 1. Fix `startNewRound` (Line 1447)
-
-**Before:**
-```typescript
-const questionCount = freshRoom.total_questions || 5;
-```
-
-**After:**
-```typescript
-// FIX: Always use fresh default for new rounds
-// Don't rely on stale total_questions from previous round
-const questionCount = 5;
-```
-
-### 2. Ensure `startNextFromQueue` Uses Fresh Default (Already Fixed)
-
-This was already fixed in a previous change:
-```typescript
-const questionCount = 5; // Already fixed
-```
-
-## Flow After Fix
-
-| Step | What Happens |
-|------|--------------|
-| 1 | First round plays user trivia (1 question) |
-| 2 | User clicks "Next Round" |
-| 3 | `handlePlayAgain` → `startNextFromQueue()` |
-| 4a | **If queue found:** Uses queue item category, fetches 5 questions |
-| 4b | **If queue empty/fallback:** `startNewRound()` uses `questionCount = 5` |
-| 5 | Game plays with 5 questions |
+---
 
 ## Technical Changes
 
-### File: `src/contexts/MultiplayerContextV2.tsx`
+### File 1: `src/components/team/CategoryPickerModal.tsx`
 
-**Line 1447** - Change from:
-```typescript
-const questionCount = freshRoom.total_questions || 5;
+**Location: Line 344** - Add `overflow-hidden` to prevent scale animation spillover
+
+```diff
+  <div 
+-   className="w-10 h-10 rounded-lg flex items-center justify-center"
++   className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+    style={{ backgroundColor: `${cat.color}40` }}
+  >
 ```
-To:
-```typescript
-const questionCount = 5;
+
+### File 2: `src/components/team/MultiplayerGameScreenV2.tsx`
+
+**Location: Lines 278-291** - Change from conditional rendering to always-present container with visibility toggle
+
+```diff
+- {/* Answered indicator */}
+- {answeredCount > 0 && !answerRevealed && (
+-   <motion.div
+-     initial={{ opacity: 0, y: -10 }}
+-     animate={{ opacity: 1, y: 0 }}
+-     className="px-4 mb-2"
+-   >
+-     <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-full bg-white/10 mx-auto w-fit">
+-       <span className="text-white/80 text-xs">
+-         {answeredCount}/{opponents.length} {t("game.answered")}
+-       </span>
+-     </div>
+-   </motion.div>
+- )}
++ {/* Answered indicator - fixed height container to prevent layout shift */}
++ <div className="px-4 h-8 flex items-center justify-center">
++   <motion.div
++     initial={false}
++     animate={{ 
++       opacity: answeredCount > 0 && !answerRevealed ? 1 : 0,
++       scale: answeredCount > 0 && !answerRevealed ? 1 : 0.9
++     }}
++     transition={{ duration: 0.15 }}
++     className="py-1.5 px-3 rounded-full bg-white/10"
++   >
++     <span className="text-white/80 text-xs">
++       {answeredCount}/{opponents.length} {t("game.answered")}
++     </span>
++   </motion.div>
++ </div>
 ```
 
-## Why This Is Safe
+This change:
+1. Always renders a fixed-height container (`h-8`)
+2. Uses opacity/scale animation instead of conditional rendering
+3. Prevents any layout shift when opponents answer
 
-1. **New rounds should always be fresh**: When starting a new round (whether from queue or repeat), the default of 5 questions is appropriate
-2. **User trivias determine their own count**: The user trivia branch (lines 1468-1596) fetches questions from `user_quiz_posts.questions` and uses `questions.length`, bypassing the `questionCount` variable entirely
-3. **Library categories should have 5 questions**: This is the standard for VS mode multiplayer
-4. **No loss of functionality**: Previously, if someone set a custom count, it would persist. But in practice, multiplayer VS mode always uses 5 questions per round
+---
+
+## Expected Behavior After Fix
+
+| Scenario | Before | After |
+|----------|--------|-------|
+| Category picker icons load | Flash/pop as each loads | Smooth fade-in without size changes |
+| Opponent answers during game | Question card jumps down | No movement, indicator fades in smoothly |
+| All opponents answered | Indicator disappears, card jumps up | Indicator fades out, no movement |
+
+---
 
 ## Files to Modify
 
-| File | Location | Change |
-|------|----------|--------|
-| `src/contexts/MultiplayerContextV2.tsx` | Line 1447 | Replace `freshRoom.total_questions || 5` with `5` |
+| File | Changes |
+|------|---------|
+| `src/components/team/CategoryPickerModal.tsx` | Add `overflow-hidden` to icon container |
+| `src/components/team/MultiplayerGameScreenV2.tsx` | Replace conditional rendering with fixed-height opacity animation |
