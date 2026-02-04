@@ -60,36 +60,78 @@ const LEAGUE_STROKE_COLORS: Record<number, { from: string; via: string; to: stri
   }
 };
 
-// Animated league badge component - subtle shimmer effect on border stroke
-const AnimatedLeagueBadge = ({ tier, size = 'default' }: { tier: number; size?: 'default' | 'small' }) => {
-  const colors = LEAGUE_STROKE_COLORS[tier] || LEAGUE_STROKE_COLORS[1];
-  const padding = size === 'small' ? 2 : 2.5;
+// Premium metallic league badge with light sweep animation
+const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
+  // Metallic color schemes for each tier
+  const metallicStyles: Record<number, { 
+    gradient: string; 
+    shadow: string;
+    textColor: string;
+  }> = {
+    1: { // Bronze
+      gradient: 'linear-gradient(135deg, #CD7F32 0%, #E8B066 25%, #CD7F32 50%, #8B4513 75%, #CD7F32 100%)',
+      shadow: '0 2px 8px rgba(205, 127, 50, 0.4)',
+      textColor: '#5D3A1A'
+    },
+    2: { // Silver  
+      gradient: 'linear-gradient(135deg, #C0C0C0 0%, #F0F0F0 25%, #E8E8E8 50%, #A8A8A8 75%, #C0C0C0 100%)',
+      shadow: '0 2px 8px rgba(192, 192, 192, 0.4)',
+      textColor: '#4A4A4A'
+    },
+    3: { // Gold
+      gradient: 'linear-gradient(135deg, #FFD700 0%, #FFF4B0 25%, #FFD700 50%, #DAA520 75%, #FFD700 100%)',
+      shadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
+      textColor: '#5C4800'
+    }
+  };
+  
+  const style = metallicStyles[tier] || metallicStyles[1];
   
   return (
     <div className="relative inline-flex items-center justify-center">
-      {/* Animated gradient border with shimmer effect */}
+      {/* Main metallic badge */}
       <motion.div
-        className="absolute inset-0 rounded-full"
+        className="relative rounded-full overflow-hidden"
         style={{
-          background: `linear-gradient(90deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.via}, ${colors.from})`,
-          backgroundSize: '200% 100%'
+          background: style.gradient,
+          backgroundSize: '200% 200%',
+          boxShadow: style.shadow,
         }}
-        animate={{ 
-          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+        animate={{
+          backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
         }}
-        transition={{ 
-          duration: 3, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
         }}
-      />
-      {/* Static text layer - stays on top */}
-      <span 
-        className={`relative z-10 block ${size === 'small' ? 'text-xs px-2.5 py-0.5' : 'text-sm px-3 py-1'} font-medium text-foreground bg-background/90 backdrop-blur-sm rounded-full`}
-        style={{ margin: padding }}
       >
-        შენი ლიგა
-      </span>
+        {/* Light sweep overlay */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)',
+            backgroundSize: '200% 100%'
+          }}
+          animate={{
+            backgroundPosition: ['-100% 0%', '200% 0%']
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            repeatDelay: 1.5,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Text */}
+        <span 
+          className="relative z-10 block text-sm px-4 py-1.5 font-bold"
+          style={{ color: style.textColor }}
+        >
+          შენი ლიგა
+        </span>
+      </motion.div>
     </div>
   );
 };
@@ -263,9 +305,6 @@ export default function Leaderboards() {
               <h2 className="text-lg text-foreground font-bold whitespace-nowrap drop-shadow-md" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                 {LEAGUE_NAMES[activeTier || 1]?.toUpperCase() || 'LEAGUE'}
               </h2>
-              {activeTier === userTier && (
-                <AnimatedLeagueBadge tier={userTier} size="small" />
-              )}
             </div>
             
             {/* Right Arrow */}
@@ -659,14 +698,9 @@ function TabletLeaderboards({
                   alt="" 
                   className="w-7 h-7 object-contain"
                 />
-                <div className="text-center">
-                  <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
-                    {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
-                  </h2>
-                  {currentTier === userTier && (
-                    <AnimatedLeagueBadge tier={userTier} size="small" />
-                  )}
-                </div>
+                <span className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+                  {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
+                </span>
               </div>
               
               <button
