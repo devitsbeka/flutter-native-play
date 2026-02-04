@@ -962,7 +962,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             <img src={generatedAvatar} alt="Generated Avatar" className="w-full h-full object-cover" />
           </motion.div>
           <p className="text-sm text-muted-foreground text-center">{t("avatar.avatarReady")}</p>
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <div className="flex flex-col gap-2 w-full">
             <ChunkyButton
               variant="secondary"
               size="md"
@@ -972,20 +972,20 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 setUploadedImage(null);
               }}
               disabled={isLoading}
-              className="flex-1 min-w-0"
+              className="w-full"
               icon={<img src={iconScissors} alt="" className="w-5 h-5 object-contain shrink-0" />}
             >
-              <span className="truncate">{t("avatar.regenerate")}</span>
+              {t("avatar.regenerate")}
             </ChunkyButton>
             <ChunkyButton
               variant="success"
               size="md"
               onClick={() => saveAvatar()}
               disabled={isLoading}
-              className="flex-1 min-w-0"
+              className="w-full"
               icon={isLoading ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
             >
-              <span className="truncate">{t("avatar.useAsProfile")}</span>
+              {t("avatar.useAsProfile")}
             </ChunkyButton>
           </div>
           
