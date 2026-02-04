@@ -2425,62 +2425,109 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const { getQuestions, resolveCategoryUuid } = await import('@/services/questionService');
         const { markQuestionsAsAsked } = await import('@/services/questionTracker');
 
-        // Resolve category UUID
-        const categoryUUID = await resolveCategoryUuid(categoryId);
-        if (!categoryUUID) {
-          tvLogError('startGame', 'Failed to resolve category UUID');
-          return;
-        }
-
-        tvLog('Using questionService for TV mode', { categoryId, categoryUUID });
-
-        // Fetch questions using unified service
-        const result = await getQuestions({
-          mode: 'tv',
-          categoryUuid: categoryUUID,
-          count: 10,
-        });
-
-        if (result.questions.length === 0) {
-          tvLogError('startGame', 'No questions available');
-          return;
-        }
-
-        // Log exhaustion info
-        if (result.exhaustionInfo) {
-          tvLog('Question exhaustion info', {
-            totalAvailable: result.exhaustionInfo.totalAvailable,
-            totalSeen: result.exhaustionInfo.totalSeen,
-            wasReset: result.exhaustionInfo.wasReset,
-            usedFallback: result.exhaustionInfo.usedFallback,
+        // Handle __mixed__ category - random questions from all categories
+        const isMixedCategory = categoryId === "__mixed__";
+        
+        if (isMixedCategory) {
+          tvLog('Using mixed category mode for TV', { categoryId });
+          
+          // Fetch random questions without category filter
+          const result = await getQuestions({
+            mode: 'tv',
+            count: 10,
+            // No categoryUuid = fetch from all categories
           });
+
+          if (result.questions.length === 0) {
+            tvLogError('startGame', 'No questions available');
+            return;
+          }
+
+          // Log exhaustion info
+          if (result.exhaustionInfo) {
+            tvLog('Mixed category exhaustion info', {
+              totalAvailable: result.exhaustionInfo.totalAvailable,
+              totalSeen: result.exhaustionInfo.totalSeen,
+              wasReset: result.exhaustionInfo.wasReset,
+              usedFallback: result.exhaustionInfo.usedFallback,
+            });
+          }
+
+          formattedQuestions = result.questions.map(q => ({
+            id: q.id,
+            question_text: q.question,
+            correct_answer: q.correctAnswer,
+            options: q.allAnswers,
+            icon_slug: q.iconSlug,
+            image_url: q.imageUrl,
+            video_url: q.videoUrl,
+            audio_url: q.audioUrl,
+          }));
+
+          // Track using standardized key for mixed mode
+          const trackerKey = `tv_mixed`;
+          markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
+
+          categoryName = 'სხვადასხვა';
+          categoryIcon = 'mystery-box';
+        } else {
+          // Standard category - resolve UUID
+          const categoryUUID = await resolveCategoryUuid(categoryId);
+          if (!categoryUUID) {
+            tvLogError('startGame', 'Failed to resolve category UUID');
+            return;
+          }
+
+          tvLog('Using questionService for TV mode', { categoryId, categoryUUID });
+
+          // Fetch questions using unified service
+          const result = await getQuestions({
+            mode: 'tv',
+            categoryUuid: categoryUUID,
+            count: 10,
+          });
+
+          if (result.questions.length === 0) {
+            tvLogError('startGame', 'No questions available');
+            return;
+          }
+
+          // Log exhaustion info
+          if (result.exhaustionInfo) {
+            tvLog('Question exhaustion info', {
+              totalAvailable: result.exhaustionInfo.totalAvailable,
+              totalSeen: result.exhaustionInfo.totalSeen,
+              wasReset: result.exhaustionInfo.wasReset,
+              usedFallback: result.exhaustionInfo.usedFallback,
+            });
+          }
+
+          // Format questions for TV format
+          formattedQuestions = result.questions.map(q => ({
+            id: q.id,
+            question_text: q.question,
+            correct_answer: q.correctAnswer,
+            options: q.allAnswers, // Already shuffled by questionService
+            icon_slug: q.iconSlug,
+            image_url: q.imageUrl,
+            video_url: q.videoUrl,
+            audio_url: q.audioUrl,
+          }));
+
+          // Track using standardized key
+          const trackerKey = `tv_${categoryUUID}`;
+          markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
+
+          // Get category info for session
+          const { data: category } = await supabase
+            .from('categories')
+            .select('name, icon')
+            .eq('id', categoryUUID)
+            .single();
+
+          categoryName = category?.name || null;
+          categoryIcon = category?.icon || null;
         }
-
-        // Format questions for TV format
-        formattedQuestions = result.questions.map(q => ({
-          id: q.id,
-          question_text: q.question,
-          correct_answer: q.correctAnswer,
-          options: q.allAnswers, // Already shuffled by questionService
-          icon_slug: q.iconSlug,
-          image_url: q.imageUrl,
-          video_url: q.videoUrl,
-          audio_url: q.audioUrl,
-        }));
-
-        // Track using standardized key
-        const trackerKey = `tv_${categoryUUID}`;
-        markQuestionsAsAsked(trackerKey, formattedQuestions.map(q => q.id));
-
-        // Get category info for session
-        const { data: category } = await supabase
-          .from('categories')
-          .select('name, icon')
-          .eq('id', categoryUUID)
-          .single();
-
-        categoryName = category?.name || null;
-        categoryIcon = category?.icon || null;
       }
 
       if (formattedQuestions.length === 0) {
