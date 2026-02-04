@@ -29,7 +29,7 @@ export function CategoryPickerSection({
   willBeObserver,
 }: CategoryPickerSectionProps) {
   const hasCategory = !!categoryName;
-  const showQueuePreview = hasCategory || queue.length > 0;
+  const showQueuePreview = queue.length > 0;
   const currentPillType: "random" | "category" | "user_trivia" | null = !hasCategory
     ? null
     : categoryName === "შემთხვევითი"
@@ -85,7 +85,7 @@ export function CategoryPickerSection({
               {isAlreadyPlayed && hasCategory
                 ? "აირჩიე ახალი კატეგორია"
                 : hasCategory 
-                  ? "მიმდინარე კატეგორია" 
+                  ? "მიმდინარე" 
                   : "დაამატე კატეგორია სათამაშოდ"}
             </p>
           </div>
@@ -107,26 +107,8 @@ export function CategoryPickerSection({
         >
           <p className="text-white/50 text-xs mb-2 font-medium">რიგი:</p>
 
-          {/* Single unified row for ALL pills */}
+          {/* Queue pills - draggable for host, static for others */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-            {/* Current/initial round pill (non-removable / non-draggable) */}
-            {hasCategory && (
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0 h-9">
-                <span className="text-white/40 text-xs font-bold mr-0.5">1</span>
-                {currentPillType === "random" ? (
-                  <Shuffle className="w-[18px] h-[18px] text-purple-400" />
-                ) : currentPillType === "category" ? (
-                  <Library className="w-[18px] h-[18px] text-purple-400" />
-                ) : (
-                  <Sparkles className="w-[18px] h-[18px] text-purple-400" />
-                )}
-                <span className="text-white/80 text-xs font-medium">
-                  {categoryName}
-                </span>
-              </div>
-            )}
-            
-            {/* Queued rounds - draggable for host, static for others */}
             {isHost && onReorderQueue ? (
               <Reorder.Group 
                 axis="x" 
