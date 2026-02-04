@@ -48,9 +48,9 @@ export const ControllerLobby: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col">
-      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col overflow-hidden">
+      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-6 flex-shrink-0">
         {!isHost && (
           <img
             src={retroTvIcon}
@@ -66,12 +66,12 @@ export const ControllerLobby: React.FC = () => {
         </p>
       </motion.div>
 
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="mb-6 flex-1 min-h-0 flex flex-col">
+        <div className="flex items-center gap-2 mb-3 flex-shrink-0">
           <Users className="w-5 h-5 text-purple-300" />
           <span className="text-purple-200">მოთამაშეები ({players.length})</span>
         </div>
-        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+        <div className="space-y-2 flex-1 overflow-y-auto min-h-0 max-h-[50vh]">
           {players.map(player => (
             <div key={player.id} className="bg-white/10 rounded-xl p-3 flex items-center gap-3">
               <SafeAvatar 
