@@ -517,9 +517,9 @@ export function VSScreen() {
               </div>
               {/* Avatar container - fixed size */}
               <div className="w-[88px] h-[88px] rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <SmartAvatar
-                  avatarUrl={profile?.avatar_url || defaultGuestAvatar}
-                  animatedAvatarUrl={profile?.animated_avatar_url || defaultGuestAvatarAnimated}
+              <SmartAvatar
+                  avatarUrl={profile?.avatar_url?.trim() ? profile.avatar_url : defaultGuestAvatar}
+                  animatedAvatarUrl={profile?.animated_avatar_url?.trim() ? profile.animated_avatar_url : defaultGuestAvatarAnimated}
                   fallback={profile?.nickname || "P"}
                   size="2xl"
                   autoPlay={true}
