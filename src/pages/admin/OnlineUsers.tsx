@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 import { formatDistanceToNow } from 'date-fns';
 import { ka } from 'date-fns/locale';
+import { resolveAvatarUrl } from '@/utils/avatarUtils';
 
 export default function AdminOnlineUsers() {
   const { onlineUsers, loading, onlineCount, awayCount, totalActive } = useOnlineUsers();
@@ -96,7 +97,7 @@ export default function AdminOnlineUsers() {
                     <div className="relative">
                       {user.profile?.avatar_url ? (
                         <img 
-                          src={user.profile.avatar_url} 
+                          src={resolveAvatarUrl(user.profile.avatar_url) || user.profile.avatar_url} 
                           alt={user.profile.nickname}
                           className="w-12 h-12 rounded-full object-cover"
                         />

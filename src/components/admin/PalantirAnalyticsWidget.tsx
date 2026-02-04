@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Card, CardContent } from '@/components/ui/card';
 
 const ICON_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library';
@@ -524,7 +525,7 @@ export function PalantirAnalyticsWidget() {
                 {purchases.slice(0, 2).map((p) => (
                   <div key={p.id} className="flex items-center gap-2 py-1">
                     <Avatar className="h-5 w-5">
-                      <AvatarImage src={p.avatar_url || undefined} />
+                      <ResolvedAvatarImage src={p.avatar_url || undefined} />
                       <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
                         {p.nickname[0]?.toUpperCase()}
                       </AvatarFallback>
@@ -556,7 +557,7 @@ export function PalantirAnalyticsWidget() {
                     <div key={i} className="flex items-center gap-2">
                       <span className="text-muted-foreground text-xs w-3">{i + 1}.</span>
                       <Avatar className="h-5 w-5">
-                        <AvatarImage src={c.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={c.avatar_url || undefined} />
                         <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
                           {c.nickname[0]?.toUpperCase()}
                         </AvatarFallback>
@@ -579,7 +580,7 @@ export function PalantirAnalyticsWidget() {
                     <div key={i} className="flex items-center gap-2">
                       <span className="text-muted-foreground text-xs w-3">{i + 1}.</span>
                       <Avatar className="h-5 w-5">
-                        <AvatarImage src={c.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={c.avatar_url || undefined} />
                         <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
                           {c.nickname[0]?.toUpperCase()}
                         </AvatarFallback>

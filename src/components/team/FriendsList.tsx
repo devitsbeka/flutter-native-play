@@ -4,7 +4,8 @@ import { UserPlus, Mail, Check, X, Users, MessageCircle, MoreVertical, UserMinus
 import { Friend, useFriends } from "@/hooks/useFriends";
 import { useSound } from "@/contexts/SoundContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import {
   DropdownMenu,
@@ -300,7 +301,7 @@ function PendingRequestCard({ request, onAccept, onDecline }: PendingRequestCard
       className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 backdrop-blur-sm border border-amber-200"
     >
       <Avatar className="w-12 h-12 border-2 border-amber-300">
-        <AvatarImage src={request.avatarUrl || undefined} />
+        <ResolvedAvatarImage src={request.avatarUrl || undefined} />
         <AvatarFallback className="bg-gradient-to-br from-amber-500 to-orange-500 text-white font-bold">
           {request.nickname.charAt(0).toUpperCase()}
         </AvatarFallback>

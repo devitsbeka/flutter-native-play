@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { MoreVertical, MessageCircle, Plus } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
 interface RecentRoomsSectionProps {
@@ -89,7 +90,7 @@ function RecentRoomCard({ room, index }: RecentRoomCardProps) {
               className="w-9 h-9 border-[3px] border-white ring-2 ring-purple-300 shadow-md"
               style={{ zIndex: 4 - i }}
             >
-              <AvatarImage src={p.avatar_url || undefined} />
+              <ResolvedAvatarImage src={p.avatar_url || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
                 {p.nickname.charAt(0).toUpperCase()}
               </AvatarFallback>

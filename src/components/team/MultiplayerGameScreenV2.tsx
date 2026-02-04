@@ -6,7 +6,8 @@ import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { ArrowLeft, ChevronUp, ChevronDown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { useNavigate } from "react-router-dom";
 
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
@@ -217,7 +218,7 @@ export function MultiplayerGameScreenV2() {
           <div className="flex -space-x-2">
             {opponents.slice(0, 3).map((opp, i) => (
               <Avatar key={opp.id} className="w-6 h-6 border border-white/30" style={{ zIndex: 3 - i }}>
-                <AvatarImage src={opp.avatar_url || undefined} />
+                <ResolvedAvatarImage src={opp.avatar_url || undefined} />
                 <AvatarFallback className="bg-purple-500 text-white text-[10px]">
                   {opp.nickname?.charAt(0) || "?"}
                 </AvatarFallback>
@@ -259,7 +260,7 @@ export function MultiplayerGameScreenV2() {
                     {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                   </span>
                   <Avatar className="w-6 h-6">
-                    <AvatarImage src={p.avatar_url || undefined} />
+                    <ResolvedAvatarImage src={p.avatar_url || undefined} />
                     <AvatarFallback className="bg-purple-500 text-white text-[10px]">
                       {p.nickname?.charAt(0) || "?"}
                     </AvatarFallback>
@@ -407,7 +408,7 @@ export function MultiplayerGameScreenV2() {
                             opponentAnswers[opp?.user_id || ""]?.is_correct ? "border-green-500" : "border-red-500"
                           )}
                         >
-                          <AvatarImage src={opp?.avatar_url || undefined} />
+                          <ResolvedAvatarImage src={opp?.avatar_url || undefined} />
                           <AvatarFallback className="bg-purple-500 text-white text-[10px]">
                             {opp?.nickname?.charAt(0) || "?"}
                           </AvatarFallback>

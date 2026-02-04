@@ -10,6 +10,7 @@ import { useMemo } from "react";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { AppIcon } from "@/components/shared/AppIcon";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 interface GameHistoryTableProps {
   onViewAll?: () => void;
@@ -223,7 +224,7 @@ const GameHistoryRow = React.forwardRef<HTMLDivElement, GameHistoryRowProps>(
           <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full overflow-hidden border-2 border-white bg-slate-200 shadow-sm">
             {mainOpponent.avatar_url ? (
               <img 
-                src={mainOpponent.avatar_url} 
+                src={resolveAvatarUrl(mainOpponent.avatar_url) || mainOpponent.avatar_url}
                 alt={mainOpponent.nickname}
                 className="w-full h-full object-cover"
               />

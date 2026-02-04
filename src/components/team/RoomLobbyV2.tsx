@@ -4,6 +4,7 @@ import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus } from "lucide-react";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { isRoomActive } from "@/hooks/useMyRooms";
 import { RoomIconPickerModal } from "./RoomIconPickerModal";
 import { useMultiplayerV2, getShareLink } from "@/contexts/MultiplayerContextV2";
@@ -641,7 +642,7 @@ export function RoomLobbyV2() {
                       <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                         {msg.avatar_url ? (
                           <img
-                            src={msg.avatar_url}
+                            src={resolveAvatarUrl(msg.avatar_url) || msg.avatar_url}
                             alt={msg.nickname}
                             className="w-full h-full object-cover"
                           />
