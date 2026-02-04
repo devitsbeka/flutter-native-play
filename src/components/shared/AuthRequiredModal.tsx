@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, User, Loader2, Sparkles, X } from "lucide-react";
+import { Lock, User, Loader2, Sparkles, X, Camera, ImagePlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useCamera } from "@/hooks/useCamera";
 import { lovable } from "@/integrations/lovable";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
+import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
@@ -47,6 +51,44 @@ export function AuthRequiredModal({
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
+  
+  const { takePhoto, selectFromGallery, isLoading: isCameraLoading } = useCamera();
+
+  const handleTakePhoto = async () => {
+    setShowUploadOptions(false);
+    const photo = await takePhoto();
+    if (photo?.dataUrl) {
+      setSelectedPhoto(photo.dataUrl);
+    } else if (photo?.webPath) {
+      setSelectedPhoto(photo.webPath);
+    } else if (photo?.base64String) {
+      const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg';
+      setSelectedPhoto(`data:${mimeType};base64,${photo.base64String}`);
+    }
+  };
+
+  const handleSelectFromGallery = async () => {
+    setShowUploadOptions(false);
+    const photo = await selectFromGallery();
+    if (photo?.dataUrl) {
+      setSelectedPhoto(photo.dataUrl);
+    } else if (photo?.webPath) {
+      setSelectedPhoto(photo.webPath);
+    } else if (photo?.base64String) {
+      const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg';
+      setSelectedPhoto(`data:${mimeType};base64,${photo.base64String}`);
+    }
+  };
+
+  // Reset photo when switching modes
+  const handleToggleMode = (toSignUp: boolean) => {
+    setIsSignUp(toSignUp);
+    if (!toSignUp) {
+      setSelectedPhoto(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,20 +186,77 @@ export function AuthRequiredModal({
         </button>
 
         <div className="px-6 pt-8 pb-6">
-          {/* Header with logo */}
-          <div className="flex flex-col items-center mb-4">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="mb-4"
-            >
-              <MyTriviaLiveLogo size="md" textColor="dark" />
-            </motion.div>
+          {/* Header - Logo for login, Mascot for signup */}
+          {isSignUp ? (
+            <div className="flex flex-col items-center mb-4">
+              <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
+                <PopoverTrigger asChild>
+                  <button 
+                    type="button"
+                    className="w-[90px] h-[90px] rounded-full overflow-hidden relative border-4 border-primary/20 shadow-lg"
+                  >
+                    {selectedPhoto ? (
+                      <img 
+                        src={selectedPhoto} 
+                        alt="Selected avatar" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <SinglePlayVideo 
+                        src={guestWelcomeVideo} 
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {/* Camera badge */}
+                    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-md">
+                      <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+                    </div>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" side="bottom" align="center">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={handleTakePhoto}
+                      disabled={isCameraLoading}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <Camera className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">გადაიღე ფოტო</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSelectFromGallery}
+                      disabled={isCameraLoading}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
+                    >
+                      <ImagePlus className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">აირჩიე გალერიიდან</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
+              <h2 className="font-slackey text-2xl text-foreground mt-3">გამარჯობა!</h2>
+              <p className="text-sm text-muted-foreground text-center mt-1">
+                შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center mb-4">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="mb-4"
+              >
+                <MyTriviaLiveLogo size="md" textColor="dark" />
+              </motion.div>
 
-            <p className="text-base text-foreground font-semibold text-center">
-              {message || "შესაძენად საჭიროა შესვლა"}
-            </p>
-          </div>
+              <p className="text-base text-foreground font-semibold text-center">
+                {message || "შესაძენად საჭიროა შესვლა"}
+              </p>
+            </div>
+          )}
 
           {/* Auth Form */}
           <form onSubmit={handleSubmit} className="space-y-2">
@@ -239,7 +338,7 @@ export function AuthRequiredModal({
                   უკვე გაქვს ანგარიში?{" "}
                   <button 
                     type="button" 
-                    onClick={() => setIsSignUp(false)}
+                    onClick={() => handleToggleMode(false)}
                     className="text-primary font-semibold hover:underline"
                   >
                     შესვლა
@@ -250,7 +349,7 @@ export function AuthRequiredModal({
                   არ გაქვს ანგარიში?{" "}
                   <button 
                     type="button" 
-                    onClick={() => setIsSignUp(true)}
+                    onClick={() => handleToggleMode(true)}
                     className="text-primary font-semibold hover:underline"
                   >
                     შექმენი
