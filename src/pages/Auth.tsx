@@ -25,7 +25,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { signIn, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
+  const { signIn, signInWithUsername, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
   const isIOS = Capacitor.getPlatform() === 'ios';
   const { notify } = useNotificationModal();
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function Auth() {
   });
 
   const signInSchema = z.object({
-    email: z.string().email(t("auth.invalidCredentials")),
+    email: z.string().min(1, t("auth.invalidCredentials")),
     password: z.string().min(1, t("auth.passwordRequired")),
   });
 
@@ -126,10 +126,10 @@ export default function Auth() {
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
       } else {
-        const result = signInSchema.safeParse({ email, password });
-        if (!result.success) {
+        const validation = signInSchema.safeParse({ email, password });
+        if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
-          result.error.errors.forEach((err) => {
+          validation.error.errors.forEach((err) => {
             if (err.path[0]) {
               fieldErrors[err.path[0] as string] = err.message;
             }
@@ -139,8 +139,12 @@ export default function Auth() {
           return;
         }
 
-        const { error } = await signIn(email, password);
-        if (error) {
+        const isEmail = email.includes('@');
+        const authResult = isEmail 
+          ? await signIn(email, password) 
+          : await signInWithUsername(email, password);
+        
+        if (authResult.error) {
           notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
         } else {
           notify.success(t("auth.welcomeBack"), { description: t("auth.signIn"), icon: "👋" });
@@ -276,13 +280,13 @@ export default function Auth() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-foreground">{t("help.email")}</Label>
+            <Label htmlFor="email" className="text-foreground">{isSignUp ? t("help.email") : t("auth.usernameOrEmail")}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 id="email"
-                type="email"
-                placeholder="you@example.com"
+                type={isSignUp ? "email" : "text"}
+                placeholder={isSignUp ? "you@example.com" : t("auth.usernameOrEmailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
