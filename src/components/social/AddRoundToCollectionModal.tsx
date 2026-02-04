@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, RefreshCw } from "lucide-react";
+import bullseyeIcon from "@/assets/bullseye.png";
+import checkmarkIcon from "@/assets/checkmark.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -412,8 +414,8 @@ export function AddRoundToCollectionModal({
                     : "border-white/20 hover:border-white/50"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <span className="text-2xl">🎯</span>
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+                  <img src={bullseyeIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-white">4 ვარიანტი</div>
@@ -434,8 +436,8 @@ export function AddRoundToCollectionModal({
                     : "border-white/20 hover:border-white/50"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <span className="text-2xl">✅</span>
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+                  <img src={checkmarkIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-white">მართალი / მცდარი</div>

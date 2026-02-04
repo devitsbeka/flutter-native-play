@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Edit3, Globe, Lock, Play, Users } from "lucide-react";
+import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, X, RefreshCw, Globe, Lock, Play, Users } from "lucide-react";
 import triviaBuzzer from "@/assets/trivia-buzzer.png";
+import pencilIcon from "@/assets/classic-yellow-pencil.png";
+import lockIcon from "@/assets/lock-icon.png";
+import bullseyeIcon from "@/assets/bullseye.png";
+import checkmarkIcon from "@/assets/checkmark.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -538,8 +542,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   onClick={() => handleModeSelect("edit")}
                   className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <Edit3 className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img src={pencilIcon} alt="" className="w-10 h-10 object-contain" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-base">ღია</h4>
@@ -554,8 +558,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                   onClick={() => handleModeSelect("play")}
                   className="relative p-4 rounded-2xl text-left transition-all bg-white/15 border border-white/20 hover:bg-white/25 hover:border-white/30 flex items-center gap-4"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <img src={lockIcon} alt="" className="w-10 h-10 object-contain" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-base">დახურული</h4>
@@ -808,8 +812,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     : "border-white/30 hover:border-white/50 bg-white/10"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <span className="text-2xl">🎯</span>
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+                  <img src={bullseyeIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-white">4 ვარიანტი</div>
@@ -830,8 +834,8 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
                     : "border-white/30 hover:border-white/50 bg-white/10"
                 }`}
               >
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                  <span className="text-2xl">✅</span>
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+                  <img src={checkmarkIcon} alt="" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="flex-1">
                   <div className="font-semibold text-white">მართალი / მცდარი</div>
