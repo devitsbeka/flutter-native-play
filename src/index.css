@@ -347,4 +347,22 @@
     display: none !important;
     -webkit-appearance: none;
   }
+
+  /* Portrait orientation lock fallback - shows message in landscape */
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    body::before {
+      content: "Please rotate your device to portrait mode";
+      position: fixed;
+      inset: 0;
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      font-size: 1.25rem;
+      text-align: center;
+      padding: 2rem;
+    }
+  }
 }

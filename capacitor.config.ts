@@ -14,6 +14,10 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
     infoPlist: {
+      // Lock orientation to portrait only
+      UISupportedInterfaceOrientations: ['UIInterfaceOrientationPortrait'],
+      'UISupportedInterfaceOrientations~ipad': ['UIInterfaceOrientationPortrait'],
+      
       // App Tracking Transparency (iOS 14.5+) - Required for AdMob
       NSUserTrackingUsageDescription: 'This identifier will be used to deliver personalized ads to you.',
       
@@ -24,6 +28,10 @@ const config: CapacitorConfig = {
       NSPhotoLibraryUsageDescription: 'Select your profile picture',
       NSPhotoLibraryAddUsageDescription: 'Save images from the app',
     },
+  },
+  android: {
+    // Note: screenOrientation must be set manually in AndroidManifest.xml
+    overrideUserAgent: 'MyTrivia Android App',
   },
   plugins: {
     // AdMob configuration
