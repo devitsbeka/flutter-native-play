@@ -154,7 +154,29 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     setActionLoading(notificationId);
     try {
       await acceptFriendRequest(friendshipId);
-      await markAsRead(notificationId);
+      
+      // Get current notification data to preserve it
+      const { data: currentNotification } = await supabase
+        .from('notifications')
+        .select('data')
+        .eq('id', notificationId)
+        .single();
+      
+      // Merge with action_taken
+      const mergedData = {
+        ...(currentNotification?.data as Record<string, unknown> || {}),
+        action_taken: 'accepted'
+      };
+      
+      // Update notification to show accepted state
+      await supabase
+        .from('notifications')
+        .update({ 
+          read_at: new Date().toISOString(),
+          data: mergedData
+        })
+        .eq('id', notificationId);
+        
       toast.success("მეგობრის მოთხოვნა მიღებულია!");
     } catch (error) {
       toast.error("შეცდომა მოხდა");
@@ -167,7 +189,29 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     setActionLoading(notificationId);
     try {
       await declineFriendRequest(friendshipId);
-      await deleteNotification(notificationId);
+      
+      // Get current notification data to preserve it
+      const { data: currentNotification } = await supabase
+        .from('notifications')
+        .select('data')
+        .eq('id', notificationId)
+        .single();
+      
+      // Merge with action_taken
+      const mergedData = {
+        ...(currentNotification?.data as Record<string, unknown> || {}),
+        action_taken: 'declined'
+      };
+      
+      // Update notification to show declined state instead of deleting
+      await supabase
+        .from('notifications')
+        .update({ 
+          read_at: new Date().toISOString(),
+          data: mergedData
+        })
+        .eq('id', notificationId);
+        
       toast.success("მოთხოვნა უარყოფილია");
     } catch (error) {
       toast.error("შეცდომა მოხდა");
