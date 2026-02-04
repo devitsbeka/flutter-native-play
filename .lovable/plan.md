@@ -1,137 +1,88 @@
 
-# Plan: Fix UI Jumping/Flashing Issues
+# Multiplayer Flow Analysis & Fix
 
-## Problem Summary
+## Summary of Current State
 
-Two separate layout instability issues:
+After reviewing the complete multiplayer flow, I found that **most of the critical fixes are already in place**:
 
-1. **Category Picker Icon Flashing**: On the library view, category icons flash/jump as they load (skeleton → icon transition with scale animation)
-2. **Game Screen Content Shifting**: When opponents answer, the "answered indicator" appears and pushes all content down, causing visible layout shift
+| Component | Status |
+|-----------|--------|
+| `startNextFromQueue` (line 1743) | ✅ Fixed - uses `questionCount = 5` |
+| `startNewRound` (line 1449) | ✅ Fixed - uses `questionCount = 5` |
+| Guest synchronization | ✅ Robust - 8 retries, 600ms delay, game_id validation |
+| Delete-verify-insert pattern | ✅ Implemented - 3 retries with verification |
+| UI layout stability | ✅ Fixed - answered indicator uses fixed-height container |
+| Observer auto-progression | ✅ Working - advances when all players complete |
 
----
+## Remaining Issue Found
 
-## Issue 1: Category Picker Icon Flash
+There's **one remaining edge case** in the `startGame` function at line 972:
 
-### Root Cause
-
-In `CategoryPickerModal.tsx` (line 348), `DynamicIcon` components:
-- Start with a pulsing skeleton placeholder
-- Animate in with `opacity: 0 → 1` and `scale: 0.9 → 1`
-- This creates a visual "pop" effect multiplied across all category cards
-
-### Solution
-
-Set a **fixed container size** for the icon area in the category cards, so the skeleton and the loaded icon occupy the same space without layout shift. The icons already have a fixed container (`w-10 h-10`), but the `DynamicIcon` animation is causing the flash.
-
-**Change**: Remove or reduce the scale animation on `DynamicIcon` when used in lists, or ensure the icon container clips overflow to prevent visual expansion.
-
-**Files to modify:**
-- `src/components/team/CategoryPickerModal.tsx` - Add `overflow-hidden` to icon container
-
----
-
-## Issue 2: Game Screen Layout Shift
-
-### Root Cause
-
-In `MultiplayerGameScreenV2.tsx` (lines 278-291), the answered indicator appears/disappears dynamically:
-
-```jsx
-{answeredCount > 0 && !answerRevealed && (
-  <motion.div className="px-4 mb-2">
-    ...
-  </motion.div>
-)}
+```typescript
+const questionCount = freshRoom.total_questions || 5;
 ```
 
-When this element appears/disappears:
-- Question card shifts down/up by ~30px
-- Answer buttons follow, causing a jump
+This reads `total_questions` from the database which could still have a stale value of `1` from a previous 1-question user trivia.
 
-### Solution
+**Scenario where this matters:**
+1. Host plays a 1-question user trivia → `total_questions` becomes `1`
+2. Returns to lobby
+3. Selects a new library category directly (not via queue)
+4. Clicks "Start Game" 
+5. `questionCount` = `1` (from stale database value)
+6. Only 1 question is fetched → game ends immediately
 
-**Reserve fixed space** for the answered indicator so it doesn't shift content. Use opacity/visibility instead of conditionally rendering, OR place it in a position that doesn't affect the main layout flow (e.g., absolutely positioned).
+## Database Evidence
 
-**Option A (Recommended)**: Keep the indicator in the flow but always reserve its height. When hidden, show a transparent placeholder of the same size.
+Current rooms show mixed `total_questions` values - some at `5` (after recent fixes), others still at `1`:
 
-**Option B**: Absolutely position the indicator overlay so it doesn't affect layout.
-
-**Files to modify:**
-- `src/components/team/MultiplayerGameScreenV2.tsx` - Change answered indicator to use fixed height container
-
----
-
-## Technical Changes
-
-### File 1: `src/components/team/CategoryPickerModal.tsx`
-
-**Location: Line 344** - Add `overflow-hidden` to prevent scale animation spillover
-
-```diff
-  <div 
--   className="w-10 h-10 rounded-lg flex items-center justify-center"
-+   className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
-    style={{ backgroundColor: `${cat.color}40` }}
-  >
+```text
+total_questions: 5 ← Recent room (fix working)
+total_questions: 1 ← Older rooms (before fix)
+total_questions: 1 ← Older rooms (before fix)
 ```
 
-### File 2: `src/components/team/MultiplayerGameScreenV2.tsx`
+## Solution
 
-**Location: Lines 278-291** - Change from conditional rendering to always-present container with visibility toggle
+Apply the same fix to `startGame` that was applied to `startNewRound` and `startNextFromQueue`.
 
-```diff
-- {/* Answered indicator */}
-- {answeredCount > 0 && !answerRevealed && (
--   <motion.div
--     initial={{ opacity: 0, y: -10 }}
--     animate={{ opacity: 1, y: 0 }}
--     className="px-4 mb-2"
--   >
--     <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-full bg-white/10 mx-auto w-fit">
--       <span className="text-white/80 text-xs">
--         {answeredCount}/{opponents.length} {t("game.answered")}
--       </span>
--     </div>
--   </motion.div>
-- )}
-+ {/* Answered indicator - fixed height container to prevent layout shift */}
-+ <div className="px-4 h-8 flex items-center justify-center">
-+   <motion.div
-+     initial={false}
-+     animate={{ 
-+       opacity: answeredCount > 0 && !answerRevealed ? 1 : 0,
-+       scale: answeredCount > 0 && !answerRevealed ? 1 : 0.9
-+     }}
-+     transition={{ duration: 0.15 }}
-+     className="py-1.5 px-3 rounded-full bg-white/10"
-+   >
-+     <span className="text-white/80 text-xs">
-+       {answeredCount}/{opponents.length} {t("game.answered")}
-+     </span>
-+   </motion.div>
-+ </div>
+### Technical Change
+
+**File:** `src/contexts/MultiplayerContextV2.tsx`
+
+**Line 972** - Change from:
+```typescript
+const questionCount = freshRoom.total_questions || 5;
 ```
 
-This change:
-1. Always renders a fixed-height container (`h-8`)
-2. Uses opacity/scale animation instead of conditional rendering
-3. Prevents any layout shift when opponents answer
+To:
+```typescript
+// FIX: Always use fresh default for new games
+// Don't rely on stale total_questions from previous round
+const questionCount = 5;
+```
 
----
+## Why This Is Safe
 
-## Expected Behavior After Fix
+1. **Library categories always use 5 questions** - This is the standard for VS mode
+2. **User trivias bypass this variable** - They use `customQuestions.length` directly (lines 1006-1034)
+3. **Consistent behavior** - All three game-start paths now use the same default
+4. **No loss of functionality** - The room's `total_questions` is always updated with the actual count after questions are fetched
 
-| Scenario | Before | After |
-|----------|--------|-------|
-| Category picker icons load | Flash/pop as each loads | Smooth fade-in without size changes |
-| Opponent answers during game | Question card jumps down | No movement, indicator fades in smoothly |
-| All opponents answered | Indicator disappears, card jumps up | Indicator fades out, no movement |
+## Complete Fix Summary
 
----
+After this change, all game-start paths will use fresh defaults:
 
-## Files to Modify
+| Function | Line | Fixed Value |
+|----------|------|-------------|
+| `startGame` | 972 | `const questionCount = 5;` |
+| `startNewRound` | 1449 | `const questionCount = 5;` ✅ Already done |
+| `startNextFromQueue` | 1743 | `const questionCount = 5;` ✅ Already done |
 
-| File | Changes |
-|------|---------|
-| `src/components/team/CategoryPickerModal.tsx` | Add `overflow-hidden` to icon container |
-| `src/components/team/MultiplayerGameScreenV2.tsx` | Replace conditional rendering with fixed-height opacity animation |
+## Expected Outcome
+
+Players can now play continuously without experiencing:
+- Games ending after 1 question (regardless of which game-start path is used)
+- UI jumping when opponents answer (fixed with reserved-height container)
+- Icon flashing in category picker (fixed with overflow-hidden)
+- Stale questions from previous rounds (game_id validation in place)
