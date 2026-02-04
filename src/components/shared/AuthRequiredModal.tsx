@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Lock, User, Loader2, Sparkles, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { lovable } from "@/integrations/lovable";
 import { ChunkyButton } from "@/components/ui/chunky-button";
-import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
+import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import guestAvatarVideo from "@/assets/guest-welcome-avatar.mp4";
 import { toast } from "sonner";
 
 interface AuthRequiredModalProps {
@@ -145,40 +144,18 @@ export function AuthRequiredModal({
         </button>
 
         <div className="px-6 pt-8 pb-6">
-          {/* Header with mascot */}
+          {/* Header with logo */}
           <div className="flex flex-col items-center mb-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="mb-3"
+              className="mb-4"
             >
-              <motion.div
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div 
-                  className="rounded-full overflow-hidden"
-                  style={{
-                    width: 90,
-                    height: 90,
-                    boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
-                    border: "3px solid hsl(var(--background))",
-                  }}
-                >
-                  <SinglePlayVideo 
-                    src={guestAvatarVideo}
-                    className="w-full h-full object-cover"
-                    style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
-                  />
-                </div>
-              </motion.div>
+              <MyTriviaLiveLogo size="md" textColor="dark" />
             </motion.div>
 
-            <h2 className="font-slackey text-foreground font-black text-2xl">
-              გამარჯობა!
-            </h2>
-            <p className="text-sm text-muted-foreground font-medium text-center mt-1">
-              {message || "შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ"}
+            <p className="text-base text-foreground font-semibold text-center">
+              {message || "შესაძენად საჭიროა შესვლა"}
             </p>
           </div>
 
