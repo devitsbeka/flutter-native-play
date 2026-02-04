@@ -1,0 +1,17 @@
+{
+  "name": "MyTrivia",
+  "short_name": "MyTrivia",
+  "description": "Test your knowledge, become a trivia champion!",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
