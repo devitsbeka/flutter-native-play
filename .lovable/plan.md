@@ -1,94 +1,119 @@
 
+# Password Reset via Security Question
 
-# Fix: Allow Username-Only Login on Auth Page
+## Overview
+Since your app uses **username-only authentication** (without real emails), traditional email-based password reset won't work. I'll implement a **security question** system that allows users to reset their password by answering a question they set during signup.
 
-## Problem
-The auth page (`/auth`) requires an email with '@' symbol, but the app is designed to support **username-only** login. When you enter "Mascot" as a username, the browser shows "Please include an '@' in the email address".
+## How It Works
 
-## Root Cause
-1. The email input uses `type="email"` which triggers browser validation
-2. Zod validation schema requires `z.string().email()` format
-3. The page only uses `signIn()` instead of also supporting `signInWithUsername()`
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                        SIGNUP FLOW                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. User creates account with username + password                   │
+│  2. User selects a security question from a list                    │
+│  3. User provides their own secret answer                           │
+│  4. Answer is hashed and stored securely in the database            │
+└─────────────────────────────────────────────────────────────────────┘
 
-## Solution
-Update the Auth page to accept both username and email (like Index.tsx does):
+┌─────────────────────────────────────────────────────────────────────┐
+│                      PASSWORD RESET FLOW                            │
+├─────────────────────────────────────────────────────────────────────┤
+│  1. User clicks "Forgot Password" on login screen                   │
+│  2. User enters their username                                      │
+│  3. System shows their security question                            │
+│  4. User types the answer                                           │
+│  5. If correct: User can set a new password                         │
+│  6. If wrong: "Incorrect answer" error (3 attempts max)             │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+## Security Questions (Predefined List)
+
+Users will choose from these Georgian questions:
+1. შენი პირველი შინაური ცხოველის სახელი? (Your first pet's name?)
+2. რომელ ქალაქში დაიბადე? (Which city were you born in?)
+3. შენი საყვარელი მასწავლებლის სახელი? (Your favorite teacher's name?)
+4. შენი საყვარელი ფილმი? (Your favorite movie?)
+5. შენი საყვარელი სპორტული გუნდი? (Your favorite sports team?)
 
 ---
 
-## Technical Changes
+## Technical Implementation
 
-### File: `src/pages/Auth.tsx`
+### 1. Database Changes
 
-#### 1. Change input type from `email` to `text`
-```tsx
-// Before (line 284)
-type="email"
-
-// After
-type="text"
+**Add to `profiles` table:**
+```sql
+ALTER TABLE profiles ADD COLUMN security_question_id INTEGER;
+ALTER TABLE profiles ADD COLUMN security_answer_hash TEXT;
 ```
 
-#### 2. Update Zod validation for sign-in
-```tsx
-// Before (lines 39-42)
-const signInSchema = z.object({
-  email: z.string().email(t("auth.invalidCredentials")),
-  password: z.string().min(1, t("auth.passwordRequired")),
-});
+### 2. New Page: `/forgot-password`
 
-// After - allow username or email
-const signInSchema = z.object({
-  email: z.string().min(1, t("auth.invalidCredentials")),
-  password: z.string().min(1, t("auth.passwordRequired")),
-});
-```
+A new page with 3 steps:
+- **Step 1**: Enter username
+- **Step 2**: Show security question, enter answer
+- **Step 3**: Set new password (if answer correct)
 
-#### 3. Import `signInWithUsername` from useAuth
-```tsx
-// Before (line 28)
-const { signIn, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
+### 3. Edge Function: `reset-password-with-security`
 
-// After
-const { signIn, signInWithUsername, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
-```
+A secure backend function that:
+- Validates the security answer
+- Uses admin API to reset the user's password
+- Limits attempts (3 max per hour)
 
-#### 4. Handle both username and email in sign-in logic
-```tsx
-// Before (lines 141-148)
-const { error } = await signIn(email, password);
+### 4. Update Signup Flow
 
-// After - check if it's email or username
-const isEmail = email.includes('@');
-let result;
-if (isEmail) {
-  result = await signIn(email, password);
-} else {
-  result = await signInWithUsername(email, password);
-}
-const { error } = result;
-```
+During account creation, ask users to:
+- Select a security question
+- Provide an answer (min 2 characters)
 
-#### 5. Update placeholder text
-```tsx
-// Before (line 285)
-placeholder="you@example.com"
+### 5. Add "Forgot Password?" Link
 
-// After - indicate both options
-placeholder="username or email"
-```
-
-#### 6. Update label (optional)
-Change "ელფოსტა" (email) to something like "მომხმარებელი ან ელფოსტა" (username or email)
+Add link on login screen: "პაროლი დამავიწყდა?" (Forgot password?)
 
 ---
 
-## Summary of Changes
-| What | Change |
+## Files to Create/Modify
+
+| File | Action |
 |------|--------|
-| Input type | `email` -> `text` |
-| Validation | Remove email format requirement for login |
-| Auth method | Use `signInWithUsername()` for usernames without '@' |
-| Placeholder | Update to show both options |
+| `src/pages/ForgotPassword.tsx` | **Create** - New password reset page |
+| `supabase/functions/reset-password-with-security/index.ts` | **Create** - Backend logic |
+| `src/pages/Index.tsx` | **Modify** - Add security question to signup |
+| `src/pages/Auth.tsx` | **Modify** - Add "Forgot Password" link |
+| `src/locales/ka.ts` + other locales | **Modify** - Add translations |
+| `src/contexts/AuthContext.tsx` | **Modify** - Add reset function |
+| `src/App.tsx` | **Modify** - Add route |
+| Database migration | **Create** - Add columns to profiles |
 
-This mirrors the existing pattern in `Index.tsx` (lines 275-296) which already handles this correctly.
+---
 
+## User Experience
+
+### On Signup (New Step)
+After username/password, user sees:
+> "აირჩიე უსაფრთხოების შეკითხვა" (Choose a security question)
+> [Dropdown with 5 questions]
+> "პასუხი" (Answer): [Input field]
+
+### On Login Screen
+New link appears:
+> "პაროლი დამავიწყდა?" (Forgot password?) → Goes to `/forgot-password`
+
+### On Forgot Password Page
+1. Enter username → "გაგრძელება" (Continue)
+2. See question, enter answer → "შემოწმება" (Verify)
+3. If correct: Enter new password twice → "პაროლის შეცვლა" (Change Password)
+4. Success: Redirect to login with success message
+
+---
+
+## Security Measures
+
+1. **Hashed answers**: Security answers are hashed before storage (like passwords)
+2. **Rate limiting**: Max 3 attempts per hour per username
+3. **Admin API**: Password change uses Supabase admin API (not client)
+4. **Case-insensitive**: Answers compared in lowercase
+5. **Minimum length**: Answer must be at least 2 characters
