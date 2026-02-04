@@ -29,6 +29,7 @@ import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
 import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
+import mysteryBoxIcon from "@/assets/mystery-box.png";
 
 // Slot machine avatars for cycling effect
 const slotAvatars = [
@@ -445,16 +446,25 @@ export function VSScreen() {
             {/* Category name - ABOVE blob */}
             <AnimatePresence>
               {isCategoryLocked && (
-                <motion.span
-                  className="text-white font-bold text-lg"
+                <motion.div
+                  className="flex items-center gap-2"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ delay: 0.2 }}
-                  style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
                 >
-                  {selectedCategory?.name || currentCategory?.name || t("game.category")}
-                </motion.span>
+                  {selectedCategory?.id === "__mixed__" && (
+                    <img src={mysteryBoxIcon} alt="" className="w-8 h-8 object-contain" />
+                  )}
+                  <span
+                    className="text-white font-bold text-lg"
+                    style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+                  >
+                    {selectedCategory?.id === "__mixed__" 
+                      ? "სხვადასხვა" 
+                      : (selectedCategory?.name || currentCategory?.name || t("game.category"))}
+                  </span>
+                </motion.div>
               )}
             </AnimatePresence>
 
