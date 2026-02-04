@@ -10,6 +10,7 @@ import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import triviaBuzzer from '@/assets/trivia-buzzer.png';
 import { TVBrandingOverlay } from './TVBrandingOverlay';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
 
 const MAX_PLAYERS = 8;
 const MIN_PLAYERS_TO_START = 2;
@@ -406,12 +407,12 @@ export const TVLobbyScreenV2: React.FC = () => {
       </div>
 
       {/* Central Category/Rounds Display - Left aligned */}
-      <div className="mb-4 pr-[240px]">
+      <div className="mb-4">
         {hasMultiRound ? (
-          // Multi-round queue display
+          // Multi-round queue display - full width with wrap
           <div
-            className="flex flex-nowrap justify-start gap-1.5 py-3 overflow-x-auto scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+            className="flex flex-wrap justify-start gap-2 py-3 pr-60"
+            style={{ }}
           >
             {queue.map((item, index) => (
               <motion.div
@@ -570,13 +571,14 @@ export const TVLobbyScreenV2: React.FC = () => {
                 <motion.div
                   key={isActivePlayer ? (player as typeof players[0]).id : isInvited ? (player as InvitedGuest).id : `slot-${index}`}
                   {...entranceAnimation}
-                  className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 ${
+                  className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 overflow-hidden ${
                     isActivePlayer 
-                      ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30 border-2 border-purple-400/50' 
+                      ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30' 
                       : isInvited
                         ? 'bg-white/5 border-2 border-dashed border-purple-400/30'
                         : 'bg-white/5 border-2 border-dashed border-purple-500/30'
                   } ${isInvited ? 'opacity-50 grayscale' : ''} ${isNewlyJoined ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-transparent' : ''}`}
+                  style={isActivePlayer ? { boxShadow: 'inset 0 0 0 2px rgba(192, 132, 252, 0.5)' } : {}}
                 >
                   {isActivePlayer ? (
                     <>
@@ -585,7 +587,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg"
+                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
                         >
                           <Crown className="w-3 h-3 text-yellow-900" />
                         </motion.div>
@@ -745,24 +747,9 @@ export const TVLobbyScreenV2: React.FC = () => {
         </motion.p>
       )}
 
-      {/* Bottom Logo - Right aligned */}
-      <div className="absolute bottom-4 right-4 flex items-center">
-        <span 
-          className="text-lg font-slackey text-white"
-          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
-        >
-          MyTrivia
-        </span>
-        <span 
-          className="ml-1.5 relative inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold uppercase text-white"
-          style={{
-            background: '#EF4444',
-            boxShadow: '0 2px 0 #B91C1C',
-          }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse" />
-          LIVE
-        </span>
+      {/* Bottom Logo - Centered */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <MyTriviaLiveLogo size="md" textColor="light" />
       </div>
     </div>
   );
