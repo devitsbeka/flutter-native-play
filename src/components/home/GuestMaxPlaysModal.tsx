@@ -34,29 +34,11 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           variant="primary"
           iconEmoji="🎮"
           title={t("modals.likedIt")}
-          subtitle={t("modals.createAccountToContinue")}
           showSparkles
           showStars
           inline={inline}
           fullScreen={false}
         >
-          {/* Progress earned */}
-          {(totalLevels > 0 || totalStars > 0) && (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <GameModalStat
-                icon={<Trophy className="h-6 w-6 text-primary" />}
-                value={totalLevels}
-                label={t("modals.levelCompleted")}
-              />
-              <GameModalStat
-                icon={<Star className="h-6 w-6 text-amber-500 fill-amber-500" />}
-                value={totalStars}
-                label={t("modals.starsCollected")}
-                highlight
-              />
-            </div>
-          )}
-
           {/* Benefits list */}
           <div className="space-y-2 mb-4">
             <motion.div 
@@ -71,7 +53,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               transition={{ delay: 0.1 }}
             >
               <Sparkles className="h-5 w-5 text-primary shrink-0" />
-              <p className="text-sm font-medium text-gray-800">{t("modals.createUniqueAvatar")}</p>
+              <p className="text-sm font-medium text-foreground">{t("modals.createAnimatedAvatar") || "შექმენი ანიმირებული ავატარი"}</p>
             </motion.div>
             
             <motion.div 
@@ -86,7 +68,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               transition={{ delay: 0.15 }}
             >
               <Trophy className="h-5 w-5 text-green-600 shrink-0" />
-              <p className="text-sm font-medium text-gray-800">{t("modals.saveProgressForever")}</p>
+              <p className="text-sm font-medium text-foreground">{t("modals.saveProgress") || "შეინახე პროგრესი"}</p>
             </motion.div>
 
             <motion.div 
@@ -101,7 +83,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
               transition={{ delay: 0.2 }}
             >
               <Lock className="h-5 w-5 text-blue-600 shrink-0" />
-              <p className="text-sm font-medium text-gray-800">{t("modals.unlockAllFeatures")}</p>
+              <p className="text-sm font-medium text-foreground">{t("modals.unlockAllFeatures")}</p>
             </motion.div>
           </div>
 
