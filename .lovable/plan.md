@@ -1,50 +1,120 @@
 
-# ✅ COMPLETED: Fix Host Observer Mode for All Game Start Paths
+# Plan: Fix Category Queue Display Logic
 
-## Summary
+## Problem
 
-Fixed the issue where hosts were playing their own trivia instead of observing. The observer detection logic was previously ONLY in `RoomLobbyV2.tsx`, but games could start from multiple paths.
+When picking "Geography", the UI shows it three times:
+1. As the main title with "მიმდინარე კატეგორია" subtitle
+2. As pill #1 in the queue row (from the `hasCategory` check creating a "current" pill)
+3. As pill #2 in the queue row (from the `queue` array also containing the same category)
 
-## Solution Implemented
+## Expected Behavior
 
-Moved observer detection INTO the `MultiplayerContextV2.tsx` context so ALL game start paths auto-detect when the host should observe.
+The user wants:
+- **Selected category**: Show as main title with "მიმდინარე" subtitle below
+- **Queue section**: Only show when there are ADDITIONAL rounds queued beyond the current one
+- Numbering should start from 2 for queued items (since current = 1)
 
-### Changes Made
+## Root Cause
 
-1. **Added `shouldHostObserve` helper function** (lines 46-68)
-   - Checks if trivia is owned by host
-   - Checks if trivia is blind mode and has been played before
-   - Returns `true` if host knows answers and should observe
+`CategoryPickerSection` displays:
+1. Main title from `categoryName` prop
+2. A "current" pill with #1 when `hasCategory` is true (lines 113-127)
+3. Queue pills starting from #2 from the `queue` array (lines 138-207)
 
-2. **Updated `startGame`** (line 946+)
-   - Auto-detects observer mode when no explicit flag is passed
-   - Saves `host_is_observer` to database
+This creates redundancy when the queue also contains the current category.
 
-3. **Updated `startNewRound`** (line 1413+)
-   - Determines if host should observe
-   - Saves `host_is_observer` to database
-   - Sets `hostIsObserver` in local state
+## Solution
 
-4. **Updated `startNextFromQueue`** (line 1721+)
-   - Determines if host should observe for queue items
-   - Saves `host_is_observer` to database
-   - Sets `hostIsObserver` in local state
+Redesign the `CategoryPickerSection` component to follow the user's desired layout:
 
-5. **Updated non-host subscription** (line 430+)
-   - Non-hosts read `host_is_observer` from room data when game starts
-   - Sets `hostIsObserver` in local state
+### Changes to `CategoryPickerSection.tsx`
 
-6. **Added `host_is_observer` to `GameRoom` interface** (line 142)
+**1. Remove the "current" pill from the queue row**
 
-## Observer Policy
+The main title already shows the current selection prominently - no need to repeat it as pill #1 in the queue.
 
-| Trivia Type | Host Behavior |
-|------------|---------------|
-| Library/Random categories | Host PLAYS |
-| Open (ღია) User Trivia - Owner | Host OBSERVES |
-| Blind (დახურული) User Trivia - Owner, first play | Host PLAYS |
-| Blind User Trivia - Owner, played before | Host OBSERVES |
+**2. Only show queue section when `queue.length > 0`**
 
-## Files Modified
+Remove the condition `showQueuePreview = hasCategory || queue.length > 0` and replace with just `queue.length > 0`.
 
-- `src/contexts/MultiplayerContextV2.tsx` - All observer detection logic centralized here
+**3. Update numbering for queue items**
+
+Queue items should be numbered starting from 2 (since current = 1 implied by main title).
+
+**4. Update subtitle text**
+
+- When category is selected: Show "მიმდინარე" (Current) instead of "მიმდინარე კატეგორია"
+- Keep fallback text for empty state
+
+### Updated Layout
+
+```text
+┌─────────────────────────────────────┐
+│ [Icon]  გეოგრაფია              [+]  │ ← Main title (18px)
+│         მიმდინარე                   │ ← Subtitle (14px)
+├─────────────────────────────────────┤
+│ რიგი:                               │ ← Only show if queue.length > 0
+│ [2 🎲 შემთხვევითი ×] [3 📚 ისტორია ×] │ ← Queue items start at #2
+└─────────────────────────────────────┘
+```
+
+### Code Changes
+
+```typescript
+// CategoryPickerSection.tsx
+
+// 1. Simplify showQueuePreview condition
+const showQueuePreview = queue.length > 0;
+
+// 2. Remove the "current" pill section (lines 113-127)
+// The main title area already shows the current selection
+
+// 3. Update queue item numbering
+// Change: index + 2 → index + 2 (keep as is, since we removed the #1 pill)
+// Actually: With the current pill removed, queue items should show as 2, 3, 4...
+// The "1" is implied by the main title
+
+// 4. Update subtitle
+<p className={cn("leading-snug", hasCategory ? "text-white/60 text-[14px]" : "text-white/60 text-[12px]")}>
+  {isAlreadyPlayed && hasCategory
+    ? "აირჩიე ახალი კატეგორია"
+    : hasCategory 
+      ? "მიმდინარე"  // Changed from "მიმდინარე კატეგორია"
+      : "დაამატე კატეგორია სათამაშოდ"}
+</p>
+```
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/team/CategoryPickerSection.tsx` | Remove "current" pill from queue row, only show queue when items exist, update subtitle text, update numbering logic |
+
+## Visual Comparison
+
+**Before (Bug):**
+```text
+გეოგრაფია
+მიმდინარე კატეგორია
+
+რიგი:
+[1 📚 გეოგრაფია] [2 🎲 გეოგრაფია ×]  ← Same category shown 3 times!
+```
+
+**After (Fixed):**
+```text
+გეოგრაფია
+მიმდინარე
+
+რიგი:  ← Only shown if additional items queued
+[2 🎲 შემთხვევითი ×] [3 📚 ისტორია ×]  ← Only shows queue items, starts at #2
+```
+
+## Technical Details
+
+The numbering scheme:
+- Position 1 = Current selection (shown in main title, not as pill)
+- Position 2+ = Queued items (shown as pills with numbers 2, 3, 4...)
+
+When queue is empty, the "რიგი:" section and all pills are hidden - only the main title with "მიმდინარე" subtitle is shown.
