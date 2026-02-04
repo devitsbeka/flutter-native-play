@@ -318,7 +318,7 @@ export default function Leaderboards() {
                       <div 
                         key={entry.user_id} 
                         ref={isCurrentUser ? userRowRef : undefined}
-                        className={isCurrentUser ? "relative z-10 my-2" : ""}
+                        className={isCurrentUser ? "relative z-10 my-3 mx-1" : ""}
                       >
                         <LeaguePlayerRow
                           entry={entry}
@@ -523,7 +523,11 @@ function TabletLeaderboards({
       
       {/* Rating Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] p-0 overflow-hidden">
+        <DialogContent 
+          className="max-w-lg max-h-[80vh] p-0 overflow-hidden"
+          onInteractOutside={() => setIsModalOpen(false)}
+          onEscapeKeyDown={() => setIsModalOpen(false)}
+        >
           <DialogHeader className="p-4 pb-2 border-b border-border/30">
             <DialogTitle className="text-center font-bold" style={{ fontFamily: "'Google Sans', sans-serif" }}>
               {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
@@ -559,7 +563,7 @@ function TabletLeaderboards({
                   return (
                     <div 
                       key={entry.user_id}
-                      className={isCurrentUser ? "relative z-10 my-2" : ""}
+                      className={isCurrentUser ? "relative z-10 my-3 mx-1" : ""}
                     >
                       <LeaguePlayerRow
                         entry={entry}
