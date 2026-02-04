@@ -1,122 +1,92 @@
 
-# Mix Explore Feed Content by Creator - Prevent Same-Creator Clustering
+# Fix Mixed Category Display Texts
 
-## Problem
+## Current Issues
 
-On the Explore page (mobile), when sorted by date, items from the same creator appear consecutively if they published multiple trivias/collections at similar times. The user sees:
+Based on the screenshots and code analysis:
 
-```
-beka - trivia 1 (21 days ago)
-beka - trivia 2 (21 days ago)  
-beka - collection (21 days ago)
-...
-```
+1. **Library Picker (CategorySelectorModal.tsx)** - Still shows old text:
+   - Title truncated: "სხვადასხვა კატე..." (from `name: "სხვადასხვა კატეგორიები"`)
+   - Subtitle: "ყველა კატეგორიიდან"
 
-## Solution
+2. **VS Screen** - Shows both title AND subtitle:
+   - "სხვადასხვა" ✓
+   - "შერეული კითხვები" ← user wants this REMOVED
 
-Implement a **creator-diversified sorting algorithm** that:
-1. Still respects date ordering as the primary factor
-2. Spaces out items from the same creator to ensure variety
-3. Shows mixed content from different creators
+## Desired Behavior
 
-## Algorithm Approach
-
-**Round-robin interleaving with date priority:**
-
-```text
-Input (sorted by date):
-  [beka-1, beka-2, beka-3, john-1, mary-1, mary-2]
-
-Step 1: Group by creator
-  beka: [beka-1, beka-2, beka-3]
-  john: [john-1]
-  mary: [mary-1, mary-2]
-
-Step 2: Interleave (round-robin, take one from each)
-  [beka-1, john-1, mary-1, beka-2, mary-2, beka-3]
-
-Result: Mixed content, still roughly date-ordered
-```
+| Screen | What to show |
+|--------|-------------|
+| VS Screen | Only: "სხვადასხვა" + mystery-box icon (NO subtitle) |
+| Library Picker | Title: "სხვადასხვა" + Subtitle: "შერეული კითხვები" |
 
 ---
 
 ## Technical Changes
 
-### File: `src/hooks/usePlayerFeedItems.ts`
+### 1. CategorySelectorModal.tsx - Update Mixed Category Card
 
-Add a helper function to interleave items from different creators:
+Update the MIXED_CATEGORY constant and display text:
 
+**Line 17:** Change `name` to just "სხვადასხვა"
 ```tsx
-// After sorting by date, interleave items from different creators
-function interleaveByCreator(items: PlayerFeedItem[]): PlayerFeedItem[] {
-  // Group items by creator
-  const byCreator = new Map<string, PlayerFeedItem[]>();
-  items.forEach(item => {
-    const userId = item.player.user_id;
-    if (!byCreator.has(userId)) {
-      byCreator.set(userId, []);
-    }
-    byCreator.get(userId)!.push(item);
-  });
-
-  // Round-robin interleave
-  const result: PlayerFeedItem[] = [];
-  const queues = Array.from(byCreator.values());
-  
-  while (queues.some(q => q.length > 0)) {
-    for (const queue of queues) {
-      if (queue.length > 0) {
-        result.push(queue.shift()!);
-      }
-    }
-  }
-  
-  return result;
-}
+const MIXED_CATEGORY = {
+  id: "__mixed__",
+  category_id: "__mixed__",
+  name: "სხვადასხვა",  // Changed from "სხვადასხვა კატეგორიები"
+  icon: "🎁",
+  color: "#8B5CF6",
+  icon_slug: "mystery-box",
+  total_levels: 0,
+} as const;
 ```
 
-Then, after applying the date sort (for "recent" mode), apply this interleaving:
-
+**Lines 176-178:** Update subtitle text
 ```tsx
-// After line 288 (date sort)
-case "recent":
-default:
-  filteredItems.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-  // Interleave to prevent same-creator clustering
-  filteredItems = interleaveByCreator(filteredItems);
-  break;
+<p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+  შერეული კითხვები
+</p>
 ```
 
 ---
 
-## Visual Result
+### 2. VSScreen.tsx - Remove Subtitle
 
-| Before | After |
-|--------|-------|
-| beka - მუსიკა | beka - მუსიკა |
-| beka - სპორტი | john - ისტორია |
-| beka - კოლექცია | mary - გეოგრაფია |
-| john - ისტორია | beka - სპორტი |
-| mary - გეოგრაფია | anna - ხელოვნება |
-| mary - კინო | mary - კინო |
+**Remove lines 467-471** - the subtitle for mixed category:
+```tsx
+// DELETE THIS BLOCK:
+{selectedCategory?.id === "__mixed__" && (
+  <span className="text-white/70 text-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
+    შერეული კითხვები
+  </span>
+)}
+```
 
-Content from different creators is now mixed, providing variety in the feed.
+VS Screen will then display ONLY:
+- Mystery-box icon (w-14 h-14)
+- "სხვადასხვა" title
 
 ---
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/hooks/usePlayerFeedItems.ts` | Add interleaving function, apply after date sort |
+| File | Changes |
+|------|---------|
+| `src/components/team/CategorySelectorModal.tsx` | Update MIXED_CATEGORY name to "სხვადასხვა", change subtitle to "შერეული კითხვები" |
+| `src/components/game/VSScreen.tsx` | Remove subtitle block (lines 467-471) |
 
 ---
 
-## Edge Cases Handled
+## Visual Result
 
-- Single creator with many items: Will be spaced out across the feed
-- Single item per creator: No change in behavior
-- Empty feed: Returns empty array
-- Only one creator exists: Falls back to date order (no interleaving possible)
+**VS Screen (after):**
+```
+   🎁         (mystery-box icon, large)
+სხვადასხვა    (title only, no subtitle)
+```
+
+**Library Picker (after):**
+```
+სხვადასხვა        (title)
+შერეული კითხვები  (subtitle)
+```
