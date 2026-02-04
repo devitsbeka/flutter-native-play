@@ -7,6 +7,7 @@ import iconScissors from '@/assets/icons/icon-scissors.png';
 import iconAiSparkle from '@/assets/icons/icon-ai-sparkle.png';
 import iconPhotoUpload from '@/assets/icons/icon-photo-upload.png';
 import iconHourglass from '@/assets/icons/icon-hourglass.png';
+import iconSelfie from '@/assets/icons/icon-selfie.png';
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
@@ -629,9 +630,11 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-primary" />
-                </div>
+                <img 
+                  src={iconSelfie} 
+                  alt="Selfie" 
+                  className="w-10 h-10 object-contain"
+                />
                 <span className="text-xs text-muted-foreground">{t("avatar.takeSelfie")}</span>
               </motion.button>
 
@@ -741,7 +744,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
 
           {/* Default Avatars */}
           <div>
-            <p className="text-sm font-medium text-foreground mb-2">{t("avatar.defaultAvatars")}</p>
+            <p className="text-sm font-medium text-foreground mb-2">ავატარები</p>
             <div className="grid grid-cols-5 gap-2">
               {DEFAULT_AVATARS.map((avatar, index) => {
                 // Check against both bundled URL and canonical path for selection indicator
@@ -844,8 +847,8 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 </div>
                 
                 <p className="text-xs text-muted-foreground mb-3">
-                  გადააქციე ფოტო ულამაზეს 3D ავატარად! 
-                  ანიმაციის საშუალებაც გექნება ✨
+                  გადააქციე შენი ფოტო 3D ავატარად! <br />
+                  + შექმენი ანიმირებული ავატარი ✨
                 </p>
                 
                 <ChunkyButton
