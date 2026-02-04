@@ -88,7 +88,7 @@ export const LeaguePlayerRow = forwardRef<HTMLDivElement, LeaguePlayerRowProps>(
 
   return (
     <motion.div
-      className={`flex items-center gap-3 py-3 px-3 transition-colors border-b border-border/40 last:border-b-0 ${getRowStyles()} ${isFixed ? "shadow-lg border border-border/50" : ""}`}
+      className={`flex items-center gap-3 py-3 px-3 transition-colors ${isCurrentUser ? "" : "border-b border-border/40 last:border-b-0"} ${getRowStyles()} ${isFixed ? "shadow-lg border border-border/50" : ""}`}
       style={{ borderRadius: isCurrentUser ? 18 : 0 }}
       initial={
         shouldAnimate && rankDiff !== 0 
