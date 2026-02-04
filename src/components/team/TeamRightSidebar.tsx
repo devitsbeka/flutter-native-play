@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tv, Users, Trophy, ChevronRight } from "lucide-react";
 import { GameInvitationsSection } from "./GameInvitationsSection";
@@ -6,6 +7,7 @@ import { MyTriviasWidget } from "./widgets/MyTriviasWidget";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFriends, Friend } from "@/hooks/useFriends";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
+import { WeeklyChallengeModal } from "@/components/challenge/WeeklyChallengeModal";
 import tvIcon from "@/assets/tv-3d-icon.png";
 
 interface TeamRightSidebarProps {
@@ -29,11 +31,14 @@ export function TeamRightSidebar({
 }: TeamRightSidebarProps) {
   const { t } = useLanguage();
   const { friends, onlineUsers } = useFriends();
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
   
   // Get online friends
   const onlineFriends = friends.filter(f => onlineUsers.has(f.friendId));
 
   return (
+    <>
+      <WeeklyChallengeModal open={showChallengeModal} onOpenChange={setShowChallengeModal} />
     <aside className="hidden xl:flex flex-col w-[320px] min-w-[320px] sticky top-0 h-screen border-l border-border/50 bg-background/50 backdrop-blur-sm">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Game Invitations Widget */}
@@ -113,7 +118,10 @@ export function TeamRightSidebar({
             </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-muted/50 border border-border/50">
+          <button 
+            onClick={() => setShowChallengeModal(true)}
+            className="w-full p-4 rounded-2xl bg-muted/50 border border-border/50 hover:bg-muted/70 transition-colors text-left"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
@@ -129,7 +137,7 @@ export function TeamRightSidebar({
             <div className="w-full h-2 bg-border rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: "30%" }} />
             </div>
-          </div>
+          </button>
         </motion.div>
 
         {/* Friends Online Widget - TEMPORARILY HIDDEN */}
@@ -183,5 +191,6 @@ export function TeamRightSidebar({
         </motion.div> */}
       </div>
     </aside>
+    </>
   );
 }
