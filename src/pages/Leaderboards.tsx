@@ -4,6 +4,7 @@ import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLeagueLeaderboard, LEAGUES, LeagueEntry } from "@/hooks/useLeagueLeaderboard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import glitchIcon from "@/assets/glitch.png";
 import trophyBronze from "@/assets/trophy-bronze.png";
 import trophySilver from "@/assets/trophy-silver.png";
@@ -18,6 +19,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboardsSkeleton } from "@/components/leaderboard/LeaderboardSkeleton";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import {
   Carousel,
@@ -42,6 +44,7 @@ const TROPHY_SIZES = {
 export default function Leaderboards() {
   const { user } = useAuth();
   const { region, language } = useLanguage();
+  const isMobile = useIsMobile();
   const [viewingTier, setViewingTier] = useState<number | undefined>(undefined);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -191,7 +194,7 @@ export default function Leaderboards() {
         </div>
         
         {/* League Navigation - Mobile only, at TOP - with blur */}
-        <div className="lg:hidden bg-background/70 backdrop-blur-md">
+        <div className="md:hidden bg-background/70 backdrop-blur-md">
           <div className="flex items-center justify-between py-3 px-4">
             {/* Left Arrow */}
             <button
@@ -229,8 +232,20 @@ export default function Leaderboards() {
         <DesktopLeaderboards userTier={userTier} region={region} />
       </div>
 
-      {/* Mobile/Tablet: Fullscreen league view with collapsed/expanded */}
-      <div id="leaderboard-scroll-container" className="lg:hidden flex-1 flex flex-col overflow-hidden relative">
+      {/* Tablet: Full background with league nav and View Rating button */}
+      <div className="hidden md:block lg:hidden flex-1 relative">
+        <TabletLeaderboards 
+          userTier={userTier} 
+          region={region}
+          activeTier={activeTier}
+          onTierChange={handleSelectTier}
+          onPrevTier={handlePrevTier}
+          onNextTier={handleNextTier}
+        />
+      </div>
+
+      {/* Mobile: Fullscreen league view with collapsed/expanded */}
+      <div id="leaderboard-scroll-container" className="md:hidden flex-1 flex flex-col overflow-hidden relative">
         {/* Background Hero - fixed behind everything */}
         <LeaderboardHeroBackground 
           isMobile 
@@ -405,6 +420,165 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
           </div>
         </div>
       </div>
+    </LeaderboardHeroBackground>
+  );
+}
+
+// Tablet: Full background with league nav at top and View Rating button
+function TabletLeaderboards({ 
+  userTier, 
+  region,
+  activeTier,
+  onTierChange,
+  onPrevTier,
+  onNextTier,
+}: { 
+  userTier: number; 
+  region?: string;
+  activeTier: number | undefined;
+  onTierChange: (tier: number) => void;
+  onPrevTier: () => void;
+  onNextTier: () => void;
+}) {
+  const { user } = useAuth();
+  const { language } = useLanguage();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const {
+    leaderboard,
+    isLoading,
+    userEntry,
+    previousRank,
+  } = useLeagueLeaderboard(activeTier, region);
+  
+  const LEAGUE_NAMES: Record<number, string> = {
+    1: "ბრინჯაოს ლიგა",
+    2: "ვერცხლის ლიგა",
+    3: "ოქროს ლიგა",
+  };
+  
+  const currentTier = activeTier || 2;
+  
+  return (
+    <LeaderboardHeroBackground isTablet currentTier={currentTier}>
+      <div className="flex flex-col h-[calc(100vh-120px)]">
+        {/* League Navigation at top */}
+        <div className="flex items-center justify-between py-4 px-6">
+          <button
+            onClick={onPrevTier}
+            className="p-3 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:bg-background/50 transition-all"
+            aria-label="Previous tier"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          
+          <div className="text-center flex-1 min-w-0">
+            <h2 className="text-2xl text-foreground font-bold whitespace-nowrap drop-shadow-lg" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+              {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
+            </h2>
+            {currentTier === userTier && (
+              <p className="text-sm text-primary font-medium drop-shadow-sm mt-1">შენი ლიგა</p>
+            )}
+          </div>
+          
+          <button
+            onClick={onNextTier}
+            className="p-3 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:bg-background/50 transition-all"
+            aria-label="Next tier"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+        
+        {/* Center trophy */}
+        <div className="flex-1 flex items-center justify-center">
+          <motion.img
+            key={currentTier}
+            src={TROPHY_IMAGES[currentTier]}
+            alt="Trophy"
+            className="w-48 h-auto drop-shadow-2xl"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            style={{
+              filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))',
+            }}
+          />
+        </div>
+        
+        {/* View Rating button */}
+        <div className="pb-32 flex justify-center">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
+                       shadow-lg border border-border/30 active:scale-95 transition-transform
+                       hover:bg-background"
+          >
+            <span className="text-base font-semibold text-foreground">
+              {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
+            </span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Rating Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-2 border-b border-border/30">
+            <DialogTitle className="text-center font-bold" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+              {LEAGUE_NAMES[currentTier]?.toUpperCase() || 'LEAGUE'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <ScrollArea className="flex-1 max-h-[60vh]">
+            <div className="px-3 pb-4">
+              {isLoading && leaderboard.length === 0 ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 py-3 px-3 border-b border-border/40 last:border-b-0">
+                    <div className="relative shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-muted animate-pulse" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
+                      <div className="h-5 w-12 bg-muted animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))
+              ) : leaderboard.length === 0 ? (
+                <div className="text-center py-8">
+                  <img src={glitchIcon} alt="" className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm text-muted-foreground">ჯერ არავინ</p>
+                </div>
+              ) : (
+                leaderboard.map((entry, index) => {
+                  const isCurrentUser = entry.user_id === user?.id;
+                  return (
+                    <div 
+                      key={entry.user_id}
+                      className={isCurrentUser ? "relative z-10 my-2" : ""}
+                    >
+                      <LeaguePlayerRow
+                        entry={entry}
+                        isCurrentUser={isCurrentUser}
+                        index={index}
+                        previousRank={isCurrentUser ? previousRank : null}
+                        shouldAnimate={false}
+                        totalPlayers={leaderboard.length}
+                        isPromotionZone={currentTier < 5 && entry.rank <= 10}
+                        isDemotionZone={currentTier > 1 && entry.rank > leaderboard.length - 10}
+                      />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </LeaderboardHeroBackground>
   );
 }
