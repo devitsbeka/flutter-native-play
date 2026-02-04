@@ -113,13 +113,13 @@ export function UniversalBottomNav({
       >
         {/* Navigation items container */}
         <div className="flex items-center py-5 min-h-[80px] overflow-visible">
-          {/* Explore */}
+          {/* Explore - always accessible */}
           <div 
             className="flex-1 flex justify-center"
             onTouchStart={() => handleRouteTouchStart("/discover")}
           >
             <NavButton
-              onClick={isGuest ? handleLockedNavClick : () => {
+              onClick={() => {
                 if (isActive("/discover")) {
                   const mainEl = document.getElementById("main-scroll-container");
                   if (mainEl) {
@@ -133,18 +133,18 @@ export function UniversalBottomNav({
               }}
               isActive={isActive("/discover")}
               icon={Compass}
-              hasNewContent={!isGuest && indicators.explore}
-              isLocked={isGuest}
+              hasNewContent={indicators.explore}
+              isLocked={false}
             />
           </div>
 
-          {/* Shop */}
+          {/* Shop - always accessible */}
           <div 
             className="flex-1 flex justify-center pr-4"
             onTouchStart={() => handleRouteTouchStart("/power-ups")}
           >
             <NavButton
-              onClick={isGuest ? handleLockedNavClick : () => {
+              onClick={() => {
                 if (isActive("/power-ups")) {
                   const mainEl = document.getElementById("main-scroll-container");
                   if (mainEl) {
@@ -158,8 +158,8 @@ export function UniversalBottomNav({
               }}
               isActive={isActive("/power-ups")}
               icon={Store}
-              hasNewContent={!isGuest && indicators.shop}
-              isLocked={isGuest}
+              hasNewContent={indicators.shop}
+              isLocked={false}
             />
           </div>
 

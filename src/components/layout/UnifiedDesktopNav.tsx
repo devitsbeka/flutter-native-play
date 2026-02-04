@@ -38,7 +38,7 @@ interface UnifiedDesktopNavProps {
 }
 
 // Items that require authentication
-const LOCKED_FOR_GUESTS = ["shop", "rank", "team"];
+const LOCKED_FOR_GUESTS = ["rank", "team"];
 
 const navItems = [
   { id: "home", label: "მთავარი", icon: Home, path: "/" },
