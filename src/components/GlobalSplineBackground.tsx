@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
 
 // Pages where the background should be visible
-const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/category", "/auth", "/vip", "/power-ups"];
+const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/vip", "/power-ups"];
 
 // Pages where particles should be disabled for performance
 const NO_PARTICLES_PAGES = ["/", "/discover", "/game", "/leaderboards", "/power-ups"];
 
 // Pages where the white radial mask should be hidden (they have their own solid background)
-const NO_RADIAL_MASK_PAGES = ["/game", "/category", "/power-ups"];
+const NO_RADIAL_MASK_PAGES = ["/game", "/power-ups"];
 
 // White sparkle particle with glow effect - using CSS animation for better performance
 const SparkleParticle = ({ delay, x, size, duration }: { delay: number; x: number; size: number; duration: number }) => (
