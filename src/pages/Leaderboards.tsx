@@ -190,13 +190,13 @@ export default function Leaderboards() {
           </div>
         </div>
         
-        {/* League Navigation - Mobile only, at TOP */}
-        <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border/20">
+        {/* League Navigation - Mobile only, at TOP - TRANSPARENT */}
+        <div className="lg:hidden">
           <div className="flex items-center justify-between py-3 px-4">
             {/* Left Arrow */}
             <button
               onClick={handlePrevTier}
-              className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+              className="p-2 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:bg-background/50 transition-all"
               aria-label="Previous tier"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -204,59 +204,23 @@ export default function Leaderboards() {
             
             {/* Title */}
             <div className="text-center flex-1 min-w-0">
-              <h2 className="text-lg text-foreground font-bold whitespace-nowrap" style={{ fontFamily: "'Google Sans', sans-serif" }}>
+              <h2 className="text-lg text-foreground font-bold whitespace-nowrap drop-shadow-md" style={{ fontFamily: "'Google Sans', sans-serif" }}>
                 {LEAGUE_NAMES[activeTier || 1]?.toUpperCase() || 'LEAGUE'}
               </h2>
               {activeTier === userTier && (
-                <p className="text-xs text-primary font-medium">შენი ლიგა</p>
+                <p className="text-xs text-primary font-medium drop-shadow-sm">შენი ლიგა</p>
               )}
             </div>
             
             {/* Right Arrow */}
             <button
               onClick={handleNextTier}
-              className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all"
+              className="p-2 rounded-full bg-background/30 backdrop-blur-sm text-foreground hover:bg-background/50 transition-all"
               aria-label="Next tier"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
-        </div>
-        
-        {/* User Row - Mobile only, at TOP below league nav */}
-        <div className="lg:hidden bg-background/95 backdrop-blur-md border-b border-border/20 px-3">
-          {isLoading ? (
-            <div className="flex items-center gap-3 py-3 px-3">
-              <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
-              <div className="flex-1">
-                <div className="h-5 w-24 bg-muted animate-pulse rounded" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-full bg-muted animate-pulse" />
-                <div className="h-5 w-16 bg-muted animate-pulse rounded" />
-              </div>
-            </div>
-          ) : userEntry ? (
-            <button
-              onClick={() => setIsExpanded(true)}
-              className="w-full text-left"
-            >
-              <LeaguePlayerRow
-                entry={userEntry}
-                isCurrentUser={true}
-                index={0}
-                previousRank={previousRank}
-                shouldAnimate={false}
-                totalPlayers={leaderboard.length}
-                isPromotionZone={(activeTier || 1) < 5 && userEntry.rank <= 10}
-                isDemotionZone={(activeTier || 1) > 1 && userEntry.rank > leaderboard.length - 10}
-              />
-            </button>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">ჯერ არ ხარ ლიდერბორდზე</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -266,14 +230,28 @@ export default function Leaderboards() {
       </div>
 
       {/* Mobile/Tablet: Fullscreen league view with collapsed/expanded */}
-      <div id="leaderboard-scroll-container" className="lg:hidden flex-1 flex flex-col overflow-hidden">
-        {/* Background Hero - fullscreen when collapsed, smaller when expanded */}
+      <div id="leaderboard-scroll-container" className="lg:hidden flex-1 flex flex-col overflow-hidden relative">
+        {/* Background Hero - fixed behind everything */}
         <LeaderboardHeroBackground 
           isMobile 
           currentTier={activeTier} 
           onTierChange={handleSelectTier}
           isFullscreen={!isExpanded}
         />
+        
+        {/* Floating "See Rankings" button when collapsed */}
+        {!isExpanded && (
+          <button 
+            onClick={() => setIsExpanded(true)}
+            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-20
+                       bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 
+                       shadow-lg border border-border/30 active:scale-95 transition-transform"
+          >
+            <span className="text-sm font-medium text-foreground">
+              ნახე რეიტინგი
+            </span>
+          </button>
+        )}
 
         {/* Bottom section: Expandable list */}
         <AnimatePresence>
