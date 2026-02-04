@@ -1,120 +1,192 @@
 
-# Plan: Fix Category Queue Display Logic
+# Plan: Fix Race Condition When Adding Category to Queue
 
-## Problem
+## Problem Summary
 
-When picking "Geography", the UI shows it three times:
-1. As the main title with "მიმდინარე კატეგორია" subtitle
-2. As pill #1 in the queue row (from the `hasCategory` check creating a "current" pill)
-3. As pill #2 in the queue row (from the `queue` array also containing the same category)
+When the host clicks "რიგში დამატება" (Add to Queue) on the results screen, other players briefly see the previous game. This happens because:
 
-## Expected Behavior
-
-The user wants:
-- **Selected category**: Show as main title with "მიმდინარე" subtitle below
-- **Queue section**: Only show when there are ADDITIONAL rounds queued beyond the current one
-- Numbering should start from 2 for queued items (since current = 1)
+1. Host updates `game_rooms` with new category info
+2. Non-host subscription receives the update while status is still "playing"
+3. Non-host incorrectly tries to load questions from the old game
+4. Then `continueInRoom()` resets status to "waiting" (too late)
 
 ## Root Cause
 
-`CategoryPickerSection` displays:
-1. Main title from `categoryName` prop
-2. A "current" pill with #1 when `hasCategory` is true (lines 113-127)
-3. Queue pills starting from #2 from the `queue` array (lines 138-207)
+In `GameResultsScreenV2.tsx`, the `handleAddToQueue` function updates the room's category data **before** calling `continueInRoom()`:
 
-This creates redundancy when the queue also contains the current category.
+```text
+Step 1: await addToQueue(item)
+Step 2: await supabase.update({ category_id, category_name... })  ← Non-host sees this!
+Step 3: continueInRoom()  ← Status reset happens here, too late!
+```
+
+The non-host's realtime subscription detects the UPDATE and sees `status: "playing"` with the old `current_game_id`, triggering an unwanted fetch.
 
 ## Solution
 
-Redesign the `CategoryPickerSection` component to follow the user's desired layout:
+**Option: Reset status to "waiting" FIRST, then update category data**
 
-### Changes to `CategoryPickerSection.tsx`
+Change the order of operations in `handleAddToQueue`:
 
-**1. Remove the "current" pill from the queue row**
+1. Call `continueInRoom()` FIRST to reset status to "waiting"
+2. Wait for the status update to complete
+3. THEN update the category/trivia fields
 
-The main title already shows the current selection prominently - no need to repeat it as pill #1 in the queue.
+This ensures non-hosts see the status change to "waiting" before any category updates.
 
-**2. Only show queue section when `queue.length > 0`**
+## Technical Changes
 
-Remove the condition `showQueuePreview = hasCategory || queue.length > 0` and replace with just `queue.length > 0`.
+### File: `src/components/team/GameResultsScreenV2.tsx`
 
-**3. Update numbering for queue items**
-
-Queue items should be numbered starting from 2 (since current = 1 implied by main title).
-
-**4. Update subtitle text**
-
-- When category is selected: Show "მიმდინარე" (Current) instead of "მიმდინარე კატეგორია"
-- Keep fallback text for empty state
-
-### Updated Layout
-
-```text
-┌─────────────────────────────────────┐
-│ [Icon]  გეოგრაფია              [+]  │ ← Main title (18px)
-│         მიმდინარე                   │ ← Subtitle (14px)
-├─────────────────────────────────────┤
-│ რიგი:                               │ ← Only show if queue.length > 0
-│ [2 🎲 შემთხვევითი ×] [3 📚 ისტორია ×] │ ← Queue items start at #2
-└─────────────────────────────────────┘
-```
-
-### Code Changes
+Update `handleAddToQueue` function:
 
 ```typescript
-// CategoryPickerSection.tsx
-
-// 1. Simplify showQueuePreview condition
-const showQueuePreview = queue.length > 0;
-
-// 2. Remove the "current" pill section (lines 113-127)
-// The main title area already shows the current selection
-
-// 3. Update queue item numbering
-// Change: index + 2 → index + 2 (keep as is, since we removed the #1 pill)
-// Actually: With the current pill removed, queue items should show as 2, 3, 4...
-// The "1" is implied by the main title
-
-// 4. Update subtitle
-<p className={cn("leading-snug", hasCategory ? "text-white/60 text-[14px]" : "text-white/60 text-[12px]")}>
-  {isAlreadyPlayed && hasCategory
-    ? "აირჩიე ახალი კატეგორია"
-    : hasCategory 
-      ? "მიმდინარე"  // Changed from "მიმდინარე კატეგორია"
-      : "დაამატე კატეგორია სათამაშოდ"}
-</p>
+const handleAddToQueue = async (item: {
+  source_type: "category" | "random" | "user_trivia";
+  category_id?: string | null;
+  category_name?: string | null;
+  user_trivia_id?: string | null;
+  icon_slug?: string | null;
+}) => {
+  if (!currentRoom) return;
+  
+  // Add item to queue first
+  await addToQueue(item);
+  
+  // CRITICAL FIX: Reset room status to "waiting" FIRST
+  // This prevents non-hosts from seeing the room update with status="playing"
+  // and incorrectly trying to load old game questions
+  await supabase
+    .from("game_rooms")
+    .update({
+      status: "waiting",
+      category_id: item.source_type === "category" ? item.category_id : null,
+      category_name: item.category_name || (item.source_type === "random" ? "შემთხვევითი" : null),
+      user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
+    })
+    .eq("id", currentRoom.id);
+  
+  // Navigate to lobby (already sets local state correctly)
+  // Since we already updated status, pass a flag or simplify continueInRoom's update
+  setState(prev => ({
+    ...prev,
+    phase: "lobby",
+    questions: [],
+    currentQuestionIndex: 0,
+    myScore: 0,
+    lastQuestionResult: null,
+    opponentAnswers: {},
+  }));
+};
 ```
 
-## Files to Modify
+Wait, this approach has a problem: `continueInRoom` is from context and the component doesn't have direct access to `setState`.
 
-| File | Changes |
-|------|---------|
-| `src/components/team/CategoryPickerSection.tsx` | Remove "current" pill from queue row, only show queue when items exist, update subtitle text, update numbering logic |
+### Better Solution: Combine the DB update into a single atomic operation
 
-## Visual Comparison
+Move ALL the room updates (status + category) into ONE database call:
 
-**Before (Bug):**
-```text
-გეოგრაფია
-მიმდინარე კატეგორია
+**File: `src/components/team/GameResultsScreenV2.tsx`**
 
-რიგი:
-[1 📚 გეოგრაფია] [2 🎲 გეოგრაფია ×]  ← Same category shown 3 times!
+```typescript
+const handleAddToQueue = async (item: {...}) => {
+  if (!currentRoom) return;
+  
+  // Add item to queue first
+  await addToQueue(item);
+  
+  // COMBINED UPDATE: Reset status AND set category in ONE operation
+  // This prevents race condition where non-host sees status="playing" with new category
+  await supabase
+    .from("game_rooms")
+    .update({
+      status: "waiting",  // ← Include status reset
+      category_id: item.source_type === "category" ? item.category_id : null,
+      category_name: item.category_name || (item.source_type === "random" ? "შემთხვევითი" : null),
+      user_trivia_id: item.source_type === "user_trivia" ? item.user_trivia_id : null,
+    })
+    .eq("id", currentRoom.id);
+  
+  // Navigate to lobby (continueInRoom will see status is already "waiting")
+  continueInRoom();
+};
 ```
 
-**After (Fixed):**
-```text
-გეოგრაფია
-მიმდინარე
+**AND update `continueInRoom` in `MultiplayerContextV2.tsx`** to handle the case where status is already "waiting":
 
-რიგი:  ← Only shown if additional items queued
-[2 🎲 შემთხვევითი ×] [3 📚 ისტორია ×]  ← Only shows queue items, starts at #2
+```typescript
+const continueInRoom = useCallback(async () => {
+  if (!state.currentRoom) return;
+  
+  const roomId = state.currentRoom.id;
+  const justPlayedTriviaId = state.currentRoom.user_trivia_id;
+  
+  const { data: queueItems } = await supabase
+    .from("room_category_queue")
+    .select("id")
+    .eq("room_id", roomId)
+    .limit(1);
+  
+  const hasQueueItems = queueItems && queueItems.length > 0;
+  
+  // Check current room status - if already "waiting", skip the DB update
+  const { data: currentRoomState } = await supabase
+    .from("game_rooms")
+    .select("status")
+    .eq("id", roomId)
+    .single();
+  
+  // Only update DB if not already in waiting state
+  if (currentRoomState?.status !== "waiting") {
+    await supabase
+      .from("game_rooms")
+      .update({ 
+        status: "waiting",
+        ...(hasQueueItems ? {} : {
+          category_id: null,
+          category_name: null,
+          user_trivia_id: null,
+        }),
+      })
+      .eq("id", roomId);
+  }
+  
+  // Update local state regardless
+  setState(prev => ({
+    ...prev,
+    phase: "lobby",
+    questions: [],
+    currentQuestionIndex: 0,
+    myScore: 0,
+    lastQuestionResult: null,
+    opponentAnswers: {},
+    lastPlayedTriviaId: justPlayedTriviaId || null,
+    justReturnedFromResults: !hasQueueItems,
+    ...(hasQueueItems ? {} : {
+      currentRoom: prev.currentRoom ? {
+        ...prev.currentRoom,
+        category_id: null,
+        category_name: null,
+        user_trivia_id: null,
+      } : null,
+    }),
+  }));
+}, [state.currentRoom]);
 ```
 
-## Technical Details
+## Summary of Changes
 
-The numbering scheme:
-- Position 1 = Current selection (shown in main title, not as pill)
-- Position 2+ = Queued items (shown as pills with numbers 2, 3, 4...)
+| File | Change |
+|------|--------|
+| `src/components/team/GameResultsScreenV2.tsx` | Combine status reset + category update into single DB operation in `handleAddToQueue` |
+| `src/contexts/MultiplayerContextV2.tsx` | Make `continueInRoom` idempotent (skip DB update if already in "waiting" status) |
 
-When queue is empty, the "რიგი:" section and all pills are hidden - only the main title with "მიმდინარე" subtitle is shown.
+## Expected Behavior After Fix
+
+1. Host clicks "რიგში დამატება"
+2. Queue item is added
+3. **Single atomic DB update**: `status: "waiting"` + new category data
+4. Non-host receives ONE update event with `status: "waiting"`
+5. Non-host sees `status === "waiting"` → transitions to lobby (correct behavior)
+6. `continueInRoom()` sets host's local state to lobby
+7. No flash of previous game on any screen
