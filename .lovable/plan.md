@@ -1,80 +1,100 @@
 
 
-# Fix Animated League Stroke - Rotate Border Only
+# Subtle Shimmer Stroke Animation for League Badge
 
-## The Problem
+## Current Issue
 
-The current implementation rotates the **entire container** including the text, which causes the text to spin around:
+The gradient element behind the text is fully rotating like a spinning object. This looks wrong and distracting.
 
-```tsx
-// Current (WRONG) - rotates everything
-<motion.div
-  style={{ background: `conic-gradient(...)` }}
-  animate={{ rotate: 360 }}  // This rotates text too!
->
-  <span>შენი ლიგა</span>
-</motion.div>
-```
+## Desired Effect
 
-## The Solution
+A **subtle shimmer/glow effect on the border stroke** that makes the gradient appear to flow or pulse gently - similar to how premium badges or metallic surfaces catch light.
 
-Use a **layered approach** with an absolutely positioned rotating border element behind a static text container:
+---
 
-```text
-+---------------------------+
-|  Outer container (static) |
-|  +---------------------+  |
-|  | Rotating gradient   |  |  ← Only this rotates
-|  | border (absolute)   |  |
-|  +---------------------+  |
-|  +---------------------+  |
-|  | Static text layer   |  |  ← This stays still
-|  | "შენი ლიგა"         |  |
-|  +---------------------+  |
-+---------------------------+
-```
+## Implementation Approach
 
-## Technical Implementation
+Instead of rotating the entire element, use a **gradient position animation** that creates a subtle shimmer effect moving across the border:
 
-### File: `src/pages/Leaderboards.tsx` (lines 64-81)
+### Option 1: Animated Gradient Position (Shimmer Effect)
 
-Replace the `AnimatedLeagueBadge` component:
+Animate the gradient angle/position to create a light "sweep" effect:
 
 ```tsx
 const AnimatedLeagueBadge = ({ tier, size = 'default' }: { tier: number; size?: 'default' | 'small' }) => {
   const colors = LEAGUE_STROKE_COLORS[tier] || LEAGUE_STROKE_COLORS[1];
-  const padding = size === 'small' ? 1.5 : 2;
+  const padding = size === 'small' ? 2 : 2.5;
   
   return (
-    <div className="relative">
-      {/* Static text layer - stays on top and doesn't rotate */}
+    <div className="relative inline-flex items-center justify-center">
+      {/* Animated gradient border with shimmer effect */}
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `linear-gradient(90deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.via}, ${colors.from})`,
+          backgroundSize: '200% 100%'
+        }}
+        animate={{ 
+          backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
+        }}
+        transition={{ 
+          duration: 3, 
+          repeat: Infinity, 
+          ease: "easeInOut" 
+        }}
+      />
+      {/* Static text layer */}
       <span 
         className={`relative z-10 block ${size === 'small' ? 'text-xs px-2.5 py-0.5' : 'text-sm px-3 py-1'} font-medium text-foreground bg-background/90 backdrop-blur-sm rounded-full`}
         style={{ margin: padding }}
       >
         შენი ლიგა
       </span>
-      
-      {/* Rotating gradient border - positioned behind text */}
-      <motion.div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `conic-gradient(from 0deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.from})`
-        }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      />
     </div>
   );
 };
 ```
 
+### How It Works
+
+```text
+Time 0:    [Gold]--[Orange]--[DarkGold]
+           ↓ shimmer moves right →
+Time 1.5:  [DarkGold]--[Gold]--[Orange]
+           ↓ shimmer moves right →
+Time 3:    [Gold]--[Orange]--[DarkGold]  (loop)
+```
+
+The gradient colors smoothly shift position, creating a subtle metallic shimmer effect like light reflecting off a gold/silver/bronze surface.
+
+---
+
+## Technical Details
+
+| Property | Value | Purpose |
+|----------|-------|---------|
+| `backgroundSize` | `200% 100%` | Makes gradient wider than element for animation range |
+| `backgroundPosition` | `0% → 100% → 0%` | Animates gradient sliding across |
+| `duration` | `3s` | Slow, subtle effect |
+| `ease` | `easeInOut` | Smooth, natural motion |
+
+---
+
 ## Visual Result
 
 | Before | After |
 |--------|-------|
-| Text spins with border 🌀 | Only border rotates around static text ✓ |
-| "შენი ლიგა" is unreadable | "შენი ლიგა" stays perfectly readable |
+| Full element rotates behind text | Subtle shimmer flows across border |
+| Distracting, looks broken | Premium, elegant metallic effect |
+| Motion everywhere | Minimal, smooth animation |
 
-The gradient stroke will smoothly rotate around the badge while the text remains completely stationary and readable.
+The border will have a gentle "light sweep" effect that makes the gold/silver/bronze colors shimmer subtly, similar to how real metallic surfaces catch light.
+
+---
+
+## File to Modify
+
+| File | Change |
+|------|--------|
+| `src/pages/Leaderboards.tsx` | Replace rotation animation with `backgroundPosition` shimmer animation |
 
