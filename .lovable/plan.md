@@ -1,88 +1,141 @@
 
 
-# Plan: Enhance LIVE Badge & Hide No-Ads Button for Pro Users
+# Plan: Fix Player List Cropping & Mixed Category TV Game Start
 
 ## Overview
-This plan addresses two changes:
-1. Make "LIVE" text in the LiveBadge component bolder and 20% bigger
-2. Hide the "no-ads" (ad-free) button on the home screen when the user has Pro/VIP status
+This plan addresses two user-reported issues:
+1. **Player/list cropping** in TV Lobby screens - both the category picker and player list are getting cut off
+2. **"სხვადასხვა" (Mixed) category can't start game** - clicking "Start Game" doesn't work after selecting the mixed category
 
 ---
 
-## Change 1: Make "LIVE" Text Bolder and 20% Bigger
+## Issue 1: Player List Cropping
 
-### Current State
-The `LiveBadge` component in `src/components/social/LiveBadge.tsx` uses these text sizes:
-- sm: `text-[8px]`
-- md: `text-[10px]`
-- lg: `text-[13px]`
-- xl: `text-[15px]`
+### Problem
+In `TVLobbyScreenV2.tsx`, the player grid uses a fixed grid layout (`grid grid-cols-4`) without proper scroll containment. When there are many players, the list gets cropped instead of scrolling.
 
-The text already uses `font-black` (boldest weight), so it's already bold.
+Similarly, in `ControllerLobby.tsx`, the player list already has `max-h-[50vh]` and `overflow-y-auto`, but the container structure may still cause cropping on smaller screens.
 
-### What to Change
-Increase the font sizes by 20%:
-- sm: `8px → 10px` (rounded from 9.6)
-- md: `10px → 12px`
-- lg: `13px → 16px` (rounded from 15.6)
-- xl: `15px → 18px`
+### Solution
 
-### File: `src/components/social/LiveBadge.tsx`
-Update the `sizeConfig` object with new text sizes.
+#### File: `src/components/tv/TVLobbyScreenV2.tsx`
 
----
+Wrap the players grid in a scrollable container with proper flex and overflow handling:
 
-## Change 2: Hide No-Ads Button When User Has Pro
+**Current (line 531-536):**
+```tsx
+<div className="flex-1 flex flex-col min-h-0">
+  <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
+    ...
+  </h2>
 
-### Current State
-The ad-free button appears in two places:
-1. **Desktop sidebar** (`DesktopActionCards.tsx`): Already hidden for VIP users with `{!isVip && (...)}`
-2. **Mobile orbiting buttons** (`Index.tsx`): Always shown regardless of VIP status
+  <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
+```
 
-### What to Change
-In `src/pages/Index.tsx`, wrap the ad-free `ActionButtonWithParticles` (around lines 1013-1031) with a VIP check to hide it when the user has Pro/VIP status.
+**Changed to:**
+```tsx
+<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+  <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
+    ...
+  </h2>
 
-### Files to Modify
-| File | Change |
-|------|--------|
-| `src/components/social/LiveBadge.tsx` | Increase text sizes by 20% |
-| `src/pages/Index.tsx` | Wrap ad-free button with `{!isVip && (...)}` condition |
+  <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
+```
+
+Add a closing `</div>` after the grid to properly wrap the scrollable area.
 
 ---
 
-## Technical Details
+## Issue 2: Mixed Category ("სხვადასხვა") Start Game Not Working
 
-### LiveBadge.tsx Changes
+### Problem Analysis
+Based on console logs, when "__mixed__" category is selected:
+- First attempt works: `State category: __mixed__`
+- Second attempt fails: `State category: null`
+
+The root cause is in the `startGame` function in `TVGameContext.tsx`. At lines 2276-2280:
 
 ```typescript
-const sizeConfig = {
-  sm: { text: "text-[10px]", dot: "w-1 h-1", px: "px-2", py: "py-1", gap: "gap-1", rounded: "rounded-[4px]" },
-  md: { text: "text-[12px]", dot: "w-1.5 h-1.5", px: "px-2.5", py: "py-1", gap: "gap-1", rounded: "rounded-[5px]" },
-  lg: { text: "text-[16px]", dot: "w-2 h-2", px: "px-3", py: "py-1.5", gap: "gap-1.5", rounded: "rounded-[7px]" },
-  xl: { text: "text-[18px]", dot: "w-2.5 h-2.5", px: "px-4", py: "py-2", gap: "gap-2", rounded: "rounded-[9px]" },
-};
+if (!categoryId && !userTriviaId) {
+  tvLogError('startGame', 'No category ID or user trivia ID provided');
+  return;
+}
 ```
 
-The text already uses `font-black` which is the maximum font weight, so it's already as bold as possible.
+When queue items have `source_type: "random"`, they have `category_id: null`, so `startGame(null)` returns early without doing anything. This is the correct behavior for random.
 
-### Index.tsx Changes
-Wrap the ad-free button section (around line 1013-1031) with:
-```tsx
-{!isVip && (
-  <motion.div ...>
-    <ActionButtonWithParticles iconSrc={adFreeIcon} ... />
-  </motion.div>
-)}
+However, the actual issue is in `handleStartGame()` in `TVHostController.tsx` when trying to use queue items. Looking at lines 474-477:
+
+```typescript
+} else if (firstQueued.category_id) {
+  await startGame(firstQueued.category_id);
+} else {
+  toast.error('არასწორი რაუნდის ტიპი');
 ```
 
-Note: The `isVip` variable is already available in Index.tsx from `useDailyPlays()` hook.
+The problem: When `source_type === "random"`, `category_id` is `null`, so neither the `user_trivia_id` nor `category_id` branch is triggered, causing the toast error.
+
+### Solution
+
+#### File: `src/pages/TVHostController.tsx`
+
+Update `handleStartGame` to properly handle "random" source type by fetching a random category before starting:
+
+**Current logic (around line 467-486):**
+```typescript
+if (hasQueue && queue.length > 0) {
+  const firstQueued = queue[0];
+  
+  if (firstQueued.user_trivia_id) {
+    await startGame(undefined, firstQueued.user_trivia_id);
+  } else if (firstQueued.category_id) {
+    await startGame(firstQueued.category_id);
+  } else {
+    toast.error('არასწორი რაუნდის ტიპი');
+    return;
+  }
+```
+
+**Changed to:**
+```typescript
+if (hasQueue && queue.length > 0) {
+  const firstQueued = queue[0];
+  
+  if (firstQueued.user_trivia_id) {
+    await startGame(undefined, firstQueued.user_trivia_id);
+  } else if (firstQueued.category_id) {
+    await startGame(firstQueued.category_id);
+  } else if (firstQueued.source_type === "random") {
+    // Random mode - fetch random category and start
+    const randomCat = categories[Math.floor(Math.random() * categories.length)];
+    if (randomCat) {
+      await startGame(randomCat.id);
+    } else {
+      toast.error('კატეგორიები ვერ მოიძებნა');
+      return;
+    }
+  } else {
+    toast.error('არასწორი რაუნდის ტიპი');
+    return;
+  }
+```
+
+This ensures that when "შემთხვევითი" (random) is in the queue, it picks a random category from the loaded categories list.
+
+---
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/tv/TVLobbyScreenV2.tsx` | Add scroll container around player grid |
+| `src/pages/TVHostController.tsx` | Handle "random" source_type in handleStartGame |
 
 ---
 
 ## Summary
 
-| Component | Change |
-|-----------|--------|
-| `LiveBadge.tsx` | Increase "LIVE" text sizes by 20% (8→10, 10→12, 13→16, 15→18 px) |
-| `Index.tsx` | Hide ad-free button on mobile when user has VIP status |
+1. **TV Lobby Player Grid**: Wrap the 4-column player grid in a scrollable container with `overflow-y-auto` and `flex-1 min-h-0` to prevent cropping
+2. **Mixed Category Start**: Add handling for `source_type === "random"` queue items to pick a random category from the available list when starting the game
 
