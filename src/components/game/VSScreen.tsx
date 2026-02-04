@@ -453,8 +453,8 @@ export function VSScreen() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ delay: 0.2 }}
                 >
-                  {selectedCategory?.id === "__mixed__" && (
-                    <img src={mysteryBoxIcon} alt="" className="w-14 h-14 object-contain drop-shadow-lg" />
+{selectedCategory?.id === "__mixed__" && (
+                    <img src={mysteryBoxIcon} alt="" className="w-[68px] h-[68px] object-contain drop-shadow-lg" />
                   )}
                   <span
                     className="text-white font-bold text-lg"
@@ -468,9 +468,9 @@ export function VSScreen() {
               )}
             </AnimatePresence>
 
-            {/* Interactive Blob - Icons during spin, Video on reveal */}
+{/* Interactive Blob - Icons during spin, Video on reveal */}
             <InteractiveBlobVideo
-              iconUrl={currentCategory?.image_url || undefined}
+              iconUrl={selectedCategory?.id === "__mixed__" ? mysteryBoxIcon : (currentCategory?.image_url || undefined)}
               videoSrc={selectedCategory?.videoUrl}
               isLocked={isCategoryLocked}
               shouldAnimate={showCategorySlot && !isCategoryLocked}
