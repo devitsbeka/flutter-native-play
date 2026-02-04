@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { QuizCategoryIcon } from "@/components/ui/quiz-category-icon";
+
+// Import feature icons
+import roomsIcon from "@/assets/icons/rooms-icon.png";
+import triviaIcon from "@/assets/icons/trivia-icon.png";
+import exploreIcon from "@/assets/icons/explore-icon.png";
 
 const ONBOARDING_KEY = "mytrivia_feature_onboarding_seen";
 
 interface FeatureTooltip {
   id: string;
-  icon: string;
+  iconSrc: string;
   title: string;
   description: string;
   targetTab: string;
@@ -15,21 +19,21 @@ interface FeatureTooltip {
 const FEATURE_TOOLTIPS: FeatureTooltip[] = [
   {
     id: "rooms",
-    icon: "retro-tv",
+    iconSrc: roomsIcon,
     title: "ოთახები",
     description: "შექმენი სათამაშო ოთახი, აირჩიე რას ითამაშებთ, და მოიწვიე მეგობრები სათამაშოდ. თამაში TV-ზეც შესაძლებელია",
     targetTab: "rooms",
   },
   {
     id: "my-trivia",
-    icon: "sparkles",
+    iconSrc: triviaIcon,
     title: "ჩემი ტრივია",
     description: "შექმენი შენი Trivia, გამოაქვეყნე ან შექმენი My Trivia Party მეგობრებთან ერთად სათამაშოდ, შენი კითხვებით / შენი პასუხებით",
     targetTab: "my-content",
   },
   {
     id: "explore",
-    icon: "compass",
+    iconSrc: exploreIcon,
     title: "აღმოაჩინე",
     description: "ითამაშე სხვა მოთამაშეების მიერ შექმნილი Trivia სხვადასხვა თემაზე",
     targetTab: "explore",
@@ -171,10 +175,12 @@ function FeatureCard({ tooltip, onClick, index }: FeatureCardProps) {
           />
           
           <div className="relative z-10 flex flex-col gap-3">
-            {/* Icon */}
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-              <QuizCategoryIcon iconSlug={tooltip.icon} size={36} />
-            </div>
+            {/* Icon - no background container */}
+            <img 
+              src={tooltip.iconSrc} 
+              alt={tooltip.title} 
+              className="w-16 h-16 object-contain"
+            />
             
             {/* Title */}
             <h3 className="text-lg font-bold text-foreground">
