@@ -464,11 +464,6 @@ export function VSScreen() {
                       ? "სხვადასხვა" 
                       : (selectedCategory?.name || currentCategory?.name || t("game.category"))}
                   </span>
-                  {selectedCategory?.id === "__mixed__" && (
-                    <span className="text-white/70 text-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.2)" }}>
-                      შერეული კითხვები
-                    </span>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>

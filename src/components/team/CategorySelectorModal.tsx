@@ -14,7 +14,7 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 const MIXED_CATEGORY = {
   id: "__mixed__",
   category_id: "__mixed__",
-  name: "სხვადასხვა კატეგორიები",
+  name: "სხვადასხვა",
   icon: "🎁",
   color: "#8B5CF6",
   icon_slug: "mystery-box",
@@ -174,7 +174,7 @@ export function CategorySelectorModal({
                     {MIXED_CATEGORY.name}
                   </span>
                   <p className="text-xs text-white/90 mt-0.5" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                    ყველა კატეგორიიდან
+                    შერეული კითხვები
                   </p>
                 </div>
 
