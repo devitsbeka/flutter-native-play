@@ -187,8 +187,7 @@ export default function Discover() {
                   <HeaderActions />
                   <button
                     onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-foreground"
-                    style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                    className="flex items-center justify-center p-2 rounded-full hover:bg-white/30 transition-colors text-gray-600"
                   >
                     {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
                   </button>
