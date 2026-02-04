@@ -42,6 +42,9 @@ import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 import { SamplePost } from "@/data/samplePosts";
 import { TriviaPreviewModal } from "@/components/social/TriviaPreviewModal";
 import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
+import { useMyRooms } from "@/hooks/useMyRooms";
+import { useMyQuizPosts } from "@/hooks/useSocialFeed";
+import { useMyCollections } from "@/hooks/useCollections";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
@@ -257,7 +260,13 @@ function TeamContentV2() {
 
   // Feature onboarding state
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => hasSeenFeatureOnboarding());
-  
+
+  // Check if rooms/trivias are empty to conditionally hide filter bar
+  const { rooms: checkRooms } = useMyRooms({ limit: 1 });
+  const { data: myPosts } = useMyQuizPosts();
+  const { data: myCollections } = useMyCollections();
+  const hasRooms = checkRooms.length > 0;
+  const hasTrivias = (myPosts?.length || 0) > 0 || (myCollections?.length || 0) > 0;
   // Guest auth modal
   const [showAuthModal, setShowAuthModal] = useState(false);
   const isGuest = !user;
@@ -631,55 +640,59 @@ function TeamContentV2() {
               </div>
             </div>
 
-          {/* STICKY: Only Filter Bar */}
-          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
-            {activeTab === "rooms" && (
-              <UnifiedFiltersBar<RoomFilter, string>
-                filter={roomsFilter}
-                onFilterChange={(f) => setRoomsFilter(f)}
-                filterOptions={roomFilterOptions}
-                searchQuery={roomsSearchQuery}
-                onSearchQueryChange={setRoomsSearchQuery}
-                onAddClick={() => setShowCreateModal(true)}
-                addButtonText="+ ოთახი"
-              />
-            )}
+          {/* STICKY: Only Filter Bar - Hidden when tab has no content */}
+          {((activeTab === "rooms" && hasRooms) || 
+            (activeTab === "explore") || 
+            (activeTab === "my-content" && hasTrivias)) && (
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
+              {activeTab === "rooms" && hasRooms && (
+                <UnifiedFiltersBar<RoomFilter, string>
+                  filter={roomsFilter}
+                  onFilterChange={(f) => setRoomsFilter(f)}
+                  filterOptions={roomFilterOptions}
+                  searchQuery={roomsSearchQuery}
+                  onSearchQueryChange={setRoomsSearchQuery}
+                  onAddClick={() => setShowCreateModal(true)}
+                  addButtonText="+ ოთახი"
+                />
+              )}
 
-            {activeTab === "explore" && (
-              <UnifiedFiltersBar<ExploreFilter, ExploreSort>
-                filter={exploreFilter}
-                onFilterChange={(f) => setExploreFilter(f)}
-                filterOptions={exploreFilterOptions}
-                sort={exploreSort}
-                onSortChange={(s) => setExploreSort(s)}
-                sortOptions={exploreSortOptions}
-                searchQuery={exploreSearchQuery}
-                onSearchQueryChange={setExploreSearchQuery}
-                onAddClick={() => setShowCreateTypeModal(true)}
-                addButtonText="შექმენი ტრივია"
-              />
-            )}
+              {activeTab === "explore" && (
+                <UnifiedFiltersBar<ExploreFilter, ExploreSort>
+                  filter={exploreFilter}
+                  onFilterChange={(f) => setExploreFilter(f)}
+                  filterOptions={exploreFilterOptions}
+                  sort={exploreSort}
+                  onSortChange={(s) => setExploreSort(s)}
+                  sortOptions={exploreSortOptions}
+                  searchQuery={exploreSearchQuery}
+                  onSearchQueryChange={setExploreSearchQuery}
+                  onAddClick={() => setShowCreateTypeModal(true)}
+                  addButtonText="შექმენი ტრივია"
+                />
+              )}
 
-            {activeTab === "my-content" && (
-              <UnifiedFiltersBar<MyTriviaFilter, string>
-                filter={sortFilter}
-                onFilterChange={(f) => setSortFilter(f)}
-                filterOptions={myTriviaFilterOptions}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
-                onAddClick={() => setShowCreateTypeModal(true)}
-                addButtonText="+ ტრივია"
+              {activeTab === "my-content" && hasTrivias && (
+                <UnifiedFiltersBar<MyTriviaFilter, string>
+                  filter={sortFilter}
+                  onFilterChange={(f) => setSortFilter(f)}
+                  filterOptions={myTriviaFilterOptions}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  onAddClick={() => setShowCreateTypeModal(true)}
+                  addButtonText="+ ტრივია"
+                />
+              )}
+              
+              {/* Fade gradient below sticky filter bar */}
+              <div 
+                className="h-4 -mb-4 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
+                }}
               />
-            )}
-            
-            {/* Fade gradient below sticky filter bar */}
-            <div 
-              className="h-4 -mb-4 pointer-events-none"
-              style={{
-                background: 'linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent)'
-              }}
-            />
-          </div>
+            </div>
+          )}
 
             {/* Content Area - Full width like Shop/PowerUps */}
             <div className="flex-1 px-4 pt-4 pb-4 overflow-x-hidden max-w-full">

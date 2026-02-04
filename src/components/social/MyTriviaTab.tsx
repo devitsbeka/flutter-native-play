@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
-import glitchIcon from "@/assets/glitch.png";
+import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
@@ -1117,16 +1117,20 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         className="flex flex-col items-center justify-center py-16 px-6"
       >
         <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
-          <img src={glitchIcon} alt="" className="w-full h-full object-cover" />
+          <img src={triviaBuzzerIcon} alt="" className="w-full h-full object-contain" />
         </div>
         
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          {title}
+          {sortFilter === "all" ? "ტრივიები ჯერ არ გაქვს" : title}
         </h3>
         
-        <p className="text-muted-foreground text-center text-sm max-w-xs">
+        <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
           {description}
         </p>
+        
+        {onCreateQuiz && sortFilter === "all" && (
+          <ChunkyButton onClick={onCreateQuiz}>+ ტრივია</ChunkyButton>
+        )}
       </motion.div>
     );
   }
