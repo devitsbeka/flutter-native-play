@@ -724,7 +724,7 @@ export default function Index() {
                         xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
                         xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                         hideStats={!user}
-                        showAvatarPrompt={!!user && !profile?.animated_avatar_url}
+                        showAvatarPrompt={false}
                         showMascotReminder={!!user && !profile?.avatar_url}
                         userId={user?.id}
                       />
@@ -810,7 +810,7 @@ export default function Index() {
                       xpProgress={levelInfo.progress}
                       xpCurrent={levelInfo.xpInCurrentLevel}
                       xpTotal={levelInfo.xpNeededForNextLevel}
-                      showAvatarPrompt={!!user && !profile?.animated_avatar_url}
+                      showAvatarPrompt={false}
                       showMascotReminder={!!user && !profile?.avatar_url}
                       userId={user?.id}
                     />
@@ -1080,7 +1080,7 @@ export default function Index() {
                       xpCurrent={user ? levelInfo.xpInCurrentLevel : 0}
                       xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                       hideStats={!user}
-                      showAvatarPrompt={!!user && !profile?.animated_avatar_url}
+                      showAvatarPrompt={false}
                       showMascotReminder={!!user && !profile?.avatar_url}
                       userId={user?.id}
                     />
