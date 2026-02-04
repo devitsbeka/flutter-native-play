@@ -467,7 +467,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
         <div className="flex-1" />
         
         {/* View Rating button at bottom with "შენი ლიგა" label */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
           {activeTier === userTier && (
             <span className="text-sm font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
               შენი ლიგა
@@ -633,7 +633,7 @@ function TabletLeaderboards({
         <div className="flex-1" />
         
         {/* View Rating button at bottom with "შენი ლიგა" label */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
           {currentTier === userTier && (
             <span className="text-sm font-medium text-foreground bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full">
               შენი ლიგა
