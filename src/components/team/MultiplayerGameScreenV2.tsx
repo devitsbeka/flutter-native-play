@@ -294,7 +294,7 @@ export function MultiplayerGameScreenV2() {
       <div className={cn(
         "px-4 flex-shrink-0 relative",
         // Only add top margin for icon when no media present
-        !currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && "mt-16"
+        !currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && "mt-12"
       )}>
         {/* Category Icon - only show when no media is present AND icon_slug exists */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
@@ -426,7 +426,7 @@ export function MultiplayerGameScreenV2() {
       )}
 
       {/* Bottom Area - Next Button */}
-      <div className="px-4 pb-6 pt-6 mt-auto flex-shrink-0">
+      <div className="px-4 pb-4 pt-4 mt-auto flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed && (
