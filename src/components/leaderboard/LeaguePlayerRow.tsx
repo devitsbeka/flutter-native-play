@@ -67,16 +67,16 @@ export const LeaguePlayerRow = forwardRef<HTMLDivElement, LeaguePlayerRowProps>(
   // Determine background and border styling based on zone
   const getRowStyles = () => {
     if (isCurrentUser) {
-      // Current user: no fill, subtle 1px stroke, 18px border radius
-      return "border border-foreground/20";
+      // Current user: white background with subtle stroke, 18px border radius
+      return "bg-background border border-foreground/20";
     }
     if (isPromotionZone) {
-      return "bg-emerald-500/5";
+      return "bg-background";
     }
     if (isDemotionZone) {
-      return "bg-destructive/5";
+      return "bg-background";
     }
-    return "hover:bg-muted/30";
+    return "bg-background hover:bg-muted/30";
   };
 
   // Get zone indicator color for the rank badge ring
