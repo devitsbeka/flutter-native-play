@@ -1,78 +1,114 @@
 
-# Show Mystery-Box Icon in Blob Container for Mixed Category
+# Lock App Screen Orientation (Portrait Only)
 
-## Problem
+## Overview
 
-When the "სხვადასხვა" (Mixed) category is selected, the blob container shows a random category icon (like archaeology/medical equipment) instead of the mystery-box icon. The passed `iconUrl` prop with the mystery-box is being ignored.
+To prevent the app from rotating when the device is rotated, we need to lock the orientation to portrait mode. This requires changes at multiple levels:
 
-## Root Cause
-
-The `InteractiveBlobVideo` component receives `iconUrl` as a prop but never uses it. Instead:
-- When spinning: Shows icons from slot sequence (`currentIconUrl`)
-- When locked with video: Shows video
-- When locked without video: Still shows `currentIconUrl` from slot sequence
-
-The `iconUrl` prop (which contains mystery-box for mixed category) is completely ignored.
-
-## Solution
-
-Update `InteractiveBlobVideo` to use the passed `iconUrl` when the category is locked. This ensures the mystery-box icon appears in the blob container for the mixed category.
+1. **Capacitor config** - For native iOS/Android apps
+2. **Web manifest** - For PWA/browser
+3. **CSS fallback** - As a visual safeguard
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/game/InteractiveBlobVideo.tsx`
+### 1. Update Capacitor Config (`capacitor.config.ts`)
 
-**Update the locked state rendering logic (around lines 186-203):**
+Add iOS and Android orientation settings to lock to portrait mode:
 
-Change from showing `currentIconUrl` (slot sequence icon) to showing the passed `iconUrl` prop when locked:
-
-```tsx
-) : (
-  <motion.div
-    key={isLocked ? "locked-icon" : slotIndex}
-    className="w-full h-full flex items-center justify-center"
-    initial={{ y: -80, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    exit={{ y: 80, opacity: 0 }}
-    transition={{ duration: 0.08, ease: "easeOut" }}
-  >
-    {/* When locked, show the passed iconUrl; when spinning, show slot icons */}
-    {(isLocked ? iconUrl : currentIconUrl) && (
-      <img 
-        src={isLocked ? iconUrl : currentIconUrl} 
-        alt="" 
-        className="w-20 h-20 object-contain drop-shadow-lg"
-      />
-    )}
-  </motion.div>
-)}
+```typescript
+ios: {
+  minVersion: '14.0',
+  contentInset: 'automatic',
+  preferredContentMode: 'mobile',
+  infoPlist: {
+    // Lock orientation to portrait
+    UISupportedInterfaceOrientations: ['UIInterfaceOrientationPortrait'],
+    'UISupportedInterfaceOrientations~ipad': ['UIInterfaceOrientationPortrait'],
+    // ... existing entries
+  },
+},
+android: {
+  // Lock to portrait mode
+  overrideUserAgent: 'MyTrivia Android App',
+},
 ```
 
-**Key changes:**
-1. Use `iconUrl` prop when `isLocked` is true
-2. Use `currentIconUrl` (slot animation) when spinning
-3. Update the key to `"locked-icon"` when locked to ensure proper animation state
+### 2. Native Platform Files (Manual Steps)
+
+After syncing, you'll need to manually verify these settings in the native projects:
+
+**iOS** (`ios/App/App/Info.plist`):
+- `UISupportedInterfaceOrientations` should only contain `UIInterfaceOrientationPortrait`
+
+**Android** (`android/app/src/main/AndroidManifest.xml`):
+- Add `android:screenOrientation="portrait"` to the main activity
+
+### 3. Add Web App Manifest for PWA (`public/manifest.json`)
+
+Create or update the web manifest to specify portrait orientation:
+
+```json
+{
+  "name": "MyTrivia",
+  "short_name": "MyTrivia",
+  "orientation": "portrait",
+  "display": "standalone",
+  ...
+}
+```
+
+### 4. Update `index.html`
+
+Link the manifest and add orientation meta tag:
+
+```html
+<link rel="manifest" href="/manifest.json" />
+<meta name="screen-orientation" content="portrait" />
+```
+
+### 5. CSS Fallback (`src/index.css`)
+
+Add a visual safeguard that shows a "please rotate" message if somehow landscape is detected:
+
+```css
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  body::before {
+    content: "Please rotate your device to portrait mode";
+    position: fixed;
+    inset: 0;
+    background: hsl(var(--background));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    font-size: 1.25rem;
+    text-align: center;
+    padding: 2rem;
+  }
+}
+```
 
 ---
 
-## Visual Result
+## Files to Modify/Create
 
-**Before:**
-- Blob shows: Random category icon (archaeology, etc.)
-- Title shows: "სხვადასხვა" with mystery-box above ✓
-
-**After:**
-- Blob shows: Mystery-box icon ✓
-- Title shows: "სხვადასხვა" with mystery-box above ✓
-
-Both the title area AND the blob container will show the mystery-box icon for the mixed category.
+| File | Action | Description |
+|------|--------|-------------|
+| `capacitor.config.ts` | Modify | Add iOS orientation lock settings |
+| `public/manifest.json` | Create | Web app manifest with portrait orientation |
+| `index.html` | Modify | Link manifest, add orientation meta |
+| `src/index.css` | Modify | Add landscape fallback warning |
 
 ---
 
-## Files to Modify
+## Post-Implementation Steps
 
-| File | Change |
-|------|--------|
-| `src/components/game/InteractiveBlobVideo.tsx` | Use `iconUrl` prop when locked instead of slot sequence icon |
+After implementation, you need to:
+
+1. Run `npx cap sync` to apply Capacitor changes
+2. **For iOS**: Open Xcode, go to target → General → Deployment Info → check only "Portrait"
+3. **For Android**: Edit `AndroidManifest.xml` to add `android:screenOrientation="portrait"` to the MainActivity
+
+This ensures the app stays in portrait mode on both native platforms and web/PWA.
