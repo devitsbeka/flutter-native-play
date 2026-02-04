@@ -341,7 +341,7 @@ export function CategoryPickerModal({
                     >
                       <div className="flex items-center gap-3">
                         <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center"
+                          className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
                           style={{ backgroundColor: `${cat.color}40` }}
                         >
                           {cat.icon_slug ? (

@@ -275,20 +275,22 @@ export function MultiplayerGameScreenV2() {
         )}
       </AnimatePresence>
 
-      {/* Answered indicator */}
-      {answeredCount > 0 && !answerRevealed && (
+      {/* Answered indicator - fixed height container to prevent layout shift */}
+      <div className="px-4 h-8 flex items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="px-4 mb-2"
+          initial={false}
+          animate={{ 
+            opacity: answeredCount > 0 && !answerRevealed ? 1 : 0,
+            scale: answeredCount > 0 && !answerRevealed ? 1 : 0.9
+          }}
+          transition={{ duration: 0.15 }}
+          className="py-1.5 px-3 rounded-full bg-white/10"
         >
-          <div className="flex items-center justify-center gap-2 py-1.5 px-3 rounded-full bg-white/10 mx-auto w-fit">
-            <span className="text-white/80 text-xs">
-              {answeredCount}/{opponents.length} {t("game.answered")}
-            </span>
-          </div>
+          <span className="text-white/80 text-xs">
+            {answeredCount}/{opponents.length} {t("game.answered")}
+          </span>
         </motion.div>
-      )}
+      </div>
 
       {/* Question Card */}
       <div className={cn(
