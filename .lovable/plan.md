@@ -1,228 +1,185 @@
 
-# Plan: Guest Gating System - Auth Required for Most Features
+
+# Plan: Enhanced Sign-Up Mode with Avatar Selection in AuthRequiredModal
 
 ## Overview
 
-This plan implements a comprehensive guest restriction system where unauthenticated users:
-1. **See the main page** with auth form (login/signup) matching the reference design
-2. **Can play 5 VS games daily** for free as guest
-3. **Cannot access** Rating page, Online Game page, Categories play, or Shop purchases
+When users click "შექმენი" (Create Account) in the AuthRequiredModal, the modal will transform to show:
+1. A clickable mascot circle in the header (replaces logo)
+2. "გამარჯობა!" title with signup messaging
+3. Clicking the mascot circle opens avatar upload options (camera or gallery)
+4. User can select/capture a photo before creating their account
 
-## Current State Analysis
+## Current Behavior
 
-The codebase already has partial guest gating:
-- `UniversalBottomNav.tsx` already has `isLocked` prop and `handleLockedNavClick()` that shows a toast
-- `GuestWelcomePanel.tsx` and `DesktopGuestSplitLayout.tsx` exist for guest auth forms
-- `useGuestPlays.ts` tracks 5 daily guest plays
-- `Index.tsx` shows different UI for guests vs logged-in users
+- Login mode: Shows `MyTriviaLiveLogo` + "შესაძენად საჭიროა შესვლა" message
+- Sign-up mode: Same logo display (no mascot, no avatar selection)
 
-**What's missing:**
-- Rating page (`/leaderboards`) not gated
-- Online game page (`/team`) not gated
-- Category play buttons not gated
-- Shop purchases not gated (should show auth modal)
-- Desktop navigation not showing locks for guests
+## Proposed Changes
 
----
+### Visual States
 
-## Implementation Strategy
-
-### 1. Create Reusable Auth Required Modal Component
-
-Create a modal that prompts users to sign in/register when they try to access locked features.
-
-**New File: `src/components/shared/AuthRequiredModal.tsx`**
-
-```text
+**Login Mode (current)**
+```
 ┌─────────────────────────────────────┐
-│           🔒 გამარჯობა!              │
+│         MyTrivia LIVE Logo          │
 │                                     │
-│   შექმენი ანგარიში და ჩაერთე        │
-│   თამაშში უფასოდ                    │
-│                                     │
-│        [Mascot Avatar]              │
+│    "შესაძენად საჭიროა შესვლა"       │
 │                                     │
 │   [email/username input]            │
 │   [password input]                  │
-│                                     │
 │   [  🔒 შესვლა  ]                   │
-│                                     │
-│   არ გაქვს ანგარიში? "შექმენი"      │
-│                                     │
-│           ── ან ──                  │
-│                                     │
-│     [Google]    [Apple]             │
 └─────────────────────────────────────┘
 ```
 
-### 2. Update Desktop Navigation for Guests
+**Sign-Up Mode (new)**
+```
+┌─────────────────────────────────────┐
+│       ┌─────────────┐               │
+│       │  [Mascot]   │  ← Clickable! │
+│       │  📷 badge   │               │
+│       └─────────────┘               │
+│                                     │
+│        "გამარჯობა!"                 │
+│  "შექმენი ანგარიში და ჩაერთე       │
+│   თამაშში უფასოდ"                   │
+│                                     │
+│   [სახელი input]                    │
+│   [პაროლი input]                    │
+│   [  ✨ შექმენი ანგარიში  ]         │
+└─────────────────────────────────────┘
+```
 
-**File: `src/components/layout/UnifiedDesktopNav.tsx`**
+### Implementation Details
 
-- Add lock icons to nav items for guests (similar to mobile bottom nav)
-- Show toast or modal when clicking locked items
-- Keep Profile button clickable (navigates to auth)
+**File: `src/components/shared/AuthRequiredModal.tsx`**
 
-### 3. Gate Page Routes
+Changes:
+1. Add imports for `useCamera`, `SinglePlayVideo`, `Popover`, `Camera`, `ImagePlus` icons
+2. Add `guestWelcomeVideo` asset import
+3. Add state for avatar selection: `selectedPhoto`, `videoEnded`, `showUploadOptions`
+4. Add camera handlers: `handleTakePhoto`, `handleSelectFromGallery`
+5. Conditionally render header based on `isSignUp` state:
+   - Login mode: Logo + custom message
+   - Sign-up mode: Clickable mascot circle with camera badge + "გამარჯობა!" title
 
-**File: `src/pages/Leaderboards.tsx`**
-- Check if user is not authenticated
-- If guest, show auth modal or redirect instead of leaderboard content
-- Show lock icon visual indicator
+### Code Structure
 
-**File: `src/pages/TeamV2.tsx`**
-- Check if user is not authenticated
-- If guest, show auth modal instead of team/online game content
+```tsx
+// New imports
+import { Camera, ImagePlus } from "lucide-react";
+import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useCamera } from "@/hooks/useCamera";
+import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
-### 4. Gate Category Play Buttons
+// New state in component
+const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+const [videoEnded, setVideoEnded] = useState(false);
+const [showUploadOptions, setShowUploadOptions] = useState(false);
+const { takePhoto, selectFromGallery, isLoading: isCameraLoading } = useCamera();
 
-**File: `src/pages/CategoryPage.tsx`**
-- When guest clicks play button, show auth modal instead of navigating to play
-- Update `handleLevelClick()` to require auth
-- Update `handlePlayFromLeaderboard()` to require auth
+// Handler functions for photo selection
+const handleTakePhoto = async () => {
+  setShowUploadOptions(false);
+  const photo = await takePhoto();
+  if (photo?.dataUrl) setSelectedPhoto(photo.dataUrl);
+};
 
-### 5. Gate Shop Purchases
+const handleSelectFromGallery = async () => {
+  setShowUploadOptions(false);
+  const photo = await selectFromGallery();
+  if (photo?.dataUrl) setSelectedPhoto(photo.dataUrl);
+};
 
-**File: `src/pages/PowerUps.tsx`** (Shop page)
-- When guest clicks any purchase button, show auth modal
-- Allow browsing but not purchasing
+// In the render - header changes based on isSignUp
+{isSignUp ? (
+  // Sign-up header with mascot circle
+  <div className="flex flex-col items-center mb-4">
+    <Popover open={showUploadOptions} onOpenChange={setShowUploadOptions}>
+      <PopoverTrigger asChild>
+        <button className="rounded-full overflow-hidden relative">
+          {selectedPhoto ? (
+            <img src={selectedPhoto} className="w-[90px] h-[90px] object-cover" />
+          ) : (
+            <SinglePlayVideo src={guestWelcomeVideo} onEnded={() => setVideoEnded(true)} />
+          )}
+          {/* Camera badge */}
+          <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5">
+            <Camera className="w-3.5 h-3.5 text-white" />
+          </div>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        {/* Camera / Gallery options */}
+      </PopoverContent>
+    </Popover>
+    <h2 className="font-slackey text-2xl">გამარჯობა!</h2>
+    <p>შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ</p>
+  </div>
+) : (
+  // Login header with logo
+  <div className="flex flex-col items-center mb-4">
+    <MyTriviaLiveLogo size="md" textColor="dark" />
+    <p>{message || "შესაძენად საჭიროა შესვლა"}</p>
+  </div>
+)}
+```
 
-### 6. Update Index Page for Guests
+### Avatar Integration with Account Creation
 
-The current `Index.tsx` already shows `GuestWelcomePanel` for guests. The design matches the reference screenshots. We need to ensure the play button shows `5/5` badge.
+The selected photo will be stored in component state and can be:
+1. Displayed as preview in the mascot circle
+2. Passed to the sign-up flow for avatar generation after account creation
+
+For the initial implementation, the photo selection will:
+- Replace the mascot video with the selected photo preview
+- Store the photo for potential use after successful registration
+- Trigger the AvatarCreationFlow post-registration if a photo was selected
 
 ---
-
-## Technical Details
-
-### AuthRequiredModal Component
-
-```tsx
-interface AuthRequiredModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  returnToPath?: string;
-  message?: string;
-}
-```
-
-Features:
-- Reuses auth logic from `GuestWelcomePanel.tsx`
-- Shows mascot avatar
-- Email/username + password inputs
-- Sign in / Create account toggle
-- Google + Apple OAuth buttons
-- "ან" (or) dividers as shown in reference
-
-### Route Protection Pattern
-
-```tsx
-// In protected pages
-const { user } = useAuth();
-const [showAuthModal, setShowAuthModal] = useState(false);
-
-// Check on mount or action
-if (!user) {
-  setShowAuthModal(true);
-  return;
-}
-
-// Render auth modal
-<AuthRequiredModal 
-  isOpen={showAuthModal} 
-  onClose={() => setShowAuthModal(false)}
-  returnToPath={location.pathname}
-/>
-```
-
-### Desktop Nav Lock Icons
-
-```tsx
-// In UnifiedDesktopNav.tsx
-const isGuest = !profile && !user;
-
-// For each nav item (except home)
-<NavButton
-  icon={item.icon}
-  label={item.label}
-  onClick={() => {
-    if (isGuest && item.id !== 'home') {
-      setShowAuthModal(true);
-    } else {
-      navigate(item.path);
-    }
-  }}
-  isLocked={isGuest && item.id !== 'home'}
-/>
-```
-
----
-
-## Files to Create
-
-| File | Description |
-|------|-------------|
-| `src/components/shared/AuthRequiredModal.tsx` | Reusable auth prompt modal |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/layout/UnifiedDesktopNav.tsx` | Add guest detection, lock icons, auth modal trigger |
-| `src/pages/Leaderboards.tsx` | Add auth gate - show modal when guest tries to view |
-| `src/pages/TeamV2.tsx` | Add auth gate - show modal when guest tries to view |
-| `src/pages/CategoryPage.tsx` | Gate play buttons - require auth before playing |
-| `src/pages/PowerUps.tsx` | Gate purchase buttons - require auth before buying |
-| `src/components/home/DesktopPlayButtonLarge.tsx` | Already shows 5/5 badge for guests (verified working) |
+| `src/components/shared/AuthRequiredModal.tsx` | Add conditional header rendering, mascot circle with camera popover, photo selection handlers |
 
 ---
 
-## User Flow Summary
+## User Experience Flow
 
-```text
-Guest User Journey:
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│  1. Lands on Index page                                      │
-│     → Sees auth form (login/signup) with mascot             │
-│     → Can click "ითამაშე" button (5/5 plays)                │
-│                                                              │
-│  2. Clicks nav items (Rating, Team, Shop, Categories)       │
-│     → Sees 🔒 lock icons on nav                             │
-│     → Modal appears: "გამარჯობა! შექმენი ანგარიში..."       │
-│                                                              │
-│  3. Clicks Play button in Category                          │
-│     → Same auth modal appears                                │
-│                                                              │
-│  4. Clicks any Shop purchase                                 │
-│     → Same auth modal appears                                │
-│                                                              │
-│  5. Plays as Guest (uses 1 of 5 daily plays)               │
-│     → VS game works normally                                 │
-│     → After game, prompted to register to save progress     │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+```
+1. User sees AuthRequiredModal (Login mode by default)
+   → Shows logo + "შესაძენად საჭიროა შესვლა"
+
+2. User clicks "შექმენი" link
+   → Modal transforms to Sign-Up mode
+   → Shows animated mascot in circle with camera badge
+   → Shows "გამარჯობა!" title
+
+3. User clicks on mascot circle
+   → Popover appears with two options:
+     - "გადაიღე ფოტო" (Take Photo)
+     - "აირჩიე გალერიიდან" (Choose from Gallery)
+
+4. User selects/captures photo
+   → Mascot replaced with photo preview
+   → User fills in username + password
+   → Clicks "შექმენი ანგარიში"
+
+5. Account created successfully
+   → Modal closes
+   → User is logged in
 ```
 
 ---
 
-## Localization
+## Technical Considerations
 
-The modal and messages will use Georgian text matching the reference:
-- `გამარჯობა!` - Hello!
-- `შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ` - Create account and join the game for free
-- `ელფოსტა ან სახელი` - Email or username
-- `პაროლი` - Password
-- `შესვლა` - Sign in
-- `არ გაქვს ანგარიში? შექმენი` - Don't have an account? Create one
-- `ან` - or
+1. **Asset Import**: Uses existing `guest-welcome-avatar.mp4` mascot video
+2. **Camera Hook**: Reuses existing `useCamera` hook for native/web camera access
+3. **Video Component**: Reuses `SinglePlayVideo` for optimized video playback
+4. **Popover**: Uses existing Radix Popover for upload options menu
+5. **State Reset**: Photo selection resets when switching between sign-up/login modes
 
----
-
-## Edge Cases Handled
-
-1. **Guest plays VS game** → Works, uses guest play quota
-2. **Guest exhausts 5 plays** → Existing `GuestMaxPlaysModal` prompts registration
-3. **Guest tries to navigate via URL** → Auth check runs on page mount
-4. **Guest clicks shop item** → Auth modal before any purchase logic
-5. **OAuth redirect** → Uses existing `returnTo` pattern to redirect after auth
