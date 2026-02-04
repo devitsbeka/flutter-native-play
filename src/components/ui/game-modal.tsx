@@ -261,7 +261,7 @@ export function GameModal({
               )}
               
               {/* Main content */}
-              <div className="px-5 pb-5">
+              <div className="px-6 pb-5">
                 {children}
               </div>
             </motion.div>
@@ -358,7 +358,7 @@ export function GameModal({
           </div>
           
           {/* Content */}
-          <div className="px-5 pb-5">
+          <div className="px-6 pb-5">
             {children}
           </div>
           

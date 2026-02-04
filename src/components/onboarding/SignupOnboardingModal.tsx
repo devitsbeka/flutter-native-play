@@ -235,7 +235,7 @@ export function SignupOnboardingModal() {
         return {
           icon: <User className="w-10 h-10 text-white" />,
           title: t("onboarding.chooseUsername"),
-          subtitle: t("onboarding.usernameHint"),
+          subtitle: undefined,
           primaryLabel: t("auth.createAccount"),
           primaryIcon: <Sparkles className="w-5 h-5" />,
           onPrimaryClick: handleCreateAccount,
