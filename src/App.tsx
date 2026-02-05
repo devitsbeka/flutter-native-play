@@ -7,6 +7,7 @@ import { SoundProvider } from "@/contexts/SoundContext";
 import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
 import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationContext";
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
+import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { TVGameProvider } from "@/contexts/TVGameContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -106,8 +107,9 @@ const App = () => (
           <NotificationModalProvider>
             <BackgroundGenerationProvider>
               <PlayerProfileProvider>
-                <SplashScreen>
-                  <TooltipProvider>
+                <AvatarModalProvider>
+                  <SplashScreen>
+                    <TooltipProvider>
             {/* Offline detection banner */}
             <OfflineBanner />
             
@@ -188,9 +190,10 @@ const App = () => (
                 <Route path="/onboarding-preview" element={<OnboardingPreview />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </Suspense>
-                  </TooltipProvider>
-                </SplashScreen>
+              </Suspense>
+                    </TooltipProvider>
+                  </SplashScreen>
+                </AvatarModalProvider>
               </PlayerProfileProvider>
             </BackgroundGenerationProvider>
           </NotificationModalProvider>

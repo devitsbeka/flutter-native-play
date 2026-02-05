@@ -7,7 +7,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { AvatarModal } from "@/components/home/AvatarModal";
+import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -26,8 +26,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { subscription, isVip } = useVipStatus();
+  const { openAvatarModal } = useAvatarModal();
   const [activeTab, setActiveTab] = useState("PRO");
-  const [showAvatarGenerator, setShowAvatarGenerator] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -89,7 +89,7 @@ export default function Profile() {
               <div className="flex flex-col items-center">
                 {/* Entire avatar area is clickable */}
                 <motion.button
-                  onClick={() => setShowAvatarGenerator(true)}
+                  onClick={() => openAvatarModal()}
                   className="relative cursor-pointer group"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -230,10 +230,6 @@ export default function Profile() {
             )}
           </div>
 
-      <AvatarModal
-        isOpen={showAvatarGenerator}
-        onClose={() => setShowAvatarGenerator(false)}
-      />
       </div>
     </MainLayout>
   );

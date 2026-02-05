@@ -42,7 +42,7 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
-import { AvatarModal } from "@/components/home/AvatarModal";
+import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
@@ -166,6 +166,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
   const { step, startOnboarding, skipToAvatarCreation, setStep, hasCompletedOnboarding } = useOnboarding();
+  const { openAvatarModal } = useAvatarModal();
   const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
   const { totalStars } = useTotalStars();
@@ -184,7 +185,6 @@ export default function Index() {
   const [isSoundModalOpen, setIsSoundModalOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [selectedPowerUp, setSelectedPowerUp] = useState<PowerUpType | null>(null);
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isAdFreeModalOpen, setIsAdFreeModalOpen] = useState(false);
   const [isGemShopOpen, setIsGemShopOpen] = useState(false);
   const [showMissionsModal, setShowMissionsModal] = useState(false);
@@ -343,10 +343,6 @@ export default function Index() {
         onClose={() => setSelectedPowerUp(null)} 
         type={selectedPowerUp || "fifty-fifty"}
         onAddClick={() => navigate("/power-ups")}
-      />
-      <AvatarModal 
-        isOpen={isAvatarModalOpen} 
-        onClose={() => setIsAvatarModalOpen(false)} 
       />
       <AdFreeModal
         isOpen={isAdFreeModalOpen}
@@ -711,7 +707,7 @@ export default function Index() {
                   <div 
                       data-walkthrough="avatar" 
                       className="pointer-events-auto cursor-pointer"
-                      onClick={() => user ? setIsAvatarModalOpen(true) : navigate("/auth")}
+                      onClick={() => user ? openAvatarModal() : navigate("/auth")}
                     >
                       <AvatarCircle 
                         avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 
@@ -798,7 +794,7 @@ export default function Index() {
                   <div 
                     data-walkthrough="avatar" 
                     className="pointer-events-auto cursor-pointer"
-                    onClick={() => setIsAvatarModalOpen(true)}
+                    onClick={() => openAvatarModal()}
                   >
                     <AvatarCircle 
                       avatarUrl={profile?.avatar_url} 
@@ -1069,7 +1065,7 @@ export default function Index() {
                   <div 
                     data-walkthrough="avatar" 
                     className="pointer-events-auto cursor-pointer"
-                    onClick={() => user ? setIsAvatarModalOpen(true) : navigate("/auth")}
+                    onClick={() => user ? openAvatarModal() : navigate("/auth")}
                   >
                     <AvatarCircle 
                       avatarUrl={user ? profile?.avatar_url : defaultGuestAvatar} 

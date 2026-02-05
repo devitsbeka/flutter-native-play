@@ -8,7 +8,6 @@ import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
-import { AvatarModal } from "./AvatarModal";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
@@ -34,7 +33,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
 
@@ -81,7 +79,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
       <MissionsModal isOpen={isMissionsOpen} onClose={() => setIsMissionsOpen(false)} />
       <DailyRewardsModal isOpen={isDailyRewardsOpen} onClose={() => setIsDailyRewardsOpen(false)} currentStreak={currentStreak} />
       <ChestRewardModal isOpen={isChestModalOpen} onClose={() => setIsChestModalOpen(false)} onClaim={() => setIsChestModalOpen(false)} />
-      <AvatarModal isOpen={isAvatarModalOpen} onClose={() => setIsAvatarModalOpen(false)} />
       <AnimatePresence>
         {isTeamMenuOpen && (
           <TeamMenuScreen
