@@ -26,7 +26,6 @@ export const VIP_PRICES: Record<VipDuration, number> = {
 export const VIP_BENEFITS = [
   { icon: "⭐", title: "2x XP", description: "ორმაგი გამოცდილება ყველა თამაშში" },
   { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
-  { icon: "🎨", title: "ექსკლუზიური ჩარჩოები", description: "VIP-ისთვის განკუთვნილი ავატარის ჩარჩოები" },
   { icon: "⚡", title: "უფასო ძალები", description: "ყოველდღიური უფასო power-ups" },
   { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
   { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
@@ -45,7 +44,6 @@ export const VIP_BENEFITS_BY_TIER = {
     { icon: "🎰", title: "+3 სპინი", description: "დამატებითი ყოველდღიური სპინები" },
     { icon: "🚫", title: "რეკლამების გარეშე", description: "სრული თამაში რეკლამების გარეშე" },
     { icon: "👑", title: "VIP ბეჯი", description: "ოქროს გვირგვინის ბეჯი პროფილზე" },
-    { icon: "🎨", title: "ექსკლუზიური ჩარჩოები", description: "3 VIP-ისთვის განკუთვნილი ჩარჩო" },
     { icon: "⚡", title: "უფასო ძალები", description: "ყოველდღიურად 4 უფასო power-up" },
     { icon: "🎁", title: "გაძლიერებული ჯილდოები", description: "+50% ყოველდღიური ჯილდო" },
   ],
