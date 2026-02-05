@@ -59,27 +59,27 @@ export default function Profile() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen relative">
+          {/* Full-page Video Background */}
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline
+            className="fixed inset-0 w-full h-full object-cover -z-10"
+          >
+            <source src="/videos/floating-blob.mp4" type="video/mp4" />
+          </video>
+          {/* Gradient Overlay */}
+          <div className="fixed inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50 -z-10" />
+
           {/* Page Header with Back Button */}
           <PageHeader title={t("profile.title")} />
 
           {/* Header with Video Background */}
-          <div className="relative pt-12 pb-20 px-6 overflow-hidden">
-            {/* Video Background */}
-            <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-            >
-              <source src="/videos/floating-blob.mp4" type="video/mp4" />
-            </video>
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50" />
-          </div>
+          <div className="pt-12 pb-20 px-6" />
 
-          <div className="px-6 -mt-16 relative z-10 max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
+          <div className="px-6 -mt-16 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
             {/* Avatar Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
