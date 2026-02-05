@@ -1,198 +1,145 @@
 
+# Plan: Fix Queue Scroll vs Drag Conflict
 
-# Plan: Optimize Category Video Background Performance
+## Problem
 
-## Problem Summary
+In the room lobby queue section, users cannot scroll horizontally through the queued items because touching anywhere on a queue pill initiates a drag-to-reorder action. The user wants to be able to:
+- **Scroll** when swiping left/right on the queue items
+- **Drag** to reorder only when touching the grip handle (⋮⋮ icon)
 
-Category video backgrounds render too slowly, especially on first visit. The current setup has several performance bottlenecks:
+## Current Implementation Issues
 
-| Issue | Impact |
-|-------|--------|
-| Large video files (uncompressed) | Slow downloads, high bandwidth |
-| No poster/placeholder images | Users see blank space while video loads |
-| 20+ videos loading simultaneously | Network congestion, memory pressure |
-| No mobile-optimized video sizes | Same large files served to all devices |
-| Service Worker cache miss on first visit | All videos hit network |
+In `CategoryPickerSection.tsx` (lines 116-169):
 
----
+| Issue | Current Code | Problem |
+|-------|--------------|---------|
+| No `useDragControls` hook | Missing | Can't control which element triggers drag |
+| No `dragListener={false}` | `<Reorder.Item>` captures all touches | Entire item triggers drag |
+| `touch-none` class on item | Line 128: `touch-none` | Prevents any scrolling |
+| Grip handle is decorative | `<GripVertical>` has no event handler | Not functional |
 
-## Recommended Solutions
+## Solution
 
-### Solution 1: Add Static Poster Images (Quick Win)
+Apply the same pattern used in `GameStylePersonalTrivia.tsx` (lines 92-212):
 
-Generate JPEG first-frame images for each video and display them instantly while video loads.
+1. Import `useDragControls` from framer-motion
+2. Create individual drag controls for each queue item
+3. Disable automatic drag listener on `Reorder.Item`
+4. Add `onPointerDown` handler to the grip icon to start drag
+5. Remove `touch-none` from the item (keep it only on grip handle)
+6. Allow container to handle horizontal scroll
 
-**Implementation:**
-1. Create `/public/images/categories/` folder with JPG files
-2. Update PingPongVideo to show poster immediately
-3. Fade video in over poster once ready
+## Technical Changes
 
-**Changes to `PingPongVideo.tsx`:**
+### File: `src/components/team/CategoryPickerSection.tsx`
+
+**Line 1** - Update import:
 ```tsx
-interface PingPongVideoProps {
-  src: string;
-  posterUrl?: string;  // Add poster support
-  // ...
-}
-
-// Show poster image immediately, fade in video when ready
-return (
-  <div ref={containerRef} className="absolute inset-0">
-    {/* Poster shows instantly */}
-    {posterUrl && (
-      <img 
-        src={posterUrl} 
-        className="absolute inset-0 w-full h-full object-cover"
-        loading="lazy"
-      />
-    )}
-    {/* Video fades in when ready */}
-    <video ... className={isReady ? 'opacity-100' : 'opacity-0'} />
-  </div>
-);
+import { motion, Reorder, useDragControls } from "framer-motion";
 ```
 
-**Pass poster from AirbnbCategoryCard:**
+**Lines 116-169** - Refactor the Reorder.Group section:
+
+Instead of inline items, create a new component `DraggableQueueItem` that uses `useDragControls`:
+
 ```tsx
-import { CATEGORY_IMAGES } from "@/config/videoConfig";
+function DraggableQueueItem({
+  item,
+  index,
+  hasCategory,
+  onRemoveQueueItem,
+}: {
+  item: QueueItem;
+  index: number;
+  hasCategory: boolean;
+  onRemoveQueueItem?: (id: string) => void;
+}) {
+  const dragControls = useDragControls();
 
-<PingPongVideo 
-  src={videoUrl} 
-  posterUrl={CATEGORY_IMAGES[categoryId]}
-/>
-```
-
----
-
-### Solution 2: Lazy Load Videos More Aggressively
-
-Only load videos that are actually visible on screen, not just "near" the viewport.
-
-**Changes to `PingPongVideo.tsx`:**
-```tsx
-// Reduce preload distance - only load when nearly visible
-rootMargin = "50px"  // Was 200px
-
-// Add priority prop for above-the-fold videos
-interface PingPongVideoProps {
-  priority?: boolean; // Load immediately if true
-}
-```
-
----
-
-### Solution 3: Limit Concurrent Video Loads
-
-Create a video loading queue that limits to 2-3 concurrent downloads.
-
-**New file: `src/utils/videoLoadQueue.ts`**
-```tsx
-class VideoLoadQueue {
-  private queue: string[] = [];
-  private loading: Set<string> = new Set();
-  private maxConcurrent = 2;
-
-  async loadVideo(url: string): Promise<void> {
-    if (this.loading.size >= this.maxConcurrent) {
-      // Wait in queue
-      await new Promise(resolve => {
-        this.queue.push(url);
-        // ... resolve when slot available
-      });
-    }
-    // ... load video
-  }
+  return (
+    <Reorder.Item
+      key={item.id}
+      value={item}
+      dragListener={false}  // <-- CRITICAL: Disable auto-drag
+      dragControls={dragControls}
+      layout
+      className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0 h-9"
+      whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
+    >
+      <span className="text-white/40 text-xs font-bold mr-0.5">
+        {hasCategory ? index + 2 : index + 1}
+      </span>
+      
+      {/* Drag handle - ONLY this triggers drag */}
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="w-[18px] h-[18px] text-white/40" />
+      </div>
+      
+      {/* Icon and label - scrollable, not draggable */}
+      {/* ... icon logic ... */}
+      <span className="text-white/80 text-xs font-medium">
+        {item.category_name || "ტრივია"}
+      </span>
+      
+      {/* Remove button */}
+      {onRemoveQueueItem && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemoveQueueItem(item.id);
+          }}
+          className="ml-0.5 p-1 rounded-full hover:bg-white/20"
+        >
+          <X className="w-[18px] h-[18px] text-white/50" />
+        </button>
+      )}
+    </Reorder.Item>
+  );
 }
 ```
 
----
-
-### Solution 4: Compress Video Files (Requires Asset Work)
-
-**Current state:** Videos are likely 1-5MB each (50+ files = 100MB+ total)
-
-**Recommended specs for web:**
-| Property | Mobile | Desktop |
-|----------|--------|---------|
-| Resolution | 480p | 720p |
-| Bitrate | 500-800 kbps | 1-2 Mbps |
-| Format | MP4 H.264 | MP4 H.264 |
-| Duration | 3-6 seconds | 3-6 seconds |
-| Target size | 100-300KB | 300-600KB |
-
-**FFmpeg command for compression:**
-```bash
-ffmpeg -i input.mp4 -vf "scale=480:-2" -c:v libx264 -crf 28 -preset slow -an output-mobile.mp4
-```
-
----
-
-### Solution 5: Use WebM with MP4 Fallback
-
-WebM (VP9) offers 30-50% better compression than H.264.
-
+**Update the container div** (line 114):
 ```tsx
-<video>
-  <source src="/videos/art.webm" type="video/webm" />
-  <source src="/videos/art.mp4" type="video/mp4" />
-</video>
+// Remove select-none and cursor-grab from items
+// Remove touch-none from the Reorder.Item (move it only to grip handle)
+<div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
 ```
 
----
-
-## Recommended Implementation Order
-
-| Priority | Solution | Effort | Impact |
-|----------|----------|--------|--------|
-| 1 | Add poster images | Low | High - instant visual feedback |
-| 2 | Reduce rootMargin to 50px | Very Low | Medium - fewer concurrent loads |
-| 3 | Compress video files | Medium | Very High - faster downloads |
-| 4 | Limit concurrent loads | Medium | High - prevents network congestion |
-| 5 | Add WebM format | High | Medium - better compression |
-
----
-
-## Technical Changes Summary
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/shared/PingPongVideo.tsx` | Add poster support, reduce rootMargin |
-| `src/components/discover/AirbnbCategoryCard.tsx` | Pass posterUrl from CATEGORY_IMAGES |
-| `/public/images/categories/*.jpg` | Create poster images (need to be uploaded manually) |
-
-### Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/utils/videoLoadQueue.ts` | Optional: Queue for concurrent load limiting |
-
----
-
-## Quick Implementation (Code Changes Only)
-
-If you want me to implement the code-side optimizations immediately, I can:
-
-1. Update PingPongVideo to support poster images with graceful fade-in
-2. Reduce the Intersection Observer rootMargin from 200px to 50px
-3. Update AirbnbCategoryCard to pass poster URLs
-
-Note: You'll need to manually create/upload the poster images to `/public/images/categories/` - these should be JPEG screenshots of the first frame of each video at around 400x300 resolution.
-
----
-
-## Generating Poster Images
-
-You can generate poster images from your videos using FFmpeg:
-
-```bash
-# For each video, extract first frame as JPEG
-for f in public/videos/*.mp4; do
-  name=$(basename "$f" .mp4)
-  ffmpeg -i "$f" -vframes 1 -q:v 2 "public/images/categories/${name}.jpg"
-done
+**Update `Reorder.Group`** (line 116-121):
+```tsx
+<Reorder.Group 
+  axis="x" 
+  values={queue} 
+  onReorder={onReorderQueue}
+  className="flex gap-2"
+  // Remove touchAction: "pan-y" - let natural scroll work
+>
 ```
 
-Or I can implement a runtime fallback that extracts the first frame using Canvas (already have `videoFrameExtractor.ts`), but static images will be faster.
+## Summary of Changes
 
+| Component | Change | Effect |
+|-----------|--------|--------|
+| Import | Add `useDragControls` | Enable controlled dragging |
+| `Reorder.Item` | Add `dragListener={false}` | Disable whole-item drag |
+| `Reorder.Item` | Add `dragControls={dragControls}` | Link to controls |
+| `Reorder.Item` | Remove `touch-none` class | Allow scroll on item |
+| `Reorder.Item` | Remove `cursor-grab` class | Only grip shows grab cursor |
+| `GripVertical` wrapper | Add `onPointerDown` handler | Grip starts drag |
+| `GripVertical` wrapper | Add `touch-none` class | Prevent scroll on grip |
+
+## Files to Modify
+
+| File | Lines | Change |
+|------|-------|--------|
+| `src/components/team/CategoryPickerSection.tsx` | 1 | Update import |
+| `src/components/team/CategoryPickerSection.tsx` | 114-169 | Refactor queue items with proper drag controls |
+
+## Result
+
+- **Scroll**: Swiping anywhere except the grip handle scrolls through queue
+- **Drag**: Only touching/clicking the grip icon (⋮⋮) initiates reorder
+- **Consistent UX**: Matches behavior of answer reordering in trivia editor
