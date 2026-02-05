@@ -321,72 +321,50 @@ export function CategoryPickerModal({
                 </div>
               ) : (
                 <>
-                  {/* Mixed Questions - Featured Card */}
-                  {(!search.trim() || "სხვადასხვა".toLowerCase().includes(search.toLowerCase())) && (
-                    <motion.button
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      onClick={() => setSelectedItem({
-                        type: "category",
-                        id: "__mixed__",
-                        name: "სხვადასხვა",
-                        iconSlug: "mystery-box",
-                      })}
-                      className={`w-full mb-4 relative overflow-hidden rounded-2xl transition-all ${
-                        selectedItem?.id === "__mixed__"
-                          ? "ring-2 ring-white/60"
-                          : ""
-                      }`}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-purple-700" />
-                      <div className="relative flex flex-col items-center justify-center py-10 px-6">
-                        {/* Large animated icon */}
-                        <motion.div 
-                          className="relative"
-                          animate={{ 
-                            y: [0, -6, 0],
-                            rotate: [0, 3, -3, 0]
-                          }}
-                          transition={{ 
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        >
-                          <div 
-                            className="flex items-center justify-center"
-                            style={{ width: 86, height: 86 }}
-                          >
-                            <DynamicIcon slug="mystery-box" size={86} />
-                          </div>
-                          {/* Glow effect */}
-                          <div className="absolute inset-0 blur-xl opacity-50 bg-white/30 rounded-full" />
-                        </motion.div>
-                        
-                        {/* Text */}
-                        <div className="mt-4 text-center">
-                          <p className="font-bold text-white text-lg">სხვადასხვა</p>
-                          <p className="text-white/70 text-sm mt-1">შერეული კითხვები</p>
-                        </div>
-                        
-                        {/* Selected indicator */}
-                        {selectedItem?.id === "__mixed__" && (
-                          <div className="absolute top-3 right-3 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                            <Check className="w-4 h-4 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    </motion.button>
-                  )}
-
                   <div className="grid grid-cols-2 gap-3">
+                    {/* Mixed Category - First in grid */}
+                    {(!search.trim() || "სხვადასხვა".toLowerCase().includes(search.toLowerCase())) && (
+                      <motion.button
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0 }}
+                        onClick={() => setSelectedItem({
+                          type: "category",
+                          id: "__mixed__",
+                          name: "სხვადასხვა",
+                          iconSlug: "mystery-box",
+                        })}
+                        className={`p-4 rounded-xl backdrop-blur-sm transition-all text-left ${
+                          selectedItem?.id === "__mixed__"
+                            ? "bg-white/20 border-2 border-white/50"
+                            : "bg-white/10 border border-white/20 hover:bg-white/15"
+                        }`}
+                        style={{ background: "linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(236, 72, 153, 0.3))" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
+                            style={{ background: "linear-gradient(135deg, #9333ea, #ec4899)" }}
+                          >
+                            <DynamicIcon slug="mystery-box" size={22} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-sm truncate">სხვადასხვა</p>
+                            <p className="text-white/50 text-xs">შერეული</p>
+                          </div>
+                          {selectedItem?.id === "__mixed__" && (
+                            <Check className="w-4 h-4 text-white flex-shrink-0" />
+                          )}
+                        </div>
+                      </motion.button>
+                    )}
+
                     {filteredCategories.map((cat, index) => (
                       <motion.button
                         key={cat.id}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.02 }}
+                        transition={{ delay: (index + 1) * 0.02 }}
                         onClick={() => setSelectedItem({
                           type: "category",
                           id: cat.id,
