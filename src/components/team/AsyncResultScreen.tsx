@@ -4,7 +4,8 @@ import { Clock, Trophy, ArrowRight, Home, Bell, RotateCcw, Loader2 } from "lucid
 import { useNavigate } from "react-router-dom";
 import { useMultiplayer } from "@/contexts/MultiplayerContext";
 import { useSound } from "@/contexts/SoundContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -258,7 +259,7 @@ export function AsyncResultScreen({
                 <Avatar className={`w-20 h-20 border-3 ${
                   !iWon && !isTie ? "border-yellow-400" : "border-white/30"
                 }`}>
-                  <AvatarImage src={challengerInfo?.avatar || undefined} />
+                  <ResolvedAvatarImage src={challengerInfo?.avatar || undefined} />
                   <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xl font-bold">
                     {(challengerInfo?.nickname || "?").charAt(0).toUpperCase()}
                   </AvatarFallback>

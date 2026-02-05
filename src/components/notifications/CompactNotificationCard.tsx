@@ -2,7 +2,8 @@ import { memo, useState, useMemo, useRef } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Trash2, Home, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
 import { getNotificationConfig } from '@/config/notificationConfig';
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
@@ -299,7 +300,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
             </div>
           ) : (
             <Avatar className="w-11 h-11">
-              <AvatarImage src={avatarUrl} />
+              <ResolvedAvatarImage src={avatarUrl} />
               <AvatarFallback 
                 className="text-sm font-bold text-primary-foreground"
                 style={{

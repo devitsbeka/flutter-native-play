@@ -6,6 +6,7 @@ import { useSound } from "@/contexts/SoundContext";
 import { useTheme } from "@/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { Check, X, Crown, ChevronLeft, Sun, Moon } from "lucide-react";
@@ -401,7 +402,7 @@ export function QuestionScreen() {
                       : "border-rose-500"
                   )}>
                     {opponent?.avatarUrl ? (
-                      <img src={opponent.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      <img src={resolveAvatarUrl(opponent.avatarUrl) || opponent.avatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span>{opponent?.avatarEmoji || "🤖"}</span>
                     )}

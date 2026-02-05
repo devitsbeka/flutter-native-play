@@ -34,7 +34,8 @@ import { useMyRooms } from "@/hooks/useMyRooms";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections } from "@/hooks/useCollections";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { SearchHorizontalLists } from "./SearchHorizontalLists";
 
@@ -490,7 +491,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                       className="flex items-center gap-3 cursor-pointer"
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={friend.avatarUrl || undefined} />
+                        <ResolvedAvatarImage src={friend.avatarUrl || undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary text-xs">
                           {friend.nickname.charAt(0).toUpperCase()}
                         </AvatarFallback>

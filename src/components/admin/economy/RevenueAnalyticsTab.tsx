@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Loader2, TrendingUp, Coins, Gem, ShoppingCart, Users } from "lucide-react";
 import { usePurchaseAnalytics } from "@/hooks/usePurchaseAnalytics";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { format } from "date-fns";
 import {
   Select,
@@ -265,7 +266,7 @@ export function RevenueAnalyticsTab() {
               <div key={tx.id} className="flex items-center justify-between py-2 border-b last:border-0">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={tx.profile?.avatar_url || undefined} />
+                    <ResolvedAvatarImage src={tx.profile?.avatar_url || undefined} />
                     <AvatarFallback>
                       {tx.profile?.nickname?.charAt(0) || "?"}
                     </AvatarFallback>
