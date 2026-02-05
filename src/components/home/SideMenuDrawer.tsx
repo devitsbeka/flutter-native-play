@@ -4,6 +4,7 @@ import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { Avatar } from "@/components/shared/Avatar";
 import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
@@ -30,6 +31,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
   const { t } = useLanguage();
+  const { openAvatarModal } = useAvatarModal();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
@@ -173,8 +175,9 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
                     <button 
                       onClick={() => {
+                        // Open avatar modal first, then close menu for smooth transition
+                        openAvatarModal();
                         onClose();
-                        navigate('/profile');
                       }}
                       className="h-16 w-16 rounded-2xl bg-background/50 backdrop-blur flex items-center justify-center overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
                     >
