@@ -1,77 +1,100 @@
 
-# Plan: Premium Metallic Surface Badge Styling
+# Plan: Optimize TV Lobby Layout for Single Viewport
 
-## Current Issue
+## Issues Identified (from screenshot)
 
-The "შენი ლიგა" badge looks flat with washed-out colors (as seen in screenshot - too yellow/matte gold). Need realistic polished metal effect.
+1. **Duplicate code display** - Code "3177" shown twice: once below room title AND in the right QR section
+2. **Rounds wrap to second line** - Causes players grid to move down and get cropped
+3. **Players/Logo cropped** - Content extends beyond visible viewport
 
-## Solution: Real Metallic Surface Gradients
+## Changes
 
-Create gradients that simulate polished metal by:
-1. Adding darker tonal contrast (shadows)
-2. Using multiple highlight bands (like light hitting curved metal)
-3. Adding subtle edge definition
+### File: `src/components/tv/TVLobbyScreenV2.tsx`
 
----
+#### 1. Remove Duplicate Code Below Header
+**Lines 409-415** - Delete the entire game code block:
+```tsx
+{/* Game Code - Below header */}
+<div className="mb-3">
+  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 ...">
+    ...
+  </div>
+</div>
+```
 
-## Technical Changes
-
-### File: `src/pages/Leaderboards.tsx`
-
-Update the `metallicStyles` object with improved metallic gradients:
+#### 2. Rounds Queue: Single Line with Abbreviations
+**Lines 418-443** - Update the queue container to:
+- Use `overflow-x-auto` with `flex-nowrap` (no wrap)
+- Truncate category names or use abbreviations
+- Limit max-width per pill
 
 ```tsx
-const metallicStyles: Record<number, { 
-  gradient: string; 
-  shadow: string;
-}> = {
-  1: { // Bronze - Rich polished bronze with depth
-    gradient: 'linear-gradient(145deg, #8B5A2B 0%, #CD853F 15%, #DEB887 30%, #F4A460 50%, #CD853F 65%, #8B4513 85%, #A0522D 100%)',
-    shadow: '0 4px 20px rgba(139, 90, 43, 0.7), inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.2)'
-  },
-  2: { // Silver - Polished chrome/silver effect
-    gradient: 'linear-gradient(145deg, #808080 0%, #C0C0C0 15%, #F5F5F5 30%, #FFFFFF 45%, #E8E8E8 55%, #B8B8B8 75%, #909090 100%)',
-    shadow: '0 4px 20px rgba(150, 150, 150, 0.6), inset 0 2px 6px rgba(255,255,255,0.6), inset 0 -2px 6px rgba(0,0,0,0.15)'
-  },
-  3: { // Gold - Lustrous 24K gold effect
-    gradient: 'linear-gradient(145deg, #996515 0%, #D4A017 15%, #FFD700 30%, #FFEC8B 45%, #FFD700 55%, #DAA520 75%, #B8860B 100%)',
-    shadow: '0 4px 20px rgba(218, 165, 32, 0.7), inset 0 2px 6px rgba(255,255,255,0.5), inset 0 -2px 6px rgba(0,0,0,0.2)'
-  }
-};
+{hasMultiRound ? (
+  // Multi-round queue display - single line, scrollable if needed
+  <div className="flex items-center gap-2 py-2 overflow-x-auto scrollbar-hide pr-60">
+    {queue.map((item, index) => {
+      // Abbreviate long names: "მეცნიერება" → "მეცნ."
+      const displayName = item.category_name 
+        ? (item.category_name.length > 12 
+            ? item.category_name.slice(0, 8) + '...' 
+            : item.category_name)
+        : 'რაუნდი';
+      
+      return (
+        <motion.div
+          key={item.id}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.1 }}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-purple-400/50 shrink-0"
+          style={{
+            background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)',
+          }}
+        >
+          <span className="text-xs text-purple-200/80">{index + 1}.</span>
+          <span className="text-white text-sm font-medium whitespace-nowrap">
+            {displayName}
+          </span>
+        </motion.div>
+      );
+    })}
+  </div>
+) : (
+  // Single category display - kept as is but smaller padding
+  ...
+)}
 ```
 
-### Visual Breakdown
+#### 3. Reduce Vertical Spacing
+- Header: `mb-3` → `mb-2`
+- Category section: `mb-4` → `mb-2`
+- Bottom button area: `mt-3` → `mt-2`
+- Players section: Remove label to save vertical space
 
-**Key improvements:**
-- **145deg angle**: More natural light reflection angle
-- **7 color stops**: Creates realistic curved metal reflection bands
-- **Dark → Light → Highlight → Light → Dark**: Simulates cylindrical metal surface
-- **Inset shadows**: Both top highlight AND bottom shadow for 3D depth
-
-```text
-Gradient structure (simulates light hitting curved metal):
-
-  ┌─────────────────────────────────────────┐
-  │ Dark edge (shadow)           0%         │
-  │ Mid-tone                    15%         │
-  │ Light zone                  30%         │
-  │ ★ BRIGHT HIGHLIGHT ★        45%         │  ← Peak reflection
-  │ Light zone                  55%         │
-  │ Mid-tone                    75%         │
-  │ Dark edge (shadow)         100%         │
-  └─────────────────────────────────────────┘
-```
-
-### Color Reference
-
-| Tier | Dark | Mid | Highlight | Effect |
-|------|------|-----|-----------|--------|
-| Bronze | #8B5A2B | #CD853F | #DEB887 | Antique polished bronze |
-| Silver | #808080 | #C0C0C0 | #FFFFFF | Chrome mirror finish |
-| Gold | #996515 | #D4A017 | #FFEC8B | 24K lustrous gold |
+#### 4. Compact Players Grid
+- Remove "მოთამაშეები" (Players) label header to save space
+- Reduce gap from `gap-1.5` → `gap-1`
+- Reduce avatar container size slightly
 
 ---
 
-## Result
+## Visual Result
 
-Badge will look like polished metal jewelry instead of flat colored buttons - with visible light bands that create depth and shine.
+| Before | After |
+|--------|-------|
+| Code shown twice | Code only in QR section |
+| Rounds wrap to 2 lines | Single line with abbreviated names |
+| Players cropped at bottom | All 8 slots visible |
+| Logo cropped | Logo fully visible |
+
+---
+
+## Summary
+
+| Change | Purpose |
+|--------|---------|
+| Remove code block (lines 409-415) | Eliminate duplicate, save vertical space |
+| `flex-nowrap` on queue | Prevent wrapping to second line |
+| Abbreviate names > 12 chars | Fit more rounds in single line |
+| Reduce margins/padding | Fit everything in viewport |
+| Remove players label | Save ~24px vertical space |
