@@ -1,107 +1,108 @@
 
-# Plan: Global Avatar Modal System
+# Plan: Unify Avatar Creation to Use the Polished AvatarModal
 
-## Goal
-Create a global context for opening the Avatar Modal ("შენი ავატარი" screen) from anywhere in the app when users click on their own avatar, ensuring selfie/upload functionality works consistently.
+## Problem
 
----
+When users need to create an avatar (during signup or when they're missing an avatar), they see the old `AvatarCreationFlow` modal which has:
+- No close/exit button
+- Text touching edges
+- Different design from the polished "შენი ავატარი" screen
+- Inconsistent experience
 
-## Current State
+## Solution
 
-The `AvatarModal` component exists and works correctly, but it's embedded locally in:
-- Home screen (`Index.tsx`)
-- Side menu (`SideMenuDrawer.tsx`) 
-- Profile page (`Profile.tsx`)
-
-This creates maintenance issues and potential inconsistencies.
+Replace the `AvatarCreationFlow` usage with the global `AvatarModal` system for all avatar creation scenarios.
 
 ---
 
 ## Technical Changes
 
-### 1. Create AvatarModalContext
-**New file:** `src/contexts/AvatarModalContext.tsx`
+### File 1: `src/contexts/OnboardingContext.tsx`
 
-Create a global context similar to `PlayerProfileContext`:
-- `openAvatarModal()` - function to open the modal
-- `closeAvatarModal()` - function to close the modal
-- `isOpen` - current state
+Remove the avatar-related steps from OnboardingStep type since we'll use the global AvatarModal instead:
 
-The context will render the single `AvatarModal` instance at the app root level.
-
----
-
-### 2. Add Provider to App.tsx
-**File:** `src/App.tsx`
-
-Wrap the app with `AvatarModalProvider` inside the existing provider tree (after `AuthProvider` since AvatarModal needs auth).
-
----
-
-### 3. Remove Local AvatarModal Instances
-
-**Files to update:**
-
-| File | Change |
-|------|--------|
-| `src/pages/Index.tsx` | Remove local `isAvatarModalOpen` state and `<AvatarModal>` component. Use `useAvatarModal()` hook instead. |
-| `src/components/home/SideMenuDrawer.tsx` | Remove local state and modal. Use hook. |
-| `src/pages/Profile.tsx` | Remove `showAvatarGenerator` state and modal. Use hook. |
-
----
-
-### 4. Update Avatar Click Handlers
-
-In all places where user clicks on their own avatar:
-
+**Lines 4-14** - Remove avatar steps from OnboardingStep type:
 ```tsx
-// Before
-onClick={() => setIsAvatarModalOpen(true)}
-
-// After
-const { openAvatarModal } = useAvatarModal();
-onClick={() => user ? openAvatarModal() : navigate("/auth")}
+export type OnboardingStep = 
+  | "idle"
+  | "welcome"
+  | "username"
+  | "password"
+  | "creating"
+  | "complete";
 ```
 
+**Lines 27-30** - Remove avatar-related state from context type:
+```tsx
+// Remove these:
+// uploadedImage: string | null;
+// setUploadedImage: (image: string | null) => void;
+// generatedAvatar: string | null;
+// setGeneratedAvatar: (avatar: string | null) => void;
+```
+
+**Line 34** - Update `skipToAvatarCreation` to open the global AvatarModal instead of setting step:
+- This function will be replaced with a trigger for the global avatar modal
+
 ---
 
-### 5. Make SmartAvatar Self-Opening for Own Profile
+### File 2: `src/pages/Index.tsx`
 
-**File:** `src/components/shared/SmartAvatar.tsx`
+**Lines 222-224** - Update `handlePlay` to use global AvatarModal:
 
-Add optional prop `isCurrentUser` that when true, clicking opens the avatar modal instead of the profile modal:
-
+When user tries to play but has no avatar, open the AvatarModal instead of calling `skipToAvatarCreation()`:
 ```tsx
-interface SmartAvatarProps {
-  // ... existing props
-  userId?: string;        // User ID for profile opening
-  isCurrentUser?: boolean; // If true, opens avatar modal instead
+} else if (!profile?.avatar_url) {
+  // Logged in but no avatar - open avatar modal
+  openAvatarModal();
 }
 ```
 
-This enables consistent behavior across leaderboards, friend lists, etc.
+**Line 328** - Remove `<AvatarCreationFlow />` component since it's no longer used
 
 ---
 
-## File Changes Summary
+### File 3: `src/components/onboarding/SignupOnboardingModal.tsx`
+
+**Line 211** - After account creation, instead of going to `avatar-upload` step, complete the signup and let the user open the avatar modal:
+
+```tsx
+// After successful signup
+setStep("complete");
+// Optionally auto-open the avatar modal
+openAvatarModal();
+```
+
+This component will need to import and use `useAvatarModal` hook.
+
+---
+
+### File 4: `src/contexts/AvatarModalContext.tsx`
+
+No changes needed - this already provides the global modal.
+
+---
+
+### File 5: Delete `src/components/onboarding/AvatarCreationFlow.tsx`
+
+This component will no longer be needed since all avatar creation flows through `AvatarModal`.
+
+---
+
+## Summary of Changes
 
 | Action | File |
 |--------|------|
-| Create | `src/contexts/AvatarModalContext.tsx` |
-| Modify | `src/App.tsx` |
-| Modify | `src/pages/Index.tsx` |
-| Modify | `src/components/home/SideMenuDrawer.tsx` |
-| Modify | `src/pages/Profile.tsx` |
-| Modify | `src/components/shared/SmartAvatar.tsx` |
+| Modify | `src/contexts/OnboardingContext.tsx` - Remove avatar steps |
+| Modify | `src/pages/Index.tsx` - Use openAvatarModal() instead of skipToAvatarCreation() |
+| Modify | `src/components/onboarding/SignupOnboardingModal.tsx` - Complete signup, then open AvatarModal |
+| Delete | `src/components/onboarding/AvatarCreationFlow.tsx` |
 
 ---
 
-## User Experience
+## User Experience After Changes
 
-After these changes:
-1. Clicking avatar on home screen → Opens "შენი ავატარი" modal
-2. Clicking avatar in side menu → Opens "შენი ავატარი" modal  
-3. Clicking avatar on profile page → Opens "შენი ავატარი" modal
-4. Selfie button → Opens camera (unchanged)
-5. Upload button → Opens file picker (unchanged)
-6. All functionality works identically from any entry point
+1. **New user signup** → Account created → "შენი ავატარი" modal opens (with close button, proper spacing)
+2. **User tries to play without avatar** → "შენი ავატარი" modal opens
+3. **User clicks their avatar anywhere** → "შენი ავატარი" modal opens (already works)
+4. **All scenarios** → Same polished experience with selfie/upload working perfectly
