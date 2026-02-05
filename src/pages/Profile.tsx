@@ -13,6 +13,13 @@ import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { PageHeader } from "@/components/shared/PageHeader";
 
+// Stat icons
+import triviaIcon from "@/assets/icons/trivia-buzzer-8.png";
+import trophyIcon from "@/assets/icons/trophy-2.png";
+import percentIcon from "@/assets/icons/percentage-discount.png";
+import trophyShelfIcon from "@/assets/icons/trophy-shelf.png";
+import crownIcon from "@/assets/icons/crown-5.png";
+
 
 export default function Profile() {
   const { user, profile, signOut } = useAuth();
@@ -28,18 +35,13 @@ export default function Profile() {
   const currentTier = subscription?.vip_tier as ProTier | undefined;
   const friendInvitesRemaining = (subscription as any)?.friend_invites_remaining || 0;
 
-  // Dynamic PRO tab label
-  const getProTabLabel = () => {
+  // Dynamic PRO label
+  const getProLabel = () => {
     if (currentTier && ['pro', 'pro_plus', 'pro_master'].includes(currentTier)) {
       return "ჩემი PRO";
     }
     return "გახდი PRO";
   };
-
-  const tabs = [
-    { key: "Stats", label: "სტატისტიკა" },
-    { key: "PRO", label: getProTabLabel() },
-  ];
 
   const rank = profile ? getRankFromPoints(profile.total_points) : null;
 
@@ -145,20 +147,37 @@ export default function Profile() {
 
             {/* Tabs */}
             <div className="flex gap-2 mb-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    "flex-1 py-3 rounded-full font-semibold text-sm transition-colors",
-                    activeTab === tab.key
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground"
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              {/* Statistics Tab */}
+              <button
+                onClick={() => setActiveTab("Stats")}
+                className={cn(
+                  "flex-1 py-3 rounded-full font-semibold text-sm transition-colors",
+                  activeTab === "Stats"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground"
+                )}
+              >
+                სტატისტიკა
+              </button>
+              
+              {/* PRO Title with Crown - clickable */}
+              <button
+                onClick={() => setActiveTab("PRO")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-full transition-colors",
+                  activeTab === "PRO"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent"
+                )}
+              >
+                <img src={crownIcon} alt="" className="w-6 h-6" />
+                <span className={cn(
+                  "font-semibold text-sm",
+                  activeTab === "PRO" ? "text-primary-foreground" : "text-foreground"
+                )}>
+                  {getProLabel()}
+                </span>
+              </button>
             </div>
 
 
@@ -169,24 +188,28 @@ export default function Profile() {
                 animate={{ opacity: 1 }}
                 className="space-y-4"
               >
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">ნათამაშები</span>
+                <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
+                  <img src={triviaIcon} alt="" className="w-8 h-8" />
+                  <span className="text-foreground flex-1">ნათამაშები</span>
                   <span className="font-bold text-foreground">{profile.games_played}</span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">მოგებული</span>
+                <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
+                  <img src={trophyIcon} alt="" className="w-8 h-8" />
+                  <span className="text-foreground flex-1">მოგებული</span>
                   <span className="font-bold text-foreground">{profile.games_won}</span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">მოგების %</span>
+                <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
+                  <img src={percentIcon} alt="" className="w-8 h-8" />
+                  <span className="text-foreground flex-1">მოგების %</span>
                   <span className="font-bold text-foreground">
                     {profile.games_played > 0
                       ? Math.round((profile.games_won / profile.games_played) * 100)
                       : 0}%
                   </span>
                 </div>
-                <div className="bg-card rounded-2xl p-4 flex justify-between items-center border border-border/30">
-                  <span className="text-foreground">საუკეთესო სერია</span>
+                <div className="bg-card rounded-2xl p-4 flex items-center gap-3 border border-border/30">
+                  <img src={trophyShelfIcon} alt="" className="w-8 h-8" />
+                  <span className="text-foreground flex-1">საუკეთესო სერია</span>
                   <span className="font-bold text-foreground">{profile.best_streak}</span>
                 </div>
               </motion.div>
