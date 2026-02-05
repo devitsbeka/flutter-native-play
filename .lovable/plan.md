@@ -1,100 +1,141 @@
 
-# Plan: Optimize TV Lobby Layout for Single Viewport
 
-## Issues Identified (from screenshot)
+# Plan: Improved Metallic Badge with Better Text Visibility
 
-1. **Duplicate code display** - Code "3177" shown twice: once below room title AND in the right QR section
-2. **Rounds wrap to second line** - Causes players grid to move down and get cropped
-3. **Players/Logo cropped** - Content extends beyond visible viewport
+## Problem
 
-## Changes
+The current metallic badge styling:
+- Looks too flat and washed out (especially gold - too yellow/matte)
+- Text visibility is poor against the gradient background
+- Doesn't capture the polished metal look
 
-### File: `src/components/tv/TVLobbyScreenV2.tsx`
+## New Approach: Dual-Layer Metallic Effect
 
-#### 1. Remove Duplicate Code Below Header
-**Lines 409-415** - Delete the entire game code block:
-```tsx
-{/* Game Code - Below header */}
-<div className="mb-3">
-  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 ...">
-    ...
-  </div>
-</div>
-```
+Instead of a single gradient, use a layered approach:
 
-#### 2. Rounds Queue: Single Line with Abbreviations
-**Lines 418-443** - Update the queue container to:
-- Use `overflow-x-auto` with `flex-nowrap` (no wrap)
-- Truncate category names or use abbreviations
-- Limit max-width per pill
+1. **Base layer**: Solid metallic core color with depth
+2. **Highlight layer**: Subtle white reflection band at top
+3. **Border accent**: Darker metallic border for definition
+4. **Text with outline**: Dark text with light stroke OR light text with dark shadow
+
+---
+
+## Technical Changes
+
+### File: `src/pages/Leaderboards.tsx`
+
+Replace `AnimatedLeagueBadge` component (lines 65-136):
 
 ```tsx
-{hasMultiRound ? (
-  // Multi-round queue display - single line, scrollable if needed
-  <div className="flex items-center gap-2 py-2 overflow-x-auto scrollbar-hide pr-60">
-    {queue.map((item, index) => {
-      // Abbreviate long names: "მეცნიერება" → "მეცნ."
-      const displayName = item.category_name 
-        ? (item.category_name.length > 12 
-            ? item.category_name.slice(0, 8) + '...' 
-            : item.category_name)
-        : 'რაუნდი';
-      
-      return (
+const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
+  // Refined metallic color schemes
+  const metallicStyles: Record<number, { 
+    base: string;        // Core metallic color
+    highlight: string;   // Top highlight
+    border: string;      // Border/edge color
+    textColor: string;   // Text color for contrast
+    shadowColor: string; // Text shadow for depth
+  }> = {
+    1: { // Bronze - Warm copper tones
+      base: '#B87333',
+      highlight: 'rgba(222, 184, 135, 0.6)',
+      border: '#8B4513',
+      textColor: '#FFF8E7',
+      shadowColor: 'rgba(69, 35, 10, 0.8)'
+    },
+    2: { // Silver - Cool chrome
+      base: '#A8A8A8',
+      highlight: 'rgba(255, 255, 255, 0.7)',
+      border: '#6B6B6B',
+      textColor: '#1A1A1A',
+      shadowColor: 'rgba(255, 255, 255, 0.5)'
+    },
+    3: { // Gold - Rich warm gold
+      base: '#DAA520',
+      highlight: 'rgba(255, 236, 139, 0.7)',
+      border: '#996515',
+      textColor: '#2D1F00',
+      shadowColor: 'rgba(255, 255, 255, 0.4)'
+    }
+  };
+  
+  const style = metallicStyles[tier] || metallicStyles[1];
+  
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <motion.div
+        className="relative rounded-full overflow-hidden"
+        style={{
+          // Multi-layer background for metallic depth
+          background: `
+            linear-gradient(180deg, 
+              ${style.highlight} 0%, 
+              transparent 40%
+            ),
+            linear-gradient(180deg, 
+              ${style.base} 0%, 
+              ${style.base} 100%
+            )
+          `,
+          border: `2px solid ${style.border}`,
+          boxShadow: `
+            0 4px 12px rgba(0,0,0,0.3),
+            inset 0 1px 0 ${style.highlight},
+            inset 0 -2px 4px rgba(0,0,0,0.2)
+          `,
+        }}
+      >
+        {/* Animated light sweep */}
         <motion.div
-          key={item.id}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.1 }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-purple-400/50 shrink-0"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)',
+            background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
+            backgroundSize: '200% 100%'
+          }}
+          animate={{
+            backgroundPosition: ['-100% 0%', '200% 0%']
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatDelay: 2,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Text with proper contrast */}
+        <span 
+          className="relative z-10 block text-sm px-5 py-2 font-bold"
+          style={{ 
+            color: style.textColor,
+            textShadow: `0 1px 2px ${style.shadowColor}, 0 0 1px ${style.shadowColor}`
           }}
         >
-          <span className="text-xs text-purple-200/80">{index + 1}.</span>
-          <span className="text-white text-sm font-medium whitespace-nowrap">
-            {displayName}
-          </span>
-        </motion.div>
-      );
-    })}
-  </div>
-) : (
-  // Single category display - kept as is but smaller padding
-  ...
-)}
+          შენი ლიგა
+        </span>
+      </motion.div>
+    </div>
+  );
+};
 ```
 
-#### 3. Reduce Vertical Spacing
-- Header: `mb-3` → `mb-2`
-- Category section: `mb-4` → `mb-2`
-- Bottom button area: `mt-3` → `mt-2`
-- Players section: Remove label to save vertical space
-
-#### 4. Compact Players Grid
-- Remove "მოთამაშეები" (Players) label header to save space
-- Reduce gap from `gap-1.5` → `gap-1`
-- Reduce avatar container size slightly
-
 ---
 
-## Visual Result
+## Key Improvements
 
-| Before | After |
-|--------|-------|
-| Code shown twice | Code only in QR section |
-| Rounds wrap to 2 lines | Single line with abbreviated names |
-| Players cropped at bottom | All 8 slots visible |
-| Logo cropped | Logo fully visible |
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Gradient** | 7-stop complex gradient | Simple base + highlight overlay |
+| **Text contrast** | White on all tiers | Tier-specific: dark on gold/silver, light on bronze |
+| **Border** | None | 2px solid darker metallic border |
+| **Depth** | Inset shadows only | Border + inset top/bottom shadows |
+| **Highlight** | Full gradient sweep | Top-weighted highlight like real metal |
 
----
+## Color Strategy
 
-## Summary
+- **Bronze**: Light cream text on warm copper (best contrast)
+- **Silver**: Dark text on silver (like real engraved silver)
+- **Gold**: Dark brown text on gold (like embossed gold plaques)
 
-| Change | Purpose |
-|--------|---------|
-| Remove code block (lines 409-415) | Eliminate duplicate, save vertical space |
-| `flex-nowrap` on queue | Prevent wrapping to second line |
-| Abbreviate names > 12 chars | Fit more rounds in single line |
-| Reduce margins/padding | Fit everything in viewport |
-| Remove players label | Save ~24px vertical space |
+This mimics how real metallic badges/medals have embossed or engraved text that contrasts with the metal surface.
+
