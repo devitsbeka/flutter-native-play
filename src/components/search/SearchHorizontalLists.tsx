@@ -125,22 +125,6 @@ export function SearchHorizontalLists({
           />
         ))}
       </HorizontalSection>
-
-      {/* My Trivia Parties Section */}
-      <HorizontalSection 
-        title="ჩემი წვეულებები" 
-        icon={Crown}
-        isEmpty={myParties.length === 0}
-      >
-        {myParties.map((room) => (
-          <RoomMiniCard 
-            key={room.id} 
-            room={room} 
-            onClick={() => onSelectRoom(room.room_code)}
-            isParty
-          />
-        ))}
-      </HorizontalSection>
     </div>
   );
 }
