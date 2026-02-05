@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
-import { ChevronLeft, ScanLine, AlertCircle } from "lucide-react";
+import { ChevronLeft, ScanLine, AlertCircle, Flashlight, ZoomIn, ZoomOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface QRScannerModalProps {
   open: boolean;
@@ -16,6 +17,10 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [zoomCapability, setZoomCapability] = useState<{min: number; max: number; step: number} | null>(null);
+  const [torchEnabled, setTorchEnabled] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -23,6 +28,10 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
     let mounted = true;
     setError(null);
     setIsStarting(true);
+    setZoomCapability(null);
+    setTorchSupported(false);
+    setTorchEnabled(false);
+    setZoomLevel(1);
 
     const startScanner = async () => {
       try {
@@ -32,8 +41,15 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
         await scanner.start(
           { facingMode: "environment" },
           {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
+            fps: 15,
+            qrbox: { width: 280, height: 280 },
+            aspectRatio: 1.0,
+            videoConstraints: {
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              advanced: [{ focusMode: "continuous" }] as any
+            }
           },
           (decodedText) => {
             if (!mounted) return;
@@ -46,6 +62,24 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
 
         if (mounted) {
           setIsStarting(false);
+          
+          // Get camera capabilities after start
+          try {
+            const capabilities = scanner.getRunningTrackCameraCapabilities();
+            const zoom = capabilities.zoomFeature();
+            if (zoom.isSupported()) {
+              setZoomCapability({ 
+                min: zoom.min(), 
+                max: zoom.max(), 
+                step: zoom.step() 
+              });
+              setZoomLevel(zoom.value() || 1);
+            }
+            const torch = capabilities.torchFeature();
+            setTorchSupported(torch.isSupported());
+          } catch (e) {
+            console.log("Camera capabilities not available");
+          }
         }
       } catch (err) {
         console.error("QR Scanner error:", err);
@@ -74,6 +108,33 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
       }
     };
   }, [open]);
+
+  const handleZoomChange = async (value: number) => {
+    if (scannerRef.current && zoomCapability) {
+      try {
+        const capabilities = scannerRef.current.getRunningTrackCameraCapabilities();
+        const zoom = capabilities.zoomFeature();
+        await zoom.apply(value);
+        setZoomLevel(value);
+      } catch (e) {
+        console.error("Failed to apply zoom:", e);
+      }
+    }
+  };
+
+  const toggleTorch = async () => {
+    if (scannerRef.current && torchSupported) {
+      try {
+        const capabilities = scannerRef.current.getRunningTrackCameraCapabilities();
+        const torch = capabilities.torchFeature();
+        const newValue = !torchEnabled;
+        await torch.apply(newValue);
+        setTorchEnabled(newValue);
+      } catch (e) {
+        console.error("Failed to toggle torch:", e);
+      }
+    }
+  };
 
   const handleScan = (decodedText: string) => {
     // Stop scanner first
@@ -223,6 +284,47 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
                   </div>
+
+                {/* Camera Controls */}
+                <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-3">
+                  {/* Torch Button */}
+                  {torchSupported && (
+                    <button
+                      onClick={toggleTorch}
+                      className={cn(
+                        "mx-auto w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+                        torchEnabled 
+                          ? "bg-yellow-500 text-black" 
+                          : "bg-white/20 text-white hover:bg-white/30"
+                      )}
+                    >
+                      <Flashlight className="w-6 h-6" />
+                    </button>
+                  )}
+                  
+                  {/* Zoom Slider */}
+                  {zoomCapability && (
+                    <div className="bg-black/60 rounded-full px-4 py-2 flex items-center gap-3">
+                      <ZoomOut className="w-4 h-4 text-white/70" />
+                      <input
+                        type="range"
+                        min={zoomCapability.min}
+                        max={zoomCapability.max}
+                        step={zoomCapability.step}
+                        value={zoomLevel}
+                        onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                        className="flex-1 h-1 bg-white/30 rounded-full appearance-none cursor-pointer
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-5
+                          [&::-webkit-slider-thumb]:h-5
+                          [&::-webkit-slider-thumb]:rounded-full
+                          [&::-webkit-slider-thumb]:bg-primary"
+                      />
+                      <ZoomIn className="w-4 h-4 text-white/70" />
+                      <span className="text-white/70 text-xs w-8">{zoomLevel.toFixed(1)}x</span>
+                    </div>
+                  )}
+                </div>
                 </div>
               )}
             </div>
@@ -230,7 +332,7 @@ export function QRScannerModal({ open, onClose }: QRScannerModalProps) {
             {/* Footer */}
             <div className="flex-shrink-0 p-4 text-center bg-background border-t border-border/50">
               <p className="text-xs text-muted-foreground">
-                მიმართეთ კამერა QR კოდისკენ თამაშში შესაერთებლად
+              მიმართეთ კამერა QR კოდისკენ • გამოიყენეთ ზუმი დაშორებული კოდებისთვის
               </p>
             </div>
           </div>
