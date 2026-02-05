@@ -17,6 +17,8 @@ interface IconTab {
 const iconMap: Record<string, string> = {
   all: allIcon,
   favorites: favIcon,
+  recently_viewed: allIcon, // Reusing all icon temporarily
+  popular: funIcon, // Reusing fun icon temporarily
   classic: classicIcon,
   fun: funIcon,
   educational: eduIcon,
