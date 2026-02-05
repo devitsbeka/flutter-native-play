@@ -14,6 +14,7 @@ import medalBronze from "@/assets/icons/medal-bronze.png";
 import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
+import trophy3d from "@/assets/icons/trophy-3d.png";
 
 // Lazy load modals
 const QuizPlayModal = lazy(() => 
@@ -229,7 +230,7 @@ export default function TriviaLobby() {
         >
           {/* Leaderboard Header */}
           <div className="flex items-center gap-2 p-4 border-b border-border">
-            <img src={pushButton3d} alt="" className="w-5 h-5 object-contain grayscale" />
+            <img src={trophy3d} alt="" className="w-5 h-5 object-contain" />
             <h2 className="font-bold text-foreground">ლიდერბორდი</h2>
             <span className="text-xs text-muted-foreground ml-auto">{leaderboard.length} მოთამაშე</span>
           </div>
