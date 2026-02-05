@@ -1,108 +1,87 @@
 
-# Plan: Unify Avatar Creation to Use the Polished AvatarModal
+# Plan: Fix Clipped Element Inside Avatar
 
 ## Problem
 
-When users need to create an avatar (during signup or when they're missing an avatar), they see the old `AvatarCreationFlow` modal which has:
-- No close/exit button
-- Text touching edges
-- Different design from the polished "შენი ავატარი" screen
-- Inconsistent experience
+The avatar display in the AvatarModal shows a **Play button badge** (indicating animated avatar) that is clipped at the circular boundary. This creates an ugly visual artifact - a white curved element appearing inside the avatar circle.
+
+## Root Cause
+
+In `src/components/home/AvatarModal.tsx` (lines 561-578):
+
+```tsx
+<div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-primary/30 mb-2">
+  {/* avatar image */}
+  
+  {/* This badge is INSIDE the overflow-hidden container */}
+  {profile?.animated_avatar_url && (
+    <div className="absolute top-0 right-0 w-5 h-5 bg-primary rounded-full...">
+      <Play className="..." />
+    </div>
+  )}
+</div>
+```
+
+The `overflow-hidden` on the circular container clips the badge which is positioned at `top-0 right-0`.
+
+---
 
 ## Solution
 
-Replace the `AvatarCreationFlow` usage with the global `AvatarModal` system for all avatar creation scenarios.
+Restructure the avatar container to position the badge **outside** the overflow-hidden element, so it renders on top without being clipped.
 
----
+### File: `src/components/home/AvatarModal.tsx`
 
-## Technical Changes
-
-### File 1: `src/contexts/OnboardingContext.tsx`
-
-Remove the avatar-related steps from OnboardingStep type since we'll use the global AvatarModal instead:
-
-**Lines 4-14** - Remove avatar steps from OnboardingStep type:
-```tsx
-export type OnboardingStep = 
-  | "idle"
-  | "welcome"
-  | "username"
-  | "password"
-  | "creating"
-  | "complete";
-```
-
-**Lines 27-30** - Remove avatar-related state from context type:
-```tsx
-// Remove these:
-// uploadedImage: string | null;
-// setUploadedImage: (image: string | null) => void;
-// generatedAvatar: string | null;
-// setGeneratedAvatar: (avatar: string | null) => void;
-```
-
-**Line 34** - Update `skipToAvatarCreation` to open the global AvatarModal instead of setting step:
-- This function will be replaced with a trigger for the global avatar modal
-
----
-
-### File 2: `src/pages/Index.tsx`
-
-**Lines 222-224** - Update `handlePlay` to use global AvatarModal:
-
-When user tries to play but has no avatar, open the AvatarModal instead of calling `skipToAvatarCreation()`:
-```tsx
-} else if (!profile?.avatar_url) {
-  // Logged in but no avatar - open avatar modal
-  openAvatarModal();
-}
-```
-
-**Line 328** - Remove `<AvatarCreationFlow />` component since it's no longer used
-
----
-
-### File 3: `src/components/onboarding/SignupOnboardingModal.tsx`
-
-**Line 211** - After account creation, instead of going to `avatar-upload` step, complete the signup and let the user open the avatar modal:
+**Lines 559-579** - Restructure the avatar display:
 
 ```tsx
-// After successful signup
-setStep("complete");
-// Optionally auto-open the avatar modal
-openAvatarModal();
+{/* Current Avatar */}
+<div className="flex flex-col items-center">
+  {/* Wrapper for proper badge positioning */}
+  <div className="relative mb-2">
+    {/* Avatar circle with overflow-hidden */}
+    <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary/30">
+      {profile?.avatar_url ? (
+        <img 
+          src={resolveAvatarUrl(profile.avatar_url) || profile.avatar_url} 
+          alt="Current avatar" 
+          className="w-full h-full object-cover"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
+      ) : (
+        <div className="w-full h-full bg-muted flex items-center justify-center">
+          <ImageIcon className="w-10 h-10 text-muted-foreground" />
+        </div>
+      )}
+    </div>
+    
+    {/* Play badge - OUTSIDE the overflow container */}
+    {profile?.animated_avatar_url && (
+      <div className="absolute -top-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
+        <Play className="w-3 h-3 text-primary-foreground" fill="currentColor" />
+      </div>
+    )}
+  </div>
+  <p className="text-sm text-muted-foreground">{t("avatar.currentAvatar")}</p>
 ```
 
-This component will need to import and use `useAvatarModal` hook.
+---
+
+## Changes Made
+
+| Change | Description |
+|--------|-------------|
+| New wrapper div | Added `relative mb-2` wrapper to hold both avatar and badge |
+| Separated concerns | Avatar circle now only contains the image with `overflow-hidden` |
+| Badge repositioned | Badge now sits outside the overflow container with `-top-1 -right-1` |
+| Slightly larger badge | Increased from `w-5 h-5` to `w-6 h-6` for better visibility |
+| Added shadow | `shadow-md` makes badge more visible |
 
 ---
 
-### File 4: `src/contexts/AvatarModalContext.tsx`
+## Result
 
-No changes needed - this already provides the global modal.
-
----
-
-### File 5: Delete `src/components/onboarding/AvatarCreationFlow.tsx`
-
-This component will no longer be needed since all avatar creation flows through `AvatarModal`.
-
----
-
-## Summary of Changes
-
-| Action | File |
-|--------|------|
-| Modify | `src/contexts/OnboardingContext.tsx` - Remove avatar steps |
-| Modify | `src/pages/Index.tsx` - Use openAvatarModal() instead of skipToAvatarCreation() |
-| Modify | `src/components/onboarding/SignupOnboardingModal.tsx` - Complete signup, then open AvatarModal |
-| Delete | `src/components/onboarding/AvatarCreationFlow.tsx` |
-
----
-
-## User Experience After Changes
-
-1. **New user signup** → Account created → "შენი ავატარი" modal opens (with close button, proper spacing)
-2. **User tries to play without avatar** → "შენი ავატარი" modal opens
-3. **User clicks their avatar anywhere** → "შენი ავატარი" modal opens (already works)
-4. **All scenarios** → Same polished experience with selfie/upload working perfectly
+- Clean avatar display with no clipped elements
+- Play badge appears **on top** of the avatar circle border
+- Badge is fully visible and not cut off
+- Same functionality preserved (only shows when `animated_avatar_url` exists)
