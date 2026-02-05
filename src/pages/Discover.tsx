@@ -21,12 +21,13 @@ export default function Discover() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("favorites");
+  const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const tabs = useMemo(() => [
+    { id: "all", label: t("discover.all") },
     { id: "favorites", label: t("discover.favorites") },
     { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
     { id: "popular", label: t("discover.popularTab") },
@@ -278,6 +279,92 @@ export default function Discover() {
                 )}
               </motion.div>
             </AnimatePresence>
+          ) : activeTab === "all" ? (
+            /* All Tab - Shows all sections in order: Popular, Classic, Fun, Educational, Recently Viewed, Favorites */
+            <>
+              {/* Popular */}
+              <section className="mb-6">
+                <SectionHeader title={t("discover.popular")} />
+                <CategoryCarousel
+                  categories={popularCategories}
+                  progress={progressMap}
+                  favorites={favorites}
+                  leaderboardRanks={leaderboardRanks}
+                  onCategoryClick={handleCategoryClick}
+                  onFavoriteToggle={toggleFavorite}
+                  getBadge={getBadge}
+                />
+              </section>
+
+              {/* Classic */}
+              <section className="mb-6">
+                <SectionHeader title={t("discover.classicTrivia")} />
+                <CategoryCarousel
+                  categories={classicCategories}
+                  progress={progressMap}
+                  favorites={favorites}
+                  leaderboardRanks={leaderboardRanks}
+                  onCategoryClick={handleCategoryClick}
+                  onFavoriteToggle={toggleFavorite}
+                />
+              </section>
+
+              {/* Fun */}
+              <section className="mb-6">
+                <SectionHeader title={t("discover.fun")} />
+                <CategoryCarousel
+                  categories={funCategories}
+                  progress={progressMap}
+                  favorites={favorites}
+                  leaderboardRanks={leaderboardRanks}
+                  onCategoryClick={handleCategoryClick}
+                  onFavoriteToggle={toggleFavorite}
+                />
+              </section>
+
+              {/* Educational */}
+              <section className="mb-6">
+                <SectionHeader title={t("discover.educational")} />
+                <CategoryCarousel
+                  categories={educationalCategories}
+                  progress={progressMap}
+                  favorites={favorites}
+                  leaderboardRanks={leaderboardRanks}
+                  onCategoryClick={handleCategoryClick}
+                  onFavoriteToggle={toggleFavorite}
+                />
+              </section>
+
+              {/* Recently Viewed */}
+              {recentlyViewed.length > 0 && (
+                <section className="mb-6">
+                  <SectionHeader title={t("discover.recentlyViewed")} />
+                  <CategoryCarousel
+                    categories={recentlyViewed as any[]}
+                    progress={progressMap}
+                    favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+
+              {/* Favorites */}
+              {favoriteCategories.length > 0 && (
+                <section className="mb-6">
+                  <SectionHeader title={t("discover.favorites")} />
+                  <CategoryCarousel
+                    categories={favoriteCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              )}
+            </>
           ) : activeTab === "recently_viewed" ? (
             /* Recently Viewed Tab - Grid Layout */
             <section>
