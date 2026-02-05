@@ -1,12 +1,13 @@
 import { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info } from "lucide-react";
+import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info, Pencil } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
+import { useAuth } from "@/hooks/useAuth";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -14,9 +15,12 @@ import purpleHeart3d from "@/assets/icons/purple-heart-3d.png";
 import bookmark3d from "@/assets/icons/bookmark-3d-orange.png";
 import pushButton3d from "@/assets/icons/push-button-3d.png";
 
-// Lazy load the heavy modal - only loads when user clicks Play
+// Lazy load modals
 const QuizPlayModal = lazy(() => 
   import("@/components/social/QuizPlayModal").then(m => ({ default: m.QuizPlayModal }))
+);
+const EditQuizModal = lazy(() =>
+  import("@/components/social/EditQuizModal").then(m => ({ default: m.EditQuizModal }))
 );
 // Georgian time format helper
 function formatGeorgianTimeAgo(date: Date): string {
@@ -88,9 +92,13 @@ export default function TriviaLobby() {
   const { triviaId } = useParams<{ triviaId: string }>();
   const navigate = useNavigate();
   const { openProfile } = usePlayerProfile();
+  const { user } = useAuth();
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { trivia, creator, leaderboard, stats, userRank, isLoading, refetchLeaderboard } = useTriviaLobby(triviaId);
+  
+  const isOwner = user?.id === trivia?.user_id;
 
   const handleBack = () => {
     navigate(-1);
@@ -162,20 +170,27 @@ export default function TriviaLobby() {
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
-        {/* Creator Avatar - Right Side */}
-        {creator && (
-          <button
-            onClick={() => openProfile(creator.user_id)}
-            className="absolute top-4 right-4 z-10"
-          >
-            <SafeAvatar
-              avatarUrl={creator.avatar_url}
-              fallback={creator.nickname || 'U'}
-              className="w-9 h-9 border-2 border-white/40 shadow-lg"
-              fallbackClassName="text-sm bg-white/20 text-white"
-            />
-          </button>
-        )}
+        {/* Header Right Side - Edit + Avatar */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          {isOwner && (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+            >
+              <Pencil className="w-4 h-4 text-white" />
+            </button>
+          )}
+          {creator && (
+            <button onClick={() => openProfile(creator.user_id)}>
+              <SafeAvatar
+                avatarUrl={creator.avatar_url}
+                fallback={creator.nickname || 'U'}
+                className="w-9 h-9 border-2 border-white/40 shadow-lg"
+                fallbackClassName="text-sm bg-white/20 text-white"
+              />
+            </button>
+          )}
+        </div>
 
         {/* Title - Centered */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -325,6 +340,27 @@ export default function TriviaLobby() {
               if (!open) handlePlayComplete();
             }}
             post={samplePost}
+          />
+        </Suspense>
+      )}
+
+      {/* Edit Modal - Lazy loaded */}
+      {isEditModalOpen && trivia && (
+        <Suspense fallback={null}>
+          <EditQuizModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            quiz={{
+              id: trivia.id,
+              title: trivia.title,
+              description: trivia.description || "",
+              subject: trivia.subject || "",
+              hashtags: trivia.hashtags || [],
+              cover_image: trivia.cover_image || null,
+              cover_gradient: trivia.cover_gradient || "",
+              questions: trivia.questions || [],
+              is_public: trivia.is_public,
+            }}
           />
         </Suspense>
       )}

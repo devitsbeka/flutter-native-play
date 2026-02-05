@@ -1,16 +1,23 @@
 import { useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Layers, Play, Users, HelpCircle, Heart } from "lucide-react";
+import { ArrowLeft, Layers, Play, Users, HelpCircle, Heart, Pencil } from "lucide-react";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { SamplePost } from "@/data/samplePosts";
 import { useCollectionLobby } from "@/hooks/useCollectionLobby";
+import { useAuth } from "@/hooks/useAuth";
 
 const QuizPlayModal = lazy(() =>
   import("@/components/social/QuizPlayModal").then((m) => ({ default: m.QuizPlayModal }))
+);
+const EditQuizModal = lazy(() =>
+  import("@/components/social/EditQuizModal").then((m) => ({ default: m.EditQuizModal }))
+);
+const EditRoundModal = lazy(() =>
+  import("@/components/social/EditRoundModal").then((m) => ({ default: m.EditRoundModal }))
 );
 
 function getGradientProps(gradient: string) {
@@ -24,12 +31,18 @@ export default function CollectionLobby() {
   const { collectionId } = useParams<{ collectionId: string }>();
   const navigate = useNavigate();
   const { openProfile } = usePlayerProfile();
+  const { user } = useAuth();
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+  const [isEditCollectionOpen, setIsEditCollectionOpen] = useState(false);
+  const [editingRoundIndex, setEditingRoundIndex] = useState<number | null>(null);
+
 
   const { data, isLoading } = useCollectionLobby(collectionId);
   const collection = data?.collection;
   const creator = data?.creator;
   const rounds = data?.rounds || [];
+  
+  const isOwner = user?.id === collection?.user_id;
 
   const posts: SamplePost[] = useMemo(() => {
     if (!collection || rounds.length === 0) return [];
@@ -134,17 +147,27 @@ export default function CollectionLobby() {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
 
-        {/* Creator avatar */}
-        {creator && (
-          <button onClick={() => openProfile(creator.user_id)} className="absolute top-4 right-4 z-10">
-            <SafeAvatar 
-              avatarUrl={creator.avatar_url}
-              fallback={creator.nickname || "?"}
-              className="w-9 h-9 border-2 border-white/40 shadow-lg"
-              fallbackClassName="text-sm bg-white/20 text-white"
-            />
-          </button>
-        )}
+        {/* Header Right Side - Edit + Avatar */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          {isOwner && (
+            <button
+              onClick={() => setIsEditCollectionOpen(true)}
+              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+            >
+              <Pencil className="w-4 h-4 text-white" />
+            </button>
+          )}
+          {creator && (
+            <button onClick={() => openProfile(creator.user_id)}>
+              <SafeAvatar 
+                avatarUrl={creator.avatar_url}
+                fallback={creator.nickname || "?"}
+                className="w-9 h-9 border-2 border-white/40 shadow-lg"
+                fallbackClassName="text-sm bg-white/20 text-white"
+              />
+            </button>
+          )}
+        </div>
 
         {/* Title */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -205,7 +228,11 @@ export default function CollectionLobby() {
           </div>
           <div className="divide-y divide-border">
             {posts.map((p, idx) => (
-              <div key={p.id} className="flex items-center gap-3 p-3">
+              <div 
+                key={p.id} 
+                className={`flex items-center gap-3 p-3 ${isOwner ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}`}
+                onClick={isOwner ? () => setEditingRoundIndex(idx) : undefined}
+              >
                 <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                   {p.coverImage ? (
                     <img src={p.coverImage} alt="" className="w-full h-full object-cover" />
@@ -219,6 +246,9 @@ export default function CollectionLobby() {
                   </p>
                   <p className="text-xs text-muted-foreground">{p.questionCount} კითხვა</p>
                 </div>
+                {isOwner && (
+                  <Pencil className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                )}
               </div>
             ))}
           </div>
@@ -246,6 +276,37 @@ export default function CollectionLobby() {
             onOpenChange={setIsPlayModalOpen}
             post={posts[0]}
             collectionPosts={posts}
+          />
+        </Suspense>
+      )}
+
+      {/* Edit Collection Modal */}
+      {isEditCollectionOpen && collection && (
+        <Suspense fallback={null}>
+          <EditQuizModal
+            isOpen={isEditCollectionOpen}
+            onClose={() => setIsEditCollectionOpen(false)}
+            quiz={{
+              id: collection.id,
+              title: collection.title,
+              description: collection.description || "",
+              cover_image: collection.cover_image || null,
+              cover_gradient: collection.cover_gradient || "",
+              is_public: collection.is_public,
+              hashtags: collection.hashtags || [],
+              questions: [],
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Edit Round Modal */}
+      {editingRoundIndex !== null && rounds[editingRoundIndex] && (
+        <Suspense fallback={null}>
+          <EditRoundModal
+            isOpen={editingRoundIndex !== null}
+            onClose={() => setEditingRoundIndex(null)}
+            round={rounds[editingRoundIndex]}
           />
         </Suspense>
       )}
