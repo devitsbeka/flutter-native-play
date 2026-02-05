@@ -68,17 +68,17 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
     gradient: string; 
     shadow: string;
   }> = {
-    1: { // Bronze
-      gradient: 'linear-gradient(135deg, #D4945A 0%, #F5C896 30%, #CD7F32 50%, #B87333 70%, #E8A960 100%)',
-      shadow: '0 4px 16px rgba(205, 127, 50, 0.6), inset 0 2px 4px rgba(255,255,255,0.4)'
+    1: { // Bronze - Rich polished bronze with depth
+      gradient: 'linear-gradient(145deg, #8B5A2B 0%, #CD853F 15%, #DEB887 30%, #F4A460 50%, #CD853F 65%, #8B4513 85%, #A0522D 100%)',
+      shadow: '0 4px 20px rgba(139, 90, 43, 0.7), inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.2)'
     },
-    2: { // Silver  
-      gradient: 'linear-gradient(135deg, #D8D8D8 0%, #F8F8F8 30%, #E8E8E8 50%, #C4C4C4 70%, #EBEBEB 100%)',
-      shadow: '0 4px 16px rgba(200, 200, 200, 0.6), inset 0 2px 4px rgba(255,255,255,0.5)'
+    2: { // Silver - Polished chrome/silver effect
+      gradient: 'linear-gradient(145deg, #808080 0%, #C0C0C0 15%, #F5F5F5 30%, #FFFFFF 45%, #E8E8E8 55%, #B8B8B8 75%, #909090 100%)',
+      shadow: '0 4px 20px rgba(150, 150, 150, 0.6), inset 0 2px 6px rgba(255,255,255,0.6), inset 0 -2px 6px rgba(0,0,0,0.15)'
     },
-    3: { // Gold
-      gradient: 'linear-gradient(135deg, #F7C948 0%, #FFE066 30%, #FFD700 50%, #E6B800 70%, #FFC933 100%)',
-      shadow: '0 4px 16px rgba(255, 215, 0, 0.6), inset 0 2px 4px rgba(255,255,255,0.5)'
+    3: { // Gold - Lustrous 24K gold effect
+      gradient: 'linear-gradient(145deg, #996515 0%, #D4A017 15%, #FFD700 30%, #FFEC8B 45%, #FFD700 55%, #DAA520 75%, #B8860B 100%)',
+      shadow: '0 4px 20px rgba(218, 165, 32, 0.7), inset 0 2px 6px rgba(255,255,255,0.5), inset 0 -2px 6px rgba(0,0,0,0.2)'
     }
   };
   
