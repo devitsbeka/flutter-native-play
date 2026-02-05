@@ -56,6 +56,25 @@ import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 
+// Import workout icons for failed quiz results
+import acroyogaIcon from "@/assets/workout/acroyoga.png";
+import balanceBoardIcon from "@/assets/workout/balance-board.png";
+import yogaWarriorIcon from "@/assets/workout/yoga-warrior-i-pose.png";
+import workoutSquatIcon from "@/assets/workout/workout.png";
+import plankIcon from "@/assets/workout/plank.png";
+import flexibilityIcon from "@/assets/workout/flexibility.png";
+import pullUpIcon from "@/assets/workout/calisthenics-pull-up.png";
+
+const WORKOUT_ICONS = [
+  acroyogaIcon,
+  balanceBoardIcon,
+  yogaWarriorIcon,
+  workoutSquatIcon,
+  plankIcon,
+  flexibilityIcon,
+  pullUpIcon,
+];
+
 const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
 
 interface TriviaQuestion {
@@ -96,6 +115,11 @@ export default function CategoryQuizPage() {
   const [questionIds, setQuestionIds] = useState<string[]>([]);
   const [levelUpRewardsCredited, setLevelUpRewardsCredited] = useState(false);
   const [exhaustionInfo, setExhaustionInfo] = useState<QuestionResult['exhaustionInfo'] | null>(null);
+  
+  // Random workout icon for failed results (stable per mount)
+  const [workoutIcon] = useState(() => 
+    WORKOUT_ICONS[Math.floor(Math.random() * WORKOUT_ICONS.length)]
+  );
   
   // Currency hook for level-up rewards
   const { addCurrency } = useCurrency();
@@ -813,12 +837,22 @@ export default function CategoryQuizPage() {
           >
             {/* Result emoji with animation */}
             <motion.div 
-              className="text-7xl mb-4"
+              className="mb-4 flex justify-center"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
             >
-              {isPerfect ? "🏆" : passed ? "🎉" : "💪"}
+              {isPerfect ? (
+                <span className="text-7xl">🏆</span>
+              ) : passed ? (
+                <span className="text-7xl">🎉</span>
+              ) : (
+                <img 
+                  src={workoutIcon} 
+                  alt="Keep practicing" 
+                  className="w-24 h-24 object-contain drop-shadow-lg"
+                />
+              )}
             </motion.div>
             
             <h2 className="text-2xl font-bold text-foreground mb-2">
