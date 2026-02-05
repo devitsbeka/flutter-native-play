@@ -1,295 +1,123 @@
 
+# Plan: Fix Broken Avatar Images Across the App
 
-# Plan: Fix Instant Notification Delivery
+## Root Cause Analysis
 
-## Problem Analysis
+The broken avatar images are caused by **inconsistent avatar URL handling** across the codebase. There are three main patterns being used:
 
-Notifications are delayed because the current architecture has a fundamental design issue:
+### Pattern 1: Canonical Path Storage (Working in AvatarModal)
+When users select a preset avatar, the system stores a canonical path like `/src/assets/avatars/bot-avatar-3.png` in the database. The `resolveAvatarUrl()` utility correctly maps these paths to bundled assets.
 
-| Problem | Current Behavior | Impact |
-|---------|-----------------|--------|
-| **Multiple independent instances** | `useNotifications()` hook is called in 5+ places, each with its own state | Notifications don't sync between instances |
-| **No subscription status check** | `.subscribe()` is called without waiting for `SUBSCRIBED` status | Subscription may not be active when events occur |
-| **State isolation** | Each hook instance maintains its own `notifications` state | User must navigate/refresh to sync state |
-| **No connection monitoring** | If realtime disconnects, no automatic refetch | Missed notifications during disconnection |
-
-**Current architecture:**
-```text
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  HeaderActions  │     │  NotifPanel     │     │  Index Page     │
-│  useNotifications│    │  useNotifications│    │  useNotifications│
-│  ├─ state []    │     │  ├─ state []    │     │  ├─ state []    │
-│  └─ channel A   │     │  └─ channel B   │     │  └─ channel C   │
-└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 ↓
-                    ┌─────────────────────┐
-                    │   Supabase Realtime │
-                    │   notifications tbl │
-                    └─────────────────────┘
+**From database query:**
+```
+/src/assets/avatars/bot-avatar-3.png
+/src/assets/avatars/bot-avatar-1.png
+/src/assets/avatars/bot-avatar-9.png
+... etc
 ```
 
-Each component has its own subscription and state - when a new notification arrives:
-- Only the **currently active** subscription receives it
-- Other components still have old state
-- Badge counts get out of sync
+### Pattern 2: Components Using `ResolvedAvatarImage` (Working)
+Some components correctly use `ResolvedAvatarImage` which wraps `AvatarImage` and calls `resolveAvatarUrl()`:
+- `RecentRoomsSection.tsx`
+- `RoomChatsPanel.tsx`
+- `MultiplayerGameScreenV2.tsx`
+- `FriendsList.tsx` (partially)
+- `AddFriendModal.tsx`
 
-## Solution: Create a NotificationsContext
+### Pattern 3: Components Using Raw `AvatarImage` or `<img>` (BROKEN)
+These components receive canonical paths from the database but don't resolve them:
 
-Move the realtime subscription to a **single global context** that all components share.
+| File | Line | Issue |
+|------|------|-------|
+| `SpotlightSearch.tsx` | 493 | `<AvatarImage src={friend.avatarUrl}>` - no resolution |
+| `SearchMiniCards.tsx` | 23 | `<AvatarImage src={friend.avatarUrl}>` - no resolution |
+| `CompactNotificationCard.tsx` | 302 | `<AvatarImage src={avatarUrl}>` - no resolution |
+| `AsyncResultScreen.tsx` | 261 | `<AvatarImage src={challengerInfo?.avatar}>` - no resolution |
+| `RevenueAnalyticsTab.tsx` | 268 | `<AvatarImage src={tx.profile?.avatar_url}>` - no resolution |
+| `ControllerCodeEntry.tsx` | 148 | `<img src={profile.avatar_url}>` - no resolution |
+| `QuestionScreen.tsx` | 404 | `<img src={opponent.avatarUrl}>` - no resolution |
+| `MatchResultScreen.tsx` | 145 | `<img src={avatarUrl}>` - no resolution |
 
-**New architecture:**
-```text
-┌────────────────────────────────────────────────────┐
-│              NotificationsProvider                  │
-│   ├─ single shared state: notifications[]          │
-│   ├─ single realtime channel                       │
-│   └─ subscription status monitoring                │
-└────────────────────────┬───────────────────────────┘
-                         │
-    ┌────────────────────┼────────────────────┐
-    ↓                    ↓                    ↓
-┌──────────┐      ┌───────────┐       ┌───────────┐
-│HeaderActions│   │NotifPanel │       │Index Page │
-│useNotif()  │    │useNotif() │       │useNotif() │
-│  ↓ reads   │    │  ↓ reads  │       │  ↓ reads  │
-│  context   │    │  context  │       │  context  │
-└────────────┘    └───────────┘       └───────────┘
-```
+### Why It's Intermittent
+- Works when: Avatar is a full URL (Supabase storage, Google profile)
+- Breaks when: Avatar is a canonical path (`/src/assets/avatars/...`)
+- The canonical paths look like valid URLs but they point to source files that don't exist after Vite builds
+
+---
+
+## Solution: Consistent Avatar Resolution
+
+### Strategy 1: Replace All `<AvatarImage>` with `<ResolvedAvatarImage>`
+Update all imports and usages to use the resolved variant.
+
+### Strategy 2: Replace All Raw `<img>` with Proper Resolution
+Wrap all `src` attributes with `resolveAvatarUrl()`.
+
+---
 
 ## Technical Changes
 
-### 1. Create NotificationsContext
+### Files to Update
 
-**New file: `src/contexts/NotificationsContext.tsx`**
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `SpotlightSearch.tsx` | Import swap | Use `ResolvedAvatarImage` instead of `AvatarImage` |
+| `SearchMiniCards.tsx` | Import swap | Use `ResolvedAvatarImage` instead of `AvatarImage` |
+| `CompactNotificationCard.tsx` | Import swap | Use `ResolvedAvatarImage` instead of `AvatarImage` |
+| `AsyncResultScreen.tsx` | Import swap | Use `ResolvedAvatarImage` instead of `AvatarImage` |
+| `RevenueAnalyticsTab.tsx` | Import swap | Use `ResolvedAvatarImage` instead of `AvatarImage` |
+| `ControllerCodeEntry.tsx` | Add resolution | Wrap `src` with `resolveAvatarUrl()` |
+| `QuestionScreen.tsx` | Add resolution | Wrap `src` with `resolveAvatarUrl()` |
+| `MatchResultScreen.tsx` | Add resolution | Wrap `src` with `resolveAvatarUrl()` |
 
-This context will:
-- Maintain a **single realtime subscription** for the logged-in user
-- Share **one notifications state** across all components
-- Add **subscription status callback** to verify connection
-- **Refetch on reconnect** to catch any missed notifications
-- Expose the same API as the current hook
+### Example Changes
 
+**SpotlightSearch.tsx (before):**
 ```tsx
-// Key improvements:
-
-// 1. Status callback to verify subscription is active
-.subscribe((status) => {
-  if (status === 'SUBSCRIBED') {
-    console.log('[Notifications] Realtime connected');
-    // Refetch to catch any missed notifications
-    fetchNotifications();
-  }
-  if (status === 'CHANNEL_ERROR') {
-    console.error('[Notifications] Channel error, will retry...');
-  }
-});
-
-// 2. Single channel for the entire app
-const CHANNEL_ID = `notifications-global-${user.id}`;
-
-// 3. Connection health monitoring
-const [isConnected, setIsConnected] = useState(false);
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+...
+<AvatarImage src={friend.avatarUrl || undefined} />
 ```
 
-### 2. Update useNotifications Hook
-
-Convert the existing hook to consume the context:
-
+**SpotlightSearch.tsx (after):**
 ```tsx
-// src/hooks/useNotifications.ts
-
-export function useNotifications() {
-  const context = useContext(NotificationsContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within NotificationsProvider');
-  }
-  return context;
-}
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
+...
+<ResolvedAvatarImage src={friend.avatarUrl || undefined} />
 ```
 
-### 3. Add Provider to App
-
-Wrap the app with the new provider (at the same level as AuthProvider):
-
+**QuestionScreen.tsx (before):**
 ```tsx
-// src/App.tsx
-<AuthProvider>
-  <NotificationsProvider>  {/* Add here */}
-    ...
-  </NotificationsProvider>
-</AuthProvider>
+<img src={opponent.avatarUrl} alt="" className="w-full h-full object-cover" />
 ```
 
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/contexts/NotificationsContext.tsx` | **Create** | New context with single realtime subscription |
-| `src/hooks/useNotifications.ts` | **Modify** | Convert to context consumer |
-| `src/App.tsx` | **Modify** | Add NotificationsProvider |
-
-## Implementation Details
-
-### NotificationsContext.tsx (New File)
-
+**QuestionScreen.tsx (after):**
 ```tsx
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useSound } from '@/contexts/SoundContext';
-
-// ... types stay the same ...
-
-interface NotificationsContextType {
-  notifications: Notification[];
-  unreadCount: number;
-  loading: boolean;
-  isConnected: boolean;  // NEW: connection status
-  markAsRead: (id: string) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  deleteNotification: (id: string) => Promise<void>;
-  clearAllNotifications: () => Promise<void>;
-  refresh: () => Promise<void>;
-}
-
-const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
-
-export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const { playSound } = useSound();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
-
-  // ... fetchNotifications, markAsRead, etc. stay the same ...
-
-  useEffect(() => {
-    if (!user) {
-      setNotifications([]);
-      setLoading(false);
-      setIsConnected(false);
-      return;
-    }
-
-    fetchNotifications();
-
-    // SINGLE global channel
-    const channel = supabase
-      .channel(`notifications-global-${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const newNotification = payload.new as Notification;
-        setNotifications((prev) => [newNotification, ...prev]);
-        playSound('notification');
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const updated = payload.new as Notification;
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === updated.id ? updated : n))
-        );
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const deletedId = (payload.old as { id: string }).id;
-        setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
-      })
-      .subscribe((status) => {
-        // KEY FIX: Monitor subscription status
-        if (status === 'SUBSCRIBED') {
-          setIsConnected(true);
-          // Refetch to catch any events that occurred during connection
-          fetchNotifications();
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setIsConnected(false);
-        } else if (status === 'CLOSED') {
-          setIsConnected(false);
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-      setIsConnected(false);
-    };
-  }, [user, fetchNotifications, playSound]);
-
-  // ... rest of the implementation ...
-}
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
+...
+<img src={resolveAvatarUrl(opponent.avatarUrl) || opponent.avatarUrl} alt="" className="w-full h-full object-cover" />
 ```
 
-### useNotifications.ts (Modified)
+---
 
-```tsx
-import { useContext } from 'react';
-import { NotificationsContext } from '@/contexts/NotificationsContext';
-import { supabase } from '@/integrations/supabase/client';
+## Files Modified Summary
 
-// Export types
-export type { Notification, NotificationType } from '@/contexts/NotificationsContext';
+1. **src/components/search/SpotlightSearch.tsx** - Use ResolvedAvatarImage
+2. **src/components/search/SearchMiniCards.tsx** - Use ResolvedAvatarImage
+3. **src/components/notifications/CompactNotificationCard.tsx** - Use ResolvedAvatarImage
+4. **src/components/team/AsyncResultScreen.tsx** - Use ResolvedAvatarImage
+5. **src/components/admin/economy/RevenueAnalyticsTab.tsx** - Use ResolvedAvatarImage
+6. **src/components/controller/ControllerCodeEntry.tsx** - Add resolveAvatarUrl()
+7. **src/components/game/QuestionScreen.tsx** - Add resolveAvatarUrl()
+8. **src/components/game/MatchResultScreen.tsx** - Add resolveAvatarUrl()
 
-export function useNotifications() {
-  const context = useContext(NotificationsContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within NotificationsProvider');
-  }
-  return context;
-}
-
-// Keep the helper function for creating notifications
-export async function createNotification(...) {
-  // ... stays the same ...
-}
-```
-
-### App.tsx (Modified)
-
-```tsx
-import { NotificationsProvider } from '@/contexts/NotificationsContext';
-
-const App = () => (
-  <LanguageProvider>
-    <AuthProvider>
-      <NotificationsProvider>  {/* ADD HERE - after AuthProvider */}
-        <OnboardingProvider>
-          <SoundProvider>
-            ...
-          </SoundProvider>
-        </OnboardingProvider>
-      </NotificationsProvider>
-    </AuthProvider>
-  </LanguageProvider>
-);
-```
-
-## Summary
-
-| Change | Benefit |
-|--------|---------|
-| Single global context | All components share the same notification state |
-| Subscription status callback | Ensures realtime is actually connected before relying on it |
-| Refetch on reconnect | Catches any notifications missed during connection gaps |
-| Connection status exposed | Components can show offline indicator if needed |
-| Existing API preserved | No changes needed in consuming components |
+---
 
 ## Result
 
-When a notification is created:
-1. The **single** realtime subscription receives the INSERT event instantly
-2. The shared state updates **once**
-3. **All components** reading from the context immediately see the new notification
-4. Badge counts update across the entire app simultaneously
-
+After these changes:
+- All avatars will properly resolve canonical paths (`/src/assets/avatars/...`) to bundled assets
+- External URLs (Supabase storage, Google profiles) continue to work as-is
+- Broken image icons will be replaced with working avatars or proper fallbacks
+- Consistent behavior across preview, published URL, and all devices
