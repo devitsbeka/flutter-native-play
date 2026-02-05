@@ -127,11 +127,17 @@ export default function Discover() {
     });
   }, [categories, favorites, progressMap, newLevelCategories]);
 
-  // Get popular categories (first 6 from mixed types)
-  const popularCategories = useMemo(
-    () => categories.slice(0, 6),
-    [categories]
-  );
+  // Get popular categories (random 6 from all categories)
+  const popularCategories = useMemo(() => {
+    if (categories.length === 0) return [];
+    // Fisher-Yates shuffle to randomize
+    const shuffled = [...categories];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, 6);
+  }, [categories]);
 
   // Get recently viewed from localStorage
   const recentlyViewed = useMemo(() => {
