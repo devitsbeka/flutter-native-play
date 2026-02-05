@@ -22,6 +22,7 @@ export function PingPongVideo({
   const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [hasAcquiredSlot, setHasAcquiredSlot] = useState(false);
+  const [posterError, setPosterError] = useState(false);
 
   // Get preloaded blob URL if available, fallback to original src
   const preloadedUrl = getVideoBlobUrl(src);
@@ -131,8 +132,8 @@ export function PingPongVideo({
 
   return (
     <div ref={containerRef} className="absolute inset-0">
-      {/* Poster image - shows instantly while video loads */}
-      {posterUrl && (
+      {/* Poster image - shows instantly while video loads, hidden on error */}
+      {posterUrl && !posterError && (
         <img 
           src={posterUrl}
           alt=""
@@ -140,6 +141,7 @@ export function PingPongVideo({
             isReady && isInView ? 'opacity-0' : 'opacity-100'
           }`}
           loading="lazy"
+          onError={() => setPosterError(true)}
         />
       )}
       <video
