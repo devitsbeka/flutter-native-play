@@ -575,13 +575,6 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   </div>
                 )}
               </div>
-              
-              {/* Play badge - OUTSIDE the overflow container */}
-              {profile?.animated_avatar_url && (
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center border-2 border-background shadow-md">
-                  <Play className="w-3 h-3 text-primary-foreground" fill="currentColor" />
-                </div>
-              )}
             </div>
             <p className="text-sm text-muted-foreground">{t("avatar.currentAvatar")}</p>
             
