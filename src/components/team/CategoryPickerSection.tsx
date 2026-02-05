@@ -1,4 +1,4 @@
-import { motion, Reorder } from "framer-motion";
+import { motion, Reorder, useDragControls } from "framer-motion";
 import { Plus, Shuffle, X, GripVertical, Library, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QueueItem } from "@/hooks/useRoomCategoryQueue";
@@ -13,8 +13,74 @@ interface CategoryPickerSectionProps {
   onOpenPicker: () => void;
   onRemoveQueueItem?: (itemId: string) => void;
   onReorderQueue?: (newOrder: QueueItem[]) => void;
-  isAlreadyPlayed?: boolean; // True if this category was just played
-  willBeObserver?: boolean; // Host will be observer for this trivia
+  isAlreadyPlayed?: boolean;
+  willBeObserver?: boolean;
+}
+
+// Separate component to use useDragControls hook per item
+function DraggableQueueItem({
+  item,
+  index,
+  hasCategory,
+  onRemoveQueueItem,
+}: {
+  item: QueueItem;
+  index: number;
+  hasCategory: boolean;
+  onRemoveQueueItem?: (id: string) => void;
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={item}
+      dragListener={false}
+      dragControls={dragControls}
+      layout
+      className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0 h-9"
+      whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
+    >
+      <span className="text-white/40 text-xs font-bold mr-0.5">
+        {hasCategory ? index + 2 : index + 1}
+      </span>
+      
+      {/* Drag handle - ONLY this triggers drag */}
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="w-[18px] h-[18px] text-white/40" />
+      </div>
+      
+      {item.category_id === "__mixed__" ? (
+        <DynamicIcon slug="mystery-box" size={18} />
+      ) : item.source_type === "random" ? (
+        <Shuffle className="w-[18px] h-[18px] text-purple-400" />
+      ) : item.source_type === "category" ? (
+        <Library className="w-[18px] h-[18px] text-purple-400" />
+      ) : (
+        <Sparkles className="w-[18px] h-[18px] text-purple-400" />
+      )}
+      <span className="text-white/80 text-xs font-medium">
+        {item.source_type === "random" 
+          ? "შემთხვევითი" 
+          : item.category_name || "ტრივია"}
+      </span>
+      {onRemoveQueueItem && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onRemoveQueueItem(item.id);
+          }}
+          className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"
+        >
+          <X className="w-[18px] h-[18px] text-white/50 hover:text-white/80" />
+        </button>
+      )}
+    </Reorder.Item>
+  );
 }
 
 export function CategoryPickerSection({
@@ -112,59 +178,21 @@ export function CategoryPickerSection({
 
           {/* Queue pills - draggable for host, static for others */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
-            {isHost && onReorderQueue ? (
+          {isHost && onReorderQueue ? (
               <Reorder.Group 
                 axis="x" 
                 values={queue} 
                 onReorder={onReorderQueue}
                 className="flex gap-2"
-                style={{ touchAction: "pan-y" }}
               >
                 {queue.map((item, index) => (
-                  <Reorder.Item
+                  <DraggableQueueItem
                     key={item.id}
-                    value={item}
-                    layout
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 cursor-grab active:cursor-grabbing select-none touch-none shrink-0 h-9"
-                    whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
-                  >
-                    <span className="text-white/40 text-xs font-bold mr-0.5">{hasCategory ? index + 2 : index + 1}</span>
-                    <GripVertical className="w-[18px] h-[18px] text-white/40" />
-                    {item.category_id === "__mixed__" ? (
-                      <DynamicIcon slug="mystery-box" size={18} />
-                    ) : item.source_type === "random" ? (
-                      <Shuffle className="w-[18px] h-[18px] text-purple-400" />
-                    ) : item.source_type === "category" ? (
-                      <Library className="w-[18px] h-[18px] text-purple-400" />
-                    ) : (
-                      <Sparkles className="w-[18px] h-[18px] text-purple-400" />
-                    )}
-                    <span className="text-white/80 text-xs font-medium">
-                      {item.source_type === "random" 
-                        ? "შემთხვევითი" 
-                        : item.category_name || "ტრივია"}
-                    </span>
-                    {onRemoveQueueItem && (
-                      <motion.div
-                        drag={false}
-                        onPointerDownCapture={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            onRemoveQueueItem(item.id);
-                          }}
-                          className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition-colors"
-                        >
-                          <X className="w-[18px] h-[18px] text-white/50 hover:text-white/80" />
-                        </button>
-                      </motion.div>
-                    )}
-                  </Reorder.Item>
+                    item={item}
+                    index={index}
+                    hasCategory={hasCategory}
+                    onRemoveQueueItem={onRemoveQueueItem}
+                  />
                 ))}
               </Reorder.Group>
             ) : (
