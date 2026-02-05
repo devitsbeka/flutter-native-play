@@ -579,12 +579,12 @@ export const TVLobbyScreenV2: React.FC = () => {
                 <motion.div
                   key={isActivePlayer ? (player as typeof players[0]).id : isInvited ? (player as InvitedGuest).id : `slot-${index}`}
                   {...entranceAnimation}
-                  className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 overflow-hidden ${
+                  className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 ${
                     isActivePlayer 
                       ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30' 
                       : isInvited
-                        ? 'bg-white/5 border-2 border-dashed border-purple-400/30'
-                        : 'bg-white/5 border-2 border-dashed border-purple-500/30'
+                        ? 'bg-white/5 ring-1 ring-inset ring-purple-400/40'
+                        : 'bg-white/5 ring-1 ring-inset ring-purple-500/40'
                   } ${isInvited ? 'opacity-50 grayscale' : ''} ${isNewlyJoined ? 'ring-2 ring-green-400 ring-offset-2 ring-offset-transparent' : ''}`}
                   style={isActivePlayer ? { boxShadow: 'inset 0 0 0 2px rgba(192, 132, 252, 0.5)' } : {}}
                 >
@@ -595,7 +595,7 @@ export const TVLobbyScreenV2: React.FC = () => {
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
                         >
                           <Crown className="w-3 h-3 text-yellow-900" />
                         </motion.div>
@@ -668,6 +668,11 @@ export const TVLobbyScreenV2: React.FC = () => {
             <div className="mt-3 text-center">
               <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
               <p className="text-sm font-bold text-white">mytrivia.io/join</p>
+              {/* Code to enter */}
+              <div className="mt-2 px-3 py-1 bg-white/10 rounded-lg inline-block">
+                <span className="text-purple-300 text-xs">კოდი: </span>
+                <span className="text-white font-bold text-lg tracking-wider">{code}</span>
+              </div>
             </div>
           </div>
           
