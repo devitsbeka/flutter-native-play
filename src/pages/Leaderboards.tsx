@@ -76,21 +76,21 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
       highlight: 'rgba(222, 184, 135, 0.6)',
       border: '#8B4513',
       textColor: '#FFF8E7',
-      shadowColor: 'rgba(69, 35, 10, 0.8)'
+      shadowColor: 'rgba(69, 35, 10, 0.4)'
     },
     2: { // Silver - Cool chrome
       base: '#A8A8A8',
       highlight: 'rgba(255, 255, 255, 0.7)',
       border: '#6B6B6B',
       textColor: '#1A1A1A',
-      shadowColor: 'rgba(255, 255, 255, 0.5)'
+      shadowColor: 'rgba(255, 255, 255, 0.3)'
     },
     3: { // Gold - Rich warm gold
       base: '#DAA520',
       highlight: 'rgba(255, 236, 139, 0.7)',
       border: '#996515',
       textColor: '#2D1F00',
-      shadowColor: 'rgba(255, 255, 255, 0.4)'
+      shadowColor: 'rgba(255, 255, 255, 0.25)'
     }
   };
   
@@ -142,7 +142,7 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
           className="relative z-10 block text-sm px-5 py-2 font-bold"
           style={{ 
             color: style.textColor,
-            textShadow: `0 1px 2px ${style.shadowColor}, 0 0 1px ${style.shadowColor}`
+            textShadow: `0 1px 1px ${style.shadowColor}`
           }}
         >
           შენი ლიგა
