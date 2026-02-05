@@ -902,10 +902,11 @@ export default function Index() {
                 {/* Mobile: Show curved action buttons above avatar */}
                 {user && (
                   <div 
-                    className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center gap-2 pointer-events-auto z-20"
-                    style={{ top: -75, width: 340 }}
+                    className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center pointer-events-auto z-20"
+                    style={{ top: -75, width: 340, gap: isVip ? 8 : 4 }}
                     data-walkthrough="powerups"
                   >
+                    {/* Gift - edge position */}
                     <motion.div 
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -946,11 +947,12 @@ export default function Index() {
                       />
                     </motion.div>
 
+                    {/* Mission - arc position: 28px (5 buttons) or 20px (6 buttons) */}
                     <motion.div 
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.35, type: "spring" }}
-                      style={{ marginBottom: 32 }}
+                      style={{ marginBottom: isVip ? 28 : 20 }}
                     >
                       <ActionButtonWithParticles
                         iconSrc={missionCrystalIcon}
@@ -977,11 +979,12 @@ export default function Index() {
                       />
                     </motion.div>
 
+                    {/* Chest - peak position: 48px (5 buttons) or 36px (6 buttons) */}
                     <motion.div 
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.4, type: "spring" }}
-                      style={{ marginBottom: 48 }}
+                      style={{ marginBottom: isVip ? 48 : 36 }}
                     >
                       <ActionButtonWithParticles
                         iconSrc={chestBoxIcon}
@@ -1004,12 +1007,13 @@ export default function Index() {
                       />
                     </motion.div>
 
+                    {/* No-ads - only for non-VIP, arc position: 36px */}
                     {!isVip && (
                       <motion.div 
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.45, type: "spring" }}
-                        style={{ marginBottom: 32 }}
+                        style={{ marginBottom: 36 }}
                       >
                         <ActionButtonWithParticles
                           iconSrc={adFreeIcon}
@@ -1026,6 +1030,7 @@ export default function Index() {
                       </motion.div>
                     )}
 
+                    {/* Powers - edge position */}
                     <motion.div 
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
