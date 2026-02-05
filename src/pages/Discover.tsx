@@ -21,14 +21,15 @@ export default function Discover() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("favorites");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   const tabs = useMemo(() => [
-    { id: "all", label: t("discover.all") },
     { id: "favorites", label: t("discover.favorites") },
+    { id: "recently_viewed", label: t("discover.recentlyViewedTab") },
+    { id: "popular", label: t("discover.popularTab") },
     { id: "classic", label: t("discover.classic") },
     { id: "fun", label: t("discover.fun") },
     { id: "educational", label: t("discover.educational") },
@@ -277,118 +278,40 @@ export default function Discover() {
                 )}
               </motion.div>
             </AnimatePresence>
-          ) : activeTab === "all" ? (
-            /* All Categories - Show Sections */
-            <div className="space-y-6">
-              {/* Favorites */}
-              {favoriteCategories.length > 0 && (
-                <section>
-                  <SectionHeader
-                    title={t("discover.myFavorites")}
-                    subtitle={t("discover.chosenByYou")}
-                  />
-                  <CategoryCarousel
-                    categories={favoriteCategories}
-                    progress={progressMap}
-                    favorites={favorites}
-                    leaderboardRanks={leaderboardRanks}
-                    onCategoryClick={handleCategoryClick}
-                    onFavoriteToggle={toggleFavorite}
-                  />
-                </section>
+          ) : activeTab === "recently_viewed" ? (
+            /* Recently Viewed Tab - Grid Layout */
+            <section>
+              <SectionHeader title={t("discover.recentlyViewed")} />
+              <CategoryGrid
+                categories={recentlyViewed as any[]}
+                progress={progressMap}
+                favorites={favorites}
+                leaderboardRanks={leaderboardRanks}
+                onCategoryClick={handleCategoryClick}
+                onFavoriteToggle={toggleFavorite}
+              />
+              {recentlyViewed.length === 0 && (
+                <div className="text-center py-12 px-4">
+                  <p className="text-slate-500">
+                    {t("discover.noRecentlyViewed")}
+                  </p>
+                </div>
               )}
-
-              {/* Recently Viewed */}
-              {recentlyViewed.length > 0 && (
-                <section>
-                  <SectionHeader
-                    title={t("discover.recentlyViewed")}
-                  />
-                  <CategoryCarousel
-                    categories={recentlyViewed as any[]}
-                    progress={progressMap}
-                    favorites={favorites}
-                    leaderboardRanks={leaderboardRanks}
-                    onCategoryClick={handleCategoryClick}
-                    onFavoriteToggle={toggleFavorite}
-                  />
-                </section>
-              )}
-
-              {/* Popular */}
-              <section>
-                <SectionHeader
-                  title={t("discover.popular")}
-                  subtitle={t("discover.mostPlayed")}
-                />
-                <CategoryCarousel
-                  categories={popularCategories}
-                  progress={progressMap}
-                  favorites={favorites}
-                  leaderboardRanks={leaderboardRanks}
-                  onCategoryClick={handleCategoryClick}
-                  onFavoriteToggle={toggleFavorite}
-                  getBadge={getBadge}
-                />
-              </section>
-
-              {/* Classic */}
-              {classicCategories.length > 0 && (
-                <section>
-                  <SectionHeader
-                    title={t("discover.classicTrivia")}
-                    subtitle={t("discover.classicSubtitle")}
-                    onSeeAll={() => setActiveTab("classic")}
-                  />
-                  <CategoryCarousel
-                    categories={classicCategories}
-                    progress={progressMap}
-                    favorites={favorites}
-                    leaderboardRanks={leaderboardRanks}
-                    onCategoryClick={handleCategoryClick}
-                    onFavoriteToggle={toggleFavorite}
-                  />
-                </section>
-              )}
-
-              {/* Fun */}
-              {funCategories.length > 0 && (
-                <section>
-                  <SectionHeader
-                    title={t("discover.fun")}
-                    subtitle={t("discover.funSubtitle")}
-                    onSeeAll={() => setActiveTab("fun")}
-                  />
-                  <CategoryCarousel
-                    categories={funCategories}
-                    progress={progressMap}
-                    favorites={favorites}
-                    leaderboardRanks={leaderboardRanks}
-                    onCategoryClick={handleCategoryClick}
-                    onFavoriteToggle={toggleFavorite}
-                  />
-                </section>
-              )}
-
-              {/* Educational */}
-              {educationalCategories.length > 0 && (
-                <section>
-                  <SectionHeader
-                    title={t("discover.educational")}
-                    subtitle={t("discover.educationalSubtitle")}
-                    onSeeAll={() => setActiveTab("educational")}
-                  />
-                  <CategoryCarousel
-                    categories={educationalCategories}
-                    progress={progressMap}
-                    favorites={favorites}
-                    leaderboardRanks={leaderboardRanks}
-                    onCategoryClick={handleCategoryClick}
-                    onFavoriteToggle={toggleFavorite}
-                  />
-                </section>
-              )}
-            </div>
+            </section>
+          ) : activeTab === "popular" ? (
+            /* Popular Tab - Grid Layout */
+            <section>
+              <SectionHeader title={t("discover.popular")} />
+              <CategoryGrid
+                categories={popularCategories}
+                progress={progressMap}
+                favorites={favorites}
+                leaderboardRanks={leaderboardRanks}
+                onCategoryClick={handleCategoryClick}
+                onFavoriteToggle={toggleFavorite}
+                getBadge={getBadge}
+              />
+            </section>
           ) : activeTab === "favorites" ? (
             /* Favorites Tab - Grid Layout */
             <section>
