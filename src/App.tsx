@@ -34,6 +34,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const PowerUps = lazy(() => import("./pages/PowerUps"));
 const Leaderboards = lazy(() => import("./pages/Leaderboards"));
 const Profile = lazy(() => import("./pages/Profile"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const TeamV2 = lazy(() => import("./pages/TeamV2"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
@@ -131,6 +132,7 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/leaderboards" element={<Leaderboards />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/:userId" element={<PublicProfile />} />
                 <Route path="/world" element={<WorldHome />} />
                 <Route path="/game" element={<Game />} />
                 <Route path="/team" element={<TeamV2 />} />
