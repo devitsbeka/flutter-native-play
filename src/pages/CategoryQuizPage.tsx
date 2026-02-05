@@ -65,6 +65,14 @@ import plankIcon from "@/assets/workout/plank.png";
 import flexibilityIcon from "@/assets/workout/flexibility.png";
 import pullUpIcon from "@/assets/workout/calisthenics-pull-up.png";
 
+// Import celebration icons for passed quiz results
+import sparkleIcon from "@/assets/celebration/ai-sparkle.png";
+import archeryIcon from "@/assets/celebration/archery.png";
+import axeTargetIcon from "@/assets/celebration/axe-throwing-target.png";
+import awardIcon from "@/assets/celebration/award.png";
+import balloonArchIcon from "@/assets/celebration/balloon-arch.png";
+import windSpinnerIcon from "@/assets/celebration/wind-spinner.png";
+
 const WORKOUT_ICONS = [
   acroyogaIcon,
   balanceBoardIcon,
@@ -73,6 +81,15 @@ const WORKOUT_ICONS = [
   plankIcon,
   flexibilityIcon,
   pullUpIcon,
+];
+
+const SUCCESS_ICONS = [
+  sparkleIcon,
+  archeryIcon,
+  axeTargetIcon,
+  awardIcon,
+  balloonArchIcon,
+  windSpinnerIcon,
 ];
 
 const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
@@ -119,6 +136,11 @@ export default function CategoryQuizPage() {
   // Random workout icon for failed results (stable per mount)
   const [workoutIcon] = useState(() => 
     WORKOUT_ICONS[Math.floor(Math.random() * WORKOUT_ICONS.length)]
+  );
+  
+  // Random celebration icon for passed results (stable per mount)
+  const [successIcon] = useState(() => 
+    SUCCESS_ICONS[Math.floor(Math.random() * SUCCESS_ICONS.length)]
   );
   
   // Currency hook for level-up rewards
@@ -845,7 +867,11 @@ export default function CategoryQuizPage() {
               {isPerfect ? (
                 <span className="text-7xl">🏆</span>
               ) : passed ? (
-                <span className="text-7xl">🎉</span>
+                <img 
+                  src={successIcon} 
+                  alt="Excellent" 
+                  className="w-24 h-24 object-contain drop-shadow-lg"
+                />
               ) : (
                 <img 
                   src={workoutIcon} 
