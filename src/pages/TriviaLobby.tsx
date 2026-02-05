@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Trophy, Info, Pencil } from "lucide-react";
+import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Info, Pencil } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -237,7 +237,7 @@ export default function TriviaLobby() {
         >
           {/* Leaderboard Header */}
           <div className="flex items-center gap-2 p-4 border-b border-border">
-            <Trophy className="w-5 h-5 text-yellow-500" />
+            <img src={pushButton3d} alt="" className="w-5 h-5 object-contain grayscale" />
             <h2 className="font-bold text-foreground">ლიდერბორდი</h2>
             <span className="text-xs text-muted-foreground ml-auto">{leaderboard.length} მოთამაშე</span>
           </div>
@@ -246,7 +246,7 @@ export default function TriviaLobby() {
           <div className="divide-y divide-border">
             {leaderboard.length === 0 ? (
               <div className="py-12 text-center">
-                <Trophy className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                <img src={pushButton3d} alt="" className="w-10 h-10 object-contain grayscale opacity-50 mx-auto mb-3" />
                 <p className="text-muted-foreground text-sm">ჯერ არავის უთამაშია</p>
                 <p className="text-muted-foreground/70 text-xs mt-1">იყავი პირველი!</p>
               </div>
