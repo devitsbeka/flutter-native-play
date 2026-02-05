@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
@@ -58,7 +58,10 @@ const COMMANDS = [
 ];
 
 const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = "bar" }) => {
-  const [open, setOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isSearchOpenFromUrl = searchParams.get("search") === "open";
+  
+  const [open, setOpen] = useState(isSearchOpenFromUrl);
   const [query, setQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -83,6 +86,27 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Sync open state with URL param
+  useEffect(() => {
+    const isOpenInUrl = searchParams.get("search") === "open";
+    if (isOpenInUrl !== open) {
+      setOpen(isOpenInUrl);
+    }
+  }, [searchParams]);
+
+  // Update URL when open state changes (user action)
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    setSearchParams(prev => {
+      if (newOpen) {
+        prev.set("search", "open");
+      } else {
+        prev.delete("search");
+      }
+      return prev;
+    }, { replace: !newOpen }); // Use replace when closing to not add extra history entry
+  };
+
   // Focus mobile input when panel opens
   useEffect(() => {
     if (open && isMobile && mobileInputRef.current) {
@@ -99,12 +123,12 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen(prev => !prev);
+        handleOpenChange(!open);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [open]);
 
   // Reset query when dialog closes
   useEffect(() => {
@@ -174,7 +198,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
   // Handle command execution
   const handleCommandSelect = async (cmd: typeof COMMANDS[0]) => {
-    setOpen(false);
+    handleOpenChange(false);
     
     switch (cmd.action) {
       case "create-room":
@@ -192,31 +216,31 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
   // Handle category select
   const handleCategorySelect = (categoryId: string) => {
-    setOpen(false);
+    handleOpenChange(false);
     navigate(`/category/${categoryId}`);
   };
 
   // Handle friend select
   const handleFriendSelect = (friendId: string) => {
-    setOpen(false);
+    handleOpenChange(false);
     navigate(`/profile/${friendId}`);
   };
 
   // Handle room select
   const handleRoomSelect = (roomCode: string) => {
-    setOpen(false);
+    handleOpenChange(false);
     navigate(`/room/${roomCode}`);
   };
 
   // Handle trivia select
   const handleTriviaSelect = (triviaId: string) => {
-    setOpen(false);
+    handleOpenChange(false);
     navigate(`/trivia/${triviaId}`);
   };
 
   // Handle collection select
   const handleCollectionSelect = (collectionId: string) => {
-    setOpen(false);
+    handleOpenChange(false);
     navigate(`/collection/${collectionId}`);
   };
 
@@ -225,14 +249,14 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
     const value = e.target.value;
     setInputValue(value);
     if (value && !open) {
-      setOpen(true);
+      handleOpenChange(true);
     }
   };
 
   // Handle input keydown
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && inputValue) {
-      setOpen(true);
+      handleOpenChange(true);
     }
     if (e.key === "Escape") {
       setInputValue("");
@@ -250,9 +274,9 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             className={`relative p-2 rounded-full hover:bg-white/30 transition-colors ${className}`}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setOpen(true)}
+            onClick={() => handleOpenChange(true)}
           >
-            <Search className="w-5 h-5 text-gray-600" />
+            <Search className="w-5 h-5 text-muted-foreground" />
           </motion.button>
         )}
         
@@ -268,7 +292,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
             {/* Header with search bar */}
             <div className="flex items-center gap-3 p-4 border-b border-border safe-top">
               <motion.button
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
                 whileTap={{ scale: 0.9 }}
                 className="p-2 -ml-2 rounded-full hover:bg-muted"
               >
@@ -347,9 +371,9 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
           className={`relative p-2 rounded-full hover:bg-white/30 transition-colors ${className}`}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={() => setOpen(true)}
+          onClick={() => handleOpenChange(true)}
         >
-          <Search className="w-5 h-5 text-gray-600" />
+          <Search className="w-5 h-5 text-muted-foreground" />
         </motion.button>
       ) : (
         /* Bar mode - full search bar */
@@ -369,7 +393,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
           />
           <kbd 
             className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 text-[10px] font-medium text-muted-foreground border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors"
-            onClick={() => setOpen(true)}
+            onClick={() => handleOpenChange(true)}
           >
             <Command className="w-2.5 h-2.5" />K
           </kbd>
@@ -378,7 +402,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
 
       {/* Command Dialog (Desktop only) */}
       {!isMobile && (
-        <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandDialog open={open} onOpenChange={handleOpenChange}>
           <CommandInput 
             placeholder={isCommand ? "შეიყვანე ბრძანება..." : "ძებნა კატეგორიებში, მეგობრებში, ოთახებში..."}
             value={query}
