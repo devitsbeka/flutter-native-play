@@ -19,6 +19,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,28 +101,83 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
     }
   }, [isOpen, stopCamera]);
 
+  // Compress image using canvas - handles HEIC, resizes, and converts to JPEG
+  const compressImage = useCallback((file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        
+        let { width, height } = img;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxWidth) {
+          width = (width * maxWidth) / height;
+          height = maxWidth;
+        }
+        
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        
+        if (!ctx) {
+          reject(new Error("Canvas context unavailable"));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl);
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to load image"));
+      };
+      
+      img.src = url;
+    });
+  }, []);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
+    // Allow empty type for HEIC, check extension as fallback
+    const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
+    if (!file.type.startsWith("image/") && !isImageByExtension) {
       toast.error(t("errors.selectImageFile"));
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Increased limit for mobile (compression will reduce final size)
+    if (file.size > 15 * 1024 * 1024) {
       toast.error(t("errors.imageTooLarge"));
       return;
     }
 
-    // Convert to base64 for preview
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImage(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    setIsProcessingFile(true);
+
+    try {
+      const dataUrl = await compressImage(file, 1024, 0.85);
+      setUploadedImage(dataUrl);
+      
+      // Reset input for iOS Safari
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast.error(t("errors.failedToReadImage") || "Failed to process image");
+    } finally {
+      setIsProcessingFile(false);
+    }
   };
 
   const generateAvatar = async () => {
@@ -265,14 +321,28 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
                   {/* Upload button */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 max-w-[160px] aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                    disabled={isProcessingFile}
+                    className={`flex-1 max-w-[160px] aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 hover:border-primary/50 hover:bg-muted/30 transition-colors ${isProcessingFile ? 'opacity-50' : ''}`}
                   >
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Upload className="w-7 h-7 text-primary" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {t("avatar.uploadPhoto")}
-                    </span>
+                    {isProcessingFile ? (
+                      <>
+                        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Loader2 className="w-7 h-7 text-primary animate-spin" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("common.processing") || "Processing..."}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Upload className="w-7 h-7 text-primary" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {t("avatar.uploadPhoto")}
+                        </span>
+                      </>
+                    )}
                   </button>
                 </div>
               )}
@@ -280,7 +350,7 @@ export function AvatarGeneratorModal({ isOpen, onClose }: AvatarGeneratorModalPr
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 onChange={handleFileSelect}
                 className="hidden"
               />
