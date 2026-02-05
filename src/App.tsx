@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { SoundProvider } from "@/contexts/SoundContext";
 import { NotificationModalProvider } from "@/contexts/NotificationModalContext";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationContext";
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
@@ -102,9 +103,10 @@ const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 const App = () => (
   <LanguageProvider>
     <AuthProvider>
-      <OnboardingProvider>
-        <SoundProvider>
-          <NotificationModalProvider>
+      <SoundProvider>
+        <NotificationsProvider>
+          <OnboardingProvider>
+            <NotificationModalProvider>
             <BackgroundGenerationProvider>
               <PlayerProfileProvider>
                 <AvatarModalProvider>
@@ -196,9 +198,10 @@ const App = () => (
                 </AvatarModalProvider>
               </PlayerProfileProvider>
             </BackgroundGenerationProvider>
-          </NotificationModalProvider>
-        </SoundProvider>
-      </OnboardingProvider>
+            </NotificationModalProvider>
+          </OnboardingProvider>
+        </NotificationsProvider>
+      </SoundProvider>
     </AuthProvider>
   </LanguageProvider>
 );
