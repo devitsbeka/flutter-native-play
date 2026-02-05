@@ -1,145 +1,295 @@
 
-# Plan: Fix Queue Scroll vs Drag Conflict
 
-## Problem
+# Plan: Fix Instant Notification Delivery
 
-In the room lobby queue section, users cannot scroll horizontally through the queued items because touching anywhere on a queue pill initiates a drag-to-reorder action. The user wants to be able to:
-- **Scroll** when swiping left/right on the queue items
-- **Drag** to reorder only when touching the grip handle (⋮⋮ icon)
+## Problem Analysis
 
-## Current Implementation Issues
+Notifications are delayed because the current architecture has a fundamental design issue:
 
-In `CategoryPickerSection.tsx` (lines 116-169):
+| Problem | Current Behavior | Impact |
+|---------|-----------------|--------|
+| **Multiple independent instances** | `useNotifications()` hook is called in 5+ places, each with its own state | Notifications don't sync between instances |
+| **No subscription status check** | `.subscribe()` is called without waiting for `SUBSCRIBED` status | Subscription may not be active when events occur |
+| **State isolation** | Each hook instance maintains its own `notifications` state | User must navigate/refresh to sync state |
+| **No connection monitoring** | If realtime disconnects, no automatic refetch | Missed notifications during disconnection |
 
-| Issue | Current Code | Problem |
-|-------|--------------|---------|
-| No `useDragControls` hook | Missing | Can't control which element triggers drag |
-| No `dragListener={false}` | `<Reorder.Item>` captures all touches | Entire item triggers drag |
-| `touch-none` class on item | Line 128: `touch-none` | Prevents any scrolling |
-| Grip handle is decorative | `<GripVertical>` has no event handler | Not functional |
+**Current architecture:**
+```text
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  HeaderActions  │     │  NotifPanel     │     │  Index Page     │
+│  useNotifications│    │  useNotifications│    │  useNotifications│
+│  ├─ state []    │     │  ├─ state []    │     │  ├─ state []    │
+│  └─ channel A   │     │  └─ channel B   │     │  └─ channel C   │
+└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 ↓
+                    ┌─────────────────────┐
+                    │   Supabase Realtime │
+                    │   notifications tbl │
+                    └─────────────────────┘
+```
 
-## Solution
+Each component has its own subscription and state - when a new notification arrives:
+- Only the **currently active** subscription receives it
+- Other components still have old state
+- Badge counts get out of sync
 
-Apply the same pattern used in `GameStylePersonalTrivia.tsx` (lines 92-212):
+## Solution: Create a NotificationsContext
 
-1. Import `useDragControls` from framer-motion
-2. Create individual drag controls for each queue item
-3. Disable automatic drag listener on `Reorder.Item`
-4. Add `onPointerDown` handler to the grip icon to start drag
-5. Remove `touch-none` from the item (keep it only on grip handle)
-6. Allow container to handle horizontal scroll
+Move the realtime subscription to a **single global context** that all components share.
+
+**New architecture:**
+```text
+┌────────────────────────────────────────────────────┐
+│              NotificationsProvider                  │
+│   ├─ single shared state: notifications[]          │
+│   ├─ single realtime channel                       │
+│   └─ subscription status monitoring                │
+└────────────────────────┬───────────────────────────┘
+                         │
+    ┌────────────────────┼────────────────────┐
+    ↓                    ↓                    ↓
+┌──────────┐      ┌───────────┐       ┌───────────┐
+│HeaderActions│   │NotifPanel │       │Index Page │
+│useNotif()  │    │useNotif() │       │useNotif() │
+│  ↓ reads   │    │  ↓ reads  │       │  ↓ reads  │
+│  context   │    │  context  │       │  context  │
+└────────────┘    └───────────┘       └───────────┘
+```
 
 ## Technical Changes
 
-### File: `src/components/team/CategoryPickerSection.tsx`
+### 1. Create NotificationsContext
 
-**Line 1** - Update import:
+**New file: `src/contexts/NotificationsContext.tsx`**
+
+This context will:
+- Maintain a **single realtime subscription** for the logged-in user
+- Share **one notifications state** across all components
+- Add **subscription status callback** to verify connection
+- **Refetch on reconnect** to catch any missed notifications
+- Expose the same API as the current hook
+
 ```tsx
-import { motion, Reorder, useDragControls } from "framer-motion";
+// Key improvements:
+
+// 1. Status callback to verify subscription is active
+.subscribe((status) => {
+  if (status === 'SUBSCRIBED') {
+    console.log('[Notifications] Realtime connected');
+    // Refetch to catch any missed notifications
+    fetchNotifications();
+  }
+  if (status === 'CHANNEL_ERROR') {
+    console.error('[Notifications] Channel error, will retry...');
+  }
+});
+
+// 2. Single channel for the entire app
+const CHANNEL_ID = `notifications-global-${user.id}`;
+
+// 3. Connection health monitoring
+const [isConnected, setIsConnected] = useState(false);
 ```
 
-**Lines 116-169** - Refactor the Reorder.Group section:
+### 2. Update useNotifications Hook
 
-Instead of inline items, create a new component `DraggableQueueItem` that uses `useDragControls`:
+Convert the existing hook to consume the context:
 
 ```tsx
-function DraggableQueueItem({
-  item,
-  index,
-  hasCategory,
-  onRemoveQueueItem,
-}: {
-  item: QueueItem;
-  index: number;
-  hasCategory: boolean;
-  onRemoveQueueItem?: (id: string) => void;
-}) {
-  const dragControls = useDragControls();
+// src/hooks/useNotifications.ts
 
-  return (
-    <Reorder.Item
-      key={item.id}
-      value={item}
-      dragListener={false}  // <-- CRITICAL: Disable auto-drag
-      dragControls={dragControls}
-      layout
-      className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/10 border border-white/20 shrink-0 h-9"
-      whileDrag={{ scale: 1.1, zIndex: 50, boxShadow: "0 8px 20px rgba(0,0,0,0.4)" }}
-    >
-      <span className="text-white/40 text-xs font-bold mr-0.5">
-        {hasCategory ? index + 2 : index + 1}
-      </span>
-      
-      {/* Drag handle - ONLY this triggers drag */}
-      <div
-        onPointerDown={(e) => dragControls.start(e)}
-        className="cursor-grab active:cursor-grabbing touch-none"
-      >
-        <GripVertical className="w-[18px] h-[18px] text-white/40" />
-      </div>
-      
-      {/* Icon and label - scrollable, not draggable */}
-      {/* ... icon logic ... */}
-      <span className="text-white/80 text-xs font-medium">
-        {item.category_name || "ტრივია"}
-      </span>
-      
-      {/* Remove button */}
-      {onRemoveQueueItem && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemoveQueueItem(item.id);
-          }}
-          className="ml-0.5 p-1 rounded-full hover:bg-white/20"
-        >
-          <X className="w-[18px] h-[18px] text-white/50" />
-        </button>
-      )}
-    </Reorder.Item>
-  );
+export function useNotifications() {
+  const context = useContext(NotificationsContext);
+  if (!context) {
+    throw new Error('useNotifications must be used within NotificationsProvider');
+  }
+  return context;
 }
 ```
 
-**Update the container div** (line 114):
+### 3. Add Provider to App
+
+Wrap the app with the new provider (at the same level as AuthProvider):
+
 ```tsx
-// Remove select-none and cursor-grab from items
-// Remove touch-none from the Reorder.Item (move it only to grip handle)
-<div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+// src/App.tsx
+<AuthProvider>
+  <NotificationsProvider>  {/* Add here */}
+    ...
+  </NotificationsProvider>
+</AuthProvider>
 ```
 
-**Update `Reorder.Group`** (line 116-121):
+## Files to Create/Modify
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/contexts/NotificationsContext.tsx` | **Create** | New context with single realtime subscription |
+| `src/hooks/useNotifications.ts` | **Modify** | Convert to context consumer |
+| `src/App.tsx` | **Modify** | Add NotificationsProvider |
+
+## Implementation Details
+
+### NotificationsContext.tsx (New File)
+
 ```tsx
-<Reorder.Group 
-  axis="x" 
-  values={queue} 
-  onReorder={onReorderQueue}
-  className="flex gap-2"
-  // Remove touchAction: "pan-y" - let natural scroll work
->
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useSound } from '@/contexts/SoundContext';
+
+// ... types stay the same ...
+
+interface NotificationsContextType {
+  notifications: Notification[];
+  unreadCount: number;
+  loading: boolean;
+  isConnected: boolean;  // NEW: connection status
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  clearAllNotifications: () => Promise<void>;
+  refresh: () => Promise<void>;
+}
+
+const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
+
+export function NotificationsProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const { playSound } = useSound();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // ... fetchNotifications, markAsRead, etc. stay the same ...
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      setLoading(false);
+      setIsConnected(false);
+      return;
+    }
+
+    fetchNotifications();
+
+    // SINGLE global channel
+    const channel = supabase
+      .channel(`notifications-global-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const newNotification = payload.new as Notification;
+        setNotifications((prev) => [newNotification, ...prev]);
+        playSound('notification');
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const updated = payload.new as Notification;
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === updated.id ? updated : n))
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const deletedId = (payload.old as { id: string }).id;
+        setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
+      })
+      .subscribe((status) => {
+        // KEY FIX: Monitor subscription status
+        if (status === 'SUBSCRIBED') {
+          setIsConnected(true);
+          // Refetch to catch any events that occurred during connection
+          fetchNotifications();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setIsConnected(false);
+        } else if (status === 'CLOSED') {
+          setIsConnected(false);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+      setIsConnected(false);
+    };
+  }, [user, fetchNotifications, playSound]);
+
+  // ... rest of the implementation ...
+}
 ```
 
-## Summary of Changes
+### useNotifications.ts (Modified)
 
-| Component | Change | Effect |
-|-----------|--------|--------|
-| Import | Add `useDragControls` | Enable controlled dragging |
-| `Reorder.Item` | Add `dragListener={false}` | Disable whole-item drag |
-| `Reorder.Item` | Add `dragControls={dragControls}` | Link to controls |
-| `Reorder.Item` | Remove `touch-none` class | Allow scroll on item |
-| `Reorder.Item` | Remove `cursor-grab` class | Only grip shows grab cursor |
-| `GripVertical` wrapper | Add `onPointerDown` handler | Grip starts drag |
-| `GripVertical` wrapper | Add `touch-none` class | Prevent scroll on grip |
+```tsx
+import { useContext } from 'react';
+import { NotificationsContext } from '@/contexts/NotificationsContext';
+import { supabase } from '@/integrations/supabase/client';
 
-## Files to Modify
+// Export types
+export type { Notification, NotificationType } from '@/contexts/NotificationsContext';
 
-| File | Lines | Change |
-|------|-------|--------|
-| `src/components/team/CategoryPickerSection.tsx` | 1 | Update import |
-| `src/components/team/CategoryPickerSection.tsx` | 114-169 | Refactor queue items with proper drag controls |
+export function useNotifications() {
+  const context = useContext(NotificationsContext);
+  if (!context) {
+    throw new Error('useNotifications must be used within NotificationsProvider');
+  }
+  return context;
+}
+
+// Keep the helper function for creating notifications
+export async function createNotification(...) {
+  // ... stays the same ...
+}
+```
+
+### App.tsx (Modified)
+
+```tsx
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
+
+const App = () => (
+  <LanguageProvider>
+    <AuthProvider>
+      <NotificationsProvider>  {/* ADD HERE - after AuthProvider */}
+        <OnboardingProvider>
+          <SoundProvider>
+            ...
+          </SoundProvider>
+        </OnboardingProvider>
+      </NotificationsProvider>
+    </AuthProvider>
+  </LanguageProvider>
+);
+```
+
+## Summary
+
+| Change | Benefit |
+|--------|---------|
+| Single global context | All components share the same notification state |
+| Subscription status callback | Ensures realtime is actually connected before relying on it |
+| Refetch on reconnect | Catches any notifications missed during connection gaps |
+| Connection status exposed | Components can show offline indicator if needed |
+| Existing API preserved | No changes needed in consuming components |
 
 ## Result
 
-- **Scroll**: Swiping anywhere except the grip handle scrolls through queue
-- **Drag**: Only touching/clicking the grip icon (⋮⋮) initiates reorder
-- **Consistent UX**: Matches behavior of answer reordering in trivia editor
+When a notification is created:
+1. The **single** realtime subscription receives the INSERT event instantly
+2. The shared state updates **once**
+3. **All components** reading from the context immediately see the new notification
+4. Badge counts update across the entire app simultaneously
+
