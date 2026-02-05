@@ -1,111 +1,145 @@
 
-# Plan: Fix Back Button Navigation to Return to Previous Page ✅ COMPLETED
 
-## Problem
-When users open a trivia or collection from the search panel (SpotlightSearch) and then press the back button, they are taken to the home page (Index) instead of back to the search panel. This is because the search panel is rendered as a modal overlay on the Index page, so the browser history only has `Index → TriviaLobby`.
+# Plan: Reorganize Discover Page Tabs
 
-## Solution
-Implement a URL-based approach where opening the search panel adds a query parameter to the URL (`?search=open`). When users navigate to a trivia/collection from search, the back button will return them to this URL, which will automatically re-open the search panel.
+## Overview
+The user wants to restructure the Discover page tabs and content organization:
 
-## Implementation
+### Current State
+**Tabs:** ყველა (All), ფავორიტები (Favorites), კლასიკური (Classic), გართობა (Fun), სასწავლო (Educational)
 
-### File 1: `src/components/search/SpotlightSearch.tsx`
+**"ყველა" (All) tab shows sections:**
+- ჩემი ფავორიტები (My Favorites)
+- ბოლოს ნანახი (Recently Viewed)
+- პოპულარული (Popular)
+- კლასიკური ტრივია (Classic Trivia)
+- გართობა (Fun)
+- სასწავლო (Educational)
 
-**Changes:**
-1. Import `useSearchParams` from `react-router-dom`
-2. Sync the `open` state with URL query parameter `?search=open`
-3. When opening search, add `?search=open` to the URL
-4. When closing search, remove the query parameter
-5. On mount, check if `?search=open` is in URL and open the panel accordingly
+### Desired State
+**New tabs:** ფავორიტები, ბოლოს ნანახი, პოპულარული, კლასიკური, გართობა, სასწავლო
 
-```tsx
-// Before navigating to trivia/collection, the URL will be:
-// /?search=open
+**"ყველა" (All) tab should ONLY show:**
+- კლასიკური (Classic)
+- გართობა (Fun)
+- სასწავლო (Educational)
 
-// After navigating, the history will be:
-// /?search=open → /trivia/123
+---
 
-// When user presses back:
-// /?search=open (search panel auto-opens)
+## Implementation Details
+
+### File 1: `src/pages/Discover.tsx`
+
+| Change | Description |
+|--------|-------------|
+| Update tabs array | Add "recently_viewed" and "popular" tabs; reorder tabs |
+| Modify "all" tab content | Remove favorites, recently viewed, and popular sections from "ყველა" |
+| Add "recently_viewed" tab handler | Show recently viewed categories in grid when that tab is active |
+| Add "popular" tab handler | Show popular categories in grid when that tab is active |
+
+**Updated tabs array:**
+```text
+- { id: "favorites", label: "ფავორიტები" }
+- { id: "recently_viewed", label: "ბოლოს ნანახი" }
+- { id: "popular", label: "პოპულარული" }
+- { id: "classic", label: "კლასიკური" }
+- { id: "fun", label: "გართობა" }
+- { id: "educational", label: "სასწავლო" }
 ```
 
-### File 2: `src/pages/Index.tsx`
+**"ყველა" tab content (simplified):**
+Only shows three sections:
+1. Classic categories carousel
+2. Fun categories carousel
+3. Educational categories carousel
 
-**Changes:**
-1. Import `useSearchParams` from `react-router-dom`
-2. Check for `search=open` query parameter
-3. Pass this state to SpotlightSearch to control its open state externally
-4. Handle URL changes to open/close search
+**New tab handlers:**
+- `recently_viewed`: Display recently viewed categories in grid layout
+- `popular`: Display popular categories in grid layout
 
-## Technical Details
+---
 
-### SpotlightSearch Changes
+### File 2: `src/locales/ka.ts`
+
+| Change | Description |
+|--------|-------------|
+| Add translation key | `discover.recentlyViewedTab` for the tab label |
+| Add translation key | `discover.noRecentlyViewed` for empty state message |
+| Note: `discover.popular` already exists |
+
+---
+
+### File 3: `src/components/shared/IconTabBar.tsx`
+
+| Change | Description |
+|--------|-------------|
+| Add new icon mappings | Add icons for "recently_viewed" and "popular" tabs |
+| Note: Will need to add icon assets or reuse existing ones |
+
+---
+
+### File 4: `src/assets/tabs/` (New Icons)
+
+| Asset | Description |
+|-------|-------------|
+| `recently_viewed.png` or reuse existing | Icon for "ბოლოს ნანახი" tab |
+| `popular.png` or reuse existing | Icon for "პოპულარული" tab |
+
+**Alternative:** Use existing icons temporarily (e.g., `all.png` with different tint) until new icons are created.
+
+---
+
+## Technical Flow
 
 ```text
-Current Flow:
-[Home Page] → Click Search Button → [Search Modal Opens]
-                                    → Click Trivia → navigate('/trivia/123')
+Tab Selection Flow:
                                     
-History: Index → TriviaLobby
-Back Button: Goes to Index (search closed)
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                         IconTabBar                                   │
+  │  [ფავორიტები] [ბოლოს ნანახი] [პოპულარული] [კლასიკური] [გართობა] [სასწავლო]  │
+  └─────────────────────────────────────────────────────────────────────┘
+           │                │              │             │        │       │
+           ▼                ▼              ▼             ▼        ▼       ▼
+       favorites      recently_viewed  popular      classic    fun   educational
+           │                │              │             │        │       │
+           ▼                ▼              ▼             ▼        ▼       ▼
+       Grid View        Grid View      Grid View    Grid View  Grid   Grid
+       (favs only)     (recent only)  (popular)    (classic)  (fun)  (edu)
 ```
 
-```text
-New Flow:
-[Home Page] → Click Search Button → [URL: /?search=open, Search Modal Opens]
-                                    → Click Trivia → navigate('/trivia/123')
-                                    
-History: Index → Index?search=open → TriviaLobby
-Back Button: Goes to Index?search=open (search re-opens automatically)
-```
+**Removed from "all" tab:**
+- ~~ჩემი ფავორიტები section~~
+- ~~ბოლოს ნანახი section~~
+- ~~პოპულარული section~~
 
-### Key Implementation Points
-
-1. **URL Sync with Modal State**
-   - Use `useSearchParams` hook to read/write query params
-   - When `setOpen(true)` is called, also set `?search=open`
-   - When `setOpen(false)` is called, remove the query param
-
-2. **Initial State from URL**
-   - On component mount, check if `search=open` exists in URL
-   - If yes, set `open` state to `true`
-
-3. **Navigation from Search**
-   - Continue using regular `navigate()` for trivia/collection pages
-   - The `?search=open` in history ensures back returns to search state
-
-### Alternative Approach (Simpler but Less Robust)
-
-Use `navigate` with `state` parameter to pass context:
-
-```tsx
-// In SpotlightSearch
-const handleTriviaSelect = (triviaId: string) => {
-  setOpen(false);
-  navigate(`/trivia/${triviaId}`, { state: { from: 'search' } });
-};
-
-// In TriviaLobby
-const handleBack = () => {
-  if (location.state?.from === 'search') {
-    navigate('/', { state: { openSearch: true } });
-  } else {
-    navigate(-1);
-  }
-};
-```
-
-This approach is simpler but doesn't persist across page refreshes.
+---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/components/search/SpotlightSearch.tsx` | Add URL query param sync for search state |
-| `src/pages/Index.tsx` | Handle `?search=open` param to control SpotlightSearch |
+| File | Type of Change |
+|------|----------------|
+| `src/pages/Discover.tsx` | Update tabs, modify content sections, add new tab handlers |
+| `src/locales/ka.ts` | Add new translation keys |
+| `src/components/shared/IconTabBar.tsx` | Add icon mappings for new tabs |
+| `src/assets/tabs/` | May need new icon assets |
+
+---
 
 ## Edge Cases Handled
-- Direct navigation to `/?search=open` will open search panel
-- Refreshing while search is open maintains the state
-- Closing search clears the URL parameter
-- Works on both mobile (full-screen) and desktop (dialog) modes
+
+- Empty "recently viewed" shows appropriate message
+- Empty "popular" shows categories even if user hasn't interacted
+- Default tab can remain "favorites" or become first tab based on preference
+- Remove "all" tab entirely since individual type tabs now exist
+
+---
+
+## Alternative Consideration
+
+Since there's no longer a need for an "all" tab (all content types have their own tabs now), we can either:
+
+**Option A:** Remove "ყველა" tab entirely, start with "ფავორიტები" as default
+**Option B:** Keep "ყველა" showing only კლასიკური/გართობა/სასწავლო sections
+
+Based on the user's request, **Option B** is preferred - keep "ყველა" but only show the three category type sections.
+
