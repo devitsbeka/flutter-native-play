@@ -1032,11 +1032,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           </p>
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
-                            <p className="text-xs text-white/70 mt-1 truncate">
-                              შემდეგი რაუნდები: {queuedRounds.map((r, i) => 
-                                `${i + 1}. ${r.category_name || "შემთხვევითი"}`
-                              ).join(" ")}
-                            </p>
+                             <div className="mt-2 space-y-0.5">
+                               <p className="text-xs text-white/60 font-medium">შემდეგი რაუნდები:</p>
+                               <div className="flex flex-wrap gap-1.5">
+                                 {queuedRounds.map((r, i) => (
+                                   <span 
+                                     key={r.tmpId}
+                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
+                                   >
+                                     <span className="text-white/50">{i + 1}.</span>
+                                     {r.category_name || "შემთხვევითი"}
+                                   </span>
+                                 ))}
+                               </div>
+                             </div>
                           )}
                         </div>
                         {/* Re-roll button */}
@@ -1170,11 +1179,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           </p>
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
-                            <p className="text-xs text-white/70 mt-1 truncate">
-                              შემდეგი რაუნდები: {queuedRounds.map((r, i) => 
-                                `${i + 1}. ${r.category_name || "შემთხვევითი"}`
-                              ).join(" ")}
-                            </p>
+                             <div className="mt-2 space-y-0.5">
+                               <p className="text-xs text-white/60 font-medium">შემდეგი რაუნდები:</p>
+                               <div className="flex flex-wrap gap-1.5">
+                                 {queuedRounds.map((r, i) => (
+                                   <span 
+                                     key={r.tmpId}
+                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
+                                   >
+                                     <span className="text-white/50">{i + 1}.</span>
+                                     {r.category_name || "შემთხვევითი"}
+                                   </span>
+                                 ))}
+                               </div>
+                             </div>
                           )}
                         </div>
                         {/* Add to queue */}
@@ -1250,11 +1268,20 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
                           </p>
                           {/* Inline queue preview */}
                           {queuedRounds.length > 0 && (
-                            <p className="text-xs text-white/70 mt-1 truncate">
-                              შემდეგი რაუნდები: {queuedRounds.map((r, i) => 
-                                `${i + 1}. ${r.category_name || "შემთხვევითი"}`
-                              ).join(" ")}
-                            </p>
+                             <div className="mt-2 space-y-0.5">
+                               <p className="text-xs text-white/60 font-medium">შემდეგი რაუნდები:</p>
+                               <div className="flex flex-wrap gap-1.5">
+                                 {queuedRounds.map((r, i) => (
+                                   <span 
+                                     key={r.tmpId}
+                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs text-white/90"
+                                   >
+                                     <span className="text-white/50">{i + 1}.</span>
+                                     {r.category_name || "შემთხვევითი"}
+                                   </span>
+                                 ))}
+                               </div>
+                             </div>
                           )}
                         </div>
                         <button 
