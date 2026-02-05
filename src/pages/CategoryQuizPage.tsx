@@ -92,6 +92,9 @@ const SUCCESS_ICONS = [
   windSpinnerIcon,
 ];
 
+// Perfect score icon from icon library (Starfish Wizard)
+const PERFECT_SCORE_ICON = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/starfish-wizard.png";
+
 const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
 
 interface TriviaQuestion {
@@ -865,7 +868,11 @@ export default function CategoryQuizPage() {
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
             >
               {isPerfect ? (
-                <span className="text-7xl">🏆</span>
+                <img 
+                  src={PERFECT_SCORE_ICON}
+                  alt="Perfect"
+                  className="w-24 h-24 object-contain drop-shadow-lg"
+                />
               ) : passed ? (
                 <img 
                   src={successIcon} 
