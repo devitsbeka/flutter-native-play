@@ -136,21 +136,18 @@ export function GuestWelcomePanel({
   return (
     <div className="flex flex-col items-center w-full max-w-sm mx-auto px-4 py-2 overflow-y-auto" style={{ marginTop: "-70px" }}>
       {/* Title */}
-      <motion.div
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1, type: "spring" }}
-        className="flex flex-col items-center mb-2 sm:mb-3"
-      >
-        <span className="font-slackey text-foreground font-black text-2xl sm:text-3xl">
-          გამარჯობა!
-        </span>
-        {isSignUp && (
-          <p className="mt-1 text-sm sm:text-base text-muted-foreground font-medium text-center leading-relaxed">
+      {isSignUp && (
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring" }}
+          className="flex flex-col items-center mb-2 sm:mb-3"
+        >
+          <p className="text-sm sm:text-base text-muted-foreground font-medium text-center leading-relaxed">
             შექმენი შენი პროფილი და ითამაშე უფასოდ!
           </p>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Avatar upload - only show in signup mode */}
       {isSignUp && (
