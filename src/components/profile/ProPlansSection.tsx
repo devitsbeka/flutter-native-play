@@ -69,7 +69,7 @@ export const PRO_TIERS: TierConfig[] = [
     benefits: [
       { icon: Zap, text: '2x XP ბონუსი' },
       { icon: Shield, text: 'რეკლამების გარეშე' },
-      { icon: Star, text: 'VIP ბეჯი + ფრეიმები' },
+      { icon: Star, text: 'VIP ბეჯი' },
       { icon: Gift, text: 'ყოველდღიური ჯილდოები' },
       { icon: Users, text: '5 მეგობრის მოწვევა', highlight: true },
     ]
@@ -252,15 +252,6 @@ export function ProPlansSection({
                     <Gift className="w-3 h-3" style={{ color: familyTier.accentColor }} />
                   </div>
                   <span className="text-sm text-muted-foreground">ყოველდღიური ჯილდოები</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: familyTier.lightBg }}
-                  >
-                    <Star className="w-3 h-3" style={{ color: familyTier.accentColor }} />
-                  </div>
-                  <span className="text-sm text-muted-foreground">VIP ბეჯი + ფრეიმები</span>
                 </div>
               </div>
 
