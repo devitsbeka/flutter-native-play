@@ -220,7 +220,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         {/* Question Text - hide for image-only mode */}
         {!hideQuestionText && (
           <div className={cn(
-            "px-5 py-2 [@media(max-height:700px)]:py-1.5 min-h-[80px] flex items-center justify-center",
+            "px-5 py-2 [@media(max-height:700px)]:py-1.5 [@media(max-height:600px)]:py-1 min-h-[80px] [@media(max-height:600px)]:min-h-[60px] flex items-center justify-center",
             // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon
             // Reduce top padding if we have media (no need for icon space)
             hasMedia && "pt-4",

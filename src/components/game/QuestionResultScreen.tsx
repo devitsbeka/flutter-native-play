@@ -27,10 +27,10 @@ export function QuestionResultScreen() {
   const isLastQuestion = currentQuestionIndex >= questions.length - 1;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Purple Header */}
       <div className={cn(
-        "pt-12 pb-24 px-6 text-center",
+        "pt-8 pb-16 px-6 text-center [@media(max-height:700px)]:pt-6 [@media(max-height:700px)]:pb-12 [@media(max-height:600px)]:pt-4 [@media(max-height:600px)]:pb-10 flex-shrink-0",
         lastAnswerCorrect ? "gradient-purple" : "bg-destructive"
       )}>
         {/* Result Icon */}
@@ -38,12 +38,12 @@ export function QuestionResultScreen() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="w-20 h-20 mx-auto rounded-full bg-primary-foreground/20 flex items-center justify-center mb-4"
+          className="w-20 h-20 [@media(max-height:700px)]:w-16 [@media(max-height:700px)]:h-16 [@media(max-height:600px)]:w-14 [@media(max-height:600px)]:h-14 mx-auto rounded-full bg-primary-foreground/20 flex items-center justify-center mb-4"
         >
           {lastAnswerCorrect ? (
-            <Check className="w-10 h-10 text-primary-foreground" />
+            <Check className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 text-primary-foreground" />
           ) : (
-            <X className="w-10 h-10 text-destructive-foreground" />
+            <X className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 text-destructive-foreground" />
           )}
         </motion.div>
 
@@ -52,7 +52,7 @@ export function QuestionResultScreen() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-3xl font-bold text-primary-foreground mb-2"
+          className="text-3xl [@media(max-height:700px)]:text-2xl font-bold text-primary-foreground mb-2"
         >
           {lastAnswerCorrect ? "Correct!" : "Wrong!"}
         </motion.h2>
@@ -83,13 +83,13 @@ export function QuestionResultScreen() {
       </div>
 
       {/* White Content Area */}
-      <div className="flex-1 bg-background rounded-t-[2rem] -mt-6 relative z-10 p-6">
+      <div className="flex-1 bg-background rounded-t-[2rem] -mt-6 relative z-10 p-4 [@media(max-height:700px)]:p-3 flex flex-col overflow-hidden">
         {/* Score Comparison */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-card rounded-3xl p-6 mb-6 shadow-md"
+          className="bg-card rounded-3xl p-4 [@media(max-height:700px)]:p-3 mb-4 [@media(max-height:700px)]:mb-3 shadow-md flex-shrink-0"
         >
           <div className="flex items-center justify-between">
             {/* You */}
@@ -142,7 +142,7 @@ export function QuestionResultScreen() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="flex justify-center mb-8"
+          className="flex justify-center mb-4 [@media(max-height:700px)]:mb-3 flex-shrink-0"
         >
           <ProgressDots
             total={questions.length}
@@ -157,7 +157,7 @@ export function QuestionResultScreen() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="flex justify-center"
+          className="flex justify-center flex-shrink-0 mt-auto"
         >
           <ChunkyButton
             variant="primary"

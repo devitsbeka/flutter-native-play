@@ -308,7 +308,7 @@ export function QuizGameScreenProd() {
       <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Different layout for solo vs challenge mode */}
-      <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 [@media(max-height:700px)]:py-0.5 [@media(max-height:700px)]:mb-1 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 [@media(max-height:700px)]:py-0.5 [@media(max-height:700px)]:mb-1 [@media(max-height:600px)]:pt-1 [@media(max-height:600px)]:py-0 [@media(max-height:600px)]:mb-0.5 flex-shrink-0">
         <button
           onClick={() => navigate("/")}
           className="w-10 h-10 [@media(max-height:700px)]:w-8 [@media(max-height:700px)]:h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -337,7 +337,7 @@ export function QuizGameScreenProd() {
 
       {/* Players Row - Only show avatars in vs/challenge mode (no icon) */}
       {opponent && (
-        <div className="flex items-center justify-between px-6 mt-1 mb-3 [@media(max-height:700px)]:mb-2 flex-shrink-0 z-10">
+        <div className="flex items-center justify-between px-6 mt-1 mb-3 [@media(max-height:700px)]:mb-2 [@media(max-height:600px)]:mb-1 [@media(max-height:600px)]:mt-0 flex-shrink-0 z-10">
           {/* Player (Left) */}
           <QuizPlayerAvatar
             avatarUrl={profile?.avatar_url}
@@ -360,7 +360,7 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Question Card with Overlapping Icon */}
-      <div className="px-4 flex-shrink-0 -mt-1 mb-0 [@media(max-height:700px)]:-mt-2 [@media(max-height:700px)]:mb-0 relative">
+      <div className="px-4 flex-shrink-0 -mt-1 mb-0 [@media(max-height:700px)]:-mt-2 [@media(max-height:700px)]:mb-0 [@media(max-height:600px)]:-mt-3 relative">
         {/* Category Icon - overlaps card by 50% (hide if media question) */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
@@ -404,7 +404,7 @@ export function QuizGameScreenProd() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center py-2 [@media(max-height:700px)]:py-1.5 flex-shrink-0">
+      <div className="flex justify-center py-2 [@media(max-height:700px)]:py-1.5 [@media(max-height:600px)]:py-1 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -414,7 +414,7 @@ export function QuizGameScreenProd() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="w-full px-4 mt-0 flex gap-3 pb-2">
+        <div className="w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 pb-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -441,7 +441,7 @@ export function QuizGameScreenProd() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-y-auto min-h-0 pb-2">
+        <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0 pb-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isHidden = hiddenAnswers.includes(answer);
@@ -472,7 +472,7 @@ export function QuizGameScreenProd() {
       )}
 
       {/* Bottom Area - Power-ups OR Next Button */}
-      <div className="px-4 pb-2 [@media(max-height:700px)]:pb-1 flex-shrink-0">
+      <div className="px-4 pb-2 [@media(max-height:700px)]:pb-1 [@media(max-height:600px)]:pb-0.5 flex-shrink-0">
         <div className="pb-[env(safe-area-inset-bottom)]">
           <AnimatePresence mode="wait">
             {answerRevealed ? (
