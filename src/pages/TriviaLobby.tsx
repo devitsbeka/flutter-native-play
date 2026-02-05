@@ -172,14 +172,6 @@ export default function TriviaLobby() {
 
         {/* Header Right Side - Edit + Avatar */}
         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-          {isOwner && (
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
-            >
-              <Pencil className="w-4 h-4 text-white" />
-            </button>
-          )}
           {creator && (
             <button onClick={() => openProfile(creator.user_id)}>
               <SafeAvatar
@@ -315,14 +307,26 @@ export default function TriviaLobby() {
         </motion.div>
       </div>
 
-      {/* Fixed Play Button */}
+      {/* Fixed Buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-xl mx-auto space-y-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+            className="space-y-2"
           >
+            {isOwner && (
+              <ChunkyButton 
+                variant="secondary" 
+                size="lg" 
+                className="w-full gap-2" 
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <Pencil className="w-5 h-5" />
+                რედაქტირება
+              </ChunkyButton>
+            )}
             <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
               <Play className="w-5 h-5 fill-current" />
               ითამაშე
