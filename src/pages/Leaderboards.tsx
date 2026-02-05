@@ -69,16 +69,16 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
     shadow: string;
   }> = {
     1: { // Bronze
-      gradient: 'linear-gradient(135deg, #CD7F32 0%, #E8B066 25%, #CD7F32 50%, #8B4513 75%, #CD7F32 100%)',
-      shadow: '0 2px 12px rgba(205, 127, 50, 0.5), inset 0 1px 2px rgba(255,255,255,0.3)'
+      gradient: 'linear-gradient(135deg, #D4945A 0%, #F5C896 30%, #CD7F32 50%, #B87333 70%, #E8A960 100%)',
+      shadow: '0 4px 16px rgba(205, 127, 50, 0.6), inset 0 2px 4px rgba(255,255,255,0.4)'
     },
     2: { // Silver  
-      gradient: 'linear-gradient(135deg, #A8A8A8 0%, #E0E0E0 25%, #C0C0C0 50%, #808080 75%, #A8A8A8 100%)',
-      shadow: '0 2px 12px rgba(192, 192, 192, 0.5), inset 0 1px 2px rgba(255,255,255,0.3)'
+      gradient: 'linear-gradient(135deg, #D8D8D8 0%, #F8F8F8 30%, #E8E8E8 50%, #C4C4C4 70%, #EBEBEB 100%)',
+      shadow: '0 4px 16px rgba(200, 200, 200, 0.6), inset 0 2px 4px rgba(255,255,255,0.5)'
     },
     3: { // Gold
-      gradient: 'linear-gradient(135deg, #DAA520 0%, #FFD700 25%, #FFC000 50%, #B8860B 75%, #DAA520 100%)',
-      shadow: '0 2px 12px rgba(255, 215, 0, 0.5), inset 0 1px 2px rgba(255,255,255,0.3)'
+      gradient: 'linear-gradient(135deg, #F7C948 0%, #FFE066 30%, #FFD700 50%, #E6B800 70%, #FFC933 100%)',
+      shadow: '0 4px 16px rgba(255, 215, 0, 0.6), inset 0 2px 4px rgba(255,255,255,0.5)'
     }
   };
   
@@ -347,10 +347,7 @@ export default function Leaderboards() {
         
         {/* Floating "See Rankings" button with badge when collapsed */}
         {!isExpanded && (
-          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
-            {activeTier === userTier && (
-              <AnimatedLeagueBadge tier={userTier} />
-            )}
+          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
             <button 
               onClick={() => setIsExpanded(true)}
               className="bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 
@@ -360,6 +357,13 @@ export default function Leaderboards() {
                 ნახე რეიტინგი
               </span>
             </button>
+          </div>
+        )}
+        
+        {/* "შენი ლიგა" badge positioned at top, below league nav */}
+        {!isExpanded && activeTier === userTier && (
+          <div className="fixed top-[140px] left-1/2 -translate-x-1/2 z-20">
+            <AnimatedLeagueBadge tier={userTier} />
           </div>
         )}
 
