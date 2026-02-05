@@ -537,7 +537,7 @@ export const TVLobbyScreenV2: React.FC = () => {
       {/* Main Content - Split Layout (Players Left, QR Right) */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left Side - Players Grid */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-2">
           <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
             <Users className="w-4 h-4" />
             მოთამაშეები
@@ -649,24 +649,31 @@ export const TVLobbyScreenV2: React.FC = () => {
         </div>
 
         {/* Right Side - QR Code */}
-        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-start pt-5 mt-[15px]">
-          {/* QR Code */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-3 rounded-2xl bg-white shadow-2xl"
-          >
-            <QRCodeSVG
-              value={joinUrl}
-              size={140}
-              level="M"
-              includeMargin={false}
-            />
-          </motion.div>
+        <div className="w-56 flex-shrink-0 flex flex-col items-center justify-between pt-5 mt-[15px]">
+          {/* Top: QR Code + URL */}
+          <div className="flex flex-col items-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-3 rounded-2xl bg-white shadow-2xl"
+            >
+              <QRCodeSVG
+                value={joinUrl}
+                size={140}
+                level="M"
+                includeMargin={false}
+              />
+            </motion.div>
 
-          <div className="mt-3 text-center">
-            <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
-            <p className="text-sm font-bold text-white">mytrivia.io/join</p>
+            <div className="mt-3 text-center">
+              <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
+              <p className="text-sm font-bold text-white">mytrivia.io/join</p>
+            </div>
+          </div>
+          
+          {/* Bottom: Logo */}
+          <div className="pb-4">
+            <MyTriviaLiveLogo size="sm" textColor="light" />
           </div>
         </div>
       </div>
@@ -751,11 +758,6 @@ export const TVLobbyScreenV2: React.FC = () => {
           მოლოდინი, ჰოსტმა დაიწყოს თამაში...
         </motion.p>
       )}
-
-      {/* Bottom Logo - Centered */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-        <MyTriviaLiveLogo size="md" textColor="light" />
-      </div>
     </div>
   );
 };
