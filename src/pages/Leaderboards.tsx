@@ -63,22 +63,34 @@ const LEAGUE_STROKE_COLORS: Record<number, { from: string; via: string; to: stri
 
 // Premium metallic league badge with light sweep animation
 const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
-  // Metallic color schemes for each tier - all with WHITE text for visibility
+  // Refined metallic color schemes with proper text contrast
   const metallicStyles: Record<number, { 
-    gradient: string; 
-    shadow: string;
+    base: string;        // Core metallic color
+    highlight: string;   // Top highlight
+    border: string;      // Border/edge color
+    textColor: string;   // Text color for contrast
+    shadowColor: string; // Text shadow for depth
   }> = {
-    1: { // Bronze - Rich polished bronze with depth
-      gradient: 'linear-gradient(145deg, #8B5A2B 0%, #CD853F 15%, #DEB887 30%, #F4A460 50%, #CD853F 65%, #8B4513 85%, #A0522D 100%)',
-      shadow: '0 4px 20px rgba(139, 90, 43, 0.7), inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.2)'
+    1: { // Bronze - Warm copper tones
+      base: '#B87333',
+      highlight: 'rgba(222, 184, 135, 0.6)',
+      border: '#8B4513',
+      textColor: '#FFF8E7',
+      shadowColor: 'rgba(69, 35, 10, 0.8)'
     },
-    2: { // Silver - Polished chrome/silver effect
-      gradient: 'linear-gradient(145deg, #808080 0%, #C0C0C0 15%, #F5F5F5 30%, #FFFFFF 45%, #E8E8E8 55%, #B8B8B8 75%, #909090 100%)',
-      shadow: '0 4px 20px rgba(150, 150, 150, 0.6), inset 0 2px 6px rgba(255,255,255,0.6), inset 0 -2px 6px rgba(0,0,0,0.15)'
+    2: { // Silver - Cool chrome
+      base: '#A8A8A8',
+      highlight: 'rgba(255, 255, 255, 0.7)',
+      border: '#6B6B6B',
+      textColor: '#1A1A1A',
+      shadowColor: 'rgba(255, 255, 255, 0.5)'
     },
-    3: { // Gold - Lustrous 24K gold effect
-      gradient: 'linear-gradient(145deg, #996515 0%, #D4A017 15%, #FFD700 30%, #FFEC8B 45%, #FFD700 55%, #DAA520 75%, #B8860B 100%)',
-      shadow: '0 4px 20px rgba(218, 165, 32, 0.7), inset 0 2px 6px rgba(255,255,255,0.5), inset 0 -2px 6px rgba(0,0,0,0.2)'
+    3: { // Gold - Rich warm gold
+      base: '#DAA520',
+      highlight: 'rgba(255, 236, 139, 0.7)',
+      border: '#996515',
+      textColor: '#2D1F00',
+      shadowColor: 'rgba(255, 255, 255, 0.4)'
     }
   };
   
@@ -86,46 +98,51 @@ const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
   
   return (
     <div className="relative inline-flex items-center justify-center">
-      {/* Main metallic badge */}
       <motion.div
         className="relative rounded-full overflow-hidden"
         style={{
-          background: style.gradient,
-          backgroundSize: '200% 200%',
-          boxShadow: style.shadow,
-        }}
-        animate={{
-          backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
+          background: `
+            linear-gradient(180deg, 
+              ${style.highlight} 0%, 
+              transparent 40%
+            ),
+            linear-gradient(180deg, 
+              ${style.base} 0%, 
+              ${style.base} 100%
+            )
+          `,
+          border: `2px solid ${style.border}`,
+          boxShadow: `
+            0 4px 12px rgba(0,0,0,0.3),
+            inset 0 1px 0 ${style.highlight},
+            inset 0 -2px 4px rgba(0,0,0,0.2)
+          `,
         }}
       >
-        {/* Light sweep overlay */}
+        {/* Animated light sweep */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%)',
+            background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
             backgroundSize: '200% 100%'
           }}
           animate={{
             backgroundPosition: ['-100% 0%', '200% 0%']
           }}
           transition={{
-            duration: 2.5,
+            duration: 2,
             repeat: Infinity,
-            repeatDelay: 1.5,
+            repeatDelay: 2,
             ease: "easeInOut"
           }}
         />
         
-        {/* Text - WHITE with text shadow for visibility */}
+        {/* Text with proper contrast */}
         <span 
-          className="relative z-10 block text-sm px-4 py-1.5 font-bold text-white"
+          className="relative z-10 block text-sm px-5 py-2 font-bold"
           style={{ 
-            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+            color: style.textColor,
+            textShadow: `0 1px 2px ${style.shadowColor}, 0 0 1px ${style.shadowColor}`
           }}
         >
           შენი ლიგა
