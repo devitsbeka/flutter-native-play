@@ -30,10 +30,51 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
         {isLoading ? (
-          <div 
-            className="w-full h-full rounded-2xl bg-white/20 animate-pulse"
-            style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" }}
-          />
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Glowing light rays behind icon */}
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: "radial-gradient(circle, rgba(139,92,246,0.5) 0%, rgba(139,92,246,0.2) 40%, transparent 70%)",
+              }}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            
+            {/* Secondary glow ring */}
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                background: "radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 60%)",
+                filter: "blur(12px)",
+              }}
+              animate={{
+                scale: [1.1, 1.3, 1.1],
+                opacity: [0.4, 0.7, 0.4],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.3,
+              }}
+            />
+            
+            {/* The category icon itself */}
+            <DynamicIcon
+              slug={iconSlug}
+              categoryId={categoryId}
+              size={size * 0.85}
+              className="relative z-10"
+            />
+          </div>
         ) : iconSlug || categoryId ? (
           // Use DynamicIcon for icon library lookup
           <DynamicIcon
