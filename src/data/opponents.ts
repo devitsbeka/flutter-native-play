@@ -89,16 +89,16 @@ export const countries = [
 const avatarEmojis = ["😎", "🤓", "🧐", "😏", "🤔", "😊", "🙂", "🤠", "👻", "🦊", "🐱", "🐶", "🦁", "🐯", "🐼", "🐨", "🦄", "🐲", "👾", "🤖"];
 
 export const ranks = [
-  { name: "Bronze", minPoints: 0, maxPoints: 999, color: "text-amber-600" },
-  { name: "Silver", minPoints: 1000, maxPoints: 2499, color: "text-gray-400" },
-  { name: "Gold", minPoints: 2500, maxPoints: 4999, color: "text-yellow-500" },
-  { name: "Platinum", minPoints: 5000, maxPoints: 9999, color: "text-cyan-400" },
-  { name: "Diamond", minPoints: 10000, maxPoints: 24999, color: "text-blue-400" },
-  { name: "Master", minPoints: 25000, maxPoints: 49999, color: "text-purple-500" },
-  { name: "Grandmaster", minPoints: 50000, maxPoints: Infinity, color: "text-red-500" },
+  { name: "Bronze", minPoints: 0, maxPoints: 999, color: "text-amber-600", gradient: null },
+  { name: "Silver", minPoints: 1000, maxPoints: 2499, color: "text-gray-400", gradient: null },
+  { name: "Gold", minPoints: 2500, maxPoints: 4999, color: "text-yellow-500", gradient: null },
+  { name: "Platinum", minPoints: 5000, maxPoints: 9999, color: "text-cyan-400", gradient: null },
+  { name: "Diamond", minPoints: 10000, maxPoints: 24999, color: "text-blue-400", gradient: null },
+  { name: "Master", minPoints: 25000, maxPoints: 49999, color: "text-transparent", gradient: "bg-gradient-to-r from-violet-400 via-purple-500 to-fuchsia-500 bg-clip-text" },
+  { name: "Grandmaster", minPoints: 50000, maxPoints: Infinity, color: "text-transparent", gradient: "bg-gradient-to-r from-amber-300 via-rose-400 to-purple-500 bg-clip-text" },
 ];
 
-export function getRankFromPoints(points: number): { name: string; color: string } {
+export function getRankFromPoints(points: number): { name: string; color: string; gradient: string | null } {
   const rank = ranks.find(r => points >= r.minPoints && points <= r.maxPoints);
   return rank || ranks[0];
 }
