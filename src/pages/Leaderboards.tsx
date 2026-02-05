@@ -558,14 +558,18 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
           </div>
         </div>
         
+        {/* "შენი ლიგა" badge positioned at top, below league nav */}
+        {activeTier === userTier && (
+          <div className="flex justify-center mt-4">
+            <AnimatedLeagueBadge tier={userTier} />
+          </div>
+        )}
+        
         {/* Spacer - trophies visible in background */}
         <div className="flex-1" />
         
         {/* View Rating button at bottom with "შენი ლიგა" label */}
-        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
-          {activeTier === userTier && (
-            <AnimatedLeagueBadge tier={userTier} />
-          )}
+        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-10 py-4 
@@ -717,14 +721,18 @@ function TabletLeaderboards({
           </div>
         </div>
         
+        {/* "შენი ლიგა" badge positioned at top, below league nav */}
+        {currentTier === userTier && (
+          <div className="flex justify-center mt-4">
+            <AnimatedLeagueBadge tier={userTier} />
+          </div>
+        )}
+        
         {/* Spacer - trophy is already visible in the background */}
         <div className="flex-1" />
         
         {/* View Rating button at bottom with "შენი ლიგა" label */}
-        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
-          {currentTier === userTier && (
-            <AnimatedLeagueBadge tier={userTier} />
-          )}
+        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
