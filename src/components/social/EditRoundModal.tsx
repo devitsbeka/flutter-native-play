@@ -552,7 +552,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
                                 <button
                                   type="button"
                                   onClick={() => setIconPickerIndex(index)}
-                                  className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
+                                  className="rounded-full flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
                                   style={{ width: 80, height: 80 }}
                                 >
                                   {q.icon_slug ? (
