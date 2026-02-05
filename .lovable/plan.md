@@ -1,118 +1,290 @@
 
-# Plan: Fix Inconsistent Gaps in Mobile Action Buttons Arc
+# Plan: Fix Mobile Photo Upload in Avatar Modal
 
-## Problem
+## Problem Analysis
 
-The mobile home screen shows action buttons in a curved arc above the avatar. When the user is **not PRO**, there are 6 buttons (including "no-ads"), but when they **are PRO**, there are only 5 buttons. The current `marginBottom` values that create the arc were designed for 5 buttons, so when 6 are displayed, the spacing looks uneven.
+Photo upload doesn't work on actual mobile devices (published URL). The current implementation has several critical issues:
 
-**Current layout (mobile, lines 903-1055):**
-| Button | marginBottom | Position |
-|--------|-------------|----------|
-| Gift | 0 | Left edge |
-| Mission | 32 | Second |
-| Chest | 48 | Peak (center) |
-| No-ads (if !isVip) | 32 | Fourth |
-| Powers | 0 | Right edge |
-
-This creates an **asymmetric arc** because:
-- With 5 buttons: the arc is 0→32→48→32→0 ✓ (symmetric)
-- With 6 buttons: the arc should be different to remain symmetric, but currently it's still using values meant for 5
+| Issue | Description | Impact |
+|-------|-------------|--------|
+| **No FileReader error handler** | If reading the file fails, nothing happens silently | User clicks upload, file picker opens, file selected, but nothing happens |
+| **HEIC format not handled** | iPhone photos in HEIC format have empty `file.type` on some browsers | Type check fails: `!file.type.startsWith("image/")` rejects HEIC |
+| **No loading state during read** | User has no feedback while large file is being processed | Appears frozen/broken |
+| **Large mobile images** | 12MP+ phone cameras create huge files that can crash FileReader | Memory issues, slow processing |
+| **No compression** | Raw camera photos are 3-8MB, causing slow uploads | Upload timeouts, poor UX |
 
 ---
 
 ## Solution
 
-Create **dynamic arc values** based on whether the no-ads button is shown:
+Completely rewrite the file selection handler with proper mobile support:
 
-### 5 Buttons (VIP users) - Current values work:
+### 1. Accept HEIC Format + Better MIME Handling
+```tsx
+// Before
+accept="image/*"
+if (!file.type.startsWith("image/")) { ... }
+
+// After
+accept="image/*,.heic,.heif"
+// Allow empty type for HEIC, check extension as fallback
+const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
+if (!file.type.startsWith("image/") && !isImageByExtension) { ... }
 ```
-Gift(0) → Mission(28) → Chest(48) → Mission-Mirror(28) → Powers(0)
+
+### 2. Add Loading State During File Read
+```tsx
+const [isProcessingFile, setIsProcessingFile] = useState(false);
+
+const handleFileSelect = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  
+  setIsProcessingFile(true);  // Show loading on button
+  
+  try {
+    // ... process file
+  } finally {
+    setIsProcessingFile(false);
+  }
+};
 ```
 
-### 6 Buttons (Non-VIP users) - New symmetric arc:
+### 3. Add Error Handler to FileReader
+```tsx
+const reader = new FileReader();
+
+reader.onerror = () => {
+  console.error("FileReader error:", reader.error);
+  toast.error(t("errors.failedToReadImage"));
+  setIsProcessingFile(false);
+};
+
+reader.onload = (event) => { ... };
+reader.readAsDataURL(file);
 ```
-Gift(0) → Mission(24) → Chest(40) → No-ads(40) → Powers-setup(24) → Powers(0)
-```
 
----
-
-## Technical Changes
-
-### File: `src/pages/Index.tsx`
-
-**Lines 904-1055** - Add conditional marginBottom values based on `isVip`:
+### 4. Compress Large Images Using Canvas
+Before reading as data URL, resize images that are too large:
 
 ```tsx
-<div 
-  className="absolute left-1/2 -translate-x-1/2 flex items-end justify-center pointer-events-auto z-20"
-  style={{ 
-    top: -75, 
-    width: 340,
-    gap: isVip ? 8 : 4  // Smaller gap when 6 buttons
-  }}
-  data-walkthrough="powerups"
->
-  {/* Gift - always marginBottom: 0 */}
-  <motion.div style={{ marginBottom: 0 }}>
-    <ActionButtonWithParticles ... />
-  </motion.div>
-
-  {/* Mission - marginBottom: 28 (5 buttons) or 20 (6 buttons) */}
-  <motion.div style={{ marginBottom: isVip ? 28 : 20 }}>
-    <ActionButtonWithParticles ... />
-  </motion.div>
-
-  {/* Chest - marginBottom: 48 (5 buttons) or 36 (6 buttons) */}
-  <motion.div style={{ marginBottom: isVip ? 48 : 36 }}>
-    <ActionButtonWithParticles ... />
-  </motion.div>
-
-  {/* No-ads - only if !isVip, marginBottom: 36 */}
-  {!isVip && (
-    <motion.div style={{ marginBottom: 36 }}>
-      <ActionButtonWithParticles ... />
-    </motion.div>
-  )}
-
-  {/* Powers - marginBottom: 28 (5 buttons) or 20 (6 buttons) */}
-  <motion.div style={{ marginBottom: isVip ? 28 : 20 }}>
-    <ActionButtonWithParticles ... />
-  </motion.div>
-</div>
+const compressImage = (file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      
+      // Calculate new dimensions
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      // Draw to canvas
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      // Convert to data URL
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      resolve(dataUrl);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+    
+    img.src = url;
+  });
+};
 ```
 
-Wait - I see the Powers button currently has `marginBottom: 0`, which means it's also at the edge. Let me re-analyze the proper symmetric arc:
+### 5. Increase File Size Limit
+Mobile photos are often larger than 5MB, especially from modern phones:
 
-### Corrected Arc Values:
+```tsx
+// Before: 5MB limit
+if (file.size > 5 * 1024 * 1024) { ... }
 
-**5 buttons (VIP):**
-- Gift: 0
-- Mission: 28
-- Chest (center): 48
-- Powers-left-mirror: 28
-- Powers: 0
+// After: 15MB limit (compression will reduce for upload)
+if (file.size > 15 * 1024 * 1024) { ... }
+```
 
-**6 buttons (non-VIP):**
-- Gift: 0
-- Mission: 20
-- Chest: 36
-- No-ads: 36
-- Powers-setup: 20
-- Powers: 0
+### 6. Reset File Input After Use
+Fix for iOS Safari where same file can't be selected twice:
 
----
-
-## Files to Modify
-
-| File | Lines | Change |
-|------|-------|--------|
-| `src/pages/Index.tsx` | 904-1055 | Update marginBottom values to be conditional based on `isVip`, reduce gap from `gap-2` to dynamic value |
+```tsx
+reader.onload = (event) => {
+  setUploadedImage(event.target?.result as string);
+  setStep("upload");
+  // Reset input for iOS Safari
+  if (fileInputRef.current) {
+    fileInputRef.current.value = '';
+  }
+};
+```
 
 ---
 
-## Result
+## File Changes
 
-- **VIP users (5 buttons)**: Clean symmetric arc with proper spacing
-- **Non-VIP users (6 buttons)**: Slightly tighter arc with same visual symmetry
-- No visual "jumping" when VIP status changes
-- Consistent professional appearance regardless of button count
+### File: `src/components/home/AvatarModal.tsx`
+
+**Lines 82-84** - Add new state:
+```tsx
+const [isProcessingFile, setIsProcessingFile] = useState(false);
+```
+
+**Lines 184-204** - Complete rewrite of handleFileSelect:
+```tsx
+// Add compressImage helper function above handleFileSelect
+
+const compressImage = useCallback((file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxWidth) {
+        width = (width * maxWidth) / height;
+        height = maxWidth;
+      }
+      
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context unavailable"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      const dataUrl = canvas.toDataURL("image/jpeg", quality);
+      resolve(dataUrl);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+    
+    img.src = url;
+  });
+}, []);
+
+const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Allow empty type for HEIC, check extension as fallback
+  const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
+  if (!file.type.startsWith("image/") && !isImageByExtension) {
+    toast.error(t("errors.selectImageFile"));
+    return;
+  }
+
+  // Increased limit for mobile (compression will reduce)
+  if (file.size > 15 * 1024 * 1024) {
+    toast.error(t("errors.imageTooLarge"));
+    return;
+  }
+
+  setIsProcessingFile(true);
+
+  try {
+    // Use compression via canvas (handles HEIC, resizes, and converts to JPEG)
+    const dataUrl = await compressImage(file, 1024, 0.85);
+    setUploadedImage(dataUrl);
+    setStep("upload");
+    
+    // Reset input for iOS Safari
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  } catch (error) {
+    console.error("Error processing image:", error);
+    toast.error(t("errors.failedToReadImage") || "Failed to process image");
+  } finally {
+    setIsProcessingFile(false);
+  }
+};
+```
+
+**Line 656-662** - Update file input:
+```tsx
+<input
+  ref={fileInputRef}
+  type="file"
+  accept="image/*,.heic,.heif"
+  capture="environment"
+  onChange={handleFileSelect}
+  className="hidden"
+/>
+```
+
+**Line 640-652** - Add loading state to upload button:
+```tsx
+<motion.button
+  onClick={() => fileInputRef.current?.click()}
+  disabled={isProcessingFile}
+  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all ${isProcessingFile ? 'opacity-50' : ''}`}
+  whileHover={{ scale: 1.02 }}
+  whileTap={{ scale: 0.98 }}
+>
+  {isProcessingFile ? (
+    <>
+      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <span className="text-xs text-muted-foreground">მუშავდება...</span>
+    </>
+  ) : (
+    <>
+      <img 
+        src={iconPhotoUpload} 
+        alt="Upload" 
+        className="w-10 h-10 object-contain"
+      />
+      <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
+    </>
+  )}
+</motion.button>
+```
+
+---
+
+## Summary of Changes
+
+| Change | Benefit |
+|--------|---------|
+| HEIC support via extension check | iPhone photos work |
+| Canvas-based compression | Handles all formats, reduces file size, standardizes to JPEG |
+| Loading state during processing | User sees feedback |
+| Error handling | User gets error message instead of silent failure |
+| Input reset | iOS Safari can select same file again |
+| Increased size limit to 15MB | Modern phone cameras accepted |
+| `capture="environment"` attribute | Better mobile camera integration |
+
+---
+
+## Technical Details
+
+The canvas-based compression approach:
+1. Creates an object URL from the file (works with HEIC)
+2. Loads it into an Image element (browser handles decoding)
+3. Draws to canvas at reduced size
+4. Exports as JPEG data URL
+
+This bypasses FileReader's potential issues with large files and automatically converts HEIC to JPEG.
