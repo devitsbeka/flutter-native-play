@@ -1,133 +1,123 @@
 
+# Plan: Show Full PRO Benefits for Existing PRO Users
 
-# Plan: Fix TV Lobby Layout Issues
+## Problem Analysis
 
-## Issues Identified
+The Profile PRO tab has 3 different display scenarios based on subscription status:
 
-Based on the screenshots:
+1. **Not PRO** - Shows both tier cards with ALL benefits (4-5 items each) ✓
+2. **Solo PRO** - Shows current status + upgrade card with only 2 hardcoded benefits ❌
+3. **Family PRO** - Shows invite management (no benefits list)
 
-1. **Missing code below URL**: The game code (e.g., "1234") should appear below "mytrivia.io/join" so users know what to enter after opening the URL
-2. **Crown cropped**: The host crown is positioned at `-top-1 -right-1` with `overflow-hidden` on the parent, causing it to be clipped
-3. **Border/stroke overlap**: Player cards use `border-2 border-dashed` for empty slots while active players use `boxShadow: 'inset 0 0 0 2px'` - these can visually overlap on the rounded corners
+In **Scenario 2** (which the screenshot shows), the upgrade card at lines 234-256 only displays 2 hardcoded benefits:
+```tsx
+{/* Key benefits for upgrade */}
+<div className="space-y-2 mb-4">
+  <div className="flex items-center gap-2">
+    <!-- Users icon --> 5 მეგობრის მოწვევა (4 მეტი!)
+  </div>
+  <div className="flex items-center gap-2">
+    <!-- Gift icon --> ყოველდღიური ჯილდოები
+  </div>
+</div>
+```
+
+Meanwhile, the full `familyTier.benefits` array contains 5 items:
+- 2x XP ბონუსი
+- რეკლამების გარეშე
+- VIP ბეჯი
+- ყოველდღიური ჯილდოები
+- 5 მეგობრის მოწვევა
 
 ---
 
 ## Solution
 
-### File: `src/components/tv/TVLobbyScreenV2.tsx`
+Replace the hardcoded 2 benefits with the actual `familyTier.benefits` array, using the same rendering pattern as the full tier cards.
 
-### Change 1: Add Game Code Below URL (lines 668-671)
+### File: `src/components/profile/ProPlansSection.tsx`
 
-Update the QR section to include the code:
+**Location**: Lines 234-256 (inside the isSoloPro section)
 
-**Current:**
+**Current Code**:
 ```tsx
-<div className="mt-3 text-center">
-  <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
-  <p className="text-sm font-bold text-white">mytrivia.io/join</p>
-</div>
-```
-
-**Updated:**
-```tsx
-<div className="mt-3 text-center">
-  <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
-  <p className="text-sm font-bold text-white">mytrivia.io/join</p>
-  {/* Code to enter */}
-  <div className="mt-2 px-3 py-1 bg-white/10 rounded-lg inline-block">
-    <span className="text-purple-300 text-xs">კოდი: </span>
-    <span className="text-white font-bold text-lg tracking-wider">{code}</span>
+{/* Key benefits for upgrade */}
+<div className="space-y-2 mb-4">
+  <div className="flex items-center gap-2">
+    <div 
+      className="w-5 h-5 rounded-full flex items-center justify-center"
+      style={{ background: familyTier.lightBg }}
+    >
+      <Users className="w-3 h-3" style={{ color: familyTier.accentColor }} />
+    </div>
+    <span className="text-sm font-medium text-foreground">
+      5 მეგობრის მოწვევა (4 მეტი!)
+    </span>
+  </div>
+  <div className="flex items-center gap-2">
+    <div 
+      className="w-5 h-5 rounded-full flex items-center justify-center"
+      style={{ background: familyTier.lightBg }}
+    >
+      <Gift className="w-3 h-3" style={{ color: familyTier.accentColor }} />
+    </div>
+    <span className="text-sm text-muted-foreground">ყოველდღიური ჯილდოები</span>
   </div>
 </div>
 ```
 
-### Change 2: Fix Crown Cropping (lines 582 and 598)
-
-The issue is `overflow-hidden` on the parent card, which clips the crown positioned at `-top-1 -right-1`.
-
-**Solution A - Remove overflow-hidden and adjust crown position:**
-
-Change line 582 from:
+**New Code** (using dynamic benefits loop):
 ```tsx
-className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 overflow-hidden ${...}`}
+{/* All benefits from tier config */}
+<div className="space-y-2 mb-4">
+  {familyTier.benefits.map((benefit, i) => (
+    <div 
+      key={i}
+      className="flex items-center gap-2"
+    >
+      <div 
+        className="w-5 h-5 rounded-full flex items-center justify-center"
+        style={{ background: familyTier.lightBg }}
+      >
+        <benefit.icon 
+          className="w-3 h-3" 
+          style={{ color: familyTier.accentColor }} 
+        />
+      </div>
+      <span className={cn(
+        "text-sm",
+        benefit.highlight ? "text-foreground font-medium" : "text-muted-foreground"
+      )}>
+        {benefit.text}
+        {/* Add "(4 მეტი!)" for the friend invite benefit */}
+        {benefit.icon === Users && " (4 მეტი!)"}
+      </span>
+    </div>
+  ))}
+</div>
 ```
-
-To:
-```tsx
-className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-2 ${...}`}
-```
-
-And update the crown positioning (line 598) to sit inside the card:
-```tsx
-className="absolute top-1 right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg z-10"
-```
-
-This moves the crown from `-top-1 -right-1` (partially outside) to `top-1 right-1` (inside the card), so it won't be clipped.
-
-### Change 3: Fix Border Overlap on Empty Slots (lines 586-589)
-
-The dashed borders on empty slots can overlap at corners. Use consistent inset styling:
-
-**Current (empty slots):**
-```tsx
-: 'bg-white/5 border-2 border-dashed border-purple-500/30'
-```
-
-**Updated:**
-Remove the `border-*` classes and use `ring-inset` for consistent rendering:
-```tsx
-: 'bg-white/5 ring-2 ring-inset ring-dashed ring-purple-500/30'
-```
-
-Actually, Tailwind doesn't support `ring-dashed`. Alternative approach - keep the border but ensure consistent styling:
-
-**Better solution**: Use box-shadow for the dashed effect on empty slots too, matching the active player style:
-```tsx
-// For empty slots, use a pattern that doesn't overlap:
-style={{ 
-  backgroundImage: 'repeating-linear-gradient(90deg, rgba(139, 92, 246, 0.3) 0, rgba(139, 92, 246, 0.3) 8px, transparent 8px, transparent 12px)',
-  backgroundSize: '100% 2px, 100% 2px, 2px 100%, 2px 100%',
-  backgroundPosition: '0 0, 0 100%, 0 0, 100% 0',
-  backgroundRepeat: 'no-repeat'
-}}
-```
-
-**Simpler solution**: Reduce the border thickness and use `ring-inset` to keep borders inside:
-```tsx
-// Empty slots
-className="bg-white/5 ring-1 ring-inset ring-purple-500/40"
-```
-
-This uses an inset ring which stays inside the rounded corners and doesn't overlap with adjacent cells.
 
 ---
 
-## Summary of Changes
+## Expected Result
 
-| Location | Change | Purpose |
-|----------|--------|---------|
-| Lines 668-671 | Add game code display below URL | Users know what code to enter |
-| Line 582 | Remove `overflow-hidden` | Prevent crown clipping |
-| Line 598 | Change `-top-1 -right-1` to `top-1 right-1` | Position crown inside card boundaries |
-| Lines 586-587 | Replace `border-2 border-dashed` with `ring-1 ring-inset ring-purple-500/40` | Prevent border overlap between adjacent cards |
+After this change, the "upgrade to family" card shown to existing Solo PRO users will display all 5 benefits:
+
+| Icon | Benefit |
+|------|---------|
+| ⚡ Zap | 2x XP ბონუსი |
+| 🛡️ Shield | რეკლამების გარეშე |
+| ⭐ Star | VIP ბეჯი |
+| 🎁 Gift | ყოველდღიური ჯილდოები |
+| 👥 Users | 5 მეგობრის მოწვევა (4 მეტი!) |
+
+This matches the full tier card display and ensures users see all the benefits they get with the upgrade.
 
 ---
 
-## Visual Result
+## Summary
 
-```text
-┌─────────────────────────────────────────────────────┐
-│                                    │                │
-│   [Player Cards - no cropped       │   [QR Code]    │
-│    crowns, clean borders]          │                │
-│                                    │   ან გახსენით  │
-│   ┌──────┐  ┌──────┐               │ mytrivia.io/join│
-│   │ 👑 A │  │  B   │               │                │
-│   └──────┘  └──────┘               │   კოდი: 1234   │  ← NEW
-│                                    │                │
-│                                    │ [MyTrivia LIVE]│
-└─────────────────────────────────────────────────────┘
-```
-
-The crown will now appear fully visible, empty slots will have clean non-overlapping borders, and the game code will appear below the URL for easy reference.
+| File | Change | Purpose |
+|------|--------|---------|
+| `src/components/profile/ProPlansSection.tsx` | Replace hardcoded 2 benefits with `familyTier.benefits.map()` loop | Show all 5 benefits for the upgrade card |
 
