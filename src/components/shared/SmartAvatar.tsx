@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
+import { useAvatarModal } from "@/contexts/AvatarModalContext";
 
 interface SmartAvatarProps {
   avatarUrl?: string | null;
@@ -17,6 +18,7 @@ interface SmartAvatarProps {
   onlineStatus?: boolean | null;
   onClick?: () => void;
   clickable?: boolean;
+  isCurrentUser?: boolean; // If true, clicking opens avatar modal instead of profile
 }
 
 const sizeClasses = {
@@ -59,7 +61,9 @@ export function SmartAvatar({
   onlineStatus,
   onClick,
   clickable = false,
+  isCurrentUser = false,
 }: SmartAvatarProps) {
+  const { openAvatarModal } = useAvatarModal();
   const [showVideo, setShowVideo] = useState(autoPlay);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
@@ -155,7 +159,15 @@ export function SmartAvatar({
   // Resolve avatar URL to handle local asset paths
   const displayUrl = resolveAvatarUrl(avatarUrl) || undefined;
 
-  const isClickable = clickable || !!onClick;
+  const isClickable = clickable || !!onClick || isCurrentUser;
+
+  const handleClick = () => {
+    if (isCurrentUser) {
+      openAvatarModal();
+    } else if (onClick) {
+      onClick();
+    }
+  };
 
   return (
     <div
@@ -167,7 +179,7 @@ export function SmartAvatar({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
-      onClick={onClick}
+      onClick={handleClick}
       role={isClickable ? "button" : undefined}
       tabIndex={isClickable ? 0 : undefined}
     >
