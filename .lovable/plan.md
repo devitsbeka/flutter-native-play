@@ -1,269 +1,146 @@
 
-# Plan: "Game is Always On" - Resilient TV Mode Gameplay
+# Plan: Fix TV Lobby Layout and Logo Position
 
-## Problem Analysis
+## Problem Summary
 
-When players' screens lock/sleep during TV mode gameplay, several issues occur:
+Based on the screenshots provided:
+1. **Logo overlapping**: The "MyTrivia LIVE" logo is positioned at the absolute bottom-center of the screen, which overlaps with player placeholders and text
+2. **Player placeholders cropped**: The bottom row of player slots may get cut off due to spacing issues
+3. **Logo placement**: User wants the logo to be below the QR code section, centered within that right column
 
-1. **Presence disconnects** - The Supabase presence channel disconnects when the browser goes to background/sleeps
-2. **Timer pauses** - JavaScript timers pause when the tab is in background (especially on mobile)
-3. **Player count mismatch** - The game locks `active_player_count` at round start, but if players disconnect, the game still waits for their answers
-4. **No reconnection handling** - When players return (screen unlocks), there's no proactive sync to catch up with the game state
-5. **No visibility change listeners** - The TV game context doesn't listen for `visibilitychange` events
+---
 
-## Solution Overview
+## Current Layout Structure
 
-Implement a resilient "game always on" approach with three key components:
+```
+┌────────────────────────────────────────────────────────┐
+│ [TV Icon] Room Name            Players: 5/8 [TV Icon] │
+├────────────────────────────────────────────────────────┤
+│ Code: 1234                                             │
+├────────────────────────────────────────────────────────┤
+│ [Category Pills]                                       │
+├────────────────────────────────────────────────────────┤
+│                                        │               │
+│   [Player Grid - 4x2]                  │   [QR Code]   │
+│                                        │   ან გახსენით │
+│                                        │   mytrivia.io │
+├────────────────────────────────────────────────────────┤
+│              [Start Game Button]                       │
+├────────────────────────────────────────────────────────┤
+│              [MyTrivia LIVE Logo] ← OVERLAPS!          │
+└────────────────────────────────────────────────────────┘
+```
 
-1. **Visibility-aware presence reconnection** - Re-sync when players return from screen lock
-2. **Dynamic player count adjustment** - Adjust expected answers based on currently connected players
-3. **Timer resilience** - Handle host timer pauses gracefully
+---
+
+## Target Layout
+
+```
+┌────────────────────────────────────────────────────────┐
+│ [TV Icon] Room Name            Players: 5/8 [TV Icon] │
+├────────────────────────────────────────────────────────┤
+│ Code: 1234                                             │
+├────────────────────────────────────────────────────────┤
+│ [Category Pills]                                       │
+├────────────────────────────────────────────────────────┤
+│                                    │                   │
+│   [Player Grid - 4x2]              │     [QR Code]     │
+│                                    │     ან გახსენით   │
+│                                    │     mytrivia.io   │
+│                                    │                   │
+│                                    │ [MyTrivia LIVE]   │  ← MOVED HERE
+├────────────────────────────────────────────────────────┤
+│              [Start Game Button]                       │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Technical Implementation
 
-### 1. Add Visibility Change Handling in TVGameContext
+### File: `src/components/tv/TVLobbyScreenV2.tsx`
 
-**File: `src/contexts/TVGameContext.tsx`**
+**Change 1: Remove absolute positioned bottom logo (lines 755-758)**
 
-Add a new effect that listens for `visibilitychange` events:
-
-```typescript
-// After the presence channel setup, add visibility change handling
-useEffect(() => {
-  if (!state.sessionId) return;
-  
-  const handleVisibilityChange = async () => {
-    if (document.visibilityState === 'visible') {
-      console.log('[Visibility] 👀 App returned to foreground');
-      
-      // Step 1: Re-sync session state from database
-      await refetchSessionData(state.sessionId!);
-      
-      // Step 2: Re-track presence to mark as active
-      if (presenceChannelRef.current && myPlayerId) {
-        const me = state.players.find(p => p.id === myPlayerId);
-        await presenceChannelRef.current.track({
-          nickname: me?.nickname || 'Player',
-          avatar_url: me?.avatar_url ?? null,
-          score: me?.score ?? myScore,
-          hasAnswered: myAnswer !== null,
-          lastAnswerCorrect: me?.lastAnswerCorrect ?? null,
-          lastAnswer: myAnswer,
-          isHost: isHost,
-          isActive: true,
-        });
-        console.log('[Visibility] ✅ Re-tracked presence as active');
-      }
-      
-      // Step 3: If in question phase, sync timer
-      if (stateRef.current.phase === 'question') {
-        const { data: session } = await supabase
-          .from('tv_sessions')
-          .select('question_start_time')
-          .eq('id', state.sessionId)
-          .single();
-        
-        if (session?.question_start_time) {
-          const startTime = new Date(session.question_start_time).getTime();
-          const elapsed = Math.floor((Date.now() - startTime) / 1000);
-          const remaining = Math.max(0, QUESTION_TIME - elapsed);
-          
-          setState(prev => ({ ...prev, timeRemaining: remaining }));
-          console.log('[Visibility] ⏱️ Synced timer: elapsed', elapsed, 'remaining', remaining);
-        }
-      }
-    }
-  };
-  
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
-}, [state.sessionId, myPlayerId, isHost, myScore, myAnswer, refetchSessionData]);
+Remove:
+```tsx
+{/* Bottom Logo - Centered */}
+<div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+  <MyTriviaLiveLogo size="md" textColor="light" />
+</div>
 ```
 
-### 2. Dynamic Player Count Adjustment for Auto-Advance
+**Change 2: Add logo to QR section (right side column)**
 
-**File: `src/contexts/TVGameContext.tsx`**
+Update the right side QR section (lines 651-671) to include the logo at the bottom:
 
-Modify `checkAndAdvanceIfAllAnswered` to use a hybrid approach:
+```tsx
+{/* Right Side - QR Code + Logo */}
+<div className="w-56 flex-shrink-0 flex flex-col items-center justify-between pt-5 mt-[15px]">
+  {/* Top: QR Code */}
+  <div className="flex flex-col items-center">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="p-3 rounded-2xl bg-white shadow-2xl"
+    >
+      <QRCodeSVG
+        value={joinUrl}
+        size={140}
+        level="M"
+        includeMargin={false}
+      />
+    </motion.div>
 
-Currently (lines ~759-772):
-```typescript
-const expectedCount = session.active_player_count ?? liveActiveCount ?? 0;
-// ...
-if (expectedCount <= 0) {
-  console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0 (no eligible players)');
-  return;
-}
+    <div className="mt-3 text-center">
+      <p className="text-purple-300 text-sm mb-1">ან გახსენით</p>
+      <p className="text-sm font-bold text-white">mytrivia.io/join</p>
+    </div>
+  </div>
+  
+  {/* Bottom: Logo */}
+  <div className="pb-4">
+    <MyTriviaLiveLogo size="sm" textColor="light" />
+  </div>
+</div>
 ```
 
-Change to:
-```typescript
-// Use the MINIMUM of locked count and live count
-// This allows advancement when some players have left
-const lockedCount = session.active_player_count ?? 0;
-const liveCount = liveActiveCount ?? 0;
+Key changes:
+- Changed `justify-start` to `justify-between` to spread content vertically
+- Wrapped QR code and text in a container div
+- Added logo at the bottom of this column with padding
 
-// If live count is 0, someone's presence hasn't synced yet - use locked count
-// If live count > 0 but < locked, some players left - use live count
-// If live count >= locked, all expected players are present - use locked count
-let expectedCount = lockedCount;
-if (liveCount > 0 && liveCount < lockedCount) {
-  expectedCount = liveCount;
-  console.log('[AutoAdvance] 📉 Adjusted expected count from', lockedCount, 'to', liveCount, '(players left)');
-}
+**Change 3: Improve player grid spacing to prevent cropping**
 
-console.log('[AutoAdvance] 🎯 Using player count:', {
-  lockedCount,
-  liveActiveCount: liveCount,
-  finalExpected: expectedCount,
-});
+The player grid container (lines 540-649) needs adjustment to prevent bottom cropping:
 
-// SAFETY: If no players at all (everyone disconnected), let timer handle it
-if (expectedCount <= 0 && liveCount <= 0) {
-  console.log('[AutoAdvance] ⏭️ Skip: no active players - timer will handle');
-  return;
-}
+Update the container:
+```tsx
+{/* Left Side - Players Grid */}
+<div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-2">
 ```
 
-### 3. Host Timer Resilience
-
-**File: `src/contexts/TVGameContext.tsx`**
-
-Add visibility handling specifically for the host timer. When the host's screen locks and unlocks, the timer needs to catch up:
-
-```typescript
-// In the timer useEffect (around line 1222), add visibility-aware timer sync:
-useEffect(() => {
-  if (state.phase !== 'question') return;
-  if (!state.sessionId) return;
-  
-  // Timer sync on visibility change (host only)
-  const syncTimerOnVisibility = async () => {
-    if (document.visibilityState !== 'visible') return;
-    if (!isHostRef.current) return;
-    
-    // Fetch actual start time from DB and recalculate
-    const { data: session } = await supabase
-      .from('tv_sessions')
-      .select('question_start_time, status')
-      .eq('id', state.sessionId)
-      .single();
-    
-    if (session?.question_start_time && session.status === 'playing') {
-      const startTime = new Date(session.question_start_time).getTime();
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const remaining = Math.max(0, QUESTION_TIME - elapsed);
-      
-      console.log('[Timer] 🔄 Host visibility sync: elapsed', elapsed, 'remaining', remaining);
-      
-      if (remaining <= 0) {
-        // Timer should have expired while screen was locked
-        console.log('[Timer] ⏰ Timer expired during sleep - advancing now');
-        advanceToReveal('timer expired (visibility sync)');
-      } else {
-        setState(prev => ({ ...prev, timeRemaining: remaining }));
-      }
-    }
-  };
-  
-  document.addEventListener('visibilitychange', syncTimerOnVisibility);
-  
-  // Existing timer countdown logic...
-  timerRef.current = setInterval(() => { /* ... */ }, 1000);
-  
-  return () => {
-    document.removeEventListener('visibilitychange', syncTimerOnVisibility);
-    if (timerRef.current) clearInterval(timerRef.current);
-  };
-}, [state.phase, state.sessionId, advanceToReveal]);
-```
-
-### 4. Add Fallback Timer Check for Stuck Games
-
-**File: `src/contexts/TVGameContext.tsx`**
-
-Add a "heartbeat" check that runs every 5 seconds to catch stuck timers:
-
-```typescript
-// New effect: Heartbeat check for stuck games (host only)
-useEffect(() => {
-  if (!isHost) return;
-  if (state.phase !== 'question') return;
-  if (!state.sessionId) return;
-  
-  const heartbeatCheck = async () => {
-    const { data: session } = await supabase
-      .from('tv_sessions')
-      .select('question_start_time, status')
-      .eq('id', state.sessionId)
-      .single();
-    
-    if (!session?.question_start_time || session.status !== 'playing') return;
-    
-    const startTime = new Date(session.question_start_time).getTime();
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    
-    // If more than QUESTION_TIME + 5 seconds have passed, force advance
-    if (elapsed > QUESTION_TIME + 5) {
-      console.log('[Heartbeat] ⚠️ Game stuck! Elapsed:', elapsed, 'seconds. Forcing advance.');
-      advanceToReveal('heartbeat stuck recovery');
-    }
-  };
-  
-  const interval = setInterval(heartbeatCheck, 5000);
-  
-  return () => clearInterval(interval);
-}, [isHost, state.phase, state.sessionId, advanceToReveal]);
-```
+Add `pb-2` (padding-bottom) to ensure the last row isn't cropped.
 
 ---
 
 ## Summary of Changes
 
-| File | Change | Purpose |
-|------|--------|---------|
-| `src/contexts/TVGameContext.tsx` | Add `visibilitychange` listener for session re-sync | Recover state when player returns from screen lock |
-| `src/contexts/TVGameContext.tsx` | Modify `checkAndAdvanceIfAllAnswered` to use MIN(locked, live) count | Advance when some players leave mid-game |
-| `src/contexts/TVGameContext.tsx` | Add visibility-aware timer sync for host | Catch up timer after host screen lock |
-| `src/contexts/TVGameContext.tsx` | Add heartbeat check every 5s | Recover from stuck games |
+| Location | Change | Purpose |
+|----------|--------|---------|
+| Lines 755-758 | Remove absolute bottom logo | Prevent overlap with content |
+| Lines 651-671 | Add logo to QR column bottom | Position logo as user requested |
+| Line 652 | Change `justify-start` → `justify-between` | Spread content vertically |
+| Line 540 | Add `pb-2` to players container | Prevent bottom row cropping |
 
 ---
 
-## Expected Behavior After Implementation
+## Visual Result
 
-1. **Player screen locks then unlocks**: 
-   - Presence re-tracked immediately
-   - Session state refetched
-   - Timer synced to current server time
-   - Player can continue answering if time remains
+The logo will now appear:
+- Below the "mytrivia.io/join" text
+- Centered within the right column
+- No longer overlapping with player cards or start button
+- Players grid will have proper spacing at the bottom
 
-2. **Some players leave mid-game**:
-   - Game uses live presence count
-   - Advances as soon as remaining players answer
-   - Timer still works as backup
-
-3. **Host screen locks**:
-   - When host returns, timer syncs to server time
-   - If timer should have expired, immediately advances
-   - Heartbeat catches any stuck states
-
-4. **All players disconnect except one**:
-   - Game continues for remaining player
-   - Timer countdown continues
-   - Game advances normally
-
----
-
-## Testing Recommendations
-
-After implementation:
-1. Start a 2+ player TV game
-2. Lock one player's phone screen during a question
-3. Unlock and verify they can still answer (if time remains)
-4. Lock host phone during question, unlock after 10+ seconds
-5. Verify game advances properly when timer "should have" expired
+This matches the expected layout from the reference where the logo sits naturally in the QR code column without interfering with other UI elements.
