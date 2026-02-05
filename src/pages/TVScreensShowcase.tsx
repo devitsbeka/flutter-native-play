@@ -17,16 +17,26 @@ import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
 import { TVQuestionScreenV4 } from '@/components/tv/TVQuestionScreenV4';
 import { TVResultsScreen } from '@/components/tv/TVResultsScreen';
 import { TVPollScreen } from '@/components/tv/TVPollScreen';
+import { TVPollResultsScreen } from '@/components/tv/TVPollResultsScreen';
+import { TVResultsScreenV2 } from '@/components/tv/TVResultsScreenV2';
+import { TVScoreboardScreen } from '@/components/tv/TVScoreboardScreen';
+import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
+import { TVIdleScreen } from '@/components/tv/TVIdleScreen';
 
 const SCREENS = [
   { id: 'pairing', name: 'Pairing', phase: 'pairing' as const },
   { id: 'lobby', name: 'Lobby', phase: 'lobby' as const },
   { id: 'poll', name: 'Poll', phase: 'poll-suggest' as const },
+  { id: 'poll-results', name: 'Poll Results', phase: 'poll-results' as const },
   { id: 'round-intro', name: 'Round Intro', phase: 'round_intro' as const },
   { id: 'countdown', name: 'Countdown', phase: 'countdown' as const },
   { id: 'question', name: 'Question', phase: 'playing' as const },
   { id: 'question-reveal', name: 'Reveal', phase: 'reveal' as const },
   { id: 'results', name: 'Results', phase: 'results' as const },
+  { id: 'results-v2', name: 'Results V2', phase: 'results' as const },
+  { id: 'scoreboard', name: 'Scoreboard', phase: 'final_results' as const },
+  { id: 'game-over', name: 'Game Over', phase: 'final_results' as const },
+  { id: 'idle', name: 'Idle', phase: 'playing' as const },
 ];
 
 // Create a mock TVGameContext value from TVMockContext
@@ -73,6 +83,10 @@ const createMockTVGameValue = (mockCtx: ReturnType<typeof useTVMock>) => ({
   leaveSession: () => {},
   kickPlayer: async () => {},
   setPhase: mockCtx.setPhase,
+  totalRoundsPlayed: 2,
+  accumulatedScores: mockCtx.players.reduce((acc, p) => ({ ...acc, [p.id]: p.score + 100 }), {} as Record<string, number>),
+  refetchSessionData: async () => {},
+  isMirror: false,
 });
 
 const TVGameContextBridge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -93,6 +107,8 @@ const ScreenRenderer: React.FC<{ screenId: string }> = ({ screenId }) => {
       return <TVLobbyScreenV2 />;
     case 'poll':
       return <TVPollScreen />;
+    case 'poll-results':
+      return <TVPollResultsScreen />;
     case 'round-intro':
       return <TVRoundIntroScreen />;
     case 'countdown':
@@ -102,6 +118,14 @@ const ScreenRenderer: React.FC<{ screenId: string }> = ({ screenId }) => {
       return <TVQuestionScreenV4 />;
     case 'results':
       return <TVResultsScreen />;
+    case 'results-v2':
+      return <TVResultsScreenV2 />;
+    case 'scoreboard':
+      return <TVScoreboardScreen />;
+    case 'game-over':
+      return <TVGameOverScreen players={MOCK_PLAYERS.slice(0, 5)} isHost={true} />;
+    case 'idle':
+      return <TVIdleScreen />;
     default:
       return <div className="flex items-center justify-center h-full text-white">Unknown screen</div>;
   }
