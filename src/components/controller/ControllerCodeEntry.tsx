@@ -6,6 +6,7 @@ import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Input } from '@/components/ui/input';
 import { Tv, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { resolveAvatarUrl } from '@/utils/avatarUtils';
 
 interface ControllerCodeEntryProps {
   initialCode?: string;
@@ -145,7 +146,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
             <div className="flex items-center gap-3 p-3 bg-white/10 rounded-xl mb-4">
               <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center overflow-hidden">
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  <img src={resolveAvatarUrl(profile.avatar_url) || profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-white font-bold">
                     {profile.nickname.slice(0, 2).toUpperCase()}

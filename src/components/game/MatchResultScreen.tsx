@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
 
@@ -142,7 +143,7 @@ const PlayerCard = ({
       >
         <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/20">
           {avatarUrl ? (
-            <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+            <img src={resolveAvatarUrl(avatarUrl) || avatarUrl} alt={name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-white/30 flex items-center justify-center">
               <span className="text-2xl">👤</span>

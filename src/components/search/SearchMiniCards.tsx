@@ -1,7 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Gamepad2, Users, Crown, Sparkles, Folder } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import type { Friend } from "@/hooks/useFriends";
 import type { MyRoom } from "@/hooks/useMyRooms";
 
@@ -20,7 +21,7 @@ export function FriendMiniCard({ friend, onClick }: FriendMiniCardProps) {
     >
       <div className="relative">
         <Avatar className="w-14 h-14 border-2 border-border">
-          <AvatarImage src={friend.avatarUrl || undefined} />
+          <ResolvedAvatarImage src={friend.avatarUrl || undefined} />
           <AvatarFallback className="bg-primary/10 text-primary text-lg">
             {friend.nickname.charAt(0).toUpperCase()}
           </AvatarFallback>
