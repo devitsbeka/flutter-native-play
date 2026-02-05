@@ -124,19 +124,18 @@ export const TVGameOverScreen: React.FC<TVGameOverScreenProps> = ({
 
       {/* Your Result - minimal display */}
 
-      {/* Leaderboard */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="flex-1 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/20 mb-4"
+        className="flex-1 min-h-0 bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/20 mb-4 flex flex-col"
       >
         <div className="flex items-center gap-2 mb-4">
           <Medal className="w-5 h-5 text-purple-300" />
           <h2 className="text-lg font-bold text-white">ლიდერბორდი</h2>
         </div>
         
-        <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+        <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
           <AnimatePresence>
             {sortedPlayers.map((player, index) => {
               const rank = index + 1;
