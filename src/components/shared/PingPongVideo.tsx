@@ -1,8 +1,10 @@
 import { useRef, useEffect, useState } from "react";
 import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
+import { videoLoadQueue } from "@/utils/videoLoadQueue";
 
 interface PingPongVideoProps {
   src: string;
+  posterUrl?: string;
   className?: string;
   rootMargin?: string;
   style?: React.CSSProperties;
@@ -10,14 +12,16 @@ interface PingPongVideoProps {
 
 export function PingPongVideo({ 
   src, 
+  posterUrl,
   className = "",
-  rootMargin = "200px",
+  rootMargin = "50px", // Reduced from 200px for better performance
   style,
 }: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [hasAcquiredSlot, setHasAcquiredSlot] = useState(false);
 
   // Get preloaded blob URL if available, fallback to original src
   const preloadedUrl = getVideoBlobUrl(src);
@@ -42,41 +46,71 @@ export function PingPongVideo({
     return () => observer.disconnect();
   }, [rootMargin]);
 
-  // Only load and play video when in view
+  // Queue-based video loading
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-
-    if (isInView) {
-      // Video is in viewport - load and play
-      // Always set src when in view to ensure video loads
-      if (video.src !== videoSrc) {
-        video.src = videoSrc;
-        video.load();
+    if (!video || !isInView) {
+      // Release slot when leaving view
+      if (hasAcquiredSlot) {
+        videoLoadQueue.release(videoSrc);
+        setHasAcquiredSlot(false);
       }
-      
-      const handleCanPlay = () => {
-        setIsReady(true);
-        video.play().catch(() => {});
-      };
-
-      video.addEventListener("canplay", handleCanPlay);
-      video.addEventListener("loadeddata", handleCanPlay);
-      
-      if (video.readyState >= 3) {
-        setIsReady(true);
-        video.play().catch(() => {});
-      }
-
-      return () => {
-        video.removeEventListener("canplay", handleCanPlay);
-        video.removeEventListener("loadeddata", handleCanPlay);
-      };
-    } else {
-      // Video left viewport - pause to save resources
-      video.pause();
+      return;
     }
-  }, [isInView, videoSrc]);
+
+    let cancelled = false;
+
+    const loadVideo = async () => {
+      try {
+        // Wait for a slot in the queue
+        await videoLoadQueue.acquire(videoSrc);
+        if (cancelled) {
+          videoLoadQueue.release(videoSrc);
+          return;
+        }
+        setHasAcquiredSlot(true);
+
+        // Now load the video
+        if (video.src !== videoSrc) {
+          video.src = videoSrc;
+          video.load();
+        }
+
+        const handleCanPlay = () => {
+          if (!cancelled) {
+            setIsReady(true);
+            video.play().catch(() => {});
+          }
+        };
+
+        video.addEventListener("canplay", handleCanPlay);
+        video.addEventListener("loadeddata", handleCanPlay);
+
+        if (video.readyState >= 3) {
+          setIsReady(true);
+          video.play().catch(() => {});
+        }
+
+        return () => {
+          video.removeEventListener("canplay", handleCanPlay);
+          video.removeEventListener("loadeddata", handleCanPlay);
+        };
+      } catch {
+        // Queue cancelled
+      }
+    };
+
+    loadVideo();
+
+    return () => {
+      cancelled = true;
+      if (hasAcquiredSlot) {
+        videoLoadQueue.release(videoSrc);
+        setHasAcquiredSlot(false);
+      }
+      video.pause();
+    };
+  }, [isInView, videoSrc, hasAcquiredSlot]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -97,6 +131,17 @@ export function PingPongVideo({
 
   return (
     <div ref={containerRef} className="absolute inset-0">
+      {/* Poster image - shows instantly while video loads */}
+      {posterUrl && (
+        <img 
+          src={posterUrl}
+          alt=""
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+            isReady && isInView ? 'opacity-0' : 'opacity-100'
+          }`}
+          loading="lazy"
+        />
+      )}
       <video
         ref={videoRef}
         muted
@@ -104,7 +149,7 @@ export function PingPongVideo({
         loop
         preload="none"
         style={style}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           isReady && isInView ? 'opacity-100' : 'opacity-0'
         } ${className}`}
       />
