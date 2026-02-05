@@ -23,7 +23,6 @@ import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
 import { PowerUpDetailModal, PowerUpType } from "@/components/game/PowerUpDetailModal";
 import { SignupOnboardingModal } from "@/components/onboarding/SignupOnboardingModal";
-import { AvatarCreationFlow } from "@/components/onboarding/AvatarCreationFlow";
 import { AvatarCircle } from "@/components/home/AvatarCircle";
 import { DesktopActionCards } from "@/components/home/DesktopActionCards";
 import { DesktopPlayButtonLarge } from "@/components/home/DesktopPlayButtonLarge";
@@ -165,7 +164,7 @@ const SideIconButton = ({
 export default function Index() {
   const navigate = useNavigate();
   const { profile, user, fetchProfile, signUp, signUpWithUsername, signIn, signInWithUsername, signInWithGoogle, signInWithApple } = useAuth();
-  const { step, startOnboarding, skipToAvatarCreation, setStep, hasCompletedOnboarding } = useOnboarding();
+  const { step, startOnboarding, setStep, hasCompletedOnboarding } = useOnboarding();
   const { openAvatarModal } = useAvatarModal();
   const { coins, gems, addCoins, spendGems } = useCurrency();
   const { powerUps } = useUserPowerUps();
@@ -220,8 +219,8 @@ export default function Index() {
         }
       }
     } else if (!profile?.avatar_url) {
-      // Logged in but no avatar - go to avatar creation
-      skipToAvatarCreation();
+      // Logged in but no avatar - open polished avatar modal
+      openAvatarModal();
     } else {
       // Check if user has enough coins for stake
       if (!hasEnoughCoins) {
@@ -235,7 +234,7 @@ export default function Index() {
         navigate("/game");
       }
     }
-  }, [user, profile, navigate, skipToAvatarCreation, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay, hasEnoughCoins]);
+  }, [user, profile, navigate, openAvatarModal, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay, hasEnoughCoins]);
 
   // Handle exchange gems for coins
   const handleExchangeGems = useCallback(async () => {
@@ -325,7 +324,6 @@ export default function Index() {
     <>
       {/* Onboarding modals */}
       <SignupOnboardingModal />
-      <AvatarCreationFlow />
       
       
       {/* Other modals */}

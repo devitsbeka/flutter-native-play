@@ -3,6 +3,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Sparkles, User, Eye, EyeOff } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { t } from "@/lib/i18n";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -138,9 +139,11 @@ export function SignupOnboardingModal() {
     setUsername, 
     password, 
     setPassword,
+    completeOnboarding,
   } = useOnboarding();
   
   const { signUpWithUsername } = useAuth();
+  const { openAvatarModal } = useAvatarModal();
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -208,7 +211,10 @@ export function SignupOnboardingModal() {
       await new Promise(resolve => setTimeout(resolve, 1500));
       celebrateConfetti();
       toast.success(t("success.accountCreated"));
-      setStep("avatar-upload");
+      
+      // Complete signup onboarding and open avatar modal
+      completeOnboarding();
+      openAvatarModal();
       
     } catch (error: any) {
       console.error("Signup error:", error);
