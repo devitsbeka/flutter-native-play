@@ -952,7 +952,7 @@ export default function Index() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.35, type: "spring" }}
-                      style={{ marginBottom: isVip ? 28 : 20 }}
+                      style={{ marginBottom: isVip ? 32 : 24 }}
                     >
                       <ActionButtonWithParticles
                         iconSrc={missionCrystalIcon}
@@ -984,7 +984,7 @@ export default function Index() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.4, type: "spring" }}
-                      style={{ marginBottom: isVip ? 48 : 36 }}
+                      style={{ marginBottom: isVip ? 32 : 40 }}
                     >
                       <ActionButtonWithParticles
                         iconSrc={chestBoxIcon}
@@ -1013,7 +1013,7 @@ export default function Index() {
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.45, type: "spring" }}
-                        style={{ marginBottom: 36 }}
+                        style={{ marginBottom: 24 }}
                       >
                         <ActionButtonWithParticles
                           iconSrc={adFreeIcon}
