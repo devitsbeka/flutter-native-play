@@ -1,290 +1,198 @@
 
-# Plan: Fix Mobile Photo Upload in Avatar Modal
 
-## Problem Analysis
+# Plan: Optimize Category Video Background Performance
 
-Photo upload doesn't work on actual mobile devices (published URL). The current implementation has several critical issues:
+## Problem Summary
 
-| Issue | Description | Impact |
-|-------|-------------|--------|
-| **No FileReader error handler** | If reading the file fails, nothing happens silently | User clicks upload, file picker opens, file selected, but nothing happens |
-| **HEIC format not handled** | iPhone photos in HEIC format have empty `file.type` on some browsers | Type check fails: `!file.type.startsWith("image/")` rejects HEIC |
-| **No loading state during read** | User has no feedback while large file is being processed | Appears frozen/broken |
-| **Large mobile images** | 12MP+ phone cameras create huge files that can crash FileReader | Memory issues, slow processing |
-| **No compression** | Raw camera photos are 3-8MB, causing slow uploads | Upload timeouts, poor UX |
+Category video backgrounds render too slowly, especially on first visit. The current setup has several performance bottlenecks:
 
----
-
-## Solution
-
-Completely rewrite the file selection handler with proper mobile support:
-
-### 1. Accept HEIC Format + Better MIME Handling
-```tsx
-// Before
-accept="image/*"
-if (!file.type.startsWith("image/")) { ... }
-
-// After
-accept="image/*,.heic,.heif"
-// Allow empty type for HEIC, check extension as fallback
-const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(file.name);
-if (!file.type.startsWith("image/") && !isImageByExtension) { ... }
-```
-
-### 2. Add Loading State During File Read
-```tsx
-const [isProcessingFile, setIsProcessingFile] = useState(false);
-
-const handleFileSelect = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  
-  setIsProcessingFile(true);  // Show loading on button
-  
-  try {
-    // ... process file
-  } finally {
-    setIsProcessingFile(false);
-  }
-};
-```
-
-### 3. Add Error Handler to FileReader
-```tsx
-const reader = new FileReader();
-
-reader.onerror = () => {
-  console.error("FileReader error:", reader.error);
-  toast.error(t("errors.failedToReadImage"));
-  setIsProcessingFile(false);
-};
-
-reader.onload = (event) => { ... };
-reader.readAsDataURL(file);
-```
-
-### 4. Compress Large Images Using Canvas
-Before reading as data URL, resize images that are too large:
-
-```tsx
-const compressImage = (file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      
-      // Calculate new dimensions
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-      
-      // Draw to canvas
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      // Convert to data URL
-      const dataUrl = canvas.toDataURL("image/jpeg", quality);
-      resolve(dataUrl);
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-    
-    img.src = url;
-  });
-};
-```
-
-### 5. Increase File Size Limit
-Mobile photos are often larger than 5MB, especially from modern phones:
-
-```tsx
-// Before: 5MB limit
-if (file.size > 5 * 1024 * 1024) { ... }
-
-// After: 15MB limit (compression will reduce for upload)
-if (file.size > 15 * 1024 * 1024) { ... }
-```
-
-### 6. Reset File Input After Use
-Fix for iOS Safari where same file can't be selected twice:
-
-```tsx
-reader.onload = (event) => {
-  setUploadedImage(event.target?.result as string);
-  setStep("upload");
-  // Reset input for iOS Safari
-  if (fileInputRef.current) {
-    fileInputRef.current.value = '';
-  }
-};
-```
+| Issue | Impact |
+|-------|--------|
+| Large video files (uncompressed) | Slow downloads, high bandwidth |
+| No poster/placeholder images | Users see blank space while video loads |
+| 20+ videos loading simultaneously | Network congestion, memory pressure |
+| No mobile-optimized video sizes | Same large files served to all devices |
+| Service Worker cache miss on first visit | All videos hit network |
 
 ---
 
-## File Changes
+## Recommended Solutions
 
-### File: `src/components/home/AvatarModal.tsx`
+### Solution 1: Add Static Poster Images (Quick Win)
 
-**Lines 82-84** - Add new state:
+Generate JPEG first-frame images for each video and display them instantly while video loads.
+
+**Implementation:**
+1. Create `/public/images/categories/` folder with JPG files
+2. Update PingPongVideo to show poster immediately
+3. Fade video in over poster once ready
+
+**Changes to `PingPongVideo.tsx`:**
 ```tsx
-const [isProcessingFile, setIsProcessingFile] = useState(false);
+interface PingPongVideoProps {
+  src: string;
+  posterUrl?: string;  // Add poster support
+  // ...
+}
+
+// Show poster image immediately, fade in video when ready
+return (
+  <div ref={containerRef} className="absolute inset-0">
+    {/* Poster shows instantly */}
+    {posterUrl && (
+      <img 
+        src={posterUrl} 
+        className="absolute inset-0 w-full h-full object-cover"
+        loading="lazy"
+      />
+    )}
+    {/* Video fades in when ready */}
+    <video ... className={isReady ? 'opacity-100' : 'opacity-0'} />
+  </div>
+);
 ```
 
-**Lines 184-204** - Complete rewrite of handleFileSelect:
+**Pass poster from AirbnbCategoryCard:**
 ```tsx
-// Add compressImage helper function above handleFileSelect
+import { CATEGORY_IMAGES } from "@/config/videoConfig";
 
-const compressImage = useCallback((file: File, maxWidth = 1024, quality = 0.85): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-      if (height > maxWidth) {
-        width = (width * maxWidth) / height;
-        height = maxWidth;
-      }
-      
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("Canvas context unavailable"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      const dataUrl = canvas.toDataURL("image/jpeg", quality);
-      resolve(dataUrl);
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image"));
-    };
-    
-    img.src = url;
-  });
-}, []);
-
-const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  // Allow empty type for HEIC, check extension as fallback
-  const isImageByExtension = /\.(jpg|jpeg|png|gif|webp|heic|heif|bmp)$/i.test(file.name);
-  if (!file.type.startsWith("image/") && !isImageByExtension) {
-    toast.error(t("errors.selectImageFile"));
-    return;
-  }
-
-  // Increased limit for mobile (compression will reduce)
-  if (file.size > 15 * 1024 * 1024) {
-    toast.error(t("errors.imageTooLarge"));
-    return;
-  }
-
-  setIsProcessingFile(true);
-
-  try {
-    // Use compression via canvas (handles HEIC, resizes, and converts to JPEG)
-    const dataUrl = await compressImage(file, 1024, 0.85);
-    setUploadedImage(dataUrl);
-    setStep("upload");
-    
-    // Reset input for iOS Safari
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  } catch (error) {
-    console.error("Error processing image:", error);
-    toast.error(t("errors.failedToReadImage") || "Failed to process image");
-  } finally {
-    setIsProcessingFile(false);
-  }
-};
-```
-
-**Line 656-662** - Update file input:
-```tsx
-<input
-  ref={fileInputRef}
-  type="file"
-  accept="image/*,.heic,.heif"
-  capture="environment"
-  onChange={handleFileSelect}
-  className="hidden"
+<PingPongVideo 
+  src={videoUrl} 
+  posterUrl={CATEGORY_IMAGES[categoryId]}
 />
 ```
 
-**Line 640-652** - Add loading state to upload button:
+---
+
+### Solution 2: Lazy Load Videos More Aggressively
+
+Only load videos that are actually visible on screen, not just "near" the viewport.
+
+**Changes to `PingPongVideo.tsx`:**
 ```tsx
-<motion.button
-  onClick={() => fileInputRef.current?.click()}
-  disabled={isProcessingFile}
-  className={`flex-1 aspect-square max-w-[100px] rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all ${isProcessingFile ? 'opacity-50' : ''}`}
-  whileHover={{ scale: 1.02 }}
-  whileTap={{ scale: 0.98 }}
->
-  {isProcessingFile ? (
-    <>
-      <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      <span className="text-xs text-muted-foreground">მუშავდება...</span>
-    </>
-  ) : (
-    <>
-      <img 
-        src={iconPhotoUpload} 
-        alt="Upload" 
-        className="w-10 h-10 object-contain"
-      />
-      <span className="text-xs text-muted-foreground">{t("avatar.uploadPhoto")}</span>
-    </>
-  )}
-</motion.button>
+// Reduce preload distance - only load when nearly visible
+rootMargin = "50px"  // Was 200px
+
+// Add priority prop for above-the-fold videos
+interface PingPongVideoProps {
+  priority?: boolean; // Load immediately if true
+}
 ```
 
 ---
 
-## Summary of Changes
+### Solution 3: Limit Concurrent Video Loads
 
-| Change | Benefit |
-|--------|---------|
-| HEIC support via extension check | iPhone photos work |
-| Canvas-based compression | Handles all formats, reduces file size, standardizes to JPEG |
-| Loading state during processing | User sees feedback |
-| Error handling | User gets error message instead of silent failure |
-| Input reset | iOS Safari can select same file again |
-| Increased size limit to 15MB | Modern phone cameras accepted |
-| `capture="environment"` attribute | Better mobile camera integration |
+Create a video loading queue that limits to 2-3 concurrent downloads.
+
+**New file: `src/utils/videoLoadQueue.ts`**
+```tsx
+class VideoLoadQueue {
+  private queue: string[] = [];
+  private loading: Set<string> = new Set();
+  private maxConcurrent = 2;
+
+  async loadVideo(url: string): Promise<void> {
+    if (this.loading.size >= this.maxConcurrent) {
+      // Wait in queue
+      await new Promise(resolve => {
+        this.queue.push(url);
+        // ... resolve when slot available
+      });
+    }
+    // ... load video
+  }
+}
+```
 
 ---
 
-## Technical Details
+### Solution 4: Compress Video Files (Requires Asset Work)
 
-The canvas-based compression approach:
-1. Creates an object URL from the file (works with HEIC)
-2. Loads it into an Image element (browser handles decoding)
-3. Draws to canvas at reduced size
-4. Exports as JPEG data URL
+**Current state:** Videos are likely 1-5MB each (50+ files = 100MB+ total)
 
-This bypasses FileReader's potential issues with large files and automatically converts HEIC to JPEG.
+**Recommended specs for web:**
+| Property | Mobile | Desktop |
+|----------|--------|---------|
+| Resolution | 480p | 720p |
+| Bitrate | 500-800 kbps | 1-2 Mbps |
+| Format | MP4 H.264 | MP4 H.264 |
+| Duration | 3-6 seconds | 3-6 seconds |
+| Target size | 100-300KB | 300-600KB |
+
+**FFmpeg command for compression:**
+```bash
+ffmpeg -i input.mp4 -vf "scale=480:-2" -c:v libx264 -crf 28 -preset slow -an output-mobile.mp4
+```
+
+---
+
+### Solution 5: Use WebM with MP4 Fallback
+
+WebM (VP9) offers 30-50% better compression than H.264.
+
+```tsx
+<video>
+  <source src="/videos/art.webm" type="video/webm" />
+  <source src="/videos/art.mp4" type="video/mp4" />
+</video>
+```
+
+---
+
+## Recommended Implementation Order
+
+| Priority | Solution | Effort | Impact |
+|----------|----------|--------|--------|
+| 1 | Add poster images | Low | High - instant visual feedback |
+| 2 | Reduce rootMargin to 50px | Very Low | Medium - fewer concurrent loads |
+| 3 | Compress video files | Medium | Very High - faster downloads |
+| 4 | Limit concurrent loads | Medium | High - prevents network congestion |
+| 5 | Add WebM format | High | Medium - better compression |
+
+---
+
+## Technical Changes Summary
+
+### Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/shared/PingPongVideo.tsx` | Add poster support, reduce rootMargin |
+| `src/components/discover/AirbnbCategoryCard.tsx` | Pass posterUrl from CATEGORY_IMAGES |
+| `/public/images/categories/*.jpg` | Create poster images (need to be uploaded manually) |
+
+### Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/utils/videoLoadQueue.ts` | Optional: Queue for concurrent load limiting |
+
+---
+
+## Quick Implementation (Code Changes Only)
+
+If you want me to implement the code-side optimizations immediately, I can:
+
+1. Update PingPongVideo to support poster images with graceful fade-in
+2. Reduce the Intersection Observer rootMargin from 200px to 50px
+3. Update AirbnbCategoryCard to pass poster URLs
+
+Note: You'll need to manually create/upload the poster images to `/public/images/categories/` - these should be JPEG screenshots of the first frame of each video at around 400x300 resolution.
+
+---
+
+## Generating Poster Images
+
+You can generate poster images from your videos using FFmpeg:
+
+```bash
+# For each video, extract first frame as JPEG
+for f in public/videos/*.mp4; do
+  name=$(basename "$f" .mp4)
+  ffmpeg -i "$f" -vframes 1 -q:v 2 "public/images/categories/${name}.jpg"
+done
+```
+
+Or I can implement a runtime fallback that extracts the first frame using Canvas (already have `videoFrameExtractor.ts`), but static images will be faster.
+
