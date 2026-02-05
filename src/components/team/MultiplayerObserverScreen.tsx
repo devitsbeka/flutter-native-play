@@ -122,11 +122,49 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     );
     
     if (allPlayersAdvanced) {
-      console.log(`[Observer] All players at question ${otherPlayers[0].current_question}, auto-advancing from ${currentQuestionIndex}`);
-      playSound("button-click");
-      nextQuestion();
+      console.log(`[Observer] All players advanced, processing final bonus before advancing from ${currentQuestionIndex}`);
+      
+      // CRITICAL FIX: Fetch and process any unprocessed incorrect answers BEFORE advancing
+      const processFinalBonus = async () => {
+        const roomId = currentRoom?.id;
+        if (!roomId) {
+          playSound("button-click");
+          nextQuestion();
+          return;
+        }
+        
+        const { data: allAnswers } = await supabase
+          .from("player_answers")
+          .select("user_id, question_index, time_remaining, is_correct")
+          .eq("room_id", roomId)
+          .eq("is_correct", false);
+        
+        if (allAnswers && allAnswers.length > 0) {
+          let newBonus = 0;
+          
+          for (const answer of allAnswers) {
+            const answerId = `${answer.user_id}-${answer.question_index}`;
+            if (processedAnswerIdsRef.current.has(answerId)) continue;
+            
+            const timeRemaining = answer.time_remaining ?? 0;
+            const bonus = calculateObserverBonus(timeRemaining);
+            newBonus += bonus;
+            processedAnswerIdsRef.current.add(answerId);
+          }
+          
+          if (newBonus > 0) {
+            setBonusEarnedThisRound(prev => prev + newBonus);
+            await awardObserverBonus(newBonus); // AWAIT to ensure score is saved
+          }
+        }
+        
+        playSound("button-click");
+        nextQuestion();
+      };
+      
+      processFinalBonus();
     }
-  }, [participants, currentQuestionIndex, user?.id, nextQuestion, playSound]);
+  }, [participants, currentQuestionIndex, user?.id, nextQuestion, playSound, currentRoom?.id, awardObserverBonus]);
 
   // Helper to find players who picked a specific answer
   const getPlayersWhoChoseAnswer = (answer: string) => {
