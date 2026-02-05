@@ -1380,8 +1380,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .eq("id", state.currentRoom.id);
       }
       
-      // Wait briefly for score to propagate to realtime subscription before transitioning
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait for score to propagate (increased from 200ms to allow observer bonus to sync)
+      await new Promise(resolve => setTimeout(resolve, 500));
       setState(prev => ({ ...prev, phase: "results" }));
     } else {
       setState(prev => ({
