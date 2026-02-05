@@ -201,6 +201,18 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     stateRef.current = state;
   }, [state]);
 
+  // Keep myAnswer in a ref for visibility callbacks
+  const myAnswerRef = useRef(myAnswer);
+  useEffect(() => {
+    myAnswerRef.current = myAnswer;
+  }, [myAnswer]);
+
+  // Keep myScore in a ref for visibility callbacks
+  const myScoreRef = useRef(myScore);
+  useEffect(() => {
+    myScoreRef.current = myScore;
+  }, [myScore]);
+
   // Keep isHost in a ref for presence callbacks to avoid stale closures
   const isHostRef = useRef(isHost);
   useEffect(() => {
@@ -756,19 +768,35 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // FIX P0: Trust the locked active_player_count from session (already adjusted for suggester)
       // Do NOT re-adjust for suggester here - prepareForPlaying already did this
       // This prevents double-subtraction bugs
-      const expectedCount = session.active_player_count ?? liveActiveCount ?? 0;
+      // ============================================================================
+      // DYNAMIC PLAYER COUNT: Use MIN(locked, live) to handle disconnections
+      // ============================================================================
+      // This allows the game to advance when some players have left mid-game
+      // If live count is 0, presence hasn't synced yet - use locked count
+      // If live count > 0 but < locked, some players left - use live count
+      // If live count >= locked, all expected players are present - use locked count
+      // ============================================================================
+      const lockedCount = session.active_player_count ?? 0;
+      const liveCount = liveActiveCount ?? 0;
+      
+      let expectedCount = lockedCount;
+      if (liveCount > 0 && liveCount < lockedCount) {
+        expectedCount = liveCount;
+        console.log('[AutoAdvance] 📉 Adjusted expected count from', lockedCount, 'to', liveCount, '(players left mid-game)');
+      }
 
-      console.log('[AutoAdvance] 🎯 Using locked player count from session:', {
-        lockedCount: session.active_player_count,
-        liveActiveCount,
+      console.log('[AutoAdvance] 🎯 Using player count:', {
+        lockedCount,
+        liveActiveCount: liveCount,
+        finalExpected: expectedCount,
         expectedCount,
         isPaired,
         suggesterId: suggesterId ? suggesterId.substring(0, 8) + '...' : null,
       });
 
-      // SAFETY: Never advance if expected count is unreliable
-      if (expectedCount <= 0) {
-        console.log('[AutoAdvance] ⏭️ Skip: expectedCount is 0 (no eligible players)');
+      // SAFETY: If no players at all (everyone disconnected), let timer handle it
+      if (expectedCount <= 0 && liveCount <= 0) {
+        console.log('[AutoAdvance] ⏭️ Skip: no active players - timer will handle');
         return;
       }
 
@@ -1281,6 +1309,109 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       clearInterval(fallbackInterval);
     };
   }, [state.phase, isHost, state.sessionId, checkAndAdvanceIfAllAnswered]);
+
+  // ============================================================================
+  // VISIBILITY CHANGE: Re-sync when app returns to foreground
+  // ============================================================================
+  // When a player's screen locks/unlocks or they switch tabs, this ensures:
+  // 1. Session state is re-fetched from DB
+  // 2. Presence is re-tracked to mark them as active
+  // 3. Timer is synced to server time for question phase
+  // ============================================================================
+  useEffect(() => {
+    if (!state.sessionId) return;
+    
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Visibility] 👀 App returned to foreground');
+        
+        // Step 1: Re-sync session state from database
+        await refetchSessionData(stateRef.current.sessionId!);
+        
+        // Step 2: Re-track presence to mark as active
+        if (presenceChannelRef.current && myPlayerId) {
+          const me = stateRef.current.players.find(p => p.id === myPlayerId);
+          await presenceChannelRef.current.track({
+            nickname: me?.nickname || 'Player',
+            avatar_url: me?.avatar_url ?? null,
+            score: me?.score ?? myScoreRef.current,
+            hasAnswered: myAnswerRef.current !== null,
+            lastAnswerCorrect: me?.lastAnswerCorrect ?? null,
+            lastAnswer: myAnswerRef.current,
+            isHost: isHostRef.current,
+            isActive: true,
+          });
+          console.log('[Visibility] ✅ Re-tracked presence as active');
+        }
+        
+        // Step 3: If in question phase, sync timer to server time
+        if (stateRef.current.phase === 'question') {
+          const { data: session } = await supabase
+            .from('tv_sessions')
+            .select('question_start_time')
+            .eq('id', stateRef.current.sessionId)
+            .single();
+          
+          if (session?.question_start_time) {
+            const startTime = new Date(session.question_start_time).getTime();
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const remaining = Math.max(0, QUESTION_TIME - elapsed);
+            
+            setState(prev => ({ ...prev, timeRemaining: remaining }));
+            console.log('[Visibility] ⏱️ Synced timer: elapsed', elapsed, 'remaining', remaining);
+            
+            // Host-specific: If timer should have expired, advance now
+            if (isHostRef.current && remaining <= 0) {
+              console.log('[Visibility] ⏰ Timer expired during sleep - advancing now');
+              advanceToReveal('timer expired (visibility sync)');
+            }
+          }
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [state.sessionId, myPlayerId, refetchSessionData, advanceToReveal]);
+
+  // ============================================================================
+  // HEARTBEAT: Fallback check for stuck games (host only)
+  // ============================================================================
+  // Runs every 5 seconds during question phase to catch stuck timers
+  // This handles cases where the host's timer paused (screen locked) and
+  // the visibility change event didn't fire or was missed
+  // ============================================================================
+  useEffect(() => {
+    if (!isHost) return;
+    if (state.phase !== 'question') return;
+    if (!state.sessionId) return;
+    
+    const heartbeatCheck = async () => {
+      const { data: session } = await supabase
+        .from('tv_sessions')
+        .select('question_start_time, status')
+        .eq('id', stateRef.current.sessionId)
+        .single();
+      
+      if (!session?.question_start_time || session.status !== 'playing') return;
+      
+      const startTime = new Date(session.question_start_time).getTime();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      
+      // If more than QUESTION_TIME + 5 seconds have passed, force advance
+      if (elapsed > QUESTION_TIME + 5) {
+        console.log('[Heartbeat] ⚠️ Game stuck! Elapsed:', elapsed, 'seconds. Forcing advance.');
+        advanceToReveal('heartbeat stuck recovery');
+      }
+    };
+    
+    const interval = setInterval(heartbeatCheck, 5000);
+    
+    return () => clearInterval(interval);
+  }, [isHost, state.phase, state.sessionId, advanceToReveal]);
 
   // NOTE: Presence-based auto-advance has been DISABLED.
   // Auto-advance logic is now handled by database-based answer counting via:
