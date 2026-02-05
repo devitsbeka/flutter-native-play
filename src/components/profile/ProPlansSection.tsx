@@ -233,26 +233,23 @@ export function ProPlansSection({
 
               {/* Key benefits for upgrade */}
               <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: familyTier.lightBg }}
-                  >
-                    <Users className="w-3 h-3" style={{ color: familyTier.accentColor }} />
+                {familyTier.benefits.map((benefit, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div 
+                      className="w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: familyTier.lightBg }}
+                    >
+                      <benefit.icon className="w-3 h-3" style={{ color: familyTier.accentColor }} />
+                    </div>
+                    <span className={cn(
+                      "text-sm",
+                      benefit.highlight ? "text-foreground font-medium" : "text-muted-foreground"
+                    )}>
+                      {benefit.text}
+                      {benefit.icon === Users && " (4 მეტი!)"}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">
-                    5 მეგობრის მოწვევა (4 მეტი!)
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: familyTier.lightBg }}
-                  >
-                    <Gift className="w-3 h-3" style={{ color: familyTier.accentColor }} />
-                  </div>
-                  <span className="text-sm text-muted-foreground">ყოველდღიური ჯილდოები</span>
-                </div>
+                ))}
               </div>
 
               <motion.button
