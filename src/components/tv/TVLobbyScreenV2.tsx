@@ -350,7 +350,7 @@ export const TVLobbyScreenV2: React.FC = () => {
       <TVBrandingOverlay showLogo={false} showCode={false} />
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2">
         {/* Room Name - Editable */}
         <div className="flex-1">
           {isEditingName ? (
@@ -406,40 +406,37 @@ export const TVLobbyScreenV2: React.FC = () => {
         </div>
       </div>
 
-      {/* Game Code - Below header */}
-      <div className="mb-3">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-          <span className="text-purple-300 text-sm">კოდი:</span>
-          <span className="text-2xl font-mono font-bold text-white tracking-widest">{code}</span>
-        </div>
-      </div>
-
       {/* Central Category/Rounds Display - Left aligned */}
-      <div className="mb-4">
+      <div className="mb-2">
         {hasMultiRound ? (
-          // Multi-round queue display - full width with wrap
-          <div
-            className="flex flex-wrap justify-start gap-2 py-3 pr-60"
-            style={{ }}
-          >
-            {queue.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-purple-400/50 min-w-0 shrink-0"
-                style={{
-                  background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)',
-                }}
-              >
-                <span className="text-sm text-purple-200/80">{index + 1}.</span>
-                <span className="text-white font-medium whitespace-nowrap truncate max-w-[180px]">
-                  {item.category_name || 'რაუნდი'}
-                </span>
-                {/* Queue is read-only in TV mode - managed in game room */}
-              </motion.div>
-            ))}
+          // Multi-round queue display - single line, scrollable if needed
+          <div className="flex items-center gap-2 py-2 overflow-x-auto scrollbar-hide pr-60 flex-nowrap">
+            {queue.map((item, index) => {
+              // Abbreviate long names: "მეცნიერება" → "მეცნ."
+              const displayName = item.category_name 
+                ? (item.category_name.length > 12 
+                    ? item.category_name.slice(0, 8) + '.' 
+                    : item.category_name)
+                : 'რაუნდი';
+              
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-purple-400/50 shrink-0"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(168,85,247,0.3) 0%, rgba(139,92,246,0.3) 100%)',
+                  }}
+                >
+                  <span className="text-xs text-purple-200/80">{index + 1}.</span>
+                  <span className="text-white text-sm font-medium whitespace-nowrap">
+                    {displayName}
+                  </span>
+                </motion.div>
+              );
+            })}
           </div>
         ) : (
           // Single category display
@@ -538,13 +535,9 @@ export const TVLobbyScreenV2: React.FC = () => {
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Left Side - Players Grid */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-2">
-          <h2 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2 flex-shrink-0">
-            <Users className="w-4 h-4" />
-            მოთამაშეები
-          </h2>
 
           <div className="flex-1 overflow-y-auto min-h-0">
-            <div className="grid grid-cols-4 gap-1.5 auto-rows-min">
+            <div className="grid grid-cols-4 gap-1 auto-rows-min">
             {playerSlots.map((player, index) => {
               // Check if this is an invited guest
               const isInvited = player && 'status' in player && player.status === 'invited';
@@ -688,7 +681,7 @@ export const TVLobbyScreenV2: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 flex flex-col items-center gap-2 flex-shrink-0"
+          className="mt-2 flex flex-col items-center gap-2 flex-shrink-0"
         >
           {/* Auto-start countdown indicator */}
           {autoStartCountdown !== null && autoStartCountdown > 0 && (
@@ -758,7 +751,7 @@ export const TVLobbyScreenV2: React.FC = () => {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-3 text-center text-purple-300/60 text-sm flex-shrink-0"
+          className="mt-2 text-center text-purple-300/60 text-sm flex-shrink-0"
         >
           მოლოდინი, ჰოსტმა დაიწყოს თამაში...
         </motion.p>
