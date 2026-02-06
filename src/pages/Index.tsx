@@ -553,7 +553,7 @@ export default function Index() {
                 {/* Mobile: Guest avatar view mimicking logged-in layout */}
                 <motion.div
                   className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-                  style={{ marginTop: -30 }}
+                  style={{ marginTop: -75 }}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
@@ -591,7 +591,7 @@ export default function Index() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, type: "spring" }}
-                    className="flex flex-col items-center mt-8 pointer-events-auto"
+                    className="flex flex-col items-center mt-2 pointer-events-auto"
                   >
                     <button
                       onClick={() => navigate("/auth")}
@@ -622,7 +622,7 @@ export default function Index() {
                         </svg>
                       </button>
                     </div>
-                    <div className="flex flex-col items-center mt-4">
+                    <div className="flex flex-col items-center mt-1">
                       <p className="text-base text-gray-600 font-medium text-center">
                         ან ითამაშე როგორც სტუმარმა
                       </p>
