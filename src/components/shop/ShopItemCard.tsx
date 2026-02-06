@@ -118,8 +118,8 @@ export function ShopItemCard({
       <div
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
-          "px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-5",
-          "min-h-[180px] sm:min-h-[200px]",
+          "px-3 sm:px-4 p-4",
+          "h-[200px] sm:h-[220px]",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -151,9 +151,11 @@ export function ShopItemCard({
         {/* Name */}
         <h3 className="text-gray-900 font-bold text-sm sm:text-base leading-tight mb-1">{name}</h3>
         
-        {/* Description */}
+        {/* Description - flex-1 to push price section to bottom */}
         {showDescription && description && (
-          <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-2">{description}</p>
+          <div className="flex-1 flex items-start">
+            <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 w-full">{description}</p>
+          </div>
         )}
 
         {/* Price / Status - Bottom */}
