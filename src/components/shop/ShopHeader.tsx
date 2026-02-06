@@ -53,6 +53,9 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
           <div className="flex items-center gap-3">
             <WalletDisplay />
             
+            {/* Divider - desktop/tablet only */}
+            <div className="hidden md:block w-px h-6 bg-border/50" />
+            
             <HeaderActions />
             
             <motion.button
