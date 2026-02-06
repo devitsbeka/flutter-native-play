@@ -30,7 +30,7 @@ export function PageHeader({
   };
 
   return (
-    <header className={`sticky top-0 z-20 backdrop-blur-md ${className}`}>
+    <header className={`sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 ${className}`}>
       <div className="flex items-center justify-between px-4 h-16 safe-top w-full">
         {/* Left: Back button + Title */}
         <div className="flex items-center gap-3">
