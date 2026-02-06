@@ -37,7 +37,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
           return (
             <div
               key={type}
-              className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl bg-card border border-border shadow-sm"
+              className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl liquid-glass"
             >
               <img 
                 src={POWER_UP_ICONS[type]} 
