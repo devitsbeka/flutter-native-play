@@ -4,7 +4,9 @@ import { ShopSection, ShopItem } from "@/hooks/useShopData";
 import { ShopHeroCarousel } from "./ShopHeroCarousel";
 import { ShopProductGrid } from "./ShopProductGrid";
 import { MobileProCarousel } from "./MobileProCarousel";
+import { MyPowersSection } from "./MyPowersSection";
 import { useIsBreakpointUp } from "@/hooks/use-breakpoint";
+import { PowerUpType } from "@/hooks/useUserPowerUps";
 
 interface ShopStandardLayoutProps {
   sections: ShopSection[];
@@ -13,6 +15,7 @@ interface ShopStandardLayoutProps {
   isPurchasing: string | null;
   isFrameUnlocked: (frameId: string) => boolean;
   onItemClick: (item: ShopItem) => Promise<void>;
+  onSinglePowerPurchase: (powerType: PowerUpType) => Promise<void>;
   initialScrollSection?: string;
 }
 
@@ -23,6 +26,7 @@ export function ShopStandardLayout({
   isPurchasing,
   isFrameUnlocked,
   onItemClick,
+  onSinglePowerPurchase,
   initialScrollSection,
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -67,6 +71,12 @@ export function ShopStandardLayout({
       ) : (
         <MobileProCarousel />
       )}
+
+      {/* My Powers Section - individual purchase */}
+      <MyPowersSection
+        onPurchaseSingle={onSinglePowerPurchase}
+        isPurchasing={isPurchasing}
+      />
 
       {/* Product Sections */}
       {displaySections.map((section, index) => (

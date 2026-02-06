@@ -83,6 +83,41 @@ export default function PowerUps() {
 
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  const handleSinglePowerPurchase = async (powerType: PowerUpType) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (gems < 1) {
+      setRequiredGems(1);
+      setShowNotEnoughGemsModal(true);
+      playSound("wrong-answer");
+      return;
+    }
+
+    setIsPurchasing(`single_${powerType}`);
+
+    try {
+      const spent = await spendGems(1, {
+        productId: `single_${powerType}`,
+        productType: "powerup",
+        valueReceived: { [powerType]: 1 },
+      });
+
+      if (spent) {
+        await addPowerUp(powerType, 1);
+        await refetch();
+        playSound("reward");
+      }
+    } catch (error) {
+      console.error("Single power purchase failed:", error);
+      notify.error(t("shop.purchaseFailed"));
+    } finally {
+      setIsPurchasing(null);
+    }
+  };
+
   const handlePurchase = async (item: ShopItem) => {
     if (!user) {
       setShowAuthModal(true);
@@ -262,6 +297,7 @@ export default function PowerUps() {
                 isPurchasing={isPurchasing || (isStripeProcessing ? "stripe" : null)}
                 isFrameUnlocked={isFrameUnlocked}
                 onItemClick={handlePurchase}
+                onSinglePowerPurchase={handleSinglePowerPurchase}
                 initialScrollSection={initialScrollSection}
               />
             </div>
