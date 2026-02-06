@@ -677,7 +677,8 @@ export default function CategoryQuizPage() {
   }, [powerUps, usedPowerUpsThisQuestion]);
 
   const currentQuestion = questions[currentQuestionIndex];
-  const stars = Math.min(3, Math.floor((score / Math.max(questions.length, 1)) * 4));
+  const starPercentage = (score / Math.max(questions.length, 1)) * 100;
+  const stars = starPercentage >= 80 ? 3 : starPercentage >= 60 ? 2 : starPercentage >= 40 ? 1 : 0;
   
   // Get AI-analyzed icon slug for current question (highest priority)
   const aiIconSlug = useAIIconSlug(currentQuestion?.question, dbCategory?.name);
