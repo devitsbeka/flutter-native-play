@@ -24,17 +24,19 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
       
       {/* Coins */}
       <div className="flex items-center gap-1.5">
-        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+        <div className="hidden md:flex w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm items-center justify-center shadow-sm">
           <img src={coinIcon} alt="" className="w-4 h-4" />
         </div>
+        <img src={coinIcon} alt="" className="w-5 h-5 md:hidden" />
         <span className="font-bold text-sm text-foreground">{coins.toLocaleString()}</span>
       </div>
       
       {/* Gems */}
       <div className="flex items-center gap-1.5">
-        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+        <div className="hidden md:flex w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm items-center justify-center shadow-sm">
           <img src={gemIcon} alt="" className="w-4 h-4" />
         </div>
+        <img src={gemIcon} alt="" className="w-5 h-5 md:hidden" />
         <span className="font-bold text-sm text-foreground">{formatCompactNumber(gems)}</span>
       </div>
     </div>
@@ -49,23 +51,25 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
             {t("shop.title")}
           </h1>
 
-          {/* Right side: Wallet + action icons */}
-          <div className="flex items-center gap-3">
+          {/* Wallet + action icons - spread on mobile */}
+          <div className="flex items-center justify-between md:justify-end gap-3 flex-1 md:flex-none">
             <WalletDisplay />
             
-            {/* Divider - desktop/tablet only */}
-            <div className="hidden md:block w-px h-6 bg-border/50" />
-            
-            <HeaderActions />
-            
-            <motion.button
-              onClick={onHelpClick}
-              className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <HelpCircle className="w-5 h-5 text-muted-foreground" />
-            </motion.button>
+            <div className="flex items-center gap-1">
+              {/* Divider - desktop/tablet only */}
+              <div className="hidden md:block w-px h-6 bg-border/50 mr-2" />
+              
+              <HeaderActions />
+              
+              <motion.button
+                onClick={onHelpClick}
+                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
