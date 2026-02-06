@@ -21,9 +21,10 @@ interface MyPowersSectionProps {
   onPurchaseSingle: (powerType: PowerUpType) => Promise<void>;
   isPurchasing: string | null;
   canAffordCoins: (amount: number) => boolean;
+  onCardClick?: (type: PowerUpType) => void;
 }
 
-export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins }: MyPowersSectionProps) {
+export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins, onCardClick }: MyPowersSectionProps) {
   // Triple-layer defense: ensure powerUps is always a valid object
   const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
   
