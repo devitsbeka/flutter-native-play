@@ -46,6 +46,7 @@ import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
+import puzzleSphereIcon from "@/assets/icons/puzzle-sphere.png";
 
 // Import bot avatars for opponent
 import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
@@ -769,13 +770,13 @@ export default function CategoryQuizPage() {
         </button>
         
         <div className="text-center">
-          <motion.div
+          <motion.img
+            src={puzzleSphereIcon}
+            alt="Loading"
+            className="w-16 h-16 mx-auto mb-4"
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="text-6xl mb-4"
-          >
-            {category?.icon || "🎯"}
-          </motion.div>
+          />
           <p className="text-muted-foreground">კითხვების გენერირება...</p>
         </div>
       </div>
