@@ -27,7 +27,7 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
         <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
           <img src={coinIcon} alt="" className="w-4 h-4" />
         </div>
-        <span className="font-bold text-sm text-foreground">{formatCompactNumber(coins)}</span>
+        <span className="font-bold text-sm text-foreground">{coins.toLocaleString()}</span>
       </div>
       
       {/* Gems */}
