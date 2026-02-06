@@ -197,72 +197,75 @@ export function GameModal({
             
             {/* Scrollable content area */}
             <motion.div 
-              className={cn("flex-1 overflow-y-auto", className)}
+              className={cn("flex-1 overflow-y-auto flex flex-col", className)}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
             >
-              {/* Background sparkles */}
-              {showSparkles && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {sparkles.map((i) => (
-                    <ModalSparkle key={i} index={i} />
-                  ))}
-                </div>
-              )}
-              
-              {/* Floating stars */}
-              {showStars && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {stars.map((i) => (
-                    <FloatingStar key={i} index={i} />
-                  ))}
-                </div>
-              )}
-              
-              {/* Subtitle section if provided */}
-              {subtitle && (
-                <div className="px-5 pt-4 pb-2 text-center">
-                  <p className="text-sm text-gray-500">{subtitle}</p>
-                </div>
-              )}
-              
-              {/* Icon section if provided */}
-              {(icon || iconEmoji) && (
-                <div className="flex justify-center pt-4 pb-2">
-                  {iconEmoji ? (
-                    <motion.div
-                      className="relative"
-                      initial={{ scale: 0, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
-                    >
-                      <motion.span 
-                        className="text-5xl"
-                        animate={{ 
-                          rotate: [-5, 5, -5],
-                          y: [0, -3, 0],
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
+              {/* Centered content wrapper with max-width for tablet/desktop */}
+              <div className="flex-1 flex flex-col justify-center w-full max-w-xl mx-auto py-6">
+                {/* Background sparkles */}
+                {showSparkles && (
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {sparkles.map((i) => (
+                      <ModalSparkle key={i} index={i} />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Floating stars */}
+                {showStars && (
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {stars.map((i) => (
+                      <FloatingStar key={i} index={i} />
+                    ))}
+                  </div>
+                )}
+                
+                {/* Subtitle section if provided */}
+                {subtitle && (
+                  <div className="px-5 pb-2 text-center">
+                    <p className="text-sm text-gray-500">{subtitle}</p>
+                  </div>
+                )}
+                
+                {/* Icon section if provided */}
+                {(icon || iconEmoji) && (
+                  <div className="flex justify-center pb-2">
+                    {iconEmoji ? (
+                      <motion.div
+                        className="relative"
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
                       >
-                        {iconEmoji}
-                      </motion.span>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -20 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
-                    >
-                      {icon}
-                    </motion.div>
-                  )}
+                        <motion.span 
+                          className="text-5xl"
+                          animate={{ 
+                            rotate: [-5, 5, -5],
+                            y: [0, -3, 0],
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          {iconEmoji}
+                        </motion.span>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
+                      >
+                        {icon}
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Main content */}
+                <div className="px-6 pb-5">
+                  {children}
                 </div>
-              )}
-              
-              {/* Main content */}
-              <div className="px-6 pb-5">
-                {children}
               </div>
             </motion.div>
             
@@ -278,7 +281,9 @@ export function GameModal({
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                {effectiveFooter}
+                <div className="w-full max-w-xl mx-auto">
+                  {effectiveFooter}
+                </div>
               </motion.div>
             )}
           </motion.div>
