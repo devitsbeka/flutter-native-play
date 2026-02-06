@@ -8,6 +8,7 @@ import classicIcon from "@/assets/tabs/classic.png";
 import funIcon from "@/assets/tabs/fun.png";
 import eduIcon from "@/assets/tabs/edu.png";
 import popularIcon from "@/assets/tabs/puzzle-cube.png";
+import recentlyViewedIcon from "@/assets/tabs/recently-viewed.png";
 
 interface IconTab {
   id: string;
@@ -18,7 +19,7 @@ interface IconTab {
 const iconMap: Record<string, string> = {
   all: allIcon,
   favorites: favIcon,
-  recently_viewed: allIcon,
+  recently_viewed: recentlyViewedIcon,
   popular: popularIcon,
   classic: classicIcon,
   fun: funIcon,
