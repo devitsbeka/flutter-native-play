@@ -1,8 +1,8 @@
 #!/bin/bash
 # Convert all MP4 videos to WebM VP9 format with desktop and mobile variants
 #
-# Desktop: max 720px width, CRF 33, VP9
-# Mobile:  max 360px width, CRF 36, VP9
+# Desktop: max 1280px width, CRF 30, VP9
+# Mobile:  max 480px width, CRF 33, VP9
 # Both:    no audio, optimized for web playback
 #
 # Usage: bash scripts/convert-videos-webm.sh
@@ -17,10 +17,10 @@ ASSETS_DIR="$PROJECT_DIR/src/assets"
 MOBILE_DIR="$PUBLIC_VIDEOS/mobile"
 
 # VP9 encoding settings
-DESKTOP_CRF=33
-MOBILE_CRF=36
-DESKTOP_MAX_WIDTH=720
-MOBILE_MAX_WIDTH=360
+DESKTOP_CRF=30
+MOBILE_CRF=33
+DESKTOP_MAX_WIDTH=1280
+MOBILE_MAX_WIDTH=480
 THREADS=4    # Parallel conversion jobs
 CPU_USED=4   # VP9 speed (0=best quality, 8=fastest)
 
@@ -129,6 +129,29 @@ if [ -d "$ASSETS_DIR/animations" ]; then
     filename="$(basename "${mp4%.mp4}")"
     convert_video "$mp4" "$ASSETS_DIR/animations/$filename.webm" ""
   done
+fi
+
+# Generate poster images (first frame JPEG) for category videos
+IMAGES_DIR="$PROJECT_DIR/public/images/categories"
+mkdir -p "$IMAGES_DIR"
+log "Generating poster images..."
+for mp4 in "$PUBLIC_VIDEOS"/*.mp4; do
+  [ -f "$mp4" ] || continue
+  name="$(basename "${mp4%.mp4}")"
+  # Skip non-category videos
+  case "$name" in
+    floating-blob|map-*|geo-battle-2|map-background|coins|gems|mega-powers-2|powers|promo-*|starter|vip|sport-final) continue ;;
+  esac
+  output="$IMAGES_DIR/$name.jpg"
+  if [ ! -f "$output" ]; then
+    ffmpeg -i "$mp4" -vframes 1 -q:v 3 -vf "scale=480:-2" -y "$output" 2>/dev/null
+    success "Poster: $name.jpg"
+  fi
+done
+# sport.jpg from sport-final.mp4
+if [ ! -f "$IMAGES_DIR/sport.jpg" ]; then
+  ffmpeg -i "$PUBLIC_VIDEOS/sport-final.mp4" -vframes 1 -q:v 3 -vf "scale=480:-2" -y "$IMAGES_DIR/sport.jpg" 2>/dev/null
+  success "Poster: sport.jpg"
 fi
 
 # Summary
