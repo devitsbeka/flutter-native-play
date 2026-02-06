@@ -33,6 +33,7 @@ export function ShopStandardLayout({
   initialScrollSection,
   powerUps,
   canAffordCoins,
+  onPowerCardClick,
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolled = useRef(false);
