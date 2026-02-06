@@ -84,6 +84,11 @@ export default function PowerUps() {
 
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  const handlePowerCardClick = (type: PowerUpType) => {
+    setSelectedPowerType(type);
+    setShowPowerShopModal(true);
+  };
+
   const handleSinglePowerPurchase = async (powerType: PowerUpType) => {
     if (!user) {
       setShowAuthModal(true);
