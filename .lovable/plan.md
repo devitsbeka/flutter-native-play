@@ -1,99 +1,163 @@
 
-# Plan: Equal Size Shop Item Cards with Consistent Spacing
+# Plan: Separate "My Powers" Section with Individual Purchase Buttons
 
-## Problem
+## Overview
 
-From the screenshots:
-1. Cards have different heights - descriptions with 1 line vs 2 lines cause size variations
-2. Top/bottom padding needs to be exactly 16px
-3. Gap between description and price row is inconsistent
+Restructure the Power-Ups shop page to have two distinct sections:
+1. **"ჩემი ძალები" (My Powers)** - Shows current power-up inventory with + buttons to buy individual powers
+2. **"ძალები" (Powers)** - Shows the existing shop packs
 
-## Solution
-
-Make all cards equal height with:
-- Fixed 16px (`p-4`) top and bottom padding
-- Fixed height for description area (reserve space for 2 lines always)
-- Use `flex-grow` on description to push price section down consistently
-
----
-
-## File to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/shop/ShopItemCard.tsx` | Standardize padding to 16px, fix description height |
-
----
-
-## Technical Changes
-
-### 1. Update Card Container Padding (Lines 118-124)
-
-```tsx
-// Before
-"px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-5",
-"min-h-[180px] sm:min-h-[200px]",
-
-// After - exactly 16px top/bottom padding
-"px-3 sm:px-4 p-4",
-"h-[200px] sm:h-[220px]",  // Fixed height for equal cards
+## Current Structure
+```text
+[Shop Header]
+[Hero Carousel / PRO Carousel]
+[Powers Section - packs of 3]
+[Mega Powers]
+[VIP]
+...
 ```
 
-### 2. Fix Description to Reserve 2-Line Height (Lines 154-157)
+## New Structure
+```text
+[Shop Header]
+[Hero Carousel / PRO Carousel]
+[ჩემი ძალები Section]  ← NEW
+  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
+  │ 50  │ │ ❄️  │ │ 🔄  │ │ ⏱️  │
+  │ /50 │ │     │ │     │ │     │
+  │ 45  │ │ 49  │ │ 11  │ │ 22  │
+  │ [+] │ │ [+] │ │ [+] │ │ [+] │
+  └─────┘ └─────┘ └─────┘ └─────┘
+[ძალები Section - packs]
+[Mega Powers]
+[VIP]
+...
+```
+
+---
+
+## Files to Create/Modify
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/components/shop/MyPowersSection.tsx` | Create | New section showing user's powers with + buttons |
+| `src/components/shop/ShopStandardLayout.tsx` | Modify | Add MyPowersSection above the powers grid |
+| `src/pages/PowerUps.tsx` | Modify | Pass purchase handler to MyPowersSection |
+
+---
+
+## Technical Implementation
+
+### 1. Create MyPowersSection Component
+
+New component that displays:
+- Section title: "ჩემი ძალები"
+- 4 power-up cards in a row (matching the screenshot design)
+- Each card shows: icon, count, and a + button to buy 1 more
+
+**Design from screenshot:**
+- White pill-shaped cards with icon + count
+- Horizontal layout with 4 items
+- + button triggers purchase of single power-up (1 gem each)
 
 ```tsx
-// Before
-<p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-2">{description}</p>
-
-// After - reserve height for 2 lines, use flex-grow to fill space
-<div className="flex-1 flex items-start">
-  <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 w-full">
-    {description}
-  </p>
+// Structure for each power card
+<div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm">
+  <img src={powerIcon} className="w-6 h-6" />
+  <span className="font-bold">{count}</span>
+  <button className="w-6 h-6 bg-purple-500 rounded-full text-white">+</button>
 </div>
 ```
 
-### 3. Remove mb-2 from Description, Add Gap to Container
+### 2. Update ShopStandardLayout
 
-The description wrapper will grow to fill available space, pushing the price section to a consistent position at the bottom.
+Insert `<MyPowersSection />` after the hero carousel and before the existing powers section:
+
+```tsx
+{/* My Powers Section - before product grids */}
+<MyPowersSection 
+  onPurchaseSingle={onSinglePowerPurchase}
+/>
+
+{/* Then existing Product Sections */}
+{displaySections.map((section, index) => (
+  ...
+))}
+```
+
+### 3. Single Power Purchase Logic
+
+Add single power purchase capability (1 power = 1 gem):
+
+```tsx
+// In PowerUps.tsx - new handler
+const handleSinglePowerPurchase = async (powerType: PowerUpType) => {
+  if (!user) {
+    setShowAuthModal(true);
+    return;
+  }
+  
+  if (gems < 1) {
+    setRequiredGems(1);
+    setShowNotEnoughGemsModal(true);
+    return;
+  }
+  
+  const spent = await spendGems(1, {
+    productId: `single_${powerType}`,
+    productType: "powerup",
+    valueReceived: { [powerType]: 1 },
+  });
+  
+  if (spent) {
+    await addPowerUp(powerType, 1);
+    await refetch();
+    playSound("reward");
+  }
+};
+```
 
 ---
 
-## Visual Result
+## Visual Design (from screenshots)
+
+The "My Powers" row will look like:
 
 ```text
-┌─────────────────────────────┐
-│ ← 16px padding top          │
-│         [ICON]              │
-│        გაყინვა ×3           │
-│                             │
-│    დრო გაყინდება 5 წამით    │ ← 1-line desc (flex grows below)
-│         [space]             │ ← flex-grow fills this
-│         💎 3                │
-│       [შეძენა]              │
-│ ← 16px padding bottom       │
-└─────────────────────────────┘
+ჩემი ძალები
 
-┌─────────────────────────────┐
-│ ← 16px padding top          │
-│         [ICON]              │
-│        50/50 ×3             │
-│                             │
-│    ნაშლის 2 არასწორი        │ ← 2-line desc
-│        პასუხს               │
-│         💎 3                │
-│       [შეძენა]              │
-│ ← 16px padding bottom       │
-└─────────────────────────────┘
+┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
+│  🔶  45   │ │  ❄️  49   │ │  🔄  11   │ │  ⏱️  22   │
+│    [+]    │ │    [+]    │ │    [+]    │ │    [+]    │
+└───────────┘ └───────────┘ └───────────┘ └───────────┘
+
+ძალები (shop packs below)
 ```
 
-Both cards are now exactly the same height with consistent 16px padding.
+Each + button purchases 1 power for 1 gem.
+
+---
+
+## Props Flow
+
+```text
+PowerUps.tsx
+    │
+    ├─ handleSinglePowerPurchase(powerType)
+    │
+    └─ ShopStandardLayout
+           │
+           └─ MyPowersSection
+                  │
+                  └─ onPurchaseSingle(powerType)
+```
 
 ---
 
 ## Summary
 
-1. Set exact 16px padding on all sides
-2. Use fixed card height instead of min-height
-3. Make description area flex-grow to fill space between content and price
-4. All cards will be equal size regardless of description length
+1. **Create** `MyPowersSection.tsx` - Shows current power counts with + purchase buttons
+2. **Modify** `ShopStandardLayout.tsx` - Insert new section before powers grid
+3. **Modify** `PowerUps.tsx` - Add single power purchase handler
+4. Each + button buys 1 power for 1 gem
+5. Section title: "ჩემი ძალები", packs section stays as "ძალები"
