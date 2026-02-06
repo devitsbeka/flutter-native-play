@@ -77,6 +77,8 @@ export const useUserPresence = () => {
   const countryCodeRef = useRef<string | null>(null);
   const isUpdatingRef = useRef(false);
   const currentRoomIdRef = useRef<string | null>(null);
+  const pathnameRef = useRef(location.pathname);
+  pathnameRef.current = location.pathname;
 
   // Check if we can make authenticated requests
   const canMakeRequest = useCallback((): boolean => {
@@ -107,9 +109,9 @@ export const useUserPresence = () => {
 
     try {
       // Use room-specific path if user is in a room
-      const pagePath = currentRoomIdRef.current 
-        ? `/room/${currentRoomIdRef.current}` 
-        : (currentPage || location.pathname);
+      const pagePath = currentRoomIdRef.current
+        ? `/room/${currentRoomIdRef.current}`
+        : (currentPage || pathnameRef.current);
 
       const { error } = await supabase
         .from('user_presence')
@@ -132,7 +134,7 @@ export const useUserPresence = () => {
     } finally {
       isUpdatingRef.current = false;
     }
-  }, [user?.id, location.pathname, canMakeRequest]);
+  }, [user?.id, canMakeRequest]);
 
   // Set room-specific presence (called when entering/exiting a room)
   const setRoomPresence = useCallback(async (roomId: string | null) => {
@@ -144,8 +146,8 @@ export const useUserPresence = () => {
     isUpdatingRef.current = true;
 
     try {
-      const pagePath = roomId ? `/room/${roomId}` : location.pathname;
-      
+      const pagePath = roomId ? `/room/${roomId}` : pathnameRef.current;
+
       const { error } = await supabase
         .from('user_presence')
         .upsert({
@@ -166,7 +168,7 @@ export const useUserPresence = () => {
     } finally {
       isUpdatingRef.current = false;
     }
-  }, [user?.id, location.pathname, canMakeRequest]);
+  }, [user?.id, canMakeRequest]);
 
   useEffect(() => {
     // Get country code synchronously, then start presence tracking
@@ -212,7 +214,7 @@ export const useUserPresence = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       updatePresence('offline');
     };
-  }, [user?.id, updatePresence, location.pathname, canMakeRequest]);
+  }, [user?.id, updatePresence, canMakeRequest]);
 
   // Update page on route change (but respect room override)
   useEffect(() => {

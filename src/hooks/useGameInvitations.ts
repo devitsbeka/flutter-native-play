@@ -54,12 +54,14 @@ export function useGameInvitations() {
 
       // Fetch sender profiles separately
       const senderIds = [...new Set(data?.map(inv => inv.sender_id) || [])];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, nickname, avatar_url, country_code")
-        .in("user_id", senderIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]));
+      let profileMap = new Map<string, any>();
+      if (senderIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, nickname, avatar_url, country_code")
+          .in("user_id", senderIds);
+        profileMap = new Map(profiles?.map(p => [p.user_id, p]));
+      }
 
       const invitationsWithProfiles: GameInvitation[] = data?.map(inv => ({
         ...inv,

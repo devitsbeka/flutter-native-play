@@ -313,6 +313,11 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .order("joined_at", { ascending: true });
     
     if (!error && data) {
+      if (data.length === 0) {
+        setParticipants([]);
+        return;
+      }
+
       // Fetch fresh profile data for all participants
       const userIds = data.map(p => p.user_id);
       const { data: profiles } = await supabase

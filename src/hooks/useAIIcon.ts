@@ -177,21 +177,16 @@ export async function preloadQuestionIcons(
 ): Promise<void> {
   if (!questions || questions.length === 0) return;
 
-  for (let i = 0; i < questions.length; i++) {
-    const q = questions[i];
+  // Filter to only uncached questions
+  const uncached = questions.filter(q => {
     const questionHash = hashQuestion(q.question + (q.category || ''));
+    return !getCachedResult(questionHash);
+  });
 
-    // Skip if already cached
-    if (getCachedResult(questionHash)) {
-      continue;
-    }
+  if (uncached.length === 0) return;
 
-    // Small delay between requests to avoid rate limiting (50ms)
-    if (i > 0) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-
-    // Fire and forget - don't block on individual requests
-    fetchAIIconData(q.question, q.category).catch(() => {});
-  }
+  // Fire all uncached requests in parallel (fetchAIIconData deduplicates via pendingRequests)
+  await Promise.allSettled(
+    uncached.map(q => fetchAIIconData(q.question, q.category))
+  );
 }

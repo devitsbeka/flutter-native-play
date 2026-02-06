@@ -40,25 +40,31 @@ export const useActiveUsers = () => {
 
       // Fetch profiles for these users
       const userIds = presenceData.map(p => p.user_id).filter(id => !id.startsWith('guest_'));
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, nickname, avatar_url, country_code, region')
-        .in('user_id', userIds);
 
-      if (profilesError) throw profilesError;
+      let profilesMap = new Map<string, any>();
+      let vipUserIds = new Set<string>();
 
-      // Fetch VIP subscriptions
-      const { data: vipData } = await supabase
-        .from('vip_subscriptions')
-        .select('user_id, expires_at')
-        .in('user_id', userIds)
-        .gte('expires_at', new Date().toISOString());
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, nickname, avatar_url, country_code, region')
+          .in('user_id', userIds);
 
-      const profilesMap = new Map(
-        (profilesData || []).map(p => [p.user_id, p])
-      );
-      
-      const vipUserIds = new Set((vipData || []).map(v => v.user_id));
+        if (profilesError) throw profilesError;
+
+        // Fetch VIP subscriptions
+        const { data: vipData } = await supabase
+          .from('vip_subscriptions')
+          .select('user_id, expires_at')
+          .in('user_id', userIds)
+          .gte('expires_at', new Date().toISOString());
+
+        profilesMap = new Map(
+          (profilesData || []).map(p => [p.user_id, p])
+        );
+
+        vipUserIds = new Set((vipData || []).map(v => v.user_id));
+      }
 
       const usersWithProfiles: ActiveUser[] = presenceData.map(presence => {
         const profile = profilesMap.get(presence.user_id);

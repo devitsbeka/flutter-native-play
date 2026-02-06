@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Category } from '@/data/categories';
 import { preloadIcons } from '@/hooks/useIconLibrary';
@@ -50,12 +50,16 @@ const transformCategory = (dbCat: DatabaseCategory): TransformedCategory => ({
   image_url: dbCat.image_url,
 });
 
+// Minimum time between category refetches (60 seconds)
+const CATEGORIES_STALE_TIME = 60 * 1000;
+
 export const useCategories = () => {
   const [categories, setCategories] = useState<TransformedCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [translations, setTranslations] = useState<Record<string, { name: string; description?: string }>>({});
   const [currentLanguage, setCurrentLanguage] = useState<string>(DEFAULT_LANGUAGE);
+  const lastFetchRef = useRef(0);
 
   // Get current language from localStorage
   const getCurrentLanguage = useCallback(() => {
@@ -131,7 +135,8 @@ export const useCategories = () => {
 
       const transformed = filtered.map(transformCategory);
       setCategories(transformed);
-      
+      lastFetchRef.current = Date.now();
+
       // Preload category icons for faster rendering
       const iconUrls = transformed
         .filter(cat => cat.icon_slug)
@@ -169,23 +174,17 @@ export const useCategories = () => {
       .subscribe();
 
     // Refetch when app comes back to foreground (fixes iOS homescreen app issue)
+    // Only refetch if data is stale (>60s since last fetch)
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && Date.now() - lastFetchRef.current > CATEGORIES_STALE_TIME) {
         fetchCategories(currentLanguage);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Also refetch on focus (for desktop browsers)
-    const handleFocus = () => {
-      fetchCategories(currentLanguage);
-    };
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
     };
   }, [fetchCategories, currentLanguage]);
 

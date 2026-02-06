@@ -192,51 +192,27 @@ function getIconUrl(fileName: string): string {
   return `https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${fileName}`;
 }
 
-// Storage URL for the synced icon library JSON
-const ICON_LIBRARY_STORAGE_URL = 'https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icons/icon-library-meta.json';
-const ICON_LIBRARY_LOCAL_FALLBACK = '/data/icon-library-meta.json';
+// Local icon library JSON (storage fetch removed — was always returning 400)
+const ICON_LIBRARY_LOCAL_PATH = '/data/icon-library-meta.json';
 
-// Load icons from storage (with local fallback and retry logic)
+// Load icons from local JSON file
 async function loadIconIndex(): Promise<IconItem[]> {
   if (iconCache) return iconCache;
-  
   if (cachePromise) return cachePromise;
-  
-  const maxRetries = 3;
-  
+
   cachePromise = (async () => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        // Try loading from storage first (always up-to-date)
-        let response = await fetch(ICON_LIBRARY_STORAGE_URL);
-        
-        // Fallback to local file if storage fails
-        if (!response.ok) {
-          console.warn(`[IconLibrary] Storage fetch failed (attempt ${attempt}), trying local fallback`);
-          response = await fetch(ICON_LIBRARY_LOCAL_FALLBACK);
-        }
-        
-        if (!response.ok) {
-          throw new Error('Both fetches failed');
-        }
-        
-        const data = await response.json();
-        
-        iconCache = data.items || [];
-        console.log(`[IconLibrary] Loaded ${iconCache.length} icons from ${response.url.includes('storage') ? 'storage' : 'local'}`);
-        return iconCache;
-      } catch (error) {
-        console.error(`[IconLibrary] Load attempt ${attempt} failed:`, error);
-        if (attempt < maxRetries) {
-          // Exponential backoff: 1s, 2s, 4s
-          await new Promise(r => setTimeout(r, 1000 * attempt));
-        }
-      }
+    try {
+      const response = await fetch(ICON_LIBRARY_LOCAL_PATH);
+      if (!response.ok) throw new Error('Local icon library fetch failed');
+      const data = await response.json();
+      iconCache = data.items || [];
+      return iconCache;
+    } catch (error) {
+      console.error('[IconLibrary] Load failed:', error);
+      return [];
     }
-    console.error('[IconLibrary] All retry attempts exhausted');
-    return [];
   })();
-  
+
   return cachePromise;
 }
 
@@ -385,19 +361,9 @@ export function useIconLibrary() {
     };
     
     window.addEventListener('icon-library-refresh', handleRefresh);
-    
-    // Auto-refresh when user returns to the app (handles cache after external changes)
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        refreshDbIconsCache();
-        loadDbIcons().then(setDbIcons);
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    
+
     return () => {
       window.removeEventListener('icon-library-refresh', handleRefresh);
-      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 

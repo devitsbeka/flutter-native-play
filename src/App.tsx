@@ -10,6 +10,7 @@ import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationCon
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { VipProvider } from "@/contexts/VipContext";
 import { TVGameProvider } from "@/contexts/TVGameContext";
 import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
@@ -104,6 +105,7 @@ const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 const App = () => (
   <LanguageProvider>
     <AuthProvider>
+      <VipProvider>
       <SoundProvider>
         <NotificationsProvider>
           <OnboardingProvider>
@@ -204,6 +206,7 @@ const App = () => (
           </OnboardingProvider>
         </NotificationsProvider>
       </SoundProvider>
+      </VipProvider>
     </AuthProvider>
   </LanguageProvider>
 );
