@@ -1,163 +1,95 @@
 
-# Plan: Separate "My Powers" Section with Individual Purchase Buttons
 
-## Overview
+# Plan: Fix Empty Space Bug & Remove Duplicate Power-Up Pills
 
-Restructure the Power-Ups shop page to have two distinct sections:
-1. **"ჩემი ძალები" (My Powers)** - Shows current power-up inventory with + buttons to buy individual powers
-2. **"ძალები" (Powers)** - Shows the existing shop packs
+## Problem Identified
 
-## Current Structure
-```text
-[Shop Header]
-[Hero Carousel / PRO Carousel]
-[Powers Section - packs of 3]
-[Mega Powers]
-[VIP]
-...
-```
+After investigating, I found two issues:
 
-## New Structure
-```text
-[Shop Header]
-[Hero Carousel / PRO Carousel]
-[ჩემი ძალები Section]  ← NEW
-  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
-  │ 50  │ │ ❄️  │ │ 🔄  │ │ ⏱️  │
-  │ /50 │ │     │ │     │ │     │
-  │ 45  │ │ 49  │ │ 11  │ │ 22  │
-  │ [+] │ │ [+] │ │ [+] │ │ [+] │
-  └─────┘ └─────┘ └─────┘ └─────┘
-[ძალები Section - packs]
-[Mega Powers]
-[VIP]
-...
-```
+1. **Duplicate power-up pills**: Both `MyPowersSection` (shows "ჩემი ძალები" with + buttons) and `PowerUpsSummary` (inside the "ძალები" header) display the same power-up counts. This creates visual redundancy.
+
+2. **Empty space during render**: The empty gap the user sees is caused by animation timing - `MyPowersSection` uses `framer-motion` with `initial={{ opacity: 0, y: 10 }}` which starts invisible and animates in. This causes a flash of empty space during the layout calculation phase.
 
 ---
 
-## Files to Create/Modify
+## Solution
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/shop/MyPowersSection.tsx` | Create | New section showing user's powers with + buttons |
-| `src/components/shop/ShopStandardLayout.tsx` | Modify | Add MyPowersSection above the powers grid |
-| `src/pages/PowerUps.tsx` | Modify | Pass purchase handler to MyPowersSection |
+| File | Change |
+|------|--------|
+| `src/components/shop/ShopProductGrid.tsx` | Remove `PowerUpsSummary` from "powers" section header |
+| `src/components/shop/MyPowersSection.tsx` | Remove initial animation to prevent layout shift |
 
 ---
 
-## Technical Implementation
+## Technical Changes
 
-### 1. Create MyPowersSection Component
+### 1. Remove PowerUpsSummary from ShopProductGrid
 
-New component that displays:
-- Section title: "ჩემი ძალები"
-- 4 power-up cards in a row (matching the screenshot design)
-- Each card shows: icon, count, and a + button to buy 1 more
-
-**Design from screenshot:**
-- White pill-shaped cards with icon + count
-- Horizontal layout with 4 items
-- + button triggers purchase of single power-up (1 gem each)
+Since `MyPowersSection` now handles displaying user's powers with purchase functionality, the `PowerUpsSummary` in the "ძალები" section header is redundant.
 
 ```tsx
-// Structure for each power card
-<div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm">
-  <img src={powerIcon} className="w-6 h-6" />
-  <span className="font-bold">{count}</span>
-  <button className="w-6 h-6 bg-purple-500 rounded-full text-white">+</button>
-</div>
+// Before (line 43)
+{sectionId === "powers" && <PowerUpsSummary />}
+
+// After: Remove this line entirely
+// The title now just shows "ძალები" without duplicate pills
 ```
 
-### 2. Update ShopStandardLayout
+### 2. Stabilize MyPowersSection Layout
 
-Insert `<MyPowersSection />` after the hero carousel and before the existing powers section:
+Remove the animation that causes the empty space flash:
 
 ```tsx
-{/* My Powers Section - before product grids */}
-<MyPowersSection 
-  onPurchaseSingle={onSinglePowerPurchase}
-/>
+// Before
+<motion.div
+  key={type}
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="..."
+>
 
-{/* Then existing Product Sections */}
-{displaySections.map((section, index) => (
-  ...
-))}
+// After - no initial animation, stable height
+<div
+  key={type}
+  className="..."
+>
 ```
 
-### 3. Single Power Purchase Logic
-
-Add single power purchase capability (1 power = 1 gem):
-
-```tsx
-// In PowerUps.tsx - new handler
-const handleSinglePowerPurchase = async (powerType: PowerUpType) => {
-  if (!user) {
-    setShowAuthModal(true);
-    return;
-  }
-  
-  if (gems < 1) {
-    setRequiredGems(1);
-    setShowNotEnoughGemsModal(true);
-    return;
-  }
-  
-  const spent = await spendGems(1, {
-    productId: `single_${powerType}`,
-    productType: "powerup",
-    valueReceived: { [powerType]: 1 },
-  });
-  
-  if (spent) {
-    await addPowerUp(powerType, 1);
-    await refetch();
-    playSound("reward");
-  }
-};
-```
+This ensures the component renders immediately without causing layout shift.
 
 ---
 
-## Visual Design (from screenshots)
-
-The "My Powers" row will look like:
+## Visual Result
 
 ```text
-ჩემი ძალები
+Before (duplicate):
+┌─────────────────────────────┐
+│     PRO Carousel            │
+├─────────────────────────────┤
+│ ჩემი ძალები                 │  ← My Powers section
+│ [45][49][11][22] + buttons  │
+├─────────────────────────────┤
+│ ძალები [45][49][11][22]     │  ← DUPLICATE pills from PowerUpsSummary
+│ [Power Card] [Power Card]   │
+└─────────────────────────────┘
 
-┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐
-│  🔶  45   │ │  ❄️  49   │ │  🔄  11   │ │  ⏱️  22   │
-│    [+]    │ │    [+]    │ │    [+]    │ │    [+]    │
-└───────────┘ └───────────┘ └───────────┘ └───────────┘
-
-ძალები (shop packs below)
-```
-
-Each + button purchases 1 power for 1 gem.
-
----
-
-## Props Flow
-
-```text
-PowerUps.tsx
-    │
-    ├─ handleSinglePowerPurchase(powerType)
-    │
-    └─ ShopStandardLayout
-           │
-           └─ MyPowersSection
-                  │
-                  └─ onPurchaseSingle(powerType)
+After (clean):
+┌─────────────────────────────┐
+│     PRO Carousel            │
+├─────────────────────────────┤
+│ ჩემი ძალები                 │  ← My Powers section
+│ [45][49][11][22] + buttons  │
+├─────────────────────────────┤
+│ ძალები                      │  ← Clean header, no duplicate
+│ [Power Card] [Power Card]   │
+└─────────────────────────────┘
 ```
 
 ---
 
 ## Summary
 
-1. **Create** `MyPowersSection.tsx` - Shows current power counts with + purchase buttons
-2. **Modify** `ShopStandardLayout.tsx` - Insert new section before powers grid
-3. **Modify** `PowerUps.tsx` - Add single power purchase handler
-4. Each + button buys 1 power for 1 gem
-5. Section title: "ჩემი ძალები", packs section stays as "ძალები"
+1. Remove `PowerUpsSummary` from `ShopProductGrid` - eliminates duplicate display
+2. Remove animation from `MyPowersSection` power cards - prevents empty space flash during mount
+3. Clean, single source of power-up information with purchase capability
+
