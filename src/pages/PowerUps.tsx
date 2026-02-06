@@ -308,6 +308,7 @@ export default function PowerUps() {
                 initialScrollSection={initialScrollSection}
                 powerUps={shopData.powerUps}
                 canAffordCoins={canAffordCoins}
+                onPowerCardClick={handlePowerCardClick}
               />
             </div>
           </div>

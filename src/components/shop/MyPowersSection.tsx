@@ -54,7 +54,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
                 {count}
               </span>
               <button
-                onClick={() => onPurchaseSingle(type)}
+                onClick={(e) => { e.stopPropagation(); onPurchaseSingle(type); }}
                 disabled={isLoading || !canAfford}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50"
               >

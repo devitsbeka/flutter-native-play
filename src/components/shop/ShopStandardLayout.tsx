@@ -84,6 +84,7 @@ export function ShopStandardLayout({
         onPurchaseSingle={onSinglePowerPurchase}
         isPurchasing={isPurchasing}
         canAffordCoins={canAffordCoins}
+        onCardClick={onPowerCardClick}
       />
 
       {/* Product Sections */}
