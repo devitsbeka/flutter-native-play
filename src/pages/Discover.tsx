@@ -127,16 +127,30 @@ export default function Discover() {
     });
   }, [categories, favorites, progressMap, newLevelCategories]);
 
-  // Get popular categories (random 6 from all categories)
+  // Get popular categories (random 15, same order for the whole day)
   const popularCategories = useMemo(() => {
     if (categories.length === 0) return [];
-    // Fisher-Yates shuffle to randomize
+    
+    // Create a daily seed based on current date
+    const today = new Date();
+    const dailySeed = today.getFullYear() * 10000 + 
+                      (today.getMonth() + 1) * 100 + 
+                      today.getDate();
+    
+    // Seeded random function (deterministic)
+    const seededRandom = (seed: number) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    // Fisher-Yates shuffle with seeded random
     const shuffled = [...categories];
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(seededRandom(dailySeed + i) * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    return shuffled.slice(0, 6);
+    
+    return shuffled.slice(0, 15);
   }, [categories]);
 
   // Get recently viewed from localStorage
