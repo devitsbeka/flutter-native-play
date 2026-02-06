@@ -36,12 +36,9 @@ export function ShopProductGrid({
     >
       {/* Section Header */}
       <div className="px-[15px] mb-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
-            {title}
-          </h2>
-          {sectionId === "powers" && <PowerUpsSummary />}
-        </div>
+        <h2 className="text-lg font-display font-bold text-foreground/90 drop-shadow-sm">
+          {title}
+        </h2>
       </div>
 
       {/* Products Grid */}

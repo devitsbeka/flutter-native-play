@@ -35,10 +35,8 @@ export function MyPowersSection({ onPurchaseSingle, isPurchasing }: MyPowersSect
           const isLoading = isPurchasing === `single_${type}`;
           
           return (
-            <motion.div
+            <div
               key={type}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border shadow-sm min-w-fit"
             >
               <img 
@@ -60,7 +58,7 @@ export function MyPowersSection({ onPurchaseSingle, isPurchasing }: MyPowersSect
                   <Plus className="w-4 h-4" />
                 )}
               </button>
-            </motion.div>
+            </div>
           );
         })}
       </div>
