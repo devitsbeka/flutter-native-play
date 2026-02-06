@@ -81,25 +81,40 @@ export function useTriviaLobby(triviaId: string | undefined) {
   const creator = triviaWithCreator?.creator;
 
   // Fetch leaderboard - two-step approach to avoid FK join issues
+  // Shows only BEST score per user (de-duplicated)
   const { data: leaderboard = [], isLoading: isLoadingLeaderboard, refetch: refetchLeaderboard } = useQuery({
     queryKey: ["trivia-leaderboard", triviaId],
     queryFn: async () => {
       if (!triviaId) return [];
 
-      // Step 1: Get plays
-      const { data: plays, error: playsError } = await supabase
+      // Step 1: Get ALL plays for this trivia (no limit - we'll filter in JS)
+      const { data: allPlays, error: playsError } = await supabase
         .from("quiz_post_plays")
         .select("user_id, score, played_at")
-        .eq("post_id", triviaId)
-        .order("score", { ascending: false })
-        .order("played_at", { ascending: true })
-        .limit(20);
+        .eq("post_id", triviaId);
 
       if (playsError) throw playsError;
-      if (!plays || plays.length === 0) return [];
+      if (!allPlays || allPlays.length === 0) return [];
 
-      // Step 2: Get unique user profiles in one query
-      const userIds = [...new Set(plays.map(p => p.user_id))];
+      // Step 2: Group by user and keep only BEST score per user
+      const bestByUser = new Map<string, { user_id: string; score: number; played_at: string }>();
+      for (const play of allPlays) {
+        const existing = bestByUser.get(play.user_id);
+        if (!existing || (play.score || 0) > (existing.score || 0)) {
+          bestByUser.set(play.user_id, play);
+        }
+      }
+
+      // Step 3: Sort by score desc, then by played_at asc, limit to top 20
+      const plays = Array.from(bestByUser.values())
+        .sort((a, b) => {
+          if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+          return new Date(a.played_at).getTime() - new Date(b.played_at).getTime();
+        })
+        .slice(0, 20);
+
+      // Step 4: Get unique user profiles in one query
+      const userIds = plays.map(p => p.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, nickname, avatar_url")
@@ -107,7 +122,7 @@ export function useTriviaLobby(triviaId: string | undefined) {
 
       if (profilesError) throw profilesError;
 
-      // Step 3: Merge and rank
+      // Step 5: Merge and rank
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
       const entries: TriviaLeaderboardEntry[] = plays.map((entry, index) => ({
