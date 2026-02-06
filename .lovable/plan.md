@@ -1,46 +1,117 @@
-# Plan: Lifetime Play Limit for Non-PRO Users (5 Games Total)
 
-## ✅ IMPLEMENTED
 
----
+# Plan: Update Reward Success Icon & Chest Cooldown
 
 ## Summary
 
-Replaced the **daily** play limit system with a **lifetime** 5-game limit for non-PRO users. Once a user plays 5 games total, they must upgrade to PRO to continue playing.
+1. Replace the party popper emoji (`🎉`) with a treasure pile icon when showing reward success notifications (chest/missions)
+2. Change the chest cooldown from **6 hours** to **24 hours**
 
 ---
 
-## Files Modified
+## Current Behavior
+
+| Feature | Current |
+|---------|---------|
+| Reward success icon | Party popper emoji `🎉` |
+| Chest cooldown | 6 hours |
+
+## New Behavior
+
+| Feature | New |
+|---------|-----|
+| Reward success icon | Treasure pile image (from uploaded file) |
+| Chest cooldown | 24 hours |
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/hooks/usePlayLimit.ts` | **NEW** - Simple hook using `profile.games_played` for lifetime limit |
-| `src/pages/Index.tsx` | Updated to use `usePlayLimit`, shows PRO modal when exhausted |
-| `src/components/game/MatchResultScreen.tsx` | Added limit check on "Play Again" button |
-| `src/components/home/PlayLimitModal.tsx` | **NEW** - Handles both guest registration and PRO upgrade prompts |
+| `src/assets/` | Add `pile-of-treasure.png` image |
+| `src/components/home/ChestRewardModal.tsx` | Update success notification to use treasure image |
+| `src/components/home/MissionsModal.tsx` | Update success notification to use treasure image |
+| `src/config/rewardConfig.ts` | Change `CHEST_COOLDOWN_HOURS` from 6 to 24 |
+| `src/hooks/useRewardTimers.ts` | Change `CHEST_COOLDOWN_HOURS` from 6 to 24 |
+| `src/config/economyConfig.ts` | Change `CHEST_COOLDOWN_HOURS` from 6 to 24 |
 
 ---
 
-## Behavior
+## Technical Implementation
 
-| User Type | Limit | When Exhausted |
-|-----------|-------|----------------|
-| **Guest** | 5 games (localStorage) | Show registration modal |
-| **Registered Non-PRO** | 5 games lifetime | Show PRO upgrade modal |
-| **PRO Users** | Unlimited | N/A |
+### 1. Add Treasure Pile Image
+
+Copy the uploaded `pile-of-treasure.png` to `src/assets/icons/` for consistent organization.
+
+### 2. Update ChestRewardModal.tsx
+
+Change the success notification from emoji to image:
+
+```typescript
+import treasurePileIcon from "@/assets/icons/pile-of-treasure.png";
+
+// In handleClaim, update the notify call:
+if (result.success) {
+  notify.success(t("chest.rewardsReceived"), { 
+    icon: <img src={treasurePileIcon} alt="" className="w-12 h-12" /> 
+  });
+}
+```
+
+### 3. Update MissionsModal.tsx (if applicable)
+
+Find any similar success notifications and update to use the treasure pile icon.
+
+### 4. Update Chest Cooldown Configuration
+
+**src/config/rewardConfig.ts** (Line 49):
+```typescript
+CHEST_COOLDOWN_HOURS: 24,   // 1x per day max
+```
+
+**src/hooks/useRewardTimers.ts** (Line 23):
+```typescript
+const CHEST_COOLDOWN_HOURS = 24;
+```
+
+**src/config/economyConfig.ts** (Line 18):
+```typescript
+CHEST_COOLDOWN_HOURS: 24,
+```
 
 ---
 
-## Data Source
+## Visual Result
 
-Uses existing `profiles.games_played` column (already incremented after each game in `MatchResultScreen.tsx`). No database schema changes required.
+**Before (reward success):**
+```text
+┌──────────────────────────────┐
+│         🎉                   │
+│   ჯილდოები მიღებულია!        │
+└──────────────────────────────┘
+```
+
+**After (reward success):**
+```text
+┌──────────────────────────────┐
+│     [Treasure Pile Icon]     │
+│   ჯილდოები მიღებულია!        │
+└──────────────────────────────┘
+```
+
+**Before (chest cooldown):**
+- Timer shows max ~6 hours countdown
+
+**After (chest cooldown):**
+- Timer shows max ~24 hours countdown (once per day)
 
 ---
 
-## What Happens When Limit is Reached
+## Summary of Changes
 
-1. **On Home Screen**: Play button shows `0/5`, clicking opens PRO modal
-2. **After Game (Play Again)**: Checks if `games_played >= 5`, shows PRO modal if limit reached
-3. **PRO Users**: Unlimited plays, no limits shown
-
+1. Copy treasure pile image to project assets
+2. Update `ChestRewardModal.tsx` to use treasure pile icon in success notification
+3. Update `MissionsModal.tsx` if it has similar notifications
+4. Change chest cooldown from 6 hours to 24 hours in 3 config locations
 
