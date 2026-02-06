@@ -118,8 +118,8 @@ export function ShopItemCard({
       <div
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
-          "p-3 sm:p-4 md:p-5",
-          "aspect-[1/1.35] sm:aspect-[1/1.45]",
+          "p-3 sm:p-4",
+          "min-h-[180px] sm:min-h-[200px]",
           !isPurchased && canAfford && "liquid-glass"
         )}
         style={{
@@ -138,7 +138,7 @@ export function ShopItemCard({
       >
         {/* Icon - Top */}
         <motion.div
-          className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-2 sm:mb-3"
+          className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 sm:mb-2"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: index * 0.05 + 0.1 }}
@@ -153,11 +153,11 @@ export function ShopItemCard({
         
         {/* Description */}
         {showDescription && description && (
-          <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-2 flex-1">{description}</p>
+          <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-2">{description}</p>
         )}
 
         {/* Price / Status - Bottom */}
-        <div className="mt-auto w-full flex flex-col items-center gap-1 sm:gap-1.5">
+        <div className="mt-auto w-full flex flex-col items-center gap-0.5">
           {isPurchased ? (
             <div className="flex items-center justify-center gap-1 text-success font-bold text-sm px-4 py-2 rounded-full bg-success/10">
               <Check className="w-5 h-5" />
