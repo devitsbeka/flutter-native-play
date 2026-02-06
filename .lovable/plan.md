@@ -1,34 +1,20 @@
 
 
-# Plan: Match My Powers Section to Reference Design
+# Plan: Position Power Icons Overlaying Top of Cards
 
-## Visual Comparison
+## Visual Reference
+
+From the screenshots, the icon should be positioned so it overlaps the top edge of the card:
 
 ```text
-Current (Screen 1):          Target (Screen 2):
-┌────────┐                   ┌────────┐
-│  🎯    │                   │        │
-│  46    │                   │  🎯    │  ← Larger icon, more top padding
-│────────│ ← divider         │        │
-│  (+)   │                   │  32    │  ← More space between icon and count
-└────────┘                   │        │
-                             │  (+)   │  ← No divider, more spacing
-                             │        │
-                             └────────┘  ← Taller overall card
+Current:                     Target:
+┌────────────┐               ┌─────🎯─────┐  ← 50% of icon above card
+│    🎯      │               │     ▼      │  ← 50% of icon inside card
+│    32      │               │            │
+│   (+)      │               │    32      │
+└────────────┘               │   (+)      │
+                             └────────────┘
 ```
-
----
-
-## Changes Required
-
-| Element | Current | Target |
-|---------|---------|--------|
-| Icon size | `w-10 h-10` (40px) | `w-12 h-12` (48px) |
-| Divider | Present | **Remove** |
-| Card padding | `px-3 py-3` | `px-3 py-4` (more vertical) |
-| Gap between items | `gap-2` | `gap-3` (more spacing) |
-| Button size | `w-8 h-8` | `w-9 h-9` (slightly larger) |
-| Button border | `border-2` | `border-[1.5px]` (thinner stroke) |
 
 ---
 
@@ -36,79 +22,75 @@ Current (Screen 1):          Target (Screen 2):
 
 | File | Change |
 |------|--------|
-| `src/components/shop/MyPowersSection.tsx` | Remove divider, adjust sizing and spacing |
+| `src/components/shop/MyPowersSection.tsx` | Use relative positioning with negative margin to overlay icon |
 
 ---
 
 ## Technical Changes
 
-### Updated card structure
+### 1. Add top margin to grid for icon overflow space
+
+The grid container needs extra top margin to allow icons to extend above:
+
+```tsx
+// Before:
+<div className="grid grid-cols-4 gap-3">
+
+// After:
+<div className="grid grid-cols-4 gap-3 mt-6">
+```
+
+### 2. Use relative positioning on card with icon overlay
+
+Make the card a positioning context and position the icon with negative top margin:
 
 ```tsx
 <div
   key={type}
-  className="flex flex-col items-center gap-3 px-3 py-4 rounded-2xl liquid-glass"
+  className="relative flex flex-col items-center gap-3 px-3 pt-8 pb-4 rounded-2xl liquid-glass"
 >
-  {/* Larger icon */}
+  {/* Icon positioned at top edge, 50% above card */}
   <img 
     src={POWER_UP_ICONS[type]} 
     alt="" 
-    className="w-12 h-12 object-contain" 
+    className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 object-contain" 
   />
   
-  {/* Count - no changes */}
+  {/* Count and button remain as flex children */}
   <span className="font-bold text-lg text-foreground">
     {count}
   </span>
-  
-  {/* NO DIVIDER - removed */}
-  
-  {/* Slightly larger button with thinner border */}
-  <button
-    onClick={() => onPurchaseSingle(type)}
-    disabled={isLoading}
-    className="w-9 h-9 rounded-full bg-transparent border-[1.5px] border-primary flex items-center justify-center text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
-  >
-    {isLoading ? (
-      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-    ) : (
-      <Plus className="w-4 h-4" />
-    )}
-  </button>
+  <button>...</button>
 </div>
 ```
 
 ### Key styling changes:
-- **Remove divider line** - no more `<div className="w-full h-px bg-border my-1" />`
-- **Increase icon size** from `w-10 h-10` to `w-12 h-12`
-- **Increase gap** from `gap-2` to `gap-3` for better spacing between elements
-- **Add vertical padding** from `py-3` to `py-4` for taller cards
-- **Slightly larger button** from `w-8 h-8` to `w-9 h-9`
-- **Thinner border** from `border-2` to `border-[1.5px]` for a more refined look
+- **`relative`** on card - establishes positioning context
+- **`absolute -top-6 left-1/2 -translate-x-1/2`** on icon - centers horizontally and positions 50% above card (6 = half of 12 = 48px/2 = 24px)
+- **`pt-8`** on card - adds top padding to make room for where icon overlaps inside
+- **`mt-6`** on grid - provides space above cards for icon overflow
 
 ---
 
 ## Visual Result
 
 ```text
-┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
-│        │ │        │ │        │ │        │
-│   🎯   │ │   ❄️   │ │   🔄   │ │   ⏱️   │
-│        │ │        │ │        │ │        │
-│   32   │ │   32   │ │   32   │ │   32   │
-│        │ │        │ │        │ │        │
-│  ( + ) │ │  ( + ) │ │  ( + ) │ │  ( + ) │
-│        │ │        │ │        │ │        │
-└────────┘ └────────┘ └────────┘ └────────┘
-    ↑ Cleaner, more spacious cards matching Screen 2
+                 🎯               ❄️               🔄               ⏱️
+         ┌───────────────┬───────────────┬───────────────┬───────────────┐
+         │               │               │               │               │
+         │      32       │      32       │      32       │      32       │
+         │               │               │               │               │
+         │     ( + )     │     ( + )     │     ( + )     │     ( + )     │
+         └───────────────┴───────────────┴───────────────┴───────────────┘
+                     ↑ Icons overlapping top edge of cards
 ```
 
 ---
 
 ## Summary
 
-1. Remove the horizontal divider between count and button
-2. Increase icon size to 48px
-3. Add more vertical padding and gaps for a taller, more elegant card
-4. Make button slightly larger with thinner border stroke
+1. Add `relative` positioning to cards
+2. Position icons with `absolute -top-6` to overlay 50% above card edge
+3. Add `pt-8` padding inside card for icon overlap area
+4. Add `mt-6` margin on grid to prevent clipping
 
