@@ -45,6 +45,7 @@ import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
 import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayout";
+import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 
 import { t } from "@/lib/i18n";
@@ -193,6 +194,7 @@ export default function Index() {
   const [showGuestMaxPlaysModal, setShowGuestMaxPlaysModal] = useState(false);
   const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
+  const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false);
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
   
   // Guest play tracking
@@ -327,6 +329,10 @@ export default function Index() {
     <>
       {/* Onboarding modals */}
       <SignupOnboardingModal />
+      <GuestSignupPromptModal 
+        isOpen={showGuestSignupPrompt} 
+        onClose={() => setShowGuestSignupPrompt(false)} 
+      />
       
       
       {/* Other modals */}
@@ -543,21 +549,73 @@ export default function Index() {
                   />
                 </motion.div>
                 
-                {/* Mobile: Original unified panel */}
+                {/* Mobile: Guest avatar view mimicking logged-in layout */}
                 <motion.div
-                  className="md:hidden w-full h-full flex items-center justify-center pointer-events-auto overflow-y-auto"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, type: "spring" }}
+                  className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
+                  style={{ marginTop: -5 }}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, type: "spring" }}
                 >
-                  <GuestWelcomePanel
-                    onCreateAccount={handleGuestCreateAccount}
-                    onSignIn={handleGuestSignIn}
-                    onGoogleSignIn={handleGuestGoogleSignIn}
-                    onAppleSignIn={handleGuestAppleSignIn}
-                    onPlayAsGuest={handlePlayClick}
-                    isLoading={isAuthLoading}
-                  />
+                  <div className="relative">
+                    <motion.div 
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <div 
+                        data-walkthrough="avatar" 
+                        className="pointer-events-auto cursor-pointer"
+                        onClick={() => setShowGuestSignupPrompt(true)}
+                      >
+                        <AvatarCircle 
+                          avatarUrl={defaultGuestAvatar} 
+                          animatedAvatarUrl={defaultGuestAvatarAnimated}
+                          size={280} 
+                          coins={0}
+                          gems={0}
+                          level={1}
+                          xpProgress={0}
+                          xpCurrent={0}
+                          xpTotal={100}
+                          hideStats={true}
+                          showAvatarPrompt={false}
+                          showMascotReminder={false}
+                        />
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  {/* Guest info section */}
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                    className="flex flex-col items-center mt-8 pointer-events-auto"
+                  >
+                    <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+                      სტუმარი
+                    </span>
+                    <div className="flex items-center gap-6 mt-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={coinIcon} alt="Coins" className="w-10 h-10" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-lg">0</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/90" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                          <img src={gemIcon} alt="Gems" className="w-10 h-10" />
+                        </div>
+                        <span className="font-bold text-gray-700 text-lg">0</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center mt-4">
+                      <p className="text-base text-gray-600 font-medium text-center">
+                        ან ითამაშე როგორც სტუმარმა
+                      </p>
+                      <HandDrawnArrow size={44} color="#9CA3AF" />
+                    </div>
+                  </motion.div>
                 </motion.div>
               </>
             )}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { Sparkles, User, Eye, EyeOff } from "lucide-react";
+import { Sparkles, User, Eye, EyeOff, Lock, ShieldQuestion } from "lucide-react";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
@@ -8,6 +8,8 @@ import { t } from "@/lib/i18n";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { GameModal } from "@/components/ui/game-modal";
+import { supabase } from "@/integrations/supabase/client";
+import { SECURITY_QUESTIONS } from "@/pages/ForgotPassword";
 
 // Confetti celebration effect
 const celebrateConfetti = () => {
@@ -147,9 +149,11 @@ export function SignupOnboardingModal() {
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ username?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; password?: string; security?: string }>({});
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [prevStep, setPrevStep] = useState(step);
+  const [securityQuestionId, setSecurityQuestionId] = useState<number | null>(null);
+  const [securityAnswer, setSecurityAnswer] = useState("");
   
   const usernameRef = useRef<HTMLInputElement>(null);
   
@@ -187,13 +191,30 @@ export function SignupOnboardingModal() {
     return undefined;
   };
   
-  // Combined create account - validates both username and password
+  // Hash security answer using SHA-256 (same as edge function)
+  const hashAnswer = async (answer: string): Promise<string> => {
+    const normalized = answer.trim().toLowerCase();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(normalized);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  };
+
+  // Combined create account - validates all fields
   const handleCreateAccount = async () => {
     const usernameError = validateUsername(username);
     const passwordError = validatePassword(password);
+    let securityError: string | undefined;
     
-    if (usernameError || passwordError) {
-      setErrors({ username: usernameError, password: passwordError });
+    if (!securityQuestionId) {
+      securityError = "აირჩიე უსაფრთხოების კითხვა";
+    } else if (!securityAnswer.trim()) {
+      securityError = "შეიყვანე პასუხი";
+    }
+    
+    if (usernameError || passwordError || securityError) {
+      setErrors({ username: usernameError, password: passwordError, security: securityError });
       return;
     }
     
@@ -202,10 +223,27 @@ export function SignupOnboardingModal() {
     setStep("creating");
     
     try {
-      const { error: signUpError } = await signUpWithUsername(username, password);
+      const { error: signUpError, data } = await signUpWithUsername(username, password);
       
       if (signUpError) {
         throw signUpError;
+      }
+      
+      // Save security question data to profile
+      if (data?.user?.id && securityQuestionId && securityAnswer.trim()) {
+        try {
+          const hashedAnswer = await hashAnswer(securityAnswer);
+          await supabase
+            .from("profiles")
+            .update({
+              security_question_id: securityQuestionId,
+              security_answer_hash: hashedAnswer,
+            })
+            .eq("user_id", data.user.id);
+        } catch (securityErr) {
+          console.error("Failed to save security question:", securityErr);
+          // Don't block signup if security Q save fails
+        }
       }
       
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -245,7 +283,7 @@ export function SignupOnboardingModal() {
           primaryLabel: t("auth.createAccount"),
           primaryIcon: <Sparkles className="w-5 h-5" />,
           onPrimaryClick: handleCreateAccount,
-          primaryDisabled: !username.trim() || !password || isLoading,
+          primaryDisabled: !username.trim() || !password || !securityQuestionId || !securityAnswer.trim() || isLoading,
           showBack: true,
         };
       case "creating":
@@ -334,20 +372,25 @@ export function SignupOnboardingModal() {
             >
               {/* Username Input */}
               <motion.div variants={itemVariants} className="relative">
-                <input
-                  ref={usernameRef}
-                  type="text"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setErrors(prev => ({ ...prev, username: undefined }));
-                  }}
-                  placeholder={t("auth.usernamePlaceholder")}
-                  className="w-full px-5 py-4 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-all duration-200"
-                  style={{
-                    boxShadow: "0 4px 0 hsl(var(--border))",
-                  }}
-                />
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <input
+                    ref={usernameRef}
+                    type="text"
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      setErrors(prev => ({ ...prev, username: undefined }));
+                    }}
+                    placeholder={t("auth.usernamePlaceholder")}
+                    className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-base font-medium text-left transition-all duration-200"
+                    style={{
+                      boxShadow: "0 4px 0 hsl(var(--border))",
+                    }}
+                  />
+                </div>
                 <AnimatePresence>
                   {errors.username && (
                     <motion.p
@@ -364,29 +407,34 @@ export function SignupOnboardingModal() {
               
               {/* Password Input */}
               <motion.div variants={itemVariants} className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrors(prev => ({ ...prev, password: undefined }));
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
-                  placeholder={t("auth.passwordPlaceholder")}
-                  className="w-full px-5 py-4 pr-14 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-lg font-medium text-center transition-all duration-200"
-                  style={{
-                    boxShadow: "0 4px 0 hsl(var(--border))",
-                  }}
-                />
-                <motion.button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </motion.button>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrors(prev => ({ ...prev, password: undefined }));
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreateAccount()}
+                    placeholder={t("auth.passwordPlaceholder")}
+                    className="w-full pl-12 pr-14 py-3.5 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-base font-medium text-left transition-all duration-200"
+                    style={{
+                      boxShadow: "0 4px 0 hsl(var(--border))",
+                    }}
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </motion.button>
+                </div>
                 <AnimatePresence>
                   {errors.password && (
                     <motion.p
@@ -396,6 +444,66 @@ export function SignupOnboardingModal() {
                       className="text-destructive text-sm mt-2 text-center font-medium overflow-hidden"
                     >
                       {errors.password}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Security Question Dropdown */}
+              <motion.div variants={itemVariants} className="relative">
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
+                    <ShieldQuestion className="w-5 h-5" />
+                  </div>
+                  <select
+                    value={securityQuestionId || ""}
+                    onChange={(e) => {
+                      setSecurityQuestionId(e.target.value ? Number(e.target.value) : null);
+                      setErrors(prev => ({ ...prev, security: undefined }));
+                    }}
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-sm font-medium text-left transition-all duration-200 appearance-none cursor-pointer"
+                    style={{
+                      boxShadow: "0 4px 0 hsl(var(--border))",
+                      color: securityQuestionId ? "inherit" : "hsl(var(--muted-foreground))",
+                    }}
+                  >
+                    <option value="" disabled>უსაფრთხოების კითხვა</option>
+                    {SECURITY_QUESTIONS.map((q) => (
+                      <option key={q.id} value={q.id}>{q.ka}</option>
+                    ))}
+                  </select>
+                </div>
+              </motion.div>
+
+              {/* Security Answer Input */}
+              <motion.div variants={itemVariants} className="relative">
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={securityAnswer}
+                    onChange={(e) => {
+                      setSecurityAnswer(e.target.value);
+                      setErrors(prev => ({ ...prev, security: undefined }));
+                    }}
+                    placeholder="პასუხი"
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-background border-4 border-border focus:border-primary outline-none text-sm font-medium text-left transition-all duration-200"
+                    style={{
+                      boxShadow: "0 4px 0 hsl(var(--border))",
+                    }}
+                  />
+                </div>
+                <AnimatePresence>
+                  {errors.security && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -10, height: 0 }}
+                      className="text-destructive text-sm mt-2 text-center font-medium overflow-hidden"
+                    >
+                      {errors.security}
                     </motion.p>
                   )}
                 </AnimatePresence>
