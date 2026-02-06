@@ -43,19 +43,19 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
             <div
               key={type}
               onClick={() => onCardClick?.(type)}
-              className="relative flex flex-col items-center gap-3 px-3 pt-8 pb-4 rounded-2xl liquid-glass cursor-pointer active:scale-95 transition-transform"
+              className="relative flex flex-col items-center gap-3 px-3 pt-7 pb-4 rounded-2xl liquid-glass cursor-pointer active:scale-95 transition-transform"
             >
               <img 
                 src={POWER_UP_ICONS[type]} 
                 alt="" 
-                className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 object-contain" 
+                className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 object-contain" 
               />
               <span className="font-bold text-lg text-foreground">
                 {count}
               </span>
               <button
-                onClick={(e) => { e.stopPropagation(); onPurchaseSingle(type); }}
-                disabled={isLoading || !canAfford}
+                onClick={(e) => { e.stopPropagation(); onCardClick?.(type); }}
+                disabled={isLoading}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
