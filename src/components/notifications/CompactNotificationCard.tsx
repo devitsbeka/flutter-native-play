@@ -72,7 +72,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   // Friend requests and game invites ALWAYS show action buttons (accept/decline) until acted upon
   // The buttons should remain visible even after marking as read
   const hasDualActions = (isFriendRequest || isGameInvite) && !hasActionTaken;
-  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved || isTriviaPlayed) && !hasDualActions;
+  const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
 
   const isLoading = actionLoading === notification.id;
 
@@ -229,7 +229,8 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
   const isPlayButton = isRoomInvite || isGameStarted || isTriviaPlayed;
 
   const handleClick = () => {
-    if (!hasDualActions && !hasSingleAction) {
+    // Allow card click for all notifications except those with dual actions (accept/decline)
+    if (!hasDualActions) {
       if (isUnread) onMarkRead(notification.id);
       onNavigate(notification);
     }
@@ -277,7 +278,7 @@ export const CompactNotificationCard = memo(function CompactNotificationCard({
         className={cn(
           "relative flex items-start gap-3 px-4 py-3 transition-colors backdrop-blur-sm border border-border/40 rounded-2xl",
           isUnread ? "bg-purple-500/10" : "bg-card/80",
-          !hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
+          !hasDualActions && "cursor-pointer active:bg-foreground/5"
         )}
         onClick={handleClick}
       >
