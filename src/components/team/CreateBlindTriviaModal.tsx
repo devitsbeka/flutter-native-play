@@ -450,7 +450,7 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
           >
             <div className="text-center">
               <h3 className="text-2xl font-bold text-white mb-2">რამდენი კითხვა? 🎯</h3>
-              <p className="text-white/70">აირჩიე რაოდენობა და სირთულე</p>
+              <p className="text-white/70">აირჩიე კითხვების რაოდენობა</p>
             </div>
 
             {/* Question Count */}
@@ -468,25 +468,6 @@ export function CreateBlindTriviaModal({ open, onOpenChange, onTriviaReady, resu
                   }`}
                 >
                   {count}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Difficulty */}
-            <div className="grid grid-cols-4 gap-2">
-              {DIFFICULTY_OPTIONS.map((option) => (
-                <motion.button
-                  key={option.value}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setDifficulty(option.value)}
-                  className={`p-3 rounded-2xl transition-all text-center ${
-                    difficulty === option.value
-                      ? "bg-white text-[#5B21B6] shadow-lg"
-                      : "bg-white/20 text-white hover:bg-white/30"
-                  }`}
-                >
-                  <span className="text-2xl block mb-1">{option.emoji}</span>
-                  <span className="text-xs font-medium block">{option.label}</span>
                 </motion.button>
               ))}
             </div>
