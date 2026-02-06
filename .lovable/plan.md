@@ -1,46 +1,40 @@
 
-# Plan: Make Notification Cards Clickable and Improve Trivia Notifications
+
+# Plan: Update Play Button Style with Played State Indicator
 
 ## Summary
 
-Enable click-to-navigate functionality on all notification cards and adjust the behavior for `trivia_played` notifications (when someone plays your trivia).
+Change the "ითამაშე" (Play) button to show only a play icon, with visual distinction between played and unplayed trivias.
 
 ---
 
-## Current Behavior
+## Visual Design
 
-| Issue | Description |
-|-------|-------------|
-| Cards not fully clickable | Notifications with single action buttons only navigate when clicking the button itself |
-| "ითამაშე" button on `trivia_played` | Shows play button, but this is **your** trivia - you don't want to play it again, just view stats |
+| State | Background | Border | Icon Color |
+|-------|------------|--------|------------|
+| **Not Played** | Purple filled (`bg-purple-500`) | None | White |
+| **Already Played** | Transparent | Purple (`border-purple-500`) | Purple |
 
----
-
-## Solution
-
-### 1. Make Entire Notification Card Clickable
-
-Currently, the card's `handleClick` function only navigates when there are no actions:
-
-```typescript
-const handleClick = () => {
-  if (!hasDualActions && !hasSingleAction) {  // ← Only navigates if NO buttons
-    if (isUnread) onMarkRead(notification.id);
-    onNavigate(notification);
-  }
-};
+**Current:** 
+```text
+┌──────────────────┐
+│ ▷ ითამაშე        │  ← Outlined, with text
+└──────────────────┘
 ```
 
-**Change:** Allow the card to be clickable even when it has a single action button. The card AND the button will both navigate.
+**After (Not Played):**
+```text
+┌────┐
+│ ▷  │  ← Filled purple, white icon, no text
+└────┘
+```
 
-### 2. Remove "ითამაშე" Button for `trivia_played`
-
-For `trivia_played` notifications:
-- The trivia owner sees "Someone played your trivia"
-- They should click the card to view their trivia's leaderboard/stats
-- No need for a "Play" button - they created this trivia!
-
-**Change:** Remove `isTriviaPlayed` from the `hasSingleAction` condition. This makes the card behave like a regular clickable notification without a button.
+**After (Already Played):**
+```text
+┌────┐
+│ ▷  │  ← Outlined, purple icon, no text
+└────┘
+```
 
 ---
 
@@ -48,108 +42,121 @@ For `trivia_played` notifications:
 
 | File | Changes |
 |------|---------|
-| `src/components/notifications/CompactNotificationCard.tsx` | Remove `isTriviaPlayed` from `hasSingleAction`, update `handleClick` logic |
+| `src/components/social/PlayerFeedItem.tsx` | Add `isPlayed` prop, update button styling |
+| `src/components/social/TriviaPortfolioCard.tsx` | Update button styling based on `isPlayed` |
+| `src/components/social/CreatorPortfolioCard.tsx` | Pass `userPlays` to `TriviaPortfolioCard` |
+| `src/components/social/ExplorePortfolioFeed.tsx` | Get `userPlays` from hook and pass to components |
 
 ---
 
 ## Technical Implementation
 
-### Change 1: Update `hasSingleAction` (Line 75)
+### 1. ExplorePortfolioFeed.tsx
 
-**Before:**
+Extract `userPlays` from `useSocialFeed` hook and pass it to child components:
+
 ```typescript
-const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved || isTriviaPlayed) && !hasDualActions;
+const { userLikes, userSaves, userPlays, toggleLike, toggleSave } = useSocialFeed();
 ```
 
-**After:**
+Pass to `PlayerFeedItem`:
 ```typescript
-const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
+isPlayed={userPlays.includes(feedItem.item.id)}
 ```
 
-This removes the "ითამაშე" button from `trivia_played` notifications.
-
-### Change 2: Update `handleClick` (Lines 231-236)
-
-**Before:**
+Pass to `CreatorPortfolioCard`:
 ```typescript
-const handleClick = () => {
-  if (!hasDualActions && !hasSingleAction) {
-    if (isUnread) onMarkRead(notification.id);
-    onNavigate(notification);
-  }
-};
+userPlays={userPlays}
 ```
 
-**After:**
+### 2. PlayerFeedItem.tsx
+
+Add `isPlayed` prop:
 ```typescript
-const handleClick = () => {
-  // Allow card click for all notifications except those with dual actions (accept/decline)
-  if (!hasDualActions) {
-    if (isUnread) onMarkRead(notification.id);
-    onNavigate(notification);
-  }
-};
+interface PlayerFeedItemProps {
+  // ... existing props
+  isPlayed?: boolean;
+}
 ```
 
-This makes cards clickable even when they have a single action button.
-
-### Change 3: Update cursor styling (Line 280)
-
-**Before:**
+Update button to icon-only with dynamic styling:
 ```typescript
-!hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
+<button 
+  onClick={handlePlayClick}
+  className={cn(
+    "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+    isPlayed 
+      ? "bg-transparent border-2 border-purple-500" 
+      : "bg-purple-500 hover:bg-purple-600"
+  )}
+>
+  <Play className={cn(
+    "w-4 h-4",
+    isPlayed ? "text-purple-500" : "text-white"
+  )} />
+</button>
 ```
 
-**After:**
+### 3. TriviaPortfolioCard.tsx
+
+Update the existing button styling (already has `isPlayed` prop):
 ```typescript
-!hasDualActions && "cursor-pointer active:bg-foreground/5"
+<button 
+  onClick={handlePlayClick}
+  className={cn(
+    "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+    isPlayed 
+      ? "bg-transparent border-2 border-purple-500" 
+      : "bg-purple-500 hover:bg-purple-600"
+  )}
+>
+  <Play className={cn(
+    "w-4 h-4",
+    isPlayed ? "text-purple-500" : "text-white"
+  )} />
+</button>
+```
+
+### 4. CreatorPortfolioCard.tsx
+
+Add `userPlays` prop to interface:
+```typescript
+interface CreatorPortfolioCardProps {
+  // ... existing props
+  userPlays?: string[];
+}
+```
+
+Pass to `TriviaPortfolioCard`:
+```typescript
+isPlayed={userPlays.includes(trivia.id)}
 ```
 
 ---
 
-## Behavior After Changes
+## Data Flow
 
-| Notification Type | Card Clickable | Button Shown | Destination |
-|------------------|----------------|--------------|-------------|
-| `friend_request` | No | Accept/Decline | N/A |
-| `challenge` | No | Accept/Decline | N/A |
-| `room_invite` | Yes | "ითამაშე" | Room join |
-| `game_started` | Yes | "ითამაშე" | Room |
-| `game_result` | Yes | "ნახვა" | Room/Profile |
-| `trivia_liked` | Yes | "ნახვა" | Trivia lobby |
-| `trivia_saved` | Yes | "ნახვა" | Trivia lobby |
-| `trivia_played` | Yes | **None** | Trivia lobby |
-| Others | Yes | None | Varies |
-
----
-
-## Visual Result
-
-**Before (`trivia_played`):**
 ```text
+useSocialFeed() hook
+    ↓
+Returns userPlays[] (list of played trivia IDs)
+    ↓
+ExplorePortfolioFeed
+    ↓
 ┌─────────────────────────────────────┐
-│ 🎮 TriviaMaste ითამაშა შენი ტრივია │
-│     გემრიელი ქართული სამზარეულო    │
-│                                     │
-│     ┌───────────┐                   │
-│     │ ითამაშე   │  ← Button shown  │
-│     └───────────┘                   │
+│ PlayerFeedItem                      │  ← isPlayed={userPlays.includes(id)}
+│ CreatorPortfolioCard                │  ← userPlays={userPlays}
+│   └─ TriviaPortfolioCard            │  ← isPlayed={userPlays.includes(id)}
 └─────────────────────────────────────┘
 ```
 
-**After (`trivia_played`):**
-```text
-┌─────────────────────────────────────┐
-│ 🎮 TriviaMaste ითამაშა შენი ტრივია │ ← Entire card clickable
-│     გემრიელი ქართული სამზარეულო    │
-│                                     │ ← No button, cleaner look
-└─────────────────────────────────────┘
-```
-
 ---
 
-## Summary of Changes
+## Expected Result
 
-1. Remove `isTriviaPlayed` from `hasSingleAction` condition
-2. Allow card click navigation for all non-dual-action notifications
-3. Update cursor styling to reflect clickability
+When scrolling through the Explore feed:
+- **Unplayed trivias**: Purple filled circle with white play icon (inviting action)
+- **Played trivias**: Purple outlined circle with purple play icon (indicates already played)
+
+This provides instant visual feedback for users to identify which trivias they've already completed.
+
