@@ -57,8 +57,17 @@ export function SinglePlayVideo({
     if (!video) return;
 
     if (isInView) {
-      // Video is in viewport - load via <source> tags
-      video.load();
+      // Video is in viewport - set src directly, fallback to MP4 on error
+      if (video.src !== videoSrc) {
+        video.onerror = () => {
+          if (video.src !== src) {
+            video.src = src;
+            video.load();
+          }
+        };
+        video.src = videoSrc;
+        video.load();
+      }
 
       const handleCanPlay = () => {
         setIsReady(true);
@@ -81,7 +90,7 @@ export function SinglePlayVideo({
       // Video left viewport - pause to save resources
       video.pause();
     }
-  }, [isInView, videoSrc]);
+  }, [isInView, videoSrc, src]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -112,10 +121,7 @@ export function SinglePlayVideo({
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
           isReady && isInView ? 'opacity-100' : 'opacity-0'
         } ${className}`}
-      >
-        {webmUrl && <source src={videoSrc} type="video/webm" />}
-        <source src={src} type="video/mp4" />
-      </video>
+      />
     </div>
   );
 }

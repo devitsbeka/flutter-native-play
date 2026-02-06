@@ -75,8 +75,17 @@ export function PingPongVideo({
         }
         setHasAcquiredSlot(true);
 
-        // Load via <source> elements - browser picks best format
-        video.load();
+        // Set src directly - try WebM first, fallback to MP4 on error
+        if (video.src !== videoSrc) {
+          video.onerror = () => {
+            if (!cancelled && video.src !== mp4Src) {
+              video.src = mp4Src;
+              video.load();
+            }
+          };
+          video.src = videoSrc;
+          video.load();
+        }
 
         const handleCanPlay = () => {
           if (!cancelled) {
@@ -112,7 +121,7 @@ export function PingPongVideo({
       }
       video.pause();
     };
-  }, [isInView, videoSrc, hasAcquiredSlot]);
+  }, [isInView, videoSrc, hasAcquiredSlot, mp4Src]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -155,10 +164,7 @@ export function PingPongVideo({
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           isReady && isInView ? 'opacity-100' : 'opacity-0'
         } ${className}`}
-      >
-        <source src={videoSrc} type="video/webm" />
-        <source src={mp4Src} type="video/mp4" />
-      </video>
+      />
     </div>
   );
 }
