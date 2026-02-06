@@ -833,10 +833,7 @@ export default function CategoryQuizPage() {
     const didLevelUp = newProfileLevel > previousProfileLevel;
     
     // Calculate level-up rewards for display
-    const levelUpCoins = didLevelUp ? REWARDS.LEVEL_UP_COINS_PER_LEVEL * newProfileLevel : 0;
-    const levelUpGems = didLevelUp && newProfileLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
-      ? Math.floor(newProfileLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD)
-      : 0;
+    const levelUpCoins = didLevelUp ? REWARDS.LEVEL_UP_COINS : 0;
     
     return (
       <>
