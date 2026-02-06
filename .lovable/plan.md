@@ -1,20 +1,27 @@
 
 
-# Plan: Position Power Icons Overlaying Top of Cards
+# Plan: Match Title Font and Gap for "ჩემი ძალები"
 
-## Visual Reference
-
-From the screenshots, the icon should be positioned so it overlaps the top edge of the card:
+## Visual Comparison
 
 ```text
-Current:                     Target:
-┌────────────┐               ┌─────🎯─────┐  ← 50% of icon above card
-│    🎯      │               │     ▼      │  ← 50% of icon inside card
-│    32      │               │            │
-│   (+)      │               │    32      │
-└────────────┘               │   (+)      │
-                             └────────────┘
+Current:                          Target:
+ჩემი ძალები  (font-bold)          ჩემი ძალები  (font-display)
+     ↓ mb-3 + mt-6 gap                 ↓ smaller gap
+     
+     🎯    ❄️    🔄    ⏱️              🎯    ❄️    🔄    ⏱️
+  ┌─────┐                           ┌─────┐
 ```
+
+---
+
+## Changes Required
+
+| Element | Current | Target |
+|---------|---------|--------|
+| Title font | `font-bold` | `font-display` (decorative Georgian font) |
+| Title margin | `mb-3` | `mb-0` or `mb-1` (icons will overlap into gap) |
+| Grid margin | `mt-6` | `mt-4` (reduce since title margin reduced) |
 
 ---
 
@@ -22,75 +29,50 @@ Current:                     Target:
 
 | File | Change |
 |------|--------|
-| `src/components/shop/MyPowersSection.tsx` | Use relative positioning with negative margin to overlay icon |
+| `src/components/shop/MyPowersSection.tsx` | Update title font class and adjust spacing |
 
 ---
 
 ## Technical Changes
 
-### 1. Add top margin to grid for icon overflow space
-
-The grid container needs extra top margin to allow icons to extend above:
+### Line 30 - Update title styling
 
 ```tsx
 // Before:
-<div className="grid grid-cols-4 gap-3">
+<h2 className="text-lg font-bold text-foreground mb-3">ჩემი ძალები</h2>
 
 // After:
-<div className="grid grid-cols-4 gap-3 mt-6">
+<h2 className="text-lg font-display text-foreground mb-1">ჩემი ძალები</h2>
 ```
 
-### 2. Use relative positioning on card with icon overlay
-
-Make the card a positioning context and position the icon with negative top margin:
+### Line 32 - Adjust grid top margin
 
 ```tsx
-<div
-  key={type}
-  className="relative flex flex-col items-center gap-3 px-3 pt-8 pb-4 rounded-2xl liquid-glass"
->
-  {/* Icon positioned at top edge, 50% above card */}
-  <img 
-    src={POWER_UP_ICONS[type]} 
-    alt="" 
-    className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 object-contain" 
-  />
-  
-  {/* Count and button remain as flex children */}
-  <span className="font-bold text-lg text-foreground">
-    {count}
-  </span>
-  <button>...</button>
-</div>
-```
+// Before:
+<div className="grid grid-cols-4 gap-3 mt-6">
 
-### Key styling changes:
-- **`relative`** on card - establishes positioning context
-- **`absolute -top-6 left-1/2 -translate-x-1/2`** on icon - centers horizontally and positions 50% above card (6 = half of 12 = 48px/2 = 24px)
-- **`pt-8`** on card - adds top padding to make room for where icon overlaps inside
-- **`mt-6`** on grid - provides space above cards for icon overflow
+// After:
+<div className="grid grid-cols-4 gap-3 mt-4">
+```
 
 ---
 
 ## Visual Result
 
 ```text
-                 🎯               ❄️               🔄               ⏱️
-         ┌───────────────┬───────────────┬───────────────┬───────────────┐
-         │               │               │               │               │
-         │      32       │      32       │      32       │      32       │
-         │               │               │               │               │
-         │     ( + )     │     ( + )     │     ( + )     │     ( + )     │
-         └───────────────┴───────────────┴───────────────┴───────────────┘
-                     ↑ Icons overlapping top edge of cards
+ჩემი ძალები    ← Decorative font-display (matches "ძალები" section)
+   🎯  ❄️  🔄  ⏱️   ← Icons closer to title
+┌────┬────┬────┬────┐
+│ 46 │ 49 │ 11 │ 22 │
+│(+) │(+) │(+) │(+) │
+└────┴────┴────┴────┘
 ```
 
 ---
 
 ## Summary
 
-1. Add `relative` positioning to cards
-2. Position icons with `absolute -top-6` to overlay 50% above card edge
-3. Add `pt-8` padding inside card for icon overlap area
-4. Add `mt-6` margin on grid to prevent clipping
+1. Change title from `font-bold` to `font-display` for decorative Georgian styling
+2. Reduce title bottom margin from `mb-3` to `mb-1`
+3. Reduce grid top margin from `mt-6` to `mt-4` for proper icon overlap spacing
 
