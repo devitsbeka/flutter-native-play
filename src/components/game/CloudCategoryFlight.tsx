@@ -65,7 +65,7 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
     // Phase 4: Complete and callback (2.2s total)
     const completeTimer = setTimeout(() => {
       const winner = displayCategories[winnerIndex];
-      const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.mp4";
+      const videoUrl = CATEGORY_VIDEOS[winner.id] || "/videos/galaxy.webm";
       // Pass category_id (e.g., "coding") not uuid for question fetching
       onCategorySelected(winner.id, winner.name, videoUrl);
     }, 2200);
@@ -79,7 +79,7 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
   }, [isOpen, displayCategories, winnerIndex, onCategorySelected]);
 
   const getVideoUrl = (categoryId: string) => {
-    return CATEGORY_VIDEOS[categoryId] || "/videos/galaxy.mp4";
+    return CATEGORY_VIDEOS[categoryId] || "/videos/galaxy.webm";
   };
 
   if (!isOpen) return null;

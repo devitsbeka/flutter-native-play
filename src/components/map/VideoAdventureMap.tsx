@@ -305,7 +305,7 @@ export function VideoAdventureMap() {
             visibility: currentPhase === "default" ? "visible" : "hidden",
           }}
         >
-          <source src={MAP_VIDEOS.default} type="video/mp4" />
+          <source src={MAP_VIDEOS.default} type="video/webm" />
         </video>
 
         {/* Video B (plays once) */}
@@ -320,7 +320,7 @@ export function VideoAdventureMap() {
             visibility: currentPhase === "video-b" ? "visible" : "hidden",
           }}
         >
-          <source src={MAP_VIDEOS.videoB} type="video/mp4" />
+          <source src={MAP_VIDEOS.videoB} type="video/webm" />
         </video>
 
         {/* Video C (plays once) */}
@@ -335,7 +335,7 @@ export function VideoAdventureMap() {
             visibility: currentPhase === "video-c" ? "visible" : "hidden",
           }}
         >
-          <source src={MAP_VIDEOS.videoC} type="video/mp4" />
+          <source src={MAP_VIDEOS.videoC} type="video/webm" />
         </video>
       </div>
 
