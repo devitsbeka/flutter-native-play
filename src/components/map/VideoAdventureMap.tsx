@@ -305,7 +305,7 @@ export function VideoAdventureMap() {
             visibility: currentPhase === "default" ? "visible" : "hidden",
           }}
         >
-          <source src={MAP_VIDEOS.default} type="video/mp4" />
+          <source src={MAP_VIDEOS.default} type="video/webm" />
         </video>
 
         {/* Video B (plays once) */}
