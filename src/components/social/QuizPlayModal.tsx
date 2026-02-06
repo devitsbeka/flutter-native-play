@@ -145,7 +145,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
         
         if (isCollection && currentRoundIndex < totalRounds - 1) {
           // More rounds to play - award round rewards and increment plays for this round's post
-          awardRewards(xpEarned, coinsEarned, currentRoundPost?.id);
+          awardRewards(xpEarned, coinsEarned, currentRoundPost?.id, roundScore);
           setRoundComplete(true);
         } else {
           // All rounds complete - add collection bonus if applicable
@@ -155,7 +155,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
           if (isCollection) {
             setTotalEarnedCoins(prev => prev + REWARDS.FEED_COLLECTION_COMPLETE_COINS);
           }
-          awardRewards(xpEarned, finalCoins, currentRoundPost?.id);
+          awardRewards(xpEarned, finalCoins, currentRoundPost?.id, roundScore);
           setGameComplete(true);
           setAllRoundsComplete(true);
           confetti({
@@ -169,7 +169,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
   };
   
   // Award rewards to user and increment plays count
-  const awardRewards = async (xp: number, coins: number, postId?: string) => {
+  const awardRewards = async (xp: number, coins: number, postId?: string, score?: number) => {
     if (rewardsAwarded.current) return;
     
     try {
@@ -190,6 +190,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
           await supabase.from('quiz_post_plays').insert({
             user_id: user.id,
             post_id: postId,
+            score: score ?? 0,
           });
           
           // Send notification to trivia creator
