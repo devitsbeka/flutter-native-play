@@ -577,16 +577,6 @@ function Hex3DPlayButton({
         )}
       </motion.button>
 
-      {/* Watch ad text below when exhausted */}
-      {showExhausted && (
-        <motion.p
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-medium text-gray-600 whitespace-nowrap"
-        >
-          უყურე რეკლამას
-        </motion.p>
-      )}
     </div>
   );
 }
