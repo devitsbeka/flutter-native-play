@@ -28,6 +28,7 @@ interface CreatorPortfolioCardProps {
   onSaveTrivia?: (trivia: SamplePost) => void;
   userLikes?: string[];
   userSaves?: string[];
+  userPlays?: string[];
 }
 
 // Get country flag emoji from country code
@@ -40,7 +41,7 @@ function getCountryFlag(countryCode: string | null): string {
   return String.fromCodePoint(...codePoints);
 }
 
-export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [] }: CreatorPortfolioCardProps) {
+export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onLikeTrivia, onSaveTrivia, userLikes = [], userSaves = [], userPlays = [] }: CreatorPortfolioCardProps) {
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
   const { language } = useLanguage();
@@ -208,6 +209,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
               onSave={onSaveTrivia}
               isLiked={userLikes.includes(trivia.id)}
               isSaved={userSaves.includes(trivia.id)}
+              isPlayed={userPlays.includes(trivia.id)}
               className="w-full"
             />
           ))}
@@ -233,6 +235,7 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
                     onSave={onSaveTrivia}
                     isLiked={userLikes.includes(trivia.id)}
                     isSaved={userSaves.includes(trivia.id)}
+                    isPlayed={userPlays.includes(trivia.id)}
                   />
                 </CarouselItem>
               ))}

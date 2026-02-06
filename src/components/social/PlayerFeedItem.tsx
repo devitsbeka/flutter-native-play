@@ -24,6 +24,7 @@ interface PlayerFeedItemProps {
   onSave?: (id: string) => void;
   isLiked?: boolean;
   isSaved?: boolean;
+  isPlayed?: boolean;
 }
 
 // Get country flag emoji from country code
@@ -52,7 +53,8 @@ export function PlayerFeedItem({
   onLike, 
   onSave, 
   isLiked = false, 
-  isSaved = false 
+  isSaved = false,
+  isPlayed = false 
 }: PlayerFeedItemProps) {
   const navigate = useNavigate();
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
@@ -312,13 +314,17 @@ export function PlayerFeedItem({
               </button>
             </div>
             
-            {/* Play Button */}
+            {/* Play Button - Icon only with played state indicator */}
             <button 
               onClick={handlePlayClick}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-transparent border-2 border-purple-500 text-purple-500 rounded-full text-sm font-medium hover:bg-purple-500/10 transition-colors"
+              className={cn(
+                "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+                isPlayed 
+                  ? "bg-transparent border-2 border-purple-500" 
+                  : "bg-purple-500 hover:bg-purple-600"
+              )}
             >
-              <Play className="w-4 h-4 text-purple-500" />
-              <span>ითამაშე</span>
+              <Play className={cn("w-4 h-4", isPlayed ? "text-purple-500" : "text-white")} />
             </button>
           </div>
         </div>
