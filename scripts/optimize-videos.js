@@ -3,11 +3,12 @@
 /**
  * Video Optimization Script for World Quizzes
  * 
- * Converts and optimizes all MP4 videos in public/videos/ directory to WebM using FFmpeg with:
- * - VP9 codec (significantly smaller than H.264, ~40-50% savings)
- * - CRF 35 (good quality for small background videos)
+ * Optimizes all MP4 videos in public/videos/ directory using FFmpeg with:
+ * - H.264 High Profile encoding (best compatibility)
+ * - CRF 28-32 (visually lossless for small backgrounds)
  * - 480px width (2x retina for ~200-300px cards)
  * - No audio track (saves significant space)
+ * - movflags +faststart (instant first frame, progressive download)
  * - Two-pass encoding for optimal compression
  * 
  * Usage: node scripts/optimize-videos.js
@@ -22,10 +23,10 @@ const VIDEOS_DIR = path.join(__dirname, '..', 'public', 'videos');
 const TEMP_DIR = path.join(__dirname, '..', 'public', 'videos', '_temp');
 const BACKUP_DIR = path.join(__dirname, '..', 'public', 'videos', '_backup');
 
-// FFmpeg settings for VP9 WebM
-const CRF = 35; // VP9 CRF (30-40 is good for small background videos)
+// FFmpeg settings
+const CRF = 30; // Quality (18-28 = high quality, 28-32 = good for small videos)
 const SCALE_WIDTH = 480; // 480px width, height auto
-const PRESET_SPEED = 2; // VP9 speed (0=slowest/best, 4=fast, lower = better compression)
+const PRESET = 'slow'; // slower = better compression (options: ultrafast, fast, medium, slow, slower, veryslow)
 
 // Colors for console output
 const colors = {
@@ -51,7 +52,7 @@ function formatBytes(bytes) {
 
 function getVideoFiles() {
   return fs.readdirSync(VIDEOS_DIR)
-    .filter(file => (file.endsWith('.mp4') || file.endsWith('.webm')) && !file.startsWith('_'))
+    .filter(file => file.endsWith('.mp4') && !file.startsWith('_'))
     .map(file => path.join(VIDEOS_DIR, file));
 }
 
@@ -65,74 +66,44 @@ function checkFFmpeg() {
 }
 
 async function optimizeVideo(inputPath, outputPath) {
-  // VP9 two-pass encoding for best compression
-  const passLogFile = outputPath + '-passlog';
-  
-  // Pass 1
-  await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    // Single-pass encoding with CRF (simpler and usually just as good)
     const args = [
       '-i', inputPath,
-      '-c:v', 'libvpx-vp9',
-      '-b:v', '0',
+      '-c:v', 'libx264',
+      '-profile:v', 'high',
+      '-level:v', '4.1',
       '-crf', String(CRF),
-      '-vf', `scale=${SCALE_WIDTH}:-2`,
-      '-an',
-      '-pass', '1',
-      '-passlogfile', passLogFile,
-      '-speed', '4', // Fast first pass
-      '-pix_fmt', 'yuv420p',
-      '-f', 'null',
-      '-y',
-      process.platform === 'win32' ? 'NUL' : '/dev/null'
-    ];
-
-    const ffmpeg = spawn('ffmpeg', args, { stdio: ['pipe', 'pipe', 'pipe'] });
-    let stderr = '';
-    ffmpeg.stderr.on('data', (data) => { stderr += data.toString(); });
-    ffmpeg.on('close', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`FFmpeg pass 1 exited with code ${code}: ${stderr.slice(-500)}`));
-    });
-    ffmpeg.on('error', reject);
-  });
-
-  // Pass 2
-  await new Promise((resolve, reject) => {
-    const args = [
-      '-i', inputPath,
-      '-c:v', 'libvpx-vp9',
-      '-b:v', '0',
-      '-crf', String(CRF),
-      '-vf', `scale=${SCALE_WIDTH}:-2`,
-      '-an',
-      '-pass', '2',
-      '-passlogfile', passLogFile,
-      '-speed', String(PRESET_SPEED),
-      '-pix_fmt', 'yuv420p',
-      '-auto-alt-ref', '1',
-      '-lag-in-frames', '25',
-      '-row-mt', '1', // Multi-threaded row encoding
-      '-y',
+      '-preset', PRESET,
+      '-vf', `scale=${SCALE_WIDTH}:-2`, // -2 ensures even height
+      '-an', // No audio
+      '-movflags', '+faststart', // Metadata at start for progressive download
+      '-pix_fmt', 'yuv420p', // Maximum compatibility
+      '-y', // Overwrite output
       outputPath
     ];
 
     const ffmpeg = spawn('ffmpeg', args, { stdio: ['pipe', 'pipe', 'pipe'] });
+    
     let stderr = '';
-    ffmpeg.stderr.on('data', (data) => { stderr += data.toString(); });
-    ffmpeg.on('close', (code) => {
-      // Clean up pass log files
-      try {
-        fs.unlinkSync(passLogFile + '-0.log');
-      } catch {}
-      if (code === 0) resolve();
-      else reject(new Error(`FFmpeg pass 2 exited with code ${code}: ${stderr.slice(-500)}`));
+    ffmpeg.stderr.on('data', (data) => {
+      stderr += data.toString();
     });
+
+    ffmpeg.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`FFmpeg exited with code ${code}: ${stderr}`));
+      }
+    });
+
     ffmpeg.on('error', reject);
   });
 }
 
 async function main() {
-  log('\n🎬 Video Optimization Script (MP4 → WebM VP9)\n', 'cyan');
+  log('\n🎬 Video Optimization Script for World Quizzes\n', 'cyan');
   
   // Check FFmpeg
   if (!checkFFmpeg()) {
@@ -145,10 +116,10 @@ async function main() {
   // Get video files
   const videos = getVideoFiles();
   if (videos.length === 0) {
-    log('No video files found in public/videos/', 'yellow');
+    log('No MP4 files found in public/videos/', 'yellow');
     process.exit(0);
   }
-  log(`Found ${videos.length} videos to convert to WebM\n`, 'cyan');
+  log(`Found ${videos.length} videos to optimize\n`, 'cyan');
 
   // Create temp and backup directories
   if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
@@ -161,14 +132,13 @@ async function main() {
   for (let i = 0; i < videos.length; i++) {
     const inputPath = videos[i];
     const fileName = path.basename(inputPath);
-    const webmFileName = fileName.replace(/\.mp4$/, '.webm');
-    const tempPath = path.join(TEMP_DIR, webmFileName);
+    const tempPath = path.join(TEMP_DIR, fileName);
     const backupPath = path.join(BACKUP_DIR, fileName);
 
     const originalSize = fs.statSync(inputPath).size;
     totalOriginalSize += originalSize;
 
-    log(`[${i + 1}/${videos.length}] Converting: ${fileName} → ${webmFileName}`, 'yellow');
+    log(`[${i + 1}/${videos.length}] Optimizing: ${fileName}`, 'yellow');
     log(`   Original: ${formatBytes(originalSize)}`, 'dim');
 
     try {
@@ -182,23 +152,15 @@ async function main() {
       // Backup original
       fs.copyFileSync(inputPath, backupPath);
       
-      // Move WebM to videos directory
-      const finalPath = path.join(VIDEOS_DIR, webmFileName);
-      fs.renameSync(tempPath, finalPath);
+      // Replace with optimized
+      fs.renameSync(tempPath, inputPath);
       
-      // Remove original MP4 if it was converted (not if already webm)
-      if (fileName.endsWith('.mp4')) {
-        fs.unlinkSync(inputPath);
-        log(`   Converted: ${formatBytes(optimizedSize)} (${savings}% smaller) ✓ MP4 removed`, 'green');
-      } else {
-        log(`   Optimized: ${formatBytes(optimizedSize)} (${savings}% smaller)`, 'green');
-      }
-      
-      results.push({ fileName, webmFileName, originalSize, optimizedSize, savings });
+      log(`   Optimized: ${formatBytes(optimizedSize)} (${savings}% smaller)`, 'green');
+      results.push({ fileName, originalSize, optimizedSize, savings });
     } catch (error) {
       log(`   ❌ Failed: ${error.message}`, 'red');
-      totalOptimizedSize += originalSize;
-      results.push({ fileName, webmFileName, originalSize, optimizedSize: originalSize, savings: '0', error: true });
+      totalOptimizedSize += originalSize; // Count original size for failed files
+      results.push({ fileName, originalSize, optimizedSize: originalSize, savings: '0', error: true });
     }
   }
 
@@ -211,20 +173,20 @@ async function main() {
   const totalSavings = ((1 - totalOptimizedSize / totalOriginalSize) * 100).toFixed(1);
   
   log('\n' + '═'.repeat(50), 'cyan');
-  log('📊 CONVERSION SUMMARY (MP4 → WebM VP9)', 'cyan');
+  log('📊 OPTIMIZATION SUMMARY', 'cyan');
   log('═'.repeat(50), 'cyan');
   log(`   Videos processed: ${videos.length}`, 'reset');
   log(`   Original total:   ${formatBytes(totalOriginalSize)}`, 'dim');
-  log(`   WebM total:       ${formatBytes(totalOptimizedSize)}`, 'green');
+  log(`   Optimized total:  ${formatBytes(totalOptimizedSize)}`, 'green');
   log(`   Total savings:    ${totalSavings}% (${formatBytes(totalOriginalSize - totalOptimizedSize)})`, 'green');
   log(`   Backups saved to: public/videos/_backup/`, 'dim');
   log('═'.repeat(50) + '\n', 'cyan');
 
   // Settings used
   log('Settings used:', 'dim');
-  log(`   CRF: ${CRF} | Width: ${SCALE_WIDTH}px | Speed: ${PRESET_SPEED}`, 'dim');
-  log(`   Codec: VP9 (libvpx-vp9) | Format: WebM | Audio: Removed`, 'dim');
-  log(`   Two-pass encoding | Row multi-threading enabled\n`, 'dim');
+  log(`   CRF: ${CRF} | Width: ${SCALE_WIDTH}px | Preset: ${PRESET}`, 'dim');
+  log(`   Codec: H.264 High Profile | Audio: Removed`, 'dim');
+  log(`   Faststart: Enabled (progressive download)\n`, 'dim');
 }
 
 main().catch(console.error);
