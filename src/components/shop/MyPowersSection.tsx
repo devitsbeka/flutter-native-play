@@ -26,7 +26,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
   const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
   
   return (
-    <div className="px-4 py-4 relative z-10">
+    <div className="px-4 pt-1.5 pb-4 relative z-10">
       <h2 className="text-lg font-display text-foreground mb-4">ჩემი ძალები</h2>
       
       <div className="grid grid-cols-4 gap-3 mt-6">
