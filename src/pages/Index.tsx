@@ -41,6 +41,7 @@ import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
+import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
 import { HandDrawnArrow } from "@/components/shared/HandDrawnArrow";
 import { GuestWelcomePanel } from "@/components/home/GuestWelcomePanel";
@@ -568,8 +569,7 @@ export default function Index() {
                         onClick={() => setShowGuestSignupPrompt(true)}
                       >
                         <AvatarCircle 
-                          avatarUrl={defaultGuestAvatar} 
-                          animatedAvatarUrl={defaultGuestAvatarAnimated}
+                          animatedAvatarUrl={guestMascotVideo}
                           size={280} 
                           coins={0}
                           gems={0}
@@ -580,6 +580,7 @@ export default function Index() {
                           hideStats={true}
                           showAvatarPrompt={false}
                           showMascotReminder={false}
+                          autoPlayInterval={5000}
                         />
                       </div>
                     </motion.div>

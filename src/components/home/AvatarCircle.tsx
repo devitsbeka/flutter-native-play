@@ -31,6 +31,7 @@ interface AvatarCircleProps {
   showAvatarPrompt?: boolean; // Show sparkle badge to prompt user to create animated avatar
   showMascotReminder?: boolean; // Show mascot video as reminder to set avatar
   userId?: string; // User ID for localStorage tracking
+  autoPlayInterval?: number; // Auto-replay video every N ms (e.g. 5000 for 5s)
 }
 
 export function AvatarCircle({ 
@@ -47,14 +48,16 @@ export function AvatarCircle({
   showAvatarPrompt = false,
   showMascotReminder = false,
   userId,
+  autoPlayInterval,
 }: AvatarCircleProps) {
-  const [showVideo, setShowVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(!!autoPlayInterval);
   const [isHovering, setIsHovering] = useState(false);
   const [isReversing, setIsReversing] = useState(false);
   const [hasImageError, setHasImageError] = useState(false);
   const [mascotFinished, setMascotFinished] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Check if mascot has been shown for this user (localStorage)
   const mascotStorageKey = userId ? `mytrivia_mascot_shown_${userId}` : null;
@@ -65,6 +68,8 @@ export function AvatarCircle({
   
   // Determine if we should show the mascot reminder
   const shouldShowMascot = showMascotReminder && !avatarUrl && !hasMascotPlayed && !mascotFinished;
+  // Auto-play mode: show video as primary content, no static image needed
+  const isAutoPlayMode = !!autoPlayInterval && !!animatedAvatarUrl;
   const progressRingWidth = 20;
   const whiteRingWidth = 24; // Thick white chunky ring
   const ringGap = 6;
@@ -96,7 +101,17 @@ export function AvatarCircle({
       if (video.currentTime <= 0.05) {
         video.currentTime = 0;
         setIsReversing(false);
-        video.play().catch(console.error);
+        // In auto-play mode, schedule next play after interval
+        if (isAutoPlayMode && autoPlayInterval) {
+          autoPlayTimerRef.current = setTimeout(() => {
+            if (videoRef.current) {
+              videoRef.current.currentTime = 0;
+              videoRef.current.play().catch(console.error);
+            }
+          }, autoPlayInterval);
+        } else {
+          video.play().catch(console.error);
+        }
         return;
       }
       video.currentTime = Math.max(0, video.currentTime - delta);
@@ -114,14 +129,26 @@ export function AvatarCircle({
     }
   };
 
-  // Cleanup animation frame on unmount
+  // Cleanup animation frame and auto-play timer on unmount
   useEffect(() => {
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      if (autoPlayTimerRef.current) {
+        clearTimeout(autoPlayTimerRef.current);
+      }
     };
   }, []);
+
+  // Auto-play mode: start playing on mount
+  useEffect(() => {
+    if (isAutoPlayMode && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(console.error);
+      setShowVideo(true);
+    }
+  }, [isAutoPlayMode]);
 
   // Reset error state when avatarUrl changes
   useEffect(() => {
@@ -217,23 +244,50 @@ export function AvatarCircle({
       <div 
         className="relative z-10"
         onMouseEnter={() => {
-          setIsHovering(true);
-          if (animatedAvatarUrl && videoRef.current) {
-            setShowVideo(true);
-            videoRef.current.currentTime = 0;
-            videoRef.current.play().catch(console.error);
+          if (!isAutoPlayMode) {
+            setIsHovering(true);
+            if (animatedAvatarUrl && videoRef.current) {
+              setShowVideo(true);
+              videoRef.current.currentTime = 0;
+              videoRef.current.play().catch(console.error);
+            }
           }
         }}
-        onMouseLeave={() => setIsHovering(false)}
+        onMouseLeave={() => { if (!isAutoPlayMode) setIsHovering(false); }}
         onTouchStart={() => {
-          if (animatedAvatarUrl && videoRef.current) {
+          if (!isAutoPlayMode && animatedAvatarUrl && videoRef.current) {
             setShowVideo(true);
             videoRef.current.currentTime = 0;
             videoRef.current.play().catch(console.error);
           }
         }}
       >
-        {avatarUrl && !hasImageError ? (
+        {/* Auto-play mode: video is primary content (e.g. guest mascot) */}
+        {isAutoPlayMode ? (
+          <div 
+            className="rounded-full overflow-hidden relative"
+            style={{
+              width: size - (progressRingWidth + ringGap) * 2 - 8,
+              height: size - (progressRingWidth + ringGap) * 2 - 8,
+            }}
+          >
+            <video
+              ref={videoRef}
+              src={animatedAvatarUrl!}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: 'center 20%', transform: 'scale(1.3)' }}
+              muted
+              playsInline
+              onEnded={handleVideoEnded}
+              onLoadedData={() => {
+                if (videoRef.current) {
+                  videoRef.current.play().catch(console.error);
+                  setShowVideo(true);
+                }
+              }}
+            />
+          </div>
+        ) : avatarUrl && !hasImageError ? (
           <>
             {/* Static avatar image */}
             <motion.img 
