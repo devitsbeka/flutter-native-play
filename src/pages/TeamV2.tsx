@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Plus, Bell, MessageCircle, Layers, ScanLine } from "lucide-react";
+import { Users, Plus, Layers, ScanLine } from "lucide-react";
 import { MultiplayerProviderV2, useMultiplayerV2 } from "@/contexts/MultiplayerContextV2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSound } from "@/contexts/SoundContext";
@@ -23,10 +23,8 @@ import { AllFriendsModal } from "@/components/team/AllFriendsModal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useGameInvitations } from "@/hooks/useGameInvitations";
-import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadRoomMessages } from "@/hooks/useUnreadRoomMessages";
 import { useUnreadMessages } from "@/hooks/useChat";
-import { NotificationsPanel } from "@/components/home/NotificationsPanel";
 import { RoomChatsPanel } from "@/components/team/RoomChatsPanel";
 import { LiveBadge } from "@/components/social/LiveBadge";
 import { ExplorePortfolioFeed } from "@/components/social/ExplorePortfolioFeed";
@@ -49,6 +47,7 @@ import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { HeaderActions } from "@/components/shared/HeaderActions";
 import { TVMirrorModal } from "@/components/tv/TVMirrorModal";
 import { useProGating } from "@/hooks/useProGating";
 import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
@@ -174,7 +173,6 @@ function TeamContentV2() {
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showAllGamesModal, setShowAllGamesModal] = useState(false);
-  const [showNotificationsPanel, setShowNotificationsPanel] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
@@ -281,7 +279,6 @@ function TeamContentV2() {
     }
   }, [isGuest]);
 
-  const { unreadCount } = useNotifications();
   const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
   const { unreadCounts: unreadFriendCounts } = useUnreadMessages();
   const unreadFriendMessagesCount = Object.values(unreadFriendCounts).reduce(
@@ -528,55 +525,25 @@ function TeamContentV2() {
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
           {/* STICKY: Title, Buttons, Friends Bar, Tabs */}
           <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md w-full max-w-full">
-              <div className="px-4 py-3 border-b border-purple-900/10">
+              <div className="px-4 py-3 border-b border-border/30">
                 <div className="flex items-center justify-between gap-3">
                   {/* Left: Logo - aligned to left edge */}
                   <div className="flex items-center gap-4">
                     <MyTriviaLiveLogo responsive />
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {/* QR Scanner */}
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={() => setShowQRScanner(true)}
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
-                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
+                      className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
                     >
-                      <ScanLine className="w-5 h-5" />
+                      <ScanLine className="w-5 h-5 text-gray-600" />
                     </motion.button>
 
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowNotificationsPanel(true)}
-                      className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
-                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                    >
-                      <Bell className="w-5 h-5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                          {unreadCount > 99 ? "99+" : unreadCount}
-                        </span>
-                      )}
-                    </motion.button>
-
-                    {/* Messages button - TEMPORARILY HIDDEN */}
-                    {/* <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowRoomChatsPanel(true)}
-                      className="relative flex items-center justify-center w-9 h-9 rounded-full bg-muted text-foreground"
-                      style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      {unreadMessagesCount > 0 && (
-                        <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[9px] font-bold text-white bg-destructive rounded-full">
-                          {unreadMessagesCount > 99 ? "99+" : unreadMessagesCount}
-                        </span>
-                      )}
-                    </motion.button> */}
+                    <HeaderActions />
                   </div>
                 </div>
               </div>
@@ -876,10 +843,6 @@ function TeamContentV2() {
       <AllRecentRoomsModal
         isOpen={showAllGamesModal}
         onClose={() => setShowAllGamesModal(false)}
-      />
-      <NotificationsPanel
-        isOpen={showNotificationsPanel}
-        onClose={() => setShowNotificationsPanel(false)}
       />
       {/* TEMPORARILY HIDDEN */}
       {/* <RoomChatsPanel

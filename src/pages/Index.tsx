@@ -418,7 +418,7 @@ export default function Index() {
         disableScroll
       >
         <div className="h-full flex flex-col w-full relative overflow-hidden md:overflow-visible">
-        <header className="relative z-20 px-4 py-3 safe-top border-b border-purple-900/10">
+        <header className="relative z-20 px-4 py-3 safe-top border-b border-border/30">
           <div className="flex items-center justify-between gap-3">
             {/* Left side: Burger menu (mobile only) - Hidden for guests */}
             <div className="flex items-center gap-2">

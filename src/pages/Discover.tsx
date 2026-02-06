@@ -198,7 +198,7 @@ export default function Discover() {
       <div className="fixed inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/20 pointer-events-none z-0" />
 
         {/* Sticky header section - always visible */}
-        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md">
           {/* Header with Page Title */}
           <div>
             <PageHeader

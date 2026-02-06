@@ -37,8 +37,8 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
   );
 
   return (
-    <div className="bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
-      <div className="px-[15px] pt-4 pb-3">
+    <div className="bg-background/95 backdrop-blur-md border-b border-border/30">
+      <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Left side: title */}
           <h1 className="hidden md:block text-xl font-display font-bold text-foreground uppercase tracking-wide">

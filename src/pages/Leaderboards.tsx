@@ -193,7 +193,7 @@ export default function Leaderboards() {
     <div className="min-h-screen w-full max-w-[100vw] flex flex-col overflow-x-hidden bg-background">
       {/* Header Bar - sticky with white background */}
       <div className="sticky top-0 left-0 right-0 z-50">
-        <div className="px-4 pt-4 pb-3 bg-background/95 backdrop-blur-md">
+        <div className="px-4 py-3 bg-background/95 backdrop-blur-md border-b border-border/30">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
               {language === 'ka' ? 'რეიტინგი' : 'Leaderboard'}
