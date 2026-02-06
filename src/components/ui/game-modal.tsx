@@ -192,7 +192,7 @@ export function GameModal({
               </div>
               
               {/* Right spacer or actions */}
-              <div className="w-10 flex items-center justify-center">
+              <div className={cn("flex items-center justify-center", headerActions ? "shrink-0" : "w-10")}>
                 {headerActions}
               </div>
             </motion.div>

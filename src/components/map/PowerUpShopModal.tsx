@@ -7,11 +7,12 @@ import { useUserPowerUps, PowerUpType } from "@/hooks/useUserPowerUps";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ChunkyButton } from "@/components/ui/chunky-button";
+
 import { GameModal } from "@/components/ui/game-modal";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import { formatCompactNumber } from "@/lib/utils";
 import { REWARDS } from "@/config/rewardConfig";
 
 // Power icon for header
@@ -161,7 +162,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
     }
   };
 
-  // Custom header icon with coin balance - shows power bottle icon
+  // Custom header icon - power bottle only, coins moved to header right
   const headerIcon = (
     <div className="flex flex-col items-center gap-2">
       <motion.div
@@ -179,12 +180,16 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
       </motion.div>
-      <div className="flex items-center gap-1.5 bg-amber-100 rounded-full px-3 py-1">
-        <img src={coinIcon} alt="coins" className="w-4 h-4" />
-        <span className="text-sm font-bold text-amber-700">
-          {coins.toLocaleString()}
-        </span>
-      </div>
+    </div>
+  );
+
+  // Coin balance pill in header right side (like main page)
+  const headerRight = (
+    <div className="flex items-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5">
+      <img src={coinIcon} alt="coins" className="w-4 h-4" />
+      <span className="text-sm font-bold text-foreground">
+        {formatCompactNumber(coins)}
+      </span>
     </div>
   );
 
@@ -196,25 +201,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       title={t('shop.powerShop')}
       subtitle={t('shop.buyPowers')}
       showSparkles
-      footer={
-        <ChunkyButton
-          onClick={handlePurchase}
-          disabled={isPurchasing || !canAfford}
-          variant={canAfford ? "success" : "secondary"}
-          className="w-full"
-        >
-          {isPurchasing ? (
-            t('shop.purchasing')
-          ) : !canAfford ? (
-            t('shop.notEnoughCoinsLong')
-          ) : (
-            <>
-              <img src={coinIcon} alt="" className="w-5 h-5 mr-2" />
-              {t('shop.buy')}
-            </>
-          )}
-        </ChunkyButton>
-      }
+      headerActions={headerRight}
     >
       <div className="relative">
         {/* Power-up preview */}
@@ -245,7 +232,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
               >
                 <PowerUpBadge 
                   type={info.type === "5050" ? "fifty-fifty" : info.type} 
-                  size="sm" 
+                  size="xs" 
                   count={count}
                 />
               </motion.button>
@@ -282,21 +269,33 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
           </motion.button>
         </div>
 
-        {/* Total price with chunky coin badge */}
+        {/* Total price - clickable golden button to purchase */}
         <div className="text-center">
-          <div 
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full"
+          <motion.button
+            onClick={handlePurchase}
+            disabled={isPurchasing || !canAfford}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              background: "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)",
-              boxShadow: "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #CA8A04, 0 4px 8px rgba(234,179,8,0.3)",
+              background: canAfford
+                ? "linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%)"
+                : "linear-gradient(180deg, #D1D5DB 0%, #9CA3AF 100%)",
+              boxShadow: canAfford
+                ? "inset 0 2px 4px rgba(255,255,255,0.3), 0 3px 0 #CA8A04, 0 4px 8px rgba(234,179,8,0.3)"
+                : "inset 0 2px 4px rgba(255,255,255,0.2), 0 3px 0 #6B7280",
               border: "2px solid rgba(255,255,255,0.4)",
             }}
           >
-            <img src={coinIcon} alt="coins" className="w-5 h-5" />
+            {isPurchasing ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <img src={coinIcon} alt="coins" className="w-5 h-5" />
+            )}
             <span className="text-xl font-bold text-white drop-shadow-sm">
               {totalPrice.toLocaleString()}
             </span>
-          </div>
+          </motion.button>
           <p className="text-xs text-muted-foreground mt-2">
             {POWER_UP_PRICES[selectedType]} × {quantity}
           </p>
