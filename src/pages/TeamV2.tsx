@@ -526,8 +526,8 @@ function TeamContentV2() {
       <div className="flex min-h-full">
         {/* Main Content Area */}
         <div id="team-main-content" className="flex-1 flex flex-col pb-24 lg:pb-0 bg-background min-w-0">
-          {/* NON-STICKY: Title, Buttons, Friends Bar, Tabs */}
-          <div className="bg-background w-full max-w-full">
+          {/* STICKY: Title, Buttons, Friends Bar, Tabs */}
+          <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md w-full max-w-full">
               <div className="px-4 py-3 border-b border-purple-900/10">
                 <div className="flex items-center justify-between gap-3">
                   {/* Left: Logo - aligned to left edge */}

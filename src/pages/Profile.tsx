@@ -59,7 +59,7 @@ export default function Profile() {
 
   return (
     <MainLayout showPlayButton={false}>
-      <div className="min-h-screen relative">
+      <div className="min-h-screen relative flex flex-col">
           {/* Full-page Video Background */}
           <video 
             autoPlay 
@@ -73,13 +73,15 @@ export default function Profile() {
           {/* Gradient Overlay */}
           <div className="fixed inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50 -z-10" />
 
-          {/* Page Header with Back Button */}
+          {/* Page Header with Back Button - Sticky */}
           <PageHeader title={t("profile.title")} />
 
-          {/* Header with Video Background */}
-          <div className="pt-12 pb-20 px-6" />
+          {/* Scrollable Content */}
+          <div className="flex-1 relative">
+            {/* Header spacer */}
+            <div className="pt-12 pb-20 px-6" />
 
-          <div className="px-6 -mt-16 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
+            <div className="px-6 -mt-16 relative max-w-[700px] md:max-w-[600px] mx-auto w-full pb-8">
             {/* Avatar Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -228,6 +230,7 @@ export default function Profile() {
                 />
               </motion.div>
             )}
+            </div>
           </div>
 
       </div>
