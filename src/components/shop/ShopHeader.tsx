@@ -45,7 +45,7 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
       <div className="px-[15px] pt-4 pb-3">
         <div className="flex items-center justify-between">
           {/* Left side: title */}
-          <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+          <h1 className="hidden md:block text-xl font-display font-bold text-foreground uppercase tracking-wide">
             {t("shop.title")}
           </h1>
 
