@@ -1,68 +1,64 @@
 
-
-# Plan: Fix Broken Image Display in Category Cards
+# Plan: Ensure Sticky Headers Have Proper Background Across App
 
 ## Problem
-When categories are displayed on the Discover page, a broken image icon appears in the top-left corner of some cards while videos are loading. This happens because:
-
-1. The `PingPongVideo` component uses poster images to show instantly while videos load
-2. These poster images are configured in `CATEGORY_IMAGES` (e.g., `/images/categories/world-history.jpg`)
-3. The `public/images/categories/` directory is empty - these image files don't exist
-4. When the browser fails to load the image, it shows the default broken image icon instead of hiding it
+The `PageHeader` component has sticky positioning and `backdrop-blur-md` but is missing a background color. This causes content to show through the header when scrolling on pages that use `PageHeader` (like VIP, Profile, Settings pages).
 
 ## Solution
-Add error handling to the `PingPongVideo` component's poster image, similar to how `SafeAvatar` handles broken images:
+Update the `PageHeader` component to include a proper background color that matches the app's design system, similar to how other sticky headers in the app are implemented.
 
-- Track whether the poster image failed to load
-- Hide the poster image immediately on error (never show broken icon)
-- Continue relying on the pastel background color until video loads
+---
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/shared/PingPongVideo.tsx` | Add `onError` handler to poster `<img>` to hide on failure |
+| `src/components/shared/PageHeader.tsx` | Add background color + border to header |
+
+---
 
 ## Technical Details
 
-### Current Poster Image Code
+### Current Code (Line 33)
 ```tsx
-{posterUrl && (
-  <img 
-    src={posterUrl}
-    alt=""
-    className={`... ${isReady && isInView ? 'opacity-0' : 'opacity-100'}`}
-    loading="lazy"
-  />
-)}
+<header className={`sticky top-0 z-20 backdrop-blur-md ${className}`}>
 ```
 
-### Updated Code with Error Handling
+### Updated Code
 ```tsx
-const [posterError, setPosterError] = useState(false);
-
-// Only show poster if URL exists AND it hasn't errored
-{posterUrl && !posterError && (
-  <img 
-    src={posterUrl}
-    alt=""
-    className={`... ${isReady && isInView ? 'opacity-0' : 'opacity-100'}`}
-    loading="lazy"
-    onError={() => setPosterError(true)}
-  />
-)}
+<header className={`sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 ${className}`}>
 ```
 
-## Why This Works
+---
 
-- When the poster image 404s (doesn't exist), the `onError` callback fires
-- This sets `posterError` to `true`, which removes the `<img>` from the DOM
-- The pastel background of the card shows through instead of a broken icon
-- Once the video loads and `isReady` becomes true, the video fades in normally
+## Changes Explained
 
-## Additional Considerations
+| Addition | Purpose |
+|----------|---------|
+| `bg-background/95` | Semi-transparent background that matches app theme (95% opacity for subtle content visibility) |
+| `border-b border-border/30` | Subtle bottom border for visual separation from content |
 
-**Long-term fix**: The poster images should be added to `public/images/categories/`. These are first-frame screenshots of each video that provide instant visual feedback.
+---
 
-**Avatar handling**: The avatar components (`SafeAvatar`, `AvatarWithFrame`) already use similar error handling patterns - this brings consistency across the codebase.
+## Pages That Will Benefit
 
+These pages use `PageHeader` and will now have proper sticky headers:
+
+- VIP (`/vip`)
+- Profile (`/profile`)
+- Settings pages (`/settings/*`)
+- Support (`/support`)
+- Privacy Policy / Terms pages
+- Any other pages using `PageHeader`
+
+---
+
+## Already Working (No Changes Needed)
+
+These pages have custom sticky headers already implemented correctly:
+
+| Page | Implementation |
+|------|----------------|
+| Leaderboards | Custom sticky header with `bg-background/95 backdrop-blur-md` |
+| PowerUps/Shop | Uses `ShopHeader` wrapped in sticky container |
+| Discover | Custom sticky header with `bg-white/80 backdrop-blur-md shadow-sm` |
