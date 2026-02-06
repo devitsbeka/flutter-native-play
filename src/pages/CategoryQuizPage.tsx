@@ -929,11 +929,6 @@ export default function CategoryQuizPage() {
                       +{levelUpCoins} <img src={coinIcon} alt="" className="w-4 h-4 inline" />
                     </span>
                   )}
-                  {levelUpGems > 0 && (
-                    <span className="flex items-center gap-1">
-                      +{levelUpGems} <img src={gemIcon} alt="" className="w-4 h-4 inline" />
-                    </span>
-                  )}
                 </div>
               </motion.div>
             )}

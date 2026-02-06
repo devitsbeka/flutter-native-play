@@ -241,11 +241,9 @@ export function useCategoryProgress() {
     // Calculate stars based on score percentage
     const percentage = (score / totalQuestions) * 100;
     let stars = 0;
-    if (percentage >= 100) stars = 3;
-    else if (percentage >= 80) stars = 3;
+    if (percentage >= 80) stars = 3;
     else if (percentage >= 60) stars = 2;
     else if (percentage >= 40) stars = 1;
-    else if (percentage >= 20) stars = 1; // At least 1 star for trying (1/5 correct)
 
     // For unlocking: level is unlocked if stars >= 1 AND this is the current level or beyond
     // Cap at categoryTotalLevels to prevent progressing beyond available content
