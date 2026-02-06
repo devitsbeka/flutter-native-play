@@ -335,7 +335,7 @@ export function VideoAdventureMap() {
             visibility: currentPhase === "video-c" ? "visible" : "hidden",
           }}
         >
-          <source src={MAP_VIDEOS.videoC} type="video/mp4" />
+          <source src={MAP_VIDEOS.videoC} type="video/webm" />
         </video>
       </div>
 

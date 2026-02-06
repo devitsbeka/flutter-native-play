@@ -79,7 +79,7 @@ export function CloudCategoryFlight({ isOpen, onCategorySelected }: CloudCategor
   }, [isOpen, displayCategories, winnerIndex, onCategorySelected]);
 
   const getVideoUrl = (categoryId: string) => {
-    return CATEGORY_VIDEOS[categoryId] || "/videos/galaxy.mp4";
+    return CATEGORY_VIDEOS[categoryId] || "/videos/galaxy.webm";
   };
 
   if (!isOpen) return null;
