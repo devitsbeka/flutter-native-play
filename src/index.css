@@ -187,6 +187,7 @@
   html {
     overflow-y: scroll;
     overscroll-behavior: none;
+    overscroll-behavior-y: none;
   }
 
   body {
@@ -194,14 +195,17 @@
     font-family: var(--font-sans);
     letter-spacing: var(--tracking-normal);
     background: transparent;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: auto;
+    touch-action: pan-x pan-y;
   }
   
   /* Prevent pull-to-refresh on scrollable containers */
   #main-scroll-container {
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: auto;
   }
 }
 
