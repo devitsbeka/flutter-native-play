@@ -6,6 +6,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { formatCompactNumber } from "@/lib/utils";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import safeIcon from "@/assets/icons/icon-safe.png";
 
 interface ShopHeaderProps {
   onHelpClick: () => void;
@@ -16,39 +17,53 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
   const { t } = useLanguage();
   const { coins, gems } = useCurrency();
 
+  const WalletDisplay = () => (
+    <div className="flex items-center gap-3">
+      {/* Safe icon */}
+      <img src={safeIcon} alt="" className="w-7 h-7" />
+      
+      {/* Coins */}
+      <div className="flex items-center gap-1.5">
+        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+          <img src={coinIcon} alt="" className="w-4 h-4" />
+        </div>
+        <span className="font-bold text-sm text-foreground">{formatCompactNumber(coins)}</span>
+      </div>
+      
+      {/* Gems */}
+      <div className="flex items-center gap-1.5">
+        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+          <img src={gemIcon} alt="" className="w-4 h-4" />
+        </div>
+        <span className="font-bold text-sm text-foreground">{formatCompactNumber(gems)}</span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
       <div className="px-[15px] pt-4 pb-3">
-        {/* Full width row: Title + Wallet on left, Actions on far right */}
         <div className="flex items-center justify-between">
-          {/* Left side: Title + Wallet */}
+          {/* Left side */}
           <div className="flex items-center gap-4">
-            {/* md+: keep title text */}
+            {/* md+: title text */}
             <h1 className="hidden md:block text-xl font-display font-bold text-foreground uppercase tracking-wide">
               {t("shop.title")}
             </h1>
             
-            {/* Wallet - Coins & Gems */}
-            <div className="flex items-center gap-3">
-              {/* Coins */}
-              <div className="flex items-center gap-1.5">
-                <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-                  <img src={coinIcon} alt="" className="w-4 h-4" />
-                </div>
-                <span className="font-bold text-sm text-foreground">{formatCompactNumber(coins)}</span>
-              </div>
-              
-              {/* Gems */}
-              <div className="flex items-center gap-1.5">
-                <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-                  <img src={gemIcon} alt="" className="w-4 h-4" />
-                </div>
-                <span className="font-bold text-sm text-foreground">{formatCompactNumber(gems)}</span>
-              </div>
+            {/* Mobile only: Wallet on left */}
+            <div className="md:hidden">
+              <WalletDisplay />
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            {/* md+: Wallet before action icons */}
+            <div className="hidden md:block">
+              <WalletDisplay />
+            </div>
+            
             <HeaderActions />
             
             <motion.button
