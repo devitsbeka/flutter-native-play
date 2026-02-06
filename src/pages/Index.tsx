@@ -570,7 +570,7 @@ export default function Index() {
                       >
                         <AvatarCircle 
                           animatedAvatarUrl={guestMascotVideo}
-                          size={280} 
+                          size={238} 
                           coins={0}
                           gems={0}
                           level={1}
@@ -591,15 +591,15 @@ export default function Index() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, type: "spring" }}
-                    className="flex flex-col items-center mt-2 pointer-events-auto"
+                    className="flex flex-col items-center mt-5 pointer-events-auto"
                   >
                     <button
                       onClick={() => navigate("/auth")}
-                      className="bg-primary text-primary-foreground rounded-full px-10 py-3 font-bold text-lg shadow-md hover:opacity-90 transition-opacity"
+                      className="bg-primary text-primary-foreground rounded-full px-10 py-4 font-bold text-lg shadow-md hover:opacity-90 transition-opacity"
                     >
                       შესვლა
                     </button>
-                    <div className="flex items-center gap-4 mt-3">
+                    <div className="flex items-center gap-4 mt-4">
                       <button
                         onClick={handleGuestGoogleSignIn}
                         className="w-14 h-14 rounded-2xl bg-background border border-border flex items-center justify-center shadow-sm hover:opacity-80 transition-opacity"
