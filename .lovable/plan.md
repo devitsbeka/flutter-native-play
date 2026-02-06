@@ -1,158 +1,105 @@
 
 
-# Plan: Improve Sign-in / Sign-up Screen Layouts
+# Plan: Fix Quiz Score Not Saving to Leaderboard
 
-## Summary
+## Problem
 
-This plan addresses spacing, sizing, and greeting issues on the login ("შესვლა") and signup ("შექმენი") screens in the `GuestWelcomePanel` component.
+When a user plays a trivia game, their score is displayed as `0/5` on the leaderboard because the `score` value is not being saved to the database.
+
+**Root Cause:** In `QuizPlayModal.tsx`, the `awardRewards` function inserts a record into `quiz_post_plays` but omits the `score` field:
+
+```typescript
+await supabase.from('quiz_post_plays').insert({
+  user_id: user.id,
+  post_id: postId,
+  // score is MISSING!
+});
+```
+
+The database table has a `score` column (as seen in Supabase types), but it defaults to `null` when not provided, causing the leaderboard to show `0/5`.
 
 ---
 
-## Problems Identified
+## Solution
 
-| Issue | Screen | Description |
-|-------|--------|-------------|
-| Missing greeting | შესვლა (Login) | "გამარჯობა" should appear on login screen |
-| Remove mascot | შესვლა (Login) | Don't show avatar/mascot on login, only on signup |
-| Elements too cramped | Both screens | Insufficient spacing between header, form inputs, and buttons |
-| CTA button height | Both screens | Submit button is shorter than input fields |
-| Button text size | შექმენი (Signup) | "შექმენი ანგარიში" text should be 10% larger |
-| OAuth icons too small | Both screens | Google and Apple icons should be 20% larger |
-| Signup layout | შექმენი | Move mascot and text higher with proper gaps |
+Modify the `awardRewards` function to accept and save the score to the database.
 
 ---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/components/home/GuestWelcomePanel.tsx` | All UI adjustments |
+| File | Change |
+|------|--------|
+| `src/components/social/QuizPlayModal.tsx` | Add score parameter to `awardRewards` and include it in the insert |
 
 ---
 
 ## Implementation Details
 
-### 1. Add "გამარჯობა" Greeting on Login Screen
+### 1. Update Function Signature (Line ~172)
 
-```tsx
-{/* Title - show greeting only on login mode */}
-{!isSignUp && (
-  <motion.div className="flex flex-col items-center mb-4">
-    <h2 className="text-2xl font-bold text-foreground">გამარჯობა!</h2>
-  </motion.div>
-)}
+**Before:**
+```typescript
+const awardRewards = async (xp: number, coins: number, postId?: string) => {
 ```
 
-### 2. Increase Spacing Between Elements
-
-Current container: `space-y-2` → Change to `space-y-3`
-
-Also adjust:
-- Remove negative margin-top on container (`marginTop: "-70px"` → `marginTop: "-50px"` for signup, `marginTop: "-20px"` for login)
-- Add `mt-4` below mascot on signup
-- Add `my-3` on the dividers
-
-### 3. Make CTA Button Height Match Input Fields
-
-Current input padding: `py-[15px]`  
-Current ChunkyButton `md` size: `py-3` (12px)
-
-Fix: Apply custom class to match input height:
-```tsx
-<ChunkyButton 
-  className="w-full min-h-[54px]"  // Match input height
-  ...
-/>
+**After:**
+```typescript
+const awardRewards = async (xp: number, coins: number, postId?: string, score?: number) => {
 ```
 
-### 4. Increase "შექმენი ანგარიში" Button Text by 10%
+### 2. Add Score to Database Insert (Line ~190)
 
-Add a custom text size class for signup button:
-```tsx
-{isSignUp ? (
-  <span className="text-[1.1rem]">შექმენი ანგარიში</span>
-) : (
-  <>შესვლა</>
-)}
+**Before:**
+```typescript
+await supabase.from('quiz_post_plays').insert({
+  user_id: user.id,
+  post_id: postId,
+});
 ```
 
-### 5. Increase Google/Apple Icons by 20%
-
-Current icon size: `w-5 h-5` (20px)  
-New size: `w-6 h-6` (24px = 20% larger)
-
-Current button size: `w-11 h-11` → `w-14 h-14` to accommodate larger icons
-
-### 6. Adjust Signup Layout - Move Content Up
-
-For signup mode:
-- Reduce top spacing
-- Adjust mascot container margin
-- Proper visual hierarchy with consistent gaps
-
----
-
-## Visual Summary
-
-**Login Screen (შესვლა):**
-```text
-┌─────────────────────┐
-│                     │
-│   გამარჯობა! ←NEW   │
-│                     │
-│ ┌─────────────────┐ │
-│ │ ელფოსტა ან...   │ │ ← Input (54px height)
-│ └─────────────────┘ │
-│                     │ ← 12px gap
-│ ┌─────────────────┐ │
-│ │ პაროლი          │ │ ← Input (54px height)
-│ └─────────────────┘ │
-│                     │ ← 12px gap
-│ ┌─────────────────┐ │
-│ │    შესვლა       │ │ ← Button (54px height)
-│ └─────────────────┘ │
-│                     │
-│ არ გაქვს ანგარიში? │
-│        ან           │
-│    [G]    [⌘]       │ ← Larger icons (24px)
-│                     │
-└─────────────────────┘
+**After:**
+```typescript
+await supabase.from('quiz_post_plays').insert({
+  user_id: user.id,
+  post_id: postId,
+  score: score ?? 0,
+});
 ```
 
-**Signup Screen (შექმენი):**
-```text
-┌─────────────────────┐
-│ შექმენი შენი...     │
-│                     │
-│      [Mascot]       │ ← Moved up
-│                     │
-│ ┌─────────────────┐ │
-│ │ სახელი          │ │
-│ └─────────────────┘ │
-│                     │ ← 12px gap
-│ ┌─────────────────┐ │
-│ │ პაროლი          │ │
-│ └─────────────────┘ │
-│                     │ ← 12px gap
-│ ┌───────────────────┐│
-│ │ შექმენი ანგარიში  ││ ← Larger text (110%)
-│ └───────────────────┘│
-│                     │
-└─────────────────────┘
+### 3. Pass Score When Calling awardRewards
+
+**At line ~148 (multi-round):**
+```typescript
+awardRewards(xpEarned, coinsEarned, currentRoundPost?.id, roundScore);
+```
+
+**At line ~158 (single round or final round):**
+```typescript
+awardRewards(xpEarned, finalCoins, currentRoundPost?.id, roundScore);
 ```
 
 ---
 
-## All Changes Summary
+## Data Flow Summary
 
-| Element | Before | After |
-|---------|--------|-------|
-| Login greeting | None | "გამარჯობა!" |
-| Form spacing | `space-y-2` | `space-y-3` |
-| CTA button height | `py-3` (~48px) | `min-h-[54px]` |
-| Signup button text | `text-base` | `text-[1.1rem]` |
-| OAuth button size | `w-11 h-11` | `w-14 h-14` |
-| OAuth icon size | `w-5 h-5` | `w-6 h-6` |
-| Container margin-top | `-70px` | Dynamic based on mode |
-| Divider spacing | `my-2` | `my-3` |
+```text
+User answers questions
+       ↓
+handleAnswer() calculates: roundScore = score + (isCorrect ? 1 : 0)
+       ↓
+awardRewards(xp, coins, postId, roundScore)
+       ↓
+INSERT INTO quiz_post_plays (user_id, post_id, score)
+       ↓
+Leaderboard displays {entry.score}/{trivia.question_count}
+```
+
+---
+
+## Impact
+
+- **TriviaLobby leaderboard**: Will correctly show `3/5`, `5/5`, etc. instead of `0/5`
+- **Stats calculation**: `avgScore` and `highestScore` in `useTriviaLobby` will work correctly
+- **Historical data**: Previously played games will still show `0` (only new plays will have scores)
 
