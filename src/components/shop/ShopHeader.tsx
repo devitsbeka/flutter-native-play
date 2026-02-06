@@ -53,10 +53,9 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
             
             <motion.button
               onClick={onHelpClick}
-              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center"
-              style={{ boxShadow: "0 3px 0 hsl(var(--border))" }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95, y: 2 }}
+              className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
               <HelpCircle className="w-5 h-5 text-muted-foreground" />
             </motion.button>

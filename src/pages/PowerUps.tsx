@@ -299,6 +299,7 @@ export default function PowerUps() {
                 onItemClick={handlePurchase}
                 onSinglePowerPurchase={handleSinglePowerPurchase}
                 initialScrollSection={initialScrollSection}
+                powerUps={shopData.powerUps}
               />
             </div>
           </div>
