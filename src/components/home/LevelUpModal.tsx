@@ -1,30 +1,37 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, ChevronLeft, Zap } from "lucide-react";
+import { Gift, ChevronLeft } from "lucide-react";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
+import fiftyFiftyIcon from "@/assets/powers/5050.png";
+import freezeIcon from "@/assets/powers/freeze.png";
+import replaceIcon from "@/assets/powers/replace.png";
+import timeDrainIcon from "@/assets/powers/time-drain.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import confetti from "canvas-confetti";
+
+const POWER_UP_ICONS: Record<string, string> = {
+  "5050": fiftyFiftyIcon,
+  "freeze": freezeIcon,
+  "replace": replaceIcon,
+  "time-drain": timeDrainIcon,
+};
+
+const POWER_UP_TRANSLATION_KEYS: Record<string, string> = {
+  "5050": "shop.powerUpNames.fiftyFifty",
+  "freeze": "shop.powerUpNames.freeze",
+  "replace": "shop.powerUpNames.replace",
+  "time-drain": "shop.powerUpNames.timeDrain",
+};
 
 interface LevelUpModalProps {
   isOpen: boolean;
   onClose: () => void;
   newLevel: number;
   previousLevel: number;
-  awardedPowerUp?: string;  // e.g., "freeze", "5050", "replace", "time-drain"
+  awardedPowerUp?: string;
 }
-
-// Get power-up display info
-const getPowerUpDisplay = (powerUp: string, t: (key: string) => string) => {
-  const powerUpMap: Record<string, { name: string; emoji: string; color: string }> = {
-    "5050": { name: t("modals.powerUp5050"), emoji: "✂️", color: "#F59E0B" },
-    "freeze": { name: t("modals.powerUpFreeze"), emoji: "❄️", color: "#3B82F6" },
-    "replace": { name: t("modals.powerUpReplace"), emoji: "🔄", color: "#8B5CF6" },
-    "time-drain": { name: t("modals.powerUpTimeDrain"), emoji: "⏱️", color: "#10B981" },
-  };
-  return powerUpMap[powerUp] || { name: powerUp, emoji: "⚡", color: "#6366F1" };
-};
 
 // PURELY PRESENTATIONAL - rewards are credited in MatchResultScreen
 export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awardedPowerUp }: LevelUpModalProps) {
@@ -33,7 +40,6 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
 
   // Fixed reward amounts from config
   const levelUpCoins = REWARDS.LEVEL_UP_COINS;
-  const powerUpInfo = awardedPowerUp ? getPowerUpDisplay(awardedPowerUp, t) : null;
 
   // Fire confetti when modal opens
   useEffect(() => {
@@ -166,41 +172,17 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
                 <Gift className="w-5 h-5 text-purple-600" />
                 <span className="font-bold text-lg text-gray-900">{t("modals.rewards")}</span>
               </div>
-              <div className="flex justify-center gap-8 flex-wrap">
-                {/* Fixed 150 Coins */}
-                <div className="text-center">
-                  <img src={coinIcon} alt="" className="w-10 h-10 mx-auto" />
-                  <p className="font-bold text-xl text-gray-800">+{levelUpCoins}</p>
+              <div className="flex justify-center gap-6">
+                <div className="text-center flex flex-col items-center min-w-[70px]">
+                  <img src={coinIcon} alt="" className="w-10 h-10 object-contain" />
+                  <p className="font-bold text-xl text-gray-800 mt-1">+{levelUpCoins}</p>
                   <p className="text-sm font-medium text-gray-500">{t("modals.coin")}</p>
                 </div>
-                
-                {/* Random Power-up */}
-                {powerUpInfo && (
-                  <div className="text-center">
-                    <div 
-                      className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-2xl"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${powerUpInfo.color}20, ${powerUpInfo.color}40)`,
-                        border: `2px solid ${powerUpInfo.color}60`,
-                      }}
-                    >
-                      {powerUpInfo.emoji}
-                    </div>
-                    <p className="font-bold text-xl text-gray-800">+1</p>
-                    <p className="text-sm font-medium text-gray-500">{powerUpInfo.name}</p>
-                  </div>
-                )}
-                
-                {/* Fallback if no power-up passed */}
-                {!powerUpInfo && (
-                  <div className="text-center">
-                    <div 
-                      className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center bg-indigo-100 border-2 border-indigo-300"
-                    >
-                      <Zap className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <p className="font-bold text-xl text-gray-800">+1</p>
-                    <p className="text-sm font-medium text-gray-500">{t("modals.powerUpReward")}</p>
+                {awardedPowerUp && POWER_UP_ICONS[awardedPowerUp] && (
+                  <div className="text-center flex flex-col items-center min-w-[70px]">
+                    <img src={POWER_UP_ICONS[awardedPowerUp]} alt={awardedPowerUp} className="w-10 h-10 object-contain" />
+                    <p className="font-bold text-xl text-gray-800 mt-1">+1</p>
+                    <p className="text-sm font-medium text-gray-500">{t(POWER_UP_TRANSLATION_KEYS[awardedPowerUp])}</p>
                   </div>
                 )}
               </div>

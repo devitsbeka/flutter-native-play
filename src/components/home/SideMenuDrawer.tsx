@@ -38,9 +38,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
 
-  // Debug logging
-  console.log('[SideMenuDrawer] user:', user?.id, 'profile:', profile?.nickname, 'loading:', loading);
-
   const currentStreak = profile?.current_streak || 1;
   const levelInfo = calculateLevel(profile?.total_points || 0);
 

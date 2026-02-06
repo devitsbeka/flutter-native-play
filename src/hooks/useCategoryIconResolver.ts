@@ -24,7 +24,6 @@ async function loadIconIndex(): Promise<void> {
         title: item.title || ''
       }));
       indexLoaded = true;
-      console.log(`[IconResolver] Loaded ${iconIndex.length} icons from library`);
     }
   } catch (error) {
     console.error('[IconResolver] Failed to load icon index:', error);
@@ -69,16 +68,14 @@ function findIconByKeyword(keyword: string): string | null {
 // Resolve icon for a category using keywords
 function resolveCategoryIcon(categoryId: string): string | null {
   const keywords = getCategoryKeywords(categoryId);
-  
+
   for (const keyword of keywords) {
     const iconUrl = findIconByKeyword(keyword);
     if (iconUrl) {
-      console.log(`[IconResolver] ${categoryId} -> "${keyword}" -> found`);
       return iconUrl;
     }
   }
-  
-  console.warn(`[IconResolver] No icon found for ${categoryId} with keywords:`, keywords);
+
   return null;
 }
 
@@ -135,8 +132,7 @@ export async function preloadCategoryIcons(categoryIds: string[]): Promise<Recor
     const img = new Image();
     img.src = url;
   });
-  
-  console.log(`[IconResolver] Resolved ${Object.keys(resolved).length} category icons`);
+
   return resolved;
 }
 

@@ -99,8 +99,8 @@ export function VSScreen() {
   const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Player data
-  const playerPoints = profile?.total_points || 0;
-  const playerLevelInfo = calculateLevel(playerPoints);
+  const playerCoins = profile?.coins || 0;
+  const playerLevelInfo = calculateLevel(profile?.total_points || 0);
   const opponentPoints = opponent?.points || 0;
   const opponentLevelInfo = calculateLevel(opponentPoints);
 
@@ -519,7 +519,7 @@ export function VSScreen() {
                   {t("common.level")} {playerLevelInfo.level}
                 </p>
                 <p className="text-amber-300 text-sm font-medium">
-                  {playerPoints.toLocaleString()}
+                  {playerCoins.toLocaleString()}
                 </p>
               </div>
               {/* Avatar container */}

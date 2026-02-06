@@ -524,7 +524,7 @@ export function MatchResultScreen() {
             <PlayerCard 
               avatarUrl={profile?.avatar_url} 
               name={profile?.nickname || t("game.you")}
-              coinBalance={profile?.total_points || 0}
+              coinBalance={profile?.coins || 0}
               level={userLevel}
               isWinner={isWin}
               winnerLabel={t("game.winner")}

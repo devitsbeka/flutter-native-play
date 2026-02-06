@@ -176,29 +176,22 @@ export async function preloadQuestionIcons(
   questions: Array<{ question: string; category?: string }>
 ): Promise<void> {
   if (!questions || questions.length === 0) return;
-  
-  console.log(`[IconPreload] Starting background preload for ${questions.length} questions`);
-  
+
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     const questionHash = hashQuestion(q.question + (q.category || ''));
-    
+
     // Skip if already cached
     if (getCachedResult(questionHash)) {
-      console.log(`[IconPreload] Q${i + 1} already cached, skipping`);
       continue;
     }
-    
+
     // Small delay between requests to avoid rate limiting (50ms)
     if (i > 0) {
       await new Promise(resolve => setTimeout(resolve, 50));
     }
-    
+
     // Fire and forget - don't block on individual requests
-    fetchAIIconData(q.question, q.category)
-      .then(() => console.log(`[IconPreload] Q${i + 1} analyzed`))
-      .catch(() => console.log(`[IconPreload] Q${i + 1} failed, will retry on display`));
+    fetchAIIconData(q.question, q.category).catch(() => {});
   }
-  
-  console.log(`[IconPreload] Background preload initiated for all questions`);
 }

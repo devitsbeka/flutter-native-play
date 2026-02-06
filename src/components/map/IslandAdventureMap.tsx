@@ -325,12 +325,12 @@ export function IslandAdventureMap() {
           >
             <div className="flex items-center gap-1">
               <img src={iconCoin} alt="" className="w-6 h-6 object-contain" />
-              <span className="text-sm font-bold text-gray-800">{profile?.total_points || 0}</span>
+              <span className="text-sm font-bold text-gray-800">{profile?.coins || 0}</span>
             </div>
             <div className="w-px h-4 bg-gray-200" />
             <div className="flex items-center gap-1">
               <img src={iconGem} alt="" className="w-6 h-6 object-contain" />
-              <span className="text-sm font-bold text-gray-800">0</span>
+              <span className="text-sm font-bold text-gray-800">{profile?.gems || 0}</span>
             </div>
           </motion.div>
         </div>

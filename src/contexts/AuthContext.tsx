@@ -53,12 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     // Prevent duplicate fetches for the same user
     if (profileFetchInProgressRef.current === userId) {
-      console.log('[AuthContext] Profile fetch already in progress for:', userId);
       return null;
     }
-    
+
     profileFetchInProgressRef.current = userId;
-    console.log('[AuthContext] Starting profile fetch for:', userId);
     
     try {
       const { data, error } = await supabase
@@ -67,8 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", userId)
         .maybeSingle();
 
-      console.log('[AuthContext] Profile fetch result:', { data: data?.nickname, error: error?.message });
-
       if (error) {
         console.error('[AuthContext] Profile fetch error:', error);
         profileFetchInProgressRef.current = null;
@@ -76,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       if (data) {
-        console.log('[AuthContext] Setting profile:', data.nickname);
         setProfile(data as Profile);
         
         // Auto-detect and set country code if not already set
@@ -99,8 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileFetchInProgressRef.current = null;
         return data as Profile;
       }
-      
-      console.log('[AuthContext] No profile found for user');
+
       profileFetchInProgressRef.current = null;
       return null;
     } catch (err) {
@@ -114,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST - keep it synchronous!
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log('Auth state change:', event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -128,7 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      console.log('Initial session check:', existingSession?.user?.id);
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       if (!existingSession?.user) {
@@ -147,9 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Only fetch if user ID actually changed
     if (userId && userId !== userIdRef.current) {
       userIdRef.current = userId;
-      console.log('[AuthContext] User ID changed, fetching profile for:', userId);
       fetchProfile(userId).finally(() => {
-        console.log('[AuthContext] Profile fetch complete, setting loading false');
         setLoading(false);
       });
     } else if (!userId && userIdRef.current) {
@@ -176,11 +166,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         (payload) => {
           // Skip if we just did a local update (prevents race condition)
           if (Date.now() - lastLocalUpdateRef.current < 2000) {
-            console.log('Skipping realtime update - local update in progress');
             return;
           }
-          
-          console.log('Profile updated via realtime:', payload);
+
           if (payload.new) {
             setProfile(payload.new as Profile);
           }
