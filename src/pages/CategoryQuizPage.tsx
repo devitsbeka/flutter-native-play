@@ -677,7 +677,8 @@ export default function CategoryQuizPage() {
   }, [powerUps, usedPowerUpsThisQuestion]);
 
   const currentQuestion = questions[currentQuestionIndex];
-  const stars = Math.min(3, Math.floor((score / Math.max(questions.length, 1)) * 4));
+  const starPercentage = (score / Math.max(questions.length, 1)) * 100;
+  const stars = starPercentage >= 80 ? 3 : starPercentage >= 60 ? 2 : starPercentage >= 40 ? 1 : 0;
   
   // Get AI-analyzed icon slug for current question (highest priority)
   const aiIconSlug = useAIIconSlug(currentQuestion?.question, dbCategory?.name);
@@ -832,10 +833,7 @@ export default function CategoryQuizPage() {
     const didLevelUp = newProfileLevel > previousProfileLevel;
     
     // Calculate level-up rewards for display
-    const levelUpCoins = didLevelUp ? REWARDS.LEVEL_UP_COINS_PER_LEVEL * newProfileLevel : 0;
-    const levelUpGems = didLevelUp && newProfileLevel % REWARDS.LEVEL_UP_GEMS_THRESHOLD === 0 
-      ? Math.floor(newProfileLevel / REWARDS.LEVEL_UP_GEMS_THRESHOLD)
-      : 0;
+    const levelUpCoins = didLevelUp ? REWARDS.LEVEL_UP_COINS : 0;
     
     return (
       <>
@@ -929,11 +927,6 @@ export default function CategoryQuizPage() {
                   {levelUpCoins > 0 && (
                     <span className="flex items-center gap-1">
                       +{levelUpCoins} <img src={coinIcon} alt="" className="w-4 h-4 inline" />
-                    </span>
-                  )}
-                  {levelUpGems > 0 && (
-                    <span className="flex items-center gap-1">
-                      +{levelUpGems} <img src={gemIcon} alt="" className="w-4 h-4 inline" />
                     </span>
                   )}
                 </div>
