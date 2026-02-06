@@ -56,14 +56,14 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
               <button
                 onClick={(e) => { e.stopPropagation(); onCardClick?.(type); }}
                 disabled={isLoading}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-1 px-2.5 py-1 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50 whitespace-nowrap min-w-fit"
               >
                 {isLoading ? (
                   <div className="w-3 h-3 border-2 border-warning border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <img src={coinIcon} alt="" className="w-4 h-4" />
-                    <span className="text-sm font-semibold">{price}</span>
+                    <img src={coinIcon} alt="" className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-xs font-semibold">{price}</span>
                   </>
                 )}
               </button>

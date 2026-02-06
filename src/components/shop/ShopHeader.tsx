@@ -51,23 +51,25 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
             {t("shop.title")}
           </h1>
 
-          {/* Right side: Wallet + action icons */}
-          <div className="flex items-center gap-3">
+          {/* Wallet + action icons - spread on mobile */}
+          <div className="flex items-center justify-between md:justify-end gap-3 flex-1 md:flex-none">
             <WalletDisplay />
             
-            {/* Divider - desktop/tablet only */}
-            <div className="hidden md:block w-px h-6 bg-border/50" />
-            
-            <HeaderActions />
-            
-            <motion.button
-              onClick={onHelpClick}
-              className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <HelpCircle className="w-5 h-5 text-muted-foreground" />
-            </motion.button>
+            <div className="flex items-center gap-1">
+              {/* Divider - desktop/tablet only */}
+              <div className="hidden md:block w-px h-6 bg-border/50 mr-2" />
+              
+              <HeaderActions />
+              
+              <motion.button
+                onClick={onHelpClick}
+                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
