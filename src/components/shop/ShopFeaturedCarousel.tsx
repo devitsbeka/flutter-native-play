@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toWebmUrl } from "@/config/videoConfig";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
 import iconPowersBottle from "@/assets/icons/icon-powers-bottle.png";
@@ -120,13 +121,15 @@ export function ShopFeaturedCarousel({ onDealClick, onScrollToTab }: ShopFeature
           >
             {/* Video Background */}
             <video
-              src={deal.videoSrc}
               autoPlay
               muted
               loop
               playsInline
               className="absolute inset-0 w-full h-full object-cover"
-            />
+            >
+              <source src={toWebmUrl(deal.videoSrc)} type="video/webm" />
+              <source src={deal.videoSrc} type="video/mp4" />
+            </video>
 
             {/* Cleaner gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/60 to-transparent" />

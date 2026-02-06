@@ -3,6 +3,7 @@ import { Sparkles, Users, ChevronRight, Check, Loader2, Crown } from "lucide-rea
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useMemo, useState } from "react";
 import shopBgVideo from "@/assets/shopbg.mp4";
+import shopBgVideoWebm from "@/assets/shopbg.webm";
 import crown3dIcon from "@/assets/crown-3d.png";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 
@@ -100,6 +101,7 @@ export function ShopRightSidebar() {
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
       >
+        <source src={shopBgVideoWebm} type="video/webm" />
         <source src={shopBgVideo} type="video/mp4" />
       </video>
       

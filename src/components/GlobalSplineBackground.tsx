@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useIsBreakpointDown } from "@/hooks/use-breakpoint";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 
 // Pages where the background should be visible
 const BACKGROUND_PAGES = ["/", "/game", "/discover", "/leaderboards", "/profile", "/auth", "/vip", "/power-ups"];
@@ -68,6 +69,7 @@ const FloatingOrb = ({ delay, x, y, size, duration }: { delay: number; x: number
 export function GlobalSplineBackground() {
   const location = useLocation();
   const isMobile = useIsBreakpointDown("md");
+  const blobVideo = useResponsiveVideo("/videos/floating-blob.mp4");
   
   // Check if current page should show background (include team check here)
   const isTeamRoute = location.pathname.startsWith("/team");
@@ -129,7 +131,8 @@ export function GlobalSplineBackground() {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: "blur(8px)" }}
         >
-          <source src="/videos/floating-blob.mp4" type="video/mp4" />
+          <source src={blobVideo.webm} type="video/webm" />
+          <source src={blobVideo.mp4} type="video/mp4" />
         </video>
       </div>
       

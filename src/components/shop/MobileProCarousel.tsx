@@ -4,6 +4,7 @@ import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-rea
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import shopBgVideo from "@/assets/shopbg.mp4";
+import shopBgVideoWebm from "@/assets/shopbg.webm";
 
 const PRO_TIERS = [
   {
@@ -216,6 +217,7 @@ export function MobileProCarousel() {
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ objectPosition: "70% 20%" }}
               >
+                <source src={shopBgVideoWebm} type="video/webm" />
                 <source src={shopBgVideo} type="video/mp4" />
               </video>
             </div>

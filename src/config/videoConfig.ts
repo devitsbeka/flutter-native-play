@@ -133,13 +133,55 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   linguistics: "/images/categories/languages.jpg",
 };
 
-// Get all video URLs for preloading (deduplicated)
+// Convert an MP4 path to its WebM equivalent
+export function toWebmUrl(mp4Url: string): string {
+  return mp4Url.replace(/\.mp4$/, ".webm");
+}
+
+// Convert an MP4 path to its mobile WebM equivalent
+export function toMobileWebmUrl(mp4Url: string): string {
+  const lastSlash = mp4Url.lastIndexOf("/");
+  const dir = mp4Url.substring(0, lastSlash);
+  const filename = mp4Url.substring(lastSlash + 1).replace(/\.mp4$/, ".webm");
+  return `${dir}/mobile/${filename}`;
+}
+
+// Check if user is on a mobile-sized viewport (< 768px)
+export function isMobileViewport(): boolean {
+  return typeof window !== "undefined" && window.innerWidth < 768;
+}
+
+// Get the best video URL for current device: mobile WebM, desktop WebM, or MP4 fallback
+export function getResponsiveVideoSrc(mp4Url: string): {
+  webm: string;
+  mp4: string;
+} {
+  const mobile = isMobileViewport();
+  return {
+    webm: mobile ? toMobileWebmUrl(mp4Url) : toWebmUrl(mp4Url),
+    mp4: mp4Url,
+  };
+}
+
+// Get all video URLs for preloading (deduplicated) - returns WebM URLs for current device
 export function getAllVideoUrls(): string[] {
+  const allMp4Urls = [
+    ...Object.values(MAP_VIDEOS),
+    ...Object.values(CATEGORY_VIDEOS),
+  ];
+  const uniqueMp4 = [...new Set(allMp4Urls)];
+
+  // Preload WebM versions (appropriate for device size)
+  const mobile = isMobileViewport();
+  return uniqueMp4.map((url) => (mobile ? toMobileWebmUrl(url) : toWebmUrl(url)));
+}
+
+// Get all MP4 URLs (for legacy/fallback preloading)
+export function getAllMp4Urls(): string[] {
   const allUrls = [
     ...Object.values(MAP_VIDEOS),
     ...Object.values(CATEGORY_VIDEOS),
   ];
-  // Deduplicate
   return [...new Set(allUrls)];
 }
 

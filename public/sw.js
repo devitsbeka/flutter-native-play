@@ -1,14 +1,14 @@
 /**
  * Service Worker for World Quizzes
  * Caches video files for instant return visits
- * 
- * Version: 2 - Improved caching strategy
+ *
+ * Version: 3 - WebM + responsive video support
  */
 
-const CACHE_NAME = 'worldquizzes-videos-v2';
+const CACHE_NAME = 'worldquizzes-videos-v3';
 
-// Match video requests (no query params needed now)
-const VIDEO_URL_PATTERN = /\/videos\/.*\.mp4$/;
+// Match video requests - MP4 and WebM (including mobile/ subdirectory)
+const VIDEO_URL_PATTERN = /\/videos\/.*\.(mp4|webm)$/;
 
 // Install event - activate immediately
 self.addEventListener('install', () => {

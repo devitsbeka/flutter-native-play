@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrency } from "@/hooks/useCurrency";
 import { supabase } from "@/integrations/supabase/client";
 import { MAP_VIDEOS } from "@/components/game/VideoPreloader";
+import { toWebmUrl } from "@/config/videoConfig";
 import { DailyRewardsModal } from "@/components/home/DailyRewardsModal";
 import { MissionsModal } from "@/components/home/MissionsModal";
 import { ChestRewardModal } from "@/components/home/ChestRewardModal";
@@ -305,6 +306,7 @@ export function VideoAdventureMap() {
             visibility: currentPhase === "default" ? "visible" : "hidden",
           }}
         >
+          <source src={toWebmUrl(MAP_VIDEOS.default)} type="video/webm" />
           <source src={MAP_VIDEOS.default} type="video/mp4" />
         </video>
 
@@ -314,12 +316,13 @@ export function VideoAdventureMap() {
           {...videoAttributes}
           onEnded={handleVideoBEnded}
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ 
+          style={{
             zIndex: 0,
             opacity: currentPhase === "video-b" ? 1 : 0,
             visibility: currentPhase === "video-b" ? "visible" : "hidden",
           }}
         >
+          <source src={toWebmUrl(MAP_VIDEOS.videoB)} type="video/webm" />
           <source src={MAP_VIDEOS.videoB} type="video/mp4" />
         </video>
 
@@ -329,12 +332,13 @@ export function VideoAdventureMap() {
           {...videoAttributes}
           onEnded={handleVideoCEnded}
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ 
+          style={{
             zIndex: 0,
             opacity: currentPhase === "video-c" ? 1 : 0,
             visibility: currentPhase === "video-c" ? "visible" : "hidden",
           }}
         >
+          <source src={toWebmUrl(MAP_VIDEOS.videoC)} type="video/webm" />
           <source src={MAP_VIDEOS.videoC} type="video/mp4" />
         </video>
       </div>

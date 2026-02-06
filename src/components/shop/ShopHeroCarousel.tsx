@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toWebmUrl } from "@/config/videoConfig";
 import { ChevronRight } from "lucide-react";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import iconStarterPack from "@/assets/icons/icon-starter-pack.png";
@@ -180,13 +181,15 @@ export function ShopHeroCarousel({ onSlideClick }: ShopHeroCarouselProps) {
           >
             {/* Video Background */}
             <video
-              src={slide.videoSrc}
               autoPlay
               muted
               loop
               playsInline
               className="absolute inset-0 w-full h-full object-cover"
-            />
+            >
+              <source src={toWebmUrl(slide.videoSrc)} type="video/webm" />
+              <source src={slide.videoSrc} type="video/mp4" />
+            </video>
 
             {/* Gradient overlay for readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
