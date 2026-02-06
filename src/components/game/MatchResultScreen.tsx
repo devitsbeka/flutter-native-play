@@ -231,6 +231,7 @@ const PlayerCard = ({
 export function MatchResultScreen() {
   const { userScore, opponentScore, opponent, resetGame, startMatchmaking } = useGame();
   const { user, profile, updateProfile } = useAuth();
+  const { addCoins } = useCurrency();
   const { playSound } = useSound();
   const { updateMissionProgress } = useMissions();
   const { t } = useLanguage();
@@ -360,9 +361,13 @@ export function MatchResultScreen() {
           best_streak: isWin 
             ? Math.max(currentProfile.best_streak || 0, (currentProfile.current_streak || 0) + 1)
             : currentProfile.best_streak,
-          // Add simplified level-up coins (no gems)
-          coins: (currentProfile.coins || 0) + levelUpCoins,
+          // coins removed — handled atomically by awardWin/awardDraw/awardLose RPC calls
         });
+
+        // Level-up coins added atomically via RPC (separate from game rewards)
+        if (levelUpCoins > 0) {
+          await addCoins(levelUpCoins);
+        }
 
         await supabase.from("game_sessions").insert({
           user_id: currentUser.id,
