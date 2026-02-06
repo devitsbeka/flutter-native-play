@@ -1,125 +1,54 @@
 
+# Guest Home Screen Redesign
 
-# Fix: Coin Balance Race Condition in Game Results
+## Overview
 
-## Problem Identified
+Redesign the mobile guest view on the home screen to replace the "სტუმარი" username and coin/gem displays with authentication actions:
 
-There is a critical race condition in `MatchResultScreen.tsx` that corrupts the player's coin balance after every game.
+1. Move the mascot avatar higher (reduce top margin)
+2. Remove "სტუმარი" text
+3. Add a "შესვლა" (Sign In) button below the mascot
+4. Replace coin/gem row with Google and Apple sign-in buttons
 
-### Root Cause
+## Changes
 
-On line 364 of `MatchResultScreen.tsx`:
-```js
-coins: (currentProfile.coins || 0) + levelUpCoins,
-```
+### File: `src/pages/Index.tsx` (lines 553-620)
 
-This does an **absolute overwrite** of the `coins` column using a stale snapshot (`initialProfileRef`). It races against the atomic RPC calls from `awardWin()` / `awardDraw()` which already correctly updated coins in the database.
+**Mascot position** -- Change `marginTop: -5` to a more negative value (e.g., `-30`) to push the mascot higher on screen.
 
-### What Happens (Win example)
+**Remove "სტუმარი" text** -- Delete the `<span>` with "სტუმარი" (lines 596-598).
+
+**Replace coin/gem row with auth buttons** -- Remove the coin icon + "0" and gem icon + "0" display (lines 599-612). Replace with:
+
+1. A "შესვლა" button styled as a primary rounded pill (navigates to `/auth`)
+2. Google sign-in button (white, rounded, with Google SVG icon) calling `handleGuestGoogleSignIn`
+3. Apple sign-in button (white, rounded, with Apple SVG icon) calling `handleGuestAppleSignIn`
+
+The Google and Apple buttons will reuse the same SVG icons and OAuth handlers already defined in Index.tsx (`handleGuestGoogleSignIn` at line 303, `handleGuestAppleSignIn` at line 314).
+
+**Keep "ან ითამაშე როგორც სტუმარმა"** text and arrow below the auth buttons.
+
+## Technical Details
+
+The guest info section (lines 589-619) will be restructured as:
 
 ```text
-1. User starts with 2,000 coins
-2. VSScreen: deductStake() -> RPC deducts 500 -> DB: 1,500
-3. initialProfileRef captures coins: 1,500
-4. User wins
-5. awardWin() -> RPC adds 1,000 -> DB: 2,500  (correct!)
-6. updateProfile({ coins: 1,500 + 0 }) -> DB: 1,500  (OVERWRITES win reward!)
+[AvatarCircle mascot - moved up]
+        |
+  [შესვლა button]     <-- primary pill, navigates to /auth
+        |
+  [Google] [Apple]     <-- side by side OAuth buttons
+        |
+  "ან ითამაშე როგორც სტუმარმა"
+        arrow
 ```
 
-The player wins but ends up with 1,500 instead of 2,500. The win reward is silently erased.
+### Specific changes in `src/pages/Index.tsx`:
 
-### Secondary Issue: Double-Write in useCurrency
-
-Every `addCoins` / `spendCoins` call does TWO database writes:
-1. Atomic RPC: `update_user_currency` (correct, locked)
-2. Redundant `updateProfile({ coins: X })` (absolute write, can race)
-
-If two currency operations overlap, the second `updateProfile` from the first operation can overwrite the RPC result of the second operation.
-
-## Fix
-
-### File 1: `src/components/game/MatchResultScreen.tsx`
-
-**Remove `coins` from the `updateProfile` call.** Currency changes are already handled by the RPC-based `awardWin/awardDraw/awardLose`. Adding `coins` here creates the overwrite.
-
-For level-up coins, use the atomic `addCoins()` function instead of an absolute write.
-
-**Before:**
-```js
-await updateProfile({
-  total_points: newPoints,
-  games_played: ...,
-  // ...other stats...
-  coins: (currentProfile.coins || 0) + levelUpCoins,  // BUG: overwrites RPC results
-});
-```
-
-**After:**
-```js
-await updateProfile({
-  total_points: newPoints,
-  games_played: ...,
-  // ...other stats...
-  // coins removed -- handled by awardWin/awardDraw/awardLose RPC calls
-});
-
-// Level-up coins added atomically via RPC (separate from game rewards)
-if (levelUpCoins > 0) {
-  await addCoins(levelUpCoins);
-}
-```
-
-This requires importing `addCoins` from `useGameStake` or `useCurrency`. Since `useCurrency` is already available via `useGameStake`'s internals, we'll use `useCurrency` directly.
-
-### File 2: `src/hooks/useCurrency.ts`
-
-**Replace the redundant `updateProfile` DB write with a local-only state update** after RPC calls. The RPC already updated the database -- we just need to sync local state.
-
-**Before (in addCoins/spendCoins/addGems/spendGems):**
-```js
-if (data && data.length > 0) {
-  await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
-}
-```
-
-**After:**
-```js
-if (data && data.length > 0) {
-  // Only sync local state -- DB already updated by RPC
-  await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
-}
-```
-
-Actually, the `updateProfile` call here is problematic because it does a second DB write. We should instead create a lightweight local-only profile setter. But since `updateProfile` also does `setProfile(data)` which syncs the UI, and changing it requires modifying `AuthContext`, a safer minimal fix is:
-
-- In `AuthContext.tsx`, add a `setProfileLocal` method that updates React state without a DB write
-- In `useCurrency.ts`, use `setProfileLocal` instead of `updateProfile` after RPC calls
-
-### File 3: `src/contexts/AuthContext.tsx`
-
-Add a new `setProfileLocal` method to update the profile in React state without writing to the database:
-
-```ts
-const setProfileLocal = (updates: Partial<Profile>) => {
-  lastLocalUpdateRef.current = Date.now();
-  setProfile(prev => prev ? { ...prev, ...updates } : prev);
-};
-```
-
-Export it through the context so `useCurrency` can use it.
-
-## Summary of Changes
-
-| File | Change |
-|------|--------|
-| `src/contexts/AuthContext.tsx` | Add `setProfileLocal` method for local-only state updates |
-| `src/hooks/useCurrency.ts` | Replace `updateProfile` with `setProfileLocal` after RPC calls to prevent double DB writes |
-| `src/components/game/MatchResultScreen.tsx` | Remove `coins` from `updateProfile` call; use atomic `addCoins()` for level-up coins |
-
-## Expected Results After Fix
-
-Starting with 2,000 coins:
-- **Win**: 2,000 - 500 (stake) + 1,000 (reward) = **2,500 coins** (net +500)
-- **Draw**: 2,000 - 500 (stake) + 250 (refund) = **1,750 coins** (net -250)
-- **Lose**: 2,000 - 500 (stake) = **1,500 coins** (net -500)
-
+1. **Line 556**: Change `marginTop: -5` to `marginTop: -30` to move mascot up
+2. **Lines 590-618**: Replace the entire guest info `motion.div` content:
+   - Remove "სტუმარი" span
+   - Remove coin/gem display divs
+   - Add "შესვლა" button: `onClick={() => navigate("/auth")}`, styled as `bg-primary text-primary-foreground rounded-full px-10 py-3 font-bold text-lg`
+   - Add a row with Google and Apple buttons side by side using the same white rounded style from Auth.tsx but as icon-only square buttons (w-14 h-14 rounded-2xl)
+   - Keep the "ან ითამაშე როგორც სტუმარმა" + `HandDrawnArrow` below
