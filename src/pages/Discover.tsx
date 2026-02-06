@@ -205,14 +205,14 @@ export default function Discover() {
               title={t("discover.title")}
               showBack={false}
               rightElements={
-                <div className="flex items-center gap-2">
-                  <HeaderActions />
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                    className="flex items-center justify-center p-2 rounded-full hover:bg-white/30 transition-colors text-gray-600"
+                    className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors text-gray-600"
                   >
                     {isSearchExpanded ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
                   </button>
+                  <HeaderActions />
                 </div>
               }
             />

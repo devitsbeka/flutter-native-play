@@ -53,8 +53,6 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
               {/* Divider - desktop/tablet only */}
               <div className="hidden md:block w-px h-6 bg-border/50 mr-2" />
               
-              <HeaderActions />
-              
               <motion.button
                 onClick={onHelpClick}
                 className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
@@ -63,6 +61,8 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
               >
                 <HelpCircle className="w-5 h-5 text-muted-foreground" />
               </motion.button>
+
+              <HeaderActions />
             </div>
           </div>
         </div>
