@@ -11,6 +11,8 @@ import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { VipProvider } from "@/contexts/VipContext";
+import { FriendsProvider } from "@/contexts/FriendsContext";
+import { PendingChallengesProvider } from "@/contexts/PendingChallengesContext";
 import { TVGameProvider } from "@/contexts/TVGameContext";
 import { SplashScreen } from "@/components/SplashScreen";
 // VideoPreloader auto-starts on import - no component needed
@@ -107,6 +109,8 @@ const App = () => (
     <AuthProvider>
       <VipProvider>
       <SoundProvider>
+        <FriendsProvider>
+        <PendingChallengesProvider>
         <NotificationsProvider>
           <OnboardingProvider>
             <NotificationModalProvider>
@@ -205,6 +209,8 @@ const App = () => (
             </NotificationModalProvider>
           </OnboardingProvider>
         </NotificationsProvider>
+        </PendingChallengesProvider>
+        </FriendsProvider>
       </SoundProvider>
       </VipProvider>
     </AuthProvider>

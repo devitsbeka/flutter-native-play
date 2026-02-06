@@ -10,12 +10,17 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(), 
+    react(),
     mode === "development" && componentTagger()
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  esbuild: {
+    // Strip console.log/debug/info from production builds.
+    // console.error and console.warn are preserved for real issues.
+    pure: mode === "production" ? ["console.log", "console.debug", "console.info"] : [],
   },
 }));

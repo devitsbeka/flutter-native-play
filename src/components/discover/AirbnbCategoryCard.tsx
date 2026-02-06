@@ -116,13 +116,16 @@ export function AirbnbCategoryCard({
   const progressPercent = (progress / totalLevels) * 100;
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
       onPointerEnter={preloadCategoryPage}
-      className="flex-shrink-0 w-full text-left"
+      className="flex-shrink-0 w-full text-left cursor-pointer"
       style={buttonStyle}
     >
       {/* 3D Chunky Container with depth layer */}
@@ -335,6 +338,6 @@ export function AirbnbCategoryCard({
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }

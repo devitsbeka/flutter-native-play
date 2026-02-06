@@ -2,7 +2,6 @@ import { useRef, useCallback, memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
-import { useNewLevels } from "@/hooks/useNewLevels";
 
 interface Category {
   id: string;
@@ -22,6 +21,7 @@ interface CategoryCarouselProps {
   progress: Record<string, number>;
   favorites: Set<string>;
   leaderboardRanks?: Record<string, number>;
+  newLevelCategories?: Set<string>;
   onCategoryClick: (categoryId: string) => void;
   onFavoriteToggle: (categoryUuid: string) => void;
   getBadge?: (category: Category, index: number) => string | undefined;
@@ -32,12 +32,12 @@ function CategoryCarouselComponent({
   progress,
   favorites,
   leaderboardRanks = {},
+  newLevelCategories,
   onCategoryClick,
   onFavoriteToggle,
   getBadge,
 }: CategoryCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { hasNewLevels } = useNewLevels();
 
   const scroll = useCallback((direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -100,7 +100,7 @@ function CategoryCarouselComponent({
                 isFavorite={favorites.has(favoriteId)}
                 leaderboardRank={leaderboardRanks[category.id]}
                 videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
-                hasNewLevels={hasNewLevels(category.uuid || category.id)}
+                hasNewLevels={newLevelCategories?.has(category.uuid || category.id) ?? false}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

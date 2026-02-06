@@ -7,6 +7,10 @@ import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
 import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
 
+// Silently ignore AbortError from play() — expected when video is removed from DOM (e.g. StrictMode remount)
+const safePlay = (video: HTMLVideoElement) =>
+  video.play().catch((e) => { if (e.name !== "AbortError") console.error(e); });
+
 const formatNumber = (num: number): string => {
   if (num >= 1000000) {
     return Math.floor(num / 1000000) + 'M';
@@ -106,11 +110,11 @@ export function AvatarCircle({
           autoPlayTimerRef.current = setTimeout(() => {
             if (videoRef.current) {
               videoRef.current.currentTime = 0;
-              videoRef.current.play().catch(console.error);
+              safePlay(videoRef.current);
             }
           }, autoPlayInterval);
         } else {
-          video.play().catch(console.error);
+          safePlay(video);
         }
         return;
       }
@@ -145,7 +149,7 @@ export function AvatarCircle({
   useEffect(() => {
     if (isAutoPlayMode && videoRef.current) {
       videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(console.error);
+      safePlay(videoRef.current);
       setShowVideo(true);
     }
   }, [isAutoPlayMode]);
@@ -249,7 +253,7 @@ export function AvatarCircle({
             if (animatedAvatarUrl && videoRef.current) {
               setShowVideo(true);
               videoRef.current.currentTime = 0;
-              videoRef.current.play().catch(console.error);
+              safePlay(videoRef.current);
             }
           }
         }}
@@ -258,7 +262,7 @@ export function AvatarCircle({
           if (!isAutoPlayMode && animatedAvatarUrl && videoRef.current) {
             setShowVideo(true);
             videoRef.current.currentTime = 0;
-            videoRef.current.play().catch(console.error);
+            safePlay(videoRef.current);
           }
         }}
       >
@@ -281,7 +285,7 @@ export function AvatarCircle({
               onEnded={handleVideoEnded}
               onLoadedData={() => {
                 if (videoRef.current) {
-                  videoRef.current.play().catch(console.error);
+                  safePlay(videoRef.current);
                   setShowVideo(true);
                 }
               }}
@@ -323,7 +327,7 @@ export function AvatarCircle({
                 onEnded={handleVideoEnded}
                 onLoadedData={() => {
                   if (videoRef.current) {
-                    videoRef.current.play().catch(console.error);
+                    safePlay(videoRef.current);
                     setShowVideo(true);
                   }
                 }}

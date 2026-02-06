@@ -137,7 +137,7 @@ export function useFlyingCurrency() {
   return {
     flyingState,
     triggerFlyingCurrency,
-    FlyingCurrencyComponent: () => (
+    FlyingCurrencyComponent: (
       <FlyingCurrency
         type={flyingState.type}
         amount={flyingState.amount}

@@ -62,7 +62,6 @@ import { useMissions } from "@/hooks/useMissions";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useRewardTimers as useRewardTimersWithTime } from "@/hooks/useRewardTimers";
 import { 
   getGuestPlaysRemaining, 
   recordGuestPlay, 
@@ -78,7 +77,6 @@ const theme = {
 
 // Chest button countdown badge component
 const ChestButtonBadge = ({ canClaimChest }: { canClaimChest: boolean }) => {
-  const { chestTimeLeft } = useRewardTimersWithTime();
   
   if (canClaimChest) {
     return (

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useCurrency } from "./useCurrency";
@@ -17,61 +18,51 @@ interface DailySpinInfo {
   maxSpins: number;
 }
 
+const QUERY_KEY = "daily-spin-info";
+
+async function fetchSpinInfo(userId: string, isVip: boolean): Promise<DailySpinInfo> {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabase
+    .from("user_daily_spins")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("spin_date", today)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const vipMaxSpins = getMaxDailySpins(isVip);
+
+  if (data) {
+    const effectiveMaxSpins = Math.max(data.max_spins, vipMaxSpins);
+    return {
+      canSpin: data.spins_used < effectiveMaxSpins,
+      spinsUsed: data.spins_used,
+      maxSpins: effectiveMaxSpins,
+    };
+  }
+
+  return { canSpin: true, spinsUsed: 0, maxSpins: vipMaxSpins };
+}
+
 export function useRewards() {
   const { user, profile, updateProfile } = useAuth();
   const { addCoins, addGems, addCurrency } = useCurrency();
   const { isVip } = useVipStatus();
-  const [dailySpinInfo, setDailySpinInfo] = useState<DailySpinInfo>({
-    canSpin: true,
-    spinsUsed: 0,
-    maxSpins: 1,
+  const queryClient = useQueryClient();
+
+  const { data: dailySpinInfo = { canSpin: true, spinsUsed: 0, maxSpins: 1 }, isLoading: loading } = useQuery<DailySpinInfo>({
+    queryKey: [QUERY_KEY, user?.id, isVip],
+    queryFn: () => fetchSpinInfo(user!.id, isVip),
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
-  const [loading, setLoading] = useState(true);
 
-  const fetchDailySpinInfo = useCallback(async () => {
-    if (!user) {
-      setDailySpinInfo({ canSpin: true, spinsUsed: 0, maxSpins: 1 });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      
-      const { data, error } = await supabase
-        .from("user_daily_spins")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("spin_date", today)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      // Calculate max spins based on VIP status
-      const vipMaxSpins = getMaxDailySpins(isVip);
-
-      if (data) {
-        // Update max_spins if VIP status changed
-        const effectiveMaxSpins = Math.max(data.max_spins, vipMaxSpins);
-        
-        setDailySpinInfo({
-          canSpin: data.spins_used < effectiveMaxSpins,
-          spinsUsed: data.spins_used,
-          maxSpins: effectiveMaxSpins,
-        });
-      } else {
-        setDailySpinInfo({ canSpin: true, spinsUsed: 0, maxSpins: vipMaxSpins });
-      }
-    } catch (error) {
-      console.error("Error fetching daily spin info:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, isVip]);
-
-  useEffect(() => {
-    fetchDailySpinInfo();
-  }, [fetchDailySpinInfo]);
+  const invalidateSpinInfo = useCallback(() => {
+    return queryClient.invalidateQueries({ queryKey: [QUERY_KEY, user?.id, isVip] });
+  }, [queryClient, user?.id, isVip]);
 
   const recordSpinReward = async (result: SpinResult): Promise<boolean> => {
     if (!user) return false;
@@ -79,14 +70,12 @@ export function useRewards() {
     try {
       const today = new Date().toISOString().split("T")[0];
 
-      // Record the reward
       await supabase.from("user_rewards").insert([{
         user_id: user.id,
         reward_type: "spin",
         reward_value: { label: result.label, value: result.value, type: result.type },
       }]);
 
-      // Update or create daily spin record
       const { data: existing } = await supabase
         .from("user_daily_spins")
         .select("*")
@@ -108,7 +97,6 @@ export function useRewards() {
         });
       }
 
-      // Apply rewards based on type - apply VIP 2x multiplier to XP
       if (result.type === "xp" || result.type === "bonus") {
         const currentPoints = profile?.total_points || 0;
         const xpToAdd = calculateXP(result.value, isVip);
@@ -119,9 +107,7 @@ export function useRewards() {
         await addGems(result.value);
       }
 
-      // Refresh spin info
-      await fetchDailySpinInfo();
-
+      await invalidateSpinInfo();
       return true;
     } catch (error) {
       console.error("Error recording spin reward:", error);
@@ -133,18 +119,16 @@ export function useRewards() {
     if (!user) return { success: false };
 
     try {
-      // Record the chest reward
       await supabase.from("user_rewards").insert([{
         user_id: user.id,
         reward_type: "chest",
         reward_value: { rewards: rewards.map(r => ({ type: r.type, value: r.value, label: r.label })) },
       }]);
 
-      // Process all reward types - apply VIP 2x multiplier to XP
       let newPoints: number | undefined;
       let totalCoins = 0;
       let totalGems = 0;
-      
+
       for (const reward of rewards) {
         if (reward.type === "xp") {
           const currentPoints = profile?.total_points || 0;
@@ -158,13 +142,12 @@ export function useRewards() {
         }
       }
 
-      // Add coins and gems
       if (totalCoins > 0 || totalGems > 0) {
         await addCurrency(totalCoins, totalGems);
       }
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         newPoints,
         newCoins: totalCoins > 0 ? (profile?.coins || 0) + totalCoins : undefined,
         newGems: totalGems > 0 ? (profile?.gems || 0) + totalGems : undefined,
@@ -181,7 +164,6 @@ export function useRewards() {
     try {
       const today = new Date().toISOString().split("T")[0];
 
-      // Find or create today's spin record
       const { data: existing } = await supabase
         .from("user_daily_spins")
         .select("*")
@@ -203,7 +185,7 @@ export function useRewards() {
         });
       }
 
-      await fetchDailySpinInfo(); // Refresh state
+      await invalidateSpinInfo();
       return true;
     } catch (error) {
       console.error("Error adding extra spins:", error);
@@ -216,7 +198,7 @@ export function useRewards() {
     loading,
     recordSpinReward,
     recordChestReward,
-    refreshSpinInfo: fetchDailySpinInfo,
+    refreshSpinInfo: invalidateSpinInfo,
     addExtraSpins,
   };
 }

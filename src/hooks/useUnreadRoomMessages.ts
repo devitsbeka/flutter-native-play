@@ -1,113 +1,116 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 interface UnreadCounts {
   [roomId: string]: number;
 }
 
+const QUERY_KEY = "unread-room-messages";
+
+// ── Ref-counted singleton realtime subscription ──
+let realtimeChannel: RealtimeChannel | null = null;
+let subscriberCount = 0;
+let currentUserId: string | null = null;
+
+function subscribeRealtime(
+  userId: string,
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  subscriberCount++;
+  if (realtimeChannel && currentUserId === userId) return;
+
+  // Tear down stale channel if user changed
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+  }
+
+  currentUserId = userId;
+  realtimeChannel = supabase
+    .channel("unread-room-messages-shared")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "room_chat_messages",
+      },
+      (payload) => {
+        const msg = payload.new as { room_id: string; user_id: string };
+        if (msg.user_id === userId) return;
+
+        // Increment unread count in the shared cache
+        queryClient.setQueryData<UnreadCounts>([QUERY_KEY, userId], (prev) => {
+          if (!prev) return { [msg.room_id]: 1 };
+          return { ...prev, [msg.room_id]: (prev[msg.room_id] || 0) + 1 };
+        });
+      },
+    )
+    .subscribe();
+}
+
+function unsubscribeRealtime() {
+  subscriberCount = Math.max(0, subscriberCount - 1);
+  if (subscriberCount === 0 && realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+    currentUserId = null;
+  }
+}
+
+// ── Fetch function ──
+async function fetchUnreadCounts(userId: string): Promise<UnreadCounts> {
+  const { data: participations, error: partError } = await supabase
+    .from("room_participants")
+    .select("room_id, last_read_at")
+    .eq("user_id", userId);
+
+  if (partError) throw partError;
+  if (!participations || participations.length === 0) return {};
+
+  const roomsParam = (participations as unknown as { room_id: string; last_read_at: string | null }[]).map((p) => ({
+    room_id: p.room_id,
+    last_read_at: p.last_read_at || new Date(0).toISOString(),
+  }));
+
+  const { data: unreadData, error: rpcError } = await supabase.rpc(
+    "get_unread_counts_by_room",
+    { p_user_id: userId, p_rooms: roomsParam },
+  );
+
+  if (rpcError) throw rpcError;
+
+  const counts: UnreadCounts = {};
+  if (unreadData) {
+    for (const row of unreadData as { room_id: string; unread_count: number }[]) {
+      counts[row.room_id] = row.unread_count;
+    }
+  }
+  return counts;
+}
+
+// ── Hook ──
 export function useUnreadRoomMessages() {
   const { user } = useAuth();
-  const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({});
-  const [loading, setLoading] = useState(true);
-  const isMountedRef = useRef(true);
+  const queryClient = useQueryClient();
 
-  const fetchUnreadCounts = useCallback(async () => {
-    if (!user) {
-      setUnreadCounts({});
-      setLoading(false);
-      return;
-    }
+  const { data: unreadCounts = {}, isLoading: loading } = useQuery<UnreadCounts>({
+    queryKey: [QUERY_KEY, user?.id],
+    queryFn: () => fetchUnreadCounts(user!.id),
+    enabled: !!user,
+    staleTime: 60 * 1000, // 1 min
+    gcTime: 10 * 60 * 1000,
+  });
 
-    try {
-      // Get user's room participations with last_read_at
-      const { data: participations, error: partError } = await supabase
-        .from("room_participants")
-        .select("room_id, last_read_at")
-        .eq("user_id", user.id);
-
-      if (partError) throw partError;
-      if (!participations || participations.length === 0) {
-        if (isMountedRef.current) {
-          setUnreadCounts({});
-          setLoading(false);
-        }
-        return;
-      }
-
-      // Build rooms array for RPC call - single query instead of N queries
-      const roomsParam = (participations as unknown as { room_id: string; last_read_at: string | null }[]).map(p => ({
-        room_id: p.room_id,
-        last_read_at: p.last_read_at || new Date(0).toISOString()
-      }));
-
-      // Single RPC call to get all unread counts
-      const { data: unreadData, error: rpcError } = await supabase
-        .rpc('get_unread_counts_by_room', {
-          p_user_id: user.id,
-          p_rooms: roomsParam
-        });
-
-      if (rpcError) throw rpcError;
-
-      // Map results to counts object
-      const counts: UnreadCounts = {};
-      if (unreadData) {
-        for (const row of unreadData as { room_id: string; unread_count: number }[]) {
-          counts[row.room_id] = row.unread_count;
-        }
-      }
-
-      if (isMountedRef.current) {
-        setUnreadCounts(counts);
-      }
-    } catch (error) {
-      console.error("Error fetching unread counts:", error);
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [user]);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    fetchUnreadCounts();
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [fetchUnreadCounts]);
-
-  // Subscribe to new messages
+  // Manage singleton realtime subscription
   useEffect(() => {
     if (!user) return;
-
-    const channel = supabase
-      .channel("unread-messages")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "room_chat_messages",
-        },
-        (payload) => {
-          const newMessage = payload.new as { room_id: string; user_id: string };
-          // Only increment if it's not our own message
-          if (newMessage.user_id !== user.id) {
-            setUnreadCounts((prev) => ({
-              ...prev,
-              [newMessage.room_id]: (prev[newMessage.room_id] || 0) + 1,
-            }));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+    subscribeRealtime(user.id, queryClient);
+    return () => unsubscribeRealtime();
+  }, [user, queryClient]);
 
   const markRoomAsRead = useCallback(
     async (roomId: string) => {
@@ -122,23 +125,23 @@ export function useUnreadRoomMessages() {
 
         if (error) throw error;
 
-        // Clear unread count for this room
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [roomId]: 0,
-        }));
+        // Optimistic update
+        queryClient.setQueryData<UnreadCounts>([QUERY_KEY, user.id], (prev) => {
+          if (!prev) return {};
+          return { ...prev, [roomId]: 0 };
+        });
       } catch (error) {
         console.error("Error marking room as read:", error);
       }
     },
-    [user]
+    [user, queryClient],
   );
 
   const markAllRoomsAsRead = useCallback(async () => {
     if (!user) return;
 
     try {
-      const roomIds = Object.keys(unreadCounts).filter(id => unreadCounts[id] > 0);
+      const roomIds = Object.keys(unreadCounts).filter((id) => unreadCounts[id] > 0);
       if (roomIds.length === 0) return;
 
       const { error } = await supabase
@@ -149,14 +152,22 @@ export function useUnreadRoomMessages() {
 
       if (error) throw error;
 
-      // Clear all unread counts
-      setUnreadCounts({});
+      // Optimistic update
+      queryClient.setQueryData<UnreadCounts>([QUERY_KEY, user.id], () => ({}));
     } catch (error) {
       console.error("Error marking all rooms as read:", error);
     }
-  }, [user, unreadCounts]);
+  }, [user, unreadCounts, queryClient]);
 
-  const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
+  const totalUnread = useMemo(
+    () => Object.values(unreadCounts).reduce((sum, count) => sum + count, 0),
+    [unreadCounts],
+  );
+
+  const refreshUnreadCounts = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: [QUERY_KEY, user?.id] }),
+    [queryClient, user?.id],
+  );
 
   return {
     unreadCounts,
@@ -164,6 +175,6 @@ export function useUnreadRoomMessages() {
     loading,
     markRoomAsRead,
     markAllRoomsAsRead,
-    refreshUnreadCounts: fetchUnreadCounts,
+    refreshUnreadCounts,
   };
 }

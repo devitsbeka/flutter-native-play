@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -19,131 +20,111 @@ interface RewardTimers extends DailyRewardStatus, ChestStatus {
   refreshTimers: () => Promise<void>;
 }
 
+interface RewardData {
+  dailyClaimedAt: string | null;
+  chestClaimedAt: string | null;
+}
+
 // Chest cooldown in hours
 const CHEST_COOLDOWN_HOURS = 24;
 
+const QUERY_KEY = "reward-timers";
+
+async function fetchRewardData(userId: string): Promise<RewardData> {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { data, error } = await supabase
+    .from("user_daily_rewards")
+    .select("daily_claimed_at, chest_claimed_at")
+    .eq("user_id", userId)
+    .eq("reward_date", today)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    dailyClaimedAt: data?.daily_claimed_at ?? null,
+    chestClaimedAt: data?.chest_claimed_at ?? null,
+  };
+}
+
+function formatTimeDiff(diffMs: number): { timeLeft: string; secondsLeft: number } {
+  if (diffMs <= 0) return { timeLeft: "00:00:00", secondsLeft: 0 };
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+  return {
+    timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
+    secondsLeft: Math.floor(diffMs / 1000),
+  };
+}
+
 export function useRewardTimers(): RewardTimers {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [dailyClaimedAt, setDailyClaimedAt] = useState<Date | null>(null);
-  const [chestClaimedAt, setChestClaimedAt] = useState<Date | null>(null);
+  const queryClient = useQueryClient();
   const [now, setNow] = useState(new Date());
 
-  // Update current time every second
+  // Shared React Query — all callers share a single fetch
+  const { data, isLoading } = useQuery<RewardData>({
+    queryKey: [QUERY_KEY, user?.id],
+    queryFn: () => fetchRewardData(user!.id),
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 min
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Tick every second for countdown display
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+    const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch reward status from database
-  const fetchRewardStatus = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      
-      const { data, error } = await supabase
-        .from("user_daily_rewards")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("reward_date", today)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setDailyClaimedAt(data.daily_claimed_at ? new Date(data.daily_claimed_at) : null);
-        setChestClaimedAt(data.chest_claimed_at ? new Date(data.chest_claimed_at) : null);
-      } else {
-        setDailyClaimedAt(null);
-        setChestClaimedAt(null);
-      }
-    } catch (error) {
-      console.error("Error fetching reward status:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchRewardStatus();
-  }, [fetchRewardStatus]);
-
-  // Calculate time until midnight (next daily reset)
-  const getMidnightReset = (): { timeLeft: string; secondsLeft: number } => {
+  const dailyReset = useMemo(() => {
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);
-    const diff = midnight.getTime() - now.getTime();
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return {
-      timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
-      secondsLeft: Math.floor(diff / 1000),
-    };
-  };
+    return formatTimeDiff(midnight.getTime() - now.getTime());
+  }, [now]);
 
-  // Calculate chest cooldown
-  const getChestCooldown = (): { timeLeft: string; secondsLeft: number; canClaim: boolean } => {
-    if (!chestClaimedAt) {
+  const chestCooldown = useMemo(() => {
+    if (!data?.chestClaimedAt) {
       return { timeLeft: "00:00:00", secondsLeft: 0, canClaim: true };
     }
+    const cooldownEnd = new Date(data.chestClaimedAt).getTime() + CHEST_COOLDOWN_HOURS * 60 * 60 * 1000;
+    const diff = cooldownEnd - now.getTime();
+    if (diff <= 0) return { timeLeft: "00:00:00", secondsLeft: 0, canClaim: true };
+    return { ...formatTimeDiff(diff), canClaim: false };
+  }, [now, data?.chestClaimedAt]);
 
-    const cooldownEnd = new Date(chestClaimedAt.getTime() + CHEST_COOLDOWN_HOURS * 60 * 60 * 1000);
-    const diff = cooldownEnd.getTime() - now.getTime();
-    
-    if (diff <= 0) {
-      return { timeLeft: "00:00:00", secondsLeft: 0, canClaim: true };
-    }
+  const canClaimDaily = !data?.dailyClaimedAt;
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return {
-      timeLeft: `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`,
-      secondsLeft: Math.floor(diff / 1000),
-      canClaim: false,
-    };
+  const refreshTimers = async () => {
+    await queryClient.invalidateQueries({ queryKey: [QUERY_KEY, user?.id] });
   };
-
-  const dailyReset = getMidnightReset();
-  const chestCooldown = getChestCooldown();
-
-  // Can claim daily if not claimed today
-  const canClaimDaily = !dailyClaimedAt;
 
   return {
-    loading,
+    loading: isLoading,
     canClaimDaily,
     dailyTimeLeft: dailyReset.timeLeft,
     dailySecondsLeft: dailyReset.secondsLeft,
     canClaimChest: chestCooldown.canClaim,
     chestTimeLeft: chestCooldown.timeLeft,
     chestSecondsLeft: chestCooldown.secondsLeft,
-    refreshTimers: fetchRewardStatus,
+    refreshTimers,
   };
 }
 
-// Hook to claim daily reward
+// Hook to claim daily reward — invalidates the shared cache after claiming
 export function useDailyRewardsClaim() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const claimDailyReward = async (): Promise<boolean> => {
     if (!user) return false;
 
     try {
       const today = new Date().toISOString().split("T")[0];
-      const now = new Date().toISOString();
+      const nowIso = new Date().toISOString();
 
-      // Check if record exists for today
       const { data: existing } = await supabase
         .from("user_daily_rewards")
         .select("*")
@@ -152,30 +133,30 @@ export function useDailyRewardsClaim() {
         .maybeSingle();
 
       if (existing) {
-        if (existing.daily_claimed) {
-          return false; // Already claimed
-        }
-        // Update existing record
+        if (existing.daily_claimed) return false;
         await supabase
           .from("user_daily_rewards")
-          .update({ 
-            daily_claimed: true, 
-            daily_claimed_at: now,
+          .update({
+            daily_claimed: true,
+            daily_claimed_at: nowIso,
             streak_count: (existing.streak_count || 0) + 1,
           })
           .eq("id", existing.id);
       } else {
-        // Create new record
-        await supabase
-          .from("user_daily_rewards")
-          .insert({
-            user_id: user.id,
-            reward_date: today,
-            daily_claimed: true,
-            daily_claimed_at: now,
-            streak_count: 1,
-          });
+        await supabase.from("user_daily_rewards").insert({
+          user_id: user.id,
+          reward_date: today,
+          daily_claimed: true,
+          daily_claimed_at: nowIso,
+          streak_count: 1,
+        });
       }
+
+      // Optimistic update + background revalidation
+      queryClient.setQueryData<RewardData>([QUERY_KEY, user.id], (old) => ({
+        dailyClaimedAt: nowIso,
+        chestClaimedAt: old?.chestClaimedAt ?? null,
+      }));
 
       return true;
     } catch (error) {
@@ -189,9 +170,8 @@ export function useDailyRewardsClaim() {
 
     try {
       const today = new Date().toISOString().split("T")[0];
-      const now = new Date().toISOString();
+      const nowIso = new Date().toISOString();
 
-      // Check if record exists for today
       const { data: existing } = await supabase
         .from("user_daily_rewards")
         .select("*")
@@ -200,25 +180,27 @@ export function useDailyRewardsClaim() {
         .maybeSingle();
 
       if (existing) {
-        // Update existing record
         await supabase
           .from("user_daily_rewards")
-          .update({ 
-            chest_claimed: true, 
-            chest_claimed_at: now,
+          .update({
+            chest_claimed: true,
+            chest_claimed_at: nowIso,
           })
           .eq("id", existing.id);
       } else {
-        // Create new record
-        await supabase
-          .from("user_daily_rewards")
-          .insert({
-            user_id: user.id,
-            reward_date: today,
-            chest_claimed: true,
-            chest_claimed_at: now,
-          });
+        await supabase.from("user_daily_rewards").insert({
+          user_id: user.id,
+          reward_date: today,
+          chest_claimed: true,
+          chest_claimed_at: nowIso,
+        });
       }
+
+      // Optimistic update
+      queryClient.setQueryData<RewardData>([QUERY_KEY, user.id], (old) => ({
+        dailyClaimedAt: old?.dailyClaimedAt ?? null,
+        chestClaimedAt: nowIso,
+      }));
 
       return true;
     } catch (error) {

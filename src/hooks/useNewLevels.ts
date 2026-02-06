@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -7,62 +8,48 @@ interface CategoryLastSeen {
   last_seen_total_levels: number;
 }
 
+async function fetchNewLevelCategories(userId: string): Promise<Set<string>> {
+  const { data: lastSeenData, error: lastSeenError } = await supabase
+    .from('user_category_last_seen')
+    .select('category_id, last_seen_total_levels')
+    .eq('user_id', userId);
+
+  if (lastSeenError) throw lastSeenError;
+
+  const { data: categories, error: categoriesError } = await supabase
+    .from('categories')
+    .select('id, total_levels')
+    .eq('is_active', true);
+
+  if (categoriesError) throw categoriesError;
+
+  const lastSeenMap = new Map<string, number>();
+  (lastSeenData || []).forEach((item: CategoryLastSeen) => {
+    lastSeenMap.set(item.category_id, item.last_seen_total_levels);
+  });
+
+  const newCategories = new Set<string>();
+  (categories || []).forEach((cat) => {
+    const lastSeen = lastSeenMap.get(cat.id);
+    if (lastSeen !== undefined && cat.total_levels > lastSeen) {
+      newCategories.add(cat.id);
+    }
+  });
+
+  return newCategories;
+}
+
 export function useNewLevels() {
   const { user } = useAuth();
-  const [newLevelCategories, setNewLevelCategories] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const checkNewLevels = useCallback(async () => {
-    if (!user) {
-      setNewLevelCategories(new Set());
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Get user's last seen levels for each category
-      const { data: lastSeenData, error: lastSeenError } = await supabase
-        .from('user_category_last_seen')
-        .select('category_id, last_seen_total_levels')
-        .eq('user_id', user.id);
-
-      if (lastSeenError) throw lastSeenError;
-
-      // Get current category total levels
-      const { data: categories, error: categoriesError } = await supabase
-        .from('categories')
-        .select('id, total_levels')
-        .eq('is_active', true);
-
-      if (categoriesError) throw categoriesError;
-
-      // Create a map of last seen levels
-      const lastSeenMap = new Map<string, number>();
-      (lastSeenData || []).forEach((item: CategoryLastSeen) => {
-        lastSeenMap.set(item.category_id, item.last_seen_total_levels);
-      });
-
-      // Find categories with new levels
-      const newCategories = new Set<string>();
-      (categories || []).forEach((cat) => {
-        const lastSeen = lastSeenMap.get(cat.id);
-        // Only mark as new if user has played it before AND there are new levels
-        if (lastSeen !== undefined && cat.total_levels > lastSeen) {
-          newCategories.add(cat.id);
-        }
-      });
-
-      setNewLevelCategories(newCategories);
-    } catch (error) {
-      console.error('Error checking for new levels:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    checkNewLevels();
-  }, [checkNewLevels]);
+  const { data: newLevelCategories = new Set<string>(), isLoading: loading } = useQuery({
+    queryKey: ["new-level-categories", user?.id],
+    queryFn: () => fetchNewLevelCategories(user!.id),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,   // 5 min — new levels are rare
+    gcTime: 10 * 60 * 1000,
+  });
 
   const hasNewLevels = useCallback((categoryId: string) => {
     return newLevelCategories.has(categoryId);
@@ -81,16 +68,24 @@ export function useNewLevels() {
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id,category_id' });
 
-      // Remove from local state
-      setNewLevelCategories(prev => {
-        const next = new Set(prev);
-        next.delete(categoryId);
-        return next;
-      });
+      // Optimistically remove from cache
+      queryClient.setQueryData<Set<string>>(
+        ["new-level-categories", user.id],
+        (prev) => {
+          if (!prev) return new Set();
+          const next = new Set(prev);
+          next.delete(categoryId);
+          return next;
+        }
+      );
     } catch (error) {
       console.error('Error clearing new level badge:', error);
     }
-  }, [user]);
+  }, [user, queryClient]);
 
-  return { hasNewLevels, newLevelCategories, loading, clearNewLevelBadge, refetch: checkNewLevels };
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["new-level-categories", user?.id] });
+  }, [queryClient, user?.id]);
+
+  return { hasNewLevels, newLevelCategories, loading, clearNewLevelBadge, refetch };
 }
