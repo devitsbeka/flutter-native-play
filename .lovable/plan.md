@@ -1,52 +1,34 @@
 
-# Plan: Vertical Centering in GameModal & Fix Stretched Elements on Desktop/Tablet
 
-## Problem Analysis
+# Plan: Match My Powers Section to Reference Design
 
-From the screenshot, there are two distinct issues:
+## Visual Comparison
 
-### Issue 1: Content Not Vertically Centered in Full-Screen Modal
-The `PowerUpTutorialModal` (and all modals using `fullScreen` mode) show content at the top of the screen with large empty space at the bottom. Users expect content to be vertically centered with equal padding from top and bottom.
-
-**Current behavior:**
 ```text
-┌─────────────────────────┐
-│ Header                  │
-├─────────────────────────┤
-│ 💡 Subtitle             │  ← Content stuck at top
-│ 🎯 Icon                 │
-│ Title                   │
-│ Description             │
-│ Tip box                 │
-│ ● ○ ○ ○                 │
-│                         │
-│                         │  ← Large empty space
-│                         │
-├─────────────────────────┤
-│ Footer                  │
-└─────────────────────────┘
+Current (Screen 1):          Target (Screen 2):
+┌────────┐                   ┌────────┐
+│  🎯    │                   │        │
+│  46    │                   │  🎯    │  ← Larger icon, more top padding
+│────────│ ← divider         │        │
+│  (+)   │                   │  32    │  ← More space between icon and count
+└────────┘                   │        │
+                             │  (+)   │  ← No divider, more spacing
+                             │        │
+                             └────────┘  ← Taller overall card
 ```
 
-**Target behavior:**
-```text
-┌─────────────────────────┐
-│ Header                  │
-├─────────────────────────┤
-│                         │  ← Equal padding top
-│ 💡 Subtitle             │
-│ 🎯 Icon                 │
-│ Title                   │  ← Content vertically centered
-│ Description             │
-│ Tip box                 │
-│ ● ○ ○ ○                 │
-│                         │  ← Equal padding bottom
-├─────────────────────────┤
-│ Footer                  │
-└─────────────────────────┘
-```
+---
 
-### Issue 2: Elements Stretched Too Wide on Desktop/Tablet
-The full-screen modal content area and footer stretch to full width, which looks poor on large screens. Need to constrain content to max-width while keeping it centered.
+## Changes Required
+
+| Element | Current | Target |
+|---------|---------|--------|
+| Icon size | `w-10 h-10` (40px) | `w-12 h-12` (48px) |
+| Divider | Present | **Remove** |
+| Card padding | `px-3 py-3` | `px-3 py-4` (more vertical) |
+| Gap between items | `gap-2` | `gap-3` (more spacing) |
+| Button size | `w-8 h-8` | `w-9 h-9` (slightly larger) |
+| Button border | `border-2` | `border-[1.5px]` (thinner stroke) |
 
 ---
 
@@ -54,126 +36,79 @@ The full-screen modal content area and footer stretch to full width, which looks
 
 | File | Change |
 |------|--------|
-| `src/components/ui/game-modal.tsx` | Add vertical centering wrapper for content in fullScreen mode + add max-width constraints for desktop/tablet |
+| `src/components/shop/MyPowersSection.tsx` | Remove divider, adjust sizing and spacing |
 
 ---
 
 ## Technical Changes
 
-### 1. Update fullScreen content area to vertically center content
+### Updated card structure
 
-The scrollable content area currently uses `flex-1 overflow-y-auto` but doesn't center its content. We need to:
-- Add `flex flex-col items-center justify-center` to the scrollable area for vertical centering
-- Wrap content in a max-width container for desktop/tablet
-
-**Before (lines 198-267):**
 ```tsx
-<motion.div 
-  className={cn("flex-1 overflow-y-auto", className)}
-  ...
+<div
+  key={type}
+  className="flex flex-col items-center gap-3 px-3 py-4 rounded-2xl liquid-glass"
 >
-  {/* Subtitle */}
-  {subtitle && <div className="px-5 pt-4 pb-2 text-center">...</div>}
-  {/* Icon */}
-  {(icon || iconEmoji) && <div className="flex justify-center pt-4 pb-2">...</div>}
-  {/* Main content */}
-  <div className="px-6 pb-5">
-    {children}
-  </div>
-</motion.div>
+  {/* Larger icon */}
+  <img 
+    src={POWER_UP_ICONS[type]} 
+    alt="" 
+    className="w-12 h-12 object-contain" 
+  />
+  
+  {/* Count - no changes */}
+  <span className="font-bold text-lg text-foreground">
+    {count}
+  </span>
+  
+  {/* NO DIVIDER - removed */}
+  
+  {/* Slightly larger button with thinner border */}
+  <button
+    onClick={() => onPurchaseSingle(type)}
+    disabled={isLoading}
+    className="w-9 h-9 rounded-full bg-transparent border-[1.5px] border-primary flex items-center justify-center text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+  >
+    {isLoading ? (
+      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    ) : (
+      <Plus className="w-4 h-4" />
+    )}
+  </button>
+</div>
 ```
 
-**After:**
-```tsx
-<motion.div 
-  className={cn("flex-1 overflow-y-auto flex flex-col", className)}
-  ...
->
-  {/* Centered content wrapper with max-width for tablet/desktop */}
-  <div className="flex-1 flex flex-col justify-center w-full max-w-xl mx-auto py-6">
-    {/* Sparkles */}
-    {showSparkles && ...}
-    {/* Stars */}
-    {showStars && ...}
-    {/* Subtitle */}
-    {subtitle && <div className="px-5 pb-2 text-center">...</div>}
-    {/* Icon */}
-    {(icon || iconEmoji) && <div className="flex justify-center pb-2">...</div>}
-    {/* Main content */}
-    <div className="px-6 pb-5">
-      {children}
-    </div>
-  </div>
-</motion.div>
-```
-
-### 2. Constrain footer max-width on large screens
-
-**Before (line 272):**
-```tsx
-<motion.div className="sticky bottom-0 px-5 py-4 border-t ...">
-  {effectiveFooter}
-</motion.div>
-```
-
-**After:**
-```tsx
-<motion.div className="sticky bottom-0 px-5 py-4 border-t ...">
-  <div className="w-full max-w-xl mx-auto">
-    {effectiveFooter}
-  </div>
-</motion.div>
-```
+### Key styling changes:
+- **Remove divider line** - no more `<div className="w-full h-px bg-border my-1" />`
+- **Increase icon size** from `w-10 h-10` to `w-12 h-12`
+- **Increase gap** from `gap-2` to `gap-3` for better spacing between elements
+- **Add vertical padding** from `py-3` to `py-4` for taller cards
+- **Slightly larger button** from `w-8 h-8` to `w-9 h-9`
+- **Thinner border** from `border-2` to `border-[1.5px]` for a more refined look
 
 ---
 
 ## Visual Result
 
-**On Desktop/Tablet:**
 ```text
-┌────────────────────────────────────────────────┐
-│              Header (full width)               │
-├────────────────────────────────────────────────┤
-│                                                │
-│              ┌──────────────────┐              │
-│              │   💡 Subtitle    │              │
-│              │      🎯 Icon     │              │
-│              │      Title       │              │ ← Centered, max-w-xl
-│              │   Description    │              │
-│              │     Tip box      │              │
-│              │    ● ○ ○ ○       │              │
-│              └──────────────────┘              │
-│                                                │
-├────────────────────────────────────────────────┤
-│              ┌──────────────────┐              │
-│              │   Footer button  │              │ ← Centered, max-w-xl
-│              └──────────────────┘              │
-└────────────────────────────────────────────────┘
-```
-
-**On Mobile (unchanged):**
-```text
-┌─────────────────────────┐
-│ Header                  │
-├─────────────────────────┤
-│                         │
-│ 💡 Subtitle             │
-│ 🎯 Icon                 │
-│ Title                   │ ← Content centered
-│ Description             │
-│ Tip box                 │
-│ ● ○ ○ ○                 │
-│                         │
-├─────────────────────────┤
-│ Footer button           │
-└─────────────────────────┘
+┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
+│        │ │        │ │        │ │        │
+│   🎯   │ │   ❄️   │ │   🔄   │ │   ⏱️   │
+│        │ │        │ │        │ │        │
+│   32   │ │   32   │ │   32   │ │   32   │
+│        │ │        │ │        │ │        │
+│  ( + ) │ │  ( + ) │ │  ( + ) │ │  ( + ) │
+│        │ │        │ │        │ │        │
+└────────┘ └────────┘ └────────┘ └────────┘
+    ↑ Cleaner, more spacious cards matching Screen 2
 ```
 
 ---
 
 ## Summary
 
-1. **Add vertical centering** to fullScreen modal content area using `flex flex-col justify-center`
-2. **Constrain max-width** of content and footer to `max-w-xl` (576px) for desktop/tablet
-3. **Center horizontally** with `mx-auto` on large screens
-4. **Equal padding** top and bottom using `py-6` and flex centering
+1. Remove the horizontal divider between count and button
+2. Increase icon size to 48px
+3. Add more vertical padding and gaps for a taller, more elegant card
+4. Make button slightly larger with thinner border stroke
+
