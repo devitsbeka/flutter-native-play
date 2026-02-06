@@ -823,7 +823,9 @@ export default function CategoryQuizPage() {
   }
 
   if (showResults) {
-    const displayStars = isSaving ? stars : savedStars || stars;
+    // Use savedStars after saving is complete, fallback to local stars only while saving
+    // Important: savedStars can be 0, so we check hasSaved.current instead of truthiness
+    const displayStars = isSaving ? stars : (hasSaved.current ? savedStars : stars);
     const passed = displayStars >= 1;
     const isPerfect = score === questions.length;
     const didLevelUp = newProfileLevel > previousProfileLevel;
