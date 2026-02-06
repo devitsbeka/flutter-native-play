@@ -42,7 +42,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
               <img 
                 src={POWER_UP_ICONS[type]} 
                 alt="" 
-                className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 object-contain" 
+                className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 object-contain" 
               />
               <span className="font-bold text-lg text-foreground">
                 {count}
