@@ -18,6 +18,8 @@ import { useTrivia, ExhaustionInfo } from "@/hooks/useTrivia";
 import { ExhaustionIndicator } from "@/components/ui/exhaustion-indicator";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
+import { usePlayLimit, MAX_FREE_PLAYS } from "@/hooks/usePlayLimit";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
@@ -236,6 +238,10 @@ export function MatchResultScreen() {
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { canPlay, isVip, playsRemaining } = usePlayLimit();
+  
+  // State for showing PRO upgrade modal when limit reached
+  const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
 
   const isWin = userScore > opponentScore;
   const isDraw = userScore === opponentScore;
@@ -257,6 +263,14 @@ export function MatchResultScreen() {
   };
 
   const handlePlayAgain = () => {
+    // Check if user can play another game (lifetime limit for non-PRO)
+    // Note: games_played is updated after game completion, so we need to account for the game just played
+    const gamesPlayedAfterThisGame = (profile?.games_played || 0) + 1;
+    if (!isVip && gamesPlayedAfterThisGame >= MAX_FREE_PLAYS) {
+      setShowPlayLimitModal(true);
+      return;
+    }
+    
     startMatchmaking();
   };
 
@@ -445,6 +459,12 @@ export function MatchResultScreen() {
         newLevel={newLevel}
         previousLevel={previousLevel}
         awardedPowerUp={awardedPowerUp}
+      />
+      
+      <PlayLimitModal
+        isOpen={showPlayLimitModal}
+        onClose={() => setShowPlayLimitModal(false)}
+        isGuest={false}
       />
 
       

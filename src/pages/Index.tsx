@@ -32,7 +32,7 @@ import { AdFreeModal } from "@/components/home/AdFreeModal";
 import { GemShopModal } from "@/components/home/GemShopModal";
 import { MyPowersModal } from "@/components/home/MyPowersModal";
 import { ActionButtonWithParticles } from "@/components/home/ActionButtonWithParticles";
-import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 
@@ -57,7 +57,7 @@ import { useTotalStars } from "@/hooks/useTotalStars";
 import { getCountryFlag } from "@/data/opponents";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
-import { useDailyPlays } from "@/hooks/useDailyPlays";
+import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useRewardTimers as useRewardTimersWithTime } from "@/hooks/useRewardTimers";
@@ -171,7 +171,7 @@ export default function Index() {
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
-  const { playsRemaining, maxPlays, canPlay, isVip, vipLoading, recordPlay, watchAdForPlays } = useDailyPlays();
+  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading } = usePlayLimit();
   const { unreadCount } = useNotifications();
   const { hasEnoughCoins, stakeAmount } = useGameStake();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
@@ -228,13 +228,16 @@ export default function Index() {
         return;
       }
       
-      // Check if user can play (daily limit)
-      const canPlayGame = await recordPlay();
-      if (canPlayGame) {
-        navigate("/game");
+      // Check if user can play (lifetime limit for non-PRO)
+      if (!canPlay && !isVip) {
+        // Show PRO upgrade modal
+        setShowGuestMaxPlaysModal(true);
+        return;
       }
+      
+      navigate("/game");
     }
-  }, [user, profile, navigate, openAvatarModal, hasCompletedOnboarding, setStep, recordPlay, isVip, canPlay, hasEnoughCoins]);
+  }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins]);
 
   // Handle exchange gems for coins
   const handleExchangeGems = useCallback(async () => {
@@ -370,16 +373,17 @@ export default function Index() {
       <WatchAdModal
         isOpen={showWatchAdModal}
         onClose={() => setShowWatchAdModal(false)}
-        onWatchAd={watchAdForPlays}
+        onWatchAd={async () => Promise.resolve(true)}
         playsRemaining={playsRemaining}
       />
-      <GuestMaxPlaysModal
+      <PlayLimitModal
         isOpen={showGuestMaxPlaysModal}
         onClose={() => setShowGuestMaxPlaysModal(false)}
         onRegister={() => {
           setShowGuestMaxPlaysModal(false);
           startOnboarding();
         }}
+        isGuest={!user}
       />
       <NotEnoughCoinsModal
         isOpen={showNotEnoughCoinsModal}
