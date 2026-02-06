@@ -670,185 +670,85 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ============================================================================
   // TRIGGER 2: Check if all players answered (from DB)
+  // Simple logic: count active players, count answers, if equal → advance
+  // ============================================================================
   const checkAndAdvanceIfAllAnswered = useCallback(async () => {
-    const checkStartTime = Date.now();
-    
-    // CRITICAL FIX: Debounce - skip if already checking
-    if (checkInProgressRef.current) {
-      console.log('[AutoAdvance] ⏭️ Skip: check already in progress');
-      return;
-    }
-    
-    // Guard: only host checks
-    if (!isHostRef.current) {
-      console.log('[AutoAdvance] ⏭️ Skip: not host');
-      return;
-    }
-    
-    // Set debounce flag
+    // Debounce — skip if another check is in flight
+    if (checkInProgressRef.current) return;
+    if (!isHostRef.current) return;
+
     checkInProgressRef.current = true;
-    
+
     try {
       const current = stateRef.current;
-      
-      // Guard: must be in question phase
-      if (current.phase !== 'question') {
-        console.log('[AutoAdvance] ⏭️ Skip: phase is', current.phase, 'not "question"');
-        return;
-      }
-      
-      // Guard: already advanced
-      if (hasAdvancedRef.current) {
-        console.log('[AutoAdvance] ⏭️ Skip: already advanced this question');
-        return;
-      }
-      
-      // Guard: need session
-      if (!current.sessionId) {
-        console.log('[AutoAdvance] ⏭️ Skip: no sessionId');
-        return;
-      }
-      
-      // CRITICAL: Safety guard - don't check in first 2500ms after question start
-      // Increased to 2.5s to account for network latency, DB propagation, player sync,
-      // and especially post-poll transitions where there may be additional latency
-      // The questionStartedAtRef is set AFTER the DB transition in startPlaying
+
+      // Basic guards
+      if (current.phase !== 'question') return;
+      if (hasAdvancedRef.current) return;
+      if (!current.sessionId) return;
+
+      // Don't check during countdown (questionStartedAtRef = 0 until playing)
       const questionStartTime = questionStartedAtRef.current;
-      
-      // CRITICAL: If questionStartedAtRef is 0, it means we're in countdown or startPlaying hasn't run yet
-      // This DISABLES auto-advance during countdown phase entirely - only timer can advance
-      if (!questionStartTime || questionStartTime === 0) {
-        console.log('[AutoAdvance] ⏭️ Skip: questionStartedAtRef=0 (countdown or not initialized)');
-        return;
-      }
-      
+      if (!questionStartTime) return;
+
+      // Brief safety window: wait 1.5s after question start for DB to settle
       const timeSinceStart = Date.now() - questionStartTime;
-      if (timeSinceStart < 2500) {
-        console.log('[AutoAdvance] ⏭️ Skip: too soon after question start', { timeSinceStart, questionStartTime });
-        return;
-      }
+      if (timeSinceStart < 1500) return;
 
-      console.log('[AutoAdvance] 🔍 Checking...', {
-        questionIndex: current.currentQuestionIndex,
-        timeSinceQuestionStart: timeSinceStart,
-        sessionId: current.sessionId.substring(0, 8) + '...',
-      });
-
-      // Get session data
+      // ── Single source of truth: active_player_count set by prepareForPlaying ──
+      // This count is already adjusted for suggester and verified against presence
       const { data: session, error: sessionError } = await supabase
         .from('tv_sessions')
-        .select('active_player_count, is_paired, current_round_suggester_id')
+        .select('active_player_count, current_round_suggester_id')
         .eq('id', current.sessionId)
         .single();
 
-      if (sessionError || !session) {
-        console.error('[AutoAdvance] ❌ Error fetching session:', sessionError);
-        return;
+      if (sessionError || !session) return;
+
+      let expectedCount = session.active_player_count ?? 0;
+
+      // Fallback: if locked count is 0 (shouldn't happen), use live DB count
+      if (expectedCount <= 0) {
+        const systemIds = ['TV_DISPLAY', 'TV_MIRROR'];
+        const { count: liveCount } = await supabase
+          .from('tv_players')
+          .select('*', { count: 'exact', head: true })
+          .eq('tv_session_id', current.sessionId)
+          .eq('is_active', true)
+          .not('player_id', 'in', `(${systemIds.join(',')})`)
+          .not('nickname', 'in', `(${systemIds.join(',')})`);
+
+        const live = liveCount ?? 0;
+        const suggesterId = (session as any).current_round_suggester_id as string | null;
+        expectedCount = suggesterId ? Math.max(1, live - 1) : live;
+
+        if (expectedCount <= 0) {
+          // No players at all — let timer handle it
+          return;
+        }
       }
 
-      const isPaired = session.is_paired ?? current.isPaired;
-      const suggesterId = (session as any).current_round_suggester_id as string | null;
-      
-      // CRITICAL FIX: Live-verify active player count instead of trusting stale locked count
-      // This ensures we don't advance when only host is active but stale count says 2+
-      const systemDeviceIdentifiers = ['TV_DISPLAY', 'TV_MIRROR'];
-      const { count: liveActiveCount, error: countActiveError } = await supabase
-        .from('tv_players')
-        .select('*', { count: 'exact', head: true })
-        .eq('tv_session_id', current.sessionId)
-        .eq('is_active', true)
-        .not('player_id', 'in', `(${systemDeviceIdentifiers.join(',')})`)
-        .not('nickname', 'in', `(${systemDeviceIdentifiers.join(',')})`);
-      
-      if (countActiveError) {
-        console.error('[AutoAdvance] ❌ Error counting active players:', countActiveError);
-        return;
-      }
-      
-      // FIX P0: Trust the locked active_player_count from session (already adjusted for suggester)
-      // Do NOT re-adjust for suggester here - prepareForPlaying already did this
-      // This prevents double-subtraction bugs
-      // ============================================================================
-      // DYNAMIC PLAYER COUNT: Use MIN(locked, live) to handle disconnections
-      // ============================================================================
-      // This allows the game to advance when some players have left mid-game
-      // If live count is 0, presence hasn't synced yet - use locked count
-      // If live count > 0 but < locked, some players left - use live count
-      // If live count >= locked, all expected players are present - use locked count
-      // ============================================================================
-      const lockedCount = session.active_player_count ?? 0;
-      const liveCount = liveActiveCount ?? 0;
-      
-      let expectedCount = lockedCount;
-      if (liveCount > 0 && liveCount < lockedCount) {
-        expectedCount = liveCount;
-        console.log('[AutoAdvance] 📉 Adjusted expected count from', lockedCount, 'to', liveCount, '(players left mid-game)');
-      }
-
-      console.log('[AutoAdvance] 🎯 Using player count:', {
-        lockedCount,
-        liveActiveCount: liveCount,
-        finalExpected: expectedCount,
-        expectedCount,
-        isPaired,
-        suggesterId: suggesterId ? suggesterId.substring(0, 8) + '...' : null,
-      });
-
-      // SAFETY: If no players at all (everyone disconnected), let timer handle it
-      if (expectedCount <= 0 && liveCount <= 0) {
-        console.log('[AutoAdvance] ⏭️ Skip: no active players - timer will handle');
-        return;
-      }
-
-      // SAFETY: In paired mode with no suggester, refuse to advance if only 1 expected
-      // This catches edge cases where count was locked incorrectly
-      if (isPaired && expectedCount === 1 && !suggesterId) {
-        console.log('[AutoAdvance] ⚠️ Refusing: paired mode but only 1 expected (likely stale data)');
-        return;
-      }
-
-      // Count actual answers from DB
+      // Count answers for this question
       const { count: answerCount, error: countError } = await supabase
         .from('player_answers')
         .select('*', { count: 'exact', head: true })
         .eq('tv_session_id', current.sessionId)
         .eq('question_index', current.currentQuestionIndex);
 
-      if (countError) {
-        console.error('[AutoAdvance] ❌ Error counting answers:', countError);
-        return;
-      }
+      if (countError) return;
 
       const actualCount = answerCount || 0;
-      const checkDuration = Date.now() - checkStartTime;
-      
-      console.log('[AutoAdvance] 📊 DB Status:', { 
-        actualAnswers: actualCount, 
-        expectedPlayers: expectedCount,
-        progress: `${actualCount}/${expectedCount}`,
-        checkDurationMs: checkDuration,
-        questionIndex: current.currentQuestionIndex,
-      });
 
-      // All answered? Advance!
+      console.log('[AutoAdvance]', `${actualCount}/${expectedCount}`,
+        actualCount >= expectedCount ? '→ ADVANCE' : '→ waiting',
+        { qi: current.currentQuestionIndex, ms: Date.now() - questionStartTime });
+
       if (actualCount >= expectedCount) {
-        console.log('[AutoAdvance] ✅ ALL PLAYERS ANSWERED! Advancing to reveal...', {
-          actualCount,
-          expectedCount,
-          questionIndex: current.currentQuestionIndex,
-          timeSinceQuestionStart: timeSinceStart,
-        });
         advanceToReveal('all players answered');
-      } else {
-        console.log('[AutoAdvance] ⏳ Waiting for more answers:', {
-          remaining: expectedCount - actualCount,
-          progress: `${actualCount}/${expectedCount}`,
-        });
       }
     } catch (err) {
-      console.error('[AutoAdvance] ❌ Exception:', err);
+      console.error('[AutoAdvance] Exception:', err);
     } finally {
-      // CRITICAL: Always reset debounce flag
       checkInProgressRef.current = false;
     }
   }, [advanceToReveal]);
@@ -1289,25 +1189,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!isHost) return;
     if (!state.sessionId) return;
     
-    // Start checking after a short delay to avoid race with initial renders
-    let fallbackCheckCount = 0;
+    // Check every 1.5s in case realtime subscription missed an INSERT
     const fallbackInterval = setInterval(() => {
-      fallbackCheckCount++;
-      console.log('[AutoAdvance] ⏰ Fallback interval check #' + fallbackCheckCount, {
-        phase: stateRef.current.phase,
-        questionIndex: stateRef.current.currentQuestionIndex,
-        timestamp: new Date().toISOString(),
-      });
       checkAndAdvanceIfAllAnswered();
-    }, 2000);
+    }, 1500);
     
-    console.log('[AutoAdvance] ⏰ Fallback interval STARTED (every 2s) for question phase');
-    tvLog('Fallback check interval started (2s)');
-    
-    return () => {
-      console.log('[AutoAdvance] ⏰ Fallback interval STOPPED (phase changed or unmount)');
-      clearInterval(fallbackInterval);
-    };
+    return () => clearInterval(fallbackInterval);
   }, [state.phase, isHost, state.sessionId, checkAndAdvanceIfAllAnswered]);
 
   // ============================================================================
