@@ -171,6 +171,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
   // Award rewards to user and increment plays count
   const awardRewards = async (xp: number, coins: number, postId?: string, score?: number) => {
     if (rewardsAwarded.current) return;
+    rewardsAwarded.current = true;
     
     try {
       if (coins > 0) {
