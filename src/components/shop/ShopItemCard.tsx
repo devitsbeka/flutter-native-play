@@ -118,7 +118,7 @@ export function ShopItemCard({
       <div
         className={cn(
           "w-full rounded-2xl transition-all relative overflow-hidden flex flex-col items-center text-center",
-          "p-3 sm:p-4",
+          "px-3 sm:px-4 pt-4 sm:pt-5 pb-4 sm:pb-5",
           "min-h-[180px] sm:min-h-[200px]",
           !isPurchased && canAfford && "liquid-glass"
         )}
