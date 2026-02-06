@@ -1,40 +1,32 @@
 
 
-# Plan: Update Play Button Style with Played State Indicator
+# Plan: Lifetime Play Limit for Non-PRO Users (5 Games Total)
 
 ## Summary
 
-Change the "ითამაშე" (Play) button to show only a play icon, with visual distinction between played and unplayed trivias.
+Replace the current **daily** play limit system with a **lifetime** 5-game limit for non-PRO users. Once a user plays 5 games total, they must upgrade to PRO to continue playing.
 
 ---
 
-## Visual Design
+## Current Behavior
 
-| State | Background | Border | Icon Color |
-|-------|------------|--------|------------|
-| **Not Played** | Purple filled (`bg-purple-500`) | None | White |
-| **Already Played** | Transparent | Purple (`border-purple-500`) | Purple |
+| Feature | Current Implementation |
+|---------|------------------------|
+| Play Limit | **5 per day** (resets daily, tracked in `user_daily_plays` table) |
+| Guest Limit | 3 games lifetime (localStorage) |
+| PRO Users | Unlimited plays |
+| "Play Again" | Starts matchmaking without checking limit |
 
-**Current:** 
-```text
-┌──────────────────┐
-│ ▷ ითამაშე        │  ← Outlined, with text
-└──────────────────┘
-```
+---
 
-**After (Not Played):**
-```text
-┌────┐
-│ ▷  │  ← Filled purple, white icon, no text
-└────┘
-```
+## Proposed Changes
 
-**After (Already Played):**
-```text
-┌────┐
-│ ▷  │  ← Outlined, purple icon, no text
-└────┘
-```
+| Feature | New Behavior |
+|---------|-------------|
+| Play Limit | **5 total lifetime** games for registered non-PRO users |
+| Storage | Track in `profiles` table using existing `games_played` column |
+| "Play Again" | Check limit before starting new game |
+| When Exhausted | Show PRO upgrade modal |
 
 ---
 
@@ -42,121 +34,152 @@ Change the "ითამაშე" (Play) button to show only a play icon, with 
 
 | File | Changes |
 |------|---------|
-| `src/components/social/PlayerFeedItem.tsx` | Add `isPlayed` prop, update button styling |
-| `src/components/social/TriviaPortfolioCard.tsx` | Update button styling based on `isPlayed` |
-| `src/components/social/CreatorPortfolioCard.tsx` | Pass `userPlays` to `TriviaPortfolioCard` |
-| `src/components/social/ExplorePortfolioFeed.tsx` | Get `userPlays` from hook and pass to components |
+| `src/hooks/useDailyPlays.ts` | Rename to `usePlayLimit.ts`, change logic from daily to lifetime |
+| `src/pages/Index.tsx` | Update references to use lifetime limit |
+| `src/components/game/MatchResultScreen.tsx` | Add play limit check on "Play Again" |
+| `src/contexts/GameContext.tsx` | Add optional limit check before matchmaking |
+| `src/components/home/DesktopPlayButtonLarge.tsx` | Update to show lifetime remaining |
+| `src/components/home/GuestMaxPlaysModal.tsx` | Rename to `PlayLimitModal.tsx` for both guests and registered users |
 
 ---
 
 ## Technical Implementation
 
-### 1. ExplorePortfolioFeed.tsx
+### 1. New Hook: `usePlayLimit.ts`
 
-Extract `userPlays` from `useSocialFeed` hook and pass it to child components:
+Replace `useDailyPlays.ts` with a simpler lifetime-based limit:
 
 ```typescript
-const { userLikes, userSaves, userPlays, toggleLike, toggleSave } = useSocialFeed();
-```
+const MAX_FREE_PLAYS = 5; // Lifetime limit
 
-Pass to `PlayerFeedItem`:
-```typescript
-isPlayed={userPlays.includes(feedItem.item.id)}
-```
-
-Pass to `CreatorPortfolioCard`:
-```typescript
-userPlays={userPlays}
-```
-
-### 2. PlayerFeedItem.tsx
-
-Add `isPlayed` prop:
-```typescript
-interface PlayerFeedItemProps {
-  // ... existing props
-  isPlayed?: boolean;
+export function usePlayLimit() {
+  const { profile } = useAuth();
+  const { isVip } = useVipStatus();
+  
+  // Total games played is already tracked in profiles.games_played
+  const gamesPlayed = profile?.games_played || 0;
+  const playsRemaining = Math.max(0, MAX_FREE_PLAYS - gamesPlayed);
+  const canPlay = isVip || playsRemaining > 0;
+  
+  return {
+    playsRemaining,
+    playsUsed: gamesPlayed,
+    maxPlays: MAX_FREE_PLAYS,
+    canPlay,
+    isVip,
+  };
 }
 ```
 
-Update button to icon-only with dynamic styling:
+**Key Insight:** We already track `games_played` in the `profiles` table (updated in `MatchResultScreen.tsx` after each game). No database schema changes needed!
+
+### 2. MatchResultScreen.tsx - Add Limit Check on "Play Again"
+
 ```typescript
-<button 
-  onClick={handlePlayClick}
-  className={cn(
-    "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-    isPlayed 
-      ? "bg-transparent border-2 border-purple-500" 
-      : "bg-purple-500 hover:bg-purple-600"
-  )}
->
-  <Play className={cn(
-    "w-4 h-4",
-    isPlayed ? "text-purple-500" : "text-white"
-  )} />
-</button>
+// Before
+const handlePlayAgain = () => {
+  startMatchmaking();
+};
+
+// After
+const handlePlayAgain = async () => {
+  // Check if user can play another game
+  if (!isVip && gamesPlayed >= MAX_FREE_PLAYS) {
+    setShowProModal(true); // Show PRO upgrade modal
+    return;
+  }
+  
+  startMatchmaking();
+};
 ```
 
-### 3. TriviaPortfolioCard.tsx
+### 3. Index.tsx - Update Play Button Logic
 
-Update the existing button styling (already has `isPlayed` prop):
+The current `handlePlayClick` already checks limits. Update to use the new hook:
+
 ```typescript
-<button 
-  onClick={handlePlayClick}
-  className={cn(
-    "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-    isPlayed 
-      ? "bg-transparent border-2 border-purple-500" 
-      : "bg-purple-500 hover:bg-purple-600"
-  )}
->
-  <Play className={cn(
-    "w-4 h-4",
-    isPlayed ? "text-purple-500" : "text-white"
-  )} />
-</button>
-```
+// Replace useDailyPlays with usePlayLimit
+const { playsRemaining, maxPlays, canPlay, isVip } = usePlayLimit();
 
-### 4. CreatorPortfolioCard.tsx
-
-Add `userPlays` prop to interface:
-```typescript
-interface CreatorPortfolioCardProps {
-  // ... existing props
-  userPlays?: string[];
+// In handlePlayClick:
+if (!canPlay && !isVip) {
+  // Show PRO upgrade modal instead of "plays exhausted" message
+  setShowProModal(true);
+  return;
 }
 ```
 
-Pass to `TriviaPortfolioCard`:
-```typescript
-isPlayed={userPlays.includes(trivia.id)}
-```
+### 4. Update Play Button UI
+
+`DesktopPlayButtonLarge.tsx` already displays `playsRemaining/maxPlays`. Just pass the lifetime values instead of daily values.
+
+### 5. Create/Rename Modal for Limit Reached
+
+Update `GuestMaxPlaysModal.tsx` to handle both:
+- **Guests**: "Create account to continue" (existing behavior)
+- **Registered Non-PRO**: "Upgrade to PRO for unlimited games"
 
 ---
 
 ## Data Flow
 
-```text
-useSocialFeed() hook
-    ↓
-Returns userPlays[] (list of played trivia IDs)
-    ↓
-ExplorePortfolioFeed
-    ↓
-┌─────────────────────────────────────┐
-│ PlayerFeedItem                      │  ← isPlayed={userPlays.includes(id)}
-│ CreatorPortfolioCard                │  ← userPlays={userPlays}
-│   └─ TriviaPortfolioCard            │  ← isPlayed={userPlays.includes(id)}
-└─────────────────────────────────────┘
+```
+Profile.games_played (existing column)
+         ↓
+usePlayLimit() hook (new, simple logic)
+         ↓
+playsRemaining = 5 - games_played
+         ↓
+┌─────────────────────────────────┐
+│ Index.tsx (Play button)         │ → Checks limit
+│ MatchResultScreen (Play Again)  │ → Checks limit
+│ GameContext (startMatchmaking)  │ → Optional check
+└─────────────────────────────────┘
+         ↓
+Show ProUpgradeModal if limit reached
 ```
 
 ---
 
-## Expected Result
+## What Happens When Limit is Reached
 
-When scrolling through the Explore feed:
-- **Unplayed trivias**: Purple filled circle with white play icon (inviting action)
-- **Played trivias**: Purple outlined circle with purple play icon (indicates already played)
+1. **On Home Screen**: Play button becomes grayed out with hourglass icon, shows `0/5`
+2. **Clicking Play**: Opens PRO upgrade modal (not the guest registration modal)
+3. **After Game (Play Again)**: 
+   - Check if `games_played >= 5`
+   - If yes, show PRO modal
+   - If no, start matchmaking
 
-This provides instant visual feedback for users to identify which trivias they've already completed.
+---
+
+## Backward Compatibility
+
+- Users who've already played >5 games:
+  - They can't play anymore unless they go PRO
+  - This is intentional as per the new limit
+- Daily plays table (`user_daily_plays`):
+  - Can keep for now (doesn't interfere)
+  - Or migrate/remove in a future cleanup
+
+---
+
+## UI Copy (Georgian)
+
+| Context | Text |
+|---------|------|
+| Limit Reached Modal Title | "თამაშების ლიმიტი ამოწურულია" |
+| Modal Description | "უფასო 5 თამაში ამოიწურა. გახდი PRO და ითამაშე შეუზღუდავად!" |
+| Upgrade Button | "გახდი PRO" |
+
+---
+
+## Summary of Changes
+
+1. **Create `usePlayLimit.ts`** - Simple hook using `profile.games_played`
+2. **Update `Index.tsx`** - Use new hook, show PRO modal when exhausted
+3. **Update `MatchResultScreen.tsx`** - Check limit on "Play Again"
+4. **Update/Create `PlayLimitModal.tsx`** - Handle both guest and non-PRO scenarios
+5. **Keep existing references to `useDailyPlays`** - They can coexist or be migrated later
+
+No database changes required - we reuse the existing `profiles.games_played` column.
 
