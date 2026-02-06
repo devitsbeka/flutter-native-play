@@ -2,11 +2,12 @@ import { motion } from "framer-motion";
 import { useRef, useCallback } from "react";
 
 // Import tab icons
-import allIcon from "@/assets/tabs/all.png";
+import allIcon from "@/assets/tabs/puzzle-sphere.png";
 import favIcon from "@/assets/tabs/fav.png";
 import classicIcon from "@/assets/tabs/classic.png";
 import funIcon from "@/assets/tabs/fun.png";
 import eduIcon from "@/assets/tabs/edu.png";
+import popularIcon from "@/assets/tabs/puzzle-cube.png";
 
 interface IconTab {
   id: string;
@@ -17,8 +18,8 @@ interface IconTab {
 const iconMap: Record<string, string> = {
   all: allIcon,
   favorites: favIcon,
-  recently_viewed: allIcon, // Reusing all icon temporarily
-  popular: funIcon, // Reusing fun icon temporarily
+  recently_viewed: allIcon,
+  popular: popularIcon,
   classic: classicIcon,
   fun: funIcon,
   educational: eduIcon,
