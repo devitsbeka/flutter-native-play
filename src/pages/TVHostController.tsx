@@ -171,8 +171,8 @@ const TVHostController: React.FC = () => {
   // CRITICAL: Only override poll-voting → poll-results, NOT poll-suggest → poll-results
   // When starting a new poll (initiatePoll), pollHook.pollPhase may still be 'results' from stale state
   // We must NOT override poll-suggest to poll-results in that case
-  if (pollHook.pollPhase === 'results' && rawLocalPhase === 'poll-voting') {
-    // Only override when transitioning from voting to results (endVoting flow)
+  if (votingEnded || (pollHook.pollPhase === 'results' && rawLocalPhase === 'poll-voting')) {
+    // Host's onVotingEnded fired or pollHook detected results — skip waiting for realtime
     localPhase = 'poll-results';
   } else if (pollHook.pollPhase === 'voting' && rawLocalPhase !== 'poll-voting' && rawLocalPhase !== 'poll-results') {
     // If poll is in voting phase but context hasn't caught up, show voting
@@ -893,9 +893,9 @@ const TVHostController: React.FC = () => {
         contextPhase="poll-voting"
         code={gameCode}
         onVotingEnded={() => {
-          // Database status is updated by ControllerPollScreen, 
-          // which triggers realtime update for all clients
+          // Immediately transition host to poll-results without waiting for realtime
           tvLog('Voting ended, transitioning to poll-results');
+          setVotingEnded(true);
         }}
       />
     );

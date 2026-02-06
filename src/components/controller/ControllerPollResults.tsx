@@ -30,28 +30,30 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
 
   const [isStarting, setIsStarting] = useState(false);
 
-  // Only count suggestions that actually received votes
+  // Count suggestions that actually received votes (for default selection)
   const votedCount = useMemo(() => {
     const count = suggestions.filter(s => s.vote_count > 0).length;
     return count > 0 ? count : suggestions.length; // fallback if nobody voted
   }, [suggestions]);
 
-  // Available round options — allow 1 round if only 1 category has votes
+  // Available round options — allow selecting up to all suggestions, not just voted ones
   const roundOptions = useMemo(() => {
-    const maxRounds = Math.min(votedCount, 5);
+    const maxRounds = Math.min(suggestions.length, 5);
     const options = [];
     for (let i = 1; i <= maxRounds; i++) {
       options.push(i);
     }
     return options;
-  }, [votedCount]);
+  }, [suggestions.length]);
 
-  const [selectedRoundCount, setSelectedRoundCount] = useState(() => Math.min(3, votedCount));
+  // Default to votedCount but allow selecting more
+  const [selectedRoundCount, setSelectedRoundCount] = useState(() => Math.min(votedCount, 5));
 
-  // Top N voted suggestions that will be played (matches finalizePollAndStartGame filtering)
+  // Top N suggestions ordered by votes — voted first, then non-voted fill remaining slots
   const winningCategories = useMemo(() => {
     const voted = suggestions.filter(s => s.vote_count > 0);
-    return (voted.length > 0 ? voted : suggestions).slice(0, selectedRoundCount);
+    const notVoted = suggestions.filter(s => s.vote_count === 0);
+    return [...voted, ...notVoted].slice(0, selectedRoundCount);
   }, [suggestions, selectedRoundCount]);
 
   const handleStartGame = async () => {

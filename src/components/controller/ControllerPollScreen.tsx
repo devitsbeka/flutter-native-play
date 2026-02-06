@@ -102,14 +102,14 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   // Track if voting has ended (for auto-transition)
   const hasEndedRef = useRef(false);
 
-  // Derive effective poll phase from context phase OR hook phase
-  // Context phase is more reliable for guests as it comes from TVGameContext
+  // Derive effective poll phase from hook state + context phase
+  // Hook's 'results' state is immediate (set by endVoting), so trust it first.
+  // Context phase is a good fallback for guests who don't call endVoting directly.
   const effectivePollPhase = useMemo(() => {
-    // If context tells us we're in voting, trust it
+    if (pollPhase === 'results') return 'results';
     if (contextPhase === 'poll-voting') return 'voting';
     if (contextPhase === 'poll-suggest') return 'suggest';
     if (contextPhase === 'poll-results') return 'results';
-    // Otherwise fall back to hook's pollPhase
     return pollPhase;
   }, [contextPhase, pollPhase]);
 
