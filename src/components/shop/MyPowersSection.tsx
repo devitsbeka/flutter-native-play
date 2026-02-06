@@ -21,14 +21,14 @@ interface MyPowersSectionProps {
   isPurchasing: string | null;
 }
 
-export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: MyPowersSectionProps) {
+export function MyPowersSection({ powerUps = { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 }, onPurchaseSingle, isPurchasing }: MyPowersSectionProps) {
   return (
     <div className="px-4 py-4">
       <h2 className="text-lg font-bold text-foreground mb-3">ჩემი ძალები</h2>
       
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {POWER_UP_ORDER.map((type) => {
-          const count = powerUps[type] ?? 0;
+          const count = powerUps?.[type] ?? 0;
           const isLoading = isPurchasing === `single_${type}`;
           
           return (
