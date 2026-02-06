@@ -1,33 +1,24 @@
 
 
-# Plan: Update Popular Categories & Tab Icons
+# Plan: Replace Category Round Loading Emoji with Puzzle-Sphere Icon
 
 ## Summary
 
-1. **Increase popular categories from 6 to 15**
-2. **Daily randomization** - same random order throughout the day, not per page load
-3. **Replace "პოპულარული" (Popular) tab icon** with Rubik's cube
-4. **Replace "ყველა" (All) tab icon** with puzzle-sphere
+Replace the emoji shown during the "კითხვების გენერირება..." (question generation) loading screen with the uploaded puzzle-sphere icon.
 
 ---
 
 ## Current Behavior
 
-| Feature | Current |
-|---------|---------|
-| Popular categories count | 6 |
-| Randomization | Every page load (Fisher-Yates shuffle) |
-| "ყველა" (All) tab icon | `all.png` (current icon) |
-| "პოპულარული" (Popular) tab icon | Reuses `funIcon` (game controller) |
+| Screen | Current |
+|--------|---------|
+| Quiz loading ("კითხვების გენერირება...") | Category emoji (e.g., 🤯 exploding head) or fallback 🎯 |
 
 ## New Behavior
 
-| Feature | New |
-|---------|-----|
-| Popular categories count | **15** |
-| Randomization | **Once per day** (uses date as seed) |
-| "ყველა" (All) tab icon | **puzzle-sphere.png** |
-| "პოპულარული" (Popular) tab icon | **puzzle-cube.png** (Rubik's cube) |
+| Screen | New |
+|--------|-----|
+| Quiz loading ("კითხვების გენერირება...") | Puzzle-sphere 3D icon (rotating animation) |
 
 ---
 
@@ -35,102 +26,66 @@
 
 | File | Changes |
 |------|---------|
-| `src/assets/tabs/` | Add `puzzle-sphere.png` and `puzzle-cube.png` |
-| `src/components/shared/IconTabBar.tsx` | Update icon imports and map |
-| `src/pages/Discover.tsx` | Change count to 15, add daily seed-based shuffle |
+| `src/assets/icons/` | Add `puzzle-sphere.png` (loading icon) |
+| `src/pages/CategoryQuizPage.tsx` | Replace emoji with puzzle-sphere image |
 
 ---
 
 ## Technical Implementation
 
-### 1. Add New Tab Icons
+### 1. Copy Puzzle-Sphere Icon
 
-Copy the uploaded icons to the tabs folder:
-- `puzzle-sphere.png` → for "ყველა" (All) tab
-- `puzzle-cube.png` → for "პოპულარული" (Popular) tab
+Copy the uploaded puzzle-sphere icon to `src/assets/icons/puzzle-sphere.png` for use in the loading screen.
 
-### 2. Update IconTabBar.tsx
+### 2. Update CategoryQuizPage.tsx
 
-```typescript
-// Add new imports
-import allIcon from "@/assets/tabs/puzzle-sphere.png";
-import popularIcon from "@/assets/tabs/puzzle-cube.png";
-
-// Update iconMap
-const iconMap: Record<string, string> = {
-  all: allIcon,           // Now puzzle-sphere
-  favorites: favIcon,
-  recently_viewed: allIcon,
-  popular: popularIcon,   // Now Rubik's cube
-  classic: classicIcon,
-  fun: funIcon,
-  educational: eduIcon,
-};
-```
-
-### 3. Update Discover.tsx - Daily Seed-Based Shuffle
-
-Replace the current random shuffle with a deterministic daily shuffle:
+**Lines 771-778** - Replace emoji with image:
 
 ```typescript
-// Get popular categories (random 15, same order for the whole day)
-const popularCategories = useMemo(() => {
-  if (categories.length === 0) return [];
-  
-  // Create a daily seed based on current date
-  const today = new Date();
-  const dailySeed = today.getFullYear() * 10000 + 
-                    (today.getMonth() + 1) * 100 + 
-                    today.getDate();
-  
-  // Seeded random function (deterministic)
-  const seededRandom = (seed: number) => {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  };
-  
-  // Fisher-Yates shuffle with seeded random
-  const shuffled = [...categories];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(seededRandom(dailySeed + i) * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  
-  return shuffled.slice(0, 15);  // Changed from 6 to 15
-}, [categories]);
-```
+import puzzleSphereIcon from "@/assets/icons/puzzle-sphere.png";
 
-**How daily seeding works:**
-- `dailySeed = 20260206` (for Feb 6, 2026)
-- Same seed produces same shuffle order all day
-- At midnight, seed changes → new random order
+// In the loading return block:
+<div className="text-center">
+  <motion.img
+    src={puzzleSphereIcon}
+    alt="Loading"
+    className="w-16 h-16 mx-auto mb-4"
+    animate={{ rotate: 360 }}
+    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+  />
+  <p className="text-muted-foreground">კითხვების გენერირება...</p>
+</div>
+```
 
 ---
 
 ## Visual Result
 
-**Tab Bar (Before):**
+**Before:**
 ```text
-[🎮 ყველა] [❤️ ფავორიტები] [🎮 პოპულარული] [❓ კლასიკური] ...
+┌─────────────────────────┐
+│                         │
+│          🤯             │  ← Category emoji (inconsistent)
+│                         │
+│  კითხვების გენერირება... │
+└─────────────────────────┘
 ```
 
-**Tab Bar (After):**
+**After:**
 ```text
-[🧩 ყველა] [❤️ ფავორიტები] [🧊 პოპულარული] [❓ კლასიკური] ...
- ↑ puzzle-sphere            ↑ Rubik's cube
+┌─────────────────────────┐
+│                         │
+│    [Puzzle Sphere]      │  ← Consistent 3D icon (rotating)
+│                         │
+│  კითხვების გენერირება... │
+└─────────────────────────┘
 ```
-
-**Popular Section:**
-- Before: 6 random categories, changes on every load
-- After: 15 random categories, same order all day
 
 ---
 
 ## Summary of Changes
 
-1. **Copy icons**: `puzzle-sphere.png` and `puzzle-cube.png` to `src/assets/tabs/`
-2. **Update IconTabBar.tsx**: Import new icons and update iconMap
-3. **Update Discover.tsx**: 
-   - Change popular count from 6 to 15
-   - Implement daily-seeded shuffle for consistent order per day
+1. Copy `puzzle-sphere.png` to `src/assets/icons/`
+2. Update `CategoryQuizPage.tsx` to import and use the puzzle-sphere image instead of emoji
+3. Keep the rotating animation but apply it to the image element
 
