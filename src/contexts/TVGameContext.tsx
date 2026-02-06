@@ -213,6 +213,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     myScoreRef.current = myScore;
   }, [myScore]);
 
+  // Keep myPlayerId in a ref for callbacks to avoid stale closures
+  const myPlayerIdRef = useRef(myPlayerId);
+  useEffect(() => {
+    myPlayerIdRef.current = myPlayerId;
+  }, [myPlayerId]);
+
   // Keep isHost in a ref for presence callbacks to avoid stale closures
   const isHostRef = useRef(isHost);
   useEffect(() => {
@@ -290,40 +296,34 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     tvLogPhase('question', 'reveal', reason);
 
     // ============================================================================
-    // OBSERVER SCORING: Award points to suggester when players answer incorrectly
+    // OBSERVER SCORING: Award points to suggester when majority answers wrong
     // ============================================================================
-    // Fair play rule: If the suggester (host who knows answers) is observing,
-    // they earn points when other players fail - this incentivizes fair play
-    // and compensates for skipping the round.
+    // The suggester (who knows answers) observes this round. They earn ONE
+    // question's worth of points if more than half of active players answered
+    // incorrectly or didn't answer. The bonus amount is time-based (average of
+    // wrong answers' time remaining), same range as a normal correct answer.
+    // If majority answered correctly → no bonus.
     // ============================================================================
     const suggesterId = current.currentRoundSuggesterId;
     if (suggesterId) {
       try {
         // Calculate observer points based on incorrect/unanswered players
+        // Rule: observer earns ONE question worth of points if MAJORITY answered wrong.
+        // Not per-player — a single bonus like any other player would earn.
         const activePlayers = current.players.filter(p => p.id !== suggesterId && p.isActive !== false);
-        const incorrectCount = activePlayers.filter(p => {
-          // Player got it wrong or didn't answer
-          return !p.hasAnswered || p.lastAnswerCorrect === false;
-        }).length;
-        
+        const wrongPlayers = activePlayers.filter(p => !p.hasAnswered || p.lastAnswerCorrect === false);
+        const incorrectCount = wrongPlayers.length;
+
         const totalActive = activePlayers.length;
-        if (totalActive > 0 && incorrectCount > 0) {
-          // Fair scoring based on player count with time-based bonuses
-          // Observer bonus mirrors player scoring: faster wrong = less bonus, timeout = max bonus
-          let observerBonus = 0;
-          if (totalActive <= 2) {
-            // Calculate time-based bonus for each incorrect/unanswered player
-            for (const player of activePlayers) {
-              if (!player.hasAnswered || player.lastAnswerCorrect === false) {
-                // Use player's answeredTimeRemaining if tracked, otherwise assume timeout (0)
-                const timeRemaining = player.answeredTimeRemaining ?? 0;
-                observerBonus += calculateObserverBonus(timeRemaining);
-              }
-            }
-          } else if (incorrectCount / totalActive >= 0.5) {
-            // For larger games with 50%+ wrong, use timeout value for fair max bonus
-            observerBonus = calculateObserverBonus(0);
+        if (totalActive > 0 && incorrectCount > totalActive / 2) {
+          // Majority answered wrong → award a single question's worth of points
+          // Use average time remaining of wrong answers for fair time-based bonus
+          let totalTimeRemaining = 0;
+          for (const player of wrongPlayers) {
+            totalTimeRemaining += (player.answeredTimeRemaining ?? 0);
           }
+          const avgTimeRemaining = incorrectCount > 0 ? totalTimeRemaining / incorrectCount : 0;
+          let observerBonus = calculateObserverBonus(avgTimeRemaining);
           
           console.log('[advanceToReveal] 🏆 OBSERVER BONUS CALC:', {
             suggesterId: suggesterId.slice(0, 8),
@@ -359,6 +359,12 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 bonus: observerBonus,
                 newScore,
               });
+
+              // CRITICAL FIX: Sync observer bonus to local myScore
+              // Without this, all views using myScore show wrong values for the suggester
+              if (suggesterId === myPlayerIdRef.current) {
+                setMyScore(newScore);
+              }
             }
           }
         }

@@ -11,6 +11,7 @@ import { ControllerRoundIntroWaiting } from '@/components/controller/ControllerR
 import { ControllerPollScreen } from '@/components/controller/ControllerPollScreen';
 import { ControllerPollResultsGuest } from '@/components/controller/ControllerPollResultsGuest';
 import { Loader2 } from 'lucide-react';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 
 const TVJoinContent: React.FC = () => {
   const { code: urlCode, sessionId: urlSessionId } = useParams<{ code?: string; sessionId?: string }>();
@@ -24,6 +25,13 @@ const TVJoinContent: React.FC = () => {
   
   const { phase, sessionId, questions, leaveSession, myPlayerId, players, refetchSessionData } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);
+
+  // Auto-redirect to home when game is idle for 60s
+  useIdleTimeout(phase, () => {
+    console.log('[TVJoin] Idle timeout — leaving session');
+    leaveSession();
+    navigate('/', { replace: true });
+  });
 
   // Find current player from players array
   const myPlayer = players.find(p => p.id === myPlayerId);

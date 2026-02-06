@@ -28,22 +28,30 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
     avatarUrl,
   });
 
-  const [selectedRoundCount, setSelectedRoundCount] = useState(3);
   const [isStarting, setIsStarting] = useState(false);
 
-  // Available round options based on suggestion count
+  // Only count suggestions that actually received votes
+  const votedCount = useMemo(() => {
+    const count = suggestions.filter(s => s.vote_count > 0).length;
+    return count > 0 ? count : suggestions.length; // fallback if nobody voted
+  }, [suggestions]);
+
+  // Available round options — allow 1 round if only 1 category has votes
   const roundOptions = useMemo(() => {
-    const maxRounds = Math.min(suggestions.length, 5);
+    const maxRounds = Math.min(votedCount, 5);
     const options = [];
-    for (let i = 2; i <= maxRounds; i++) {
+    for (let i = 1; i <= maxRounds; i++) {
       options.push(i);
     }
     return options;
-  }, [suggestions.length]);
+  }, [votedCount]);
 
-  // Top N suggestions that will be played
+  const [selectedRoundCount, setSelectedRoundCount] = useState(() => Math.min(3, votedCount));
+
+  // Top N voted suggestions that will be played (matches finalizePollAndStartGame filtering)
   const winningCategories = useMemo(() => {
-    return suggestions.slice(0, selectedRoundCount);
+    const voted = suggestions.filter(s => s.vote_count > 0);
+    return (voted.length > 0 ? voted : suggestions).slice(0, selectedRoundCount);
   }, [suggestions, selectedRoundCount]);
 
   const handleStartGame = async () => {
@@ -82,7 +90,7 @@ export const ControllerPollResults: React.FC<ControllerPollResultsProps> = ({
       {/* Results list */}
       <div className="flex-1 space-y-3 mb-6 overflow-y-auto">
         {suggestions.map((suggestion, index) => {
-          const isWinning = index < selectedRoundCount;
+          const isWinning = winningCategories.some(w => w.id === suggestion.id);
           
           return (
             <motion.div

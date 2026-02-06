@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut } from "lucide-react";
+import { ChevronLeft, User, Play, Compass, Store, Trophy, Headphones, Settings, ChevronRight, LogOut, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -198,6 +198,15 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                         </span>
                       </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        navigate("/profile");
+                        onClose();
+                      }}
+                      className="p-2 rounded-xl bg-background/50 hover:bg-background/80 transition-colors"
+                    >
+                      <Pencil className="w-4 h-4 text-muted-foreground" />
+                    </button>
                   </div>
                 ) : (
                   <button

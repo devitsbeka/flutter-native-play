@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TVGameProvider, useTVGame, mapDbStatusToPhase } from '@/contexts/TVGameContext';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
@@ -21,14 +22,15 @@ const isUuid = (value: string) =>
 const TVDisplayContent: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { 
-    phase, 
+  const {
+    phase,
     createSession,
     joinSession,
-    startGame, 
-    questions, 
-    currentQuestionIndex, 
-    players, 
+    leaveSession,
+    startGame,
+    questions,
+    currentQuestionIndex,
+    players,
     timeRemaining,
     code: sessionCode,
     isPaired,
@@ -36,6 +38,13 @@ const TVDisplayContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasInitialized = React.useRef(false);
+
+  // Auto-redirect to pairing screen when game is idle for 60s
+  useIdleTimeout(phase, () => {
+    tvLog('TVDisplay idle timeout — returning to pairing screen');
+    leaveSession();
+    navigate('/tv', { replace: true });
+  });
 
   useEffect(() => {
     const initSession = async () => {

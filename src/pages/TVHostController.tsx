@@ -12,6 +12,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Avatar } from '@/components/shared/Avatar';
 import { TVGameOverScreen } from '@/components/tv/TVGameOverScreen';
 import { useTVGame } from '@/contexts/TVGameContext';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { tvLog, tvLogError } from '@/utils/tvDebug';
 import { useTVSessionQueue } from '@/hooks/useTVSessionQueue';
 import { QuizCategoryIcon } from '@/components/ui/quiz-category-icon';
@@ -82,6 +83,13 @@ const TVHostController: React.FC = () => {
     myPlayerId: myPlayerId?.slice(0, 8) || 'null',
     currentRoundSuggesterId: currentRoundSuggesterId?.slice(0, 8) || 'null',
     isSuggester,
+  });
+
+  // Auto-redirect to team page when game is idle for 60s
+  useIdleTimeout(contextPhase, () => {
+    tvLog('Host idle timeout — returning to team page');
+    leaveSession();
+    navigate('/team', { replace: true });
   });
 
   // Room ID for queue fallback
@@ -196,11 +204,16 @@ const TVHostController: React.FC = () => {
   // Load session and categories - join via context
   useEffect(() => {
     const loadData = async () => {
-      if (!sessionId || !user) {
+      if (!sessionId) {
         setError('No session ID');
         setLoading(false);
         return;
       }
+      // Wait for auth to resolve before proceeding
+      if (!user) return;
+
+      // Clear any stale error from previous render (e.g., auth was loading)
+      setError(null);
 
       // Get user profile
       const { data: profile } = await supabase

@@ -542,8 +542,9 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
 
     tvLog('[useTVPoll] Finalizing poll with top', topN);
 
-    // Get top N suggestions
-    const topSuggestions = suggestions.slice(0, topN);
+    // Get top N suggestions — only include ones that actually received votes
+    const votedSuggestions = suggestions.filter(s => s.vote_count > 0);
+    const topSuggestions = (votedSuggestions.length > 0 ? votedSuggestions : suggestions).slice(0, topN);
 
     if (topSuggestions.length === 0) {
       tvLogError('[useTVPoll] Finalize poll failed', 'No suggestions to start game with');
