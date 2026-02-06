@@ -354,8 +354,29 @@ export function useShopData() {
       },
     ];
 
-    // Section definitions
+    // Section definitions - ordered: ჩემი ძალები (hardcoded) → მონეტები → ალმასები → VIP → მოიმატე ძალები → სუპერ ძალები
     const SHOP_SECTIONS: ShopSection[] = [
+      {
+        id: "coins",
+        title: t("shop.coins"),
+        description: t("shop.withBonuses"),
+        videoSrc: "/videos/coins.mp4",
+        items: COINS_ITEMS,
+      },
+      {
+        id: "gems-lari",
+        title: t("common.gems"),
+        description: "₾ ლარით შეძენა",
+        videoSrc: "/videos/gems.mp4",
+        items: GEMS_ITEMS,
+      },
+      {
+        id: "vip",
+        title: t("shop.vipStatus"),
+        description: t("shop.vipBenefits"),
+        videoSrc: "/videos/vip.mp4",
+        items: VIP_PROMO_ITEMS,
+      },
       {
         id: "powers",
         title: t("shop.powers"),
@@ -371,32 +392,11 @@ export function useShopData() {
         items: MEGA_POWERS_ITEMS,
       },
       {
-        id: "vip",
-        title: t("shop.vipStatus"),
-        description: t("shop.vipBenefits"),
-        videoSrc: "/videos/vip.mp4",
-        items: VIP_PROMO_ITEMS,
-      },
-      {
         id: "frames",
         title: t("shop.frames"),
         description: t("shop.uniqueProfile"),
         videoSrc: "/videos/art.mp4",
         items: FRAMES_ITEMS,
-      },
-      {
-        id: "coins",
-        title: t("shop.coins"),
-        description: t("shop.withBonuses"),
-        videoSrc: "/videos/coins.mp4",
-        items: COINS_ITEMS,
-      },
-      {
-        id: "gems-lari",
-        title: t("common.gems"),
-        description: "₾ ლარით შეძენა",
-        videoSrc: "/videos/gems.mp4",
-        items: GEMS_ITEMS,
       },
     ];
 
