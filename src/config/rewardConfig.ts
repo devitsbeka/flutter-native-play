@@ -46,7 +46,7 @@ export const REWARDS = {
   CHEST_COINS_MAX: 250,      // Maximum coins from chest
   CHEST_GEMS: 0,             // Base gems (0 on normal days)
   CHEST_WEEKEND_GEMS: 1,     // Bonus gem on special days (Saturday/Sunday)
-  CHEST_COOLDOWN_HOURS: 6,   // 4x per day max
+  CHEST_COOLDOWN_HOURS: 24,   // 1x per day max
   CHEST_XP: 0,               // No XP from chest
 
   // ===== LUCKY SPIN REWARDS - Balanced =====

@@ -20,7 +20,7 @@ interface RewardTimers extends DailyRewardStatus, ChestStatus {
 }
 
 // Chest cooldown in hours
-const CHEST_COOLDOWN_HOURS = 6;
+const CHEST_COOLDOWN_HOURS = 24;
 
 export function useRewardTimers(): RewardTimers {
   const { user } = useAuth();
