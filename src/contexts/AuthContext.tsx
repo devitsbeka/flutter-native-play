@@ -33,6 +33,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ data?: any; error: any }>;
+  setProfileLocal: (updates: Partial<Profile>) => void;
   fetchProfile: (userId: string) => Promise<Profile | null>;
 }
 
@@ -312,6 +313,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  // Local-only profile state update (no DB write) — used by useCurrency after RPC calls
+  const setProfileLocal = useCallback((updates: Partial<Profile>) => {
+    lastLocalUpdateRef.current = Date.now();
+    setProfile(prev => prev ? { ...prev, ...updates } : prev);
+  }, []);
+
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error("Not authenticated") };
 
@@ -347,6 +354,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         signOut,
         updateProfile,
+        setProfileLocal,
         fetchProfile,
       }}
     >

@@ -10,7 +10,7 @@ export interface TransactionLog {
 }
 
 export function useCurrency() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, setProfileLocal } = useAuth();
 
   // Current balances with defaults
   const coins = profile?.coins ?? 0;
@@ -56,9 +56,9 @@ export function useCurrency() {
 
       if (error) throw error;
 
-      // Update local state with server response
+      // Sync local state only — DB already updated by RPC
       if (data && data.length > 0) {
-        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+        setProfileLocal({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
       return true;
     } catch (error) {
@@ -87,9 +87,9 @@ export function useCurrency() {
         throw error;
       }
 
-      // Update local state with server response
+      // Sync local state only — DB already updated by RPC
       if (data && data.length > 0) {
-        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+        setProfileLocal({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
 
       // Log transaction if provided
@@ -117,9 +117,9 @@ export function useCurrency() {
 
       if (error) throw error;
 
-      // Update local state with server response
+      // Sync local state only — DB already updated by RPC
       if (data && data.length > 0) {
-        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+        setProfileLocal({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
       return true;
     } catch (error) {
@@ -148,9 +148,9 @@ export function useCurrency() {
         throw error;
       }
 
-      // Update local state with server response
+      // Sync local state only — DB already updated by RPC
       if (data && data.length > 0) {
-        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+        setProfileLocal({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
 
       // Log transaction if provided
@@ -185,9 +185,9 @@ export function useCurrency() {
 
       if (error) throw error;
 
-      // Update local state with server response
+      // Sync local state only — DB already updated by RPC
       if (data && data.length > 0) {
-        await updateProfile({ coins: data[0].new_coins, gems: data[0].new_gems });
+        setProfileLocal({ coins: data[0].new_coins, gems: data[0].new_gems });
       }
       return true;
     } catch (error) {
