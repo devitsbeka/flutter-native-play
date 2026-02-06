@@ -68,6 +68,7 @@ export default function Profile() {
             playsInline
             className="fixed inset-0 w-full h-full object-cover -z-10"
           >
+            <source src="/videos/floating-blob.webm" type="video/webm" />
             <source src="/videos/floating-blob.mp4" type="video/mp4" />
           </video>
           {/* Gradient Overlay */}

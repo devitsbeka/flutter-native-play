@@ -1,15 +1,18 @@
 import { useRef, useEffect, useState } from "react";
 import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
+import { toWebmUrl } from "@/config/videoConfig";
 
 interface SinglePlayVideoProps {
   src: string;
+  webmSrc?: string; // Optional explicit WebM source (for bundled assets)
   className?: string;
   style?: React.CSSProperties;
   onEnded?: () => void;
 }
 
-export function SinglePlayVideo({ 
-  src, 
+export function SinglePlayVideo({
+  src,
+  webmSrc: explicitWebmSrc,
   className = "",
   style,
   onEnded,
@@ -19,9 +22,15 @@ export function SinglePlayVideo({
   const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  // Get preloaded blob URL if available, fallback to original src
-  const preloadedUrl = getVideoBlobUrl(src);
-  const videoSrc = preloadedUrl !== src ? preloadedUrl : src;
+  // For public URLs (/videos/...), compute WebM path automatically
+  // For bundled assets, use explicit webmSrc if provided
+  const isPublicVideo = src.startsWith("/videos/");
+  const webmUrl = explicitWebmSrc || (isPublicVideo ? toWebmUrl(src) : null);
+
+  // Get preloaded blob URL if available
+  const effectiveSrc = webmUrl || src;
+  const preloadedUrl = getVideoBlobUrl(effectiveSrc);
+  const videoSrc = preloadedUrl !== effectiveSrc ? preloadedUrl : effectiveSrc;
 
   // Intersection Observer - detect when video enters viewport
   useEffect(() => {
@@ -48,12 +57,9 @@ export function SinglePlayVideo({
     if (!video) return;
 
     if (isInView) {
-      // Video is in viewport - load and play
-      if (video.src !== videoSrc) {
-        video.src = videoSrc;
-        video.load();
-      }
-      
+      // Video is in viewport - load via <source> tags
+      video.load();
+
       const handleCanPlay = () => {
         setIsReady(true);
         video.play().catch(() => {});
@@ -61,7 +67,7 @@ export function SinglePlayVideo({
 
       video.addEventListener("canplay", handleCanPlay);
       video.addEventListener("loadeddata", handleCanPlay);
-      
+
       if (video.readyState >= 3) {
         setIsReady(true);
         video.play().catch(() => {});
@@ -106,7 +112,10 @@ export function SinglePlayVideo({
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
           isReady && isInView ? 'opacity-100' : 'opacity-0'
         } ${className}`}
-      />
+      >
+        {webmUrl && <source src={videoSrc} type="video/webm" />}
+        <source src={src} type="video/mp4" />
+      </video>
     </div>
   );
 }

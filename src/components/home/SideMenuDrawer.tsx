@@ -142,6 +142,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                 style={{ filter: "blur(8px)" }}
               >
+                <source src="/videos/floating-blob.webm" type="video/webm" />
                 <source src="/videos/floating-blob.mp4" type="video/mp4" />
               </video>
               {/* White radial overlay */}

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
+import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
 
 interface PingPongVideoProps {
   src: string;
@@ -10,8 +11,8 @@ interface PingPongVideoProps {
   style?: React.CSSProperties;
 }
 
-export function PingPongVideo({ 
-  src, 
+export function PingPongVideo({
+  src,
   posterUrl,
   className = "",
   rootMargin = "50px", // Reduced from 200px for better performance
@@ -24,9 +25,12 @@ export function PingPongVideo({
   const [hasAcquiredSlot, setHasAcquiredSlot] = useState(false);
   const [posterError, setPosterError] = useState(false);
 
-  // Get preloaded blob URL if available, fallback to original src
-  const preloadedUrl = getVideoBlobUrl(src);
-  const videoSrc = preloadedUrl !== src ? preloadedUrl : src;
+  // Get responsive video URLs (WebM + MP4, sized for viewport)
+  const { webm: webmSrc, mp4: mp4Src } = useResponsiveVideo(src);
+
+  // Get preloaded blob URL if available, fallback to WebM source
+  const preloadedUrl = getVideoBlobUrl(webmSrc);
+  const videoSrc = preloadedUrl !== webmSrc ? preloadedUrl : webmSrc;
 
   // Intersection Observer - detect when video enters viewport
   useEffect(() => {
@@ -71,11 +75,8 @@ export function PingPongVideo({
         }
         setHasAcquiredSlot(true);
 
-        // Now load the video
-        if (video.src !== videoSrc) {
-          video.src = videoSrc;
-          video.load();
-        }
+        // Load via <source> elements - browser picks best format
+        video.load();
 
         const handleCanPlay = () => {
           if (!cancelled) {
@@ -134,7 +135,7 @@ export function PingPongVideo({
     <div ref={containerRef} className="absolute inset-0">
       {/* Poster image - shows instantly while video loads, hidden on error */}
       {posterUrl && !posterError && (
-        <img 
+        <img
           src={posterUrl}
           alt=""
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
@@ -154,7 +155,10 @@ export function PingPongVideo({
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
           isReady && isInView ? 'opacity-100' : 'opacity-0'
         } ${className}`}
-      />
+      >
+        <source src={videoSrc} type="video/webm" />
+        <source src={mp4Src} type="video/mp4" />
+      </video>
     </div>
   );
 }
