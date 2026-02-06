@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Sparkles, User, Eye, EyeOff, Lock, ShieldQuestion } from "lucide-react";
@@ -288,8 +289,8 @@ export function SignupOnboardingModal() {
         };
       case "creating":
         return {
-          icon: "✨",
-          iconEmoji: true,
+          icon: ICON_URLS.sparkle,
+          iconImgSrc: true,
           title: t("onboarding.creatingAccount"),
           subtitle: t("onboarding.almostThere"),
           showBack: false,
@@ -318,16 +319,16 @@ export function SignupOnboardingModal() {
             exit="exit"
             className="flex items-center justify-center"
           >
-            {config.iconEmoji ? (
-              <motion.span 
-                className="text-5xl"
+            {config.iconImgSrc ? (
+              <motion.img 
+                src={config.icon as string}
+                alt=""
+                className="w-12 h-12 object-contain"
                 animate={step === "creating" ? {
                   scale: [1, 1.2, 1],
                 } : {}}
                 transition={step === "creating" ? { duration: 1, repeat: Infinity } : {}}
-              >
-                {config.icon}
-              </motion.span>
+              />
             ) : (
               <motion.div
                 className="w-full h-full flex items-center justify-center"

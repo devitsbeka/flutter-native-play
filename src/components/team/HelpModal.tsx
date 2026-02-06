@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -83,7 +84,7 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title={t("help.howItWorks")}
-      iconEmoji="❓"
+      iconSrc={ICON_URLS.questionMark}
       showSparkles={false}
     >
       {/* Content */}

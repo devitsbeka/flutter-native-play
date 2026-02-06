@@ -1,3 +1,5 @@
+import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
+import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -112,16 +114,16 @@ export default function Auth() {
                   .update({ referred_by_invite_id: invite.id })
                   .eq('user_id', data.user.id);
 
-                notify.success("მოგესალმებით! 🎁", { 
+                notify.success("მოგესალმებით!", { 
                   description: "მიიღე PRO სტატუსი მეგობრის მოწვევით!", 
-                  icon: "🎉" 
+                  icon: toastIcon(ICON_URLS.partyPopper) 
                 });
               }
             } catch (err) {
               console.error('Error processing referral:', err);
             }
           } else {
-            notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: "🎉" });
+            notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
           }
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
@@ -147,7 +149,7 @@ export default function Auth() {
         if (authResult.error) {
           notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
         } else {
-          notify.success(t("auth.welcomeBack"), { description: t("auth.signIn"), icon: "👋" });
+          notify.success(t("auth.welcomeBack"), { description: t("auth.signIn"), icon: toastIcon(triviaBuzzer) });
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
       }
@@ -225,7 +227,7 @@ export default function Auth() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  მოწვეული ხარ! 🎁
+                  მოწვეული ხარ!
                 </p>
                 <p className="text-xs text-muted-foreground">
                   დარეგისტრირდი და მიიღე PRO სტატუსი უფასოდ

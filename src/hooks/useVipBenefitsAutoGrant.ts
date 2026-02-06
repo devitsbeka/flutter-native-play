@@ -3,6 +3,8 @@
  * Handles daily power-ups claim for VIP users
  */
 
+import { toastIcon } from "@/lib/toast-icons";
+import crownIcon from "@/assets/icons/crown-3d.png";
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -37,8 +39,8 @@ export function useVipBenefitsAutoGrant() {
     const autoClaim = async () => {
       const success = await claimDailyPowerUps();
       if (success) {
-        toast.success("VIP: მიღებულია 4 ძალა! ⚡", {
-          icon: "👑",
+        toast.success("VIP: მიღებულია 4 ძალა!", {
+          icon: toastIcon(crownIcon),
           duration: 3000,
         });
       }

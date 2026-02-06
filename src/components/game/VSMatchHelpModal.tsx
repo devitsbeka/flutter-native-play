@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { Trophy, Zap, Coins, Target, Timer } from "lucide-react";
@@ -78,7 +79,7 @@ export function VSMatchHelpModal({ isOpen, onClose }: VSMatchHelpModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title={t("game.quickMatch")}
-      iconEmoji="⚔️"
+      iconSrc={ICON_URLS.sword}
       showSparkles={false}
     >
       <div className="space-y-1.5 mb-2">

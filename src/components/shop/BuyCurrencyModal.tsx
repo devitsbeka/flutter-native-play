@@ -1,3 +1,4 @@
+import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Clock } from "lucide-react";
@@ -96,7 +97,7 @@ export function BuyCurrencyModal({
       });
       
       toast.success(t("shop.receivedCoinsAndPowers").replace("{coins}", String(pkg.coins)), {
-        icon: "🎁",
+        icon: toastIcon(ICON_URLS.gift),
       });
       
       onClose();

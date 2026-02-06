@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Loader2, Sparkles } from "lucide-react";
@@ -89,7 +90,7 @@ export function PlayCategoryModal({
       isOpen={open}
       onClose={!isMatchmaking ? () => onOpenChange(false) : undefined}
       title={t("game.selectCategory")}
-      iconEmoji="🎯"
+      iconSrc={ICON_URLS.target}
       showStars={true}
       hideCloseButton={isMatchmaking}
       disableBackdropClick={isMatchmaking}

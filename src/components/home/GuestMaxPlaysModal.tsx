@@ -1,3 +1,4 @@
+import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import React from "react";
 import { motion } from "framer-motion";
 import { Star, Trophy, Sparkles, Lock } from "lucide-react";
@@ -32,7 +33,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           isOpen={isOpen}
           onClose={onClose}
           variant="primary"
-          iconEmoji="🎮"
+          iconSrc={triviaBuzzer}
           title={t("modals.likedIt")}
           showSparkles
           showStars

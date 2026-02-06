@@ -1,3 +1,4 @@
+import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { motion } from "framer-motion";
 import { Sparkles, Trophy, Lock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
@@ -45,7 +46,7 @@ export function GuestSignupPromptModal({ isOpen, onClose }: GuestSignupPromptMod
       fullScreen={false}
       showSparkles
       showStars
-      iconEmoji="🎮"
+      iconSrc={triviaBuzzer}
       title="შექმენი ანგარიში და გააგრძელე თამაში"
     >
       <div className="space-y-3 pb-2">

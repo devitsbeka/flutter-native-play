@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { GameModal } from "@/components/ui/game-modal";
 import giftBottleIcon from "@/assets/icons/icon-gem.png";
@@ -83,7 +84,7 @@ export function AdventureHelpModal({ isOpen, onClose }: AdventureHelpModalProps)
     <GameModal 
       isOpen={isOpen} 
       onClose={onClose}
-      iconEmoji="❓"
+      iconSrc={ICON_URLS.questionMark}
       title="დახმარება"
       subtitle="როგორ მუშაობს თავგადასავალი"
       primaryLabel="გასაგებია"
