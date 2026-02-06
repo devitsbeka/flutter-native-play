@@ -29,7 +29,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
     <div className="px-4 py-4 relative z-10">
       <h2 className="text-lg font-bold text-foreground mb-3">ჩემი ძალები</h2>
       
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-3 mt-6">
         {POWER_UP_ORDER.map((type) => {
           const count = safeData[type] ?? 0;
           const isLoading = isPurchasing === `single_${type}`;
@@ -37,12 +37,12 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
           return (
             <div
               key={type}
-              className="flex flex-col items-center gap-3 px-3 py-4 rounded-2xl liquid-glass"
+              className="relative flex flex-col items-center gap-3 px-3 pt-8 pb-4 rounded-2xl liquid-glass"
             >
               <img 
                 src={POWER_UP_ICONS[type]} 
                 alt="" 
-                className="w-12 h-12 object-contain" 
+                className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 object-contain" 
               />
               <span className="font-bold text-lg text-foreground">
                 {count}
