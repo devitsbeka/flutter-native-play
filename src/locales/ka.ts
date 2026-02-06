@@ -665,7 +665,7 @@ export const ka = {
     winMoreGames: "მოიგე მეტი თამაში",
     vipStatus: "VIP სტატუსი",
     vipBenefits: "2xp / ულიმიტო თამაში",
-    powers: "ძალები",
+    powers: "მოიმატე ძალები",
     advantage: "უპირატესობა თამაშში",
     frames: "ჩარჩოები",
     uniqueProfile: "უნიკალური პროფილი",
