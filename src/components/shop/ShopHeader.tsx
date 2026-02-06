@@ -57,7 +57,7 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
               
               <motion.button
                 onClick={onHelpClick}
-                className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >

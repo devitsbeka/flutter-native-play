@@ -450,7 +450,7 @@ export default function Index() {
                 
                 {/* Bell icon with unread badge */}
                 <motion.button
-                  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
+                  className="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/30 transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => navigate('/notifications')}
@@ -462,8 +462,8 @@ export default function Index() {
                       animate={{ scale: 1 }}
                       className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
                       style={{
-                        background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-                        boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
+                        background: "linear-gradient(180deg, #EF4444 0%, #DC2626 100%)",
+                        boxShadow: "0 2px 4px rgba(239, 68, 68, 0.5)",
                       }}
                     >
                       <span className="text-[9px] font-bold text-white">
