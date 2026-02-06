@@ -24,17 +24,19 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
       
       {/* Coins */}
       <div className="flex items-center gap-1.5">
-        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+        <div className="hidden md:flex w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm items-center justify-center shadow-sm">
           <img src={coinIcon} alt="" className="w-4 h-4" />
         </div>
+        <img src={coinIcon} alt="" className="w-5 h-5 md:hidden" />
         <span className="font-bold text-sm text-foreground">{coins.toLocaleString()}</span>
       </div>
       
       {/* Gems */}
       <div className="flex items-center gap-1.5">
-        <div className="w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+        <div className="hidden md:flex w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm items-center justify-center shadow-sm">
           <img src={gemIcon} alt="" className="w-4 h-4" />
         </div>
+        <img src={gemIcon} alt="" className="w-5 h-5 md:hidden" />
         <span className="font-bold text-sm text-foreground">{formatCompactNumber(gems)}</span>
       </div>
     </div>
