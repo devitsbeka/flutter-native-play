@@ -942,7 +942,7 @@ export default function Index() {
             </motion.div>}
 
             {/* Mobile only: circular action buttons + avatar + info - LOGGED IN USERS ONLY */}
-            {user && <div className="md:hidden w-full flex justify-center [@media(max-height:730px)]:[zoom:0.92] [@media(max-height:660px)]:[zoom:0.85] [@media(max-height:580px)]:[zoom:0.78]">
+            {user && <div className="md:hidden w-full flex justify-center [@media(max-height:780px)]:[zoom:0.88] [@media(max-height:700px)]:[zoom:0.8] [@media(max-height:620px)]:[zoom:0.72]">
             <motion.div
               className="flex flex-col items-center w-full max-w-[360px] px-4"
               style={{ marginTop: -5 }}
