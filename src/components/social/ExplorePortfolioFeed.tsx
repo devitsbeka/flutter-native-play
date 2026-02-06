@@ -25,7 +25,7 @@ export function ExplorePortfolioFeed({
   const { data: feedItems = [], isLoading: isFlatLoading } = usePlayerFeedItems(searchQuery, filter, sort);
   // Grouped feed for desktop/tablet
   const { data: creators = [], isLoading: isGroupedLoading } = useExploreCreators(searchQuery, filter, sort);
-  const { userLikes, userSaves, toggleLike, toggleSave } = useSocialFeed();
+  const { userLikes, userSaves, userPlays, toggleLike, toggleSave } = useSocialFeed();
 
   const isLoading = isFlatLoading || isGroupedLoading;
 
@@ -74,6 +74,7 @@ export function ExplorePortfolioFeed({
               onSave={toggleSave}
               isLiked={userLikes.includes(feedItem.item.id)}
               isSaved={userSaves.includes(feedItem.item.id)}
+              isPlayed={userPlays.includes(feedItem.item.id)}
             />
           </motion.div>
         ))}
@@ -96,6 +97,7 @@ export function ExplorePortfolioFeed({
               onSaveTrivia={(trivia) => toggleSave(trivia.id)}
               userLikes={userLikes}
               userSaves={userSaves}
+              userPlays={userPlays}
             />
           </motion.div>
         ))}

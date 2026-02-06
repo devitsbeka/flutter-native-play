@@ -158,13 +158,17 @@ export function TriviaPortfolioCard({
             </button>
           </div>
           
-          {/* Play Button - Always visible */}
+          {/* Play Button - Icon only with played state indicator */}
           <button 
             onClick={handlePlayClick}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-transparent border-2 border-purple-500 text-purple-500 rounded-full text-sm font-medium hover:bg-purple-500/10 transition-colors"
+            className={cn(
+              "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+              isPlayed 
+                ? "bg-transparent border-2 border-purple-500" 
+                : "bg-purple-500 hover:bg-purple-600"
+            )}
           >
-            <Play className="w-4 h-4 text-purple-500" />
-            <span>ითამაშე</span>
+            <Play className={cn("w-4 h-4", isPlayed ? "text-purple-500" : "text-white")} />
           </button>
         </div>
       </div>
