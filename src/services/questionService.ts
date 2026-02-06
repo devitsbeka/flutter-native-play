@@ -26,9 +26,9 @@ import {
   clearCategoryAskedQuestions,
   clearSeenQuestions,
   shouldResetGlobalPool,
-  getCategoryLevelSeenIds,
-  markCategoryLevelSeen,
-  clearCategoryLevelSeen,
+  getCategorySeenIds,
+  markCategorySeen,
+  clearCategorySeen,
 } from "@/services/questionTracker";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -282,38 +282,38 @@ async function getCategoryQuestions(
   const minLevel = Math.max(1, levelNumber - 3);
   const maxLevel = Math.min(20, levelNumber + 5);
   
-  // Get total available for this level range
-  const { count: totalCount } = await supabase
+  // FIX: Get TOTAL available in ENTIRE CATEGORY (not just level range)
+  // This is critical for proper exhaustion tracking
+  const { count: totalCategoryCount } = await supabase
     .from('questions')
     .select('id', { count: 'exact', head: true })
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
-    .eq('category_id', categoryUuid)
-    .gte('level_number', minLevel)
-    .lte('level_number', maxLevel);
+    .eq('category_id', categoryUuid);
   
-  const totalAvailable = totalCount || 0;
+  const totalAvailable = totalCategoryCount || 0;
   
-  // Get seen questions for THIS level ONLY (category mode is isolated from other modes)
-  const levelSeenIds = getCategoryLevelSeenIds(categoryUuid, levelNumber);
+  // FIX: Get seen questions for ENTIRE CATEGORY (not level-specific)
+  // This prevents questions from repeating when playing different levels
+  const categorySeenIds = getCategorySeenIds(categoryUuid);
   
-  // Category mode: use ONLY level-specific tracking
-  // Do NOT include globalSeen from VS/TV modes - they are separate tracking scopes
-  let excludeIds = [...new Set([...levelSeenIds, ...(additionalExcludeIds || [])])];
+  // Combine category-seen with any additional exclusions
+  let excludeIds = [...new Set([...categorySeenIds, ...(additionalExcludeIds || [])])];
   
-  // Check level-specific exhaustion
-  const levelExhausted = levelSeenIds.length >= totalAvailable;
+  // Check category-wide exhaustion (not level-specific)
+  const categoryExhausted = categorySeenIds.length >= totalAvailable;
   
-  if (levelExhausted && totalAvailable > 0) {
-    // Level pool exhausted - clear level tracking and start fresh
-    clearCategoryLevelSeen(categoryUuid, levelNumber);
+  if (categoryExhausted && totalAvailable > 0) {
+    // Category pool exhausted - clear tracking and start fresh
+    clearCategorySeen(categoryUuid);
     wasReset = true;
     exhausted = true;
     excludeIds = [...(additionalExcludeIds || [])]; // Only keep explicit exclusions
+    console.log(`[questionService] Category ${categoryUuid} exhausted (${categorySeenIds.length}/${totalAvailable}), resetting...`);
   }
   
-  // Build query
+  // Build query - still use level range for appropriate difficulty
   let query = supabase
     .from('questions')
     .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
@@ -354,7 +354,7 @@ async function getCategoryQuestions(
   
   // Fallback 2: If still not enough, clear ALL exclusions and try ANY level
   if (!questions || questions.length < count) {
-    clearCategoryLevelSeen(categoryUuid, levelNumber);
+    clearCategorySeen(categoryUuid);
     wasReset = true;
     exhausted = true;
     
@@ -396,9 +396,10 @@ async function getCategoryQuestions(
   // Shuffle and select
   const selected = shuffleArray(validQuestions).slice(0, count);
   
-  // Mark as seen immediately
+  // FIX: Mark as seen for CATEGORY (not level-specific)
+  // This ensures questions won't repeat across any level
   if (selected.length > 0) {
-    markCategoryLevelSeen(categoryUuid, levelNumber, selected.map(q => q.id));
+    markCategorySeen(categoryUuid, selected.map(q => q.id));
   }
   
   return {
@@ -406,7 +407,7 @@ async function getCategoryQuestions(
     exhausted,
     exhaustionInfo: {
       totalAvailable,
-      totalSeen: excludeIds.length,
+      totalSeen: categorySeenIds.length,
       wasReset,
       usedFallback,
     },
