@@ -1039,14 +1039,14 @@ export default function CategoryQuizPage() {
   }
   return (
     // Full-width purple background on desktop/tablet (prevents white gutters)
-    <div className="w-full h-screen bg-[#7E7ADB] overflow-hidden">
+    <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden">
       {/* Content wrapper with max-width for desktop/tablet, centered */}
       <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
         {/* Safe area padding for notched phones */}
         <div className="pt-[env(safe-area-inset-top)]" />
 
       {/* Header - Solo mode with category name and timer */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0 [@media(max-height:700px)]:py-1 [@media(max-height:600px)]:pt-1 [@media(max-height:600px)]:pb-0.5">
         <button
           onClick={() => setShowExitDialog(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -1068,7 +1068,7 @@ export default function CategoryQuizPage() {
       </div>
 
       {/* Question Card with Overlapping Icon - Solo mode optimized */}
-      <div className="px-4 flex-shrink-0 mt-10 mb-2 relative">
+      <div className="px-4 flex-shrink-0 mt-10 mb-2 [@media(max-height:700px)]:mt-6 [@media(max-height:600px)]:mt-4 [@media(max-height:700px)]:mb-1 relative">
         {/* Category Icon - hide for media questions (image/video/audio) */}
         {!currentQuestion?.image_url && !currentQuestion?.video_url && !currentQuestion?.audio_url && (
           <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
@@ -1106,7 +1106,7 @@ export default function CategoryQuizPage() {
 
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
-        <div className="flex-1 px-4 pt-2 flex gap-3 items-center justify-center">
+        <div className="flex-1 min-h-0 px-4 pt-2 flex gap-3 items-center justify-center">
           <AnimatePresence>
             {currentQuestion?.allAnswers?.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -1133,7 +1133,7 @@ export default function CategoryQuizPage() {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-hidden min-h-0">
+        <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-y-auto min-h-0">
           <AnimatePresence>
             {currentQuestion?.allAnswers?.map((answer, index) => {
               // Skip hidden answers (from 50/50 power-up)

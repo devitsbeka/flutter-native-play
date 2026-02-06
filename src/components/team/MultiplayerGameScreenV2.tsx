@@ -297,7 +297,7 @@ export function MultiplayerGameScreenV2() {
       <div className={cn(
         "px-4 flex-shrink-0 relative",
         // Only add top margin for icon when no media present
-        !currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && "mt-12"
+        !currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && "mt-12 [@media(max-height:700px)]:mt-8 [@media(max-height:600px)]:mt-6"
       )}>
         {/* Category Icon - only show when no media is present AND icon_slug exists */}
         {!currentQuestion.imageUrl && !currentQuestion.videoUrl && !currentQuestion.audioUrl && (
@@ -331,7 +331,7 @@ export function MultiplayerGameScreenV2() {
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center my-4 flex-shrink-0">
+      <div className="flex justify-center my-2 [@media(max-height:700px)]:my-1.5 flex-shrink-0">
         <QuizProgressDots
           total={questions.length}
           current={currentQuestionIndex}
@@ -342,7 +342,7 @@ export function MultiplayerGameScreenV2() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         /* True/False Layout - side by side cards */
-        <div className="px-4 flex gap-2 items-center justify-center mt-4">
+        <div className="flex-1 min-h-0 px-4 flex gap-2 items-center justify-center mt-2">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
@@ -368,7 +368,7 @@ export function MultiplayerGameScreenV2() {
         </div>
       ) : (
         /* Regular 4-answer layout */
-        <div className="flex-1 px-4 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-hidden min-h-0">
+        <div className="flex-1 px-4 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 overflow-y-auto min-h-0">
           <AnimatePresence mode="wait">
             {currentQuestion.allAnswers.map((answer, index) => {
               // Find opponents who chose this answer (only show when revealed)

@@ -224,9 +224,9 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             // Reserve headroom for top badges (timer/difficulty) and/or an external overlapping icon
             // Reduce top padding if we have media (no need for icon space)
             hasMedia && "pt-4",
-            !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14",
-            !hasMedia && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16",
-            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10"
+            !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14 [@media(max-height:600px)]:pt-12",
+            !hasMedia && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16 [@media(max-height:600px)]:pt-12",
+            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10 [@media(max-height:600px)]:pt-8"
           )}>
             {isLoading ? (
               <div className="space-y-2 w-full">

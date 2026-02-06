@@ -116,7 +116,7 @@ export function QuizTrueFalseButton({
       animate={isRevealed ? state : "initial"}
       whileTap={!disabled ? "tap" : undefined}
       className={cn(
-        "w-full relative cursor-pointer h-[120px]",
+        "w-full relative cursor-pointer h-[120px] [@media(max-height:700px)]:h-[100px] [@media(max-height:600px)]:h-[85px]",
         disabled && "cursor-default",
         className
       )}
@@ -169,14 +169,14 @@ export function QuizTrueFalseButton({
           animate={isRevealed ? state : "initial"}
         >
           {isTrue ? (
-            <Check 
-              className="w-14 h-14" 
+            <Check
+              className="w-14 h-14 [@media(max-height:600px)]:w-10 [@media(max-height:600px)]:h-10"
               strokeWidth={3.5} 
               style={{ color: styles.iconColor }}
             />
           ) : (
-            <X 
-              className="w-14 h-14" 
+            <X
+              className="w-14 h-14 [@media(max-height:600px)]:w-10 [@media(max-height:600px)]:h-10"
               strokeWidth={3.5} 
               style={{ color: styles.iconColor }}
             />
