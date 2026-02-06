@@ -1,15 +1,52 @@
 
-# Plan: Match My Powers Card Style to Shop Cards
+# Plan: Vertical Centering in GameModal & Fix Stretched Elements on Desktop/Tablet
 
 ## Problem Analysis
 
-From the reference images, the "My Powers" (ჩემი ძალები) cards should use the same transparent glass styling as the power pack cards below in the "ძალები" section.
+From the screenshot, there are two distinct issues:
 
-**Current styling:**
-- `bg-card border border-border shadow-sm` - solid background, visible border
+### Issue 1: Content Not Vertically Centered in Full-Screen Modal
+The `PowerUpTutorialModal` (and all modals using `fullScreen` mode) show content at the top of the screen with large empty space at the bottom. Users expect content to be vertically centered with equal padding from top and bottom.
 
-**Target styling:**
-- `liquid-glass` class - semi-transparent with blur effect, matching the shop item cards
+**Current behavior:**
+```text
+┌─────────────────────────┐
+│ Header                  │
+├─────────────────────────┤
+│ 💡 Subtitle             │  ← Content stuck at top
+│ 🎯 Icon                 │
+│ Title                   │
+│ Description             │
+│ Tip box                 │
+│ ● ○ ○ ○                 │
+│                         │
+│                         │  ← Large empty space
+│                         │
+├─────────────────────────┤
+│ Footer                  │
+└─────────────────────────┘
+```
+
+**Target behavior:**
+```text
+┌─────────────────────────┐
+│ Header                  │
+├─────────────────────────┤
+│                         │  ← Equal padding top
+│ 💡 Subtitle             │
+│ 🎯 Icon                 │
+│ Title                   │  ← Content vertically centered
+│ Description             │
+│ Tip box                 │
+│ ● ○ ○ ○                 │
+│                         │  ← Equal padding bottom
+├─────────────────────────┤
+│ Footer                  │
+└─────────────────────────┘
+```
+
+### Issue 2: Elements Stretched Too Wide on Desktop/Tablet
+The full-screen modal content area and footer stretch to full width, which looks poor on large screens. Need to constrain content to max-width while keeping it centered.
 
 ---
 
@@ -17,59 +54,126 @@ From the reference images, the "My Powers" (ჩემი ძალები) car
 
 | File | Change |
 |------|--------|
-| `src/components/shop/MyPowersSection.tsx` | Replace solid card styling with `liquid-glass` class |
+| `src/components/ui/game-modal.tsx` | Add vertical centering wrapper for content in fullScreen mode + add max-width constraints for desktop/tablet |
 
 ---
 
 ## Technical Changes
 
-The existing `liquid-glass` class in `src/index.css` provides:
-- Semi-transparent white gradient background (65% → 55% → 60% opacity)
-- Backdrop blur effect (20px blur + 180% saturation)
-- Subtle white border (50% opacity)
-- Inner shadow highlights
+### 1. Update fullScreen content area to vertically center content
 
-### Code Change
+The scrollable content area currently uses `flex-1 overflow-y-auto` but doesn't center its content. We need to:
+- Add `flex flex-col items-center justify-center` to the scrollable area for vertical centering
+- Wrap content in a max-width container for desktop/tablet
 
+**Before (lines 198-267):**
 ```tsx
-// Current:
-<div
-  key={type}
-  className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl bg-card border border-border shadow-sm"
+<motion.div 
+  className={cn("flex-1 overflow-y-auto", className)}
+  ...
 >
-
-// Updated:
-<div
-  key={type}
-  className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl liquid-glass"
->
+  {/* Subtitle */}
+  {subtitle && <div className="px-5 pt-4 pb-2 text-center">...</div>}
+  {/* Icon */}
+  {(icon || iconEmoji) && <div className="flex justify-center pt-4 pb-2">...</div>}
+  {/* Main content */}
+  <div className="px-6 pb-5">
+    {children}
+  </div>
+</motion.div>
 ```
 
-This single class change will apply all the styling needed:
-- Transparent background with blur
-- Proper border styling
-- Shadow effects
-- Dark mode support (automatically handled by `.dark .liquid-glass`)
+**After:**
+```tsx
+<motion.div 
+  className={cn("flex-1 overflow-y-auto flex flex-col", className)}
+  ...
+>
+  {/* Centered content wrapper with max-width for tablet/desktop */}
+  <div className="flex-1 flex flex-col justify-center w-full max-w-xl mx-auto py-6">
+    {/* Sparkles */}
+    {showSparkles && ...}
+    {/* Stars */}
+    {showStars && ...}
+    {/* Subtitle */}
+    {subtitle && <div className="px-5 pb-2 text-center">...</div>}
+    {/* Icon */}
+    {(icon || iconEmoji) && <div className="flex justify-center pb-2">...</div>}
+    {/* Main content */}
+    <div className="px-6 pb-5">
+      {children}
+    </div>
+  </div>
+</motion.div>
+```
+
+### 2. Constrain footer max-width on large screens
+
+**Before (line 272):**
+```tsx
+<motion.div className="sticky bottom-0 px-5 py-4 border-t ...">
+  {effectiveFooter}
+</motion.div>
+```
+
+**After:**
+```tsx
+<motion.div className="sticky bottom-0 px-5 py-4 border-t ...">
+  <div className="w-full max-w-xl mx-auto">
+    {effectiveFooter}
+  </div>
+</motion.div>
+```
 
 ---
 
 ## Visual Result
 
+**On Desktop/Tablet:**
 ```text
-Before (solid):              After (glass effect):
-┌─────────┐                  ┌─────────┐
-│█████████│                  │░░░░░░░░░│ ← transparent blur
-│█ Icon ██│                  │░ Icon ░░│
-│█  46  ██│                  │░  46  ░░│
-│█─────███│                  │░─────░░░│
-│█ (+) ███│                  │░ (+) ░░░│
-└─────────┘                  └─────────┘
+┌────────────────────────────────────────────────┐
+│              Header (full width)               │
+├────────────────────────────────────────────────┤
+│                                                │
+│              ┌──────────────────┐              │
+│              │   💡 Subtitle    │              │
+│              │      🎯 Icon     │              │
+│              │      Title       │              │ ← Centered, max-w-xl
+│              │   Description    │              │
+│              │     Tip box      │              │
+│              │    ● ○ ○ ○       │              │
+│              └──────────────────┘              │
+│                                                │
+├────────────────────────────────────────────────┤
+│              ┌──────────────────┐              │
+│              │   Footer button  │              │ ← Centered, max-w-xl
+│              └──────────────────┘              │
+└────────────────────────────────────────────────┘
+```
+
+**On Mobile (unchanged):**
+```text
+┌─────────────────────────┐
+│ Header                  │
+├─────────────────────────┤
+│                         │
+│ 💡 Subtitle             │
+│ 🎯 Icon                 │
+│ Title                   │ ← Content centered
+│ Description             │
+│ Tip box                 │
+│ ● ○ ○ ○                 │
+│                         │
+├─────────────────────────┤
+│ Footer button           │
+└─────────────────────────┘
 ```
 
 ---
 
 ## Summary
 
-1. Replace `bg-card border border-border shadow-sm` with `liquid-glass` class
-2. This ensures consistent styling across all shop components
-3. Automatically includes dark mode support
+1. **Add vertical centering** to fullScreen modal content area using `flex flex-col justify-center`
+2. **Constrain max-width** of content and footer to `max-w-xl` (576px) for desktop/tablet
+3. **Center horizontally** with `mx-auto` on large screens
+4. **Equal padding** top and bottom using `py-6` and flex centering
