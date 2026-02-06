@@ -1,26 +1,15 @@
 
-
-# Plan: Style "+" Button with Divider and Purple Outline
+# Plan: Match My Powers Card Style to Shop Cards
 
 ## Problem Analysis
 
-From the reference image, the "+" buttons should have:
-1. A horizontal divider line separating them from the count above
-2. Transparent background instead of solid purple
-3. Purple border/stroke around the button
-4. Purple "+" icon instead of white
+From the reference images, the "My Powers" (ჩემი ძალები) cards should use the same transparent glass styling as the power pack cards below in the "ძალები" section.
 
-## Current vs Target
+**Current styling:**
+- `bg-card border border-border shadow-sm` - solid background, visible border
 
-```text
-Current:                      Target:
-┌─────┐                       ┌─────┐
-│ 🎯  │                       │ 🎯  │
-│ 46  │                       │ 46  │
-│[██+]│ ← solid bg            │─────│ ← divider line
-└─────┘                       │(+) │ ← transparent bg, purple border
-                              └─────┘
-```
+**Target styling:**
+- `liquid-glass` class - semi-transparent with blur effect, matching the shop item cards
 
 ---
 
@@ -28,59 +17,59 @@ Current:                      Target:
 
 | File | Change |
 |------|--------|
-| `src/components/shop/MyPowersSection.tsx` | Add divider, update button styling to transparent with purple border |
+| `src/components/shop/MyPowersSection.tsx` | Replace solid card styling with `liquid-glass` class |
 
 ---
 
 ## Technical Changes
 
-### Update button container and styling
+The existing `liquid-glass` class in `src/index.css` provides:
+- Semi-transparent white gradient background (65% → 55% → 60% opacity)
+- Backdrop blur effect (20px blur + 180% saturation)
+- Subtle white border (50% opacity)
+- Inner shadow highlights
+
+### Code Change
 
 ```tsx
-{/* Add divider above button */}
-<div className="w-full h-px bg-border my-1" />
-
-{/* Update button: transparent bg, purple border, purple icon */}
-<button
-  onClick={() => onPurchaseSingle(type)}
-  disabled={isLoading}
-  className="w-8 h-8 rounded-full bg-transparent border-2 border-primary flex items-center justify-center text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+// Current:
+<div
+  key={type}
+  className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl bg-card border border-border shadow-sm"
 >
-  {isLoading ? (
-    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-  ) : (
-    <Plus className="w-4 h-4" />
-  )}
-</button>
+
+// Updated:
+<div
+  key={type}
+  className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl liquid-glass"
+>
 ```
 
-### Key styling changes:
-- **Divider**: `<div className="w-full h-px bg-border my-1" />` - thin horizontal line
-- **Button background**: `bg-transparent` instead of `bg-primary`
-- **Button border**: `border-2 border-primary` for purple stroke
-- **Icon color**: `text-primary` instead of `text-primary-foreground` for purple "+"
-- **Hover state**: `hover:bg-primary/10` for subtle feedback
-- **Loading spinner**: Updated border color to `border-primary` for consistency
+This single class change will apply all the styling needed:
+- Transparent background with blur
+- Proper border styling
+- Shadow effects
+- Dark mode support (automatically handled by `.dark .liquid-glass`)
 
 ---
 
 ## Visual Result
 
 ```text
-┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐
-│ 🎯  │ │ ❄️  │ │ 🔄  │ │ ⏱️  │
-│ 46  │ │ 49  │ │ 11  │ │ 22  │
-│─────│ │─────│ │─────│ │─────│
-│ (+) │ │ (+) │ │ (+) │ │ (+) │
-└─────┘ └─────┘ └─────┘ └─────┘
-     ↑ transparent bg, purple border & icon
+Before (solid):              After (glass effect):
+┌─────────┐                  ┌─────────┐
+│█████████│                  │░░░░░░░░░│ ← transparent blur
+│█ Icon ██│                  │░ Icon ░░│
+│█  46  ██│                  │░  46  ░░│
+│█─────███│                  │░─────░░░│
+│█ (+) ███│                  │░ (+) ░░░│
+└─────────┘                  └─────────┘
 ```
 
 ---
 
 ## Summary
 
-1. Add horizontal divider line (`h-px bg-border`) above each "+" button
-2. Change button from solid purple to transparent with purple border
-3. Change "+" icon from white to purple
-
+1. Replace `bg-card border border-border shadow-sm` with `liquid-glass` class
+2. This ensures consistent styling across all shop components
+3. Automatically includes dark mode support
