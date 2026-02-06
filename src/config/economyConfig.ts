@@ -15,7 +15,7 @@ export const ECONOMY = {
   GEL_TO_GEM_RATIO: 10,
 
   // Time gates (in hours)
-  CHEST_COOLDOWN_HOURS: 6,
+  CHEST_COOLDOWN_HOURS: 24,
   DAILY_SPIN_LIMIT: 1,
   VIP_BONUS_SPINS: 3,
 
