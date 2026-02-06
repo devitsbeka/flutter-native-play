@@ -44,25 +44,14 @@ export function ShopHeader({ onHelpClick }: ShopHeaderProps) {
     <div className="bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
       <div className="px-[15px] pt-4 pb-3">
         <div className="flex items-center justify-between">
-          {/* Left side */}
-          <div className="flex items-center gap-4">
-            {/* md+: title text */}
-            <h1 className="hidden md:block text-xl font-display font-bold text-foreground uppercase tracking-wide">
-              {t("shop.title")}
-            </h1>
-            
-            {/* Mobile only: Wallet on left */}
-            <div className="md:hidden">
-              <WalletDisplay />
-            </div>
-          </div>
+          {/* Left side: title */}
+          <h1 className="text-xl font-display font-bold text-foreground uppercase tracking-wide">
+            {t("shop.title")}
+          </h1>
 
-          {/* Right side */}
+          {/* Right side: Wallet + action icons */}
           <div className="flex items-center gap-3">
-            {/* md+: Wallet before action icons */}
-            <div className="hidden md:block">
-              <WalletDisplay />
-            </div>
+            <WalletDisplay />
             
             <HeaderActions />
             
