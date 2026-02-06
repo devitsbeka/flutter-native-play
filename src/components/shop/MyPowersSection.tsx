@@ -26,10 +26,10 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
   const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
   
   return (
-    <div className="px-4 py-4">
+    <div className="px-4 py-4 relative z-10">
       <h2 className="text-lg font-bold text-foreground mb-3">ჩემი ძალები</h2>
       
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="grid grid-cols-4 gap-3">
         {POWER_UP_ORDER.map((type) => {
           const count = safeData[type] ?? 0;
           const isLoading = isPurchasing === `single_${type}`;
@@ -37,20 +37,20 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
           return (
             <div
               key={type}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-card border border-border shadow-sm min-w-fit"
+              className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl bg-card border border-border shadow-sm"
             >
               <img 
                 src={POWER_UP_ICONS[type]} 
                 alt="" 
-                className="w-8 h-8 object-contain" 
+                className="w-10 h-10 object-contain" 
               />
-              <span className="font-bold text-lg text-foreground min-w-[24px] text-center">
+              <span className="font-bold text-lg text-foreground">
                 {count}
               </span>
               <button
                 onClick={() => onPurchaseSingle(type)}
                 disabled={isLoading}
-                className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {isLoading ? (
                   <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
