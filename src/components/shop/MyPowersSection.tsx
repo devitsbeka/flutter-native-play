@@ -27,9 +27,9 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
   
   return (
     <div className="px-4 py-4 relative z-10">
-      <h2 className="text-lg font-bold text-foreground mb-3">ჩემი ძალები</h2>
+      <h2 className="text-lg font-display text-foreground mb-1">ჩემი ძალები</h2>
       
-      <div className="grid grid-cols-4 gap-3 mt-6">
+      <div className="grid grid-cols-4 gap-3 mt-4">
         {POWER_UP_ORDER.map((type) => {
           const count = safeData[type] ?? 0;
           const isLoading = isPurchasing === `single_${type}`;
