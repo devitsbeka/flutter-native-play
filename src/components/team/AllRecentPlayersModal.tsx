@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { Trophy, Swords } from "lucide-react";
 import { useRecentPlayers, RecentPlayer } from "@/hooks/useRecentPlayers";
@@ -17,7 +18,7 @@ export function AllRecentPlayersModal({ isOpen, onClose }: AllRecentPlayersModal
       isOpen={isOpen}
       onClose={onClose}
       title="ბოლო მოთამაშეები"
-      iconEmoji="👥"
+      iconSrc={ICON_URLS.team}
       showSparkles={false}
       className="max-w-md"
     >

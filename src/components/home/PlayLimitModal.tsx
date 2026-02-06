@@ -1,3 +1,5 @@
+import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
+import crownIcon from "@/assets/icons/crown-3d.png";
 import React from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Trophy, Lock, Crown } from "lucide-react";
@@ -42,7 +44,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             isOpen={isOpen}
             onClose={onClose}
             variant="primary"
-            iconEmoji="🎮"
+            iconSrc={triviaBuzzer}
             title={t("modals.likedIt")}
             showSparkles
             showStars
@@ -114,7 +116,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           isOpen={isOpen}
           onClose={onClose}
           variant="primary"
-          iconEmoji="👑"
+          iconSrc={crownIcon}
           title="თამაშების ლიმიტი ამოწურულია"
           showSparkles
           showStars

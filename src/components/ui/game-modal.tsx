@@ -61,7 +61,7 @@ const FloatingStar = React.memo(({ index }: { index: number }) => {
         ease: "easeInOut",
       }}
     >
-      ✨
+      ✦
     </motion.div>
   );
 });
@@ -74,6 +74,7 @@ interface GameModalProps {
   variant?: GameModalVariant;
   icon?: React.ReactNode;
   iconEmoji?: string;
+  iconSrc?: string;
   title: React.ReactNode;
   subtitle?: string;
   children?: React.ReactNode;
@@ -105,6 +106,7 @@ export function GameModal({
   variant = "primary",
   icon,
   iconEmoji,
+  iconSrc,
   title,
   subtitle,
   children,
@@ -230,9 +232,27 @@ export function GameModal({
                 )}
                 
                 {/* Icon section if provided */}
-                {(icon || iconEmoji) && (
+                {(icon || iconEmoji || iconSrc) && (
                   <div className="flex justify-center pb-2">
-                    {iconEmoji ? (
+                    {iconSrc ? (
+                      <motion.div
+                        className="relative"
+                        initial={{ scale: 0, rotate: -20 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", delay: 0.2, stiffness: 300 }}
+                      >
+                        <motion.img 
+                          src={iconSrc}
+                          alt=""
+                          className="w-14 h-14 object-contain"
+                          animate={{ 
+                            rotate: [-5, 5, -5],
+                            y: [0, -3, 0],
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </motion.div>
+                    ) : iconEmoji ? (
                       <motion.div
                         className="relative"
                         initial={{ scale: 0, rotate: -20 }}
@@ -338,9 +358,19 @@ export function GameModal({
           
           {/* Header with icon badge */}
           <div className="relative pt-8 pb-4 px-6 text-center">
-            {(icon || iconEmoji) && (
+            {(icon || iconEmoji || iconSrc) && (
               <div className="relative mx-auto mb-3 flex items-center justify-center">
-                {iconEmoji ? (
+                {iconSrc ? (
+                  <div 
+                    className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                      boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+                    }}
+                  >
+                    <img src={iconSrc} alt="" className="w-10 h-10 object-contain" />
+                  </div>
+                ) : iconEmoji ? (
                   <div 
                     className="relative w-20 h-20 rounded-full flex items-center justify-center"
                     style={{
@@ -455,14 +485,45 @@ export function GameModal({
               {/* Header with icon badge */}
               <div className="relative pt-8 pb-4 px-6 text-center">
         {/* Icon badge */}
-        {(icon || iconEmoji) && (
+        {(icon || iconEmoji || iconSrc) && (
           <motion.div
             className="relative mx-auto mb-3 flex items-center justify-center"
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", delay: 0.1, stiffness: 300 }}
           >
-            {iconEmoji ? (
+            {iconSrc ? (
+              <>
+                {/* Subtle glow ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full blur-lg"
+                  style={{
+                    background: "radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, transparent 70%)",
+                  }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                
+                <div 
+                  className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                    boxShadow: "0 5px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
+                  }}
+                >
+                  <motion.img 
+                    src={iconSrc}
+                    alt=""
+                    className="w-10 h-10 object-contain"
+                    animate={{ 
+                      rotate: [-5, 5, -5],
+                      y: [0, -3, 0],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </div>
+              </>
+            ) : iconEmoji ? (
               <>
                 {/* Subtle glow ring - only for emoji icons */}
                 <motion.div

@@ -1,3 +1,4 @@
+import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -158,7 +159,7 @@ export default function ForgotPassword() {
 
       if (data.success) {
         setStep("success");
-        notify.success(t("forgotPassword.passwordChanged"), { icon: "🎉" });
+        notify.success(t("forgotPassword.passwordChanged"), { icon: toastIcon(ICON_URLS.partyPopper) });
       }
     } catch (err: any) {
       notify.error(t("common.error"), { description: err.message });

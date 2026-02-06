@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { Volume2, VolumeX, Music, Vibrate } from "lucide-react";
 import { useSound } from "@/contexts/SoundContext";
@@ -86,7 +87,7 @@ export function SoundSettingsModal({ isOpen, onClose }: SoundSettingsModalProps)
       isOpen={isOpen}
       onClose={onClose}
       title={t("sound.title")}
-      iconEmoji="🎧"
+      iconSrc={ICON_URLS.headphones}
       showSparkles={false}
     >
       {/* Settings */}

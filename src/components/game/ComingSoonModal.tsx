@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { Clock, Sparkles, Heart } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
@@ -20,7 +21,7 @@ export function ComingSoonModal({
       isOpen={isOpen}
       onClose={onClose}
       title="მალე დაემატება!"
-      iconEmoji="🏗️"
+      iconSrc={ICON_URLS.crane}
       primaryLabel="გასაგებია"
       onPrimaryClick={onClose}
     >
@@ -64,7 +65,7 @@ export function ComingSoonModal({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          მადლობა მოთმინებისთვის! 💜
+          მადლობა მოთმინებისთვის!
         </p>
       </div>
     </GameModal>

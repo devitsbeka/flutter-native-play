@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { RotateCcw, Home } from "lucide-react";
@@ -37,7 +38,7 @@ export function GameLoseModal({
       isOpen={isOpen}
       onClose={onClose}
       title="წაგება"
-      iconEmoji="😔"
+      iconSrc={ICON_URLS.brokenHeart}
       showSparkles={false}
     >
       {/* Score display */}

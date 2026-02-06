@@ -1,3 +1,5 @@
+import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
+import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +48,7 @@ export default function SettingsPrivacy() {
       a.click();
       URL.revokeObjectURL(url);
 
-      notify.success("მონაცემები ექსპორტირებულია", { icon: "📦" });
+      notify.success("მონაცემები ექსპორტირებულია", { icon: toastIcon(ICON_URLS.box) });
     } catch (error: any) {
       notify.error(t("errors.generic"), { description: error.message });
     } finally {
@@ -62,7 +64,7 @@ export default function SettingsPrivacy() {
       await supabase.from("profiles").delete().eq("user_id", user.id);
       await signOut();
       navigate("/");
-      notify.success("ანგარიში წაშლილია", { icon: "👋" });
+      notify.success("ანგარიში წაშლილია", { icon: toastIcon(triviaBuzzer) });
     } catch (error: any) {
       notify.error(t("errors.generic"), { description: error.message });
     } finally {

@@ -1,3 +1,4 @@
+import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import { motion } from "framer-motion";
 import { Trophy, Clock, Users } from "lucide-react";
 import { useRecentRooms, RecentRoom } from "@/hooks/useRecentRooms";
@@ -31,7 +32,7 @@ export function AllRecentRoomsModal({ isOpen, onClose }: AllRecentRoomsModalProp
       isOpen={isOpen}
       onClose={onClose}
       title="ყველა თამაში"
-      iconEmoji="🎮"
+      iconSrc={triviaBuzzer}
       showSparkles={false}
       className="max-w-md"
     >

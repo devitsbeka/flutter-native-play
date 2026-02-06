@@ -1,3 +1,5 @@
+import { toastIcon, ICON_URLS } from "@/lib/toast-icons";
+import crownIcon from "@/assets/icons/crown-3d.png";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Lock, Sparkles, Crown } from "lucide-react";
@@ -50,7 +52,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
     // VIP-only frame handling
     if (frame.vipOnly) {
       if (!isVip) {
-        notify.error("ეს ჩარჩო მხოლოდ VIP მომხმარებლებისთვისაა!", { icon: "👑" });
+        notify.error("ეს ჩარჩო მხოლოდ VIP მომხმარებლებისთვისაა!", { icon: toastIcon(crownIcon) });
         playSound("wrong-answer");
         return;
       }
@@ -123,7 +125,7 @@ export function AvatarFrameShop({ onClose }: AvatarFrameShopProps) {
         zIndex: 9999,
       });
 
-      notify.success(`${frame.name} ჩარჩო გახსნილია!`, { icon: "🎉" });
+      notify.success(`${frame.name} ჩარჩო გახსნილია!`, { icon: toastIcon(ICON_URLS.partyPopper) });
     } catch (error) {
       console.error("Purchase failed:", error);
       notify.error("შეძენა ვერ მოხერხდა");

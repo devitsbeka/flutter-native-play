@@ -1,3 +1,4 @@
+import { ICON_URLS } from "@/lib/toast-icons";
 import React from "react";
 import { motion } from "framer-motion";
 import { Trophy, Star, Shield, Sparkles } from "lucide-react";
@@ -32,7 +33,7 @@ export const RegisterPromptModal = React.forwardRef<HTMLDivElement, RegisterProm
           isOpen={isOpen}
           onClose={onClose}
           variant="gold"
-          iconEmoji="✨"
+          iconSrc={ICON_URLS.sparkle}
           title={t("modals.excellentProgress")}
           subtitle={t("modals.dontLoseAchievements")}
           showSparkles
