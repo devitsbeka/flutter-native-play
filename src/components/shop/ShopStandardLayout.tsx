@@ -76,7 +76,7 @@ export function ShopStandardLayout({
 
       {/* My Powers Section - individual purchase */}
       <MyPowersSection
-        powerUps={powerUps}
+        powerUps={powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 }}
         onPurchaseSingle={onSinglePowerPurchase}
         isPurchasing={isPurchasing}
       />
