@@ -1,84 +1,122 @@
 
-# Plan: Fix "My Powers" Section Visibility
+
+# Plan: Fix My Powers Section Visibility & Layout
 
 ## Problem Analysis
 
-From the user's screenshots, the "ჩემი ძალები" (My Powers) section is showing:
-- A single `+` button floating in empty space
-- No title visible
-- No power-up icons or counts visible
-- The "ძალები" section below is rendering correctly
+From the screenshot and code investigation, two issues are preventing the "My Powers" section from displaying correctly:
 
-This indicates the `MyPowersSection` component is either:
-1. Not receiving proper data and crashing silently
-2. Having styling issues where content is invisible
-3. The parent component isn't passing valid props
+### Issue 1: Z-Index Stacking
+The `GlobalSplineBackground` component uses fixed positioning with z-index values 0-3. The `MyPowersSection` content doesn't have a higher z-index, so it's being rendered behind the background layers.
 
-## Root Cause
+**Current z-index hierarchy:**
+```text
+z-0  → Video background (fixed)
+z-1  → White radial mask (fixed)
+z-2  → Floating orbs (fixed)
+z-3  → Sparkle particles (fixed)
+???  → MyPowersSection (no z-index = behind everything)
+```
 
-Even though we added a default value for `powerUps` in the component signature, the issue occurs when:
-- `shopData.powerUps` from the parent could be `undefined` before React Query resolves
-- The component may render before data is available
+### Issue 2: Layout Structure
+The user also wants the "+" buttons positioned below the power-up icons instead of inline. This will help fit all 4 powers without horizontal scrolling.
+
+---
 
 ## Solution
 
-### Files to Modify
-
 | File | Change |
 |------|--------|
-| `src/components/shop/MyPowersSection.tsx` | Add explicit null/undefined check before rendering |
-| `src/components/shop/ShopStandardLayout.tsx` | Add fallback default when passing `powerUps` prop |
+| `src/components/shop/MyPowersSection.tsx` | Add z-index to container, restructure layout to show + button below each power |
 
 ---
 
 ## Technical Changes
 
-### 1. Add Defensive Check in MyPowersSection
-
-Add a safety check at the top of the component to handle any undefined data:
+### 1. Add z-index to ensure visibility
 
 ```tsx
-// At the top of the component function
-const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
+// Add relative positioning and z-index above background
+<div className="px-4 py-4 relative z-10">
 ```
 
-And use `safeData` instead of `powerUps` when mapping.
+### 2. Restructure layout: Power icons in grid, + buttons below
 
-### 2. Add Fallback in ShopStandardLayout
+**Current layout (horizontal scroll):**
+```text
+[Icon + Count + Button] [Icon + Count + Button] [Icon + Count + Button] →
+```
 
-Ensure the prop always has a valid object:
+**New layout (vertical stacking, no scroll):**
+```text
+┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+│ Icon │ │ Icon │ │ Icon │ │ Icon │
+│  45  │ │  49  │ │  11  │ │  22  │
+│ [+]  │ │ [+]  │ │ [+]  │ │ [+]  │
+└──────┘ └──────┘ └──────┘ └──────┘
+```
 
+**Updated JSX structure:**
 ```tsx
-<MyPowersSection
-  powerUps={powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 }}
-  onPurchaseSingle={onSinglePowerPurchase}
-  isPurchasing={isPurchasing}
-/>
+<div className="px-4 py-4 relative z-10">
+  <h2 className="text-lg font-bold text-foreground mb-3">ჩემი ძალები</h2>
+  
+  {/* Grid layout - 4 columns, no scroll */}
+  <div className="grid grid-cols-4 gap-3">
+    {POWER_UP_ORDER.map((type) => {
+      const count = safeData[type] ?? 0;
+      const isLoading = isPurchasing === `single_${type}`;
+      
+      return (
+        <div
+          key={type}
+          className="flex flex-col items-center gap-2 px-3 py-3 rounded-2xl bg-card border border-border shadow-sm"
+        >
+          {/* Power icon */}
+          <img 
+            src={POWER_UP_ICONS[type]} 
+            alt="" 
+            className="w-10 h-10 object-contain" 
+          />
+          
+          {/* Count */}
+          <span className="font-bold text-lg text-foreground">
+            {count}
+          </span>
+          
+          {/* Add button - now below */}
+          <button
+            onClick={() => onPurchaseSingle(type)}
+            disabled={isLoading}
+            className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      );
+    })}
+  </div>
+</div>
 ```
 
 ---
 
-## Additional Improvement: Debug Visibility
+## Visual Result
 
-Add a visible background color temporarily to debug if the section wrapper is rendering:
-
-```tsx
-<div className="px-4 py-4 bg-amber-100/50"> {/* Temporary debug color */}
-```
-
-This will help verify if the container is being rendered even when content is invisible.
-
----
-
-## Visual Confirmation
-
-After fixes:
 ```text
 ┌─────────────────────────────────────┐
 │     PRO Carousel                    │
 ├─────────────────────────────────────┤
 │ ჩემი ძალები                         │
-│ [🎯 2 +] [❄️ 1 +] [🔄 1 +] [⏱️ 1 +] │
+│ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐    │
+│ │ 🎯  │ │ ❄️  │ │ 🔄  │ │ ⏱️  │    │
+│ │ 45  │ │ 49  │ │ 11  │ │ 22  │    │
+│ │ [+] │ │ [+] │ │ [+] │ │ [+] │    │
+│ └─────┘ └─────┘ └─────┘ └─────┘    │
 ├─────────────────────────────────────┤
 │ ძალები                              │
 │ [Power Pack Cards...]               │
@@ -89,8 +127,7 @@ After fixes:
 
 ## Summary
 
-1. Add explicit null-coalescing (`??`) in both components to ensure `powerUps` is never undefined
-2. This triple-layer defense ensures data is always valid:
-   - Layer 1: `useShopPageData` hook returns defaults
-   - Layer 2: `ShopStandardLayout` passes fallback value
-   - Layer 3: `MyPowersSection` uses internal fallback
+1. **Add `relative z-10`** to the container to stack above the fixed background layers
+2. **Change from horizontal flex to 4-column grid** to fit all powers without scrolling
+3. **Stack content vertically** within each card: icon → count → + button
+
