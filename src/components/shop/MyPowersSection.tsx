@@ -47,13 +47,14 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
               <span className="font-bold text-lg text-foreground">
                 {count}
               </span>
+              <div className="w-full h-px bg-border my-1" />
               <button
                 onClick={() => onPurchaseSingle(type)}
                 disabled={isLoading}
-                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-8 h-8 rounded-full bg-transparent border-2 border-primary flex items-center justify-center text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}
