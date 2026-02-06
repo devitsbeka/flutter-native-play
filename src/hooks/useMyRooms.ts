@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -274,8 +274,6 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           });
         });
 
-        // Debug log TV session data
-        console.log('[useMyRooms] TV sessions loaded:', tvSessions?.map(s => ({ id: s.id, status: s.status })));
       }
 
       const participantsByRoom = new Map<string, typeof allParticipants>();
@@ -368,9 +366,29 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
 
   useEffect(() => {
     fetchMyRooms();
-  }, [fetchMyRooms, searchQuery, includeArchived, limit]);
+  }, [fetchMyRooms]);
 
-  // Subscribe to realtime updates
+  // Debounced fetch to prevent rapid-fire realtime events from flooding requests
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedFetch = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      fetchMyRooms();
+    }, 1000);
+  }, [fetchMyRooms]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Subscribe to realtime updates (excluding user_presence - polled separately)
   useEffect(() => {
     if (!user) return;
 
@@ -384,7 +402,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           table: "game_rooms",
         },
         () => {
-          fetchMyRooms();
+          debouncedFetch();
         }
       )
       .on(
@@ -395,7 +413,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           table: "room_participants",
         },
         () => {
-          fetchMyRooms();
+          debouncedFetch();
         }
       )
       .on(
@@ -406,7 +424,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           table: "tv_sessions",
         },
         () => {
-          fetchMyRooms();
+          debouncedFetch();
         }
       )
       .on(
@@ -417,18 +435,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
           table: "tv_players",
         },
         () => {
-          fetchMyRooms();
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "user_presence",
-        },
-        () => {
-          fetchMyRooms();
+          debouncedFetch();
         }
       )
       .subscribe();
@@ -436,6 +443,15 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [user, debouncedFetch]);
+
+  // Periodic presence refresh (every 30s) instead of realtime subscription on user_presence
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      fetchMyRooms();
+    }, 30000);
+    return () => clearInterval(interval);
   }, [user, fetchMyRooms]);
 
   // Apply client-side filtering and sorting
@@ -513,17 +529,6 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       const bTime = new Date(b.last_activity_at || b.created_at).getTime();
       return bTime - aTime;
     });
-
-    // Debug log to verify sorting
-    if (result.length > 0) {
-      console.log('[useMyRooms] Sorted rooms:', result.slice(0, 3).map(r => ({
-        name: r.room_name,
-        tv_status: r.tv_status,
-        tv_active_players: r.tv_active_players,
-        isActiveTv: isActiveTVSession(r.tv_status),
-        isMyNew: r.is_host && r.status === "waiting" && isNewlyCreated(r.created_at)
-      })));
-    }
 
     return result;
   }, [rooms, filter, friendIds, searchQuery]);

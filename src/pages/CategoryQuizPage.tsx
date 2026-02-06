@@ -1107,11 +1107,11 @@ export default function CategoryQuizPage() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         <div className="flex-1 px-4 pt-2 flex gap-3 items-center justify-center">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {currentQuestion?.allAnswers?.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
               if (hiddenAnswers.includes(answer)) return null;
-              
+
               return (
                 <motion.div
                   key={`${currentQuestionIndex}-${index}`}
@@ -1134,11 +1134,11 @@ export default function CategoryQuizPage() {
         </div>
       ) : (
         <div className="flex-1 px-4 pt-2 flex flex-col gap-2 overflow-hidden min-h-0">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {currentQuestion?.allAnswers?.map((answer, index) => {
               // Skip hidden answers (from 50/50 power-up)
               if (hiddenAnswers.includes(answer)) return null;
-              
+
               return (
                 <motion.div
                   key={`${currentQuestionIndex}-${index}`}

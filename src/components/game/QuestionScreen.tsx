@@ -121,7 +121,11 @@ export function QuestionScreen() {
 
   const handleUsePowerUp = useCallback((type: PowerUpType) => {
     if (answerState !== "idle") return;
-    
+
+    // Check inventory (VS mode uses context power-ups, not DB)
+    const powerUp = playerPowerUps.find(p => p.type === type);
+    if (!powerUp || powerUp.available <= 0) return;
+
     switch (type) {
       case "fifty-fifty":
         playSound("power-up-5050");
@@ -141,23 +145,24 @@ export function QuestionScreen() {
     vibrate([30, 20, 30]);
     
     usePowerUp(type);
-  }, [answerState, usePowerUp, playSound, vibrate]);
+  }, [answerState, playerPowerUps, usePowerUp, playSound, vibrate]);
 
   // Timer - pauses when frozen
   useEffect(() => {
     if (answerState !== "idle") return;
 
     const timer = setInterval(() => {
-      // Check if timer is frozen
+      // Check if timer is frozen and freeze hasn't expired
       if (playerTimerFrozen && playerFreezeEndTime) {
         const remaining = Math.max(0, Math.ceil((playerFreezeEndTime - Date.now()) / 1000));
-        setFreezeTimeLeft(remaining);
-        if (remaining <= 0) {
-          setFreezeTimeLeft(0);
+        if (remaining > 0) {
+          setFreezeTimeLeft(remaining);
+          return; // Don't decrement timer while frozen
         }
-        return; // Don't decrement timer while frozen
+        // Freeze expired - fall through to resume normal timer
+        setFreezeTimeLeft(0);
       }
-      
+
       setFreezeTimeLeft(0);
       setTimeRemaining((prev) => {
         if (prev <= 0.1) {

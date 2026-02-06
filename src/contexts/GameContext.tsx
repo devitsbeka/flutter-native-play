@@ -247,14 +247,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
       const powerUpIndex = prev.playerPowerUps.findIndex(p => p.type === type);
       if (powerUpIndex === -1) return prev;
-      
-      const powerUp = prev.playerPowerUps[powerUpIndex];
-      if (powerUp.available <= 0 || powerUp.usedThisQuestion) return prev;
 
-      // Clone power-ups array
-      const newPowerUps = prev.playerPowerUps.map((p, i) => 
-        i === powerUpIndex 
-          ? { ...p, available: p.available - 1, usedThisQuestion: true }
+      const powerUp = prev.playerPowerUps[powerUpIndex];
+      // Only block if already used this question - inventory is handled by the caller
+      if (powerUp.usedThisQuestion) return prev;
+
+      // Clone power-ups array (decrement available for VS mode tracking)
+      const newPowerUps = prev.playerPowerUps.map((p, i) =>
+        i === powerUpIndex
+          ? { ...p, available: Math.max(0, p.available - 1), usedThisQuestion: true }
           : p
       );
 

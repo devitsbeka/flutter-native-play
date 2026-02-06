@@ -158,15 +158,14 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
         {/* Content container with colored background */}
         <motion.div
           className="absolute inset-[8px] overflow-hidden"
-          style={{ clipPath: "url(#mainBlobClip)" }}
-          animate={{
-            background: isLocked 
+          style={{
+            clipPath: "url(#mainBlobClip)",
+            background: isLocked
               ? "rgba(255,255,255,0.1)"
-              : isSpinning 
+              : isSpinning
                 ? currentColor.bg
                 : "rgba(255,255,255,0.2)",
           }}
-          transition={{ duration: 0.1 }}
         >
           <AnimatePresence mode="wait">
             {isLocked && videoSrc ? (

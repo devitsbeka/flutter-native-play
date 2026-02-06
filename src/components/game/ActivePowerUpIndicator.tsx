@@ -24,7 +24,7 @@ const POWER_UP_CONFIG: Record<PowerUpType, {
   },
   "freeze": {
     icon: <Snowflake className="w-4 h-4" />,
-    label: "გაყინვა",
+    label: "დრო გაყინულია",
     color: "#22D3EE",
     bgColor: "linear-gradient(135deg, #22D3EE 0%, #0891B2 100%)",
     glowColor: "rgba(34, 211, 238, 0.4)",
@@ -55,7 +55,7 @@ export function ActivePowerUpIndicator({ type, remainingTime, isVisible }: Activ
           initial={{ opacity: 0, scale: 0.8, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: -10 }}
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+          className="fixed top-20 left-0 right-0 z-40 pointer-events-none flex justify-center"
         >
           <motion.div
             className="flex items-center gap-2 px-4 py-2 rounded-full font-bold"

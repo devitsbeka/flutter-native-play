@@ -344,7 +344,7 @@ export default function Index() {
         isOpen={isDailyRewardsOpen} 
         onClose={() => setIsDailyRewardsOpen(false)} 
         currentStreak={currentStreak || 1}
-        onClaim={() => console.log("Claimed daily reward")}
+        onClaim={() => setIsDailyRewardsOpen(false)}
       />
       <PowerUpDetailModal 
         isOpen={selectedPowerUp !== null} 

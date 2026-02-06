@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ChunkyButtonProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline" | "outlineGreen" | "white" | "whitePurple";
+  variant?: "primary" | "secondary" | "success" | "danger" | "mint" | "outline" | "outlineGreen" | "white" | "whitePurple" | "gold";
   size?: "sm" | "md" | "compact" | "lg" | "xl";
   children: React.ReactNode;
   icon?: React.ReactNode;
@@ -114,6 +114,17 @@ const variantStyles = {
     glow: "rgba(16, 185, 129, 0.15)",
     shine: "from-emerald-500/10 via-transparent to-transparent",
     particle: "bg-emerald-500/60",
+  },
+  gold: {
+    face: "bg-gradient-to-b from-[#FBBF24] via-[#F59E0B] to-[#D97706]",
+    textColor: "text-white",
+    depth: "#B45309",
+    border: "#D97706",
+    innerBorder: "rgba(255,255,255,0.35)",
+    outerStroke: "#92400E",
+    glow: "rgba(245, 158, 11, 0.5)",
+    shine: "from-white/40 via-white/15 to-transparent",
+    particle: "bg-white/50",
   },
 };
 

@@ -21,6 +21,7 @@ import { LeaderboardCardSkeleton, MobileLeaderboardSkeleton, DesktopLeaderboards
 import { HeaderActions } from "@/components/shared/HeaderActions";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ChunkyButton } from "@/components/ui/chunky-button";
 
 import {
   Carousel,
@@ -42,115 +43,12 @@ const TROPHY_SIZES = {
   mobile: 100,
 };
 
-// Animated stroke colors for league indicator
-const LEAGUE_STROKE_COLORS: Record<number, { from: string; via: string; to: string }> = {
-  1: { // Bronze
-    from: '#CD7F32',
-    via: '#B87333',
-    to: '#8B4513'
-  },
-  2: { // Silver
-    from: '#C0C0C0',
-    via: '#E8E8E8',
-    to: '#A8A8A8'
-  },
-  3: { // Gold
-    from: '#FFD700',
-    via: '#FFA500',
-    to: '#DAA520'
-  }
-};
-
-// Premium metallic league badge with light sweep animation
-const AnimatedLeagueBadge = ({ tier }: { tier: number }) => {
-  // Refined metallic color schemes with proper text contrast
-  const metallicStyles: Record<number, { 
-    base: string;        // Core metallic color
-    highlight: string;   // Top highlight
-    border: string;      // Border/edge color
-    textColor: string;   // Text color for contrast
-    shadowColor: string; // Text shadow for depth
-  }> = {
-    1: { // Bronze - Warm copper tones
-      base: '#B87333',
-      highlight: 'rgba(222, 184, 135, 0.6)',
-      border: '#8B4513',
-      textColor: '#FFF8E7',
-      shadowColor: 'rgba(69, 35, 10, 0.4)'
-    },
-    2: { // Silver - Cool chrome
-      base: '#A8A8A8',
-      highlight: 'rgba(255, 255, 255, 0.7)',
-      border: '#6B6B6B',
-      textColor: '#1A1A1A',
-      shadowColor: 'rgba(255, 255, 255, 0.3)'
-    },
-    3: { // Gold - Rich warm gold
-      base: '#DAA520',
-      highlight: 'rgba(255, 236, 139, 0.7)',
-      border: '#996515',
-      textColor: '#2D1F00',
-      shadowColor: 'rgba(255, 255, 255, 0.25)'
-    }
-  };
-  
-  const style = metallicStyles[tier] || metallicStyles[1];
-  
-  return (
-    <div className="relative inline-flex items-center justify-center">
-      <motion.div
-        className="relative rounded-full overflow-hidden"
-        style={{
-          background: `
-            linear-gradient(180deg, 
-              ${style.highlight} 0%, 
-              transparent 40%
-            ),
-            linear-gradient(180deg, 
-              ${style.base} 0%, 
-              ${style.base} 100%
-            )
-          `,
-          border: `2px solid ${style.border}`,
-          boxShadow: `
-            0 4px 12px rgba(0,0,0,0.3),
-            inset 0 1px 0 ${style.highlight},
-            inset 0 -2px 4px rgba(0,0,0,0.2)
-          `,
-        }}
-      >
-        {/* Animated light sweep */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
-            backgroundSize: '200% 100%'
-          }}
-          animate={{
-            backgroundPosition: ['-100% 0%', '200% 0%']
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatDelay: 2,
-            ease: "easeInOut"
-          }}
-        />
-        
-        {/* Text with proper contrast */}
-        <span 
-          className="relative z-10 block text-sm px-5 py-2 font-bold"
-          style={{ 
-            color: style.textColor,
-            textShadow: `0 1px 1px ${style.shadowColor}`
-          }}
-        >
-          შენი ლიგა
-        </span>
-      </motion.div>
-    </div>
-  );
-};
+// League badge using ChunkyButton gold variant
+const AnimatedLeagueBadge = ({ tier: _tier }: { tier: number }) => (
+  <ChunkyButton variant="gold" size="sm" className="pointer-events-none">
+    შენი ლიგა
+  </ChunkyButton>
+);
 
 export default function Leaderboards() {
   const { user } = useAuth();

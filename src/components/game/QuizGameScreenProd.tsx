@@ -141,22 +141,23 @@ export function QuizGameScreenProd() {
     if (phase !== "playing" || answerRevealed || !currentQuestion) return;
 
     const interval = setInterval(() => {
-      // Check if timer is frozen
+      // Check if timer is frozen and freeze hasn't expired
       if (playerTimerFrozen && playerFreezeEndTime) {
         const remaining = Math.max(0, Math.ceil((playerFreezeEndTime - Date.now()) / 1000));
-        setFreezeTimeLeft(remaining);
-        if (remaining <= 0) {
-          // Freeze expired - timer will resume on next tick
-          setFreezeTimeLeft(0);
+        if (remaining > 0) {
+          setFreezeTimeLeft(remaining);
+          return; // Don't decrement timer while frozen
         }
-        return; // Don't decrement timer while frozen
+        // Freeze expired - fall through to resume normal timer
+        setFreezeTimeLeft(0);
       }
-      
+
       setFreezeTimeLeft(0);
       setTimeRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          handleAnswer(null);
+          // Schedule outside state update to avoid setState-during-render warning
+          setTimeout(() => handleAnswer(null), 0);
           return 0;
         }
         return prev - 1;
@@ -390,7 +391,7 @@ export function QuizGameScreenProd() {
               videoUrl={currentQuestion.videoUrl}
               audioUrl={currentQuestion.audioUrl}
               progressPercent={(timeRemaining / (timePerQuestion + playerTimerBonus)) * 100}
-              state={playerTimerFrozen ? "frozen" : "default"}
+              state={playerTimerFrozen && freezeTimeLeft > 0 ? "frozen" : "default"}
               difficultyLabel={!opponent && !hasMedia ? getDifficultyLabel(currentQuestion.difficulty) : undefined}
               difficultyColor={!opponent && !hasMedia ? DIFFICULTY_COLORS[currentQuestion.difficulty] || DIFFICULTY_COLORS.medium : undefined}
               timerSeconds={!opponent ? timeRemaining : undefined}
@@ -415,11 +416,11 @@ export function QuizGameScreenProd() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         <div className="w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 pb-2">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {currentQuestion.allAnswers.map((answer, index) => {
               const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
               if (hiddenAnswers.includes(answer)) return null;
-              
+
               return (
                 <motion.div
                   key={`${currentQuestionIndex}-${index}`}
@@ -442,7 +443,7 @@ export function QuizGameScreenProd() {
         </div>
       ) : (
         <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0 pb-2">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {currentQuestion.allAnswers.map((answer, index) => {
               const isHidden = hiddenAnswers.includes(answer);
               if (isHidden) return null;
@@ -511,12 +512,12 @@ export function QuizGameScreenProd() {
       {/* Persistent freeze indicator */}
       <ActivePowerUpIndicator
         type="freeze"
-        isVisible={playerTimerFrozen}
+        isVisible={playerTimerFrozen && freezeTimeLeft > 0}
         remainingTime={freezeTimeLeft}
       />
 
       {/* Screen-wide freeze effect */}
-      <PowerUpScreenEffect type="freeze" isActive={playerTimerFrozen} />
+      <PowerUpScreenEffect type="freeze" isActive={playerTimerFrozen && freezeTimeLeft > 0} />
       </div>
     </div>
   );

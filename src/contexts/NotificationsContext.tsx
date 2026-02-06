@@ -140,12 +140,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .subscribe((status) => {
         // Monitor subscription status for connection health
         if (status === 'SUBSCRIBED') {
-          console.log('[Notifications] Realtime connected');
+          // Realtime connected
           setIsConnected(true);
           // Refetch to catch any events that occurred during connection
           fetchNotifications();
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('[Notifications] Channel error or timeout');
+          // Channel error or timeout
           setIsConnected(false);
         } else if (status === 'CLOSED') {
           setIsConnected(false);
