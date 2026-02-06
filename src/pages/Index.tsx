@@ -942,8 +942,9 @@ export default function Index() {
             </motion.div>}
 
             {/* Mobile only: circular action buttons + avatar + info - LOGGED IN USERS ONLY */}
-            {user && <motion.div 
-              className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
+            {user && <div className="md:hidden w-full flex justify-center [@media(max-height:730px)]:[zoom:0.92] [@media(max-height:660px)]:[zoom:0.85] [@media(max-height:580px)]:[zoom:0.78]">
+            <motion.div
+              className="flex flex-col items-center w-full max-w-[360px] px-4"
               style={{ marginTop: -5 }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1220,7 +1221,8 @@ export default function Index() {
                   </div>
                 )}
               </motion.div>
-            </motion.div>}
+            </motion.div>
+            </div>}
         </div>
           </div>
 
