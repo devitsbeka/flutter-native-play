@@ -1,117 +1,110 @@
 
-
-# Plan: Update Reward Success Icon & Chest Cooldown
+# Plan: Reduce Gap in Shop Item Cards
 
 ## Summary
 
-1. Replace the party popper emoji (`🎉`) with a treasure pile icon when showing reward success notifications (chest/missions)
-2. Change the chest cooldown from **6 hours** to **24 hours**
+Remove the large empty white space between the description text and the price/button area in shop cards.
 
 ---
 
-## Current Behavior
+## Current Problem
 
-| Feature | Current |
-|---------|---------|
-| Reward success icon | Party popper emoji `🎉` |
-| Chest cooldown | 6 hours |
+The cards have a fixed aspect ratio (`aspect-[1/1.35]`) forcing a tall container, while the description has `flex-1` making it expand to fill remaining space - creating a large gap.
 
-## New Behavior
-
-| Feature | New |
-|---------|-----|
-| Reward success icon | Treasure pile image (from uploaded file) |
-| Chest cooldown | 24 hours |
+```text
+┌──────────────────┐
+│     [Icon]       │
+│      Name        │
+│   Description    │
+│                  │  ← Large empty space (flex-1)
+│                  │
+│    💎 30         │
+│   [შეძენა]       │
+└──────────────────┘
+```
 
 ---
 
-## Files to Modify
+## Solution
+
+1. **Remove fixed aspect ratio** - Let content determine height
+2. **Remove `flex-1` from description** - Stop it from expanding
+3. **Reduce margins/padding** - Tighter vertical spacing
+
+---
+
+## File to Modify
 
 | File | Changes |
 |------|---------|
-| `src/assets/` | Add `pile-of-treasure.png` image |
-| `src/components/home/ChestRewardModal.tsx` | Update success notification to use treasure image |
-| `src/components/home/MissionsModal.tsx` | Update success notification to use treasure image |
-| `src/config/rewardConfig.ts` | Change `CHEST_COOLDOWN_HOURS` from 6 to 24 |
-| `src/hooks/useRewardTimers.ts` | Change `CHEST_COOLDOWN_HOURS` from 6 to 24 |
-| `src/config/economyConfig.ts` | Change `CHEST_COOLDOWN_HOURS` from 6 to 24 |
+| `src/components/shop/ShopItemCard.tsx` | Remove aspect ratio, adjust gaps |
 
 ---
 
-## Technical Implementation
+## Technical Changes
 
-### 1. Add Treasure Pile Image
+### Lines 121-124 - Remove aspect ratio
 
-Copy the uploaded `pile-of-treasure.png` to `src/assets/icons/` for consistent organization.
-
-### 2. Update ChestRewardModal.tsx
-
-Change the success notification from emoji to image:
-
+**Before:**
 ```typescript
-import treasurePileIcon from "@/assets/icons/pile-of-treasure.png";
-
-// In handleClaim, update the notify call:
-if (result.success) {
-  notify.success(t("chest.rewardsReceived"), { 
-    icon: <img src={treasurePileIcon} alt="" className="w-12 h-12" /> 
-  });
-}
+"p-3 sm:p-4 md:p-5",
+"aspect-[1/1.35] sm:aspect-[1/1.45]",
 ```
 
-### 3. Update MissionsModal.tsx (if applicable)
-
-Find any similar success notifications and update to use the treasure pile icon.
-
-### 4. Update Chest Cooldown Configuration
-
-**src/config/rewardConfig.ts** (Line 49):
+**After:**
 ```typescript
-CHEST_COOLDOWN_HOURS: 24,   // 1x per day max
+"p-3 sm:p-4",
+"min-h-[180px] sm:min-h-[200px]",
 ```
 
-**src/hooks/useRewardTimers.ts** (Line 23):
+### Line 141 - Reduce icon margin
+
+**Before:**
 ```typescript
-const CHEST_COOLDOWN_HOURS = 24;
+className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-2 sm:mb-3"
 ```
 
-**src/config/economyConfig.ts** (Line 18):
+**After:**
 ```typescript
-CHEST_COOLDOWN_HOURS: 24,
+className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center mb-1.5 sm:mb-2"
+```
+
+### Line 156 - Remove flex-1 from description
+
+**Before:**
+```typescript
+<p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-1 sm:mb-2 flex-1">{description}</p>
+```
+
+**After:**
+```typescript
+<p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-2">{description}</p>
+```
+
+### Line 160 - Reduce price section gap
+
+**Before:**
+```typescript
+<div className="mt-auto w-full flex flex-col items-center gap-1 sm:gap-1.5">
+```
+
+**After:**
+```typescript
+<div className="mt-auto w-full flex flex-col items-center gap-0.5">
 ```
 
 ---
 
-## Visual Result
+## Expected Result
 
-**Before (reward success):**
 ```text
-┌──────────────────────────────┐
-│         🎉                   │
-│   ჯილდოები მიღებულია!        │
-└──────────────────────────────┘
+┌──────────────────┐
+│     [Icon]       │
+│      Name        │
+│   Description    │
+│    💎 30         │  ← Compact, no wasted space
+│   [შეძენა]       │
+└──────────────────┘
 ```
 
-**After (reward success):**
-```text
-┌──────────────────────────────┐
-│     [Treasure Pile Icon]     │
-│   ჯილდოები მიღებულია!        │
-└──────────────────────────────┘
-```
-
-**Before (chest cooldown):**
-- Timer shows max ~6 hours countdown
-
-**After (chest cooldown):**
-- Timer shows max ~24 hours countdown (once per day)
-
----
-
-## Summary of Changes
-
-1. Copy treasure pile image to project assets
-2. Update `ChestRewardModal.tsx` to use treasure pile icon in success notification
-3. Update `MissionsModal.tsx` if it has similar notifications
-4. Change chest cooldown from 6 hours to 24 hours in 3 config locations
-
+Cards will have consistent height based on content, with minimal gaps between elements while maintaining readability.
