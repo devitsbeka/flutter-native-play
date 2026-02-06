@@ -29,10 +29,10 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
       totalStars += cat.completedLevels.reduce((sum, l) => sum + l.stars_earned, 0);
     });
 
-    const handleUpgradeToPro = () => {
-      onClose();
-      navigate("/pro");
-    };
+  const handleUpgradeToPro = () => {
+    onClose();
+    navigate("/profile?tab=PRO");
+  };
 
     // Guest modal content
     if (isGuest) {
