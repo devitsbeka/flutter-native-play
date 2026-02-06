@@ -149,7 +149,7 @@ export default function Auth() {
         if (authResult.error) {
           notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
         } else {
-          notify.success(t("auth.welcomeBack"), { description: t("auth.signIn"), icon: toastIcon(triviaBuzzer) });
+          notify.success(t("auth.welcomeBack"), { icon: toastIcon(triviaBuzzer) });
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
       }
