@@ -1,114 +1,46 @@
 
-# Plan: Fix Trivia Leaderboard Score Recording & Display
+# Plan: Make Notification Cards Clickable and Improve Trivia Notifications
 
-## Problems Identified
+## Summary
 
-### Issue 1: Score Always Shows 0
-**Root Cause:** In `QuizPlayModal.tsx`, the score is calculated as `roundScore = score + (isCorrect ? 1 : 0)` at line 129. However, `score` is a React state that was just updated with `setScore((prev) => prev + 1)` at line 119. Due to React's asynchronous state updates, `score` still holds the OLD value when we calculate `roundScore`, causing the final answer's point to be missed.
+Enable click-to-navigate functionality on all notification cards and adjust the behavior for `trivia_played` notifications (when someone plays your trivia).
 
-**Example Flow:**
-```text
-Question 5 answered correctly:
-- score = 4 (from previous questions)
-- setScore(prev => prev + 1) → scheduled update to 5
-- roundScore = score + 1 = 4 + 1 = 5 ✅ (this works)
+---
 
-Question 5 answered incorrectly:
-- score = 4
-- isCorrect = false
-- roundScore = score + 0 = 4 ✅ (this works)
+## Current Behavior
 
-BUT: If playing multiple rounds and score was reset...
-```
-
-Wait - looking more carefully, the logic seems correct. The real issue is:
-- `score` is the state BEFORE the current answer
-- We add `(isCorrect ? 1 : 0)` for the current answer
-- This should give the correct total
-
-Let me re-examine... The issue is likely that the `awardRewards` function is being called but the score parameter is passed from a closure where it still has the old value, OR the code changes we made haven't been deployed yet.
-
-**Actual Issue:** Looking at the database, ALL scores are 0. The fix we just implemented (adding `score` parameter) is correct, but it may not be deployed yet. However, to ensure correctness, we should also:
-
-1. **De-duplicate leaderboard entries** - Show only the BEST score per user, not all plays
-2. **Ensure proper score tracking** - Add logging to confirm scores are being saved
-
-### Issue 2: Avatar Not Showing / Player Not Appearing
-**Root Cause:** Looking at the second screenshot showing "0 მოთამაშე" (0 players), this trivia simply hasn't been played yet by anyone. The leaderboard query and avatar display logic are correct.
-
-For the first screenshot showing "TriviaMaste" with 0/5 - the avatar IS showing correctly. The issue is just the score being 0.
+| Issue | Description |
+|-------|-------------|
+| Cards not fully clickable | Notifications with single action buttons only navigate when clicking the button itself |
+| "ითამაშე" button on `trivia_played` | Shows play button, but this is **your** trivia - you don't want to play it again, just view stats |
 
 ---
 
 ## Solution
 
-### File: `src/hooks/useTriviaLobby.ts`
+### 1. Make Entire Notification Card Clickable
 
-#### Change 1: Get BEST score per user (not all plays)
-Currently, the leaderboard shows ALL plays, so if a user plays 3 times, they appear 3 times. We should:
-- Group by user
-- Take the HIGHEST score for each user
-- Order by that highest score
+Currently, the card's `handleClick` function only navigates when there are no actions:
 
-**Current Query:**
 ```typescript
-const { data: plays } = await supabase
-  .from("quiz_post_plays")
-  .select("user_id, score, played_at")
-  .eq("post_id", triviaId)
-  .order("score", { ascending: false })
-  .order("played_at", { ascending: true })
-  .limit(20);
-```
-
-**Updated Query (using a subquery approach with JS):**
-```typescript
-// Get all plays for this trivia
-const { data: allPlays } = await supabase
-  .from("quiz_post_plays")
-  .select("user_id, score, played_at")
-  .eq("post_id", triviaId);
-
-// Group by user and get best score
-const bestByUser = new Map<string, { user_id: string; score: number; played_at: string }>();
-for (const play of allPlays || []) {
-  const existing = bestByUser.get(play.user_id);
-  if (!existing || (play.score || 0) > (existing.score || 0)) {
-    bestByUser.set(play.user_id, play);
+const handleClick = () => {
+  if (!hasDualActions && !hasSingleAction) {  // ← Only navigates if NO buttons
+    if (isUnread) onMarkRead(notification.id);
+    onNavigate(notification);
   }
-}
-
-// Sort by score desc, then by played_at asc
-const plays = Array.from(bestByUser.values())
-  .sort((a, b) => {
-    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
-    return new Date(a.played_at).getTime() - new Date(b.played_at).getTime();
-  })
-  .slice(0, 20);
+};
 ```
 
-### File: `src/components/social/QuizPlayModal.tsx`
+**Change:** Allow the card to be clickable even when it has a single action button. The card AND the button will both navigate.
 
-#### Change 2: Ensure score is correctly passed
-Add console.log to debug (can remove later):
-```typescript
-console.log('Saving score:', roundScore, 'to post:', postId);
-```
+### 2. Remove "ითამაშე" Button for `trivia_played`
 
-Actually, looking at the code again - the logic IS correct:
-- Line 129: `const roundScore = score + (isCorrect ? 1 : 0);`
-- `score` is the count BEFORE the last question
-- We add 1 if the last question was correct
-- This gives us the total correct answers
+For `trivia_played` notifications:
+- The trivia owner sees "Someone played your trivia"
+- They should click the card to view their trivia's leaderboard/stats
+- No need for a "Play" button - they created this trivia!
 
-The issue must be that the code change hasn't been deployed yet, OR there's a timing issue with the `rewardsAwarded.current` check.
-
-#### Change 3: Reset rewardsAwarded ref per round
-Looking at line 237: `rewardsAwarded.current = false;` in `startNextRound` - this seems fine.
-
-BUT there's a bug! The `rewardsAwarded.current` is checked at line 173 but NEVER set to `true` inside `awardRewards`! This means the function exits early on subsequent calls (which is intentional) but the first call should set it to true.
-
-Wait, let me check if it's being set... Looking at the code, I don't see `rewardsAwarded.current = true` anywhere in the `awardRewards` function! This could cause issues but wouldn't explain the 0 score.
+**Change:** Remove `isTriviaPlayed` from the `hasSingleAction` condition. This makes the card behave like a regular clickable notification without a button.
 
 ---
 
@@ -116,45 +48,108 @@ Wait, let me check if it's being set... Looking at the code, I don't see `reward
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useTriviaLobby.ts` | De-duplicate leaderboard to show best score per user |
-| `src/components/social/QuizPlayModal.tsx` | Set `rewardsAwarded.current = true` after awarding |
+| `src/components/notifications/CompactNotificationCard.tsx` | Remove `isTriviaPlayed` from `hasSingleAction`, update `handleClick` logic |
 
 ---
 
-## Technical Details
+## Technical Implementation
 
-### Change 1: useTriviaLobby.ts - Get best score per user
+### Change 1: Update `hasSingleAction` (Line 75)
 
-**Lines 89-122** will be updated to:
-1. Fetch all plays without limit
-2. Group by user_id and keep only the highest score
-3. Sort and limit to top 20
-
-### Change 2: QuizPlayModal.tsx - Set rewardsAwarded flag
-
-**After line 173**, add:
+**Before:**
 ```typescript
-rewardsAwarded.current = true;
+const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved || isTriviaPlayed) && !hasDualActions;
 ```
 
-This ensures rewards are only awarded once per round.
+**After:**
+```typescript
+const hasSingleAction = (isRoomInvite || isGameStarted || isGameResult || isTriviaLikedOrSaved) && !hasDualActions;
+```
+
+This removes the "ითამაშე" button from `trivia_played` notifications.
+
+### Change 2: Update `handleClick` (Lines 231-236)
+
+**Before:**
+```typescript
+const handleClick = () => {
+  if (!hasDualActions && !hasSingleAction) {
+    if (isUnread) onMarkRead(notification.id);
+    onNavigate(notification);
+  }
+};
+```
+
+**After:**
+```typescript
+const handleClick = () => {
+  // Allow card click for all notifications except those with dual actions (accept/decline)
+  if (!hasDualActions) {
+    if (isUnread) onMarkRead(notification.id);
+    onNavigate(notification);
+  }
+};
+```
+
+This makes cards clickable even when they have a single action button.
+
+### Change 3: Update cursor styling (Line 280)
+
+**Before:**
+```typescript
+!hasDualActions && !hasSingleAction && "cursor-pointer active:bg-foreground/5"
+```
+
+**After:**
+```typescript
+!hasDualActions && "cursor-pointer active:bg-foreground/5"
+```
 
 ---
 
-## Expected Results
+## Behavior After Changes
 
-After these changes:
-1. **Leaderboard shows best score per user** - If you play 3 times and score 2/5, 4/5, 3/5 → Shows 4/5
-2. **No duplicate entries** - Each user appears only once
-3. **Scores are properly saved** - The existing code change should work; we're just adding the flag set
-4. **Avatar displays correctly** - This was already working; no changes needed
+| Notification Type | Card Clickable | Button Shown | Destination |
+|------------------|----------------|--------------|-------------|
+| `friend_request` | No | Accept/Decline | N/A |
+| `challenge` | No | Accept/Decline | N/A |
+| `room_invite` | Yes | "ითამაშე" | Room join |
+| `game_started` | Yes | "ითამაშე" | Room |
+| `game_result` | Yes | "ნახვა" | Room/Profile |
+| `trivia_liked` | Yes | "ნახვა" | Trivia lobby |
+| `trivia_saved` | Yes | "ნახვა" | Trivia lobby |
+| `trivia_played` | Yes | **None** | Trivia lobby |
+| Others | Yes | None | Varies |
 
 ---
 
-## Testing Recommendation
+## Visual Result
 
-After implementing:
-1. Play a trivia and get some correct answers
-2. Check the leaderboard shows your actual score (e.g., 3/5)
-3. Play the same trivia again with a different score
-4. Verify the leaderboard shows your First score, not the latest
+**Before (`trivia_played`):**
+```text
+┌─────────────────────────────────────┐
+│ 🎮 TriviaMaste ითამაშა შენი ტრივია │
+│     გემრიელი ქართული სამზარეულო    │
+│                                     │
+│     ┌───────────┐                   │
+│     │ ითამაშე   │  ← Button shown  │
+│     └───────────┘                   │
+└─────────────────────────────────────┘
+```
+
+**After (`trivia_played`):**
+```text
+┌─────────────────────────────────────┐
+│ 🎮 TriviaMaste ითამაშა შენი ტრივია │ ← Entire card clickable
+│     გემრიელი ქართული სამზარეულო    │
+│                                     │ ← No button, cleaner look
+└─────────────────────────────────────┘
+```
+
+---
+
+## Summary of Changes
+
+1. Remove `isTriviaPlayed` from `hasSingleAction` condition
+2. Allow card click navigation for all non-dual-action notifications
+3. Update cursor styling to reflect clickability
