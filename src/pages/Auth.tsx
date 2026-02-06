@@ -246,11 +246,11 @@ export default function Auth() {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {isSignUp ? t("auth.createAccount") : t("auth.welcomeBack")}
           </h1>
-          <p className="text-foreground/80">
-            {isSignUp
-              ? t("onboarding.welcomeSubtitle")
-              : t("onboarding.startAdventure")}
-          </p>
+          {isSignUp && (
+            <p className="text-foreground/80">
+              {t("onboarding.welcomeSubtitle")}
+            </p>
+          )}
         </motion.div>
 
         {/* Form */}
@@ -291,7 +291,7 @@ export default function Auth() {
                 placeholder={isSignUp ? "you@example.com" : t("auth.usernameOrEmailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
               />
             </div>
             {errors.email && (
