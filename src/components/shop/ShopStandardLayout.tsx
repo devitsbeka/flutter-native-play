@@ -19,6 +19,7 @@ interface ShopStandardLayoutProps {
   initialScrollSection?: string;
   powerUps: Record<PowerUpType, number>;
   canAffordCoins: (amount: number) => boolean;
+  onPowerCardClick?: (type: PowerUpType) => void;
 }
 
 export function ShopStandardLayout({
@@ -32,6 +33,7 @@ export function ShopStandardLayout({
   initialScrollSection,
   powerUps,
   canAffordCoins,
+  onPowerCardClick,
 }: ShopStandardLayoutProps) {
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolled = useRef(false);
@@ -82,6 +84,7 @@ export function ShopStandardLayout({
         onPurchaseSingle={onSinglePowerPurchase}
         isPurchasing={isPurchasing}
         canAffordCoins={canAffordCoins}
+        onCardClick={onPowerCardClick}
       />
 
       {/* Product Sections */}

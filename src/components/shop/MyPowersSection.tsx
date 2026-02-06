@@ -21,9 +21,10 @@ interface MyPowersSectionProps {
   onPurchaseSingle: (powerType: PowerUpType) => Promise<void>;
   isPurchasing: string | null;
   canAffordCoins: (amount: number) => boolean;
+  onCardClick?: (type: PowerUpType) => void;
 }
 
-export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins }: MyPowersSectionProps) {
+export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins, onCardClick }: MyPowersSectionProps) {
   // Triple-layer defense: ensure powerUps is always a valid object
   const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
   
@@ -41,7 +42,8 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
           return (
             <div
               key={type}
-              className="relative flex flex-col items-center gap-3 px-3 pt-8 pb-4 rounded-2xl liquid-glass"
+              onClick={() => onCardClick?.(type)}
+              className="relative flex flex-col items-center gap-3 px-3 pt-8 pb-4 rounded-2xl liquid-glass cursor-pointer active:scale-95 transition-transform"
             >
               <img 
                 src={POWER_UP_ICONS[type]} 
@@ -52,7 +54,7 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canA
                 {count}
               </span>
               <button
-                onClick={() => onPurchaseSingle(type)}
+                onClick={(e) => { e.stopPropagation(); onPurchaseSingle(type); }}
                 disabled={isLoading || !canAfford}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50"
               >
