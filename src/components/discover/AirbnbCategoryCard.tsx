@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
@@ -49,6 +48,14 @@ const getPastelColors = (id: string): { base: string; accent: string; depth: str
   return PASTEL_PALETTES[index];
 };
 
+// Preload CategoryPage once (not per hover)
+let categoryPagePreloaded = false;
+function preloadCategoryPage() {
+  if (categoryPagePreloaded) return;
+  categoryPagePreloaded = true;
+  import("@/pages/CategoryPage");
+}
+
 export function AirbnbCategoryCard({
   id,
   categoryId,
@@ -74,9 +81,9 @@ export function AirbnbCategoryCard({
   const iconSize = 128;
   const [isPressed, setIsPressed] = React.useState(false);
 
-  // Memoized style objects to prevent unnecessary re-renders
   const buttonStyle = useMemo(() => ({
     transform: isPressed ? "translateY(5px)" : "translateY(0px)",
+    transition: "transform 0.1s ease-out",
     touchAction: "manipulation" as const,
   }), [isPressed]);
 
@@ -106,72 +113,43 @@ export function AirbnbCategoryCard({
     background: `linear-gradient(180deg, transparent 0%, ${pastel.base}40 20%, ${pastel.base}aa 45%, ${pastel.base}dd 65%, ${pastel.base} 85%)`,
   }), [isFull, pastel.base]);
 
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 12 }, (_, i) => ({
-        id: i,
-        size: 3 + Math.random() * 5,
-        x: 5 + Math.random() * 90,
-        y: 5 + Math.random() * 90,
-        delay: Math.random() * 3,
-        duration: 4 + Math.random() * 3,
-        drift: -15 + Math.random() * 30,
-      })),
-    []
-  );
-
-  const progressParticles = useMemo(
-    () =>
-      Array.from({ length: 6 }, (_, i) => ({
-        id: i,
-        delay: i * 0.4,
-        size: 2 + Math.random() * 2,
-      })),
-    []
-  );
-
   const progressPercent = (progress / totalLevels) * 100;
 
   return (
-    <motion.button
+    <button
       onClick={onClick}
-      whileHover={{ scale: 1.015 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
-      onPointerEnter={() => {
-        // Preload CategoryPage on hover for instant navigation
-        import("@/pages/CategoryPage");
-      }}
+      onPointerEnter={preloadCategoryPage}
       className="flex-shrink-0 w-full text-left"
       style={buttonStyle}
     >
       {/* 3D Chunky Container with depth layer */}
       <div className="relative">
         {/* Bottom depth layer - the 3D effect */}
-        <div 
+        <div
           className="absolute inset-0 rounded-[28px]"
           style={depthLayerStyle}
         />
-        
+
         {/* Main card face */}
-        <div 
+        <div
           className="relative w-full rounded-[28px] overflow-hidden border-[3px] border-white/40"
           style={mainCardStyle}
         >
           {/* Video/Icon Area with inner frame */}
           <div className={`relative w-full ${isFull ? 'aspect-[16/9]' : 'aspect-[4/3]'} m-2`} style={{ width: 'calc(100% - 16px)' }}>
             {/* Inner frame border matching container color */}
-            <div 
+            <div
               className="absolute inset-0 rounded-[20px] pointer-events-none z-[2]"
               style={innerFrameStyle}
             />
-            
+
             {/* Video content container */}
             <div className="absolute inset-0 rounded-[20px] overflow-hidden">
             {/* Top shine effect */}
-            <div 
+            <div
               className="absolute inset-x-0 top-0 h-1/3 pointer-events-none z-[1]"
               style={{
                 background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 100%)',
@@ -179,57 +157,25 @@ export function AirbnbCategoryCard({
               }}
             />
 
-            {/* Floating Particles */}
-            <div className="absolute inset-0 overflow-hidden">
-              {particles.map((particle) => (
-                <motion.div
-                  key={particle.id}
-                  className="absolute rounded-full bg-white/60"
-                  style={{
-                    width: particle.size,
-                    height: particle.size,
-                    left: `${particle.x}%`,
-                    top: `${particle.y}%`,
-                  }}
-                  animate={{
-                    y: [0, -25, 0],
-                    x: [0, particle.drift, 0],
-                    opacity: [0.3, 0.8, 0.3],
-                    scale: [1, 1.3, 1],
-                  }}
-                  transition={{
-                    duration: particle.duration,
-                    delay: particle.delay,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-            </div>
-
             {/* Video (ping-pong seamless loop) or Icon */}
             {videoUrl ? (
               <>
                 <PingPongVideo src={videoUrl} posterUrl={getCategoryImageUrl(categoryId || id) || undefined} />
                 {/* Gradient mask overlay on bottom of video */}
-                <div 
+                <div
                   className="absolute inset-x-0 bottom-0 pointer-events-none z-[1]"
                   style={videoGradientStyle}
                 />
               </>
             ) : (
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-              >
+              <div className="absolute inset-0 flex items-center justify-center">
                 <DynamicIcon
                   slug={iconSlug || undefined}
                   categoryId={categoryId}
                   size={iconSize}
                   className="drop-shadow-lg filter brightness-110"
                 />
-              </motion.div>
+              </div>
             )}
 
             {/* Heart/Favorite Button - Chunky style */}
@@ -253,24 +199,22 @@ export function AirbnbCategoryCard({
 
             {/* NEW! Badge for new levels - takes priority */}
             {hasNewLevels && !leaderboardRank && (
-              <motion.div 
+              <div
                 className="absolute top-3 left-3 px-3 py-2 rounded-full flex items-center justify-center border-2 border-purple-300"
                 style={{
                   background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%)',
                   boxShadow: '0 4px 0 0 rgba(139,92,246,0.3), inset 0 2px 0 rgba(255,255,255,0.3), 0 0 12px rgba(139,92,246,0.4)',
                 }}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <span className="text-xs font-bold text-white leading-none">
                   ახალი!
                 </span>
-              </motion.div>
+              </div>
             )}
 
             {/* Badge - only show if no leaderboard rank and no new levels badge */}
             {badge && !leaderboardRank && !hasNewLevels && (
-              <div 
+              <div
                 className="absolute top-3 left-3 px-3 py-2 rounded-full bg-white flex items-center justify-center border-2 border-white/80"
                 style={{
                   boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
@@ -284,7 +228,7 @@ export function AirbnbCategoryCard({
 
             {/* Leaderboard Rank Badge - Only show for top 3 with medals */}
             {leaderboardRank && leaderboardRank > 0 && leaderboardRank <= 3 && (
-              <div 
+              <div
                 className="absolute top-3 left-3 h-10 px-3 rounded-full flex items-center gap-1.5 z-10 bg-white border-2 border-white/80"
                 style={{
                   boxShadow: '0 4px 0 0 rgba(0,0,0,0.1), inset 0 2px 0 rgba(255,255,255,0.8)',
@@ -300,72 +244,48 @@ export function AirbnbCategoryCard({
             )}
 
             {/* Progress Bar Area with gradient mask */}
-             <div className={`absolute left-0 right-0 ${isFull ? 'bottom-0' : 'bottom-0'}`}>
+             <div className={`absolute left-0 right-0 bottom-0`}>
               {/* Strong gradient mask for video fade */}
-              <div 
+              <div
                  className="absolute inset-x-0 pointer-events-none z-0"
                 style={progressGradientStyle}
               />
-              
+
               {/* Progress bar content */}
                <div className={`relative z-10 px-4 ${isFull ? 'pb-4 pt-12' : 'pb-3 pt-10'}`}>
                 {/* Progress bar with integrated count */}
-                <div 
+                <div
                   className={`relative isolate z-0 rounded-full ${isFull ? 'h-6' : 'h-5'} border-[2.5px] border-white/70 overflow-visible`}
                   style={{
                     background: 'rgba(255,255,255,0.5)',
                     boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.08), 0 3px 0 rgba(0,0,0,0.06)',
                   }}
                 >
-                  {/* Inner clip layer so the fill stays rounded while allowing end-cap to overflow */}
+                  {/* Inner clip layer */}
                   <div className="absolute inset-0 rounded-full overflow-hidden">
-                    {/* Progress fill */}
-                    <motion.div 
+                    {/* Progress fill — CSS transition instead of framer-motion */}
+                    <div
                       className="h-full rounded-full relative overflow-hidden z-0"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPercent}%` }}
-                      transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                      style={{ 
+                      style={{
+                        width: `${progressPercent}%`,
+                        transition: 'width 0.6s ease-out',
                         background: 'linear-gradient(180deg, #FFE066 0%, #FFB800 40%, #FF9500 100%)',
-                        boxShadow: progressPercent > 0 
-                          ? 'inset 0 2px 0 rgba(255,255,255,0.6), 0 0 16px rgba(255,170,0,0.5)' 
+                        boxShadow: progressPercent > 0
+                          ? 'inset 0 2px 0 rgba(255,255,255,0.6), 0 0 16px rgba(255,170,0,0.5)'
                           : 'none',
                       }}
                     >
                       {/* Shine on progress */}
-                      <div 
+                      <div
                         className="absolute inset-x-0 top-0 h-1/2 rounded-t-full z-0"
                         style={{
                           background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 100%)',
                         }}
                       />
-                      {progressPercent > 10 && progressParticles.map((p) => (
-                        <motion.div
-                          key={p.id}
-                          className="absolute rounded-full bg-white/80 z-0"
-                          style={{
-                            width: p.size,
-                            height: p.size,
-                            top: '50%',
-                            marginTop: -p.size / 2,
-                          }}
-                          animate={{
-                            left: ['-5%', '105%'],
-                            opacity: [0, 1, 1, 0],
-                            scale: [0.5, 1, 1, 0.5],
-                          }}
-                          transition={{
-                            duration: 2.5,
-                            delay: p.delay,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        />
-                      ))}
-                    </motion.div>
+                    </div>
                   </div>
-                  
-                  {/* Completed end-cap check circle (kept in front) */}
+
+                  {/* Completed end-cap check circle */}
                   {isCompleted && (
                     <div
                       className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-8 h-8 rounded-full flex items-center justify-center"
@@ -378,10 +298,10 @@ export function AirbnbCategoryCard({
                       <span className="text-white text-sm font-bold leading-none">✓</span>
                     </div>
                   )}
-                  
-                  {/* Progress count inside the bar (remove the black check when completed) */}
+
+                  {/* Progress count inside the bar */}
                   <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                    <span 
+                    <span
                       className={`font-bold tracking-wide ${isFull ? 'text-sm' : 'text-xs'}`}
                       style={{
                         color: '#5a4a20',
@@ -397,9 +317,9 @@ export function AirbnbCategoryCard({
             </div>
           </div>
 
-          {/* Name Section - Direct text on the chunky container */}
+          {/* Name Section */}
           <div className="px-5 pb-3" style={{ marginTop: '-1px' }}>
-            <h3 
+            <h3
               className="font-bold tracking-wider line-clamp-1 text-left"
               style={{
                 fontFamily: "'Google Sans', sans-serif",
@@ -415,6 +335,6 @@ export function AirbnbCategoryCard({
           </div>
         </div>
       </div>
-    </motion.button>
+    </button>
   );
 }

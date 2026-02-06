@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -17,9 +17,40 @@ import { CategoryGrid } from "@/components/discover/CategoryGrid";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { HeaderActions } from "@/components/shared/HeaderActions";
 
+// ─── Lazy Section: only mounts children when scrolled near viewport ─────
+
+function LazySection({ children, minHeight = 280 }: { children: React.ReactNode; minHeight?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref}>
+      {visible ? children : <div style={{ height: minHeight }} />}
+    </div>
+  );
+}
+
+// ─── Main component ─────────────────────────────────────────────────────
+
 export default function Discover() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,14 +73,6 @@ export default function Discover() {
   const { ranks: leaderboardRanks } = useUserCategoryRanks();
   const { newLevelCategories } = useNewLevels();
 
-  // Preload CategoryPage chunk when Discover mounts
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      import("@/pages/CategoryPage");
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Transform progress to simple number map
   const progressMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -62,7 +85,7 @@ export default function Discover() {
   // Filter categories based on search and tab
   const filteredCategories = useMemo(() => {
     let result = categories;
-    
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -71,11 +94,11 @@ export default function Discover() {
           cat.description?.toLowerCase().includes(query)
       );
     }
-    
+
     if (activeTab !== "all") {
       result = result.filter((cat) => cat.type === activeTab);
     }
-    
+
     return result;
   }, [categories, searchQuery, activeTab]);
 
@@ -96,64 +119,56 @@ export default function Discover() {
   // Get favorite categories - match by uuid, sorted by priority
   const favoriteCategories = useMemo(() => {
     const favs = categories.filter((cat) => favorites.has(cat.uuid || cat.id));
-    
-    // Sort: 1) New levels first, 2) In-progress, 3) Not started, 4) Completed last
+
     return favs.sort((a, b) => {
       const aProgress = progressMap[a.id] || 0;
       const bProgress = progressMap[b.id] || 0;
       const aTotalLevels = (a as any).totalLevels || (a as any).total_levels || 20;
       const bTotalLevels = (b as any).totalLevels || (b as any).total_levels || 20;
-      
+
       const aHasNew = newLevelCategories.has(a.uuid || a.id);
       const bHasNew = newLevelCategories.has(b.uuid || b.id);
       const aCompleted = aProgress >= aTotalLevels;
       const bCompleted = bProgress >= bTotalLevels;
-      
-      // Priority 1: Categories with NEW levels first
+
       if (aHasNew && !bHasNew) return -1;
       if (!aHasNew && bHasNew) return 1;
-      
-      // Priority 2: Completed categories go last
       if (aCompleted && !bCompleted) return 1;
       if (!aCompleted && bCompleted) return -1;
-      
-      // Priority 3: In-progress before not-started
+
       const aInProgress = aProgress > 0 && !aCompleted;
       const bInProgress = bProgress > 0 && !bCompleted;
       if (aInProgress && !bInProgress) return -1;
       if (!aInProgress && bInProgress) return 1;
-      
+
       return 0;
     });
   }, [categories, favorites, progressMap, newLevelCategories]);
 
-  // Get popular categories (random 15, same order for the whole day)
+  // Popular categories — seeded shuffle, stable for the day
   const popularCategories = useMemo(() => {
     if (categories.length === 0) return [];
-    
-    // Create a daily seed based on current date
+
     const today = new Date();
-    const dailySeed = today.getFullYear() * 10000 + 
-                      (today.getMonth() + 1) * 100 + 
+    const dailySeed = today.getFullYear() * 10000 +
+                      (today.getMonth() + 1) * 100 +
                       today.getDate();
-    
-    // Seeded random function (deterministic)
+
     const seededRandom = (seed: number) => {
       const x = Math.sin(seed) * 10000;
       return x - Math.floor(x);
     };
-    
-    // Fisher-Yates shuffle with seeded random
+
     const shuffled = [...categories];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(seededRandom(dailySeed + i) * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    
+
     return shuffled.slice(0, 15);
   }, [categories]);
 
-  // Get recently viewed from localStorage
+  // Recently viewed from localStorage
   const recentlyViewed = useMemo(() => {
     const stored = localStorage.getItem("recentlyViewedCategories");
     if (!stored) return [];
@@ -169,7 +184,6 @@ export default function Discover() {
   }, [categories]);
 
   const handleCategoryClick = (categoryId: string) => {
-    // Save to recently viewed
     const stored = localStorage.getItem("recentlyViewedCategories");
     let ids: string[] = [];
     try {
@@ -179,7 +193,7 @@ export default function Discover() {
     }
     ids = [categoryId, ...ids.filter((id) => id !== categoryId)].slice(0, 10);
     localStorage.setItem("recentlyViewedCategories", JSON.stringify(ids));
-    
+
     navigate(`/category/${categoryId}`);
   };
 
@@ -188,18 +202,14 @@ export default function Discover() {
     return undefined;
   };
 
-  // Show search results if searching
   const isSearching = searchQuery.trim().length > 0;
 
   return (
     <MainLayout showPlayButton={false}>
       <div className="min-h-screen pb-24 bg-[#F8F6FC]">
-      {/* Subtle overlay for depth */}
-      <div className="fixed inset-0 bg-gradient-to-b from-white/30 via-white/10 to-white/20 pointer-events-none z-0" />
 
-        {/* Sticky header section - always visible */}
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md">
-          {/* Header with Page Title */}
+        {/* Sticky header section */}
+        <div className="sticky top-0 z-20 bg-[#F8F6FC]/95">
           <div>
             <PageHeader
               title={t("discover.title")}
@@ -253,7 +263,7 @@ export default function Discover() {
             )}
           </AnimatePresence>
 
-          {/* Tabs - always visible */}
+          {/* Tabs */}
           <div className="px-4 pt-2 pb-1">
             <IconTabBar
               tabs={tabs}
@@ -271,38 +281,29 @@ export default function Discover() {
               <div className="w-8 h-8 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
             </div>
           ) : isSearching ? (
-            /* Search Results */
-            <AnimatePresence mode="wait">
-              <motion.div
-                key="search-results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <SectionHeader
-                  title={t("discover.searchResults").replace("{count}", String(filteredCategories.length))}
-                />
-                <CategoryCarousel
-                  categories={filteredCategories}
-                  progress={progressMap}
-                  favorites={favorites}
-                  leaderboardRanks={leaderboardRanks}
-                  onCategoryClick={handleCategoryClick}
-                  onFavoriteToggle={toggleFavorite}
-                />
-                {filteredCategories.length === 0 && (
-                  <div className="text-center py-12 px-4">
-                    <p className="text-slate-500">
-                      {t("discover.nothingFound").replace("{query}", searchQuery)}
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+            <div>
+              <SectionHeader
+                title={t("discover.searchResults").replace("{count}", String(filteredCategories.length))}
+              />
+              <CategoryCarousel
+                categories={filteredCategories}
+                progress={progressMap}
+                favorites={favorites}
+                leaderboardRanks={leaderboardRanks}
+                onCategoryClick={handleCategoryClick}
+                onFavoriteToggle={toggleFavorite}
+              />
+              {filteredCategories.length === 0 && (
+                <div className="text-center py-12 px-4">
+                  <p className="text-slate-500">
+                    {t("discover.nothingFound").replace("{query}", searchQuery)}
+                  </p>
+                </div>
+              )}
+            </div>
           ) : activeTab === "all" ? (
-            /* All Tab - Shows all sections in order: Popular, Classic, Fun, Educational, Recently Viewed, Favorites */
             <>
-              {/* Popular */}
+              {/* Popular — renders immediately (above the fold) */}
               <section className="mb-6">
                 <SectionHeader title={t("discover.popular")} />
                 <CategoryCarousel
@@ -316,51 +317,12 @@ export default function Discover() {
                 />
               </section>
 
-              {/* Classic */}
-              <section className="mb-6">
-                <SectionHeader title={t("discover.classicTrivia")} />
-                <CategoryCarousel
-                  categories={classicCategories}
-                  progress={progressMap}
-                  favorites={favorites}
-                  leaderboardRanks={leaderboardRanks}
-                  onCategoryClick={handleCategoryClick}
-                  onFavoriteToggle={toggleFavorite}
-                />
-              </section>
-
-              {/* Fun */}
-              <section className="mb-6">
-                <SectionHeader title={t("discover.fun")} />
-                <CategoryCarousel
-                  categories={funCategories}
-                  progress={progressMap}
-                  favorites={favorites}
-                  leaderboardRanks={leaderboardRanks}
-                  onCategoryClick={handleCategoryClick}
-                  onFavoriteToggle={toggleFavorite}
-                />
-              </section>
-
-              {/* Educational */}
-              <section className="mb-6">
-                <SectionHeader title={t("discover.educational")} />
-                <CategoryCarousel
-                  categories={educationalCategories}
-                  progress={progressMap}
-                  favorites={favorites}
-                  leaderboardRanks={leaderboardRanks}
-                  onCategoryClick={handleCategoryClick}
-                  onFavoriteToggle={toggleFavorite}
-                />
-              </section>
-
-              {/* Recently Viewed */}
-              {recentlyViewed.length > 0 && (
+              {/* Classic — lazy */}
+              <LazySection>
                 <section className="mb-6">
-                  <SectionHeader title={t("discover.recentlyViewed")} />
+                  <SectionHeader title={t("discover.classicTrivia")} />
                   <CategoryCarousel
-                    categories={recentlyViewed as any[]}
+                    categories={classicCategories}
                     progress={progressMap}
                     favorites={favorites}
                     leaderboardRanks={leaderboardRanks}
@@ -368,25 +330,73 @@ export default function Discover() {
                     onFavoriteToggle={toggleFavorite}
                   />
                 </section>
+              </LazySection>
+
+              {/* Fun — lazy */}
+              <LazySection>
+                <section className="mb-6">
+                  <SectionHeader title={t("discover.fun")} />
+                  <CategoryCarousel
+                    categories={funCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              </LazySection>
+
+              {/* Educational — lazy */}
+              <LazySection>
+                <section className="mb-6">
+                  <SectionHeader title={t("discover.educational")} />
+                  <CategoryCarousel
+                    categories={educationalCategories}
+                    progress={progressMap}
+                    favorites={favorites}
+                    leaderboardRanks={leaderboardRanks}
+                    onCategoryClick={handleCategoryClick}
+                    onFavoriteToggle={toggleFavorite}
+                  />
+                </section>
+              </LazySection>
+
+              {/* Recently Viewed — lazy */}
+              {recentlyViewed.length > 0 && (
+                <LazySection>
+                  <section className="mb-6">
+                    <SectionHeader title={t("discover.recentlyViewed")} />
+                    <CategoryCarousel
+                      categories={recentlyViewed as any[]}
+                      progress={progressMap}
+                      favorites={favorites}
+                      leaderboardRanks={leaderboardRanks}
+                      onCategoryClick={handleCategoryClick}
+                      onFavoriteToggle={toggleFavorite}
+                    />
+                  </section>
+                </LazySection>
               )}
 
-              {/* Favorites */}
+              {/* Favorites — lazy */}
               {favoriteCategories.length > 0 && (
-                <section className="mb-6">
-                  <SectionHeader title={t("discover.favorites")} />
-                  <CategoryCarousel
-                    categories={favoriteCategories}
-                    progress={progressMap}
-                    favorites={favorites}
-                    leaderboardRanks={leaderboardRanks}
-                    onCategoryClick={handleCategoryClick}
-                    onFavoriteToggle={toggleFavorite}
-                  />
-                </section>
+                <LazySection>
+                  <section className="mb-6">
+                    <SectionHeader title={t("discover.favorites")} />
+                    <CategoryCarousel
+                      categories={favoriteCategories}
+                      progress={progressMap}
+                      favorites={favorites}
+                      leaderboardRanks={leaderboardRanks}
+                      onCategoryClick={handleCategoryClick}
+                      onFavoriteToggle={toggleFavorite}
+                    />
+                  </section>
+                </LazySection>
               )}
             </>
           ) : activeTab === "recently_viewed" ? (
-            /* Recently Viewed Tab - Grid Layout */
             <section>
               <SectionHeader title={t("discover.recentlyViewed")} />
               <CategoryGrid
@@ -406,7 +416,6 @@ export default function Discover() {
               )}
             </section>
           ) : activeTab === "popular" ? (
-            /* Popular Tab - Grid Layout */
             <section>
               <SectionHeader title={t("discover.popular")} />
               <CategoryGrid
@@ -420,7 +429,6 @@ export default function Discover() {
               />
             </section>
           ) : activeTab === "favorites" ? (
-            /* Favorites Tab - Grid Layout */
             <section>
               <SectionHeader title={t("discover.favorites")} />
               <CategoryGrid
@@ -440,7 +448,6 @@ export default function Discover() {
               )}
             </section>
           ) : (
-            /* Filtered by Tab - Grid Layout */
             <section>
               <SectionHeader
                 title={tabs.find((t) => t.id === activeTab)?.label || ""}
