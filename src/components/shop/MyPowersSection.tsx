@@ -1,10 +1,11 @@
-import { Plus } from "lucide-react";
 import { PowerUpType } from "@/hooks/useUserPowerUps";
+import { REWARDS } from "@/config/rewardConfig";
 
 import icon5050 from "@/assets/powers/5050.png";
 import iconFreeze from "@/assets/powers/freeze.png";
 import iconReplace from "@/assets/powers/replace.png";
 import iconTimeDrain from "@/assets/powers/time-drain.png";
+import coinIcon from "@/assets/icons/icon-coin.png";
 
 const POWER_UP_ICONS: Record<PowerUpType, string> = {
   "5050": icon5050,
@@ -19,9 +20,10 @@ interface MyPowersSectionProps {
   powerUps: Record<PowerUpType, number>;
   onPurchaseSingle: (powerType: PowerUpType) => Promise<void>;
   isPurchasing: string | null;
+  canAffordCoins: (amount: number) => boolean;
 }
 
-export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: MyPowersSectionProps) {
+export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing, canAffordCoins }: MyPowersSectionProps) {
   // Triple-layer defense: ensure powerUps is always a valid object
   const safeData = powerUps ?? { "5050": 0, freeze: 0, replace: 0, "time-drain": 0 };
   
@@ -33,6 +35,8 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
         {POWER_UP_ORDER.map((type) => {
           const count = safeData[type] ?? 0;
           const isLoading = isPurchasing === `single_${type}`;
+          const price = REWARDS.POWER_UP_PRICES[type] ?? 100;
+          const canAfford = canAffordCoins(price);
           
           return (
             <div
@@ -49,13 +53,16 @@ export function MyPowersSection({ powerUps, onPurchaseSingle, isPurchasing }: My
               </span>
               <button
                 onClick={() => onPurchaseSingle(type)}
-                disabled={isLoading}
-                className="w-9 h-9 rounded-full bg-transparent border-[1.5px] border-primary flex items-center justify-center text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+                disabled={isLoading || !canAfford}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-warning/20 border border-warning/30 text-warning-foreground hover:bg-warning/30 transition-colors disabled:opacity-50"
               >
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-warning border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Plus className="w-4 h-4" />
+                  <>
+                    <img src={coinIcon} alt="" className="w-4 h-4" />
+                    <span className="text-sm font-semibold">{price}</span>
+                  </>
                 )}
               </button>
             </div>

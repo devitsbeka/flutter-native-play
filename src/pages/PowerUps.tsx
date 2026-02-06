@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useShopData, ShopItem } from "@/hooks/useShopData";
 import { useShopPageData } from "@/hooks/useShopPageData";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
+import { REWARDS } from "@/config/rewardConfig";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
@@ -40,7 +41,7 @@ export default function PowerUps() {
   const { data: shopData } = useShopPageData();
   
   const { addPowerUp, refetch } = useUserPowerUps();
-  const { gems, spendGems, addCoins } = useCurrency();
+  const { gems, coins, spendGems, spendCoins, canAffordCoins, addCoins } = useCurrency();
   const { activateVip } = useVipStatus();
   const { unlockFrame } = useAvatarFrames();
   const { playSound } = useSound();
@@ -89,9 +90,10 @@ export default function PowerUps() {
       return;
     }
 
-    if (gems < 1) {
-      setRequiredGems(1);
-      setShowNotEnoughGemsModal(true);
+    const price = REWARDS.POWER_UP_PRICES[powerType] ?? 100;
+
+    if (!canAffordCoins(price)) {
+      notify.error(t("shop.notEnoughCoins"));
       playSound("wrong-answer");
       return;
     }
@@ -99,7 +101,7 @@ export default function PowerUps() {
     setIsPurchasing(`single_${powerType}`);
 
     try {
-      const spent = await spendGems(1, {
+      const spent = await spendCoins(price, {
         productId: `single_${powerType}`,
         productType: "powerup",
         valueReceived: { [powerType]: 1 },
@@ -300,6 +302,7 @@ export default function PowerUps() {
                 onSinglePowerPurchase={handleSinglePowerPurchase}
                 initialScrollSection={initialScrollSection}
                 powerUps={shopData.powerUps}
+                canAffordCoins={canAffordCoins}
               />
             </div>
           </div>
