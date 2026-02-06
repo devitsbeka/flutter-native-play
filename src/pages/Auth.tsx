@@ -246,11 +246,6 @@ export default function Auth() {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {isSignUp ? t("auth.createAccount") : t("auth.welcomeBack")}
           </h1>
-          {isSignUp && (
-            <p className="text-foreground/80">
-              {t("onboarding.welcomeSubtitle")}
-            </p>
-          )}
         </motion.div>
 
         {/* Form */}
