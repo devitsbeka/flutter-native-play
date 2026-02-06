@@ -19,6 +19,7 @@ interface ShopStandardLayoutProps {
   initialScrollSection?: string;
   powerUps: Record<PowerUpType, number>;
   canAffordCoins: (amount: number) => boolean;
+  onPowerCardClick?: (type: PowerUpType) => void;
 }
 
 export function ShopStandardLayout({
