@@ -129,7 +129,7 @@ export function GlobalSplineBackground() {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ filter: "blur(8px)" }}
         >
-          <source src="/videos/floating-blob.webm" type="video/webm" />
+          <source src="/videos/floating-blob.mp4" type="video/mp4" />
         </video>
       </div>
       

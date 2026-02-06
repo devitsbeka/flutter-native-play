@@ -125,7 +125,7 @@ export const GenerationHistoryTable = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {gen.avatar_url?.includes('.mp4') || gen.avatar_url?.includes('.webm') || gen.avatar_url?.includes('video') ? (
+                    {gen.avatar_url?.includes('.mp4') || gen.avatar_url?.includes('video') ? (
                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center border">
                         <Film className="w-5 h-5 text-amber-500" />
                       </div>
