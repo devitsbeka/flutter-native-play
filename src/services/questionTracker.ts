@@ -12,6 +12,7 @@ const MAX_TRACKED_PER_CATEGORY = 500; // Remember last 500 questions per categor
 const GLOBAL_MAX_TRACKED = 1000; // Global limit across all categories
 const SEEN_MAX_TRACKED = 5000; // Track up to 5000 seen questions across all modes
 const RESET_THRESHOLD = 1.0; // Only reset when 100% of available questions have been asked
+const CATEGORY_SEEN_KEY_PREFIX = 'cat_'; // Prefix for category-wide tracking
 
 interface TrackerData {
   categories: Record<string, string[]>; // categoryId -> questionIds
@@ -124,6 +125,64 @@ export function clearCategoryLevelSeen(categoryId: string, levelNumber: number):
     delete data.categoryLevels[key];
   }
   saveTrackerData(data);
+}
+
+// ============================================================================
+// CATEGORY-WIDE TRACKING (for category quiz mode - fixes repetition issue)
+// ============================================================================
+
+/**
+ * Get all seen question IDs for an entire category (not level-specific)
+ * This is the primary tracking for category quiz mode
+ */
+export function getCategorySeenIds(categoryId: string): string[] {
+  const data = getTrackerData();
+  const key = `${CATEGORY_SEEN_KEY_PREFIX}${categoryId}`;
+  return data.categoryLevels?.[key] || [];
+}
+
+/**
+ * Mark questions as seen for a category (not level-specific)
+ * This ensures questions don't repeat across ANY level in the category
+ */
+export function markCategorySeen(categoryId: string, questionIds: string[]): void {
+  const data = getTrackerData();
+  const key = `${CATEGORY_SEEN_KEY_PREFIX}${categoryId}`;
+  
+  if (!data.categoryLevels) {
+    data.categoryLevels = {};
+  }
+  
+  const existing = data.categoryLevels[key] || [];
+  const updated = [...new Set([...existing, ...questionIds])];
+  // Keep max 500 per category to limit storage
+  data.categoryLevels[key] = updated.slice(-MAX_TRACKED_PER_CATEGORY);
+  
+  // Also update global seen
+  const updatedSeen = [...new Set([...data.seen, ...questionIds])];
+  data.seen = updatedSeen.slice(-SEEN_MAX_TRACKED);
+  
+  saveTrackerData(data);
+}
+
+/**
+ * Clear category-wide seen questions (when pool is fully exhausted)
+ */
+export function clearCategorySeen(categoryId: string): void {
+  const data = getTrackerData();
+  const key = `${CATEGORY_SEEN_KEY_PREFIX}${categoryId}`;
+  if (data.categoryLevels) {
+    delete data.categoryLevels[key];
+  }
+  saveTrackerData(data);
+}
+
+/**
+ * Check if category-wide pool should be reset
+ */
+export function shouldResetCategorySeen(categoryId: string, totalAvailable: number): boolean {
+  const seenIds = getCategorySeenIds(categoryId);
+  return seenIds.length >= totalAvailable * RESET_THRESHOLD;
 }
 
 /**
