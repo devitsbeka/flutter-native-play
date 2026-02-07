@@ -1,47 +1,45 @@
 
 
-## Fix: Red-Stroked Unselectable Icons in Creator's Icon Picker
+## Fix: Smooth Icon Rendering Without Glitches
 
-### What's Happening
+### Problem
 
-The icon picker has an anti-spoiler system that blocks icons whose names match or resemble the correct answer. For example, if the answer is "ლომი" (lion), then icons like lion, elephant, eagle, whale, etc. get blocked because the system fuzzy-matches them.
+Icons across the app (icon picker, category picker modal, category cards, quiz screens) exhibit visual glitches -- they "pop in" with a scale/opacity animation every time the component mounts or the icon URL resolves. This is jarring and looks broken.
 
-This is useful when a **player** browsing icons shouldn't get a hint about the answer. But when you're the **creator/editor** of the trivia, you already know the answers -- so blocking icons is unnecessary and frustrating.
+### Root Causes
 
-The `creatorMode` flag (which disables this filtering) already exists and works correctly in one place (`GameStylePersonalTrivia.tsx`), but it's **missing from 4 other editing screens**.
+1. **`DynamicIcon` uses `motion.img` with entrance animation** (`initial: opacity 0, scale 0.9` -> `animate: opacity 1, scale 1`) that fires on every mount and every URL change
+2. **Double animation stacking**: `QuizCategoryIcon` wraps `DynamicIcon` in yet another `motion.div` with its own entrance animation -- so icons get two overlapping pop-in effects
+3. **URL resolution flicker**: When `DynamicIcon` resolves an icon, it can go through up to 3 visual states in quick succession: skeleton -> wrong fallback URL -> correct async URL. Each URL change forces a new `motion.img` element (due to the `key` prop), replaying the entrance animation
+4. **Aggressive skeleton display**: The `isResolvingIcon` state shows a pulsing skeleton placeholder even when the previous icon could remain visible, creating a flash
 
 ### Technical Changes
 
-**Add `creatorMode` prop to all editing icon pickers:**
+**File: `src/components/shared/DynamicIcon.tsx`**
 
-1. **`src/components/social/EditQuizModal.tsx`** (2 locations)
-   - Line ~308: Quiz-level icon picker -- add `creatorMode`
-   - Line ~477: Per-question icon picker -- add `creatorMode`
+- Replace `motion.img` with a plain `img` element. Instead of a spring animation on mount, use a simple CSS opacity transition that only applies when the image first loads (via an `onLoad` handler), making icons appear smoothly without the "pop" effect
+- Remove the `key` prop that forces React to destroy and recreate the `img` element on every URL change. Instead, update `src` in place so the browser handles the transition naturally
+- Keep the `onError` retry logic intact
+- Remove `framer-motion` import (no longer needed in this file)
 
-2. **`src/components/team/PersonalTriviaModal.tsx`** (1 location)
-   - Line ~710: Per-question icon picker -- add `creatorMode`
-
-3. **`src/components/social/EditRoundModal.tsx`** (1 location)
-   - Line ~747: Per-question icon picker -- add `creatorMode`
-
-4. **`src/components/social/EditQuestionDialog.tsx`** (1 location)
-   - Line ~104: Question icon picker -- add `creatorMode`
-
-Each change is simply adding one prop:
-```typescript
-<QuestionIconPicker
-  // ...existing props...
-  creatorMode  // <-- Add this line
-/>
+```
+Before: motion.img with key={url-retryCount}, initial scale 0.9
+After:  plain img with CSS fade-in on load, no scale animation
 ```
 
-### Why This Fixes It
+**File: `src/components/ui/quiz-category-icon.tsx`**
 
-With `creatorMode={true}`, the `isIconSafe()` function returns `true` for all icons, removing the red stroke, the X button, and the disabled state. Creators can freely select any icon for their questions without the anti-spoiler restrictions.
+- Remove the outer `motion.div` wrapper's entrance animation (`initial: opacity 0, scale 0.9`). Replace with a plain `div` -- since `DynamicIcon` itself will now handle smooth rendering, the extra wrapper animation is unnecessary and was causing the double-pop
+- Keep the loading state glow animations (those are intentional visual effects during question generation)
+
+### What This Fixes
+
+- Icon picker grid: Icons appear instantly without individual pop-in animations
+- Category picker modal: Category icons in the 2-column grid render cleanly
+- Category cards on discover page: `DynamicIcon` inside cards won't flash/scale on each render
+- Quiz screens: `QuizCategoryIcon` renders smoothly without double animations
+- No more skeleton flashes when icons are already cached or quickly resolved
 
 ### Files Changed
-- `src/components/social/EditQuizModal.tsx` (2 locations)
-- `src/components/team/PersonalTriviaModal.tsx` (1 location)
-- `src/components/social/EditRoundModal.tsx` (1 location)
-- `src/components/social/EditQuestionDialog.tsx` (1 location)
-
+- `src/components/shared/DynamicIcon.tsx` (replace motion.img with smooth CSS fade)
+- `src/components/ui/quiz-category-icon.tsx` (remove redundant entrance animation)
