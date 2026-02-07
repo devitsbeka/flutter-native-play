@@ -113,7 +113,7 @@ export const NotificationModal = memo(function NotificationModal({
                     initial={{ scale: 0.5 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", delay: 0.1, bounce: 0.5 }}
-                    className="text-5xl mb-4"
+                    className="text-5xl mb-4 [&_img]:w-16 [&_img]:h-16 [&_img]:object-contain"
                   >
                     {typeof displayIcon === "string" ? (
                       <span>{displayIcon}</span>
