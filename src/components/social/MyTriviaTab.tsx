@@ -470,20 +470,18 @@ function CollectionCard({
               </div>
             </div>
 
-            {/* Right: Collection Badge + Dropdown */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div 
-                className="flex items-center gap-2 text-white rounded-full px-3 py-1.5"
-                style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
-              >
-                <Layers className="w-4 h-4" />
-                <span className="text-sm font-medium">კოლექცია</span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+            {/* Right: Collection Badge with Dropdown */}
+            <div 
+              className="flex items-center gap-2 text-white rounded-full pl-3 pr-2 py-1.5"
+              style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
+            >
+              <Layers className="w-4 h-4" />
+              <span className="text-sm font-medium">კოლექცია</span>
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center ml-1">
                 {isExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  <ChevronUp className="w-4 h-4 text-white" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  <ChevronDown className="w-4 h-4 text-white" />
                 )}
               </div>
             </div>
