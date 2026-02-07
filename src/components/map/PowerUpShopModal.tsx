@@ -214,7 +214,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
         </div>
 
         {/* Power-up selector */}
-        <div className="flex justify-center gap-3 mb-4">
+        <div className="flex justify-center gap-3 mt-5 mb-6">
           {POWER_UP_INFO.map((info) => {
             const isSelected = selectedType === info.type;
             const count = isLoading ? 0 : powerUps[info.type];
@@ -242,7 +242,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
         </div>
 
         {/* Quantity selector */}
-        <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="flex items-center justify-center gap-4 mt-4 mb-6">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
