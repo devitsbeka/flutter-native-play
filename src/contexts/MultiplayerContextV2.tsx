@@ -1044,12 +1044,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     console.log(`[startGame] Observer mode: provided=${hostShouldObserve}, detected=${shouldObserve}`);
     
-    // Set host_is_observer in database (ALWAYS reset to match current game mode)
-    // This prevents stale observer flag from previous user trivia affecting library category games
-    await supabase
-      .from("game_rooms")
-      .update({ host_is_observer: shouldObserve })
-      .eq("id", roomId);
+    // NOTE: host_is_observer is now set in the final room update (merged to prevent premature realtime triggers)
     
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), ALWAYS fetch fresh from user_trivia_id
@@ -1151,7 +1146,10 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .update({ score: 0, current_question: 0, status: "playing" })
           .eq("room_id", roomId);
         
-        // Update room status
+        // FIX: Immediately reset local participants to prevent stale auto-advance
+        setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+        
+        // Update room status (includes host_is_observer to prevent premature realtime trigger)
         await supabase
           .from("game_rooms")
           .update({
@@ -1160,6 +1158,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             status: "playing",
             started_at: new Date().toISOString(),
             current_game_id: game?.id,
+            host_is_observer: shouldObserve,
           })
           .eq("id", roomId);
         
@@ -1324,13 +1323,17 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .update({ score: 0, current_question: 0 })
       .eq("room_id", roomId);
     
-    // Update room status
+    // FIX: Immediately reset local participants to prevent stale auto-advance
+    setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+    
+    // Update room status (includes host_is_observer to prevent premature realtime trigger)
     await supabase
       .from("game_rooms")
       .update({
         status: "playing",
         started_at: new Date().toISOString(),
         current_game_id: game?.id,
+        host_is_observer: hostShouldObserve,
       })
       .eq("id", roomId);
     
@@ -1524,13 +1527,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     
     console.log(`[startNewRound] Observer mode: isHost=${currentUserIsHost}, shouldObserve=${hostShouldObserve}`);
     
-    // Update host_is_observer in database (so non-hosts can read it)
-    if (currentUserIsHost) {
-      await supabase
-        .from("game_rooms")
-        .update({ host_is_observer: hostShouldObserve })
-        .eq("id", roomId);
-    }
+    // NOTE: host_is_observer is now set in the final room update (merged to prevent premature realtime triggers)
     
     try {
       // CHECK: For custom MyTrivia rooms (no category_id), ALWAYS fetch fresh from user_trivia_id
@@ -1583,6 +1580,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           .update({ score: 0, current_question: 0, status: "playing" })
           .eq("room_id", roomId);
         
+        // FIX: Immediately reset local participants to prevent stale auto-advance
+        setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+        
         // Create room_game record FIRST to get game_id
         const { data: game } = await supabase
           .from("room_games")
@@ -1629,13 +1629,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         // CRITICAL: Wait for DB commit before updating room status
         await new Promise(resolve => setTimeout(resolve, 150));
         
-        // Update room status (after questions are committed)
+        // Update room status (after questions are committed, includes host_is_observer)
         await supabase
           .from("game_rooms")
           .update({
             status: "playing",
             started_at: new Date().toISOString(),
             current_game_id: game?.id,
+            host_is_observer: hostShouldObserve,
           })
           .eq("id", roomId);
         
@@ -1718,6 +1719,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .update({ score: 0, current_question: 0, status: "playing" })
         .eq("room_id", roomId);
       
+      // FIX: Immediately reset local participants to prevent stale auto-advance
+      setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
+      
       // Create room_game record FIRST to get game_id
       const { data: game } = await supabase
         .from("room_games")
@@ -1764,13 +1768,14 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       // CRITICAL: Wait for DB commit before updating room status
       await new Promise(resolve => setTimeout(resolve, 150));
       
-      // Update room status (after questions are committed)
+      // Update room status (after questions are committed, includes host_is_observer)
       await supabase
         .from("game_rooms")
         .update({
           status: "playing",
           started_at: new Date().toISOString(),
           current_game_id: game?.id,
+          host_is_observer: hostShouldObserve,
         })
         .eq("id", roomId);
       
@@ -1902,6 +1907,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
             .from("room_participants")
             .update({ score: 0, current_question: 0, status: "playing" })
             .eq("room_id", roomId);
+          
+          // FIX: Immediately reset local participants to prevent stale auto-advance
+          setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
           
           // Create room_game record FIRST to get game_id
           const { data: game } = await supabase
@@ -2065,6 +2073,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         .from("room_participants")
         .update({ score: 0, current_question: 0, status: "playing" })
         .eq("room_id", roomId);
+      
+      // FIX: Immediately reset local participants to prevent stale auto-advance
+      setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
       
       // Mark questions as seen
       markQuestionsAsSeen(questions.map(q => q.id));
