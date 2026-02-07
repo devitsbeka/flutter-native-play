@@ -106,6 +106,7 @@ export function EditQuestionDialog({
                   onSelect={setIconSlug}
                   questionText={questionText}
                   large
+                  creatorMode
                 />
               </div>
 
