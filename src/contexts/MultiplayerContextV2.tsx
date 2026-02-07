@@ -1399,7 +1399,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     if (isLastQuestion) {
       // Mark game as completed
       if (state.currentRoom && isHost) {
-        supabase
+        await supabase
           .from("game_rooms")
           .update({ status: "completed", completed_at: new Date().toISOString() })
           .eq("id", state.currentRoom.id);
@@ -1858,13 +1858,8 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       
       console.log(`[startNextFromQueue] Observer mode: isHost=${currentUserIsHost}, sourceType=${nextItem.source_type}, shouldObserve=${hostShouldObserve}`);
       
-      // Update host_is_observer in database (so non-hosts can read it)
-      if (currentUserIsHost) {
-        await supabase
-          .from("game_rooms")
-          .update({ host_is_observer: hostShouldObserve })
-          .eq("id", roomId);
-      }
+      // NOTE: host_is_observer is now merged into the final room update
+      // to prevent premature realtime triggers that cause non-hosts to fetch stale data
       
       // Handle custom trivia separately
       if (nextItem.source_type === "user_trivia" && nextItem.user_trivia_id) {
@@ -1964,6 +1959,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               status: "playing",
               started_at: new Date().toISOString(),
               current_game_id: game?.id,
+              host_is_observer: hostShouldObserve,
             })
             .eq("id", roomId);
           
@@ -2130,6 +2126,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
           status: "playing",
           started_at: new Date().toISOString(),
           current_game_id: game?.id,
+          host_is_observer: hostShouldObserve,
         })
         .eq("id", roomId);
       
