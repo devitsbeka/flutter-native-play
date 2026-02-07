@@ -14,8 +14,8 @@ export const REWARDS = {
   GAME_LOSE_REWARD: 0,       // Loser already paid stake
 
   // ===== PLAY REGENERATION SYSTEM =====
-  PLAY_REGEN_HOURS: 4,       // 1 play every 4 hours after daily limit
-  PLAY_REGEN_MAX: 3,         // Max stored regenerated plays
+  PLAY_REGEN_HOURS: 3,       // 1 play every 3 hours after free games used
+  PLAY_REGEN_MAX: 1,         // Max 1 stored regenerated play
   PLAYS_PER_AD: 1,           // 1 play per ad
   MAX_ADS_PER_DAY: 5,        // Limit ad watching per day
   GEMS_FOR_PLAYS: 2,         // 2 gems = instant plays (1000 coins value)
