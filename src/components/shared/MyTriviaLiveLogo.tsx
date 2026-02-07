@@ -9,7 +9,7 @@ interface MyTriviaLiveLogoProps {
 }
 
 const sizeConfig = {
-  sm: { fontSize: 20, badgeSize: "sm" as const },
+  sm: { fontSize: 26, badgeSize: "sm" as const },
   md: { fontSize: 28, badgeSize: "md" as const },
   lg: { fontSize: 40, badgeSize: "lg" as const },
   xl: { fontSize: 48, badgeSize: "xl" as const },
