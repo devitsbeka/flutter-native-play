@@ -294,7 +294,7 @@ export const ka = {
     // Quick Match Help
     quickMatch: "სწრაფი მატჩი",
     whatIsQuickMatch: "რა არის სწრაფი მატჩი?",
-    quickMatchDescription: "შეჯიბრი რანდომ მოწინააღმდეგესთან და უპასუხე კითხვებს მასზე სწრაფად!",
+    quickMatchDescription: "შეეჯიბრე მოწინააღმდეგეს და უპასუხე კითხვებს მასზე სწრაფად.",
     howToWin: "როგორ მოვიგოთ?",
     howToWinDescription: "უპასუხე კითხვებს სწორად და რაც შეიძლება სწრაფად. რაც უფრო სწრაფად პასუხობ, მით მეტ ქულას იღებ!",
     xpPoints: "XP ქულები",
