@@ -5,8 +5,8 @@
  * 
  * Optimizes all MP4 videos in public/videos/ directory using FFmpeg with:
  * - H.264 High Profile encoding (best compatibility)
- * - CRF 28-32 (visually lossless for small backgrounds)
- * - 480px width (2x retina for ~200-300px cards)
+ * - CRF 23 (high quality, minimal visible artifacts)
+ * - 720px width (2x retina for ~350px mobile cards)
  * - No audio track (saves significant space)
  * - movflags +faststart (instant first frame, progressive download)
  * - Two-pass encoding for optimal compression
@@ -24,8 +24,8 @@ const TEMP_DIR = path.join(__dirname, '..', 'public', 'videos', '_temp');
 const BACKUP_DIR = path.join(__dirname, '..', 'public', 'videos', '_backup');
 
 // FFmpeg settings
-const CRF = 30; // Quality (18-28 = high quality, 28-32 = good for small videos)
-const SCALE_WIDTH = 480; // 480px width, height auto
+const CRF = 23; // Quality (18 = near-lossless, 23 = high quality, 28+ = visible artifacts)
+const SCALE_WIDTH = 720; // 720px width — crisp on retina mobile (375px @ 2x)
 const PRESET = 'slow'; // slower = better compression (options: ultrafast, fast, medium, slow, slower, veryslow)
 
 // Colors for console output

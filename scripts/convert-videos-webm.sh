@@ -1,8 +1,8 @@
 #!/bin/bash
 # Convert all MP4 videos to WebM VP9 format with desktop and mobile variants
 #
-# Desktop: max 720px width, CRF 33, VP9
-# Mobile:  max 360px width, CRF 36, VP9
+# Desktop: max 720px width, CRF 28, VP9 (high quality)
+# Mobile:  max 480px width, CRF 30, VP9 (good quality)
 # Both:    no audio, optimized for web playback
 #
 # Usage: bash scripts/convert-videos-webm.sh
@@ -17,12 +17,12 @@ ASSETS_DIR="$PROJECT_DIR/src/assets"
 MOBILE_DIR="$PUBLIC_VIDEOS/mobile"
 
 # VP9 encoding settings
-DESKTOP_CRF=33
-MOBILE_CRF=36
+DESKTOP_CRF=28
+MOBILE_CRF=30
 DESKTOP_MAX_WIDTH=720
-MOBILE_MAX_WIDTH=360
+MOBILE_MAX_WIDTH=480
 THREADS=4    # Parallel conversion jobs
-CPU_USED=4   # VP9 speed (0=best quality, 8=fastest)
+CPU_USED=2   # VP9 speed (0=best quality, 8=fastest) — 2 = good quality/speed balance
 
 # Colors
 GREEN='\033[0;32m'
