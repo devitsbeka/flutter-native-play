@@ -202,6 +202,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       subtitle={t('shop.buyPowers')}
       showSparkles
       headerActions={headerRight}
+      className="-mt-[30px]"
     >
       <div className="relative">
         {/* Power-up preview */}
