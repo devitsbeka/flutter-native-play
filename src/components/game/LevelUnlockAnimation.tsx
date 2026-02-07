@@ -2,18 +2,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Unlock, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 
 interface LevelUnlockAnimationProps {
   isVisible: boolean;
   unlockedLevel: number;
-  categoryIcon?: string;
+  iconSlug?: string;
+  categoryId?: string;
   onComplete: () => void;
 }
 
 export function LevelUnlockAnimation({
   isVisible,
   unlockedLevel,
-  categoryIcon = "🎯",
+  iconSlug,
+  categoryId,
   onComplete,
 }: LevelUnlockAnimationProps) {
   const [phase, setPhase] = useState<"lock" | "unlock" | "celebrate">("lock");
@@ -111,14 +114,18 @@ export function LevelUnlockAnimation({
                     <Unlock className="h-16 w-16 text-white" />
                   </motion.div>
                 ) : (
-                  <motion.span
+                  <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                    className="text-6xl"
+                    className="flex items-center justify-center"
                   >
-                    {categoryIcon}
-                  </motion.span>
+                    <DynamicIcon
+                      slug={iconSlug}
+                      categoryId={categoryId}
+                      size={64}
+                    />
+                  </motion.div>
                 )}
               </motion.div>
             </motion.div>
@@ -130,7 +137,7 @@ export function LevelUnlockAnimation({
               transition={{ delay: 0.2 }}
             >
               <p className="text-muted-foreground text-sm mb-2">
-                {phase === "celebrate" ? "🎉 ახალი დონე გახსნილია!" : "იხსნება..."}
+                {phase === "celebrate" ? "ახალი დონე გახსნილია!" : "იხსნება..."}
               </p>
               <motion.h2
                 className="text-4xl font-bold text-foreground"

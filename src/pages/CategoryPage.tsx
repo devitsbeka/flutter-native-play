@@ -181,7 +181,8 @@ export default function CategoryPage() {
       <LevelUnlockAnimation
         isVisible={showUnlockAnimation}
         unlockedLevel={unlockedLevel || 1}
-        categoryIcon={category.icon}
+        iconSlug={category.icon_slug}
+        categoryId={category.id}
         onComplete={handleUnlockComplete}
       />
 
