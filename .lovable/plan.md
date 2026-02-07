@@ -1,26 +1,50 @@
 
 
-## Make Filter Dropdown Items Finger-Friendly
+## Fix: Queue Rounds Lost After First Game + Show "გაგრძელება" Button
 
-The filter dropdown items are currently too small and cramped for comfortable mobile tapping. This update will increase the vertical padding, font size, and overall spacing to make each item easier to tap.
+### Problem 1: Queue rounds disappear after first game
+When the user adds rounds to the queue in the lobby and then picks a "current" category to play, the `handleSelectCategory`, `handleSelectRandom`, and `handleSelectTrivia` functions in `RoomLobbyV2.tsx` **delete the entire queue** with:
+```
+await supabase.from("room_category_queue").delete().eq("room_id", currentRoom.id);
+```
+This was added as "CRITICAL: Clear stale queue items to prevent them from overriding this selection" -- but it wipes out all carefully queued rounds.
+
+After the game ends, the queue is empty, so the results screen shows 0 rounds remaining.
+
+### Problem 2: "გაგრძელება" button not showing
+Because the queue is already empty by the time the results screen loads, `queue.length > 0` is false, so the Continue button never appears. Instead, "კატეგორიის დამატება" (Add Category) and "ოთახში დაბრუნება" (Back to Room) are shown.
+
+### Solution
+
+**File: `src/components/team/RoomLobbyV2.tsx`** -- Stop wiping the queue on category selection
+
+In all three handlers (`handleSelectCategory`, `handleSelectRandom`, `handleSelectTrivia`), remove the line that deletes the entire queue:
+```
+await supabase.from("room_category_queue").delete().eq("room_id", currentRoom.id);
+```
+
+The `consumeMatchingQueueItem` function in `MultiplayerContextV2.tsx` already handles the correct behavior: it checks if the first queue item matches what was just played, and only removes that single matching item. This is sufficient to prevent duplicates without destroying the whole queue.
 
 ### Changes
 
-**File: `src/components/team/UnifiedFiltersBar.tsx`**
+**`src/components/team/RoomLobbyV2.tsx`** (3 removals):
 
-1. **Increase dropdown content padding** -- add more vertical padding (`py-2`) to the `DropdownMenuContent` so there's breathing room at the top and bottom of the list.
+1. **Line 450-451** in `handleSelectCategory`: Remove the queue-clearing line
+2. **Line 485-486** in `handleSelectRandom`: Remove the queue-clearing line  
+3. **Line 534-535** in `handleSelectTrivia`: Remove the queue-clearing line
 
-2. **Increase each filter/sort item height and font size** -- override the default `DropdownMenuItem` styling with `py-3 text-[15px]` (bumping font from 14px to 15px and increasing vertical padding from 6px to 12px per side), making each row taller and text more readable.
+### Why This Is Safe
 
-3. **Increase label font size** -- bump the section labels ("ფილტრი", "დალაგება") from `text-xs` to `text-[13px]` with added top padding for better visual separation.
+- `consumeMatchingQueueItem` (called in `startGame`) already handles deduplication: if the first queue item matches the category being played, it removes just that one item and reorders the rest.
+- `startNextFromQueue` (called from results screen) independently pops the first item from the queue and starts the next round.
+- Queue items are room-specific and will be naturally cleaned up when rooms are deleted.
 
-### Technical Details
+### No Other Changes Needed
 
-In `UnifiedFiltersBar.tsx`:
+The results screen (`GameResultsScreenV2.tsx`) logic is already correct:
+- It shows "გაგრძელება" when `queue.length > 0`
+- It hides "ოთახში დაბრუნება" when queue exists  
+- The back button in the header provides navigation at all times
 
-- Line 111: `DropdownMenuContent` -- change className from `"w-52"` to `"w-56 py-2"`
-- Line 112: `DropdownMenuLabel` -- change className from `"text-xs text-muted-foreground"` to `"text-[13px] text-muted-foreground pt-1 pb-1"`
-- Lines 114-123: Each `DropdownMenuItem` in the filter section -- add `"py-3 text-[15px]"` to the className (appended after the conditional active styling)
-- Line 121: Increase the label span font to match -- already inherits from parent
-- Line 129: `DropdownMenuLabel` for sort section -- same treatment as line 112
-- Lines 131-141: Each `DropdownMenuItem` in the sort section -- same `"py-3 text-[15px]"` treatment
+The context functions (`startNextFromQueue`, `continueInRoom`) correctly handle queue presence/absence.
+
