@@ -449,22 +449,43 @@ function CollectionCard({
 
         {/* Info Row */}
         <div className="p-4">
+          {/* Author Info + Collection Badge Row */}
           <div className="flex items-center justify-between">
-            {/* Collection Badge */}
-            <div 
-              className="flex items-center gap-2 text-white rounded-full px-3 py-1.5"
-              style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
-            >
-              <Layers className="w-4 h-4" />
-              <span className="text-sm font-medium">კოლექცია</span>
+            {/* Left: Avatar + Name/Date */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary border-2 border-border flex-shrink-0">
+                <SafeAvatarImage 
+                  avatarUrl={profile?.avatar_url}
+                  fallback={profile?.nickname || 'U'}
+                  containerClassName="w-full h-full"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground truncate text-sm">
+                  {profile?.nickname || 'შენ'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatGeorgianTimeAgo(new Date(collection.created_at))}
+                </p>
+              </div>
             </div>
-            {/* Expand/Collapse icon */}
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              {isExpanded ? (
-                <ChevronUp className="w-5 h-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-muted-foreground" />
-              )}
+
+            {/* Right: Collection Badge + Dropdown */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div 
+                className="flex items-center gap-2 text-white rounded-full px-3 py-1.5"
+                style={{ background: "linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #3B82F6 100%)" }}
+              >
+                <Layers className="w-4 h-4" />
+                <span className="text-sm font-medium">კოლექცია</span>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                {isExpanded ? (
+                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
             </div>
           </div>
           
