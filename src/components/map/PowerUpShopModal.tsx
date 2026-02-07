@@ -202,7 +202,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       subtitle={t('shop.buyPowers')}
       showSparkles
       headerActions={headerRight}
-      className="-mt-[30px]"
+      className="-mt-[70px]"
     >
       <div className="relative">
         {/* Power-up preview */}
@@ -242,7 +242,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
         </div>
 
         {/* Quantity selector */}
-        <div className="flex items-center justify-center gap-4 mt-4 mb-6">
+        <div className="flex items-center justify-center gap-4 mt-[30px] mb-6">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
