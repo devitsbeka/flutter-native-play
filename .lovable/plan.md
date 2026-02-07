@@ -1,24 +1,26 @@
 
 
-## Set New App Icon
+## Make Filter Dropdown Items Finger-Friendly
 
-The uploaded image (`App-icon.png`) will be used as the app's icon across all platforms — favicon, Apple touch icon, and PWA icon.
+The filter dropdown items are currently too small and cramped for comfortable mobile tapping. This update will increase the vertical padding, font size, and overall spacing to make each item easier to tap.
 
 ### Changes
 
-1. **Copy the image to the public folder** as `app-icon.png`, replacing the existing icon assets.
+**File: `src/components/team/UnifiedFiltersBar.tsx`**
 
-2. **Update `index.html`**:
-   - Add a `<link rel="icon">` pointing to the new icon
-   - Update the `apple-touch-icon` reference to use the new image
+1. **Increase dropdown content padding** -- add more vertical padding (`py-2`) to the `DropdownMenuContent` so there's breathing room at the top and bottom of the list.
 
-3. **Update `public/manifest.json`**:
-   - Update the icon entry to reference the new `app-icon.png` file
+2. **Increase each filter/sort item height and font size** -- override the default `DropdownMenuItem` styling with `py-3 text-[15px]` (bumping font from 14px to 15px and increasing vertical padding from 6px to 12px per side), making each row taller and text more readable.
+
+3. **Increase label font size** -- bump the section labels ("ფილტრი", "დალაგება") from `text-xs` to `text-[13px]` with added top padding for better visual separation.
 
 ### Technical Details
 
-- The uploaded image will be copied to `public/app-icon.png`
-- `index.html` will get a new favicon link: `<link rel="icon" href="/app-icon.png" type="image/png">`
-- The existing `apple-touch-icon` link will be updated to point to `/app-icon.png`
-- `manifest.json` icon src will be updated from `/apple-touch-icon.png` to `/app-icon.png`
+In `UnifiedFiltersBar.tsx`:
 
+- Line 111: `DropdownMenuContent` -- change className from `"w-52"` to `"w-56 py-2"`
+- Line 112: `DropdownMenuLabel` -- change className from `"text-xs text-muted-foreground"` to `"text-[13px] text-muted-foreground pt-1 pb-1"`
+- Lines 114-123: Each `DropdownMenuItem` in the filter section -- add `"py-3 text-[15px]"` to the className (appended after the conditional active styling)
+- Line 121: Increase the label span font to match -- already inherits from parent
+- Line 129: `DropdownMenuLabel` for sort section -- same treatment as line 112
+- Lines 131-141: Each `DropdownMenuItem` in the sort section -- same `"py-3 text-[15px]"` treatment
