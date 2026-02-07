@@ -662,6 +662,7 @@ export const ru: KaTranslations = {
     coinsDescription: "Используйте монеты для покупки сил",
     vipDescription: "Получите эксклюзивные бонусы и преимущества",
     eachPower: "каждая сила",
+    powerUpNames: { fiftyFifty: "50/50", freeze: "Заморозка", replace: "Замена", timeDrain: "Кража времени" },
   },
   help: {
     title: "Помощь",

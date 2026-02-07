@@ -761,6 +761,12 @@ export const ka = {
     coinsDescription: "გამოიყენე მონეტები ძალების შესაძენად",
     vipDescription: "მიიღე ექსკლუზიური ბენეფიტები და ბონუსები",
     eachPower: "თითოეული ძალა",
+    powerUpNames: {
+      fiftyFifty: "50/50",
+      freeze: "გაყინვა",
+      replace: "ჩანაცვლება",
+      timeDrain: "დროის გამოწვა",
+    },
   },
 
   // ==========================================
