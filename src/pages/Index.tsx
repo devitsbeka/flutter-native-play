@@ -620,7 +620,13 @@ export default function Index() {
                         </svg>
                       </button>
                     </div>
-                    <div className="flex flex-col items-center mt-1">
+                    <p
+                      className="text-base text-gray-600 font-semibold text-center mt-3 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => navigate("/auth?mode=signup")}
+                    >
+                      რეგისტრაცია
+                    </p>
+                    <div className="flex flex-col items-center" style={{ marginTop: 25 }}>
                       <p className="text-base text-gray-600 font-medium text-center">
                         ან ითამაშე როგორც სტუმარმა
                       </p>
@@ -1212,10 +1218,18 @@ export default function Index() {
                 )}
                 {!user && (
                   <div className="flex flex-col items-center">
-                    <p className="text-base text-gray-600 font-medium text-center">
-                      ან ითამაშე როგორც სტუმარმა
+                    <p
+                      className="text-base text-gray-600 font-semibold text-center cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => navigate("/auth?mode=signup")}
+                    >
+                      რეგისტრაცია
                     </p>
-                    <HandDrawnArrow size={44} color="#9CA3AF" />
+                    <div className="flex flex-col items-center" style={{ marginTop: 25 }}>
+                      <p className="text-base text-gray-600 font-medium text-center">
+                        ან ითამაშე როგორც სტუმარმა
+                      </p>
+                      <HandDrawnArrow size={44} color="#9CA3AF" />
+                    </div>
                   </div>
                 )}
               </motion.div>
