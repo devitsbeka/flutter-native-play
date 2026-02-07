@@ -1,138 +1,60 @@
 
+## Fix: Observer Auto-Advances Immediately Due to Stale Participant Data
 
-## Fix: Non-Host Sees Previous Questions + Queue Clears on Room Return
+### Root Cause
 
-### Root Cause Analysis
+When the host starts a new game (via `startGame`, `startNewRound`, or `startNextFromQueue`), the flow is:
 
-There are **two interconnected bugs** causing this behavior:
+1. Reset all participants' `current_question` to 0 in the database
+2. Set local state to `phase: "playing"` (observer screen mounts)
+3. Observer screen reads `participants` from React state -- but these still have `current_question` values from the **previous** round (e.g., `current_question: 5`)
+4. The realtime subscription triggers `fetchParticipants()` which will eventually update with `current_question: 0` -- but this hasn't arrived yet
 
----
-
-### Bug 1: Non-Host Gets Old Questions (Premature Realtime Trigger)
-
-**The sequence that causes the problem:**
-
-1. Game round ends. Host fires `status: "completed"` update but **WITHOUT `await`** (line 1402 -- fire-and-forget)
-2. Both players transition to results screen locally (`phase: "results"`)
-3. Host clicks "Continue" which calls `startNextFromQueue()`
-4. `startNextFromQueue` immediately updates `host_is_observer` (line 1863) -- this is a **separate room update BEFORE questions are replaced**
-5. If the fire-and-forget "completed" update from step 1 hasn't committed yet, the room status in DB is still `"playing"`
-6. The `host_is_observer` update triggers a realtime event where `updated.status === "playing"`
-7. Non-host's handler matches: `updated.status === "playing" && currentPhase === "results"` -- condition passes!
-8. Non-host clears local state, fetches `current_game_id` -- but it's still the **OLD game_id** (new one hasn't been set yet)
-9. Non-host fetches questions with old game_id, finds old questions (haven't been deleted yet), loads them, and sets `phase: "playing"`
-10. Later, when the REAL room update comes (with new game_id and new questions committed), the non-host's `phaseRef.current` is already `"playing"`, so the condition `currentPhase === "lobby" || currentPhase === "results"` **FAILS**
-11. Non-host stays stuck with old questions
-
-```text
-Timeline:
-                                                                                    
-Host:   [game ends] --fire&forget "completed"--> [Continue clicked] --> [update host_is_observer] --> [delete old Qs] --> [insert new Qs] --> [300ms wait] --> [update room: playing + new game_id]
-                                                                              |                                                                                    |
-                                                                              v                                                                                    v
-DB:     status may still be "playing"                              realtime fires with                                               realtime fires with
-        (fire-and-forget not committed)                            status="playing" (PREMATURE!)                                     status="playing" + new game_id
-                                                                              |                                                                                    |
-                                                                              v                                                                                    v
-Non-host:                                                          Matches condition!                                                phase is already "playing"
-                                                                   Fetches OLD game_id                                               Condition FAILS - event ignored
-                                                                   Gets OLD questions
-                                                                   Sets phase="playing" with old data
+The observer's auto-advance effect checks:
+```
+allPlayersAdvanced = otherPlayers.every(p => (p.current_question || 0) > currentQuestionIndex)
 ```
 
-### Bug 2: Queue Appears Cleared
+With stale data: `(5 || 0) > 0` = `true` -- the observer **immediately** calls `nextQuestion()`.
 
-This is a **consequence of Bug 1**. When the non-host plays with old questions while the host plays new ones, the game states become desynchronized. Additionally, `startNextFromQueue` correctly consumes the queue item (deletes it). If the queue only had one item, it becomes empty. When the host later returns to the lobby via `continueInRoom`, it checks the queue, finds it empty, and clears category data -- this is actually expected behavior for an empty queue, but due to Bug 1 the games were desynchronized so the experience feels broken.
+For a 1-question game, `nextQuestion()` sees `isLastQuestion = true` (index 0 >= length 1 - 1), marks the game as "completed", and transitions to results. The host sees "several pages fast" because the observer screen mounts and immediately unmounts as results appear.
 
----
+The scores (474 and 224) are from a previous round -- they were never reset locally because the observer auto-advanced before the fresh participant data arrived.
 
 ### Technical Changes
 
 **File: `src/contexts/MultiplayerContextV2.tsx`**
 
-**Fix 1: Merge `host_is_observer` into the final room update (prevents premature realtime event)**
+**Fix 1: Immediately reset local `participants` state after DB reset (5 locations)**
 
-In `startNextFromQueue`, remove the separate `host_is_observer` update at line 1862-1866 and include it in the final room update at lines 1958-1968 (user trivia path) and lines 2123-2134 (library category path).
+After every `supabase.from("room_participants").update({ score: 0, current_question: 0 })` call, add an immediate local state reset:
 
-Before:
 ```typescript
-// Line 1862-1866: Separate early update (CAUSES BUG)
-if (currentUserIsHost) {
-  await supabase
-    .from("game_rooms")
-    .update({ host_is_observer: hostShouldObserve })
-    .eq("id", roomId);
-}
-
-// ... questions deleted, new game created, questions inserted, 300ms wait ...
-
-// Line 1958-1968: Final room update
-await supabase
-  .from("game_rooms")
-  .update({
-    category_name: categoryName,
-    total_questions: questions.length,
-    status: "playing",
-    started_at: new Date().toISOString(),
-    current_game_id: game?.id,
-  })
-  .eq("id", roomId);
+setParticipants(prev => prev.map(p => ({ ...p, score: 0, current_question: 0 })));
 ```
 
-After:
-```typescript
-// REMOVED: No separate host_is_observer update
+This ensures the observer screen sees `current_question: 0` right away, preventing the false `allPlayersAdvanced` trigger.
 
-// ... questions deleted, new game created, questions inserted, 300ms wait ...
+Locations:
+- `startGame` user trivia path (after line ~1152)
+- `startGame` library category path (after line ~1325)
+- `startNewRound` user trivia path (after line ~1584)
+- `startNewRound` library category path (after line ~1719)
+- `startNextFromQueue` user trivia path (after line ~1904)
+- `startNextFromQueue` library category path (after line ~2067)
 
-// Final room update - NOW includes host_is_observer
-await supabase
-  .from("game_rooms")
-  .update({
-    category_name: categoryName,
-    total_questions: questions.length,
-    status: "playing",
-    started_at: new Date().toISOString(),
-    current_game_id: game?.id,
-    host_is_observer: hostShouldObserve,  // Moved here to prevent premature realtime trigger
-  })
-  .eq("id", roomId);
-```
+**Fix 2: Merge early `host_is_observer` into final room update in `startGame` and `startNewRound`**
 
-This change needs to be applied in BOTH paths inside `startNextFromQueue`:
-- User trivia path (around lines 1958-1968)
-- Library category path (around lines 2123-2134)
+Same pattern we already fixed in `startNextFromQueue` -- the early standalone `host_is_observer` update can trigger premature realtime events.
 
-**Fix 2: Await the "completed" status update in `nextQuestion`**
+In `startGame` (line ~1049-1052): Remove the early update. Include `host_is_observer: shouldObserve` in both final room updates (user trivia path at line ~1157 and library category path at line ~1327).
 
-Line 1402 currently fires the "completed" update without `await`. This creates a window where the room status is still "playing" in the DB even though the game has ended.
+In `startNewRound` (line ~1528-1533): Remove the early update. Include `host_is_observer: hostShouldObserve` in both final room updates (user trivia path at line ~1636 and library category path at line ~1762).
 
-Before:
-```typescript
-if (state.currentRoom && isHost) {
-  supabase  // NOT awaited!
-    .from("game_rooms")
-    .update({ status: "completed", completed_at: new Date().toISOString() })
-    .eq("id", state.currentRoom.id);
-}
-```
+### Why This Fixes The Issue
 
-After:
-```typescript
-if (state.currentRoom && isHost) {
-  await supabase  // NOW awaited
-    .from("game_rooms")
-    .update({ status: "completed", completed_at: new Date().toISOString() })
-    .eq("id", state.currentRoom.id);
-}
-```
-
-### Why These Fixes Work Together
-
-- **Fix 1** eliminates the premature realtime event entirely. The non-host will only receive a realtime event when ALL data (questions, game_id, status, observer mode) is ready and committed. No more early fetch with stale game_id.
-
-- **Fix 2** ensures the room status transitions cleanly: `playing` -> `completed` -> `playing` (next round). Without this, the intermediate `host_is_observer` update (even though we're moving it) could still cause issues in other edge cases.
+- Fix 1 eliminates the stale `current_question` race. The observer's auto-advance effect will see `current_question: 0` immediately, so `(0 > 0) = false` -- it won't fire until players genuinely advance.
+- Fix 2 prevents premature realtime triggers in `startGame` and `startNewRound`, applying the same defensive pattern already in `startNextFromQueue`.
 
 ### Files Changed
-- `src/contexts/MultiplayerContextV2.tsx` (3 locations)
-
+- `src/contexts/MultiplayerContextV2.tsx` (~8 locations)
