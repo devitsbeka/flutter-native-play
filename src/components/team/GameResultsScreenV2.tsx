@@ -345,7 +345,7 @@ export function GameResultsScreenV2() {
     <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
       {/* Back Button Header */}
-      <div className="flex items-center px-4 pt-4 pb-0 flex-shrink-0">
+      <div className="flex items-center px-4 pt-3 pb-0 flex-shrink-0">
         <button
           onClick={handleBackToRoom}
           className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white"
@@ -355,11 +355,11 @@ export function GameResultsScreenV2() {
       </div>
 
       {/* Top Section: Icon + Result */}
-      <div className="pt-4 text-center">
+      <div className="pt-2 text-center">
         <motion.img 
           src={trophyWinIcon} 
           alt="Trophy" 
-          className="w-20 h-20 object-contain mx-auto mb-4"
+          className="w-16 h-16 object-contain mx-auto mb-2"
           initial={{ scale: 0.5, y: -20 }}
           animate={{ 
             scale: 1, 
@@ -413,7 +413,7 @@ export function GameResultsScreenV2() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex items-center justify-center gap-4 mt-3"
+          className="flex items-center justify-center gap-4 mt-2"
         >
           {/* Coins Badge */}
           {coinsEarned > 0 && (
@@ -437,7 +437,7 @@ export function GameResultsScreenV2() {
       </div>
 
       {/* Middle Section: Category + Scorecard (with 40px top spacing) */}
-      <div className="flex-1 min-h-0 flex flex-col items-center gap-4 px-4 overflow-hidden" style={{ paddingTop: '40px' }}>
+      <div className="flex-1 min-h-0 flex flex-col items-center gap-4 px-4 overflow-hidden" style={{ paddingTop: '20px' }}>
         {/* Category */}
         {currentRoom?.category_name && (
           <motion.div
