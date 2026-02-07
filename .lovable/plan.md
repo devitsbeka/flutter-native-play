@@ -1,50 +1,95 @@
 
+## Fix: "Game Loading..." Screen Stuck for Non-Host Players in Room
 
-## Fix Observer (Host) Scoring: Majority-Based Instead of Per-Player
+### Root Cause
 
-### The Problem
+After deep investigation, the issue is in the **room re-entry flow** (`enterRoom` function in `MultiplayerContextV2.tsx`). When a player (host or non-host) re-enters a room that is already in "playing" status, the question loading at lines 850-890 has two problems:
 
-When the host creates a trivia and observes players, the current scoring in `MultiplayerObserverScreen.tsx` awards bonus points for **every single incorrect answer from every player**. With 4 players all answering wrong on one question, the host gets ~400-800 points, while each player can only earn 100-300 per correct answer. This is massively unfair.
+1. **Missing `game_id` filter**: The query fetches questions without filtering by `current_game_id`, which can return stale questions from a previous game (or no questions if the old ones were deleted during `startGame`)
+2. **Missing `hostIsObserver` state**: The re-entry path doesn't set `hostIsObserver`, `lastQuestionResult`, or `opponentAnswers`, causing incorrect UI rendering for hosts of their own trivia
 
-### The Solution
+### What the user experienced
 
-Adopt the same majority-based logic that already exists in `TVGameContext.tsx` (TV mode):
-- Group answers **per question** (not per player)
-- For each question: count how many players answered correctly vs incorrectly
-- If **more than 50% answered wrong** -- host earns a single question's worth of points (100-175 range, same as a correct player answer)
-- If **50% or more answered correctly** -- host earns 0 for that question
-- This caps the host's per-question earning to the same range as any player
+The sequence is:
+1. Host creates a room with their trivia (user_trivia_id set)
+2. Gloria joins the room
+3. Host clicks "Start Game"
+4. `startGame` runs: deletes old questions, creates new game record, inserts new questions with game_id, updates room to "playing"
+5. Between steps 4a (delete) and 4c (insert/update), the realtime event fires for any previous room update
+6. Or: the non-host's question fetch timing catches the moment when old questions are deleted but new ones aren't yet committed
+7. After 8 retries (4.8 seconds total), the non-host gets sent to lobby with an error -- but if the room update comes slightly out of order, they can end up in "playing" phase with empty questions = loading screen
 
-### Example with 4 players
+### Technical changes
 
-| Scenario | Correct | Wrong | Host gets |
-|----------|---------|-------|-----------|
-| All wrong | 0 | 4 | 100-175 pts (one bonus) |
-| 3 wrong, 1 right | 1 | 3 | 100-175 pts (majority wrong) |
-| 2 wrong, 2 right | 2 | 2 | 0 pts (not majority wrong) |
-| 1 wrong, 3 right | 3 | 1 | 0 pts (majority correct) |
-| All correct | 4 | 0 | 0 pts |
+**File: `src/contexts/MultiplayerContextV2.tsx`**
 
-### Technical Changes
+**Fix 1: Add `game_id` filter to re-entry question fetch** (lines 850-855)
 
-**File: `src/components/team/MultiplayerObserverScreen.tsx`**
+Change the query to filter by `current_game_id` from the room data, with a fallback to unfiltered if no game_id exists:
 
-Both the polling effect (lines 76-112) and the auto-advance effect (lines 128-159) use the same flawed per-player logic. Both will be rewritten to:
+```
+// Before (line 851-855):
+const { data: roomQuestions } = await supabase
+  .from("room_questions")
+  .select("*")
+  .eq("room_id", room.id)
+  .order("question_index", { ascending: true });
 
-1. **Fetch ALL answers** (both correct and incorrect) for the room, not just incorrect ones
-2. **Group answers by `question_index`**
-3. **For each question** (that hasn't been processed yet):
-   - Count total players who answered + total players in the game
-   - Count how many answered incorrectly (wrong answers + players who didn't answer = "wrong")
-   - Only if wrong count > 50% of total players: calculate ONE bonus using the average `time_remaining` of wrong answers
-4. **Track processed questions** by `question_index` instead of individual `user_id-question_index` pairs (since we now process per-question, not per-answer)
+// After:
+let query = supabase
+  .from("room_questions")
+  .select("*")
+  .eq("room_id", room.id);
 
-**File: `src/utils/tvScoring.ts`** -- No changes needed. The existing `calculateObserverBonus` function already returns a single question's worth of points (100-175). The problem is purely in how `MultiplayerObserverScreen` calls it (once per wrong answer instead of once per question).
+// Filter by current game_id if available (prevents loading stale questions)
+if (room.current_game_id) {
+  query = query.eq("game_id", room.current_game_id);
+}
 
-### Key Details
+const { data: roomQuestions } = await query
+  .order("question_index", { ascending: true });
+```
 
-- The `processedAnswerIdsRef` will track processed **question indices** (e.g., `"q-0"`, `"q-1"`) instead of individual answer IDs
-- The query changes from `.eq("is_correct", false)` to fetching all answers, so we can count both correct and incorrect per question
-- Players who haven't answered a question at all count as "wrong" for majority calculation (consistent with TV mode logic)
-- The bonus amount per question stays in the 100-175 range (same as `calculateObserverBonus` returns), ensuring parity with player scoring
+**Fix 2: Set `hostIsObserver` and reset stale state in re-entry** (lines 875-882)
 
+Add `hostIsObserver`, `lastQuestionResult`, and `opponentAnswers` to the re-entry setState:
+
+```
+setState(prev => ({
+  ...prev,
+  phase: "playing",
+  currentRoom: room as GameRoom,
+  questions,
+  currentQuestionIndex: currentQuestion,
+  myScore: existing.score || 0,
+  hostIsObserver: room.host_is_observer || false,
+  lastQuestionResult: null,
+  opponentAnswers: {},
+}));
+```
+
+**Fix 3: Add retry-with-game_id to the re-entry path** (after line 855)
+
+If the initial query returns empty and `current_game_id` exists, retry without the filter (fallback for edge cases):
+
+```
+if ((!roomQuestions || roomQuestions.length === 0) && room.current_game_id) {
+  // Retry without game_id filter as fallback
+  const { data: fallbackQuestions } = await supabase
+    .from("room_questions")
+    .select("*")
+    .eq("room_id", room.id)
+    .order("question_index", { ascending: true });
+  roomQuestions = fallbackQuestions;
+}
+```
+
+### Why these fixes work
+
+- **Fix 1** ensures that when a host or guest re-enters a "playing" room, they get the correct set of questions for the current game (not leftover questions from a previous round)
+- **Fix 2** ensures the host correctly enters observer mode when re-entering their own trivia room, preventing them from being shown the player UI (with empty questions = loading screen)
+- **Fix 3** provides a safety net: if questions exist but aren't tagged with a game_id (older games or race conditions), they're still loaded
+
+### No changes needed elsewhere
+
+The `startGame` and `startNewRound` functions themselves are correct -- they set all state atomically. The bug is specifically in the `enterRoom` re-entry path which was missing critical state fields and game_id filtering.
