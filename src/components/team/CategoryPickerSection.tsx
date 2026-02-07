@@ -134,7 +134,7 @@ export function CategoryPickerSection({
                 "text-white font-semibold leading-tight",
                 hasCategory ? "text-[18px]" : "text-[14px]"
               )}>
-                {hasCategory ? categoryName : "რისი თამაში გინდა?"}
+                {hasCategory ? categoryName : (isHost ? "რისი თამაში გინდა?" : "მიმდინარე კატეგორია")}
               </p>
               {isAlreadyPlayed && hasCategory && (
                 <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-medium">
@@ -155,7 +155,7 @@ export function CategoryPickerSection({
                 ? "აირჩიე ახალი კატეგორია"
                 : hasCategory 
                   ? "მიმდინარე" 
-                  : "დაამატე კატეგორია სათამაშოდ"}
+                  : (isHost ? "დაამატე კატეგორია სათამაშოდ" : "ჯერ არჩეული არ არის")}
             </p>
           </div>
         </div>
