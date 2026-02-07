@@ -401,7 +401,7 @@ export function QuestionScreen() {
                 {/* Show opponent avatar if they chose this answer */}
                 {isOpponentAnswer && (
                   <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-lg border-2 overflow-hidden",
+                    "w-10 h-10 rounded-full flex items-center justify-center text-lg border-2 overflow-hidden",
                     lastOpponentCorrect 
                       ? "border-emerald-500" 
                       : "border-rose-500"
