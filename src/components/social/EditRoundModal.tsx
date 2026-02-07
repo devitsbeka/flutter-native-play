@@ -747,6 +747,7 @@ export function EditRoundModal({ round, isOpen, onClose, onAddRound }: EditRound
       <QuestionIconPicker
         isOpen={true}
         onClose={() => setIconPickerIndex(null)}
+        creatorMode
         selectedSlug={questions[iconPickerIndex]?.icon_slug || null}
         onSelect={(slug) => {
           updateQuestionIcon(iconPickerIndex, slug || undefined);

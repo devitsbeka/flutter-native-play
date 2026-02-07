@@ -710,6 +710,7 @@ export function PersonalTriviaModal({ isOpen, onClose, onSave, initialData }: Pe
             <QuestionIconPicker
               isOpen={true}
               onClose={() => setIconPickerIndex(null)}
+              creatorMode
               selectedSlug={questions[iconPickerIndex]?.iconSlug || null}
               onSelect={(slug) => {
                 updateQuestion(questions[iconPickerIndex].id, "iconSlug", slug);

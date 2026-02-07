@@ -308,6 +308,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                         <QuestionIconPicker
                           selectedSlug={iconSlug}
                           onSelect={setIconSlug}
+                          creatorMode
                           questionText={title}
                         />
                       </div>
@@ -477,6 +478,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
+                                creatorMode
                                 questionText={q.question_text}
                                 correctAnswer={q.correct_answer}
                                 incorrectAnswers={q.incorrect_answers}
