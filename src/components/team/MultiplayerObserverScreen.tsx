@@ -373,12 +373,12 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
                           key={p?.id}
                           avatarUrl={p?.avatar_url}
                           fallback={p?.nickname || "?"}
-                          className="w-7 h-7 border-2 border-white shadow-sm"
+                          className="w-9 h-9 border-2 border-white shadow-sm"
                           fallbackClassName="text-[10px]"
                         />
                       ))}
                       {playersWhoChoseThis.length > 4 && (
-                        <div className="w-7 h-7 rounded-full bg-white/90 flex items-center justify-center text-[10px] font-bold text-gray-600 border-2 border-white shadow-sm">
+                        <div className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center text-[10px] font-bold text-gray-600 border-2 border-white shadow-sm">
                           +{playersWhoChoseThis.length - 4}
                         </div>
                       )}
