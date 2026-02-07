@@ -7,7 +7,6 @@
 
 const BASE_POINTS = 100;
 const TIME_BONUS_MULTIPLIER = 5;
-const OBSERVER_BONUS_MULTIPLIER = 10; // Match player scoring (10x) for fairness
 const QUESTION_TIME_SECONDS = 15;
 
 /**
@@ -28,19 +27,13 @@ export const calculatePoints = (isCorrect: boolean, timeRemaining: number): numb
 
 /**
  * Calculate observer bonus when a player answers incorrectly or times out
- * The bonus is inversely proportional to how quickly the player failed
- * Uses same 10x multiplier as player scoring for fairness
- * 
- * @param timeWhenAnswered - Seconds remaining when wrong answer was given (0 for timeout)
- * @returns Bonus points for observer (100-250 range, matching player point range)
+ * Observer earns the same as a correct answer at the given speed (100-175 range)
+ *
+ * @param avgTimeRemaining - Average seconds remaining across wrong/timed-out answers
+ * @returns Bonus points for observer (same range as a correct player answer)
  */
-export const calculateObserverBonus = (timeWhenAnswered: number): number => {
-  // If player answered wrong quickly (14s left), observer gets less (110)
-  // If player timed out (0s left), observer gets max (250)
-  const clampedTime = Math.max(0, Math.min(timeWhenAnswered, QUESTION_TIME_SECONDS));
-  const timeUsed = QUESTION_TIME_SECONDS - clampedTime;
-  // Use 10x multiplier to match player scoring for fairness
-  return Math.round(BASE_POINTS + (timeUsed * OBSERVER_BONUS_MULTIPLIER));
+export const calculateObserverBonus = (avgTimeRemaining: number): number => {
+  return calculatePoints(true, avgTimeRemaining);
 };
 
 /**

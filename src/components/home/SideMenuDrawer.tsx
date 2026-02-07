@@ -10,7 +10,7 @@ import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
 import { calculateLevel } from "@/utils/levelCalculation";
-import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
+
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
 
@@ -162,7 +162,6 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                 </button>
                 <h2 className="text-lg font-bold text-foreground">{t("menu.menuTitle")}</h2>
               </div>
-              <LanguageSwitcher compact />
             </div>
 
             {/* Scrollable Content */}

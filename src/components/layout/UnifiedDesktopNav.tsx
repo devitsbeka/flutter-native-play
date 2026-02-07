@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePendingChallenges } from "@/hooks/usePendingChallenges";
-import { useLanguage } from "@/contexts/LanguageContext";
+
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { Avatar } from "@/components/shared/Avatar";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -24,7 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MoreMenuModal } from "@/components/home/MoreMenuModal";
-import { LanguageSelectorModal } from "@/components/layout/LanguageSelectorModal";
+
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
 
 
@@ -63,14 +63,12 @@ export function UnifiedDesktopNav({
   const pendingCount = pendingChallenges?.length || 0;
   const { prefetchRoute } = useNavigationPrefetch();
 
-  const { currentLanguage } = useLanguage();
-  
   // Guest detection
   const isGuest = !user && !profile;
   
   // Modal states
   const [isMoreModalOpen, setIsMoreModalOpen] = useState(false);
-  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingNavPath, setPendingNavPath] = useState<string | null>(null);
 
@@ -306,19 +304,8 @@ export function UnifiedDesktopNav({
           </div>
         )}
 
-        {/* Bottom Section - Language selector and More menu */}
+        {/* Bottom Section - More menu */}
         <div className={`px-2 lg:px-3 space-y-1 ${profile ? 'mt-auto' : ''}`}>
-          {/* Language Selector */}
-          <motion.button
-            onClick={() => setIsLanguageModalOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <span className="text-xl">{currentLanguage.flag}</span>
-            <span className="text-[15px] hidden lg:inline">{currentLanguage.nativeName}</span>
-          </motion.button>
-
           {/* More Menu */}
           <motion.button
             onClick={() => setIsMoreModalOpen(true)}
@@ -339,12 +326,6 @@ export function UnifiedDesktopNav({
         onClose={() => setIsMoreModalOpen(false)}
         onNavigate={navigate}
         onSignOut={handleSignOut}
-      />
-
-      {/* Language Selector Modal */}
-      <LanguageSelectorModal
-        isOpen={isLanguageModalOpen}
-        onClose={() => setIsLanguageModalOpen(false)}
       />
 
       {/* Auth Required Modal */}

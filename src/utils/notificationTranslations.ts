@@ -8,12 +8,8 @@ interface NotificationData {
 }
 
 function getTranslation(key: string): string {
-  const lang = typeof window !== 'undefined' 
-    ? localStorage.getItem('preferredLanguage') || DEFAULT_LANGUAGE
-    : DEFAULT_LANGUAGE;
-  
   const keys = key.split('.');
-  let result: unknown = translations[lang] || translations[DEFAULT_LANGUAGE];
+  let result: unknown = translations[DEFAULT_LANGUAGE];
   
   for (const k of keys) {
     if (result && typeof result === 'object' && k in result) {

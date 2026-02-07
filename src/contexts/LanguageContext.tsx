@@ -1,9 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage, type KaTranslations } from '@/locales';
-import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useCallback, useMemo } from 'react';
+import { translations, LANGUAGES, DEFAULT_LANGUAGE, getLanguage, getRegionForLanguage } from '@/locales';
 
-const STORAGE_KEY = 'preferredLanguage';
-const LEGACY_STORAGE_KEY = 'app-language'; // For migration
 
 interface LanguageContextType {
   language: string;
@@ -53,64 +50,30 @@ function stripEmojisExceptFlags(input: string): string {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Track user ID for profile sync (use Supabase directly to avoid circular deps)
-  const [userId, setUserId] = useState<string | null>(null);
-  
-  // Initialize from localStorage or default (with migration from old key)
-  const [language, setLanguageState] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      // Migration: Copy old key to new key if exists
-      const oldValue = localStorage.getItem(LEGACY_STORAGE_KEY);
-      const newValue = localStorage.getItem(STORAGE_KEY);
-      if (oldValue && !newValue) {
-        localStorage.setItem(STORAGE_KEY, oldValue);
-        return oldValue;
-      }
-      return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE;
-    }
-    return DEFAULT_LANGUAGE;
-  });
-
-  // Listen for auth state changes
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  // Georgian is the only supported language — no selection, no sync
+  const language = DEFAULT_LANGUAGE;
 
   // Compute region based on language
   const region = useMemo(() => getRegionForLanguage(language), [language]);
-  
+
   // Current language metadata
   const currentLanguage = useMemo(() => getLanguage(language), [language]);
 
-  // Get translations for current language (fallback to Georgian)
+  // Get translations for current language
   const currentTranslations = useMemo(() => {
-    return translations[language] || translations[DEFAULT_LANGUAGE];
-  }, [language]);
+    return translations[DEFAULT_LANGUAGE];
+  }, []);
 
   // Translation function
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-    // Try current language first
     let value = getNestedValue(currentTranslations, key);
-    
-    // Fallback to Georgian if not found
-    if (!value && language !== DEFAULT_LANGUAGE) {
-      value = getNestedValue(translations[DEFAULT_LANGUAGE], key);
-    }
-    
+
     // Return key if nothing found
     if (!value) {
       console.warn(`Translation key not found: ${key}`);
       return key;
     }
-    
+
     // Replace params like {name} with actual values
     const withParams = params
       ? value.replace(/\{(\w+)\}/g, (_, paramKey) => {
@@ -119,63 +82,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       : value;
 
     return stripEmojisExceptFlags(withParams);
-  }, [currentTranslations, language]);
+  }, [currentTranslations]);
 
-  // Set language and sync to profile
-  const setLanguage = useCallback(async (lang: string) => {
-    // Validate language exists
-    if (!LANGUAGES.find(l => l.code === lang)) {
-      console.warn(`Invalid language code: ${lang}`);
-      return;
-    }
-    
-    // Update state
-    setLanguageState(lang);
-    
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, lang);
-    
-    // Sync to profile if logged in
-    if (userId) {
-      const newRegion = getRegionForLanguage(lang);
-      try {
-        await supabase
-          .from('profiles')
-          .update({ 
-            preferred_language: lang,
-            region: newRegion 
-          })
-          .eq('user_id', userId);
-      } catch (error) {
-        console.error('Failed to sync language to profile:', error);
-      }
-    }
-  }, [userId]);
-
-  // On mount, sync from profile if logged in
-  useEffect(() => {
-    if (!userId) return;
-
-    const syncFromProfile = async () => {
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('preferred_language')
-          .eq('user_id', userId)
-          .single();
-        
-        if (data?.preferred_language && data.preferred_language !== language) {
-          // Profile has a different language, use it
-          setLanguageState(data.preferred_language);
-          localStorage.setItem(STORAGE_KEY, data.preferred_language);
-        }
-      } catch (error) {
-        // Ignore - profile might not exist yet
-      }
-    };
-
-    syncFromProfile();
-  }, [userId]);
+  // No-op — language is fixed to Georgian
+  const setLanguage = useCallback((_lang: string) => {}, []);
 
   const value = useMemo(() => ({
     language,
@@ -195,44 +105,31 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext);
-  
+
   // During HMR or before provider mounts, return a fallback
   if (!context) {
-    // Return a fallback implementation using the standalone t function
-    const fallbackLang = typeof window !== 'undefined' 
-      ? localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE 
-      : DEFAULT_LANGUAGE;
-    const currentLang = LANGUAGES.find(l => l.code === fallbackLang) || LANGUAGES[0];
-    
+    const currentLang = LANGUAGES.find(l => l.code === DEFAULT_LANGUAGE) || LANGUAGES[0];
+
     return {
-      language: fallbackLang,
-      region: getRegionForLanguage(fallbackLang),
-      setLanguage: () => console.warn('LanguageProvider not mounted yet'),
+      language: DEFAULT_LANGUAGE,
+      region: getRegionForLanguage(DEFAULT_LANGUAGE),
+      setLanguage: () => {},
       t,
       languages: LANGUAGES,
       currentLanguage: currentLang,
     };
   }
-  
+
   return context;
 }
 
 // Standalone t function for use outside React components
-// This reads from localStorage directly
 export function t(key: string, params?: Record<string, string | number>): string {
-  const lang = typeof window !== 'undefined' 
-    ? localStorage.getItem(STORAGE_KEY) || DEFAULT_LANGUAGE 
-    : DEFAULT_LANGUAGE;
-  
-  const trans = translations[lang] || translations[DEFAULT_LANGUAGE];
-  let value = getNestedValue(trans, key);
-  
-  if (!value && lang !== DEFAULT_LANGUAGE) {
-    value = getNestedValue(translations[DEFAULT_LANGUAGE], key);
-  }
-  
+  const trans = translations[DEFAULT_LANGUAGE];
+  const value = getNestedValue(trans, key);
+
   if (!value) return key;
-  
+
   const withParams = params
     ? value.replace(/\{(\w+)\}/g, (_, paramKey) => {
         return params[paramKey]?.toString() ?? `{${paramKey}}`;

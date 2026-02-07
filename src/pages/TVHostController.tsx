@@ -114,6 +114,9 @@ const TVHostController: React.FC = () => {
   // Countdown state for triggering startPlaying
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const hasTriggeredPlayingRef = useRef(false);
+
+  // Track observer score at start of each question for per-question delta
+  const prevObserverScoreRef = useRef<number>(0);
   
   // Category picker modal state
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -137,7 +140,15 @@ const TVHostController: React.FC = () => {
   
   // Derive hasAnswered from context
   const hasAnswered = myAnswer !== null;
-  
+
+  // Snapshot observer score at start of each question (for per-question delta display)
+  useEffect(() => {
+    if (isSuggester && contextPhase === 'question') {
+      const observerPlayer = players.find(p => p.id === myPlayerId);
+      prevObserverScoreRef.current = observerPlayer?.score ?? myScore;
+    }
+  }, [isSuggester, contextPhase, currentQuestionIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Map context phase to local phase for rendering
   const mapContextPhaseToLocal = (phase: string): LocalPhase => {
     const mapping: Record<string, LocalPhase> = {
@@ -737,31 +748,51 @@ const TVHostController: React.FC = () => {
       // Find the observer's current score from players list
       const observerPlayer = players.find(p => p.id === myPlayerId);
       const observerScore = observerPlayer?.score ?? myScore;
-      
+      const scoreDelta = observerScore - prevObserverScoreRef.current;
+
       // CRITICAL: Use key to force re-render when question changes
       return (
-        <div 
+        <div
           key={`observer-reveal-${currentQuestionIndex}`}
           className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex flex-col items-center justify-center"
         >
-          <Star className="w-16 h-16 text-yellow-400 mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">შენი კატეგორიაა!</h2>
-          <p className="text-purple-300 mb-4">ამ რაუნდში აკვირდები</p>
-          
+          {/* Question text */}
           {currentQuestion && (
-            <div className="bg-white/10 rounded-xl p-4 mb-4 max-w-sm">
-              <p className="text-purple-300 text-sm mb-1">სწორი პასუხი:</p>
+            <div className="bg-white/10 rounded-xl p-4 mb-4 max-w-sm w-full">
+              <p className="text-purple-300 text-xs mb-1">კითხვა {currentQuestionIndex + 1}/{totalQuestions}</p>
+              <p className="text-white font-semibold text-center text-sm">{currentQuestion.question_text}</p>
+            </div>
+          )}
+
+          {/* Correct answer */}
+          {currentQuestion && (
+            <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3 mb-4 max-w-sm w-full">
+              <p className="text-green-300 text-xs mb-1">სწორი პასუხი:</p>
               <p className="text-white font-semibold text-center">{currentQuestion.correct_answer}</p>
             </div>
           )}
-          
-          {/* Observer score with bonus indicator */}
-          <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
-            <span className="text-yellow-300">შენი ქულა: </span>
-            <span className="text-white text-2xl font-bold">{observerScore}</span>
+
+          {/* Per-question bonus delta */}
+          {scoreDelta > 0 ? (
+            <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
+              <p className="text-green-400 text-lg font-bold text-center">+{scoreDelta} ქულა</p>
+              <p className="text-yellow-300/60 text-xs text-center">შეცდომებზე მოგების ბონუსი</p>
+            </div>
+          ) : (
+            <div className="bg-white/10 rounded-xl px-6 py-3 mb-4">
+              <p className="text-purple-400 text-lg font-semibold text-center">ბონუსი არაა</p>
+              <p className="text-purple-300/60 text-xs text-center">ყველამ სწორად უპასუხა</p>
+            </div>
+          )}
+
+          {/* Total score */}
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+            <span className="text-white text-xl font-bold">{observerScore}</span>
+            <span className="text-purple-300 text-sm">ქულა</span>
           </div>
-          
-          <p className="text-purple-300/60">შემდეგი კითხვა მალე...</p>
+
+          <p className="text-purple-300/60 text-sm">შემდეგი კითხვა მალე...</p>
         </div>
       );
     }
@@ -1329,42 +1360,61 @@ const TVHostController: React.FC = () => {
     // Find the observer's current score from players list
     const observerPlayer = players.find(p => p.id === myPlayerId);
     const observerScore = observerPlayer?.score ?? myScore;
-    
+
     // CRITICAL: Use key to force re-render when question changes
     return (
-      <div 
+      <div
         key={`observer-playing-${currentQuestionIndex}`}
-        className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col items-center justify-center"
+        className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 flex flex-col"
       >
-        <div className="text-center">
-          <Star className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          <p className="text-white text-xl font-bold mb-2">შენი კატეგორიაა!</p>
-          <p className="text-purple-300 mb-4">ამიტომ ამ რაუნდში აკვირდები</p>
-          
-          {/* Observer score - prominently displayed */}
-          <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl px-6 py-3 mb-4">
-            <p className="text-yellow-300 text-sm mb-1">შენი ქულა</p>
-            <p className="text-white text-3xl font-bold">{observerScore}</p>
-            <p className="text-yellow-300/60 text-xs mt-1">იღებ ქულებს შეცდომებზე</p>
+        {/* Header - Question counter, Timer, Score */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-purple-300 text-sm">Q{currentQuestionIndex + 1}/{totalQuestions}</span>
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${timeRemaining <= 5 ? 'bg-red-500/30' : 'bg-white/10'}`}>
+            <Clock className="w-4 h-4 text-purple-300" />
+            <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-400' : 'text-white'}`}>{timeRemaining}წმ</span>
           </div>
-          
-          <div className="bg-white/10 rounded-xl p-4 mb-6">
-            <p className="text-white font-semibold text-center text-sm">
-              კითხვა {currentQuestionIndex + 1}/{totalQuestions}
-            </p>
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <Clock className="w-4 h-4 text-purple-300" />
-              <span className="text-purple-300">{timeRemaining}წ</span>
+          <div className="flex items-center gap-1">
+            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+            <span className="text-white font-bold text-sm">{observerScore}</span>
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-white/10 rounded-xl p-4 mb-4">
+          <p className="text-white font-semibold text-center">{currentQuestion?.question_text}</p>
+        </div>
+
+        {/* Read-only answer options */}
+        <div className="flex-1 flex flex-col gap-3">
+          {currentQuestion?.options.map((option, index) => (
+            <div
+              key={index}
+              className="w-full text-left px-4 py-3 rounded-xl bg-white/10 opacity-60 pointer-events-none"
+            >
+              <span className="inline-flex items-center gap-3">
+                <span
+                  className="w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
+                  style={{
+                    background: ['#A855F7', '#7C3AED', '#6366F1', '#8B5CF6'][index]
+                  }}
+                >
+                  {['A', 'B', 'C', 'D'][index]}
+                </span>
+                <span className="text-purple-200">{option}</span>
+              </span>
             </div>
-          </div>
-          
-          <p className="text-purple-300 text-sm mb-6">ტელევიზორზე უყურე...</p>
-          
+          ))}
+        </div>
+
+        {/* Observer badge + end game */}
+        <div className="mt-auto pt-4 flex items-center justify-between">
+          <span className="text-yellow-300/60 text-xs">აკვირდები — ქულებს იღებ შეცდომებზე</span>
           <ChunkyButton
             variant="secondary"
             onClick={handleEndGame}
           >
-            თამაშის დასრულება
+            დასრულება
           </ChunkyButton>
         </div>
       </div>
