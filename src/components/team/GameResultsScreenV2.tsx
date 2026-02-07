@@ -344,8 +344,18 @@ export function GameResultsScreenV2() {
   return (
     <div className="h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-[#7C6AE5] to-[#9B89F5]">
       <div className="w-full h-full flex flex-col max-w-[700px] mx-auto">
+      {/* Back Button Header */}
+      <div className="flex items-center px-4 pt-4 pb-0 flex-shrink-0">
+        <button
+          onClick={handleBackToRoom}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm text-white"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Top Section: Icon + Result */}
-      <div className="pt-8 text-center">
+      <div className="pt-4 text-center">
         <motion.img 
           src={trophyWinIcon} 
           alt="Trophy" 
@@ -533,33 +543,63 @@ export function GameResultsScreenV2() {
 
         {/* Strict host check: ensure user.id is defined and matches host_user_id */}
         {isHost && user?.id && currentRoom?.host_user_id === user.id ? (
-          // Host - always show category picker button
-          <ChunkyButton
-            variant="mint"
-            size="lg"
-            className="w-full"
-            onClick={() => setShowCategoryPicker(true)}
-            disabled={isStartingRematch}
-            icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
-          >
-            {isStartingRematch ? t("game.starting") : "კატეგორიის დამატება"}
-          </ChunkyButton>
-        ) : (
-          // Non-host - always show waiting indicator
-          <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <p className="text-white/70 font-medium">ველოდებით ჰოსტს</p>
-          </div>
-        )}
+          <>
+            {/* Continue button - when queue has items */}
+            {queue.length > 0 && (
+              <ChunkyButton
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handlePlayAgain}
+                disabled={isStartingRematch}
+                icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+              >
+                {isStartingRematch ? t("game.starting") : t("common.continue")}
+              </ChunkyButton>
+            )}
 
-        <ChunkyButton
-          variant="secondary"
-          size="lg"
-          className="w-full"
-          onClick={handleBackToRoom}
-          icon={<ArrowLeft className="w-5 h-5" />}
-        >
-        {t("game.backToRoom")}
-        </ChunkyButton>
+            {/* Category picker button */}
+            <ChunkyButton
+              variant="mint"
+              size="lg"
+              className="w-full"
+              onClick={() => setShowCategoryPicker(true)}
+              disabled={isStartingRematch}
+              icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+            >
+              {isStartingRematch ? t("game.starting") : "კატეგორიის დამატება"}
+            </ChunkyButton>
+
+            {/* Back to room - only when no queue */}
+            {queue.length === 0 && (
+              <ChunkyButton
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                onClick={handleBackToRoom}
+                icon={<ArrowLeft className="w-5 h-5" />}
+              >
+                {t("game.backToRoom")}
+              </ChunkyButton>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Non-host - show waiting or back */}
+            <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+              <p className="text-white/70 font-medium">ველოდებით ჰოსტს</p>
+            </div>
+            <ChunkyButton
+              variant="secondary"
+              size="lg"
+              className="w-full"
+              onClick={handleBackToRoom}
+              icon={<ArrowLeft className="w-5 h-5" />}
+            >
+              {t("game.backToRoom")}
+            </ChunkyButton>
+          </>
+        )}
       </motion.div>
 
       {/* Category Picker Modal */}
