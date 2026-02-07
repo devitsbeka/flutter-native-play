@@ -2,7 +2,7 @@ import triviaBuzzer from "@/assets/icons/trivia-buzzer.png";
 import crownIcon from "@/assets/icons/crown-3d.png";
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Trophy, Lock, Crown, Clock, Play } from "lucide-react";
+import { Sparkles, Trophy, Lock, Crown, Hourglass, Play } from "lucide-react";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -127,56 +127,16 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           inline={inline}
           fullScreen={false}
         >
+          {/* PRO upgrade section */}
           <div className="space-y-3 mb-4">
-            {/* Regen play available - show play now option */}
-            {regenPlayAvailable ? (
-              <motion.div
-                className="rounded-xl p-4 text-center"
-                style={{
-                  background: "linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)",
-                  border: "2px solid rgba(34,197,94,0.4)",
-                  boxShadow: "0 3px 0 rgba(34,197,94,0.2)",
-                }}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <p className="text-sm font-bold text-green-600 mb-1">უფასო თამაში მზადაა!</p>
-                <p className="text-xs text-foreground/60">3 საათში 1 თამაში უფასოდ</p>
-              </motion.div>
-            ) : (
-              <>
-                {/* Countdown timer */}
-                {timeUntilNextPlay && (
-                  <motion.div
-                    className="rounded-xl p-4 text-center"
-                    style={{
-                      background: "linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0.05) 100%)",
-                      border: "2px solid rgba(59,130,246,0.3)",
-                      boxShadow: "0 3px 0 rgba(59,130,246,0.15)",
-                    }}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <Clock className="h-4 w-4 text-blue-500" />
-                      <p className="text-sm font-bold text-blue-600">შემდეგი უფასო თამაში: {timeUntilNextPlay}</p>
-                    </div>
-                    <p className="text-xs text-foreground/60">3 საათში 1 თამაში უფასოდ</p>
-                  </motion.div>
-                )}
-
-                <motion.p
-                  className="text-center text-foreground/80 text-sm"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  ან გახდი PRO და ითამაშე შეუზღუდავად!
-                </motion.p>
-              </>
-            )}
+            <motion.p
+              className="text-center text-foreground/80 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              უფასო 5 თამაში ამოიწურა. გახდი PRO და ითამაშე შეუზღუდავად!
+            </motion.p>
 
             {/* PRO Benefits */}
             <motion.div 
@@ -188,7 +148,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               }}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.15 }}
             >
               <Crown className="h-5 w-5 text-amber-500 shrink-0" />
               <p className="text-sm font-medium text-foreground">შეუზღუდავი თამაშები</p>
@@ -203,28 +163,63 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               }}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 }}
+              transition={{ delay: 0.2 }}
             >
               <Sparkles className="h-5 w-5 text-primary shrink-0" />
               <p className="text-sm font-medium text-foreground">ექსკლუზიური ფუნქციები</p>
             </motion.div>
           </div>
 
+          {/* PRO button always first */}
+          <GameModalFooter
+            primaryLabel="გახდი PRO"
+            onPrimary={handleUpgradeToPro}
+            primaryIcon={<Crown className="w-5 h-5" />}
+          />
+
+          {/* Timer / free play section BELOW the PRO button */}
           {regenPlayAvailable ? (
-            <GameModalFooter
-              primaryLabel="ითამაშე ახლა"
-              onPrimary={onPlayWithRegen}
-              primaryIcon={<Play className="w-5 h-5" />}
-              secondaryLabel="გახდი PRO"
-              onSecondary={handleUpgradeToPro}
-            />
-          ) : (
-            <GameModalFooter
-              primaryLabel="გახდი PRO"
-              onPrimary={handleUpgradeToPro}
-              primaryIcon={<Crown className="w-5 h-5" />}
-            />
-          )}
+            <motion.div
+              className="mt-4 rounded-xl p-3 text-center"
+              style={{
+                background: "linear-gradient(180deg, rgba(34,197,94,0.12) 0%, rgba(34,197,94,0.04) 100%)",
+                border: "1.5px solid rgba(34,197,94,0.3)",
+              }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <p className="text-xs font-bold text-green-600 mb-2">უფასო თამაში მზადაა!</p>
+              <button
+                onClick={onPlayWithRegen}
+                className="flex items-center justify-center gap-2 mx-auto rounded-xl px-5 py-2 text-sm font-bold text-white transition-transform active:scale-95"
+                style={{
+                  background: "linear-gradient(180deg, #34D399 0%, #10B981 100%)",
+                  boxShadow: "0 3px 0 #059669, 0 4px 12px rgba(16,185,129,0.3)",
+                }}
+              >
+                <Play className="w-4 h-4" />
+                ითამაშე ახლა
+              </button>
+            </motion.div>
+          ) : timeUntilNextPlay ? (
+            <motion.div
+              className="mt-4 rounded-xl p-3 text-center"
+              style={{
+                background: "linear-gradient(180deg, rgba(107,114,128,0.08) 0%, rgba(107,114,128,0.03) 100%)",
+                border: "1.5px solid rgba(107,114,128,0.2)",
+              }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Hourglass className="h-4 w-4 text-foreground/50" />
+                <p className="text-xs font-semibold text-foreground/70">შემდეგი უფასო თამაში: {timeUntilNextPlay}</p>
+              </div>
+              <p className="text-[11px] text-foreground/40">3 საათში 1 თამაში უფასოდ</p>
+            </motion.div>
+          ) : null}
         </GameModal>
       </div>
     );
