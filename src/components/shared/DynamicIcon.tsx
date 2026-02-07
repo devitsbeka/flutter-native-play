@@ -1,5 +1,4 @@
 import * as React from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { HelpCircle } from "lucide-react";
 import { useIconLibrary } from "@/hooks/useIconLibrary";
@@ -53,6 +52,7 @@ export function DynamicIcon({
   const [retryCount, setRetryCount] = React.useState(0);
   const [asyncIconUrl, setAsyncIconUrl] = React.useState<string | null>(null);
   const [isResolvingIcon, setIsResolvingIcon] = React.useState(false);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
   const maxRetries = 2;
   
   const { findIcon, getIconBySlug, fetchIconBySlug, getIconForCategory, getRandomIconForCategory, isLoaded } = useIconLibrary();
@@ -126,6 +126,7 @@ export function DynamicIcon({
     setImageError(false);
     setRetryCount(0);
     setAsyncIconUrl(null);
+    setImageLoaded(false);
     // If we have a slug but no immediate match, we're resolving
     if (slug && isLoaded && !iconUrl) {
       setIsResolvingIcon(true);
@@ -217,21 +218,22 @@ export function DynamicIcon({
   }
 
   return (
-    <motion.img
-      key={`${finalIconUrl}-${retryCount}`} // Force new img element on retry
+    <img
       src={finalIconUrl}
       alt="Category icon"
       width={size}
       height={size}
       loading="eager"
+      onLoad={() => setImageLoaded(true)}
       onError={handleImageError}
-      className={cn("object-contain", className)}
+      className={cn(
+        "object-contain transition-opacity duration-200",
+        imageLoaded ? "opacity-100" : "opacity-0",
+        className
+      )}
       style={{ 
         filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
       }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.2 }}
     />
   );
 }

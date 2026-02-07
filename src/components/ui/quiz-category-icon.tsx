@@ -21,13 +21,10 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
     const isLoading = state === "loading";
 
     return (
-      <motion.div
+      <div
         ref={ref}
         className={cn("relative flex items-center justify-center", className)}
         style={{ width: size, height: size }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
         {isLoading ? (
           <div className="relative w-full h-full flex items-center justify-center">
@@ -107,7 +104,7 @@ const QuizCategoryIcon = React.forwardRef<HTMLDivElement, QuizCategoryIconProps>
             transition={{ delay: 0.05 }}
           />
         )}
-      </motion.div>
+      </div>
     );
   }
 );
