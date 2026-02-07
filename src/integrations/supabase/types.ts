@@ -1420,6 +1420,7 @@ export type Database = {
           games_won: number | null
           gems: number
           id: string
+          last_play_regen_at: string | null
           nickname: string
           preferred_language: string
           referred_by_invite_id: string | null
@@ -1442,6 +1443,7 @@ export type Database = {
           games_won?: number | null
           gems?: number
           id?: string
+          last_play_regen_at?: string | null
           nickname: string
           preferred_language?: string
           referred_by_invite_id?: string | null
@@ -1464,6 +1466,7 @@ export type Database = {
           games_won?: number | null
           gems?: number
           id?: string
+          last_play_regen_at?: string | null
           nickname?: string
           preferred_language?: string
           referred_by_invite_id?: string | null

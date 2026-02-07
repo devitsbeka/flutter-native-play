@@ -171,7 +171,7 @@ export default function Index() {
   const { totalStars } = useTotalStars();
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
-  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading } = usePlayLimit();
+  const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   const { unreadCount } = useNotifications();
   const { hasEnoughCoins, stakeAmount } = useGameStake();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
@@ -203,6 +203,15 @@ export default function Index() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
 
 
+  // Handle play with regenerated play
+  const handlePlayWithRegen = useCallback(async () => {
+    const success = await useRegenPlay();
+    if (success) {
+      setShowGuestMaxPlaysModal(false);
+      navigate("/game");
+    }
+  }, [useRegenPlay, navigate]);
+
   // Handle play button click - check auth status and plays remaining
   const handlePlayClick = useCallback(async () => {
     if (!user) {
@@ -229,16 +238,22 @@ export default function Index() {
         return;
       }
       
-      // Check if user can play (lifetime limit for non-PRO)
+      // Check if user can play (lifetime limit for non-PRO, or regen play)
       if (!canPlay && !isVip) {
-        // Show PRO upgrade modal
+        // Show PRO upgrade modal with regen info
         setShowGuestMaxPlaysModal(true);
         return;
+      }
+
+      // If using a regen play (free games exhausted but regen available), consume it
+      if (regenPlayAvailable && playsRemaining <= 0 && !isVip) {
+        const success = await useRegenPlay();
+        if (!success) return;
       }
       
       navigate("/game");
     }
-  }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins]);
+  }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins, regenPlayAvailable, playsRemaining, useRegenPlay]);
 
   // Handle exchange gems for coins
   const handleExchangeGems = useCallback(async () => {
@@ -389,6 +404,9 @@ export default function Index() {
           startOnboarding();
         }}
         isGuest={!user}
+        regenPlayAvailable={regenPlayAvailable}
+        timeUntilNextPlay={timeUntilNextPlay}
+        onPlayWithRegen={handlePlayWithRegen}
       />
       <NotEnoughCoinsModal
         isOpen={showNotEnoughCoinsModal}
