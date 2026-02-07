@@ -108,13 +108,13 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                   <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-52">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">ფილტრი</DropdownMenuLabel>
+              <DropdownMenuContent align="start" className="w-56 py-2">
+                <DropdownMenuLabel className="text-[13px] text-muted-foreground pt-1 pb-1">ფილტრი</DropdownMenuLabel>
                 {filterOptions.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
                     onClick={() => onFilterChange(option.value)}
-                    className={filter === option.value ? "bg-primary/10 text-primary" : ""}
+                    className={`py-3 text-[15px] ${filter === option.value ? "bg-primary/10 text-primary" : ""}`}
                   >
                     <div className="flex items-center gap-2 w-full">
                       {filter === option.value && <Check className="h-4 w-4" />}
@@ -126,12 +126,12 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                 {sortOptions && sortOptions.length > 0 && onSortChange && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">დალაგება</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-[13px] text-muted-foreground pt-1 pb-1">დალაგება</DropdownMenuLabel>
                     {sortOptions.map((option) => (
                       <DropdownMenuItem
                         key={option.value}
                         onClick={() => onSortChange(option.value)}
-                        className={sort === option.value ? "bg-primary/10 text-primary" : ""}
+                        className={`py-3 text-[15px] ${sort === option.value ? "bg-primary/10 text-primary" : ""}`}
                       >
                         <div className="flex items-center gap-2 w-full">
                           {sort === option.value && <Check className="h-4 w-4" />}
