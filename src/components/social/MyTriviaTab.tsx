@@ -159,17 +159,17 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
         </div>
 
         {/* 3) likes/saves/plays */}
-        <div className="flex items-center gap-4 text-[15px] text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <img src={purpleHeart3d} alt="Likes" className="w-[22px] h-[22px] object-contain" />
+        <div className="flex items-center gap-6 text-[17px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <img src={purpleHeart3d} alt="Likes" className="w-[26px] h-[26px] object-contain" />
             <span>{quiz.likes_count || 0}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <img src={bookmark3d} alt="Saves" className="w-[22px] h-[22px] object-contain" />
+          <div className="flex items-center gap-1.5">
+            <img src={bookmark3d} alt="Saves" className="w-[26px] h-[26px] object-contain" />
             <span>{quiz.saves_count || 0}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <img src={pushButton3d} alt="Plays" className="w-[22px] h-[22px] object-contain" />
+          <div className="flex items-center gap-1.5">
+            <img src={pushButton3d} alt="Plays" className="w-[26px] h-[26px] object-contain" />
             <span>{quiz.plays_count || 0}</span>
           </div>
         </div>
