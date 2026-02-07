@@ -72,30 +72,54 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     return () => clearInterval(timer);
   }, [currentQuestionIndex]);
 
-  // Poll for ALL incorrect answers across ALL questions (catches skipped ones)
+  // Poll answers and calculate majority-based observer bonus per question
   useEffect(() => {
     const roomId = currentRoom?.id;
-    if (!roomId || players.length === 0) return;
+    const totalPlayers = players.length;
+    if (!roomId || totalPlayers === 0) return;
     
     const pollAnswers = async () => {
+      // Fetch ALL answers (correct and incorrect) to count per-question
       const { data: allAnswers } = await supabase
         .from("player_answers")
         .select("user_id, question_index, time_remaining, is_correct")
-        .eq("room_id", roomId)
-        .eq("is_correct", false);
+        .eq("room_id", roomId);
       
       if (!allAnswers || allAnswers.length === 0) return;
       
+      // Group answers by question_index
+      const byQuestion = new Map<number, typeof allAnswers>();
+      for (const answer of allAnswers) {
+        const existing = byQuestion.get(answer.question_index) || [];
+        existing.push(answer);
+        byQuestion.set(answer.question_index, existing);
+      }
+      
       let newBonus = 0;
       
-      for (const answer of allAnswers) {
-        const answerId = `${answer.user_id}-${answer.question_index}`;
-        if (processedAnswerIdsRef.current.has(answerId)) continue;
+      for (const [qIndex, answers] of byQuestion.entries()) {
+        const qKey = `q-${qIndex}`;
+        if (processedAnswerIdsRef.current.has(qKey)) continue;
         
-        const timeRemaining = answer.time_remaining ?? 0;
-        const bonus = calculateObserverBonus(timeRemaining);
-        newBonus += bonus;
-        processedAnswerIdsRef.current.add(answerId);
+        // Only process questions where all players have answered
+        const uniqueRespondents = new Set(answers.map(a => a.user_id));
+        if (uniqueRespondents.size < totalPlayers) continue;
+        
+        // Count correct vs incorrect
+        const correctCount = answers.filter(a => a.is_correct).length;
+        const wrongCount = totalPlayers - correctCount;
+        
+        // Majority wrong (>50%) → host earns one bonus
+        if (wrongCount > totalPlayers / 2) {
+          const wrongAnswers = answers.filter(a => !a.is_correct);
+          const avgTime = wrongAnswers.length > 0
+            ? wrongAnswers.reduce((sum, a) => sum + (a.time_remaining ?? 0), 0) / wrongAnswers.length
+            : 0;
+          const bonus = calculateObserverBonus(avgTime);
+          newBonus += bonus;
+        }
+        
+        processedAnswerIdsRef.current.add(qKey);
       }
       
       if (newBonus > 0) {
@@ -124,7 +148,7 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
     if (allPlayersAdvanced) {
       console.log(`[Observer] All players advanced, processing final bonus before advancing from ${currentQuestionIndex}`);
       
-      // CRITICAL FIX: Fetch and process any unprocessed incorrect answers BEFORE advancing
+      // Fetch and process any unprocessed questions with majority-based scoring BEFORE advancing
       const processFinalBonus = async () => {
         const roomId = currentRoom?.id;
         if (!roomId) {
@@ -133,28 +157,47 @@ export function MultiplayerObserverScreen({ onExit }: MultiplayerObserverScreenP
           return;
         }
         
+        const totalPlayers = otherPlayers.length;
+        
         const { data: allAnswers } = await supabase
           .from("player_answers")
           .select("user_id, question_index, time_remaining, is_correct")
-          .eq("room_id", roomId)
-          .eq("is_correct", false);
+          .eq("room_id", roomId);
         
         if (allAnswers && allAnswers.length > 0) {
+          // Group by question_index
+          const byQuestion = new Map<number, typeof allAnswers>();
+          for (const answer of allAnswers) {
+            const existing = byQuestion.get(answer.question_index) || [];
+            existing.push(answer);
+            byQuestion.set(answer.question_index, existing);
+          }
+          
           let newBonus = 0;
           
-          for (const answer of allAnswers) {
-            const answerId = `${answer.user_id}-${answer.question_index}`;
-            if (processedAnswerIdsRef.current.has(answerId)) continue;
+          for (const [qIndex, answers] of byQuestion.entries()) {
+            const qKey = `q-${qIndex}`;
+            if (processedAnswerIdsRef.current.has(qKey)) continue;
             
-            const timeRemaining = answer.time_remaining ?? 0;
-            const bonus = calculateObserverBonus(timeRemaining);
-            newBonus += bonus;
-            processedAnswerIdsRef.current.add(answerId);
+            // At final advance, process even if not all players answered (treat missing as wrong)
+            const correctCount = answers.filter(a => a.is_correct).length;
+            const wrongCount = totalPlayers - correctCount;
+            
+            if (wrongCount > totalPlayers / 2) {
+              const wrongAnswers = answers.filter(a => !a.is_correct);
+              const avgTime = wrongAnswers.length > 0
+                ? wrongAnswers.reduce((sum, a) => sum + (a.time_remaining ?? 0), 0) / wrongAnswers.length
+                : 0;
+              const bonus = calculateObserverBonus(avgTime);
+              newBonus += bonus;
+            }
+            
+            processedAnswerIdsRef.current.add(qKey);
           }
           
           if (newBonus > 0) {
             setBonusEarnedThisRound(prev => prev + newBonus);
-            await awardObserverBonus(newBonus); // AWAIT to ensure score is saved
+            await awardObserverBonus(newBonus);
           }
         }
         
