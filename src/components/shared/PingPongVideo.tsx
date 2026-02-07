@@ -15,7 +15,7 @@ export function PingPongVideo({
   src,
   posterUrl,
   className = "",
-  rootMargin = "50px", // Reduced from 200px for better performance
+  rootMargin = "200px",
   style,
 }: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -41,10 +41,7 @@ export function PingPongVideo({
       ([entry]) => {
         setIsInView(entry.isIntersecting);
       },
-      {
-        rootMargin,
-        threshold: 0.1,
-      }
+      { rootMargin }
     );
 
     observer.observe(container);
