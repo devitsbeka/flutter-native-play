@@ -848,11 +848,28 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         
         // If game is playing, load the questions
         if (newPhase === "playing") {
-          const { data: roomQuestions } = await supabase
+          let questionQuery = supabase
             .from("room_questions")
             .select("*")
-            .eq("room_id", room.id)
+            .eq("room_id", room.id);
+
+          // Filter by current game_id if available (prevents loading stale questions)
+          if (room.current_game_id) {
+            questionQuery = questionQuery.eq("game_id", room.current_game_id);
+          }
+
+          let { data: roomQuestions } = await questionQuery
             .order("question_index", { ascending: true });
+
+          // Fallback: if game_id filter returned empty, retry without it
+          if ((!roomQuestions || roomQuestions.length === 0) && room.current_game_id) {
+            const { data: fallbackQuestions } = await supabase
+              .from("room_questions")
+              .select("*")
+              .eq("room_id", room.id)
+              .order("question_index", { ascending: true });
+            roomQuestions = fallbackQuestions;
+          }
           
           if (roomQuestions && roomQuestions.length > 0) {
             const questions: TriviaQuestion[] = roomQuestions.map((q: any) => ({
@@ -879,6 +896,9 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
               questions,
               currentQuestionIndex: currentQuestion,
               myScore: existing.score || 0,
+              hostIsObserver: room.host_is_observer || false,
+              lastQuestionResult: null,
+              opponentAnswers: {},
             }));
           } else {
             // No questions yet, go to lobby
