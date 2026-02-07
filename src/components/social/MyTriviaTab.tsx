@@ -153,7 +153,7 @@ function CollectionQuizCard({ quiz, profile, onEdit, onPlay }: { quiz: any; prof
         {/* 2) X questions + Edit */}
         <div className="flex items-center justify-between gap-2 -mt-2.5">
           <p className="text-xs text-muted-foreground">
-            {quiz.question_count} questions
+            {quiz.question_count} კითხვა
           </p>
           <span aria-hidden className="w-9" />
         </div>

@@ -763,6 +763,7 @@ export const en: KaTranslations = {
     coinsDescription: "Use coins to buy powers",
     vipDescription: "Get exclusive benefits and bonuses",
     eachPower: "each power",
+    powerUpNames: { fiftyFifty: "50/50", freeze: "Freeze", replace: "Replace", timeDrain: "Time Drain" },
   },
 
   // ==========================================

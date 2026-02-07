@@ -645,6 +645,7 @@ export const es: KaTranslations = {
     coinsDescription: "Usa monedas para comprar poderes",
     vipDescription: "Obtén beneficios y bonificaciones exclusivas",
     eachPower: "cada poder",
+    powerUpNames: { fiftyFifty: "50/50", freeze: "Congelar", replace: "Reemplazar", timeDrain: "Robar tiempo" },
   },
   help: {
     title: "Ayuda",
