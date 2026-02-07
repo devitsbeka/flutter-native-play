@@ -416,59 +416,47 @@ export function QuizGameScreenProd() {
       {/* Answer Buttons */}
       {isTrueFalseQuestion ? (
         <div className="flex-1 min-h-0 w-full px-4 mt-0 flex gap-3 [@media(max-height:600px)]:gap-2 pb-2 items-center">
-          <AnimatePresence>
-            {currentQuestion.allAnswers.map((answer, index) => {
-              const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
-              if (hiddenAnswers.includes(answer)) return null;
+          {currentQuestion.allAnswers.map((answer, index) => {
+            const isTrue = answer.toLowerCase() === "მართალია" || answer.toLowerCase() === "true";
+            if (hiddenAnswers.includes(answer)) return null;
 
-              return (
-                <motion.div
-                  key={`${currentQuestionIndex}-${index}`}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex-1"
-                >
-                  <QuizTrueFalseButton
-                    variant={isTrue ? "true" : "false"}
-                    state={getAnswerState(answer) as QuizTrueFalseState}
-                    onClick={() => handleAnswer(answer)}
-                    disabled={answerRevealed}
-                  />
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+            return (
+              <div
+                key={`${currentQuestionIndex}-${index}`}
+                className="flex-1"
+              >
+                <QuizTrueFalseButton
+                  variant={isTrue ? "true" : "false"}
+                  state={getAnswerState(answer) as QuizTrueFalseState}
+                  onClick={() => handleAnswer(answer)}
+                  disabled={answerRevealed}
+                />
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="flex-1 px-4 mt-0 flex flex-col gap-3 [@media(max-height:700px)]:gap-2 [@media(max-height:600px)]:gap-1.5 overflow-y-auto min-h-0 pb-2">
-          <AnimatePresence>
-            {currentQuestion.allAnswers.map((answer, index) => {
-              const isHidden = hiddenAnswers.includes(answer);
-              if (isHidden) return null;
+          {currentQuestion.allAnswers.map((answer, index) => {
+            const isHidden = hiddenAnswers.includes(answer);
+            if (isHidden) return null;
 
-              return (
-                <motion.div
-                  key={`${currentQuestionIndex}-${index}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex-shrink-0 w-full"
-                >
-                  <QuizAnswerButton
-                    label={ANSWER_LABELS[index]}
-                    text={answer}
-                    state={getAnswerState(answer)}
-                    onClick={() => handleAnswer(answer)}
-                    disabled={answerRevealed}
-                    showLabel={true}
-                  />
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+            return (
+              <div
+                key={`${currentQuestionIndex}-${index}`}
+                className="flex-shrink-0 w-full"
+              >
+                <QuizAnswerButton
+                  label={ANSWER_LABELS[index]}
+                  text={answer}
+                  state={getAnswerState(answer)}
+                  onClick={() => handleAnswer(answer)}
+                  disabled={answerRevealed}
+                  showLabel={true}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 

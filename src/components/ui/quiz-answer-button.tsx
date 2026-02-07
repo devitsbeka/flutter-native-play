@@ -82,14 +82,9 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         onMouseLeave={() => setIsPressed(false)}
         onTouchStart={() => setIsPressed(true)}
         onTouchEnd={() => setIsPressed(false)}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: disabled || isLoading ? 1 : 1.01 }}
-        whileTap={{ scale: disabled || isLoading ? 1 : 0.99 }}
-        transition={{ 
-          duration: 0.15,
-          scale: { type: "spring", stiffness: 400, damping: 17 }
-        }}
+        animate={{ opacity: 1 }}
+        whileTap={{ scale: disabled || isLoading ? 1 : 0.98 }}
+        transition={{ duration: 0.1 }}
         className={cn(
           "relative w-full h-full rounded-2xl font-bold text-lg",
           "disabled:cursor-not-allowed",

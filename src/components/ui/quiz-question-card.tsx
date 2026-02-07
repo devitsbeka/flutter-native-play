@@ -96,9 +96,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           backgroundColor: isFrozen ? "#E0F7FA" : "#FFFFFF",
           boxShadow: isFrozen ? "0 4px 0 #0097A7, 0 0 20px rgba(0,188,212,0.4)" : "0 4px 0 #CBD5E1",
         }}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15 }}
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
