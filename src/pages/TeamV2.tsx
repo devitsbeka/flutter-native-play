@@ -614,7 +614,7 @@ function TeamContentV2() {
           {((activeTab === "rooms" && hasRooms) || 
             (activeTab === "explore") || 
             (activeTab === "my-content" && hasTrivias)) && (
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
+            <div id="sticky-filter-bar" className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/50">
               {activeTab === "rooms" && hasRooms && (
                 <UnifiedFiltersBar<RoomFilter, string>
                   filter={roomsFilter}
