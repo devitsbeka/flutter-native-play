@@ -116,7 +116,7 @@ export function TriviaPortfolioCard({
         
         {/* Played Badge - top left */}
         {isPlayed && (
-          <div className="absolute top-2 left-2 bg-emerald-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1">
+          <div className="absolute top-2 left-2 bg-emerald-500 rounded-full px-2 py-0.5 text-xs text-white flex items-center gap-1">
             <Check className="w-3 h-3" />
             <span>ნათამაშები</span>
           </div>
@@ -130,7 +130,7 @@ export function TriviaPortfolioCard({
         </div>
         
         {/* Question Count Badge - top right */}
-        <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-xs text-white">
+        <div className="absolute top-2 right-2 bg-black/60 rounded-full px-2 py-0.5 text-xs text-white">
           {trivia.questionCount} კითხვა
         </div>
       </div>

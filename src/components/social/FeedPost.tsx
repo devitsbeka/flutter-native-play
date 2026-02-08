@@ -329,10 +329,10 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays,
         <div className="absolute inset-0 flex flex-col items-center p-4 text-center z-10">
           {/* Quiz Stats - at top */}
           <div className="flex items-center gap-4 text-white/90 text-sm pt-2">
-            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+            <span className="bg-white/30 px-3 py-1 rounded-full">
               {post.questionCount} კითხვა
             </span>
-            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+            <span className="bg-white/30 px-3 py-1 rounded-full">
               {post.answerFormat === '4_answers' ? '4 პასუხი' : 'მართალი/მცდარი'}
             </span>
           </div>
