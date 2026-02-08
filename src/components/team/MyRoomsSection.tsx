@@ -227,7 +227,7 @@ export function MyRoomsSection({
             <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
               <img src={danceFloorIcon} alt="" className="w-full h-full object-contain" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
+            <h3 className="text-base font-semibold text-foreground mb-1.5">
               {activeFilter === "all" ? "ოთახები ჯერ არ გაქვს" : 
                activeFilter === "my_rooms" ? "შენ ჯერ ოთახი არ შეგიქმნია" :
                activeFilter === "friends_rooms" ? "მეგობრებს ოთახები არ აქვთ" :
@@ -235,12 +235,12 @@ export function MyRoomsSection({
                "დასრულებული ოთახები არ არის"}
             </h3>
             {activeFilter === "all" && (
-              <p className="text-muted-foreground text-sm text-center mb-6">
+              <p className="text-muted-foreground text-xs text-center mb-5">
                 შექმენი ოთახი და მოიწვიე მეგობრები სათამაშოდ.
               </p>
             )}
             {onCreateRoom && activeFilter === "all" && (
-              <ChunkyButton onClick={onCreateRoom}>+ ოთახი</ChunkyButton>
+              <ChunkyButton onClick={onCreateRoom} size="sm">+ ოთახი</ChunkyButton>
             )}
           </motion.div>
         )

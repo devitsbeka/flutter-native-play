@@ -1291,16 +1291,16 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
             <img src={triviaBuzzerIcon} alt="" className="w-full h-full object-contain" />
           </div>
           
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-base font-semibold text-foreground mb-1.5">
             {sortFilter === "all" ? "ტრივიები ჯერ არ გაქვს" : title}
           </h3>
           
-          <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
+          <p className="text-muted-foreground text-center text-xs max-w-xs mb-5">
             {sortFilter === "all" ? "შექმენი შენი ტრივია და გაუზიარე მეგობრებს." : description}
           </p>
           
           {onCreateQuiz && sortFilter === "all" && (
-            <ChunkyButton onClick={onCreateQuiz}>+ ტრივია</ChunkyButton>
+            <ChunkyButton onClick={onCreateQuiz} size="sm">+ ტრივია</ChunkyButton>
           )}
         </div>
       </motion.div>
