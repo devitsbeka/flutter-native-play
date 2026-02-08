@@ -1,42 +1,33 @@
 
 
-## Update Play Button: Show "ითამაშე" Text for Unplayed Items
+## Fix: Make Exhausted Play Button Clickable to Show PRO Modal
 
-### Current Behavior
-Both mobile feed cards and desktop portfolio cards show a small circle button for play -- solid purple when not played, outlined purple when played. There's no text label.
+### Problem
 
-### New Behavior
-- **Not played**: A white pill-shaped button with a purple border, a filled purple play icon on the left, and the text "ითამაშე" next to it
-- **Already played**: Keep the current solid purple circle button with white play icon (no text, just the icon circle)
+On the home screen (desktop/tablet), when a user has exhausted their 5 lifetime free plays, the large "ითამაშე" button turns gray with an hourglass icon and becomes **disabled**. This means clicking it does nothing -- the user can't trigger the PRO upgrade modal.
 
-This applies to both components that render the play button in the explore feed.
+The `handlePlayClick` function in `Index.tsx` already has the correct logic to show the PRO modal when plays are exhausted (line 242-246), but the button's `disabled` attribute prevents the click event from reaching that handler.
+
+The mobile bottom nav play button does NOT have this issue -- it's always clickable.
+
+### Solution
+
+Remove the `disabled` attribute from the `DesktopPlayButtonLarge` button so the click handler fires even when plays are exhausted. The button will still appear gray (visual indication of exhaustion), but clicking it will now trigger `handlePlayClick`, which shows the PlayLimitModal with PRO upgrade options.
 
 ### Technical Details
 
-**File: `src/components/social/PlayerFeedItem.tsx`** (lines 317-328)
+**File: `src/components/home/DesktopPlayButtonLarge.tsx`**
 
-Replace the play button section:
-- When `isPlayed` is false: Render a pill-shaped button (`rounded-full`) with white background, purple border (`border-2 border-purple-500`), containing a filled purple Play icon and the text "ითამაშე" in purple
-- When `isPlayed` is true: Keep the existing solid purple circle button (`w-9 h-9 rounded-full bg-purple-500`) with a white Play icon, no text
+1. Remove the `isDisabled` variable (line 23) or repurpose it for styling only
+2. Remove `disabled={isDisabled}` from the `motion.button` (line 73)
+3. Keep the visual styling -- the button still turns gray and shows hourglass when exhausted
+4. Remove `cursor-not-allowed` from className since it's always clickable now
 
-**File: `src/components/social/TriviaPortfolioCard.tsx`** (lines 162-172)
-
-Apply the same change to the desktop/tablet portfolio card play button:
-- Not played: White pill button with purple stroke + purple play icon + "ითამაშე" text
-- Played: Solid purple circle icon button (unchanged)
-
-### Visual Summary
-
-Not played button layout:
-```text
-[ ▶  ითამაშე ]   (white bg, purple border, purple icon + text)
-```
-
-Played button layout:
-```text
-  (●)             (solid purple circle, white icon, no text)
-```
+This way:
+- Button always looks gray when exhausted (visual feedback preserved)
+- Clicking the gray button calls `handlePlayClick`
+- `handlePlayClick` checks `canPlay` is false, shows the PlayLimitModal with PRO upgrade and regen timer
+- Users can see the "Become PRO" option and the free play regeneration countdown
 
 ### Files Changed
-- `src/components/social/PlayerFeedItem.tsx` -- update play button rendering
-- `src/components/social/TriviaPortfolioCard.tsx` -- update play button rendering
+- `src/components/home/DesktopPlayButtonLarge.tsx` -- remove disabled state, keep visual exhausted styling
