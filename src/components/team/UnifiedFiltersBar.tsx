@@ -48,6 +48,10 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
 }: UnifiedFiltersBarProps<F, S>) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  const scrollToTop = () => {
+    document.getElementById('main-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const currentFilterLabel = filterOptions.find((opt) => opt.value === filter)?.label || filterOptions[0]?.label || "ყველა";
   const currentSortLabel = sortOptions?.find((opt) => opt.value === sort)?.label;
 
@@ -68,7 +72,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
                   type="text"
                   placeholder="ძიება..."
                   value={searchQuery}
-                  onChange={(e) => onSearchQueryChange(e.target.value)}
+                  onChange={(e) => { if (!searchQuery && e.target.value) scrollToTop(); onSearchQueryChange(e.target.value); }}
                   className="h-9 flex-1 rounded-full bg-card/50 border-border/30 text-base md:text-sm"
                   autoFocus
                 />
@@ -86,7 +90,7 @@ export function UnifiedFiltersBar<F extends string, S extends string>({
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                onClick={() => setIsSearchOpen(true)}
+                onClick={() => { setIsSearchOpen(true); scrollToTop(); }}
                 className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 flex items-center justify-center"
               >
                 <Search className="h-4 w-4 text-muted-foreground" />

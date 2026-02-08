@@ -56,6 +56,10 @@ export function FeedFiltersBar({
 }: FeedFiltersBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  const scrollToTop = () => {
+    document.getElementById('main-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const currentLabel = filterOptions.find(opt => opt.value === sortFilter)?.label || "ყველა";
 
   return (
@@ -77,7 +81,7 @@ export function FeedFiltersBar({
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => onSearchQueryChange(e.target.value)}
+                  onChange={(e) => { if (!searchQuery && e.target.value) scrollToTop(); onSearchQueryChange(e.target.value); }}
                   placeholder="ძიება..."
                   autoFocus
                   className="flex-1 bg-transparent text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0 w-full"
@@ -109,7 +113,7 @@ export function FeedFiltersBar({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setIsSearchOpen(true)}
+                onClick={() => { setIsSearchOpen(true); scrollToTop(); }}
                 className="h-9 w-9 rounded-full bg-white/80 dark:bg-card/50 border border-border/30 flex items-center justify-center flex-shrink-0"
               >
                 <Search className="h-4 w-4 text-muted-foreground" />
