@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Check } from "lucide-react";
+import { Play, Check, Hourglass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SamplePost } from "@/data/samplePosts";
 import { useNavigate } from "react-router-dom";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
 import bookmark3dIcon from "@/assets/icons/bookmark-3d.png";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { usePlayLimit } from "@/hooks/usePlayLimit";
 
 interface TriviaPortfolioCardProps {
   trivia: SamplePost;
@@ -53,6 +56,8 @@ export function TriviaPortfolioCard({
   className 
 }: TriviaPortfolioCardProps) {
   const navigate = useNavigate();
+  const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
+  const { regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   
   // Use the trivia's actual cover_gradient or cover_image, fallback to random gradient
   const coverGradient = trivia.coverGradient || getRandomGradient(trivia.id);
@@ -71,7 +76,11 @@ export function TriviaPortfolioCard({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/trivia/${trivia.id}`);
+    if (isPlayed) {
+      navigate(`/trivia/${trivia.id}`);
+    } else {
+      setShowPlayLimitModal(true);
+    }
   };
   
   const handleCardClick = () => {
@@ -171,12 +180,27 @@ export function TriviaPortfolioCard({
               onClick={handlePlayClick}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
             >
-              <Play className="w-4 h-4 text-purple-500 fill-purple-500" />
+              <Hourglass className="w-4 h-4 text-purple-500" />
               <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
             </button>
           )}
         </div>
       </div>
+
+      <PlayLimitModal
+        isOpen={showPlayLimitModal}
+        onClose={() => setShowPlayLimitModal(false)}
+        isGuest={false}
+        regenPlayAvailable={regenPlayAvailable}
+        timeUntilNextPlay={timeUntilNextPlay}
+        onPlayWithRegen={async () => {
+          const success = await useRegenPlay();
+          if (success) {
+            setShowPlayLimitModal(false);
+            navigate(`/trivia/${trivia.id}`);
+          }
+        }}
+      />
     </motion.div>
   );
 }
