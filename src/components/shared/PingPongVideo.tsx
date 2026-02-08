@@ -29,7 +29,6 @@ export function PingPongVideo({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [hasAcquiredSlot, setHasAcquiredSlot] = useState(false);
   const [posterError, setPosterError] = useState(false);
 
   // Get responsive video URLs (WebM + MP4, sized for viewport)
@@ -66,11 +65,6 @@ export function PingPongVideo({
     // If not in view or not active, just pause (don't unload)
     if (!isInView || !active) {
       video.pause();
-      // Release slot when leaving view but keep isReady state
-      if (hasAcquiredSlot) {
-        videoLoadQueue.release(videoSrc);
-        setHasAcquiredSlot(false);
-      }
       return;
     }
 
@@ -81,6 +75,7 @@ export function PingPongVideo({
     }
 
     let cancelled = false;
+    let cleanupListeners: (() => void) | null = null;
 
     const loadVideo = async () => {
       try {
@@ -90,7 +85,6 @@ export function PingPongVideo({
           videoLoadQueue.release(videoSrc);
           return;
         }
-        setHasAcquiredSlot(true);
 
         // Load via <source> elements - browser picks best format
         video.load();
@@ -98,22 +92,23 @@ export function PingPongVideo({
         const handleCanPlay = () => {
           if (!cancelled) {
             setIsReady(true);
+            // Release queue slot immediately - download is done
+            videoLoadQueue.release(videoSrc);
             video.play().catch(() => {});
           }
         };
 
-        video.addEventListener("canplay", handleCanPlay);
-        video.addEventListener("loadeddata", handleCanPlay);
+        video.addEventListener("canplay", handleCanPlay, { once: true });
+        video.addEventListener("loadeddata", handleCanPlay, { once: true });
 
-        if (video.readyState >= 3) {
-          setIsReady(true);
-          video.play().catch(() => {});
-        }
-
-        return () => {
+        cleanupListeners = () => {
           video.removeEventListener("canplay", handleCanPlay);
           video.removeEventListener("loadeddata", handleCanPlay);
         };
+
+        if (video.readyState >= 3) {
+          handleCanPlay();
+        }
       } catch {
         // Queue cancelled
       }
@@ -123,13 +118,11 @@ export function PingPongVideo({
 
     return () => {
       cancelled = true;
-      if (hasAcquiredSlot) {
-        videoLoadQueue.release(videoSrc);
-        setHasAcquiredSlot(false);
-      }
+      cleanupListeners?.();
+      videoLoadQueue.release(videoSrc);
       video.pause();
     };
-  }, [isInView, videoSrc, hasAcquiredSlot, active, isReady]);
+  }, [isInView, videoSrc, active, isReady]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -155,8 +148,8 @@ export function PingPongVideo({
         <img
           src={posterUrl}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            isReady && isInView ? 'opacity-0' : 'opacity-100'
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+            isReady ? 'opacity-0' : 'opacity-100'
           }`}
           loading="lazy"
           onError={() => setPosterError(true)}
@@ -169,8 +162,8 @@ export function PingPongVideo({
         loop
         preload="none"
         style={style}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-          isReady && isInView ? 'opacity-100' : 'opacity-0'
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+          isReady ? 'opacity-100' : 'opacity-0'
         } ${className}`}
       >
         <source src={videoSrc} type="video/webm" />

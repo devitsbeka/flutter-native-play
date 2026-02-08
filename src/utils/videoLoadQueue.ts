@@ -65,7 +65,11 @@ class VideoLoadQueue {
   get queuedCount(): number {
     return this.queue.length;
   }
+
+  has(url: string): boolean {
+    return this.loading.has(url);
+  }
 }
 
 // Global singleton for video loading
-export const videoLoadQueue = new VideoLoadQueue(3);
+export const videoLoadQueue = new VideoLoadQueue(4);
