@@ -1,35 +1,42 @@
 
 
-## Fix: Stop TV Screen from Refreshing and Changing Codes
+## Update Play Button: Show "ითამაშე" Text for Unplayed Items
 
-### Problem
+### Current Behavior
+Both mobile feed cards and desktop portfolio cards show a small circle button for play -- solid purple when not played, outlined purple when played. There's no text label.
 
-The TV pairing screen (`/tv`) automatically refreshes and generates a new code because of the idle timeout mechanism. When the `phase` stays the same for 60 seconds (e.g., while waiting on the pairing screen), the `useIdleTimeout` hook fires, calls `leaveSession()`, navigates to `/tv`, and creates a brand new session -- resulting in a different 4-digit code appearing on screen.
+### New Behavior
+- **Not played**: A white pill-shaped button with a purple border, a filled purple play icon on the left, and the text "ითამაშე" next to it
+- **Already played**: Keep the current solid purple circle button with white play icon (no text, just the icon circle)
 
-This is disruptive because:
-- A TV showing the pairing screen needs to keep its code stable so players can join at any time
-- The pairing and lobby screens are inherently "idle" -- the phase doesn't change until players join and the host starts
+This applies to both components that render the play button in the explore feed.
 
-### Solution
+### Technical Details
 
-Remove the idle timeout entirely from `TVDisplay.tsx`. The TV screen should keep its session and code indefinitely. The pairing screen is meant to stay up and wait for players -- there's no reason to auto-reset.
+**File: `src/components/social/PlayerFeedItem.tsx`** (lines 317-328)
 
-### Technical Changes
+Replace the play button section:
+- When `isPlayed` is false: Render a pill-shaped button (`rounded-full`) with white background, purple border (`border-2 border-purple-500`), containing a filled purple Play icon and the text "ითამაშე" in purple
+- When `isPlayed` is true: Keep the existing solid purple circle button (`w-9 h-9 rounded-full bg-purple-500`) with a white Play icon, no text
 
-**File: `src/pages/TVDisplay.tsx`**
+**File: `src/components/social/TriviaPortfolioCard.tsx`** (lines 162-172)
 
-- Remove the `useIdleTimeout` call (lines 42-47) that watches `phase` and triggers `leaveSession()` + navigation
-- Remove the unused `useIdleTimeout` import
-- Remove `leaveSession` from the destructured `useTVGame()` values (if no longer used elsewhere in the file)
+Apply the same change to the desktop/tablet portfolio card play button:
+- Not played: White pill button with purple stroke + purple play icon + "ითამაშე" text
+- Played: Solid purple circle icon button (unchanged)
 
-This is a small, surgical change: just delete the idle timeout hook and its import. Everything else stays the same -- the session creation, subscription setup, and phase rendering all remain intact.
+### Visual Summary
 
-### What This Fixes
+Not played button layout:
+```text
+[ ▶  ითამაშე ]   (white bg, purple border, purple icon + text)
+```
 
-- TV pairing screen keeps showing the same 4-digit code without resetting
-- No more unexpected code changes while waiting for players
-- The session stays alive as long as the TV page is open
+Played button layout:
+```text
+  (●)             (solid purple circle, white icon, no text)
+```
 
 ### Files Changed
-- `src/pages/TVDisplay.tsx` -- remove idle timeout hook and related import
-
+- `src/components/social/PlayerFeedItem.tsx` -- update play button rendering
+- `src/components/social/TriviaPortfolioCard.tsx` -- update play button rendering
