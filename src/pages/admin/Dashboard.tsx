@@ -18,17 +18,22 @@ import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useActiveUsers } from '@/hooks/useActiveUsers';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { AiMagicRefillModal } from '@/components/admin/AiMagicRefillModal';
 import { PalantirAnalyticsWidget } from '@/components/admin/PalantirAnalyticsWidget';
 import { AdminMap } from '@/components/admin/AdminMap';
 import { LastActiveUsersPanel } from '@/components/admin/LastActiveUsersPanel';
+import { GameStatsModal } from '@/components/admin/GameStatsModal';
+import { AdsAnalyticsModal } from '@/components/admin/AdsAnalyticsModal';
 
 export default function AdminDashboard() {
   const { categories } = useAdminCategories();
   const { activeUsers, onlineUsers, recentlyActiveUsers } = useActiveUsers();
+  const navigate = useNavigate();
   const [totalGameSessions, setTotalGameSessions] = useState(0);
   const [showMagicRefill, setShowMagicRefill] = useState(false);
+  const [showGameStats, setShowGameStats] = useState(false);
+  const [showAdsAnalytics, setShowAdsAnalytics] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [activeQuestions, setActiveQuestions] = useState(0);
   const [adsWatched, setAdsWatched] = useState(0);
@@ -90,7 +95,7 @@ export default function AdminDashboard() {
       subValue: `${recentlyActiveUsers.length} ბოლოს`,
       icon: Users,
       gradient: 'from-emerald-500 to-teal-500',
-      link: '/admin/users',
+      onClick: () => navigate('/admin/user-analytics'),
     },
     {
       title: 'დღეს თამაშები',
@@ -98,7 +103,7 @@ export default function AdminDashboard() {
       subValue: 'სესიები',
       icon: Activity,
       gradient: 'from-amber-500 to-orange-500',
-      link: null,
+      onClick: () => setShowGameStats(true),
     },
     {
       title: 'რეკლამა ნანახი',
@@ -106,7 +111,7 @@ export default function AdminDashboard() {
       subValue: 'დღეს',
       icon: Play,
       gradient: 'from-pink-500 to-rose-500',
-      link: null,
+      onClick: () => setShowAdsAnalytics(true),
     },
     {
       title: 'App Store',
@@ -115,7 +120,7 @@ export default function AdminDashboard() {
       subValueColor: appStoreRanking.change > 0 ? 'text-emerald-500' : appStoreRanking.change < 0 ? 'text-red-500' : undefined,
       icon: appStoreRanking.change >= 0 ? TrendingUp : TrendingDown,
       gradient: appStoreRanking.change >= 0 ? 'from-blue-500 to-indigo-500' : 'from-red-500 to-rose-500',
-      link: null,
+      onClick: null,
     },
   ];
 
@@ -126,6 +131,8 @@ export default function AdminDashboard() {
         onClose={() => setShowMagicRefill(false)}
         categories={categories}
       />
+      <GameStatsModal isOpen={showGameStats} onClose={() => setShowGameStats(false)} />
+      <AdsAnalyticsModal isOpen={showAdsAnalytics} onClose={() => setShowAdsAnalytics(false)} />
 
       <ScrollArea className="h-full">
         <div className="p-6 space-y-6">
@@ -153,7 +160,10 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat) => {
             const content = (
-              <Card className="group relative overflow-hidden transition-all hover:shadow-md">
+              <Card className={cn(
+                "group relative overflow-hidden transition-all hover:shadow-md",
+                stat.onClick && "cursor-pointer"
+              )}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -168,19 +178,17 @@ export default function AdminDashboard() {
                       <stat.icon className="h-4 w-4" />
                     </div>
                   </div>
-                  {stat.link && (
+                  {stat.onClick && (
                     <ArrowUpRight className="absolute top-2 right-2 h-3 w-3 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </CardContent>
               </Card>
             );
 
-            return stat.link ? (
-              <NavLink key={stat.title} to={stat.link}>
+            return (
+              <div key={stat.title} onClick={stat.onClick || undefined}>
                 {content}
-              </NavLink>
-            ) : (
-              <div key={stat.title}>{content}</div>
+              </div>
             );
           })}
         </div>

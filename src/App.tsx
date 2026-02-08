@@ -93,6 +93,7 @@ const AdminDesign = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Design")) :
 const AdminEconomy = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Economy")) : null;
 const AdminSettings = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/Settings")) : null;
 const AdminGuestShowcase = INCLUDE_ADMIN ? lazy(() => import("./pages/AdminGuestShowcase")) : null;
+const UserAnalytics = INCLUDE_ADMIN ? lazy(() => import("./pages/admin/UserAnalytics")) : null;
 
 // Shop pages
 const ShopSuccess = lazy(() => import("./pages/shop/Success"));
@@ -172,6 +173,7 @@ const App = () => (
                     <Route path="content" element={ContentManager && <ContentManager />} />
                     <Route path="import" element={AdminImport && <AdminImport />} />
                     <Route path="users" element={AdminOnlineUsers && <AdminOnlineUsers />} />
+                    <Route path="user-analytics" element={UserAnalytics && <UserAnalytics />} />
                     <Route path="duplicates" element={DuplicateScanner && <DuplicateScanner />} />
                     <Route path="icons" element={IconLibraryAdmin && <IconLibraryAdmin />} />
                     <Route path="tools" element={QuestionTools && <QuestionTools />} />
