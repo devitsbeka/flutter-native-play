@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, UserCheck, Clock, Play, Layers } from "lucide-react";
+import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass } from "lucide-react";
+import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Button } from "@/components/ui/button";
 import { PlayerInfo, CollectionItem } from "@/hooks/usePlayerFeedItems";
@@ -62,6 +64,8 @@ export function PlayerFeedItem({
   const { language } = useLanguage();
   const [friendshipStatus, setFriendshipStatus] = useState(player.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
+  const { regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
 
   const handleAddFriend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -105,10 +109,16 @@ export function PlayerFeedItem({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (itemType === 'trivia') {
-      navigate(`/trivia/${item.id}`);
+    if (isPlayed) {
+      // Already played - navigate directly
+      if (itemType === 'trivia') {
+        navigate(`/trivia/${item.id}`);
+      } else {
+        navigate(`/collection/${item.id}`);
+      }
     } else {
-      navigate(`/collection/${item.id}`);
+      // Not played - show play limit / PRO modal
+      setShowPlayLimitModal(true);
     }
   };
 
@@ -327,13 +337,32 @@ export function PlayerFeedItem({
                 onClick={handlePlayClick}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
               >
-                <Play className="w-4 h-4 text-purple-500 fill-purple-500" />
+                <Hourglass className="w-4 h-4 text-purple-500" />
                 <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
               </button>
             )}
           </div>
         </div>
       </div>
+
+      <PlayLimitModal
+        isOpen={showPlayLimitModal}
+        onClose={() => setShowPlayLimitModal(false)}
+        isGuest={false}
+        regenPlayAvailable={regenPlayAvailable}
+        timeUntilNextPlay={timeUntilNextPlay}
+        onPlayWithRegen={async () => {
+          const success = await useRegenPlay();
+          if (success) {
+            setShowPlayLimitModal(false);
+            if (itemType === 'trivia') {
+              navigate(`/trivia/${item.id}`);
+            } else {
+              navigate(`/collection/${item.id}`);
+            }
+          }
+        }}
+      />
     </motion.div>
   );
 }
