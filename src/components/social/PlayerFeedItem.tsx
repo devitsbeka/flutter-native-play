@@ -314,18 +314,23 @@ export function PlayerFeedItem({
               </button>
             </div>
             
-            {/* Play Button - Icon only with played state indicator */}
-            <button 
-              onClick={handlePlayClick}
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-                isPlayed 
-                  ? "bg-transparent border-2 border-purple-500" 
-                  : "bg-purple-500 hover:bg-purple-600"
-              )}
-            >
-              <Play className={cn("w-4 h-4", isPlayed ? "text-purple-500" : "text-white")} />
-            </button>
+            {/* Play Button - text pill when not played, icon circle when played */}
+            {isPlayed ? (
+              <button 
+                onClick={handlePlayClick}
+                className="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center transition-colors hover:bg-purple-600"
+              >
+                <Play className="w-4 h-4 text-white fill-white" />
+              </button>
+            ) : (
+              <button 
+                onClick={handlePlayClick}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
+              >
+                <Play className="w-4 h-4 text-purple-500 fill-purple-500" />
+                <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
