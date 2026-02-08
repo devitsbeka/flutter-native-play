@@ -121,7 +121,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           onClose={onClose}
           variant="primary"
           iconSrc={crownIcon}
-          title="თამაშების ლიმიტი ამოწურულია"
+          title="თამაშის ლიმიტი ამოწურულია"
           showSparkles
           showStars
           inline={inline}
@@ -135,7 +135,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              უფასო 5 თამაში ამოიწურა. გახდი PRO და ითამაშე შეუზღუდავად!
+              გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა.
             </motion.p>
 
             {/* PRO Benefits */}
