@@ -1296,7 +1296,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           </h3>
           
           <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
-            {description}
+            {sortFilter === "all" ? "შექმენი შენი ტრივია და გაუზიარე მეგობრებს." : description}
           </p>
           
           {onCreateQuiz && sortFilter === "all" && (
