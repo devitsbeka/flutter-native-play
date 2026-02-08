@@ -229,6 +229,14 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
               <div className="flex-1 flex items-center justify-center">
                 <p className="text-muted-foreground">პროფილი ვერ მოიძებნა</p>
               </div>
+            ) : data.profile.nickname === '[წაშლილი]' ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8">
+                <div className="w-[100px] h-[100px] rounded-full bg-muted flex items-center justify-center">
+                  <Users className="w-12 h-12 text-muted-foreground/50" />
+                </div>
+                <p className="text-lg font-medium text-muted-foreground">წაშლილი მომხმარებელი</p>
+                <p className="text-sm text-muted-foreground/70">ეს ანგარიში წაშლილია</p>
+              </div>
             ) : (
               <div className="flex-1 overflow-y-auto">
                 <div className="max-w-[700px] md:max-w-[600px] mx-auto">
