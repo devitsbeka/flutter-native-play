@@ -20,7 +20,7 @@ export default function Auth() {
   const referralCode = searchParams.get('ref');
   const returnTo = searchParams.get('returnTo');
   const { t } = useLanguage();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");

@@ -127,7 +127,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[60] bg-background flex flex-col overflow-hidden"
           >
             {/* Video background */}
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
@@ -284,7 +284,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               </div>
 
               {/* Settings and Logout */}
-              <div className="px-3 pb-6 pt-2 border-t border-border/30 mt-2 flex flex-col gap-1">
+              <div className="px-3 pb-10 pt-2 border-t border-border/30 mt-2 flex flex-col gap-1">
                 <button
                   onClick={() => handleNavItemClick("/settings")}
                   className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-muted/50 active:scale-95"
