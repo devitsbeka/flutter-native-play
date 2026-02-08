@@ -57,7 +57,13 @@ export function FeedFiltersBar({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const scrollToTop = () => {
-    document.getElementById('main-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
+    const container = document.getElementById('main-scroll-container');
+    const filterBar = document.getElementById('sticky-filter-bar');
+    if (container && filterBar) {
+      container.scrollTo({ top: filterBar.offsetTop, behavior: 'smooth' });
+    } else {
+      container?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const currentLabel = filterOptions.find(opt => opt.value === sortFilter)?.label || "ყველა";
