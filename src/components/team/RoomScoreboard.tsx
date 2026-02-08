@@ -79,11 +79,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
             type="button"
             onClick={onInviteFriends}
             whileTap={{ scale: 0.92 }}
-            className="w-9 h-9 rounded-full border-2 border-dashed border-white/30 bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-xl border border-dashed border-white/40 flex items-center justify-center"
             aria-label="მეგობრის დამატება"
             title="მეგობრის დამატება"
           >
-            <Plus className="w-4 h-4 text-white/50" />
+            <Plus className="w-5 h-5 text-white/60" />
           </motion.button>
         )}
       </div>
