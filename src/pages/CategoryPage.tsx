@@ -192,7 +192,8 @@ export default function CategoryPage() {
         <div className="relative h-[48vh] min-h-[340px] overflow-hidden">
           <div className="absolute inset-0">
             <PingPongVideo 
-              src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals} 
+              src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals}
+              forceDesktopQuality
             />
           </div>
           {/* Refined gradient overlay */}

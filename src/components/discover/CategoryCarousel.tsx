@@ -1,4 +1,4 @@
-import { useRef, useCallback, memo } from "react";
+import { useRef, useCallback, memo, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AirbnbCategoryCard } from "./AirbnbCategoryCard";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
@@ -38,6 +38,39 @@ function CategoryCarouselComponent({
   getBadge,
 }: CategoryCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+
+  // Track which card is most visible/centered using IntersectionObserver
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer || categories.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let bestIndex = activeCardIndex;
+        let bestRatio = 0;
+        entries.forEach((entry) => {
+          const idx = Number(entry.target.getAttribute("data-card-index"));
+          if (entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio;
+            bestIndex = idx;
+          }
+        });
+        if (bestRatio > 0) {
+          setActiveCardIndex(bestIndex);
+        }
+      },
+      {
+        root: scrollContainer,
+        threshold: [0, 0.3, 0.5, 0.7, 1],
+      }
+    );
+
+    cardRefs.current.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [categories.length]);
 
   const scroll = useCallback((direction: "left" | "right") => {
     if (scrollRef.current) {
@@ -83,7 +116,16 @@ function CategoryCarouselComponent({
           const categoryTotalLevels = (category as any).totalLevels || (category as any).total_levels || 20;
           
           return (
-            <div key={category.id} className="flex-shrink-0 snap-center" style={{ width: 'calc(80vw - 24px)', maxWidth: '320px' }}>
+            <div
+              key={category.id}
+              ref={(el) => {
+                if (el) cardRefs.current.set(index, el);
+                else cardRefs.current.delete(index);
+              }}
+              data-card-index={index}
+              className="flex-shrink-0 snap-center"
+              style={{ width: 'calc(80vw - 24px)', maxWidth: '320px' }}
+            >
               <AirbnbCategoryCard
                 id={category.id}
                 categoryId={category.category_id || category.id}
@@ -101,6 +143,7 @@ function CategoryCarouselComponent({
                 leaderboardRank={leaderboardRanks[category.id]}
                 videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
                 hasNewLevels={newLevelCategories?.has(category.uuid || category.id) ?? false}
+                isVideoActive={index === activeCardIndex}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

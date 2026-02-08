@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
+import { toWebmUrl } from "@/config/videoConfig";
 
 interface PingPongVideoProps {
   src: string;
@@ -9,6 +10,10 @@ interface PingPongVideoProps {
   className?: string;
   rootMargin?: string;
   style?: React.CSSProperties;
+  /** When true, skip mobile WebM and always use desktop 720px variant */
+  forceDesktopQuality?: boolean;
+  /** When false, video will not load or play (default: true) */
+  active?: boolean;
 }
 
 export function PingPongVideo({
@@ -17,6 +22,8 @@ export function PingPongVideo({
   className = "",
   rootMargin = "200px",
   style,
+  forceDesktopQuality = false,
+  active = true,
 }: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,7 +33,9 @@ export function PingPongVideo({
   const [posterError, setPosterError] = useState(false);
 
   // Get responsive video URLs (WebM + MP4, sized for viewport)
-  const { webm: webmSrc, mp4: mp4Src } = useResponsiveVideo(src);
+  const { webm: responsiveWebm, mp4: mp4Src } = useResponsiveVideo(src);
+  // If forceDesktopQuality, always use desktop WebM (skip mobile variant)
+  const webmSrc = forceDesktopQuality ? toWebmUrl(src) : responsiveWebm;
 
   // Get preloaded blob URL if available, fallback to WebM source
   const preloadedUrl = getVideoBlobUrl(webmSrc);
@@ -48,14 +57,18 @@ export function PingPongVideo({
     return () => observer.disconnect();
   }, [rootMargin]);
 
-  // Queue-based video loading
+  // Queue-based video loading - also respects `active` prop
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isInView) {
-      // Release slot when leaving view
+    if (!video || !isInView || !active) {
+      // Release slot when leaving view or becoming inactive
       if (hasAcquiredSlot) {
         videoLoadQueue.release(videoSrc);
         setHasAcquiredSlot(false);
+      }
+      // Pause video when inactive
+      if (video && !active) {
+        video.pause();
       }
       return;
     }
@@ -109,7 +122,7 @@ export function PingPongVideo({
       }
       video.pause();
     };
-  }, [isInView, videoSrc, hasAcquiredSlot]);
+  }, [isInView, videoSrc, hasAcquiredSlot, active]);
 
   // Handle page visibility changes
   useEffect(() => {
