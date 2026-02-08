@@ -58,6 +58,16 @@ class VideoLoadQueue {
     this.loading.delete(url);
   }
 
+  // Reset the entire queue - used on page navigation to give new page priority
+  reset(): void {
+    // Reject all queued items so their promises resolve
+    for (const item of this.queue) {
+      item.reject(new Error('Queue reset'));
+    }
+    this.queue = [];
+    this.loading.clear();
+  }
+
   get activeCount(): number {
     return this.loading.size;
   }

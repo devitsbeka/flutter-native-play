@@ -1,7 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
+import { CATEGORY_VIDEOS, toDesktopHdWebmUrl } from "@/config/videoConfig";
 
 
 interface AirbnbCategoryCardProps {
@@ -58,6 +59,18 @@ function preloadCategoryPage() {
   import("@/pages/CategoryPage");
 }
 
+// Prefetch a video URL via <link rel="prefetch"> - browser downloads in idle time
+const prefetchedVideos = new Set<string>();
+function prefetchVideo(videoUrl: string) {
+  if (!videoUrl || prefetchedVideos.has(videoUrl)) return;
+  prefetchedVideos.add(videoUrl);
+  const link = document.createElement("link");
+  link.rel = "prefetch";
+  link.as = "video";
+  link.href = toDesktopHdWebmUrl(videoUrl);
+  document.head.appendChild(link);
+}
+
 export function AirbnbCategoryCard({
   id,
   categoryId,
@@ -83,6 +96,14 @@ export function AirbnbCategoryCard({
   const isFull = variant === "full";
   const iconSize = 128;
   const [isPressed, setIsPressed] = React.useState(false);
+
+  // Prefetch the HD video + CategoryPage JS bundle on hover/touch
+  const handlePointerEnter = useCallback(() => {
+    preloadCategoryPage();
+    if (videoUrl) {
+      prefetchVideo(videoUrl);
+    }
+  }, [videoUrl]);
 
   const buttonStyle = useMemo(() => ({
     transform: isPressed ? "translateY(5px)" : "translateY(0px)",
@@ -127,7 +148,7 @@ export function AirbnbCategoryCard({
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerLeave={() => setIsPressed(false)}
-      onPointerEnter={preloadCategoryPage}
+      onPointerEnter={handlePointerEnter}
       className="flex-shrink-0 w-full text-left cursor-pointer"
       style={buttonStyle}
     >
