@@ -1,39 +1,35 @@
 
 
-## Fix Empty States: Card Wrapper + Onboarding Carousel for Trivias Tab
+## Fix: Stop TV Screen from Refreshing and Changing Codes
 
-### What's Happening Now
+### Problem
 
-- **Rooms tab**: Already works correctly -- new users see the feature onboarding carousel (animated gradient-border cards). After dismissing, they see the empty state wrapped in a card (`bg-card border border-border rounded-2xl`) with the dance-floor icon and "+ ოთახი" button.
-- **Trivias tab ("ჩემი ტრივია")**: Missing both features. The empty state has no card wrapper (just floating text/icon) and no onboarding carousel for first-time users.
+The TV pairing screen (`/tv`) automatically refreshes and generates a new code because of the idle timeout mechanism. When the `phase` stays the same for 60 seconds (e.g., while waiting on the pairing screen), the `useIdleTimeout` hook fires, calls `leaveSession()`, navigates to `/tv`, and creates a brand new session -- resulting in a different 4-digit code appearing on screen.
 
-### What Will Change
+This is disruptive because:
+- A TV showing the pairing screen needs to keep its code stable so players can join at any time
+- The pairing and lobby screens are inherently "idle" -- the phase doesn't change until players join and the host starts
 
-1. **Wrap trivia empty state in a card** -- matching the rooms empty state style from image-308 (rounded card with border)
-2. **Show the onboarding carousel first** for new users who haven't seen it yet and have no trivias, exactly like the rooms tab does
+### Solution
+
+Remove the idle timeout entirely from `TVDisplay.tsx`. The TV screen should keep its session and code indefinitely. The pairing screen is meant to stay up and wait for players -- there's no reason to auto-reset.
 
 ### Technical Changes
 
-**File: `src/components/social/MyTriviaTab.tsx`**
+**File: `src/pages/TVDisplay.tsx`**
 
-1. Import `FeatureOnboardingCarousel` and `hasSeenFeatureOnboarding` from the existing carousel component
-2. Add a `hasSeenOnboarding` state (same pattern as `MyRoomsSection`)
-3. Add an `onNavigateToTab` prop so the carousel can navigate to other tabs
-4. In the empty state block (lines ~1268-1290):
-   - First check: if user hasn't seen onboarding and `sortFilter === "all"`, show `FeatureOnboardingCarousel`
-   - After onboarding is dismissed: show the existing empty state BUT wrapped in a card container with `bg-card border border-border rounded-2xl` styling
-   - Keep the existing trivia-buzzer icon, text, description, and "+ ტრივია" button inside the card
+- Remove the `useIdleTimeout` call (lines 42-47) that watches `phase` and triggers `leaveSession()` + navigation
+- Remove the unused `useIdleTimeout` import
+- Remove `leaveSession` from the destructured `useTVGame()` values (if no longer used elsewhere in the file)
 
-**File: `src/pages/TeamV2.tsx`**
+This is a small, surgical change: just delete the idle timeout hook and its import. Everything else stays the same -- the session creation, subscription setup, and phase rendering all remain intact.
 
-- Pass the `onNavigateToTab` prop to `MyTriviaTab` so the onboarding carousel cards can navigate between tabs (just like `MyRoomsSection` already receives this prop)
+### What This Fixes
 
-### Visual Result
-
-For a new user with no trivias:
-1. First visit: They see the animated gradient-border onboarding carousel (Rooms, My Trivia, Explore cards)
-2. After tapping any card: The carousel is dismissed, and they see the empty state as a rounded card with the trivia-buzzer icon, "ტრივიები ჯერ არ გაქვს" title, description, and the "+ ტრივია" button -- exactly matching the rooms empty state card style
+- TV pairing screen keeps showing the same 4-digit code without resetting
+- No more unexpected code changes while waiting for players
+- The session stays alive as long as the TV page is open
 
 ### Files Changed
-- `src/components/social/MyTriviaTab.tsx` -- add card wrapper + onboarding carousel logic
-- `src/pages/TeamV2.tsx` -- pass `onNavigateToTab` to `MyTriviaTab`
+- `src/pages/TVDisplay.tsx` -- remove idle timeout hook and related import
+
