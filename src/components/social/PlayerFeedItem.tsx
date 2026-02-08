@@ -296,7 +296,7 @@ export function PlayerFeedItem({
         <div className="p-3 bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-b-xl border border-t-0 border-border/30">
           <div className="flex items-center justify-between">
             {/* Stats - Like and Save */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-6">
               {/* Like Button */}
               <button 
                 onClick={handleLikeClick}
@@ -305,9 +305,9 @@ export function PlayerFeedItem({
                 <img 
                   src={purpleHeartIcon} 
                   alt="Like" 
-                  className={`w-5 h-5 object-contain transition-all ${isLiked ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                  className={`w-[26px] h-[26px] object-contain transition-all ${isLiked ? 'opacity-100' : 'opacity-60 grayscale'}`}
                 />
-                <span className={cn("text-sm font-medium", isLiked ? "text-foreground" : "text-muted-foreground")}>{likesCount || 0}</span>
+                <span className={cn("text-[17px] font-medium", isLiked ? "text-foreground" : "text-muted-foreground")}>{likesCount || 0}</span>
               </button>
               
               {/* Save/Bookmark Button */}
@@ -318,9 +318,9 @@ export function PlayerFeedItem({
                 <img 
                   src={bookmark3dIcon} 
                   alt="Save" 
-                  className={`w-5 h-5 object-contain transition-all ${isSaved ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                  className={`w-[26px] h-[26px] object-contain transition-all ${isSaved ? 'opacity-100' : 'opacity-60 grayscale'}`}
                 />
-                <span className={cn("text-sm font-medium", isSaved ? "text-foreground" : "text-muted-foreground")}>{savesCount || 0}</span>
+                <span className={cn("text-[17px] font-medium", isSaved ? "text-foreground" : "text-muted-foreground")}>{savesCount || 0}</span>
               </button>
             </div>
             

@@ -187,6 +187,8 @@ export function useSocialFeed() {
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
       queryClient.invalidateQueries({ queryKey: ["user-quiz-likes"] });
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["player-feed-items"] });
+      queryClient.invalidateQueries({ queryKey: ["explore-creators"] });
     },
   });
 
@@ -245,6 +247,8 @@ export function useSocialFeed() {
       queryClient.invalidateQueries({ queryKey: ["user-quiz-saves"] });
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
       queryClient.invalidateQueries({ queryKey: ["my-quiz-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["player-feed-items"] });
+      queryClient.invalidateQueries({ queryKey: ["explore-creators"] });
     },
   });
 
