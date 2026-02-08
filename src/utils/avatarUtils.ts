@@ -13,6 +13,14 @@ import botAvatar7 from '@/assets/avatars/bot-avatar-7.png';
 import botAvatar8 from '@/assets/avatars/bot-avatar-8.png';
 import botAvatar9 from '@/assets/avatars/bot-avatar-9.png';
 import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
+import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
+import mascotAvatar2 from '@/assets/avatars/mascot-avatar-2.png';
+import mascotAvatar3 from '@/assets/avatars/mascot-avatar-3.png';
+import mascotAvatar4 from '@/assets/avatars/mascot-avatar-4.png';
+import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
+import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
+import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
+import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
 
 // Known local asset avatar patterns that need special handling
 const LOCAL_ASSET_PATTERN = /^\/src\/assets\//;
@@ -27,9 +35,19 @@ const VITE_HASHED_ASSET_PATTERN = /^\/assets\/.*-[a-zA-Z0-9]{8}\.(png|jpg|jpeg|w
  * and mapping it to the correct imported asset
  */
 function recoverViteHashedAvatar(avatarUrl: string): string | undefined {
-  const match = avatarUrl.match(/bot-avatar-(\d+)/);
-  if (match && match[1]) {
-    const filename = `bot-avatar-${match[1]}.png`;
+  // Try bot-avatar pattern
+  const botMatch = avatarUrl.match(/bot-avatar-(\d+)/);
+  if (botMatch && botMatch[1]) {
+    const filename = `bot-avatar-${botMatch[1]}.png`;
+    if (BOT_AVATAR_MAP[filename]) {
+      console.info('Recovered broken Vite-hashed avatar:', avatarUrl, '→', filename);
+      return BOT_AVATAR_MAP[filename];
+    }
+  }
+  // Try mascot-avatar pattern
+  const mascotMatch = avatarUrl.match(/mascot-avatar-(\d+)/);
+  if (mascotMatch && mascotMatch[1]) {
+    const filename = `mascot-avatar-${mascotMatch[1]}.png`;
     if (BOT_AVATAR_MAP[filename]) {
       console.info('Recovered broken Vite-hashed avatar:', avatarUrl, '→', filename);
       return BOT_AVATAR_MAP[filename];
@@ -50,6 +68,14 @@ const BOT_AVATAR_MAP: Record<string, string> = {
   'bot-avatar-8.png': botAvatar8,
   'bot-avatar-9.png': botAvatar9,
   'bot-avatar-10.png': botAvatar10,
+  'mascot-avatar-1.png': mascotAvatar1,
+  'mascot-avatar-2.png': mascotAvatar2,
+  'mascot-avatar-3.png': mascotAvatar3,
+  'mascot-avatar-4.png': mascotAvatar4,
+  'mascot-avatar-5.png': mascotAvatar5,
+  'mascot-avatar-6.png': mascotAvatar6,
+  'mascot-avatar-7.png': mascotAvatar7,
+  'mascot-avatar-8.png': mascotAvatar8,
 };
 
 /**

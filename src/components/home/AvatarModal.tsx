@@ -19,36 +19,32 @@ import { t } from "@/lib/i18n";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useNavigate } from "react-router-dom";
 
-// Import default bot avatars
-import botAvatar1 from '@/assets/avatars/bot-avatar-1.png';
-import botAvatar2 from '@/assets/avatars/bot-avatar-2.png';
-import botAvatar3 from '@/assets/avatars/bot-avatar-3.png';
-import botAvatar4 from '@/assets/avatars/bot-avatar-4.png';
-import botAvatar5 from '@/assets/avatars/bot-avatar-5.png';
-import botAvatar6 from '@/assets/avatars/bot-avatar-6.png';
-import botAvatar7 from '@/assets/avatars/bot-avatar-7.png';
-import botAvatar8 from '@/assets/avatars/bot-avatar-8.png';
-import botAvatar9 from '@/assets/avatars/bot-avatar-9.png';
-import botAvatar10 from '@/assets/avatars/bot-avatar-10.png';
+// Import mascot avatars
+import mascotAvatar1 from '@/assets/avatars/mascot-avatar-1.png';
+import mascotAvatar2 from '@/assets/avatars/mascot-avatar-2.png';
+import mascotAvatar3 from '@/assets/avatars/mascot-avatar-3.png';
+import mascotAvatar4 from '@/assets/avatars/mascot-avatar-4.png';
+import mascotAvatar5 from '@/assets/avatars/mascot-avatar-5.png';
+import mascotAvatar6 from '@/assets/avatars/mascot-avatar-6.png';
+import mascotAvatar7 from '@/assets/avatars/mascot-avatar-7.png';
+import mascotAvatar8 from '@/assets/avatars/mascot-avatar-8.png';
 
 const DEFAULT_AVATARS = [
-  botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
-  botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10,
+  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
+  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
 ];
 
 // Canonical paths that are stable across builds
 // resolveAvatarUrl() converts these to valid bundled URLs at runtime
 const DEFAULT_AVATAR_PATHS = [
-  '/src/assets/avatars/bot-avatar-1.png',
-  '/src/assets/avatars/bot-avatar-2.png',
-  '/src/assets/avatars/bot-avatar-3.png',
-  '/src/assets/avatars/bot-avatar-4.png',
-  '/src/assets/avatars/bot-avatar-5.png',
-  '/src/assets/avatars/bot-avatar-6.png',
-  '/src/assets/avatars/bot-avatar-7.png',
-  '/src/assets/avatars/bot-avatar-8.png',
-  '/src/assets/avatars/bot-avatar-9.png',
-  '/src/assets/avatars/bot-avatar-10.png',
+  '/src/assets/avatars/mascot-avatar-1.png',
+  '/src/assets/avatars/mascot-avatar-2.png',
+  '/src/assets/avatars/mascot-avatar-3.png',
+  '/src/assets/avatars/mascot-avatar-4.png',
+  '/src/assets/avatars/mascot-avatar-5.png',
+  '/src/assets/avatars/mascot-avatar-6.png',
+  '/src/assets/avatars/mascot-avatar-7.png',
+  '/src/assets/avatars/mascot-avatar-8.png',
 ];
 
 // Map from bundled URL → canonical path for storage
@@ -818,7 +814,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
           {/* Default Avatars */}
           <div>
             <p className="text-sm font-medium text-foreground mb-2">ავატარები</p>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {DEFAULT_AVATARS.map((avatar, index) => {
                 // Check against both bundled URL and canonical path for selection indicator
                 const canonicalPath = DEFAULT_AVATAR_PATHS[index];
