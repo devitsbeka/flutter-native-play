@@ -1,86 +1,64 @@
 
 
-## Add Icon Slugs to All Seeded Mascot Content
+## Seed Leaderboard Play Records for All Mascot Trivia Posts
 
 ### Problem
 
-The seed function generated questions without `icon_slug` values. Both the post-level `icon_slug` column and individual question `icon_slug` fields are NULL for all mascot content, so no icons appear during gameplay.
+Each mascot trivia post has a fake `plays_count` (20-99) but almost zero actual records in the `quiz_post_plays` table. The leaderboard reads from `quiz_post_plays`, so it appears empty despite the play counter suggesting high activity.
 
 ### Solution
 
-Write a SQL migration that updates all mascot quiz posts to have:
-1. **Post-level `icon_slug`** -- a relevant icon for the trivia cover
-2. **Per-question `icon_slug`** inside each question's JSONB object -- so icons show during gameplay
+Insert play records into `quiz_post_plays` for all 32 mascot trivia posts. For each post, the 7 other mascot accounts (everyone except the post creator) will appear as players with varied scores. This gives exactly 7 unique leaderboard entries per post -- well within the 5-20 range requested.
 
-We'll use actual slugs from the icon library (verified from the database) to ensure they resolve to real icons.
+Scores will be distributed realistically across the 0-7 range (each trivia has 7 questions), with variety: some players score high (6-7), some mid-range (3-5), and some low (1-2). Played dates will be spread over the past 2-4 weeks.
 
-### Icon Slug Assignments
+### Score Distribution Strategy
 
-Based on available slugs in the icon library:
+Each post gets 7 players with scores following this pattern to look natural:
+- 1 top scorer: 7/7
+- 1 strong: 6/7
+- 2 mid-range: 4-5/7
+- 2 lower: 2-3/7
+- 1 weak: 1/7
 
-| Account | Post Title | Post `icon_slug` | Per-Question `icon_slug` |
-|---------|-----------|------------------|--------------------------|
-| Giorgi | ფეხბურთის ვარსკვლავები | `basic-soccer-ball` | `basic-soccer-ball` |
-| Giorgi | ქართული ფეხბურთი | `soccer-net` | `soccer-net` |
-| Giorgi | ლიონელ მესი (round) | `basic-soccer-ball` | `basic-soccer-ball` |
-| Giorgi | კრისტიანო რონალდუ (round) | `basic-soccer-ball` | `basic-soccer-ball` |
-| Giorgi | NBA ლეგენდები (round) | `champions-league-trophy` | `champions-league-trophy` |
-| Mariami | სამზარეულოს საიდუმლოებები | `chef` | `chef` |
-| Mariami | მსოფლიო სამზარეულო | `chef` | `chef` |
-| Mariami | ქართული წინწკლები (round) | `chef` | `chef` |
-| Mariami | მთავარი კერძები (round) | `campfire-cooking-pot` | `campfire-cooking-pot` |
-| Mariami | ქართული ტკბილეული (round) | `chef` | `chef` |
-| Nika | როკ მუსიკის ისტორია | `basic-guitar-starter-kit` | `basic-guitar-starter-kit` |
-| Nika | ქართული მუსიკა | `musician` | `musician` |
-| Nika | 80-იანების ჰიტები (round) | `basic-guitar-starter-kit` | `basic-guitar-starter-kit` |
-| Nika | 90-იანების ჰიტები (round) | `musician` | `musician` |
-| Ana | მსოფლიო ხელოვნება | `artist` | `artist` |
-| Ana | ცნობილი ნახატები | `basic-painting-set` | `basic-painting-set` |
-| Ana | რენესანსის ოსტატები (round) | `basic-painting-set` | `basic-painting-set` |
-| Ana | თანამედროვე ხელოვნება (round) | `artist` | `artist` |
-| Daviti | კინოს ოსკარები | `movie-projector` | `movie-projector` |
-| Daviti | ქართული კინო | `cinema-screen` | `cinema-screen` |
-| Daviti | Marvel სამყარო (round) | `movie` | `movie` |
-| Daviti | ჰარი პოტერი (round) | `book` | `book` |
-| Daviti | ვარსკვლავური ომები (round) | `space-craft` | `space-craft` |
-| Elene | მეცნიერების აღმოჩენები | `astronomy-starter-kit` | `astronomy-starter-kit` |
-| Elene | ადამიანის სხეული | `heart` | `heart` |
-| Elene | მზის სისტემა (round) | `earth` | `earth` |
-| Elene | ვარსკვლავები და გალაქტიკები (round) | `blazing-star` | `blazing-star` |
-| Luka | ესპორტის სამყარო | `joystick` | `joystick` |
-| Luka | რეტრო თამაშები | `joystick` | `joystick` |
-| Luka | Nintendo კლასიკა (round) | `joystick` | `joystick` |
-| Luka | PlayStation ექსკლუზივები (round) | `joystick` | `joystick` |
-| Luka | PC გეიმინგი (round) | `joystick` | `joystick` |
+The actual scores rotate per post so the same mascot isn't always #1.
 
-For Tamari's content (if seeded later), the same pattern applies with `book` and `bookshelf` slugs.
+### Mascot User IDs
+
+| Mascot | User ID |
+|--------|---------|
+| Giorgi | `71eb3fac-ba7c-4e7e-8b5e-02a21323e76e` |
+| Mariami | `06f96912-ddc0-4a02-abc2-21817b4e9d20` |
+| Nika | `dbf8dbc0-5e95-4870-8b47-a043ead0fb9f` |
+| Ana | `2574663a-d951-4475-9feb-60fef89caf9d` |
+| Daviti | `af7699b1-ce81-4c39-8693-624ce0c20ad1` |
+| Elene | `9b9330ae-740f-4b53-8e40-9202ce3660c9` |
+| Luka | `7570d628-619b-434c-8d5c-fa6007eaa43f` |
+| Tamari | `d11948a8-afc0-4203-8020-0f1c800f17bb` |
+
+### Posts to Seed (32 total)
+
+All posts from all 8 mascot accounts. For each post, the 7 mascots who did NOT create it will have a play record inserted.
 
 ### Technical Details
 
-**Database migration:**
+**Database migration only -- no code changes needed.**
 
-A single SQL migration that for each of the ~30 mascot posts:
-1. Sets the `icon_slug` column on `user_quiz_posts`
-2. Updates each question object in the JSONB `questions` array to include `"icon_slug": "<slug>"` using `jsonb_set` or a JSONB transformation
+A single SQL migration that:
 
-The JSONB update will iterate over the `questions` array and inject `icon_slug` into each element. Example pattern:
+1. Deletes any existing mascot-to-mascot play records (to avoid duplicates on re-run)
+2. Inserts 7 play records per post (224 total rows = 32 posts x 7 players each)
+3. Each INSERT specifies: `user_id` (player), `post_id`, `score` (0-7), and `played_at` (varied dates in the past 2-4 weeks)
 
-```text
-UPDATE user_quiz_posts 
-SET 
-  icon_slug = 'joystick',
-  questions = (
-    SELECT jsonb_agg(
-      elem || jsonb_build_object('icon_slug', 'joystick')
-    )
-    FROM jsonb_array_elements(questions) AS elem
-  )
-WHERE id = '90b27aff-3721-464c-ad60-35ae935f9a16';
-```
+The score assignments rotate so that across different posts, different mascots appear as top scorers -- making leaderboards look organic and varied.
 
-This is repeated for all mascot posts with their respective icon slugs.
+### What the User Will See
 
-**No code file changes needed** -- this is purely a database data fix.
+- Every mascot trivia lobby page will now show 7 players in the leaderboard
+- Scores will range from 1/7 to 7/7 with realistic variety
+- Different mascots will rank #1 on different posts
+- The existing real play records (like Elene's 0/7 on "Retro Games") will remain alongside the seeded data
 
 ### Files Changed
-- Database migration only (update `icon_slug` on ~30 `user_quiz_posts` rows + inject per-question `icon_slug` into JSONB)
+- Database migration only (insert ~224 rows into `quiz_post_plays`)
+
