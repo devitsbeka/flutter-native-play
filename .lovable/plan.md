@@ -1,43 +1,56 @@
 
 
-## Fix: Inline "Remove" Button on Your Leaderboard Entry
+## Fix: Tap Delay on Feed Cards + Slow Scroll Performance
 
-### Current Behavior
-Tapping your own leaderboard entry opens a full-screen AlertDialog confirmation. Tapping other users opens their profile page.
+### Problem 1: Cards still require multiple taps on mobile
 
-### New Behavior
-- Tapping your own entry reveals an inline "წაშლა" (Remove) button directly on the row
-- Tapping the remove button deletes your record and refreshes the leaderboard
-- Tapping anywhere else (or the same row again) collapses the button
-- Other users' entries still open their profile as before
+The `touch-action: manipulation` on the body and card div is correct but insufficient. The real culprits are:
 
-### Changes
+1. **Double motion.div wrappers**: Each feed card is wrapped in TWO `motion.div` layers -- one in `ExplorePortfolioFeed.tsx` (the list wrapper with staggered delay) and another inside `PlayerFeedItem.tsx` itself. Framer Motion intercepts touch/pointer events for its gesture system, which can swallow or delay tap events on mobile.
 
-**File: `src/pages/TriviaLobby.tsx`**
+2. **Staggered animation delays**: The feed applies `delay: index * 0.05` to each card. For 15+ cards, later items have 750ms+ animation delays during which touch events may behave inconsistently.
 
-1. Replace the `showRemoveDialog` state with an `expandedUserId` state that tracks which row is "expanded" to show the remove button
-2. Remove the `AlertDialog` import and its JSX entirely
-3. When the current user taps their own row:
-   - If the row is collapsed, expand it to reveal a red "წაშლა" button on the right side (replacing the score display)
-   - If the row is already expanded, collapse it back
-4. The remove button calls `removeFromLeaderboard()` directly (no extra confirmation modal)
-5. Add a subtle animation (slide-in from right) for the remove button using framer-motion
+3. **The card's `onClick` is on a nested div**, but the outer `motion.div` with animation props can interfere with event propagation on touch devices.
 
-### Visual Layout of Expanded Row
+### Problem 2: Scroll is slow and not smooth on published URL
 
-```text
-+-----------------------------------------------+
-| #10  [avatar]  Gloria       [ წაშლა ]         |
-|                7ქულა                           |
-+-----------------------------------------------+
-```
+1. **`scroll-smooth` CSS class** on `#main-scroll-container` in `MainLayout.tsx` enables CSS smooth scrolling for ALL scroll interactions, not just programmatic ones. On mobile Safari/WebKit, this makes finger-swipe scrolling feel sluggish and delayed because the browser applies easing to every scroll movement.
 
-The score gets replaced by a red "წაშლა" button when the row is expanded. This keeps the interaction fast and inline.
+2. **`-webkit-overflow-scrolling: auto`** in `index.css` on the body element disables iOS momentum/inertial scrolling. The default is `touch` which gives the native "fling" feel. Setting it to `auto` makes scrolling stop immediately when the finger lifts.
 
-### Technical Details
-- State: `expandedUserId: string | null` replaces `showRemoveDialog: boolean`
-- Remove the `AlertDialog` component and its imports
-- The `isRemoving` state stays to disable the button during the async delete
-- On successful removal, `expandedUserId` resets to `null`
-- `onClick` for non-current-user rows remains `openProfile(entry.user_id)`
+3. **Framer Motion animations on every feed item** with `opacity` and `y` transforms during scroll cause layout recalculations and compositing overhead, making the scroll jank.
+
+---
+
+### Solution
+
+#### File: `src/index.css`
+
+1. Remove `-webkit-overflow-scrolling: auto` from body (line 200) -- let iOS use its default momentum scrolling (`touch`)
+2. Also remove it from `#main-scroll-container` (line 208) for the same reason
+
+#### File: `src/components/layout/MainLayout.tsx`
+
+1. Remove `scroll-smooth` from the main scroll container class. CSS `scroll-smooth` is meant for programmatic scrolling (e.g., `scrollTo`), not finger scrolling. Removing it restores native fast scrolling on mobile.
+
+#### File: `src/components/social/ExplorePortfolioFeed.tsx`
+
+1. **Remove the outer `motion.div` wrapper** from each feed item in the mobile list. Replace with a plain `div`. The `PlayerFeedItem` already has its own `motion.div` -- doubling up is unnecessary and causes touch event issues.
+2. Remove staggered animation delays (`delay: index * 0.05`) which cause late-rendering items to be unresponsive during their animation window.
+
+#### File: `src/components/social/PlayerFeedItem.tsx`
+
+1. **Replace the outer `motion.div`** with a plain `div`. The entry animation (`opacity: 0, y: 20`) is causing touch event interception. On a feed that's already loaded, these animations provide minimal visual value but create real interaction problems.
+2. Add `touch-action: manipulation` to the outermost container div as well (not just the inner card).
+
+### Summary of Changes
+
+| File | Change |
+|---|---|
+| `src/index.css` | Remove `-webkit-overflow-scrolling: auto` from body and `#main-scroll-container` |
+| `src/components/layout/MainLayout.tsx` | Remove `scroll-smooth` from main container |
+| `src/components/social/ExplorePortfolioFeed.tsx` | Replace `motion.div` with plain `div` for mobile feed items |
+| `src/components/social/PlayerFeedItem.tsx` | Replace outer `motion.div` with plain `div`, add `touch-action: manipulation` to root |
+
+These changes target the root causes: framer-motion touch event interception for the tap issue, and CSS scroll properties fighting native mobile scrolling for the jank issue.
 
