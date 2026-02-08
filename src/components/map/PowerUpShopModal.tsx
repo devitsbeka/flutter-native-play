@@ -196,7 +196,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       headerActions={headerRight}
       className="-mt-[100px]"
     >
-      <div className="relative">
+      <div className="relative pt-[100px]">
         {/* Power-up preview */}
         <div className="bg-muted/30 rounded-2xl border border-border p-3 mb-3">
           <PowerUpDemoPreview
