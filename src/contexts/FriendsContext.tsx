@@ -257,6 +257,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
         .select("user_id, nickname, avatar_url, country_code")
         .ilike("nickname", `%${query}%`)
         .neq("user_id", user.id)
+        .neq("nickname", "[წაშლილი]")
         .limit(10);
       if (error) throw error;
       return data || [];
