@@ -338,11 +338,11 @@ export function RoomScoreboard({ participants, matches, currentUserId, showHostC
                             await onResendInvitation?.(p.user_id);
                             setSentInvites(prev => new Set([...prev, p.user_id]));
                           }}
-                          className="w-7 h-7 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center"
-                          whileTap={{ scale: 0.9 }}
-                          title={isRoomActive ? "თავიდან" : "მოიწვიე"}
+                          className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium text-xs shadow-md flex items-center gap-1.5"
+                          whileTap={{ scale: 0.95 }}
                         >
-                          <Send className="w-3.5 h-3.5 text-primary" />
+                          <Send className="w-3 h-3" />
+                          {isRoomActive ? "თავიდან" : "მოიწვიე"}
                         </motion.button>
                       )}
                     </div>
