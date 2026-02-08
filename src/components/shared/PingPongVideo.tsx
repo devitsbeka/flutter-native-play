@@ -58,18 +58,25 @@ export function PingPongVideo({
   }, [rootMargin]);
 
   // Queue-based video loading - also respects `active` prop
+  // Once loaded, video stays loaded (isReady persists) - only pause/resume on visibility
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isInView || !active) {
-      // Release slot when leaving view or becoming inactive
+    if (!video) return;
+
+    // If not in view or not active, just pause (don't unload)
+    if (!isInView || !active) {
+      video.pause();
+      // Release slot when leaving view but keep isReady state
       if (hasAcquiredSlot) {
         videoLoadQueue.release(videoSrc);
         setHasAcquiredSlot(false);
       }
-      // Pause video when inactive
-      if (video && !active) {
-        video.pause();
-      }
+      return;
+    }
+
+    // If already loaded, just resume playback
+    if (isReady) {
+      video.play().catch(() => {});
       return;
     }
 
@@ -122,7 +129,7 @@ export function PingPongVideo({
       }
       video.pause();
     };
-  }, [isInView, videoSrc, hasAcquiredSlot, active]);
+  }, [isInView, videoSrc, hasAcquiredSlot, active, isReady]);
 
   // Handle page visibility changes
   useEffect(() => {
