@@ -116,7 +116,7 @@ export function CategoryPickerSection({
     >
       {/* Main category display */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center overflow-hidden">
             {categoryId === "__mixed__" ? (
               <DynamicIcon slug="mystery-box" size={24} />
@@ -131,7 +131,7 @@ export function CategoryPickerSection({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <p className={cn(
-                "text-white font-semibold leading-tight",
+                "text-white font-semibold leading-tight truncate",
                 hasCategory ? "text-[18px]" : "text-[14px]"
               )}>
                 {hasCategory ? categoryName : (isHost ? "რისი თამაში გინდა?" : "მიმდინარე კატეგორია")}
@@ -160,7 +160,7 @@ export function CategoryPickerSection({
           </div>
         </div>
         {isHost && (
-          <div className="w-10 h-10 rounded-xl border border-dashed border-white/40 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl border border-dashed border-white/40 flex items-center justify-center flex-shrink-0">
             <Plus className="w-5 h-5 text-white/60" />
           </div>
         )}
