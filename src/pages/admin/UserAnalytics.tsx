@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { 
   Users, Search, Globe, Crown, Clock, Gamepad2,
-  Coins, Gem, ArrowUpDown, Filter, ChevronDown
+  Coins, Gem, ArrowUpDown, Filter, ChevronDown, BarChart3
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { UserAnalyticsTable } from '@/components/admin/analytics/UserAnalyticsTable';
 import { CountryBreakdownChart } from '@/components/admin/analytics/CountryBreakdownChart';
 import { ActivityTimeline } from '@/components/admin/analytics/ActivityTimeline';
+import { StatsTab } from '@/components/admin/analytics/StatsTab';
 
 export interface AnalyticsUser {
   user_id: string;
@@ -215,83 +217,102 @@ export default function UserAnalytics() {
           </div>
         </div>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <StatsCard label="სულ მომხმარებლები" value={stats.total} icon={<Users className="h-4 w-4" />} />
-          <StatsCard label="ონლაინ" value={stats.online} icon={<div className="h-3 w-3 rounded-full bg-emerald-500" />} variant="success" />
-          <StatsCard label="Away" value={stats.away} icon={<div className="h-3 w-3 rounded-full bg-amber-500" />} variant="warning" />
-          <StatsCard label="ოფლაინ" value={stats.offline} icon={<div className="h-3 w-3 rounded-full bg-muted-foreground" />} />
-          <StatsCard label="VIP" value={stats.vip} icon={<Crown className="h-4 w-4 text-amber-500" />} variant="vip" />
-        </div>
+        <Tabs defaultValue="users">
+          <TabsList>
+            <TabsTrigger value="users" className="gap-1.5">
+              <Users className="h-3.5 w-3.5" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" />
+              Stats
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-3 items-center">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="ძებნა სახელით..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="სტატუსი" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">ყველა</SelectItem>
-                  <SelectItem value="online">ონლაინ</SelectItem>
-                  <SelectItem value="away">Away</SelectItem>
-                  <SelectItem value="offline">ოფლაინ</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={vipFilter} onValueChange={setVipFilter}>
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="VIP" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">ყველა</SelectItem>
-                  <SelectItem value="vip">VIP</SelectItem>
-                  <SelectItem value="free">Free</SelectItem>
-                </SelectContent>
-              </Select>
-              {countryFilter && (
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer"
-                  onClick={() => setCountryFilter(null)}
-                >
-                  🌍 {countryFilter} ✕
-                </Badge>
-              )}
-              <div className="text-sm text-muted-foreground">
-                {filteredUsers.length} მომხმარებელი
-              </div>
+          <TabsContent value="users" className="space-y-6 mt-4">
+            {/* Stats Bar */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              <StatsCard label="სულ მომხმარებლები" value={stats.total} icon={<Users className="h-4 w-4" />} />
+              <StatsCard label="ონლაინ" value={stats.online} icon={<div className="h-3 w-3 rounded-full bg-emerald-500" />} variant="success" />
+              <StatsCard label="Away" value={stats.away} icon={<div className="h-3 w-3 rounded-full bg-amber-500" />} variant="warning" />
+              <StatsCard label="ოფლაინ" value={stats.offline} icon={<div className="h-3 w-3 rounded-full bg-muted-foreground" />} />
+              <StatsCard label="VIP" value={stats.vip} icon={<Crown className="h-4 w-4 text-amber-500" />} variant="vip" />
             </div>
-          </CardContent>
-        </Card>
 
-        {/* User Table */}
-        <UserAnalyticsTable
-          users={filteredUsers}
-          loading={loading}
-          sortField={sortField}
-          sortAsc={sortAsc}
-          onToggleSort={toggleSort}
-        />
+            {/* Filters */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-wrap gap-3 items-center">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="ძებნა სახელით..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="სტატუსი" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ყველა</SelectItem>
+                      <SelectItem value="online">ონლაინ</SelectItem>
+                      <SelectItem value="away">Away</SelectItem>
+                      <SelectItem value="offline">ოფლაინ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={vipFilter} onValueChange={setVipFilter}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="VIP" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ყველა</SelectItem>
+                      <SelectItem value="vip">VIP</SelectItem>
+                      <SelectItem value="free">Free</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {countryFilter && (
+                    <Badge
+                      variant="secondary"
+                      className="cursor-pointer"
+                      onClick={() => setCountryFilter(null)}
+                    >
+                      🌍 {countryFilter} ✕
+                    </Badge>
+                  )}
+                  <div className="text-sm text-muted-foreground">
+                    {filteredUsers.length} მომხმარებელი
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Bottom Row: Country Breakdown + Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CountryBreakdownChart
-            data={countryBreakdown}
-            activeCountry={countryFilter}
-            onCountryClick={handleCountryClick}
-          />
-          <ActivityTimeline />
-        </div>
+            {/* User Table */}
+            <UserAnalyticsTable
+              users={filteredUsers}
+              loading={loading}
+              sortField={sortField}
+              sortAsc={sortAsc}
+              onToggleSort={toggleSort}
+            />
+
+            {/* Bottom Row: Country Breakdown + Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CountryBreakdownChart
+                data={countryBreakdown}
+                activeCountry={countryFilter}
+                onCountryClick={handleCountryClick}
+              />
+              <ActivityTimeline />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="stats" className="mt-4">
+            <StatsTab />
+          </TabsContent>
+        </Tabs>
       </div>
     </ScrollArea>
   );

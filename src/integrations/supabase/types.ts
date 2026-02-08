@@ -3490,6 +3490,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          country_code: string | null
+          created_at: string
+          device_type: string | null
+          duration_seconds: number | null
+          entry_page: string | null
+          exit_page: string | null
+          id: string
+          is_bounce: boolean | null
+          os: string | null
+          pages_visited: number | null
+          screen_height: number | null
+          screen_width: number | null
+          session_end: string | null
+          session_start: string
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          country_code?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          entry_page?: string | null
+          exit_page?: string | null
+          id?: string
+          is_bounce?: boolean | null
+          os?: string | null
+          pages_visited?: number | null
+          screen_height?: number | null
+          screen_width?: number | null
+          session_end?: string | null
+          session_start?: string
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          country_code?: string | null
+          created_at?: string
+          device_type?: string | null
+          duration_seconds?: number | null
+          entry_page?: string | null
+          exit_page?: string | null
+          id?: string
+          is_bounce?: boolean | null
+          os?: string | null
+          pages_visited?: number | null
+          screen_height?: number | null
+          screen_width?: number | null
+          session_end?: string | null
+          session_start?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vip_subscriptions: {
         Row: {
           apple_original_transaction_id: string | null
