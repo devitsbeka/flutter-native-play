@@ -172,9 +172,8 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
                   <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
                     <button 
                       onClick={() => {
-                        // Open avatar modal first, then close menu for smooth transition
-                        openAvatarModal();
                         onClose();
+                        navigate("/profile");
                       }}
                       className="h-16 w-16 rounded-2xl bg-background/50 backdrop-blur flex items-center justify-center overflow-hidden ring-2 ring-primary/20 hover:ring-primary/40 transition-all cursor-pointer"
                     >
