@@ -1,45 +1,39 @@
 
 
-## Fix: Smooth Icon Rendering Without Glitches
+## Fix Empty States: Card Wrapper + Onboarding Carousel for Trivias Tab
 
-### Problem
+### What's Happening Now
 
-Icons across the app (icon picker, category picker modal, category cards, quiz screens) exhibit visual glitches -- they "pop in" with a scale/opacity animation every time the component mounts or the icon URL resolves. This is jarring and looks broken.
+- **Rooms tab**: Already works correctly -- new users see the feature onboarding carousel (animated gradient-border cards). After dismissing, they see the empty state wrapped in a card (`bg-card border border-border rounded-2xl`) with the dance-floor icon and "+ ოთახი" button.
+- **Trivias tab ("ჩემი ტრივია")**: Missing both features. The empty state has no card wrapper (just floating text/icon) and no onboarding carousel for first-time users.
 
-### Root Causes
+### What Will Change
 
-1. **`DynamicIcon` uses `motion.img` with entrance animation** (`initial: opacity 0, scale 0.9` -> `animate: opacity 1, scale 1`) that fires on every mount and every URL change
-2. **Double animation stacking**: `QuizCategoryIcon` wraps `DynamicIcon` in yet another `motion.div` with its own entrance animation -- so icons get two overlapping pop-in effects
-3. **URL resolution flicker**: When `DynamicIcon` resolves an icon, it can go through up to 3 visual states in quick succession: skeleton -> wrong fallback URL -> correct async URL. Each URL change forces a new `motion.img` element (due to the `key` prop), replaying the entrance animation
-4. **Aggressive skeleton display**: The `isResolvingIcon` state shows a pulsing skeleton placeholder even when the previous icon could remain visible, creating a flash
+1. **Wrap trivia empty state in a card** -- matching the rooms empty state style from image-308 (rounded card with border)
+2. **Show the onboarding carousel first** for new users who haven't seen it yet and have no trivias, exactly like the rooms tab does
 
 ### Technical Changes
 
-**File: `src/components/shared/DynamicIcon.tsx`**
+**File: `src/components/social/MyTriviaTab.tsx`**
 
-- Replace `motion.img` with a plain `img` element. Instead of a spring animation on mount, use a simple CSS opacity transition that only applies when the image first loads (via an `onLoad` handler), making icons appear smoothly without the "pop" effect
-- Remove the `key` prop that forces React to destroy and recreate the `img` element on every URL change. Instead, update `src` in place so the browser handles the transition naturally
-- Keep the `onError` retry logic intact
-- Remove `framer-motion` import (no longer needed in this file)
+1. Import `FeatureOnboardingCarousel` and `hasSeenFeatureOnboarding` from the existing carousel component
+2. Add a `hasSeenOnboarding` state (same pattern as `MyRoomsSection`)
+3. Add an `onNavigateToTab` prop so the carousel can navigate to other tabs
+4. In the empty state block (lines ~1268-1290):
+   - First check: if user hasn't seen onboarding and `sortFilter === "all"`, show `FeatureOnboardingCarousel`
+   - After onboarding is dismissed: show the existing empty state BUT wrapped in a card container with `bg-card border border-border rounded-2xl` styling
+   - Keep the existing trivia-buzzer icon, text, description, and "+ ტრივია" button inside the card
 
-```
-Before: motion.img with key={url-retryCount}, initial scale 0.9
-After:  plain img with CSS fade-in on load, no scale animation
-```
+**File: `src/pages/TeamV2.tsx`**
 
-**File: `src/components/ui/quiz-category-icon.tsx`**
+- Pass the `onNavigateToTab` prop to `MyTriviaTab` so the onboarding carousel cards can navigate between tabs (just like `MyRoomsSection` already receives this prop)
 
-- Remove the outer `motion.div` wrapper's entrance animation (`initial: opacity 0, scale 0.9`). Replace with a plain `div` -- since `DynamicIcon` itself will now handle smooth rendering, the extra wrapper animation is unnecessary and was causing the double-pop
-- Keep the loading state glow animations (those are intentional visual effects during question generation)
+### Visual Result
 
-### What This Fixes
-
-- Icon picker grid: Icons appear instantly without individual pop-in animations
-- Category picker modal: Category icons in the 2-column grid render cleanly
-- Category cards on discover page: `DynamicIcon` inside cards won't flash/scale on each render
-- Quiz screens: `QuizCategoryIcon` renders smoothly without double animations
-- No more skeleton flashes when icons are already cached or quickly resolved
+For a new user with no trivias:
+1. First visit: They see the animated gradient-border onboarding carousel (Rooms, My Trivia, Explore cards)
+2. After tapping any card: The carousel is dismissed, and they see the empty state as a rounded card with the trivia-buzzer icon, "ტრივიები ჯერ არ გაქვს" title, description, and the "+ ტრივია" button -- exactly matching the rooms empty state card style
 
 ### Files Changed
-- `src/components/shared/DynamicIcon.tsx` (replace motion.img with smooth CSS fade)
-- `src/components/ui/quiz-category-icon.tsx` (remove redundant entrance animation)
+- `src/components/social/MyTriviaTab.tsx` -- add card wrapper + onboarding carousel logic
+- `src/pages/TeamV2.tsx` -- pass `onNavigateToTab` to `MyTriviaTab`
