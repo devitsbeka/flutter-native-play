@@ -13,7 +13,8 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
-import { CATEGORY_VIDEOS, MAP_VIDEOS } from "@/config/videoConfig";
+import { CATEGORY_VIDEOS, CATEGORY_IMAGES, MAP_VIDEOS } from "@/config/videoConfig";
+import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import crystalHourglass from "@/assets/crystal-hourglass.png";
@@ -67,6 +68,11 @@ export default function CategoryPage() {
   
   const currentLevel = getCategoryProgress(categoryId || "") || 1;
   const pastelColors = useMemo(() => getPastelColors(categoryId || ""), [categoryId]);
+
+  // Reset video load queue on mount so header video gets immediate priority
+  useEffect(() => {
+    videoLoadQueue.reset();
+  }, []);
 
   // Check for unlock animation on mount
   useEffect(() => {
@@ -193,6 +199,7 @@ export default function CategoryPage() {
           <div className="absolute inset-0">
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals}
+              posterUrl={CATEGORY_IMAGES[(category as any).category_id || categoryId || ""] || undefined}
               forceDesktopQuality
             />
           </div>
