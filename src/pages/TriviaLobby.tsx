@@ -8,6 +8,16 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -97,7 +107,9 @@ export default function TriviaLobby() {
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { trivia, creator, leaderboard, stats, userRank, isLoading, refetchLeaderboard } = useTriviaLobby(triviaId);
+  const { trivia, creator, leaderboard, stats, userRank, isLoading, refetchLeaderboard, removeFromLeaderboard } = useTriviaLobby(triviaId);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   
   const isOwner = user?.id === trivia?.user_id;
 
@@ -244,16 +256,24 @@ export default function TriviaLobby() {
                 <p className="text-muted-foreground/70 text-xs mt-1">იყავი პირველი!</p>
               </div>
             ) : (
-              leaderboard.map((entry, index) => (
+              leaderboard.map((entry, index) => {
+                const isCurrentUser = user?.id === entry.user_id;
+                return (
                 <motion.div
                   key={`${entry.user_id}-${index}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.25 + index * 0.03 }}
                   className={`flex items-center gap-3 p-3 ${
-                    userRank?.user_id === entry.user_id ? "bg-primary/10" : ""
+                    isCurrentUser ? "bg-primary/10" : ""
                   }`}
-                  onClick={() => openProfile(entry.user_id)}
+                  onClick={() => {
+                    if (isCurrentUser) {
+                      setShowRemoveDialog(true);
+                    } else {
+                      openProfile(entry.user_id);
+                    }
+                  }}
                 >
                   {/* Rank */}
                   <div className="w-8 flex justify-center">
@@ -289,7 +309,8 @@ export default function TriviaLobby() {
                     </p>
                   </div>
                 </motion.div>
-              ))
+                );
+              })
             )}
           </div>
         </motion.div>
@@ -348,6 +369,37 @@ export default function TriviaLobby() {
           />
         </Suspense>
       )}
+
+      {/* Remove from Leaderboard Confirmation Dialog */}
+      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ლიდერბორდიდან წაშლა?</AlertDialogTitle>
+            <AlertDialogDescription>
+              შენი ქულა და ჩანაწერი ამ ტრივიის ლიდერბორდიდან წაიშლება. ხელახლა თამაშით შეძლებ დაბრუნებას.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemoving}>გაუქმება</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isRemoving}
+              onClick={async (e) => {
+                e.preventDefault();
+                setIsRemoving(true);
+                try {
+                  await removeFromLeaderboard();
+                } finally {
+                  setIsRemoving(false);
+                  setShowRemoveDialog(false);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRemoving ? "იშლება..." : "წაშლა"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit Modal - Lazy loaded */}
       {isEditModalOpen && trivia && (
