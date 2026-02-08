@@ -58,13 +58,8 @@ export function ExplorePortfolioFeed({
     <>
       {/* Mobile: Flattened feed - one player + one item per card */}
       <div className="md:hidden space-y-4">
-        {feedItems.map((feedItem, index) => (
-          <motion.div
-            key={feedItem.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
-          >
+        {feedItems.map((feedItem) => (
+          <div key={feedItem.id}>
             <PlayerFeedItem
               player={feedItem.player}
               item={feedItem.item}
@@ -76,7 +71,7 @@ export function ExplorePortfolioFeed({
               isSaved={userSaves.includes(feedItem.item.id)}
               isPlayed={userPlays.includes(feedItem.item.id)}
             />
-          </motion.div>
+          </div>
         ))}
       </div>
 
