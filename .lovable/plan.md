@@ -1,29 +1,29 @@
 
 
-## Filter Out Deleted Accounts from Search Results
+## Fix Category Title Overflow and "+" Button Squeeze
 
 ### Problem
-Deleted accounts (with nickname "[წაშლილი]") are appearing in search results when searching for friends. The `searchUsers` function in `FriendsContext.tsx` queries the `profiles` table but does not filter out these deleted accounts. The FriendsStoriesBar already filters them (via the `fetchFriends` logic), but the search endpoint does not.
+When a round/category title is long (e.g., "ცოდნა Breaking Bad-ის შესახებ"), the title text pushes the "+" (add category) button, squeezing it or making it hard to tap. The title should be truncated with ellipsis (...) instead.
 
 ### Solution
-Add a `.neq("nickname", "[წაშლილი]")` filter to the `searchUsers` query in `FriendsContext.tsx`. This ensures deleted accounts never appear in search results across all modals that use this function (AddFriendModal, InviteFriendsModal).
+Three small CSS changes in `CategoryPickerSection.tsx`:
+
+1. **Prevent "+" button from shrinking**: Add `flex-shrink-0` to the "+" button wrapper so it always keeps its intended size
+2. **Allow the left content to shrink**: Add `min-w-0` and `flex-1` to the left flex container so it can shrink when space is limited
+3. **Truncate long titles**: Add `truncate` to the category name `<p>` element so long text gets cut off with "..." instead of wrapping to multiple lines
+
+### Expected Result
+- Short titles: displayed fully, no change
+- Long titles like "ცოდნა Breaking Bad-ის შესახებ": displayed as "ცოდნა Breaking Bad-ის შე..." (single line, truncated)
+- The "+" button always stays at its full 10x10 size, never squeezed
 
 ### Technical Details
 
-| File | Change |
-|------|--------|
-| `src/contexts/FriendsContext.tsx` | Add `.neq("nickname", "[წაშლილი]")` to the Supabase query in `searchUsers` (line 258) |
+**File: `src/components/team/CategoryPickerSection.tsx`**
 
-The updated query will be:
+| Line | Current | Change |
+|------|---------|--------|
+| 119 | `<div className="flex items-center gap-3">` | Add `min-w-0 flex-1` to allow shrinking |
+| 133-136 | `<p className="text-white font-semibold leading-tight ...">` | Add `truncate` class to enable ellipsis |
+| 163 | `<div className="w-10 h-10 rounded-xl ...">` | Add `flex-shrink-0` to prevent squeeze |
 
-```typescript
-const { data, error } = await supabase
-  .from("profiles")
-  .select("user_id, nickname, avatar_url, country_code")
-  .ilike("nickname", `%${query}%`)
-  .neq("user_id", user.id)
-  .neq("nickname", "[წაშლილი]")   // <-- new line
-  .limit(10);
-```
-
-This single change fixes deleted accounts appearing in both the AddFriendModal and InviteFriendsModal since they both use the same `searchUsers` function from the FriendsContext.
