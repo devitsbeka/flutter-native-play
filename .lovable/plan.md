@@ -1,88 +1,67 @@
 
 
-## Fix Desktop/Tablet Video Quality
+## Fix: Slow Video Load on Category Page (3-4 Second Delay)
 
-### Problem
+### Root Cause
 
-All videos (both WebM and MP4) are encoded at **720px width** by the optimization scripts. On desktop/tablet screens where the video fills 1200-1920px wide areas, this 720px video gets stretched 2-3x, causing visible blur and pixelation.
+When you tap a category card on the Discover page and navigate to the CategoryPage, the header video takes 3-4 seconds to appear because of **three compounding delays**:
 
-The conversion pipeline (`scripts/convert-videos-webm.sh`) has these settings:
-- Desktop WebM: 720px width, CRF 28
-- Mobile WebM: 480px width, CRF 30
+1. **No poster image**: The `PingPongVideo` on the CategoryPage is never given a `posterUrl`, even though you already have first-frame JPEG images for every category (the `CATEGORY_IMAGES` map in `videoConfig.ts`). Without a poster, the user sees nothing until the full video downloads and decodes.
 
-720px is fine for mobile (375px device = crisp at 2x retina), but far too small for desktop.
+2. **Load queue bottleneck**: The Discover page's videos may still hold slots in the global load queue (max 4 concurrent). When the CategoryPage mounts, its single header video calls `acquire()` and can get stuck waiting for Discover videos to release their slots -- even though those videos are no longer visible.
 
-### Solution
+3. **No preloading on hover**: When the user hovers/touches a category card, the code preloads the `CategoryPage` JavaScript bundle, but it does **not** start prefetching the actual video file. Starting the video download 200-500ms earlier (on hover) would eliminate most of the perceived delay.
 
-Create a **three-tier video resolution system** and update the serving logic:
+### Solution (3 changes)
 
-| Tier | Max Width | CRF | Use Case |
-|------|-----------|-----|----------|
-| Mobile | 480px | 30 | Phone screens (< 768px) |
-| Desktop (current) | 720px | 28 | Tablet/small desktop |
-| Desktop HD (new) | 1280px | 26 | Large desktop screens (>= 1024px) |
+#### Change 1: Show poster image instantly while video loads
 
-### Changes
+**File: `src/pages/CategoryPage.tsx`**
 
-#### Change 1: Update video conversion script to create HD desktop variants
-
-**File: `scripts/convert-videos-webm.sh`**
-
-Add a third tier: "desktop HD" at 1280px width, stored in `public/videos/desktop/` folder. This creates files like `/videos/desktop/mathematics.webm` alongside the existing `/videos/mathematics.webm`.
-
-Settings for the HD tier:
-- Max width: 1280px (sharp on 1440p/1920p screens)
-- CRF: 26 (higher quality than 28 but still well-compressed for VP9)
-- Same VP9 codec and other settings
-
-#### Change 2: Add desktop HD URL helper
-
-**File: `src/config/videoConfig.ts`**
-
-Add a `toDesktopHdWebmUrl()` function that maps `/videos/math.mp4` to `/videos/desktop/math.webm`. Also update `getAllVideoUrls()` to preload the HD variants on desktop.
+Import `CATEGORY_IMAGES` and pass the matching poster image to `PingPongVideo`. The poster JPEG is tiny (~15-30KB) and shows immediately, so users see the category visual within milliseconds while the video downloads in the background.
 
 ```
-// New function
-export function toDesktopHdWebmUrl(mp4Url: string): string {
-  const lastSlash = mp4Url.lastIndexOf("/");
-  const dir = mp4Url.substring(0, lastSlash);
-  const filename = mp4Url.substring(lastSlash + 1).replace(/\.mp4$/, ".webm");
-  return dir + "/desktop/" + filename;
-}
+Before:
+<PingPongVideo 
+  src={CATEGORY_VIDEOS[...]}
+  forceDesktopQuality
+/>
+
+After:
+<PingPongVideo 
+  src={CATEGORY_VIDEOS[...]}
+  posterUrl={CATEGORY_IMAGES[categoryKey]}
+  forceDesktopQuality
+/>
 ```
 
-#### Change 3: Serve HD variants on desktop/tablet
+#### Change 2: Clear the load queue on page navigation
 
-**File: `src/hooks/useResponsiveVideo.ts`**
+**File: `src/utils/videoLoadQueue.ts`**
 
-Update the hook to return:
-- Desktop HD WebM (1280px) when viewport >= 1024px
-- Regular WebM (720px) when viewport < 1024px (mobile/small tablets)
+Add a `reset()` method that clears all queued and active slots. This lets the CategoryPage's video start loading immediately without waiting for Discover page videos to finish.
 
-This uses a `matchMedia` check to determine which tier to serve.
+**File: `src/pages/CategoryPage.tsx`**
 
-#### Change 4: PingPongVideo `forceDesktopQuality` now means HD
+Call `videoLoadQueue.reset()` on mount so the header video gets immediate priority.
 
-**File: `src/components/shared/PingPongVideo.tsx`**
+#### Change 3: Prefetch the HD video on card hover/touch
 
-When `forceDesktopQuality` is true (used on the category page header), always use the desktop HD URL regardless of viewport. This ensures the large header video on category pages is always crisp.
+**File: `src/components/discover/AirbnbCategoryCard.tsx`**
 
-### What you need to do after these code changes
+When the user hovers or touches a category card, start a `<link rel="prefetch">` for the HD video URL. This uses idle browser bandwidth to begin downloading the video before the user even taps. By the time the CategoryPage mounts, the video may already be partially or fully cached.
 
-After approving this plan, you will need to **re-run the updated conversion script** on your original high-resolution source MP4 files to generate the new `/videos/desktop/*.webm` files:
-
-```
-bash scripts/convert-videos-webm.sh
-```
-
-The script will create the `public/videos/desktop/` folder with 1280px-wide WebM files. Without these files, the code will gracefully fall back to the existing 720px WebM (via the MP4 `<source>` fallback).
-
-### Technical Details
+### Summary
 
 | File | Change |
 |------|--------|
-| `scripts/convert-videos-webm.sh` | Add desktop HD tier (1280px, CRF 26) in `public/videos/desktop/` |
-| `src/config/videoConfig.ts` | Add `toDesktopHdWebmUrl()` helper; update `getAllVideoUrls()` for desktop preloading |
-| `src/hooks/useResponsiveVideo.ts` | Return desktop HD URL when viewport >= 1024px |
-| `src/components/shared/PingPongVideo.tsx` | `forceDesktopQuality` uses desktop HD URL |
+| `src/pages/CategoryPage.tsx` | Pass `posterUrl` from `CATEGORY_IMAGES`; reset load queue on mount |
+| `src/utils/videoLoadQueue.ts` | Add `reset()` method to clear all slots |
+| `src/components/discover/AirbnbCategoryCard.tsx` | Prefetch HD video URL on hover/touch |
+
+### Expected Result
+
+- **Instant**: Poster image appears immediately (no gray/empty header)
+- **~0.5-1s**: Video starts playing (vs 3-4s before), since queue is clear and video may already be prefetching
+- **Smooth**: Poster fades out as video fades in with the existing 700ms CSS transition
 
