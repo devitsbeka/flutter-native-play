@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
-import { toWebmUrl } from "@/config/videoConfig";
+import { toDesktopHdWebmUrl } from "@/config/videoConfig";
 
 interface PingPongVideoProps {
   src: string;
@@ -33,8 +33,8 @@ export function PingPongVideo({
 
   // Get responsive video URLs (WebM + MP4, sized for viewport)
   const { webm: responsiveWebm, mp4: mp4Src } = useResponsiveVideo(src);
-  // If forceDesktopQuality, always use desktop WebM (skip mobile variant)
-  const webmSrc = forceDesktopQuality ? toWebmUrl(src) : responsiveWebm;
+  // If forceDesktopQuality, always use desktop HD WebM (1280px) for crisp display
+  const webmSrc = forceDesktopQuality ? toDesktopHdWebmUrl(src) : responsiveWebm;
 
   // Get preloaded blob URL if available, fallback to WebM source
   const preloadedUrl = getVideoBlobUrl(webmSrc);
