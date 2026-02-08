@@ -133,12 +133,12 @@ export const CATEGORY_IMAGES: Record<string, string> = {
   linguistics: "/images/categories/languages.jpg",
 };
 
-// Convert an MP4 path to its WebM equivalent
+// Convert an MP4 path to its WebM equivalent (720px standard)
 export function toWebmUrl(mp4Url: string): string {
   return mp4Url.replace(/\.mp4$/, ".webm");
 }
 
-// Convert an MP4 path to its mobile WebM equivalent
+// Convert an MP4 path to its mobile WebM equivalent (480px)
 export function toMobileWebmUrl(mp4Url: string): string {
   const lastSlash = mp4Url.lastIndexOf("/");
   const dir = mp4Url.substring(0, lastSlash);
@@ -146,9 +146,22 @@ export function toMobileWebmUrl(mp4Url: string): string {
   return `${dir}/mobile/${filename}`;
 }
 
+// Convert an MP4 path to its desktop HD WebM equivalent (1280px)
+export function toDesktopHdWebmUrl(mp4Url: string): string {
+  const lastSlash = mp4Url.lastIndexOf("/");
+  const dir = mp4Url.substring(0, lastSlash);
+  const filename = mp4Url.substring(lastSlash + 1).replace(/\.mp4$/, ".webm");
+  return `${dir}/desktop/${filename}`;
+}
+
 // Check if user is on a mobile-sized viewport (< 768px)
 export function isMobileViewport(): boolean {
   return typeof window !== "undefined" && window.innerWidth < 768;
+}
+
+// Check if user is on a large desktop viewport (>= 1024px)
+export function isDesktopHdViewport(): boolean {
+  return typeof window !== "undefined" && window.innerWidth >= 1024;
 }
 
 // Get the best video URL for current device: mobile WebM, desktop WebM, or MP4 fallback
@@ -156,14 +169,16 @@ export function getResponsiveVideoSrc(mp4Url: string): {
   webm: string;
   mp4: string;
 } {
-  const mobile = isMobileViewport();
-  return {
-    webm: mobile ? toMobileWebmUrl(mp4Url) : toWebmUrl(mp4Url),
-    mp4: mp4Url,
-  };
+  if (isDesktopHdViewport()) {
+    return { webm: toDesktopHdWebmUrl(mp4Url), mp4: mp4Url };
+  }
+  if (isMobileViewport()) {
+    return { webm: toMobileWebmUrl(mp4Url), mp4: mp4Url };
+  }
+  return { webm: toWebmUrl(mp4Url), mp4: mp4Url };
 }
 
-// Get all video URLs for preloading (deduplicated) - always returns desktop WebM URLs
+// Get all video URLs for preloading (deduplicated)
 export function getAllVideoUrls(): string[] {
   const allMp4Urls = [
     ...Object.values(MAP_VIDEOS),
@@ -171,7 +186,10 @@ export function getAllVideoUrls(): string[] {
   ];
   const uniqueMp4 = [...new Set(allMp4Urls)];
 
-  // Always preload desktop-quality WebM versions
+  // Preload the best quality for current viewport
+  if (isDesktopHdViewport()) {
+    return uniqueMp4.map((url) => toDesktopHdWebmUrl(url));
+  }
   return uniqueMp4.map((url) => toWebmUrl(url));
 }
 

@@ -15,10 +15,13 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 PUBLIC_VIDEOS="$PROJECT_DIR/public/videos"
 ASSETS_DIR="$PROJECT_DIR/src/assets"
 MOBILE_DIR="$PUBLIC_VIDEOS/mobile"
+DESKTOP_HD_DIR="$PUBLIC_VIDEOS/desktop"
 
 # VP9 encoding settings
+DESKTOP_HD_CRF=26
 DESKTOP_CRF=28
 MOBILE_CRF=30
+DESKTOP_HD_MAX_WIDTH=1280
 DESKTOP_MAX_WIDTH=720
 MOBILE_MAX_WIDTH=480
 THREADS=4    # Parallel conversion jobs
@@ -42,8 +45,9 @@ if ! command -v ffmpeg &>/dev/null; then
   exit 1
 fi
 
-# Create mobile directory
+# Create output directories
 mkdir -p "$MOBILE_DIR"
+mkdir -p "$DESKTOP_HD_DIR"
 
 # Track stats
 TOTAL_ORIGINAL=0
@@ -56,10 +60,30 @@ convert_video() {
   local input="$1"
   local output_desktop="$2"
   local output_mobile="$3"
+  local output_desktop_hd="$4"
   local filename="$(basename "$input")"
 
   # Get original file size
   local orig_size=$(stat -f%z "$input" 2>/dev/null || stat -c%s "$input" 2>/dev/null)
+
+  # Convert to desktop HD WebM (max 1280px width, high quality)
+  if [ -n "$output_desktop_hd" ] && [ ! -f "$output_desktop_hd" ]; then
+    log "Desktop HD: $filename"
+    ffmpeg -i "$input" \
+      -c:v libvpx-vp9 \
+      -crf $DESKTOP_HD_CRF -b:v 0 \
+      -vf "scale='min($DESKTOP_HD_MAX_WIDTH,iw)':-2" \
+      -deadline good -cpu-used $CPU_USED \
+      -row-mt 1 \
+      -an \
+      -y "$output_desktop_hd" 2>/dev/null
+
+    local hd_size=$(stat -f%z "$output_desktop_hd" 2>/dev/null || stat -c%s "$output_desktop_hd" 2>/dev/null)
+    local hd_savings=$(( (orig_size - hd_size) * 100 / orig_size ))
+    success "Desktop HD $filename: $(numfmt --to=iec $orig_size) -> $(numfmt --to=iec $hd_size) (${hd_savings}% smaller)"
+  elif [ -n "$output_desktop_hd" ]; then
+    warn "Desktop HD $filename already exists"
+  fi
 
   # Convert to desktop WebM (max 720px width, maintain aspect ratio)
   if [ ! -f "$output_desktop" ]; then
@@ -80,7 +104,7 @@ convert_video() {
     warn "Desktop $filename already exists"
   fi
 
-  # Convert to mobile WebM (max 360px width) - only for public videos
+  # Convert to mobile WebM (max 480px width) - only for public videos
   if [ -n "$output_mobile" ] && [ ! -f "$output_mobile" ]; then
     log "Mobile: $filename"
     ffmpeg -i "$input" \
@@ -101,8 +125,9 @@ convert_video() {
 echo ""
 echo -e "${CYAN}========================================${NC}"
 echo -e "${CYAN}  WebM VP9 Video Conversion${NC}"
-echo -e "${CYAN}  Desktop: ${DESKTOP_MAX_WIDTH}px, CRF ${DESKTOP_CRF}${NC}"
-echo -e "${CYAN}  Mobile:  ${MOBILE_MAX_WIDTH}px, CRF ${MOBILE_CRF}${NC}"
+echo -e "${CYAN}  Desktop HD: ${DESKTOP_HD_MAX_WIDTH}px, CRF ${DESKTOP_HD_CRF}${NC}"
+echo -e "${CYAN}  Desktop:    ${DESKTOP_MAX_WIDTH}px, CRF ${DESKTOP_CRF}${NC}"
+echo -e "${CYAN}  Mobile:     ${MOBILE_MAX_WIDTH}px, CRF ${MOBILE_CRF}${NC}"
 echo -e "${CYAN}========================================${NC}"
 echo ""
 
@@ -111,7 +136,7 @@ log "Processing public videos..."
 for mp4 in "$PUBLIC_VIDEOS"/*.mp4; do
   [ -f "$mp4" ] || continue
   filename="$(basename "${mp4%.mp4}")"
-  convert_video "$mp4" "$PUBLIC_VIDEOS/$filename.webm" "$MOBILE_DIR/$filename.webm"
+  convert_video "$mp4" "$PUBLIC_VIDEOS/$filename.webm" "$MOBILE_DIR/$filename.webm" "$DESKTOP_HD_DIR/$filename.webm"
 done
 
 # Convert asset videos (desktop only - these are UI animations)
