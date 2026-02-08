@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Play, Users, BarChart3, HelpCircle, Info, Pencil } from "lucide-react";
 import { useTriviaLobby } from "@/hooks/useTriviaLobby";
 import { ChunkyButton } from "@/components/ui/chunky-button";
@@ -8,16 +8,6 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -108,7 +98,7 @@ export default function TriviaLobby() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { trivia, creator, leaderboard, stats, userRank, isLoading, refetchLeaderboard, removeFromLeaderboard } = useTriviaLobby(triviaId);
-  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
   
   const isOwner = user?.id === trivia?.user_id;
@@ -258,6 +248,7 @@ export default function TriviaLobby() {
             ) : (
               leaderboard.map((entry, index) => {
                 const isCurrentUser = user?.id === entry.user_id;
+                const isExpanded = expandedUserId === entry.user_id;
                 return (
                 <motion.div
                   key={`${entry.user_id}-${index}`}
@@ -269,7 +260,7 @@ export default function TriviaLobby() {
                   }`}
                   onClick={() => {
                     if (isCurrentUser) {
-                      setShowRemoveDialog(true);
+                      setExpandedUserId(isExpanded ? null : entry.user_id);
                     } else {
                       openProfile(entry.user_id);
                     }
@@ -302,12 +293,44 @@ export default function TriviaLobby() {
                     <p className="text-xs text-muted-foreground">{formatGeorgianTimeAgo(new Date(entry.played_at))}</p>
                   </div>
 
-                  {/* Score */}
-                  <div className="text-right">
-                    <p className="font-bold text-foreground">
-                      {entry.score}/{trivia.question_count}
-                    </p>
-                  </div>
+                  {/* Score or Remove Button */}
+                  <AnimatePresence mode="wait">
+                    {isCurrentUser && isExpanded ? (
+                      <motion.button
+                        key="remove-btn"
+                        initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 20, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                        disabled={isRemoving}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          setIsRemoving(true);
+                          try {
+                            await removeFromLeaderboard();
+                          } finally {
+                            setIsRemoving(false);
+                            setExpandedUserId(null);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold whitespace-nowrap disabled:opacity-50"
+                      >
+                        {isRemoving ? "იშლება..." : "წაშლა"}
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        key="score"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="text-right"
+                      >
+                        <p className="font-bold text-foreground">
+                          {entry.score}/{trivia.question_count}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
                 );
               })
@@ -370,36 +393,8 @@ export default function TriviaLobby() {
         </Suspense>
       )}
 
-      {/* Remove from Leaderboard Confirmation Dialog */}
-      <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ლიდერბორდიდან წაშლა?</AlertDialogTitle>
-            <AlertDialogDescription>
-              შენი ქულა და ჩანაწერი ამ ტრივიის ლიდერბორდიდან წაიშლება. ხელახლა თამაშით შეძლებ დაბრუნებას.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRemoving}>გაუქმება</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isRemoving}
-              onClick={async (e) => {
-                e.preventDefault();
-                setIsRemoving(true);
-                try {
-                  await removeFromLeaderboard();
-                } finally {
-                  setIsRemoving(false);
-                  setShowRemoveDialog(false);
-                }
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isRemoving ? "იშლება..." : "წაშლა"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
+
 
       {/* Edit Modal - Lazy loaded */}
       {isEditModalOpen && trivia && (
