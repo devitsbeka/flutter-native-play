@@ -21,6 +21,8 @@ interface AirbnbCategoryCardProps {
   leaderboardRank?: number | null;
   videoUrl?: string;
   hasNewLevels?: boolean;
+  /** Controls whether the video should load/play */
+  isVideoActive?: boolean;
   onFavoriteClick?: (e: React.MouseEvent) => void;
   onClick?: () => void;
   variant?: "compact" | "full";
@@ -71,6 +73,7 @@ export function AirbnbCategoryCard({
   leaderboardRank,
   videoUrl,
   hasNewLevels = false,
+  isVideoActive,
   onFavoriteClick,
   onClick,
   variant = "compact",
@@ -163,7 +166,7 @@ export function AirbnbCategoryCard({
             {/* Video (ping-pong seamless loop) or Icon */}
             {videoUrl ? (
               <>
-                <PingPongVideo src={videoUrl} posterUrl={getCategoryImageUrl(categoryId || id) || undefined} />
+                <PingPongVideo src={videoUrl} posterUrl={getCategoryImageUrl(categoryId || id) || undefined} active={isVideoActive} />
                 {/* Gradient mask overlay on bottom of video */}
                 <div
                   className="absolute inset-x-0 bottom-0 pointer-events-none z-[1]"
