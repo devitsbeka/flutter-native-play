@@ -31,17 +31,17 @@ const mascotAvatars = [
 ];
 
 const georgianFirstNames = [
-  "გიორგი", "მარიამი", "ნიკა", "ანა", "დავითი", "ელენე", "ლუკა", "თამარი",
-  "ნინო", "ალექსანდრე", "სოფია", "ილია", "ბარბარე", "გიო", "ნატო", "თეკო",
-  "ლიკა", "ზურა", "ნანა", "მაკო", "ბექა", "რატი", "კოტე", "ანი",
-  "სანდრო", "თაკო", "ირაკლი", "ეკა", "ლაშა", "მანანა", "გვანცა", "ბაჩო",
-  "ტატო", "მარი", "თორნიკე", "ქეთი", "ლევანი", "თეა", "ნიკოლოზი", "მაია",
+  "Giorgi", "Mariami", "Nika", "Ana", "Daviti", "Elene", "Luka", "Tamari",
+  "Nino", "Alexandre", "Sofia", "Ilia", "Barbare", "Gio", "Nato", "Teko",
+  "Lika", "Zura", "Nana", "Mako", "Beka", "Rati", "Kote", "Ani",
+  "Sandro", "Tako", "Irakli", "Eka", "Lasha", "Manana", "Gvantsa", "Bacho",
+  "Tato", "Mari", "Tornike", "Keti", "Levani", "Tea", "Nikolozi", "Maia",
 ];
 
 const georgianLastInitials = [
-  "კ.", "გ.", "ბ.", "ჩ.", "თ.", "მ.", "ლ.", "ს.",
-  "ხ.", "ჯ.", "წ.", "ფ.", "დ.", "რ.", "ა.", "ზ.",
-  "ნ.", "პ.", "ე.", "შ.",
+  "K.", "G.", "B.", "Ch.", "T.", "M.", "L.", "S.",
+  "Kh.", "J.", "Ts.", "P.", "D.", "R.", "A.", "Z.",
+  "N.", "E.", "Sh.",
 ];
 
 export const countries = [
