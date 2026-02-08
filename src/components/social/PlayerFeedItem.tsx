@@ -259,6 +259,7 @@ export function PlayerFeedItem({
       {/* Content Card */}
       <div 
         className="rounded-xl overflow-hidden cursor-pointer"
+        style={{ touchAction: 'manipulation' }}
         onClick={handleCardClick}
       >
         {/* Cover Section */}
