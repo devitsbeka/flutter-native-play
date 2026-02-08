@@ -17,24 +17,22 @@ import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
-import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
-import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
-import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
-import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
-import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
-import botAvatar6 from "@/assets/avatars/bot-avatar-6.png";
-import botAvatar7 from "@/assets/avatars/bot-avatar-7.png";
-import botAvatar8 from "@/assets/avatars/bot-avatar-8.png";
-import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
-import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import mysteryBoxIcon from "@/assets/mystery-box.png";
+import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
+import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
+import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
+import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
+import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
+import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
+import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
+import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 
 // Slot machine avatars for cycling effect
 const slotAvatars = [
-  botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5,
-  botAvatar6, botAvatar7, botAvatar8, botAvatar9, botAvatar10
+  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
+  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8
 ];
 
 // Topographic wave pattern SVG

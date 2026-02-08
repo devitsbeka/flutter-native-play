@@ -19,14 +19,17 @@ import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { useUserPowerUps, PowerUpType as DBPowerUpType } from "@/hooks/useUserPowerUps";
 import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 
-// Bot avatars for opponent
-import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
-import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
-import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
-import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
-import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
+// Mascot avatars for opponent
+import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
+import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
+import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
+import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
+import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
+import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
+import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
+import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 
-const botAvatars = [botAvatar1, botAvatar2, botAvatar3, botAvatar4, botAvatar5];
+const mascotAvatars = [mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4, mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: "bg-success",
@@ -70,7 +73,7 @@ export function QuizGameScreenProd() {
   const [timeRemaining, setTimeRemaining] = useState(timePerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerRevealed, setAnswerRevealed] = useState(false);
-  const [opponentAvatarIndex] = useState(() => Math.floor(Math.random() * botAvatars.length));
+  const [opponentAvatarIndex] = useState(() => Math.floor(Math.random() * mascotAvatars.length));
   const [freezeTimeLeft, setFreezeTimeLeft] = useState(0);
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -351,7 +354,7 @@ export function QuizGameScreenProd() {
 
           {/* Opponent (Right) */}
           <QuizPlayerAvatar
-            avatarUrl={botAvatars[opponentAvatarIndex]}
+            avatarUrl={mascotAvatars[opponentAvatarIndex]}
             score={opponentScore}
             position="right"
             state={getOpponentState()}

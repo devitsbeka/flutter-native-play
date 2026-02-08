@@ -48,10 +48,15 @@ import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
 import puzzleSphereIcon from "@/assets/icons/puzzle-sphere.png";
 
-// Import bot avatars for opponent
-import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
-import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
-import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
+// Import mascot avatars for opponent
+import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
+import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
+import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
+import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
+import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
+import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
+import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
+import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 
 // Import reward icons
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -96,7 +101,7 @@ const SUCCESS_ICONS = [
 // Perfect score icon from icon library (Starfish Wizard)
 const PERFECT_SCORE_ICON = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/starfish-wizard.png";
 
-const BOT_AVATARS = [botAvatar1, botAvatar2, botAvatar3];
+const BOT_AVATARS = [mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4, mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8];
 
 interface TriviaQuestion {
   id: string;
