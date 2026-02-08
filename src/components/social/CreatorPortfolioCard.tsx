@@ -86,15 +86,9 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
     switch (friendshipStatus) {
       case 'friends':
         return (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-1.5 text-green-600 border-green-200 bg-green-50"
-            disabled
-          >
-            <UserCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">მეგობარი</span>
-          </Button>
+          <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center">
+            <UserCheck className="w-5 h-5 text-white" />
+          </div>
         );
       case 'pending_sent':
         return (
@@ -171,12 +165,6 @@ export function CreatorPortfolioCard({ creator, onPlayTrivia, onViewProfile, onL
                 <Play className="w-3.5 h-3.5" />
                 <span>ტრივია</span>
               </span>
-              {timeAgo ? (
-                <>
-                  <span>•</span>
-                  <span>{timeAgo}</span>
-                </>
-              ) : null}
             </div>
           </div>
         </div>
