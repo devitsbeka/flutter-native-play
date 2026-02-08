@@ -149,9 +149,9 @@ export default function TriviaLobby() {
   const samplePost = convertToSamplePost(trivia, creator);
 
   return (
-    <div className="min-h-screen bg-background pb-32">
-      {/* Hero Section with Cover */}
-      <div className="h-56 relative overflow-hidden">
+    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+      {/* Hero Section with Cover - fixed height */}
+      <div className="h-56 relative overflow-hidden flex-shrink-0">
         {trivia.cover_image ? (
           <>
             <img src={trivia.cover_image} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -200,183 +200,178 @@ export default function TriviaLobby() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4 space-y-4 -mt-6 relative z-10 max-w-xl mx-auto">
-        {/* Stats Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="flex items-center justify-center gap-6 bg-card rounded-2xl border border-border p-4"
-        >
-          <div className="flex items-center gap-1.5">
-            <img src={purpleHeart3d} alt="Likes" className="w-6 h-6 object-contain" />
-            <span className="font-bold text-foreground">{trivia.likes_count || 0}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <img src={bookmark3d} alt="Saves" className="w-6 h-6 object-contain" />
-            <span className="font-bold text-foreground">{trivia.saves_count || 0}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <img src={pushButton3d} alt="Plays" className="w-6 h-6 object-contain" />
-            <span className="font-bold text-foreground">{trivia.plays_count || 0}</span>
-          </div>
-        </motion.div>
-
-        {/* Leaderboard Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-card rounded-2xl border border-border overflow-hidden"
-        >
-          {/* Leaderboard Header */}
-          <div className="flex items-center gap-2 p-4 border-b border-border">
-            <img src={trophy3d} alt="" className="w-5 h-5 object-contain" />
-            <h2 className="font-bold text-foreground">ლიდერბორდი</h2>
-            <span className="text-xs text-muted-foreground ml-auto">{leaderboard.length} მოთამაშე</span>
-          </div>
-
-          {/* Leaderboard List */}
-          <div className="divide-y divide-border">
-            {leaderboard.length === 0 ? (
-              <div className="py-12 text-center">
-                <img src={pushButton3d} alt="" className="w-10 h-10 object-contain grayscale opacity-50 mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">ჯერ არავის უთამაშია</p>
-                <p className="text-muted-foreground/70 text-xs mt-1">იყავი პირველი!</p>
-              </div>
-            ) : (
-              leaderboard.map((entry, index) => {
-                const isCurrentUser = user?.id === entry.user_id;
-                const isExpanded = expandedUserId === entry.user_id;
-                return (
-                <motion.div
-                  key={`${entry.user_id}-${index}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.25 + index * 0.03 }}
-                  className={`flex items-center gap-3 p-3 ${
-                    isCurrentUser ? "bg-primary/10" : ""
-                  }`}
-                  onClick={() => {
-                    if (isCurrentUser) {
-                      setExpandedUserId(isExpanded ? null : entry.user_id);
-                    } else {
-                      openProfile(entry.user_id);
-                    }
-                  }}
-                >
-                  {/* Rank */}
-                  <div className="w-8 flex justify-center">
-                    {entry.rank <= 3 ? (
-                      <img
-                        src={MEDAL_ICONS[entry.rank as 1 | 2 | 3]}
-                        alt={`Rank ${entry.rank}`}
-                        className="w-6 h-6 object-contain"
-                      />
-                    ) : (
-                      <span className="text-sm font-bold text-muted-foreground">#{entry.rank}</span>
-                    )}
-                  </div>
-
-                  {/* Avatar */}
-                  <SafeAvatar
-                    avatarUrl={entry.avatar_url}
-                    fallback={entry.nickname || 'U'}
-                    className="w-9 h-9 border border-border"
-                    fallbackClassName="text-xs bg-muted"
-                  />
-
-                  {/* Name */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{entry.nickname}</p>
-                    <p className="text-xs text-muted-foreground">{formatGeorgianTimeAgo(new Date(entry.played_at))}</p>
-                  </div>
-
-                  {/* Score or Remove Button */}
-                  <AnimatePresence mode="wait">
-                    {isCurrentUser && isExpanded ? (
-                      <motion.button
-                        key="remove-btn"
-                        initial={{ opacity: 0, x: 20, scale: 0.8 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: 20, scale: 0.8 }}
-                        transition={{ duration: 0.2 }}
-                        disabled={isRemoving}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          setIsRemoving(true);
-                          try {
-                            await removeFromLeaderboard();
-                          } finally {
-                            setIsRemoving(false);
-                            setExpandedUserId(null);
-                          }
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold whitespace-nowrap disabled:opacity-50"
-                      >
-                        {isRemoving ? "იშლება..." : "წაშლა"}
-                      </motion.button>
-                    ) : (
-                      <motion.div
-                        key="score"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="text-right"
-                      >
-                        <p className="font-bold text-foreground">
-                          {entry.score}/{trivia.question_count}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-                );
-              })
-            )}
-          </div>
-        </motion.div>
-
-        {/* Info Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex items-start gap-2 px-2 py-3"
-        >
-          <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            ქულა ავტომატურად აისახება ლიდერბორდზე.
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Fixed Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background pb-6">
-        <div className="max-w-xl mx-auto space-y-2">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 -mt-6 relative z-10">
+        <div className="max-w-xl mx-auto space-y-4">
+          {/* Stats Bar */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-            className="space-y-2"
+            transition={{ delay: 0.15 }}
+            className="flex items-center justify-center gap-6 bg-card rounded-2xl border border-border p-4"
           >
-            {isOwner && (
-              <ChunkyButton 
-                variant="secondary" 
-                size="lg" 
-                className="w-full gap-2" 
-                onClick={() => setIsEditModalOpen(true)}
-              >
-                <Pencil className="w-5 h-5" />
-                რედაქტირება
-              </ChunkyButton>
-            )}
-            <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
-              <Play className="w-5 h-5 fill-current" />
-              ითამაშე
-            </ChunkyButton>
+            <div className="flex items-center gap-1.5">
+              <img src={purpleHeart3d} alt="Likes" className="w-6 h-6 object-contain" />
+              <span className="font-bold text-foreground">{trivia.likes_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <img src={bookmark3d} alt="Saves" className="w-6 h-6 object-contain" />
+              <span className="font-bold text-foreground">{trivia.saves_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <img src={pushButton3d} alt="Plays" className="w-6 h-6 object-contain" />
+              <span className="font-bold text-foreground">{trivia.plays_count || 0}</span>
+            </div>
           </motion.div>
+
+          {/* Leaderboard Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card rounded-2xl border border-border overflow-hidden"
+          >
+            {/* Leaderboard Header */}
+            <div className="flex items-center gap-2 p-4 border-b border-border">
+              <img src={trophy3d} alt="" className="w-5 h-5 object-contain" />
+              <h2 className="font-bold text-foreground">ლიდერბორდი</h2>
+              <span className="text-xs text-muted-foreground ml-auto">{leaderboard.length} მოთამაშე</span>
+            </div>
+
+            {/* Leaderboard List - scrollable */}
+            <div className="divide-y divide-border max-h-[50vh] overflow-y-auto">
+              {leaderboard.length === 0 ? (
+                <div className="py-12 text-center">
+                  <img src={pushButton3d} alt="" className="w-10 h-10 object-contain grayscale opacity-50 mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">ჯერ არავის უთამაშია</p>
+                  <p className="text-muted-foreground/70 text-xs mt-1">იყავი პირველი!</p>
+                </div>
+              ) : (
+                leaderboard.map((entry, index) => {
+                  const isCurrentUser = user?.id === entry.user_id;
+                  const isExpanded = expandedUserId === entry.user_id;
+                  return (
+                  <motion.div
+                    key={`${entry.user_id}-${index}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.25 + index * 0.03 }}
+                    className={`flex items-center gap-3 p-3 ${
+                      isCurrentUser ? "bg-primary/10" : ""
+                    }`}
+                    onClick={() => {
+                      if (isCurrentUser) {
+                        setExpandedUserId(isExpanded ? null : entry.user_id);
+                      } else {
+                        openProfile(entry.user_id);
+                      }
+                    }}
+                  >
+                    {/* Rank */}
+                    <div className="w-8 flex justify-center">
+                      {entry.rank <= 3 ? (
+                        <img
+                          src={MEDAL_ICONS[entry.rank as 1 | 2 | 3]}
+                          alt={`Rank ${entry.rank}`}
+                          className="w-6 h-6 object-contain"
+                        />
+                      ) : (
+                        <span className="text-sm font-bold text-muted-foreground">#{entry.rank}</span>
+                      )}
+                    </div>
+
+                    {/* Avatar */}
+                    <SafeAvatar
+                      avatarUrl={entry.avatar_url}
+                      fallback={entry.nickname || 'U'}
+                      className="w-9 h-9 border border-border"
+                      fallbackClassName="text-xs bg-muted"
+                    />
+
+                    {/* Name */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm truncate">{entry.nickname}</p>
+                      <p className="text-xs text-muted-foreground">{formatGeorgianTimeAgo(new Date(entry.played_at))}</p>
+                    </div>
+
+                    {/* Score or Remove Button */}
+                    <AnimatePresence mode="wait">
+                      {isCurrentUser && isExpanded ? (
+                        <motion.button
+                          key="remove-btn"
+                          initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          exit={{ opacity: 0, x: 20, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}
+                          disabled={isRemoving}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setIsRemoving(true);
+                            try {
+                              await removeFromLeaderboard();
+                            } finally {
+                              setIsRemoving(false);
+                              setExpandedUserId(null);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold whitespace-nowrap disabled:opacity-50"
+                        >
+                          {isRemoving ? "იშლება..." : "წაშლა"}
+                        </motion.button>
+                      ) : (
+                        <motion.div
+                          key="score"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="text-right"
+                        >
+                          <p className="font-bold text-foreground">
+                            {entry.score}/{trivia.question_count}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+
+          {/* Info Footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex items-start gap-2 px-2 py-3 pb-4"
+          >
+            <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              ქულა ავტომატურად აისახება ლიდერბორდზე.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom Buttons - always visible */}
+      <div className="flex-shrink-0 p-4 pb-6 bg-background border-t border-border/50">
+        <div className="max-w-xl mx-auto space-y-2">
+          {isOwner && (
+            <ChunkyButton 
+              variant="secondary" 
+              size="lg" 
+              className="w-full gap-2" 
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              <Pencil className="w-5 h-5" />
+              რედაქტირება
+            </ChunkyButton>
+          )}
+          <ChunkyButton variant="primary" size="lg" className="w-full gap-2" onClick={handlePlay}>
+            <Play className="w-5 h-5 fill-current" />
+            ითამაშე
+          </ChunkyButton>
         </div>
       </div>
 
