@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+
 import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass } from "lucide-react";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
@@ -205,11 +205,9 @@ export function PlayerFeedItem({
   const gradientProps = getGradientProps(coverGradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
 
   return (
-    <motion.div
+    <div
       className="overflow-hidden"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      style={{ touchAction: 'manipulation' }}
     >
       {/* Player Header */}
       <div className="p-3 flex items-center justify-between bg-white/60 dark:bg-card/60 backdrop-blur-sm rounded-t-2xl border border-border/30">
@@ -364,6 +362,6 @@ export function PlayerFeedItem({
           }
         }}
       />
-    </motion.div>
+    </div>
   );
 }
