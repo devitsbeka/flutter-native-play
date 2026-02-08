@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -210,9 +211,9 @@ export function FeedPost({ post, index, onPlay, userLikes, userSaves, userPlays,
             <div className="relative">
               <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600">
                 <div className="w-full h-full rounded-full overflow-hidden bg-background p-[2px]">
-                  {post.avatarUrl ? (
+                  {resolveAvatarUrl(post.avatarUrl) ? (
                     <img 
-                      src={post.avatarUrl} 
+                      src={resolveAvatarUrl(post.avatarUrl)!}
                       alt={post.displayName}
                       className="w-full h-full rounded-full object-cover"
                     />
