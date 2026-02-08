@@ -1,50 +1,56 @@
 
 
-## Fix Stale Avatars on Room Cards + Delete Two Accounts
+## Scroll to Filter Bar Position (Not Page Top) When Searching
 
-### Problem 1: Old Avatars on Room Cards
+### Problem
 
-The room cards in "ჩემი ტრივია" show stale avatars because `useMyRooms.ts` reads `avatar_url` directly from the `room_participants` table (line 154), which stores a **snapshot** of the avatar at the time the user joined the room. When a user updates their avatar in their profile, this snapshot is not updated, so the room cards keep showing the old avatar.
+When a user scrolls down and then starts searching, the app scrolls to `top: 0` which brings the full header (logo, friends bar, tabs) into view. This pushes the first search result below the fold. The user wants to see search results immediately, starting from the first one.
 
-In contrast, the room lobby (`useRoomParticipants.ts`) correctly fetches fresh avatars from the `profiles` table -- but the room cards listing does not.
+### Current Layout Stack (inside `#main-scroll-container`)
 
-### Fix
-
-**File: `src/hooks/useMyRooms.ts`** (around lines 150-228)
-
-After fetching all participants from `room_participants`, add a second query to fetch fresh `avatar_url` from the `profiles` table for all participant user IDs, then merge the fresh avatars into the participant data (same pattern used in `useRoomParticipants.ts`).
-
-```
-// After fetching allParticipants from room_participants:
-// Fetch fresh avatar URLs from profiles
-const { data: freshProfiles } = await supabase
-  .from("profiles")
-  .select("user_id, avatar_url")
-  .in("user_id", allParticipantUserIds);
-
-const profileAvatarMap = new Map(freshProfiles?.map(p => [p.user_id, p.avatar_url]) || []);
-
-// Then when building participant data, use:
-avatar_url: profileAvatarMap.get(p.user_id) || p.avatar_url
+```text
++----------------------------+
+| Logo / QR / Notifications  |  <- sticky z-20
+| Friends Stories Bar         |
+| Tabs (Explore/Rooms/etc)   |
++----------------------------+
+| Filter/Search Bar           |  <- sticky z-30 (overlaps header when scrolled)
++----------------------------+
+| First result                |  <- THIS should be visible after search
+| Second result               |
+| ...                         |
++----------------------------+
 ```
 
-This ensures room cards always display the latest avatar from profiles, falling back to the stored snapshot only if the profile lookup fails.
+Currently `scrollToTop()` scrolls to position 0, showing the entire header. The user wants it to scroll just past the header so the sticky filter bar sits at the top and the first result is immediately visible.
 
-### Problem 2: Delete Two Accounts
+### Solution
 
-Delete these two accounts and all their associated data:
+1. Add an `id` attribute to the filter bar's sticky container in `TeamV2.tsx` so we can calculate its offset position
+2. Update `scrollToTop()` in both `UnifiedFiltersBar.tsx` and `FeedFiltersBar.tsx` to scroll to the filter bar's `offsetTop` rather than to `0`
 
-| Nickname | User ID |
-|----------|---------|
-| Mako | `79fa0a90-eef4-444b-b8e4-4e29490d6613` |
-| hhjjh | `62cdca87-5781-4ce1-b9e5-b5f54800357c` |
+This way the header/friends/tabs scroll out of view, the filter bar sticks to the top of the viewport, and the first search result appears right below it.
 
-This will be done via a database migration that deletes their data from all related tables (same order as the `delete-user-account` edge function) and then removes their auth accounts using `auth.users`.
+### Technical Details
 
-### Summary of Changes
+| File | Change |
+|------|--------|
+| `src/pages/TeamV2.tsx` | Add `id="sticky-filter-bar"` to the sticky filter bar container div (the `div` at line 617 with `className="sticky top-0 z-30..."`) |
+| `src/components/team/UnifiedFiltersBar.tsx` | Update `scrollToTop()` to first try scrolling the filter bar element into position via its `offsetTop`, falling back to `top: 0` |
+| `src/components/social/FeedFiltersBar.tsx` | Same `scrollToTop()` update for consistency |
 
-| Item | File/Action |
-|------|-------------|
-| Fresh avatars on room cards | Edit `src/hooks/useMyRooms.ts` -- add profiles query and merge fresh avatar URLs |
-| Delete Mako + hhjjh accounts | Database migration to delete all user data across all tables and auth |
+The updated scroll logic:
 
+```
+const scrollToTop = () => {
+  const container = document.getElementById('main-scroll-container');
+  const filterBar = document.getElementById('sticky-filter-bar');
+  if (container && filterBar) {
+    container.scrollTo({ top: filterBar.offsetTop, behavior: 'smooth' });
+  } else {
+    container?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+```
+
+This scrolls the main container so the filter bar is exactly at the top edge, making the first search result immediately visible below the sticky search bar.
