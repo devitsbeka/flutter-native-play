@@ -19,8 +19,6 @@ export function DesktopPlayButtonLarge({
   isGuest = false,
 }: DesktopPlayButtonLargeProps) {
   const isExhausted = !canPlay && playsRemaining === 0;
-  // For guests, button should still be clickable when exhausted to show auth modal
-  const isDisabled = isExhausted && !isGuest;
   
   // Get button styling based on state
   const getButtonStyle = () => {
@@ -70,16 +68,14 @@ export function DesktopPlayButtonLarge({
 
       <motion.button
         onClick={onClick}
-        disabled={isDisabled}
         className={`
           relative rounded-full flex items-center justify-center gap-3
           h-16 px-12 min-w-[200px]
-          transition-all duration-200
-          ${isDisabled ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}
+          transition-all duration-200 cursor-pointer
         `}
         style={getButtonStyle()}
-        whileHover={!isDisabled ? { scale: 1.03, y: -3 } : {}}
-        whileTap={!isDisabled ? { scale: 0.97, y: 0 } : {}}
+        whileHover={{ scale: 1.03, y: -3 }}
+        whileTap={{ scale: 0.97, y: 0 }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
