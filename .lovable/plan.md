@@ -1,33 +1,52 @@
 
+## Fix Save/Like Count + Increase Stats Visibility on Explore Feed Cards
 
-## Fix: Make Exhausted Play Button Clickable to Show PRO Modal
+### Problem 1: Save/Like Counts Show 0 After Click
 
-### Problem
+When you click the save or like button on the explore feed, the count doesn't update because the mutation in `useSocialFeed.ts` only invalidates `quiz-posts-with-profiles` and `my-quiz-posts` query keys. The explore feed uses different queries (`player-feed-items` and `explore-creators`) which are never refreshed after a save/like action.
 
-On the home screen (desktop/tablet), when a user has exhausted their 5 lifetime free plays, the large "ითამაშე" button turns gray with an hourglass icon and becomes **disabled**. This means clicking it does nothing -- the user can't trigger the PRO upgrade modal.
+### Problem 2: Stats Too Small
 
-The `handlePlayClick` function in `Index.tsx` already has the correct logic to show the PRO modal when plays are exhausted (line 242-246), but the button's `disabled` attribute prevents the click event from reaching that handler.
-
-The mobile bottom nav play button does NOT have this issue -- it's always clickable.
+The like, save, and play icons and counts are currently at a base size (20px icons, 14px text) which is hard to tap on mobile and hard to read on desktop.
 
 ### Solution
 
-Remove the `disabled` attribute from the `DesktopPlayButtonLarge` button so the click handler fires even when plays are exhausted. The button will still appear gray (visual indication of exhaustion), but clicking it will now trigger `handlePlayClick`, which shows the PlayLimitModal with PRO upgrade options.
+#### 1. Fix Count Refresh (useSocialFeed.ts)
+
+Add `player-feed-items` and `explore-creators` to the invalidation lists in both `likeMutation.onSettled` and `saveMutation.onSettled`. This ensures the explore feed re-fetches fresh data (including updated `likes_count` and `saves_count`) after a like or save action.
+
+#### 2. Increase Icons, Counts, and Gaps (PlayerFeedItem.tsx + TriviaPortfolioCard.tsx)
+
+Apply a 15% scale increase to the stats section in both mobile and desktop card components:
+
+- Icons: `w-5 h-5` (20px) becomes custom `w-[26px] h-[26px]` (26px -- approximately 15% larger for better visibility)
+- Count text: `text-sm` (14px) becomes custom `text-[17px]` (17px)
+- Gap between icon and count: `gap-1.5` (6px) stays at `gap-1.5` for tightness
+- Gap between stat groups (like vs save): `gap-3` (12px) becomes `gap-6` (24px) for more finger-friendly spacing
 
 ### Technical Details
 
-**File: `src/components/home/DesktopPlayButtonLarge.tsx`**
+**File: `src/hooks/useSocialFeed.ts`**
 
-1. Remove the `isDisabled` variable (line 23) or repurpose it for styling only
-2. Remove `disabled={isDisabled}` from the `motion.button` (line 73)
-3. Keep the visual styling -- the button still turns gray and shows hourglass when exhausted
-4. Remove `cursor-not-allowed` from className since it's always clickable now
+In `likeMutation.onSettled` (around line 186-190): Add invalidation of `player-feed-items` and `explore-creators` query keys.
 
-This way:
-- Button always looks gray when exhausted (visual feedback preserved)
-- Clicking the gray button calls `handlePlayClick`
-- `handlePlayClick` checks `canPlay` is false, shows the PlayLimitModal with PRO upgrade and regen timer
-- Users can see the "Become PRO" option and the free play regeneration countdown
+In `saveMutation.onSettled` (around line 243-248): Add invalidation of `player-feed-items` and `explore-creators` query keys.
+
+**File: `src/components/social/PlayerFeedItem.tsx`**
+
+Update the stats section (lines 299-324):
+- Stats container gap: `gap-3` to `gap-6`
+- Icon images: `w-5 h-5` to `w-[26px] h-[26px]`
+- Count text: `text-sm` to `text-[17px]`
+
+**File: `src/components/social/TriviaPortfolioCard.tsx`**
+
+Update the stats section (lines 142-168):
+- Stats container gap: `gap-[14px]` to `gap-6`
+- Icon images: `w-5 h-5` to `w-[26px] h-[26px]`
+- Count text: `text-sm` to `text-[17px]`
 
 ### Files Changed
-- `src/components/home/DesktopPlayButtonLarge.tsx` -- remove disabled state, keep visual exhausted styling
+- `src/hooks/useSocialFeed.ts` -- add query invalidation for explore feed queries
+- `src/components/social/PlayerFeedItem.tsx` -- increase icon/text/gap sizes
+- `src/components/social/TriviaPortfolioCard.tsx` -- increase icon/text/gap sizes
