@@ -75,23 +75,32 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      const allFriends: Friend[] = friendships.map(f => {
-        const friendId = f.user_id === user.id ? f.friend_id : f.user_id;
-        const profile = profileMap.get(friendId);
-        const isOutgoing = f.user_id === user.id;
+      const allFriends: Friend[] = friendships
+        .filter(f => {
+          // Filter out deleted accounts (no profile or "[წაშლილი]" nickname)
+          const friendId = f.user_id === user.id ? f.friend_id : f.user_id;
+          const profile = profileMap.get(friendId);
+          if (!profile) return false;
+          if (profile.nickname === "[წაშლილი]") return false;
+          return true;
+        })
+        .map(f => {
+          const friendId = f.user_id === user.id ? f.friend_id : f.user_id;
+          const profile = profileMap.get(friendId)!;
+          const isOutgoing = f.user_id === user.id;
 
-        return {
-          id: f.id,
-          friendId,
-          nickname: profile?.nickname || "მოთამაშე",
-          avatarUrl: profile?.avatar_url || null,
-          animatedAvatarUrl: profile?.animated_avatar_url || null,
-          countryCode: profile?.country_code || null,
-          status: f.status as "pending" | "accepted" | "blocked",
-          isOutgoing,
-          isOnline: onlineUsers.has(friendId),
-        };
-      });
+          return {
+            id: f.id,
+            friendId,
+            nickname: profile.nickname,
+            avatarUrl: profile.avatar_url || null,
+            animatedAvatarUrl: profile.animated_avatar_url || null,
+            countryCode: profile.country_code || null,
+            status: f.status as "pending" | "accepted" | "blocked",
+            isOutgoing,
+            isOnline: onlineUsers.has(friendId),
+          };
+        });
 
       const acceptedFriends = allFriends.filter(f => f.status === "accepted");
       const newPendingRequests = allFriends.filter(f => f.status === "pending" && !f.isOutgoing);
