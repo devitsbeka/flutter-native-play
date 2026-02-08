@@ -165,21 +165,13 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
   // Custom header icon - power bottle only, coins moved to header right
   const headerIcon = (
     <div className="flex flex-col items-center gap-2">
-      <motion.div
-        className="relative w-16 h-16 rounded-full flex items-center justify-center"
-        style={{
-          background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
-          boxShadow: "0 4px 0 #C4B5FD, inset 0 2px 4px rgba(255, 255, 255, 0.6)",
-        }}
-      >
-        <motion.img
-          src={powerIcon}
-          alt="Powers"
-          className="w-12 h-12 object-contain drop-shadow-md"
-          animate={{ y: [0, -3, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </motion.div>
+      <motion.img
+        src={powerIcon}
+        alt="Powers"
+        className="w-14 h-14 object-contain drop-shadow-md"
+        animate={{ y: [0, -3, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      />
     </div>
   );
 
@@ -202,7 +194,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       subtitle={t('shop.buyPowers')}
       showSparkles
       headerActions={headerRight}
-      className="-mt-[70px]"
+      className="-mt-[100px]"
     >
       <div className="relative">
         {/* Power-up preview */}
