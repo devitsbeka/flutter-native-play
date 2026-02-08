@@ -1,15 +1,13 @@
 // Fake opponent data for simulated matchmaking
 
-import botAvatar1 from "@/assets/avatars/bot-avatar-1.png";
-import botAvatar2 from "@/assets/avatars/bot-avatar-2.png";
-import botAvatar3 from "@/assets/avatars/bot-avatar-3.png";
-import botAvatar4 from "@/assets/avatars/bot-avatar-4.png";
-import botAvatar5 from "@/assets/avatars/bot-avatar-5.png";
-import botAvatar6 from "@/assets/avatars/bot-avatar-6.png";
-import botAvatar7 from "@/assets/avatars/bot-avatar-7.png";
-import botAvatar8 from "@/assets/avatars/bot-avatar-8.png";
-import botAvatar9 from "@/assets/avatars/bot-avatar-9.png";
-import botAvatar10 from "@/assets/avatars/bot-avatar-10.png";
+import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
+import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
+import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
+import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
+import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
+import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
+import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
+import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 
 export interface FakeOpponent {
   name: string;
@@ -21,70 +19,73 @@ export interface FakeOpponent {
   avatarUrl: string;
 }
 
-const botAvatars = [
-  botAvatar1,
-  botAvatar2,
-  botAvatar3,
-  botAvatar4,
-  botAvatar5,
-  botAvatar6,
-  botAvatar7,
-  botAvatar8,
-  botAvatar9,
-  botAvatar10,
+const mascotAvatars = [
+  mascotAvatar1,
+  mascotAvatar2,
+  mascotAvatar3,
+  mascotAvatar4,
+  mascotAvatar5,
+  mascotAvatar6,
+  mascotAvatar7,
+  mascotAvatar8,
 ];
 
-const firstNames = [
-  "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery",
-  "Skyler", "Dakota", "Jamie", "Reese", "Phoenix", "Sage", "Rowan", "Blake",
-  "Cameron", "Drew", "Finley", "Harper", "Kai", "Logan", "Parker", "Peyton",
-  "Yuki", "Hiroshi", "Sakura", "Chen", "Wei", "Ming", "Raj", "Priya", "Amit",
-  "Sofia", "Lucas", "Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan", "Isabella",
-  "Marco", "Lucia", "Hans", "Greta", "Pierre", "Marie", "Carlos", "Elena",
-  "Ivan", "Natasha", "Ahmed", "Fatima", "Jin", "Hana", "Leo", "Mia"
+const georgianFirstNames = [
+  "გიორგი", "მარიამი", "ნიკა", "ანა", "დავითი", "ელენე", "ლუკა", "თამარი",
+  "ნინო", "ალექსანდრე", "სოფია", "ილია", "ბარბარე", "გიო", "ნატო", "თეკო",
+  "ლიკა", "ზურა", "ნანა", "მაკო", "ბექა", "რატი", "კოტე", "ანი",
+  "სანდრო", "თაკო", "ირაკლი", "ეკა", "ლაშა", "მანანა", "გვანცა", "ბაჩო",
+  "ტატო", "მარი", "თორნიკე", "ქეთი", "ლევანი", "თეა", "ნიკოლოზი", "მაია",
 ];
 
-const lastNames = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-  "Rodriguez", "Martinez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore",
-  "Tanaka", "Yamamoto", "Suzuki", "Wang", "Zhang", "Li", "Kim", "Park", "Lee",
-  "Patel", "Singh", "Kumar", "Silva", "Santos", "Oliveira", "Mueller", "Schmidt",
-  "Dubois", "Bernard", "Rossi", "Ferrari", "Ivanov", "Petrov", "Hassan", "Ali"
+const georgianLastInitials = [
+  "კ.", "გ.", "ბ.", "ჩ.", "თ.", "მ.", "ლ.", "ს.",
+  "ხ.", "ჯ.", "წ.", "ფ.", "დ.", "რ.", "ა.", "ზ.",
+  "ნ.", "პ.", "ე.", "შ.",
 ];
 
 export const countries = [
+  { code: "GE", name: "Georgia", flag: "🇬🇪" },
   { code: "US", name: "United States", flag: "🇺🇸" },
   { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "CA", name: "Canada", flag: "🇨🇦" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
   { code: "DE", name: "Germany", flag: "🇩🇪" },
   { code: "FR", name: "France", flag: "🇫🇷" },
   { code: "IT", name: "Italy", flag: "🇮🇹" },
   { code: "ES", name: "Spain", flag: "🇪🇸" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "KR", name: "South Korea", flag: "🇰🇷" },
-  { code: "CN", name: "China", flag: "🇨🇳" },
-  { code: "IN", name: "India", flag: "🇮🇳" },
-  { code: "BR", name: "Brazil", flag: "🇧🇷" },
-  { code: "MX", name: "Mexico", flag: "🇲🇽" },
-  { code: "AR", name: "Argentina", flag: "🇦🇷" },
+  { code: "TR", name: "Turkey", flag: "🇹🇷" },
   { code: "RU", name: "Russia", flag: "🇷🇺" },
-  { code: "PL", name: "Poland", flag: "🇵🇱" },
-  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
-  { code: "SE", name: "Sweden", flag: "🇸🇪" },
-  { code: "NO", name: "Norway", flag: "🇳🇴" },
-  { code: "DK", name: "Denmark", flag: "🇩🇰" },
-  { code: "FI", name: "Finland", flag: "🇫🇮" },
-  { code: "PT", name: "Portugal", flag: "🇵🇹" },
-  { code: "IE", name: "Ireland", flag: "🇮🇪" },
-  { code: "NZ", name: "New Zealand", flag: "🇳🇿" },
-  { code: "SG", name: "Singapore", flag: "🇸🇬" },
-  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
-  { code: "TH", name: "Thailand", flag: "🇹🇭" },
-  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
-  { code: "PH", name: "Philippines", flag: "🇵🇭" },
-  { code: "GE", name: "Georgia", flag: "🇬🇪" },
+  { code: "UA", name: "Ukraine", flag: "🇺🇦" },
+  { code: "AM", name: "Armenia", flag: "🇦🇲" },
+  { code: "AZ", name: "Azerbaijan", flag: "🇦🇿" },
 ];
+
+// Weighted country distribution — heavily favoring Georgia
+const countryWeights = [
+  { code: "GE", weight: 70 },
+  { code: "US", weight: 4 },
+  { code: "GB", weight: 3 },
+  { code: "DE", weight: 3 },
+  { code: "FR", weight: 3 },
+  { code: "IT", weight: 2 },
+  { code: "ES", weight: 2 },
+  { code: "TR", weight: 4 },
+  { code: "RU", weight: 3 },
+  { code: "UA", weight: 2 },
+  { code: "AM", weight: 2 },
+  { code: "AZ", weight: 2 },
+];
+
+function getWeightedCountry() {
+  const totalWeight = countryWeights.reduce((sum, c) => sum + c.weight, 0);
+  let random = Math.random() * totalWeight;
+  for (const entry of countryWeights) {
+    random -= entry.weight;
+    if (random <= 0) {
+      return countries.find(c => c.code === entry.code)!;
+    }
+  }
+  return countries[0]; // fallback to GE
+}
 
 const avatarEmojis = ["😎", "🤓", "🧐", "😏", "🤔", "😊", "🙂", "🤠", "👻", "🦊", "🐱", "🐶", "🦁", "🐯", "🐼", "🐨", "🦄", "🐲", "👾", "🤖"];
 
@@ -104,16 +105,16 @@ export function getRankFromPoints(points: number): { name: string; color: string
 }
 
 export function generateFakeOpponent(): FakeOpponent {
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-  const country = countries[Math.floor(Math.random() * countries.length)];
+  const firstName = georgianFirstNames[Math.floor(Math.random() * georgianFirstNames.length)];
+  const lastInitial = georgianLastInitials[Math.floor(Math.random() * georgianLastInitials.length)];
+  const country = getWeightedCountry();
   const points = Math.floor(Math.random() * 15000) + 500;
   const rankInfo = getRankFromPoints(points);
   const avatarEmoji = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
-  const avatarUrl = botAvatars[Math.floor(Math.random() * botAvatars.length)];
+  const avatarUrl = mascotAvatars[Math.floor(Math.random() * mascotAvatars.length)];
 
   return {
-    name: `${firstName}${lastName.charAt(0)}`,
+    name: `${firstName} ${lastInitial}`,
     countryCode: country.code,
     countryName: country.name,
     points,

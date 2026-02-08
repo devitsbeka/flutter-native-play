@@ -183,3 +183,7 @@ verify_jwt = true
 
 [functions.resolve-question-quality]
 verify_jwt = true
+
+# --- SEEDING (one-time use, admin only) ---
+[functions.seed-sample-content]
+verify_jwt = false
