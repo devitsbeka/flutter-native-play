@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { FeatureOnboardingCarousel, hasSeenFeatureOnboarding } from "@/components/team/FeatureOnboardingCarousel";
 import { useNavigate } from "react-router-dom";
 import { Plus, Play, Loader2, Globe, Lock, ChevronDown, ChevronUp, Layers, Pencil, FileEdit, Trash2, Check, PartyPopper } from "lucide-react";
 import triviaBuzzerIcon from "@/assets/trivia-buzzer.png";
@@ -87,6 +88,7 @@ interface MyTriviaTabProps {
   sortFilter?: SortFilter;
   onPlay?: (post: any, collectionPosts?: any[]) => void;
   onEditingRoundChange?: (isEditing: boolean) => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 // Compact quiz card for inside collections
@@ -908,7 +910,7 @@ function StandaloneQuizCard({
     </motion.div>
   );
 }
-export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay, onEditingRoundChange }: MyTriviaTabProps) {
+export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft, searchQuery = "", sortFilter = "all", onPlay, onEditingRoundChange, onNavigateToTab }: MyTriviaTabProps) {
   const queryClient = useQueryClient();
   const { data: myPosts, isLoading: postsLoading } = useMyQuizPosts();
   const { data: myCollections, isLoading: collectionsLoading } = useMyCollections();
@@ -920,6 +922,9 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
   const [editingRound, setEditingRound] = useState<any>(null);
   const [expandedCollectionId, setExpandedCollectionId] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  
+  // Feature onboarding state
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => hasSeenFeatureOnboarding());
   
   // Play mode modal state for locked trivias
   const [playModeTrivia, setPlayModeTrivia] = useState<any>(null);
@@ -1265,27 +1270,39 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
 
     const { title, description } = getEmptyStateMessage();
 
+    // Show onboarding carousel for new users who haven't seen it
+    if (!hasSeenOnboarding && sortFilter === "all") {
+      return (
+        <FeatureOnboardingCarousel
+          onNavigateToTab={onNavigateToTab}
+          onComplete={() => setHasSeenOnboarding(true)}
+        />
+      );
+    }
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center py-16 px-6"
+        className="px-4"
       >
-        <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
-          <img src={triviaBuzzerIcon} alt="" className="w-full h-full object-contain" />
+        <div className="bg-card border border-border rounded-2xl flex flex-col items-center justify-center py-12 px-6">
+          <div className="w-20 h-20 rounded-2xl overflow-hidden mb-4">
+            <img src={triviaBuzzerIcon} alt="" className="w-full h-full object-contain" />
+          </div>
+          
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            {sortFilter === "all" ? "ტრივიები ჯერ არ გაქვს" : title}
+          </h3>
+          
+          <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
+            {description}
+          </p>
+          
+          {onCreateQuiz && sortFilter === "all" && (
+            <ChunkyButton onClick={onCreateQuiz}>+ ტრივია</ChunkyButton>
+          )}
         </div>
-        
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          {sortFilter === "all" ? "ტრივიები ჯერ არ გაქვს" : title}
-        </h3>
-        
-        <p className="text-muted-foreground text-center text-sm max-w-xs mb-6">
-          {description}
-        </p>
-        
-        {onCreateQuiz && sortFilter === "all" && (
-          <ChunkyButton onClick={onCreateQuiz}>+ ტრივია</ChunkyButton>
-        )}
       </motion.div>
     );
   }

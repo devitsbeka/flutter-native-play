@@ -700,6 +700,7 @@ function TeamContentV2() {
                   }}
                   searchQuery={searchQuery}
                   sortFilter={sortFilter}
+                  onNavigateToTab={handleTabChange}
                 />
               )}
             </div>
