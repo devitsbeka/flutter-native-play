@@ -1,40 +1,34 @@
 
-
-## Fix "x კითხვა" Badge Black Rectangle Flash on Scroll
+## Fix: Trivia Leaderboard Not Showing Players
 
 ### Problem
 
-When scrolling on the explore page, the "7 კითხვა" question count badge on trivia cards briefly renders as a black rectangle before appearing correctly. This happens because `backdrop-blur-sm` forces the browser to create a separate compositing layer and sample the pixels behind it -- during rapid scrolling with framer-motion entrance animations (opacity + transform), the backdrop-blur layer can't resolve its background in time and flashes black.
+The leaderboard on the trivia lobby page shows "0 მოთამაშე" and "ჯერ არავის უთამაშია" (No one has played yet) even though the trivia has 54 plays. This happens because the database security policy on `quiz_post_plays` only allows users to see **their own** play records:
 
-### Root Cause
+```
+SELECT policy: auth.uid() = user_id
+```
 
-The `backdrop-blur-sm` CSS property on the badge requires the GPU to:
-1. Render everything behind the element
-2. Apply a blur filter to that content
-3. Composite the blurred result under the badge
-
-When combined with framer-motion's `initial={{ opacity: 0, y: 20 }}` entrance animations on each card, the backdrop source isn't ready during the first paint frames, causing the black flash.
+When the leaderboard query fetches all plays for a trivia, the database silently filters out other users' plays, returning only the current user's data (or nothing if they haven't played).
 
 ### Solution
 
-Replace `backdrop-blur-sm` with a slightly more opaque solid background (`bg-black/60`) on the question count badge. This eliminates the GPU compositing overhead entirely while maintaining the same visual appearance (dark pill with white text over a gradient). The badge is small enough that the blur effect was barely perceptible anyway.
+Update the SELECT policy on `quiz_post_plays` to allow **anyone** (authenticated) to read all play records. The table only contains `user_id`, `post_id`, `score`, and `played_at` -- no sensitive information. This is the same pattern used for likes, saves, and other social engagement tables.
 
-Apply the same fix to the "played" badge in `TriviaPortfolioCard.tsx` which has the same issue with `bg-emerald-500/90 backdrop-blur-sm`.
+### Technical Details
 
-### Changes
+**Database migration** -- replace the existing restrictive SELECT policy with a public one:
 
-#### 1. `src/components/social/PlayerFeedItem.tsx`
-- **Line 289**: Change the question count badge from `bg-black/40 backdrop-blur-sm` to `bg-black/60` (removes blur, increases opacity for readability)
+```sql
+DROP POLICY "Users can view their own plays" ON quiz_post_plays;
 
-#### 2. `src/components/social/TriviaPortfolioCard.tsx`
-- **Line 119**: Change the "played" badge from `bg-emerald-500/90 backdrop-blur-sm` to `bg-emerald-500` (solid background, no blur)
-- **Line 133**: Change the question count badge from `bg-black/40 backdrop-blur-sm` to `bg-black/60` (same fix as PlayerFeedItem)
+CREATE POLICY "Anyone can view plays"
+  ON quiz_post_plays
+  FOR SELECT
+  USING (true);
+```
 
-#### 3. `src/components/social/FeedPost.tsx`
-- **Lines 332 and 335**: Change `bg-white/20 backdrop-blur-sm` to `bg-white/30` on the question count and answer format badges (same pattern fix)
+This single change will fix the leaderboard without requiring any code changes. The existing `useTriviaLobby` hook already fetches plays correctly -- it was just being blocked by the row-level security.
 
 ### Files Changed
-- `src/components/social/PlayerFeedItem.tsx` -- remove backdrop-blur from question count badge
-- `src/components/social/TriviaPortfolioCard.tsx` -- remove backdrop-blur from played badge and question count badge
-- `src/components/social/FeedPost.tsx` -- remove backdrop-blur from stats badges
-
+- Database policy update only (no code file changes needed)
