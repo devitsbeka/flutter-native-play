@@ -1,56 +1,59 @@
 
+## Fix: Video Quality & Playback on Discover + Category Pages
 
-## Fix: Tap Delay on Feed Cards + Slow Scroll Performance
+### Issue 1: Category Page Header Video - Poor Quality on Mobile
 
-### Problem 1: Cards still require multiple taps on mobile
+**Root cause**: The `PingPongVideo` component uses `useResponsiveVideo()` which serves mobile WebM files at 480px width (CRF 30) for ANY mobile viewport. But the category page header spans the full screen width at 48vh height -- this requires much higher resolution than a small card thumbnail.
 
-The `touch-action: manipulation` on the body and card div is correct but insufficient. The real culprits are:
+On an iPhone 14 Pro (390px @ 3x = 1170 physical pixels), a 480px WebM is being stretched to fill 1170+ physical pixels, resulting in visible blurriness.
 
-1. **Double motion.div wrappers**: Each feed card is wrapped in TWO `motion.div` layers -- one in `ExplorePortfolioFeed.tsx` (the list wrapper with staggered delay) and another inside `PlayerFeedItem.tsx` itself. Framer Motion intercepts touch/pointer events for its gesture system, which can swallow or delay tap events on mobile.
+**Fix**: Add an optional `forceDesktop` prop to `PingPongVideo` that bypasses the mobile WebM and always serves the desktop 720px WebM. Use this prop in the `CategoryPage.tsx` header where the video fills the screen.
 
-2. **Staggered animation delays**: The feed applies `delay: index * 0.05` to each card. For 15+ cards, later items have 750ms+ animation delays during which touch events may behave inconsistently.
+### Issue 2: Discover Page - Videos Not Playing / Blank Cards
 
-3. **The card's `onClick` is on a nested div**, but the outer `motion.div` with animation props can interfere with event propagation on touch devices.
+**Root cause**: The Discover page uses `CategoryCarousel` which renders multiple `AirbnbCategoryCard` components, each containing a `PingPongVideo`. The `videoLoadQueue` limits concurrent video downloads to 3, so only 3 cards load at a time. When scrolling horizontally, cards that leave the viewport release their slot, but new cards entering the view have to wait.
 
-### Problem 2: Scroll is slow and not smooth on published URL
+The real problem is that the `PingPongVideo` already has IntersectionObserver logic to play/pause based on visibility, but the load queue (max 3 concurrent) combined with multiple carousels creates contention. The user sees blank pastel backgrounds where videos are queued but not yet loaded.
 
-1. **`scroll-smooth` CSS class** on `#main-scroll-container` in `MainLayout.tsx` enables CSS smooth scrolling for ALL scroll interactions, not just programmatic ones. On mobile Safari/WebKit, this makes finger-swipe scrolling feel sluggish and delayed because the browser applies easing to every scroll movement.
+**Fix**: Implement a "play only the centered/visible card" strategy for the carousel:
+- In `PingPongVideo`, add support for an `active` prop that controls whether the video should play
+- When `active=false`, pause the video and release the load queue slot
+- In `CategoryCarousel`, track which card is most centered in the scroll viewport using an IntersectionObserver with a tighter threshold, and only set `active=true` for the most visible card
+- This ensures only 1 video per carousel loads at a time, freeing slots for other carousels
 
-2. **`-webkit-overflow-scrolling: auto`** in `index.css` on the body element disables iOS momentum/inertial scrolling. The default is `touch` which gives the native "fling" feel. Setting it to `auto` makes scrolling stop immediately when the finger lifts.
+### Changes
 
-3. **Framer Motion animations on every feed item** with `opacity` and `y` transforms during scroll cause layout recalculations and compositing overhead, making the scroll jank.
+**File: `src/components/shared/PingPongVideo.tsx`**
+1. Add `forceDesktopQuality?: boolean` prop -- when true, skip the mobile WebM and use desktop WebM directly
+2. Add `active?: boolean` prop (default `true`) -- when false, don't load or play the video
+3. Update the responsive video logic to respect `forceDesktopQuality`
+4. Update the IntersectionObserver + queue logic to also check `active` state
 
----
+**File: `src/pages/CategoryPage.tsx`**
+1. Add `forceDesktopQuality` to the header `PingPongVideo` to always serve 720px WebM instead of 480px mobile variant
 
-### Solution
+**File: `src/components/discover/AirbnbCategoryCard.tsx`**
+1. Accept new `isVideoActive?: boolean` prop and pass it to `PingPongVideo` as `active`
 
-#### File: `src/index.css`
+**File: `src/components/discover/CategoryCarousel.tsx`**
+1. Use IntersectionObserver on each card with `threshold: 0.7` to detect which card is most visible
+2. Track `activeCardIndex` state
+3. Pass `isVideoActive={index === activeCardIndex}` to each `AirbnbCategoryCard`
+4. On scroll stop, only the centered card's video plays -- all others show their poster image
 
-1. Remove `-webkit-overflow-scrolling: auto` from body (line 200) -- let iOS use its default momentum scrolling (`touch`)
-2. Also remove it from `#main-scroll-container` (line 208) for the same reason
+**File: `scripts/convert-videos-webm.sh`** (recommendation only, not a code change)
+- For future re-encodes: increase `MOBILE_MAX_WIDTH` from 480 to 540 and lower `MOBILE_CRF` from 30 to 28 for better card quality
+- This is a local script change and won't affect the app code
 
-#### File: `src/components/layout/MainLayout.tsx`
-
-1. Remove `scroll-smooth` from the main scroll container class. CSS `scroll-smooth` is meant for programmatic scrolling (e.g., `scrollTo`), not finger scrolling. Removing it restores native fast scrolling on mobile.
-
-#### File: `src/components/social/ExplorePortfolioFeed.tsx`
-
-1. **Remove the outer `motion.div` wrapper** from each feed item in the mobile list. Replace with a plain `div`. The `PlayerFeedItem` already has its own `motion.div` -- doubling up is unnecessary and causes touch event issues.
-2. Remove staggered animation delays (`delay: index * 0.05`) which cause late-rendering items to be unresponsive during their animation window.
-
-#### File: `src/components/social/PlayerFeedItem.tsx`
-
-1. **Replace the outer `motion.div`** with a plain `div`. The entry animation (`opacity: 0, y: 20`) is causing touch event interception. On a feed that's already loaded, these animations provide minimal visual value but create real interaction problems.
-2. Add `touch-action: manipulation` to the outermost container div as well (not just the inner card).
-
-### Summary of Changes
+### Summary
 
 | File | Change |
 |---|---|
-| `src/index.css` | Remove `-webkit-overflow-scrolling: auto` from body and `#main-scroll-container` |
-| `src/components/layout/MainLayout.tsx` | Remove `scroll-smooth` from main container |
-| `src/components/social/ExplorePortfolioFeed.tsx` | Replace `motion.div` with plain `div` for mobile feed items |
-| `src/components/social/PlayerFeedItem.tsx` | Replace outer `motion.div` with plain `div`, add `touch-action: manipulation` to root |
+| `PingPongVideo.tsx` | Add `forceDesktopQuality` and `active` props |
+| `CategoryPage.tsx` | Use `forceDesktopQuality` on header video |
+| `AirbnbCategoryCard.tsx` | Accept and forward `isVideoActive` prop |
+| `CategoryCarousel.tsx` | Track centered card, only activate its video |
 
-These changes target the root causes: framer-motion touch event interception for the tap issue, and CSS scroll properties fighting native mobile scrolling for the jank issue.
-
+### Result
+- Category page header: crisp 720px video on all devices (no more blurry stretched 480px mobile video)
+- Discover page: only the card you're looking at plays video, others show poster image. Scrolling to a new card triggers that card's video. This eliminates blank cards and reduces network/CPU load from trying to play 15+ videos simultaneously.
