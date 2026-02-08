@@ -1,84 +1,88 @@
 
-## Fix Video Blinking, Quality, and Smooth Rendering
 
-### Root Cause Analysis
+## Fix Desktop/Tablet Video Quality
 
-After tracing through the code, I found **3 distinct bugs** causing the poor experience:
+### Problem
 
----
+All videos (both WebM and MP4) are encoded at **720px width** by the optimization scripts. On desktop/tablet screens where the video fills 1200-1920px wide areas, this 720px video gets stretched 2-3x, causing visible blur and pixelation.
 
-### Bug 1: Videos blink on scroll (opacity tied to `isInView`)
+The conversion pipeline (`scripts/convert-videos-webm.sh`) has these settings:
+- Desktop WebM: 720px width, CRF 28
+- Mobile WebM: 480px width, CRF 30
 
-In `PingPongVideo.tsx` line 172-174, the video opacity class is:
-```
-isReady && isInView ? 'opacity-100' : 'opacity-0'
-```
+720px is fine for mobile (375px device = crisp at 2x retina), but far too small for desktop.
 
-This means even when a video is fully loaded (`isReady = true`), scrolling it out of view (`isInView = false`) forces it to `opacity-0`. When scrolling back, it fades back in with a 500ms CSS transition -- creating the visible "blink/flash".
+### Solution
 
-**Fix**: Once `isReady` is true, always show `opacity-100`. The video is already paused when out of view (saving CPU), so hiding it visually is unnecessary and harmful. The last frame should remain visible.
+Create a **three-tier video resolution system** and update the serving logic:
 
----
-
-### Bug 2: CategoryGrid loads ALL videos simultaneously (no activation control)
-
-`CategoryGrid.tsx` never passes `isVideoActive` to `AirbnbCategoryCard`. Since `active` defaults to `true` in PingPongVideo, every single card in the grid tries to load its video immediately. With 15-30 categories visible, this overwhelms the load queue (max 3 concurrent), causing most videos to sit in the queue indefinitely and never render.
-
-**Fix**: Add an IntersectionObserver to `CategoryGrid` that only activates videos for cards currently in the viewport (plus a small margin). Cards far off-screen won't even attempt to load.
-
----
-
-### Bug 3: Load queue never releases slots for loaded videos
-
-In `PingPongVideo.tsx`, when a video finishes loading (`isReady = true`) and the user scrolls away, the slot is released (line 70-73). But when the user scrolls back and the video is already ready, `isReady` is true so it skips the queue (line 78-81) -- this is correct. However, the initial load path acquires a slot (`acquire`) and only releases it when leaving view. If the user never scrolls away, the slot stays occupied forever, blocking other videos from loading.
-
-**Fix**: Release the queue slot as soon as the video is ready (after `canplay`), not just when leaving view. The slot is only needed during the download phase.
-
----
+| Tier | Max Width | CRF | Use Case |
+|------|-----------|-----|----------|
+| Mobile | 480px | 30 | Phone screens (< 768px) |
+| Desktop (current) | 720px | 28 | Tablet/small desktop |
+| Desktop HD (new) | 1280px | 26 | Large desktop screens (>= 1024px) |
 
 ### Changes
 
-**File 1: `src/components/shared/PingPongVideo.tsx`**
+#### Change 1: Update video conversion script to create HD desktop variants
 
-1. Change opacity condition from `isReady && isInView` to just `isReady` -- once loaded, video stays visible (no more blinking)
-2. Release queue slot immediately after `isReady` becomes true (not just on leave-view)
-3. Increase the transition from 500ms to 700ms for a smoother fade-in on first load
-4. Clean up event listeners properly (current code returns a cleanup function from `loadVideo` that is never called)
+**File: `scripts/convert-videos-webm.sh`**
 
-**File 2: `src/components/discover/CategoryGrid.tsx`**
+Add a third tier: "desktop HD" at 1280px width, stored in `public/videos/desktop/` folder. This creates files like `/videos/desktop/mathematics.webm` alongside the existing `/videos/mathematics.webm`.
 
-1. Add per-card IntersectionObserver tracking to determine which cards are in/near viewport
-2. Pass `isVideoActive` to each `AirbnbCategoryCard` based on viewport proximity
-3. This prevents 30+ simultaneous video load attempts in the grid view
+Settings for the HD tier:
+- Max width: 1280px (sharp on 1440p/1920p screens)
+- CRF: 26 (higher quality than 28 but still well-compressed for VP9)
+- Same VP9 codec and other settings
 
-**File 3: `src/utils/videoLoadQueue.ts`**
+#### Change 2: Add desktop HD URL helper
 
-1. Increase `maxConcurrent` from 3 to 4 for desktop (more bandwidth available)
-2. Add a `has(url)` method so PingPongVideo can check if a slot is already held without re-acquiring
+**File: `src/config/videoConfig.ts`**
+
+Add a `toDesktopHdWebmUrl()` function that maps `/videos/math.mp4` to `/videos/desktop/math.webm`. Also update `getAllVideoUrls()` to preload the HD variants on desktop.
+
+```
+// New function
+export function toDesktopHdWebmUrl(mp4Url: string): string {
+  const lastSlash = mp4Url.lastIndexOf("/");
+  const dir = mp4Url.substring(0, lastSlash);
+  const filename = mp4Url.substring(lastSlash + 1).replace(/\.mp4$/, ".webm");
+  return dir + "/desktop/" + filename;
+}
+```
+
+#### Change 3: Serve HD variants on desktop/tablet
+
+**File: `src/hooks/useResponsiveVideo.ts`**
+
+Update the hook to return:
+- Desktop HD WebM (1280px) when viewport >= 1024px
+- Regular WebM (720px) when viewport < 1024px (mobile/small tablets)
+
+This uses a `matchMedia` check to determine which tier to serve.
+
+#### Change 4: PingPongVideo `forceDesktopQuality` now means HD
+
+**File: `src/components/shared/PingPongVideo.tsx`**
+
+When `forceDesktopQuality` is true (used on the category page header), always use the desktop HD URL regardless of viewport. This ensures the large header video on category pages is always crisp.
+
+### What you need to do after these code changes
+
+After approving this plan, you will need to **re-run the updated conversion script** on your original high-resolution source MP4 files to generate the new `/videos/desktop/*.webm` files:
+
+```
+bash scripts/convert-videos-webm.sh
+```
+
+The script will create the `public/videos/desktop/` folder with 1280px-wide WebM files. Without these files, the code will gracefully fall back to the existing 720px WebM (via the MP4 `<source>` fallback).
 
 ### Technical Details
 
-Updated opacity logic in PingPongVideo:
-```text
-Before: className={`... ${isReady && isInView ? 'opacity-100' : 'opacity-0'}`}
-After:  className={`... ${isReady ? 'opacity-100' : 'opacity-0'}`}
-```
-
-Updated slot release timing:
-```text
-Before: release slot only when leaving viewport
-After:  release slot as soon as video fires 'canplay' (download complete)
-```
-
-CategoryGrid viewport activation:
-```text
-Each card wrapper gets an IntersectionObserver with rootMargin="300px".
-Only cards within viewport + 300px margin get isVideoActive=true.
-Cards far away get isVideoActive=false (video won't load).
-```
-
 | File | Change |
 |------|--------|
-| `src/components/shared/PingPongVideo.tsx` | Remove `isInView` from opacity; release slot on ready; fix event cleanup |
-| `src/components/discover/CategoryGrid.tsx` | Add viewport-based `isVideoActive` per card |
-| `src/utils/videoLoadQueue.ts` | Increase max concurrent to 4; add `has()` method |
+| `scripts/convert-videos-webm.sh` | Add desktop HD tier (1280px, CRF 26) in `public/videos/desktop/` |
+| `src/config/videoConfig.ts` | Add `toDesktopHdWebmUrl()` helper; update `getAllVideoUrls()` for desktop preloading |
+| `src/hooks/useResponsiveVideo.ts` | Return desktop HD URL when viewport >= 1024px |
+| `src/components/shared/PingPongVideo.tsx` | `forceDesktopQuality` uses desktop HD URL |
+
