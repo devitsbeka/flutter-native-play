@@ -2,13 +2,27 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-// AI user names for each league tier
+import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
+import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
+import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
+import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
+import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
+import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
+import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
+import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
+
+const mascotAvatars = [
+  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
+  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
+];
+
+// Georgian-style AI user names for each league tier (no duplicates across tiers)
 const AI_NAMES: Record<number, string[]> = {
-  1: ["ნიკა", "მარიამი", "გიორგი", "ანა", "დავით", "ელენე", "ლუკა", "სოფო", "ალექსი", "თეა", "ბექა", "ნინო"],
-  2: ["kiyo", "Uyên Lê", "りゅう", "Ayşe", "秋草勇士郎", "Hải Dương", "Marco", "李明", "София", "Ahmed"],
-  3: ["Sarah_M", "TechWiz", "QuizPro", "GameMaster", "StarPlayer", "TopGun", "Ninja99", "Eagle", "Phoenix", "Thunder"],
-  4: ["Champion1", "ProPlayer", "LeaderX", "MasterMind", "Genius", "BrainPower", "QuizKing", "TopRank", "Elite", "Legend"],
-  5: ["WorldChamp", "Ultimate", "Supreme", "Invincible", "TheOne", "Godlike", "Unstoppable", "Legendary", "Mythical", "Eternal"],
+  1: ["Giorgi K.", "Mariami G.", "Nika T.", "Ana B.", "Daviti M.", "Elene S.", "Luka Ch.", "Tamari P.", "Nino R.", "Alexandre D.", "Sofia L.", "Ilia Z.", "Barbare Kh.", "Gio N.", "Nato A."],
+  2: ["Zura E.", "Nana Sh.", "Mako J.", "Beka Ts.", "Rati K.", "Kote G.", "Ani M.", "Sandro B.", "Tako L.", "Irakli P.", "Eka D.", "Lasha T.", "Manana S.", "Gvantsa R.", "Bacho Ch."],
+  3: ["Tato N.", "Mari A.", "Tornike Z.", "Keti Kh.", "Levani J.", "Tea E.", "Nikolozi Sh.", "Maia G.", "Lika K.", "Teko M.", "Dato B.", "Salome T.", "Vakho P.", "Rusudan D.", "Zurab L."],
+  4: ["Niko S.", "Tekla R.", "Merab Ch.", "Natia A.", "Giga N.", "Tamar Z.", "Levan Kh.", "Darejan J.", "Archil E.", "Ekaterine Sh.", "Revaz G.", "Tinatin K.", "Otar M.", "Manoni B.", "Zurab T."],
+  5: ["Shota P.", "Medea D.", "Avtandil L.", "Nestan S.", "Tariel R.", "Tiniko Ch.", "Mamuka A.", "Lamara N.", "Bidzina Z.", "Shorena Kh.", "Kakha J.", "Mzevinar E.", "Nodar Sh.", "Rusudan G.", "Tsotne K."],
 };
 
 // Generate fake users for a league tier
@@ -35,7 +49,7 @@ function generateFakeUsers(tier: number, count: number = 15, lowestRealUserCoins
     return {
       user_id: `ai-${tier}-${i}`,
       nickname: names[i % names.length] + (i >= names.length ? `_${Math.floor(i / names.length)}` : ""),
-      avatar_url: null,
+      avatar_url: mascotAvatars[i % mascotAvatars.length],
       weekly_xp: coins,
       coins: coins,
       rank: i + 1,
