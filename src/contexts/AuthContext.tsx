@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
 
 export interface Profile {
@@ -277,14 +278,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://mytrivia.io/',
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
       
-      return { data, error };
+      if (result.error) {
+        return { data: null, error: result.error };
+      }
+      
+      return { data: result, error: null };
     } catch (error: any) {
       console.error('Google Sign In error:', error);
       return { data: null, error };
