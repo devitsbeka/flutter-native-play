@@ -1,33 +1,50 @@
 
 
-## Scroll to Top When Searching
+## Fix Stale Avatars on Room Cards + Delete Two Accounts
 
-### Problem
+### Problem 1: Old Avatars on Room Cards
 
-When a user scrolls down on a tab (e.g., "ჩემი ტრივია" or "აღმოაჩინე") and then opens the search bar and types, the search results appear but the scroll position remains unchanged. The user can't see the first results because they're above the current viewport.
+The room cards in "ჩემი ტრივია" show stale avatars because `useMyRooms.ts` reads `avatar_url` directly from the `room_participants` table (line 154), which stores a **snapshot** of the avatar at the time the user joined the room. When a user updates their avatar in their profile, this snapshot is not updated, so the room cards keep showing the old avatar.
 
-### Solution
+In contrast, the room lobby (`useRoomParticipants.ts`) correctly fetches fresh avatars from the `profiles` table -- but the room cards listing does not.
 
-When the search input opens or when the user starts typing a search query, automatically scroll the main content container to the top so results are visible from the very first item.
+### Fix
 
-### What Changes
+**File: `src/hooks/useMyRooms.ts`** (around lines 150-228)
 
-**File: `src/components/team/UnifiedFiltersBar.tsx`**
+After fetching all participants from `room_participants`, add a second query to fetch fresh `avatar_url` from the `profiles` table for all participant user IDs, then merge the fresh avatars into the participant data (same pattern used in `useRoomParticipants.ts`).
 
-1. Add a callback prop `onSearchStart` to notify the parent when search becomes active
-2. When the search button is clicked (search opens), scroll to top
-3. When the user types the first character into the search field, scroll to top
+```
+// After fetching allParticipants from room_participants:
+// Fetch fresh avatar URLs from profiles
+const { data: freshProfiles } = await supabase
+  .from("profiles")
+  .select("user_id, avatar_url")
+  .in("user_id", allParticipantUserIds);
 
-The scroll target is the `#main-scroll-container` element (the `<main>` tag in `MainLayout.tsx` that wraps all page content).
+const profileAvatarMap = new Map(freshProfiles?.map(p => [p.user_id, p.avatar_url]) || []);
 
-### Technical Details
+// Then when building participant data, use:
+avatar_url: profileAvatarMap.get(p.user_id) || p.avatar_url
+```
 
-| File | Change |
-|------|--------|
-| `src/components/team/UnifiedFiltersBar.tsx` | When `setIsSearchOpen(true)` is called and when `onSearchQueryChange` fires with a non-empty value (from empty), scroll `#main-scroll-container` to top using `scrollTo({ top: 0, behavior: 'smooth' })` |
+This ensures room cards always display the latest avatar from profiles, falling back to the stored snapshot only if the profile lookup fails.
 
-The logic:
-- On search open (`setIsSearchOpen(true)`): scroll to top immediately
-- No need to add new props -- the scroll behavior is self-contained inside the component since `#main-scroll-container` is always the scroll parent
+### Problem 2: Delete Two Accounts
 
-This is a minimal 2-line change: add a `scrollToTop` helper function and call it when search opens and when the first character is typed.
+Delete these two accounts and all their associated data:
+
+| Nickname | User ID |
+|----------|---------|
+| Mako | `79fa0a90-eef4-444b-b8e4-4e29490d6613` |
+| hhjjh | `62cdca87-5781-4ce1-b9e5-b5f54800357c` |
+
+This will be done via a database migration that deletes their data from all related tables (same order as the `delete-user-account` edge function) and then removes their auth accounts using `auth.users`.
+
+### Summary of Changes
+
+| Item | File/Action |
+|------|-------------|
+| Fresh avatars on room cards | Edit `src/hooks/useMyRooms.ts` -- add profiles query and merge fresh avatar URLs |
+| Delete Mako + hhjjh accounts | Database migration to delete all user data across all tables and auth |
+
