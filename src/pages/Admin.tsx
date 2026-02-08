@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FolderOpen, 
-  Users, 
+  Users,
+  BarChart3,
   Menu,
   ChevronLeft,
   ChevronDown,
@@ -70,6 +71,11 @@ const mainNavItems: NavItem[] = [
     to: '/admin/users', 
     icon: Users, 
     label: 'მომხმარებლები' 
+  },
+  { 
+    to: '/admin/user-analytics', 
+    icon: BarChart3, 
+    label: 'ანალიტიკა' 
   },
   { 
     to: '/admin/reports', 
