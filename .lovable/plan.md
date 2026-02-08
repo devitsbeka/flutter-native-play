@@ -1,34 +1,43 @@
 
 
-## Add "Remove from Leaderboard" Feature
+## Fix: Inline "Remove" Button on Your Leaderboard Entry
 
-### What It Does
-When you tap on your own entry in the trivia leaderboard, a confirmation dialog appears asking if you want to remove yourself. Confirming deletes all your play records for that trivia, removing you from the leaderboard.
+### Current Behavior
+Tapping your own leaderboard entry opens a full-screen AlertDialog confirmation. Tapping other users opens their profile page.
+
+### New Behavior
+- Tapping your own entry reveals an inline "წაშლა" (Remove) button directly on the row
+- Tapping the remove button deletes your record and refreshes the leaderboard
+- Tapping anywhere else (or the same row again) collapses the button
+- Other users' entries still open their profile as before
 
 ### Changes
 
-**1. Database: Add DELETE policy**
+**File: `src/pages/TriviaLobby.tsx`**
 
-The `quiz_post_plays` table currently has no DELETE policy, so users can't delete their own records. We need to add one:
-- Policy: "Users can delete their own plays" -- allows `DELETE` where `auth.uid() = user_id`
+1. Replace the `showRemoveDialog` state with an `expandedUserId` state that tracks which row is "expanded" to show the remove button
+2. Remove the `AlertDialog` import and its JSX entirely
+3. When the current user taps their own row:
+   - If the row is collapsed, expand it to reveal a red "წაშლა" button on the right side (replacing the score display)
+   - If the row is already expanded, collapse it back
+4. The remove button calls `removeFromLeaderboard()` directly (no extra confirmation modal)
+5. Add a subtle animation (slide-in from right) for the remove button using framer-motion
 
-**2. TriviaLobby.tsx -- Add tap-to-remove UI**
+### Visual Layout of Expanded Row
 
-- When you tap your own leaderboard entry, show an alert dialog (using the existing Radix AlertDialog) asking "ლიდერბორდიდან წაშლა?" (Remove from leaderboard?)
-- On confirm, delete all `quiz_post_plays` records matching `user_id` and `post_id`
-- Refetch leaderboard after deletion
-- Other users' entries continue to open the profile modal as before
+```text
++-----------------------------------------------+
+| #10  [avatar]  Gloria       [ წაშლა ]         |
+|                7ქულა                           |
++-----------------------------------------------+
+```
 
-**3. useTriviaLobby.ts -- Add delete function**
-
-- Export a `removeFromLeaderboard` function that:
-  - Deletes all rows from `quiz_post_plays` where `user_id = current user` AND `post_id = triviaId`
-  - Invalidates the leaderboard and stats queries so the UI updates immediately
+The score gets replaced by a red "წაშლა" button when the row is expanded. This keeps the interaction fast and inline.
 
 ### Technical Details
-
-- Only your own entry is tappable for removal; other entries still open the profile modal
-- The confirmation dialog prevents accidental removals
-- All play records for that trivia are deleted (not just the best one), so the user fully disappears from the leaderboard
-- The leaderboard, stats, and user play queries are all refetched after deletion
+- State: `expandedUserId: string | null` replaces `showRemoveDialog: boolean`
+- Remove the `AlertDialog` component and its imports
+- The `isRemoving` state stays to disable the button during the async delete
+- On successful removal, `expandedUserId` resets to `null`
+- `onClick` for non-current-user rows remains `openProfile(entry.user_id)`
 
