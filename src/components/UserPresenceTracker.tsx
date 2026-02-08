@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSessionTracker } from '@/hooks/useSessionTracker';
 import logger from '@/utils/logger';
 
 /**
@@ -19,6 +20,9 @@ export const UserPresenceTracker = () => {
   const location = useLocation();
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const isUpdatingRef = useRef(false);
+
+  // Session tracking for analytics (separate from presence)
+  useSessionTracker();
 
   // Validate session before making presence calls
   const isSessionValid = useCallback((): boolean => {
