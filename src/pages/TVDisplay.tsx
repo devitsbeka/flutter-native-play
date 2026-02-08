@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TVGameProvider, useTVGame, mapDbStatusToPhase } from '@/contexts/TVGameContext';
-import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { TVPairingScreenV3 } from '@/components/tv/TVPairingScreenV3';
 import { TVLobbyScreenV2 } from '@/components/tv/TVLobbyScreenV2';
 import { TVCountdownScreenV2 } from '@/components/tv/TVCountdownScreenV2';
@@ -26,7 +25,6 @@ const TVDisplayContent: React.FC = () => {
     phase,
     createSession,
     joinSession,
-    leaveSession,
     startGame,
     questions,
     currentQuestionIndex,
@@ -38,13 +36,6 @@ const TVDisplayContent: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasInitialized = React.useRef(false);
-
-  // Auto-redirect to pairing screen when game is idle for 60s
-  useIdleTimeout(phase, () => {
-    tvLog('TVDisplay idle timeout — returning to pairing screen');
-    leaveSession();
-    navigate('/tv', { replace: true });
-  });
 
   useEffect(() => {
     const initSession = async () => {
