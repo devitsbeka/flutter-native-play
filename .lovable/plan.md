@@ -1,45 +1,34 @@
 
 
-## Fix: Empty Leaderboard + Tap Delay on Feed Cards
+## Add "Remove from Leaderboard" Feature
 
-### Problem 1: Leaderboard shows "0 players" on new mascot trivias
+### What It Does
+When you tap on your own entry in the trivia leaderboard, a confirmation dialog appears asking if you want to remove yourself. Confirming deletes all your play records for that trivia, removing you from the leaderboard.
 
-The new mascot trivias (Tornike, Nino, Saba, etc.) have `plays_count` values (19-55) displayed in the UI, but there are **zero actual play records** in the `quiz_post_plays` table. The leaderboard queries this table for real data, so it correctly shows empty.
+### Changes
 
-The old mascots (Giorgi, Nika, etc.) have 7 actual play records each because their migration included inserting cross-play records. The new migration only set `plays_count` numbers without creating matching play data.
+**1. Database: Add DELETE policy**
 
-### Problem 2: Tap delay on feed cards
+The `quiz_post_plays` table currently has no DELETE policy, so users can't delete their own records. We need to add one:
+- Policy: "Users can delete their own plays" -- allows `DELETE` where `auth.uid() = user_id`
 
-The `touch-action: pan-x pan-y` on the body element combined with framer-motion animation wrappers causes inconsistent tap response on mobile. Cards require multiple taps to register a click.
+**2. TriviaLobby.tsx -- Add tap-to-remove UI**
 
----
+- When you tap your own leaderboard entry, show an alert dialog (using the existing Radix AlertDialog) asking "ლიდერბორდიდან წაშლა?" (Remove from leaderboard?)
+- On confirm, delete all `quiz_post_plays` records matching `user_id` and `post_id`
+- Refetch leaderboard after deletion
+- Other users' entries continue to open the profile modal as before
 
-### Solution
+**3. useTriviaLobby.ts -- Add delete function**
 
-#### Part 1: Insert play records for new mascot trivias (Database Migration)
+- Export a `removeFromLeaderboard` function that:
+  - Deletes all rows from `quiz_post_plays` where `user_id = current user` AND `post_id = triviaId`
+  - Invalidates the leaderboard and stats queries so the UI updates immediately
 
-Insert cross-play records where each of the 16 mascot accounts "plays" the 8 new trivias (excluding the trivia owner). This gives each new trivia ~15 play records with varied scores (0-5 range since each trivia has 5 questions).
+### Technical Details
 
-All 8 new trivia post IDs:
-- Tornike: `441639c7-...` (ყველაფერი ცოტ-ცოტა)
-- Nino: `99116cb9-...` (შერეული ვიქტორინა)
-- Saba: `37f690a4-...` (გამოიცანი!)
-- Salome: `93eb9637-...` (ტესტი ერუდიტებისთვის)
-- Dato: `e38f80a1-...` (მრავალფეროვანი კითხვები)
-- Keti: `89b6bba6-...` (ვინ იცის მეტი?)
-- Irakli: `e03a0467-...` (ინტელექტის ტესტი)
-- Tekla: `94482e11-...` (ერუდიციის გამოწვევა)
-
-Each will get ~15 play records with randomized scores (2-5) and staggered `played_at` timestamps.
-
-#### Part 2: Fix tap delay (Code Change)
-
-**File: `src/index.css`** -- Change `touch-action: pan-x pan-y` to `touch-action: manipulation` on the body element. The `manipulation` value allows panning and pinch-zoom but removes the 300ms delay browsers add when waiting for potential double-tap gestures. This is the standard fix for mobile tap responsiveness.
-
-**File: `src/components/social/PlayerFeedItem.tsx`** -- Add `touch-action: manipulation` directly on the clickable card div for extra safety, ensuring the card area specifically responds instantly to taps.
-
-### Files Changed
-- Database migration (insert ~120 play records across 8 trivias)
-- `src/index.css` (1 line: touch-action value)
-- `src/components/social/PlayerFeedItem.tsx` (add touch-action style to card)
+- Only your own entry is tappable for removal; other entries still open the profile modal
+- The confirmation dialog prevents accidental removals
+- All play records for that trivia are deleted (not just the best one), so the user fully disappears from the leaderboard
+- The leaderboard, stats, and user play queries are all refetched after deletion
 
