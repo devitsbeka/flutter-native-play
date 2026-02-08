@@ -156,8 +156,20 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
 
   if (allPartError) throw allPartError;
 
-  // 4. Fetch presence data — single query for 10 min window, derive both online and recently active
+  // 4. Fetch fresh avatar URLs from profiles (room_participants stores stale snapshots)
   const allParticipantUserIds = [...new Set((allParticipants || []).map(p => p.user_id))];
+
+  let profileAvatarMap = new Map<string, string | null>();
+  if (allParticipantUserIds.length > 0) {
+    const { data: freshProfiles } = await supabase
+      .from("profiles")
+      .select("user_id, avatar_url")
+      .in("user_id", allParticipantUserIds);
+
+    profileAvatarMap = new Map(freshProfiles?.map(p => [p.user_id, p.avatar_url]) || []);
+  }
+
+  // 5. Fetch presence data — single query for 10 min window, derive both online and recently active
   const onlineUserIds = new Set<string>();
   const presencePageMap = new Map<string, string>();
   const recentlyActiveUserIds = new Set<string>();
@@ -183,7 +195,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     });
   }
 
-  // 5. Fetch TV session data
+  // 6. Fetch TV session data
   const tvSessionIds = (roomsData || [])
     .map((r) => r.tv_session_id)
     .filter((id): id is string => id !== null);
@@ -219,7 +231,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     });
   }
 
-  // 6. Build MyRoom[]
+  // 7. Build MyRoom[]
   const participantsByRoom = new Map<string, typeof allParticipants>();
   allParticipants?.forEach((p) => {
     const existing = participantsByRoom.get(p.room_id) || [];
@@ -227,13 +239,17 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
     participantsByRoom.set(p.room_id, existing);
   });
 
+  // Helper to get fresh avatar from profiles, falling back to room_participants snapshot
+  const getFreshAvatar = (userIdVal: string, snapshotAvatar: string | null) =>
+    profileAvatarMap.get(userIdVal) ?? snapshotAvatar;
+
   return (roomsData || []).map((room: any) => {
     const participants = participantsByRoom.get(room.id) || [];
     const tvData = room.tv_session_id ? tvSessionMap.get(room.tv_session_id) : null;
 
     const onlineParticipants = participants
       .filter(p => onlineUserIds.has(p.user_id) && p.user_id !== userId)
-      .map(p => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url }));
+      .map(p => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: getFreshAvatar(p.user_id, p.avatar_url) }));
 
     const roomPath = `/room/${room.id}`;
     const inRoomParticipants = participants
@@ -242,7 +258,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
         const currentPage = presencePageMap.get(p.user_id);
         return currentPage === roomPath;
       })
-      .map(p => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: p.avatar_url }));
+      .map(p => ({ user_id: p.user_id, nickname: p.nickname, avatar_url: getFreshAvatar(p.user_id, p.avatar_url) }));
 
     const hasRecentActivity = participants.some(
       p => p.user_id !== userId && recentlyActiveUserIds.has(p.user_id)
@@ -275,7 +291,7 @@ async function fetchRoomsForUser(userId: string, options?: FetchRoomsOptions): P
       participants: participants.map((p) => ({
         user_id: p.user_id,
         nickname: p.nickname,
-        avatar_url: p.avatar_url,
+        avatar_url: getFreshAvatar(p.user_id, p.avatar_url),
         is_host: p.is_host || false,
       })),
       online_participants: onlineParticipants,
