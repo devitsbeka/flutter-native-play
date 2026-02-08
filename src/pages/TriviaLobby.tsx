@@ -309,7 +309,7 @@ export default function TriviaLobby() {
       </div>
 
       {/* Fixed Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pb-6">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background pb-6">
         <div className="max-w-xl mx-auto space-y-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
