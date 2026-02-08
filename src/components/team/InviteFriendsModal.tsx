@@ -358,7 +358,7 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
           {/* Scrollable Content */}
           <div className="relative z-10 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[520px] p-4 pb-28">
+            <div className="mx-auto w-full max-w-[520px] p-4 pb-36">
               <div className="space-y-[18px] sm:space-y-5">
                 {/* Search Section */}
                 <div>
@@ -573,31 +573,29 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
 
                 {/* Import & Connect Section */}
                 <div className={`space-y-2 ${narrow}`}>
-              <motion.button
+              <button
                 onClick={handleImportContacts}
-                className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 transition-colors`}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 active:bg-white/20 transition-colors relative z-10`}
+                style={{ touchAction: "manipulation" }}
               >
                 <ContactsIcon />
                 <div className="text-left">
                   <p className="font-semibold text-base text-white">კონტაქტების იმპორტი</p>
                   <p className="text-sm text-white/70">მოიწვიე მეგობრები ტელეფონიდან</p>
                 </div>
-              </motion.button>
+              </button>
               
-              <motion.button
+              <button
                 onClick={handleConnectFacebook}
-                className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 transition-colors`}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 active:bg-white/20 transition-colors relative z-10`}
+                style={{ touchAction: "manipulation" }}
               >
                 <FacebookIcon />
                 <div className="text-left">
                   <p className="font-semibold text-base text-white">Facebook მეგობრები</p>
                   <p className="text-sm text-white/70">იპოვე მეგობრები Facebook-ზე</p>
                 </div>
-              </motion.button>
+              </button>
                 </div>
 
                 {/* Divider */}
