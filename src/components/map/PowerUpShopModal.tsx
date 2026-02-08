@@ -196,7 +196,7 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
       headerActions={headerRight}
       className="-mt-[50px]"
     >
-      <div className="relative pt-[100px]">
+      <div className="relative pt-[70px]">
         {/* Power-up preview */}
         <div className="bg-muted/30 rounded-2xl border border-border p-3 mb-3">
           <PowerUpDemoPreview
@@ -285,8 +285,8 @@ export function PowerUpShopModal({ isOpen, onClose, initialSelectedType }: Power
             ) : (
               <img src={coinIcon} alt="coins" className="w-5 h-5" />
             )}
-            <span className="text-xl font-bold text-white drop-shadow-sm">
-              {totalPrice.toLocaleString()}
+            <span className="text-xl font-bold text-amber-900 drop-shadow-sm">
+              {totalPrice.toLocaleString()} შეძენა
             </span>
           </motion.button>
           <p className="text-xs text-muted-foreground mt-2">
