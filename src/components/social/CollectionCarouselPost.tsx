@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AvatarWithFrame } from "@/components/shared/AvatarWithFrame";
 import { CollectionPreviewModal } from "./CollectionPreviewModal";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -160,9 +161,9 @@ export function CollectionCarouselPost({ posts, collectionTitle, index, onPlay, 
             <div className="relative">
               <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600">
                 <div className="w-full h-full rounded-full overflow-hidden bg-background p-[2px]">
-                  {currentPost.avatarUrl ? (
+                  {resolveAvatarUrl(currentPost.avatarUrl) ? (
                     <img 
-                      src={currentPost.avatarUrl} 
+                      src={resolveAvatarUrl(currentPost.avatarUrl)!}
                       alt={currentPost.displayName}
                       className="w-full h-full rounded-full object-cover"
                     />

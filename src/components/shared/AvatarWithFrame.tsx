@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useAvatarFrames, AvatarFrame } from "@/hooks/useAvatarFrames";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { Crown } from "lucide-react";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 interface AvatarWithFrameProps {
   imageUrl?: string;
@@ -33,6 +34,7 @@ export function AvatarWithFrame({
   
   const equippedFrame = frameOverride !== undefined ? frameOverride : getEquippedFrameData();
   const sizeConfig = sizeClasses[size];
+  const resolvedImageUrl = resolveAvatarUrl(imageUrl);
 
   return (
     <div className={cn("relative inline-block", className)}>
@@ -82,9 +84,9 @@ export function AvatarWithFrame({
         )}
 
         {/* Avatar image or emoji */}
-        {imageUrl ? (
+        {resolvedImageUrl ? (
           <img
-            src={imageUrl}
+            src={resolvedImageUrl}
             alt="Avatar"
             className="w-full h-full object-cover"
           />

@@ -18,6 +18,7 @@ import { useVipStatus } from "@/hooks/useVipStatus";
 import { shuffleArray } from "@/utils/shuffle";
 import { useAuth } from "@/contexts/AuthContext";
 import { REWARDS } from "@/config/rewardConfig";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useSocialFeed } from "@/hooks/useSocialFeed";
 import { supabase } from "@/integrations/supabase/client";
 import { createNotification } from "@/hooks/useNotifications";
@@ -348,12 +349,18 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
           {/* Header */}
           <div className="relative z-10 flex items-center justify-between px-4 py-4 safe-top">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
-                <img 
-                  src={currentRoundPost?.avatarUrl || post.avatarUrl} 
-                  alt={currentRoundPost?.displayName || post.displayName}
-                  className="w-full h-full object-cover"
-                />
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
+                {resolveAvatarUrl(currentRoundPost?.avatarUrl || post.avatarUrl) ? (
+                  <img 
+                    src={resolveAvatarUrl(currentRoundPost?.avatarUrl || post.avatarUrl)!}
+                    alt={currentRoundPost?.displayName || post.displayName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/30 flex items-center justify-center text-white font-bold text-sm">
+                    {(currentRoundPost?.username || post.username || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-white font-semibold text-sm">{currentRoundPost?.title || post.title}</p>
