@@ -1,59 +1,43 @@
 
-## Fix: Video Quality & Playback on Discover + Category Pages
 
-### Issue 1: Category Page Header Video - Poor Quality on Mobile
+## Fix: Green "Friend Added" Button + Remove Date from Feed Cards
 
-**Root cause**: The `PingPongVideo` component uses `useResponsiveVideo()` which serves mobile WebM files at 480px width (CRF 30) for ANY mobile viewport. But the category page header spans the full screen width at 48vh height -- this requires much higher resolution than a small card thumbnail.
+### Change 1: Make "friend added" button green (not purple)
 
-On an iPhone 14 Pro (390px @ 3x = 1170 physical pixels), a 480px WebM is being stretched to fill 1170+ physical pixels, resulting in visible blurriness.
+Both `PlayerFeedItem.tsx` and `CreatorPortfolioCard.tsx` have a `renderFriendButton()` function with a `friends` case. The current styling uses `variant="outline"` which brings in purple-themed base styles from the Button component that compete with the green overrides. Additionally, the `disabled` attribute adds `opacity-50`, making the green nearly invisible.
 
-**Fix**: Add an optional `forceDesktop` prop to `PingPongVideo` that bypasses the mobile WebM and always serves the desktop 720px WebM. Use this prop in the `CategoryPage.tsx` header where the video fills the screen.
+**Fix**: Replace the button styling to use explicit green background, green border, and remove the competing `variant="outline"` base styles. Use `variant="ghost"` or override everything explicitly so the green is clearly visible. Also set full opacity since it's a status indicator, not a disabled action.
 
-### Issue 2: Discover Page - Videos Not Playing / Blank Cards
+**Files**:
+- `src/components/social/PlayerFeedItem.tsx` -- update the `friends` case in `renderFriendButton()` (around line 137-145)
+- `src/components/social/CreatorPortfolioCard.tsx` -- update the `friends` case in `renderFriendButton()` (around line 88-98)
 
-**Root cause**: The Discover page uses `CategoryCarousel` which renders multiple `AirbnbCategoryCard` components, each containing a `PingPongVideo`. The `videoLoadQueue` limits concurrent video downloads to 3, so only 3 cards load at a time. When scrolling horizontally, cards that leave the viewport release their slot, but new cards entering the view have to wait.
+Updated button styling for both files:
+```tsx
+case 'friends':
+  return (
+    <div className="w-10 h-10 rounded-xl bg-green-500 flex items-center justify-center">
+      <UserCheck className="w-5 h-5 text-white" />
+    </div>
+  );
+```
 
-The real problem is that the `PingPongVideo` already has IntersectionObserver logic to play/pause based on visibility, but the load queue (max 3 concurrent) combined with multiple carousels creates contention. The user sees blank pastel backgrounds where videos are queued but not yet loaded.
+This gives a solid green rounded-square icon matching the same shape as the current purple one, but clearly green. No `disabled` attribute so no opacity reduction.
 
-**Fix**: Implement a "play only the centered/visible card" strategy for the carousel:
-- In `PingPongVideo`, add support for an `active` prop that controls whether the video should play
-- When `active=false`, pause the video and release the load queue slot
-- In `CategoryCarousel`, track which card is most centered in the scroll viewport using an IntersectionObserver with a tighter threshold, and only set `active=true` for the most visible card
-- This ensures only 1 video per carousel loads at a time, freeing slots for other carousels
+### Change 2: Remove date ("დაახლოებით 11 საათი") from feed cards
 
-### Changes
+The relative time is shown in the subtitle line under the player name ("კოლექცია . დაახლოებით 11 საათი"). The user wants to remove the date portion entirely, keeping only the type label ("ტრივია" or "კოლექცია").
 
-**File: `src/components/shared/PingPongVideo.tsx`**
-1. Add `forceDesktopQuality?: boolean` prop -- when true, skip the mobile WebM and use desktop WebM directly
-2. Add `active?: boolean` prop (default `true`) -- when false, don't load or play the video
-3. Update the responsive video logic to respect `forceDesktopQuality`
-4. Update the IntersectionObserver + queue logic to also check `active` state
+**Files**:
+- `src/components/social/PlayerFeedItem.tsx` -- remove the `timeAgo` variable usage and the dot separator from the subtitle (lines 196-203 and 243-248)
+- `src/components/social/CreatorPortfolioCard.tsx` -- remove the `timeAgo` variable usage and the dot separator from the subtitle (lines 51-55 and 174-179)
 
-**File: `src/pages/CategoryPage.tsx`**
-1. Add `forceDesktopQuality` to the header `PingPongVideo` to always serve 720px WebM instead of 480px mobile variant
-
-**File: `src/components/discover/AirbnbCategoryCard.tsx`**
-1. Accept new `isVideoActive?: boolean` prop and pass it to `PingPongVideo` as `active`
-
-**File: `src/components/discover/CategoryCarousel.tsx`**
-1. Use IntersectionObserver on each card with `threshold: 0.7` to detect which card is most visible
-2. Track `activeCardIndex` state
-3. Pass `isVideoActive={index === activeCardIndex}` to each `AirbnbCategoryCard`
-4. On scroll stop, only the centered card's video plays -- all others show their poster image
-
-**File: `scripts/convert-videos-webm.sh`** (recommendation only, not a code change)
-- For future re-encodes: increase `MOBILE_MAX_WIDTH` from 480 to 540 and lower `MOBILE_CRF` from 30 to 28 for better card quality
-- This is a local script change and won't affect the app code
+The subtitle will simply show the type icon + label without any timestamp.
 
 ### Summary
 
 | File | Change |
 |---|---|
-| `PingPongVideo.tsx` | Add `forceDesktopQuality` and `active` props |
-| `CategoryPage.tsx` | Use `forceDesktopQuality` on header video |
-| `AirbnbCategoryCard.tsx` | Accept and forward `isVideoActive` prop |
-| `CategoryCarousel.tsx` | Track centered card, only activate its video |
+| `PlayerFeedItem.tsx` | Green solid icon for "friends" state; remove date from subtitle |
+| `CreatorPortfolioCard.tsx` | Green solid icon for "friends" state; remove date from subtitle |
 
-### Result
-- Category page header: crisp 720px video on all devices (no more blurry stretched 480px mobile video)
-- Discover page: only the card you're looking at plays video, others show poster image. Scrolling to a new card triggers that card's video. This eliminates blank cards and reduces network/CPU load from trying to play 15+ videos simultaneously.
