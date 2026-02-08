@@ -65,7 +65,7 @@ export function PlayerFeedItem({
   const [friendshipStatus, setFriendshipStatus] = useState(player.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
-  const { regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { isVip, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
 
   const handleAddFriend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -109,15 +109,15 @@ export function PlayerFeedItem({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlayed) {
-      // Already played - navigate directly
+    if (isPlayed || isVip) {
+      // Already played or PRO user - navigate directly
       if (itemType === 'trivia') {
         navigate(`/trivia/${item.id}`);
       } else {
         navigate(`/collection/${item.id}`);
       }
     } else {
-      // Not played - show play limit / PRO modal
+      // Not played, free user - show play limit / PRO modal
       setShowPlayLimitModal(true);
     }
   };
@@ -325,7 +325,7 @@ export function PlayerFeedItem({
                 onClick={handlePlayClick}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
               >
-                <Hourglass className="w-4 h-4 text-purple-500" />
+                {isVip ? <Play className="w-4 h-4 text-purple-500" /> : <Hourglass className="w-4 h-4 text-purple-500" />}
                 <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
               </button>
             )}

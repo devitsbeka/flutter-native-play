@@ -57,7 +57,7 @@ export function TriviaPortfolioCard({
 }: TriviaPortfolioCardProps) {
   const navigate = useNavigate();
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
-  const { regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { isVip, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   
   // Use the trivia's actual cover_gradient or cover_image, fallback to random gradient
   const coverGradient = trivia.coverGradient || getRandomGradient(trivia.id);
@@ -76,7 +76,7 @@ export function TriviaPortfolioCard({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlayed) {
+    if (isPlayed || isVip) {
       navigate(`/trivia/${trivia.id}`);
     } else {
       setShowPlayLimitModal(true);
@@ -180,7 +180,7 @@ export function TriviaPortfolioCard({
               onClick={handlePlayClick}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-purple-500 rounded-full transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10"
             >
-              <Hourglass className="w-4 h-4 text-purple-500" />
+              {isVip ? <Play className="w-4 h-4 text-purple-500" /> : <Hourglass className="w-4 h-4 text-purple-500" />}
               <span className="text-sm font-semibold text-purple-500">ითამაშე</span>
             </button>
           )}
