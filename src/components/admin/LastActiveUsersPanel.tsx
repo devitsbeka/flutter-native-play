@@ -12,6 +12,7 @@ import {
 import { ActiveUser } from '@/hooks/useActiveUsers';
 import { cn } from '@/lib/utils';
 import { LANGUAGES } from '@/locales';
+import { usePlayerProfile } from '@/contexts/PlayerProfileContext';
 
 interface LastActiveUsersPanelProps {
   users: ActiveUser[];
@@ -39,6 +40,7 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilter>('all');
   const [regionOpen, setRegionOpen] = useState(false);
+  const { openProfile } = usePlayerProfile();
   
   const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
@@ -162,9 +164,11 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
             filteredUsers.slice(0, 30).map((user) => {
               const online = isOnline(user);
               return (
-                <div
+                <button
                   key={user.id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
+                  onClick={() => openProfile(user.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer text-left"
+                  style={{ touchAction: 'manipulation' }}
                 >
                   {/* Avatar with status */}
                   <div className="relative flex-shrink-0">
@@ -225,7 +229,7 @@ export function LastActiveUsersPanel({ users }: LastActiveUsersPanelProps) {
                       <span className="text-base">🌍</span>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })
           )}
