@@ -106,7 +106,7 @@ function CategoryCarouselComponent({
       {/* Scrollable Container - Native scroll only */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 scroll-smooth snap-x snap-mandatory"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-4 snap-x snap-mandatory"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
       >
         {categories.map((category, index) => {
@@ -143,7 +143,7 @@ function CategoryCarouselComponent({
                 leaderboardRank={leaderboardRanks[category.id]}
                 videoUrl={CATEGORY_VIDEOS[category.category_id || category.id]}
                 hasNewLevels={newLevelCategories?.has(category.uuid || category.id) ?? false}
-                isVideoActive={index === activeCardIndex}
+                isVideoActive={index >= activeCardIndex - 1 && index <= activeCardIndex + 1}
                 onFavoriteClick={(e) => {
                   e.stopPropagation();
                   onFavoriteToggle(favoriteId);

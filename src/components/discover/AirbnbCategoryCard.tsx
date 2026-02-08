@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { getCategoryImageUrl } from "@/config/videoConfig";
+
 
 interface AirbnbCategoryCardProps {
   id: string;
@@ -166,7 +166,7 @@ export function AirbnbCategoryCard({
             {/* Video (ping-pong seamless loop) or Icon */}
             {videoUrl ? (
               <>
-                <PingPongVideo src={videoUrl} posterUrl={getCategoryImageUrl(categoryId || id) || undefined} active={isVideoActive} />
+                <PingPongVideo src={videoUrl} active={isVideoActive} />
                 {/* Gradient mask overlay on bottom of video */}
                 <div
                   className="absolute inset-x-0 bottom-0 pointer-events-none z-[1]"

@@ -163,7 +163,7 @@ export function getResponsiveVideoSrc(mp4Url: string): {
   };
 }
 
-// Get all video URLs for preloading (deduplicated) - returns WebM URLs for current device
+// Get all video URLs for preloading (deduplicated) - always returns desktop WebM URLs
 export function getAllVideoUrls(): string[] {
   const allMp4Urls = [
     ...Object.values(MAP_VIDEOS),
@@ -171,9 +171,8 @@ export function getAllVideoUrls(): string[] {
   ];
   const uniqueMp4 = [...new Set(allMp4Urls)];
 
-  // Preload WebM versions (appropriate for device size)
-  const mobile = isMobileViewport();
-  return uniqueMp4.map((url) => (mobile ? toMobileWebmUrl(url) : toWebmUrl(url)));
+  // Always preload desktop-quality WebM versions
+  return uniqueMp4.map((url) => toWebmUrl(url));
 }
 
 // Get all MP4 URLs (for legacy/fallback preloading)
