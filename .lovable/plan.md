@@ -1,56 +1,40 @@
 
-
-## Scroll to Filter Bar Position (Not Page Top) When Searching
+## Fix Broken Avatar in QuizPlayModal and Related Components
 
 ### Problem
 
-When a user scrolls down and then starts searching, the app scrolls to `top: 0` which brings the full header (logo, friends bar, tabs) into view. This pushes the first search result below the fold. The user wants to see search results immediately, starting from the first one.
+The broken avatar (question mark) appears because the user's avatar URL is stored in the database as a local asset path like `/src/assets/avatars/mascot-avatar-3.png`. This path only works when processed through `resolveAvatarUrl()`, which maps it to the actual bundled asset. Several components use raw `<img>` tags without this resolution, causing the image to fail to load.
 
-### Current Layout Stack (inside `#main-scroll-container`)
+### Affected Components
 
-```text
-+----------------------------+
-| Logo / QR / Notifications  |  <- sticky z-20
-| Friends Stories Bar         |
-| Tabs (Explore/Rooms/etc)   |
-+----------------------------+
-| Filter/Search Bar           |  <- sticky z-30 (overlaps header when scrolled)
-+----------------------------+
-| First result                |  <- THIS should be visible after search
-| Second result               |
-| ...                         |
-+----------------------------+
-```
+| Component | Line | Issue |
+|-----------|------|-------|
+| `QuizPlayModal.tsx` | 352-353 | Raw `<img src={post.avatarUrl}>` without resolution |
+| `AvatarWithFrame.tsx` | 86-87 | Raw `<img src={imageUrl}>` without resolution |
+| `FeedPost.tsx` | 214-215 | Raw `<img src={post.avatarUrl}>` without resolution |
+| `CollectionCarouselPost.tsx` | 164-165 | Raw `<img src={currentPost.avatarUrl}>` without resolution |
 
-Currently `scrollToTop()` scrolls to position 0, showing the entire header. The user wants it to scroll just past the header so the sticky filter bar sits at the top and the first result is immediately visible.
+### Fix
 
-### Solution
+Wrap all avatar URL sources through `resolveAvatarUrl()` before passing them to `<img>` tags:
 
-1. Add an `id` attribute to the filter bar's sticky container in `TeamV2.tsx` so we can calculate its offset position
-2. Update `scrollToTop()` in both `UnifiedFiltersBar.tsx` and `FeedFiltersBar.tsx` to scroll to the filter bar's `offsetTop` rather than to `0`
+**1. `src/components/shared/AvatarWithFrame.tsx`**
+- Import `resolveAvatarUrl` from `@/utils/avatarUtils`
+- Resolve `imageUrl` before rendering: `const resolvedUrl = resolveAvatarUrl(imageUrl);`
+- Use `resolvedUrl` in the `<img>` tag and condition check
+- This fixes the avatar everywhere `AvatarWithFrame` is used (feed posts, preview modals, etc.)
 
-This way the header/friends/tabs scroll out of view, the filter bar sticks to the top of the viewport, and the first search result appears right below it.
+**2. `src/components/social/QuizPlayModal.tsx`**
+- Import `resolveAvatarUrl` from `@/utils/avatarUtils`
+- Resolve the avatar URL before rendering: `const resolvedAvatarUrl = resolveAvatarUrl(currentRoundPost?.avatarUrl || post.avatarUrl);`
+- Use the resolved URL in the `<img>` tag, with a fallback to show the first letter of the username if resolution fails
 
-### Technical Details
+**3. `src/components/social/FeedPost.tsx`**
+- For non-user posts that use raw `<img>` tags (line 214-215), wrap `post.avatarUrl` through `resolveAvatarUrl()`
 
-| File | Change |
-|------|--------|
-| `src/pages/TeamV2.tsx` | Add `id="sticky-filter-bar"` to the sticky filter bar container div (the `div` at line 617 with `className="sticky top-0 z-30..."`) |
-| `src/components/team/UnifiedFiltersBar.tsx` | Update `scrollToTop()` to first try scrolling the filter bar element into position via its `offsetTop`, falling back to `top: 0` |
-| `src/components/social/FeedFiltersBar.tsx` | Same `scrollToTop()` update for consistency |
+**4. `src/components/social/CollectionCarouselPost.tsx`**
+- Same fix for the raw `<img>` at line 164-165
 
-The updated scroll logic:
+### Why This Fixes It
 
-```
-const scrollToTop = () => {
-  const container = document.getElementById('main-scroll-container');
-  const filterBar = document.getElementById('sticky-filter-bar');
-  if (container && filterBar) {
-    container.scrollTo({ top: filterBar.offsetTop, behavior: 'smooth' });
-  } else {
-    container?.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
-```
-
-This scrolls the main container so the filter bar is exactly at the top edge, making the first search result immediately visible below the sticky search bar.
+The `resolveAvatarUrl()` function maps paths like `/src/assets/avatars/mascot-avatar-3.png` to the actual Vite-bundled asset URL (e.g., `/assets/mascot-avatar-3-abc123.png`). Without this mapping, the browser tries to load the raw source path which doesn't exist in the built app.
