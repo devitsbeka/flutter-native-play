@@ -1,30 +1,44 @@
 
-
-## Replace Old Leaderboard AI Users with Mascot Accounts
+## Fix: PRO Users Should Never See Sand Timer on Play Button
 
 ### Problem
-The league leaderboard filler users (AI bots) use outdated English usernames like "TechWiz", "StarPlayer_1", "GameMaster" across all tiers, and have no avatars (`avatar_url: null`), causing them to render as plain colored circles with letters. This looks unprofessional for public beta.
+The "not played" state of the play button in feed cards always shows an Hourglass icon and opens the PlayLimitModal, regardless of whether the user is PRO/VIP. PRO users should see a normal Play icon and navigate directly to the trivia without any limit gating.
 
-### Solution
-Update `src/hooks/useLeaderboardPrefetch.ts` to:
+### Root Cause
+Both `PlayerFeedItem.tsx` and `TriviaPortfolioCard.tsx` have the same logic:
+- If `isPlayed` is true: show compact purple circle with Play icon, navigate directly
+- If `isPlayed` is false: **always** show Hourglass icon and open PlayLimitModal
 
-1. **Replace all AI_NAMES** with proper Georgian-style names using the same "FirstName L." convention used in the opponents system (e.g., "Giorgi K.", "Mariami G.", "Nika T.").
-2. **Assign mascot avatars** to each AI user instead of `null` -- import and cycle through the 8 mascot avatar images already available in `src/assets/avatars/`.
-3. Keep tier-appropriate name sets but all in Georgian style to match the app's target audience.
+The `usePlayLimit` hook already provides `isVip`, but neither component uses it for the button rendering or click behavior.
 
 ### Changes
 
-**File: `src/hooks/useLeaderboardPrefetch.ts`**
+**File 1: `src/components/social/PlayerFeedItem.tsx`**
+1. Destructure `isVip` from the existing `usePlayLimit()` call
+2. Update `handlePlayClick`: if PRO user and not played, navigate directly instead of showing PlayLimitModal
+3. Update the "not played" button icon: show Play icon (with text) for PRO users, Hourglass only for free users
 
-- Import all 8 mascot avatar images at the top (same pattern used in `opponents.ts`)
-- Replace `AI_NAMES` with Georgian "FirstName L." formatted names for all tiers:
-  - Tier 1 (Bronze): 15 unique Georgian names like "Giorgi K.", "Mariami G.", "Nika T."
-  - Tier 2 (Silver): 15 unique Georgian names like "Daviti M.", "Elene S.", "Luka B."
-  - Tier 3 (Gold): 15 unique Georgian names like "Irakli Ch.", "Gvantsa P.", "Sandro Z."
-  - (Tiers 4-5 similarly updated, no duplicate names across tiers)
-- In `generateFakeUsers()`, assign `avatar_url` using the mascot avatar images (cycling through 8 avatars deterministically based on index)
+**File 2: `src/components/social/TriviaPortfolioCard.tsx`**
+1. Destructure `isVip` from the existing `usePlayLimit()` call
+2. Update `handlePlayClick`: if PRO user and not played, navigate directly instead of showing PlayLimitModal
+3. Update the "not played" button icon: show Play icon (with text) for PRO users, Hourglass only for free users
 
-### Result
-- All AI filler users in every league tier will show proper Georgian names with mascot avatars
-- Consistent with the rest of the app's visual identity (opponents, game screens, etc.)
-- No more "TechWiz", "StarPlayer_1" type names appearing in the leaderboard
+### Updated Logic (same pattern in both files)
+
+handlePlayClick:
+```text
+if (isPlayed) -> navigate directly (unchanged)
+else if (isVip) -> navigate directly (NEW - skip modal)
+else -> show PlayLimitModal (unchanged)
+```
+
+Button icon (not-played state):
+```text
+if (isVip) -> Play icon + "ითამაშე" text
+else -> Hourglass icon + "ითამაშე" text (unchanged)
+```
+
+### Technical Detail
+- `usePlayLimit()` already returns `isVip` -- just needs destructuring
+- No new imports needed (Play icon is already imported in both files)
+- PlayLimitModal stays in the JSX but will never open for PRO users
