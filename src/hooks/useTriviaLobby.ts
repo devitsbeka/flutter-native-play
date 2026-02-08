@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -48,6 +48,7 @@ const CACHE_OPTIONS = {
 
 export function useTriviaLobby(triviaId: string | undefined) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Fetch trivia details WITH creator profile in one query (eliminates waterfall)
   const { data: triviaWithCreator, isLoading: isLoadingTrivia } = useQuery({
@@ -196,6 +197,24 @@ export function useTriviaLobby(triviaId: string | undefined) {
     ? leaderboard.find(entry => entry.user_id === user.id)
     : null;
 
+  // Remove current user from leaderboard (delete all their plays for this trivia)
+  const removeFromLeaderboard = async () => {
+    if (!triviaId || !user?.id) return;
+
+    const { error } = await supabase
+      .from("quiz_post_plays")
+      .delete()
+      .eq("post_id", triviaId)
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+
+    // Invalidate all related queries so the UI updates immediately
+    queryClient.invalidateQueries({ queryKey: ["trivia-leaderboard", triviaId] });
+    queryClient.invalidateQueries({ queryKey: ["trivia-stats", triviaId] });
+    queryClient.invalidateQueries({ queryKey: ["trivia-user-play", triviaId, user.id] });
+  };
+
   return {
     trivia,
     creator,
@@ -205,5 +224,6 @@ export function useTriviaLobby(triviaId: string | undefined) {
     userRank,
     isLoading: isLoadingTrivia || isLoadingLeaderboard || isLoadingStats,
     refetchLeaderboard,
+    removeFromLeaderboard,
   };
 }
