@@ -646,7 +646,7 @@ export function GameModalFooter({
         disabled={isLoading}
         icon={primaryIcon}
       >
-        {isLoading ? "Loading..." : primaryLabel}
+        {isLoading ? "იტვირთება..." : primaryLabel}
       </ChunkyButton>
       
       {secondaryLabel && onSecondary && (
