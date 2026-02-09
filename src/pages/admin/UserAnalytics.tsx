@@ -33,6 +33,7 @@ export interface AnalyticsUser {
   current_page: string | null;
   last_seen: string | null;
   games_played: number;
+  games_won: number;
   created_at: string;
   coins: number;
   gems: number;
@@ -63,7 +64,7 @@ export default function UserAnalytics() {
       // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, nickname, avatar_url, country_code, games_played, created_at, coins, gems')
+        .select('user_id, nickname, avatar_url, country_code, games_played, games_won, created_at, coins, gems')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -107,6 +108,7 @@ export default function UserAnalytics() {
           current_page: presence?.current_page || null,
           last_seen: presence?.last_seen || null,
           games_played: profile.games_played || 0,
+          games_won: profile.games_won || 0,
           created_at: profile.created_at,
           coins: profile.coins || 0,
           gems: profile.gems || 0,

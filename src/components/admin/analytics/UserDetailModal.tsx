@@ -121,13 +121,14 @@ export function UserDetailModal({ user, open, onClose }: Props) {
   const overview = useMemo(() => {
     if (!user) return null;
 
+    // Use profile as single source of truth for totals
+    const totalGames = user.games_played ?? 0;
     const totalMatchmaking = gameSessions.length;
     const totalCategory = gamePlays.length;
     const totalRoom = roomHistory.length;
-    const totalGames = totalMatchmaking + totalCategory + totalRoom;
 
-    const won = gameSessions.filter(s => s.status === 'won').length;
-    const winRate = totalMatchmaking > 0 ? Math.round((won / totalMatchmaking) * 100) : 0;
+    const gamesWon = user.games_won ?? 0;
+    const winRate = totalGames > 0 ? Math.round((gamesWon / totalGames) * 100) : 0;
 
     const totalTimeSeconds = userSessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
 
