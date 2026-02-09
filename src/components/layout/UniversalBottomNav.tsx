@@ -181,6 +181,7 @@ export function UniversalBottomNav({
                 isVip={isVip}
                 canPlay={canPlay}
                 isLoading={vipLoading}
+                vipExpiresAt={vipExpiresAt}
               />
             </div>
           </div>
