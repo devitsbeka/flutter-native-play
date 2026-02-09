@@ -1,35 +1,57 @@
 
-## Fix Duplicate Question Scanner
+## Fix Return Gift Logic and Add Floating Gift Icon
 
 ### Problem
-The scanner says "no duplicates found" even though there are **119 question texts with exact duplicates** across 8,650 active questions. The root cause is that the Supabase client has a **default limit of 1,000 rows per query**. The scanner's query fetches at most 1,000 questions, meaning it only compares a fraction of the database.
+The current BetaGiftModal has two issues:
+1. **One-time only**: The gift is tracked with `returnee_gift_claimed` in localStorage, so it only works once ever. You want it to trigger every time a user returns after 30+ minutes of absence (as long as they're not already VIP).
+2. **No fallback when dismissed**: When user clicks "მოგვიანებით", the gift opportunity is lost for that session with no way to reclaim it.
 
 ### Solution
 
-**File: `src/hooks/useDuplicateDetection.ts`** -- `scanDatabaseForDuplicates` function
+#### 1. Make the gift repeatable (BetaGiftModal.tsx)
+- Remove the `returnee_gift_claimed` one-time check. Instead, only check:
+  - User is not currently VIP
+  - User has been away 30+ minutes (using `last_visit_ts`)
+  - User has played at least 1 game
+- Keep updating `last_visit_ts` on every visit so the 30-minute window resets correctly.
 
-Replace the single query with a **paginated fetch** that loads all questions in batches of 1,000 until the full set is retrieved. Then run the existing comparison logic on the complete dataset.
+#### 2. Add floating gift icon when dismissed
+- When user clicks "მოგვიანებით" or clicks outside the modal, instead of just closing, store a "pending gift" state.
+- Show a floating gift icon (using the uploaded `gift-box.png`) on the main page -- a bouncing/pulsing button in the bottom-right area.
+- Clicking the floating icon re-opens the modal with the same offer.
+- After claiming, the floating icon disappears.
 
-Changes:
-1. Create a helper function `fetchAllQuestions(categoryId?)` that paginates through the `questions` table in chunks of 1,000 using `.range()`, accumulating all results.
-2. Update `scanDatabaseForDuplicates` to use this helper instead of the current single query.
-3. Also update `checkForDuplicates` (the import-time checker) with the same paginated fetch for consistency.
+#### 3. Use uploaded assets
+- Copy `gift-box.png` to `src/assets/icons/gift-box.png` for the floating icon (closed gift).
+- Copy `unboxing-gift-2.png` to `src/assets/icons/unboxing-gift-2.png` for the opened gift in the claim button.
+
+### Files to Change
+
+| File | Change |
+|------|--------|
+| `src/assets/icons/gift-box.png` | New -- copy uploaded gift-box image |
+| `src/assets/icons/unboxing-gift-2.png` | New -- copy uploaded unboxing gift image |
+| `src/components/shared/BetaGiftModal.tsx` | Remove one-time claim check; add `onDismiss` callback prop; make repeatable |
+| `src/components/shared/FloatingGiftButton.tsx` | New -- floating pulsing gift icon component |
+| `src/contexts/PlayerProfileContext.tsx` | Add state for pending gift; render FloatingGiftButton when gift was dismissed; wire modal open/close |
 
 ### Technical Details
 
-```text
-Current flow:
-  query.eq('is_active', true) --> returns max 1000 rows --> compare
+**BetaGiftModal changes:**
+- Remove `GIFT_STORAGE_KEY` and the `claimed` localStorage check
+- Keep `isVip` check (don't offer to active VIP users)
+- Add `onDismiss` prop so parent knows when user chose "მოგვიანებით"
+- Add `onClaimed` prop so parent knows when gift was claimed
 
-Fixed flow:
-  page 0: range(0, 999)    --> 1000 rows
-  page 1: range(1000, 1999) --> 1000 rows
-  ...
-  page N: range(N*1000, ...) --> < 1000 rows (done)
-  --> merge all --> compare all pairs
-```
+**FloatingGiftButton:**
+- Positioned fixed bottom-right (above any bottom nav)
+- Uses `gift-box.png` with a bounce + glow animation
+- Small badge/shimmer effect to draw attention
+- Clicking it calls `onOpen` to reshow the modal
 
-The comparison logic (O(n^2) with early exits) remains unchanged -- it already works correctly. Only the data fetching is broken.
-
-### Additional improvement
-Since the scanner UI shows 80% threshold by default but the user screenshot shows it still finds nothing, this confirms the data fetching is the sole issue. Georgian text keywords work fine with the Jaccard similarity -- exact duplicates would score 1.0 and be caught at any threshold.
+**PlayerProfileContext orchestration:**
+- Track `pendingGift` boolean state
+- When BetaGiftModal triggers and user dismisses, set `pendingGift = true`
+- Show FloatingGiftButton when `pendingGift` is true
+- When FloatingGiftButton clicked, reopen BetaGiftModal
+- When gift claimed, set `pendingGift = false`
