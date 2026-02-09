@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
 import confettiGunIcon from "@/assets/icons/confetti-gun.png";
@@ -13,12 +14,10 @@ import xpIcon from "@/assets/icons/icon-xp.png";
 import chestIcon from "@/assets/icons/icon-chest-box.png";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 
-// Beta users who should see this modal (by email)
-const BETA_GIFT_EMAILS = [
-  "kanchaveli.b@gmail.com",
-];
-
-const GIFT_STORAGE_KEY = "beta_gift_claimed";
+const GIFT_STORAGE_KEY = "returnee_gift_claimed";
+const LAST_VISIT_KEY = "last_visit_ts";
+/** Minimum time away (ms) to qualify as a "return" — 30 minutes */
+const MIN_AWAY_MS = 30 * 60 * 1000;
 
 /** Phase 1: Appreciation message + claim button. Phase 2: Success + what's unlocked. */
 type Phase = "offer" | "success";
@@ -39,21 +38,41 @@ export function BetaGiftModal() {
   const [claiming, setClaiming] = useState(false);
   const hasChecked = useRef(false);
 
-  // Check if this user qualifies
+  // Detect returning users who have been away 30+ min and played at least 1 game
   useEffect(() => {
     if (hasChecked.current || vipLoading || !user) return;
     hasChecked.current = true;
 
-    const email = user.email?.toLowerCase();
-    if (!email || !BETA_GIFT_EMAILS.includes(email)) return;
-
     // Don't show if already claimed or already VIP
     const claimed = localStorage.getItem(`${GIFT_STORAGE_KEY}_${user.id}`);
-    if (claimed || isVip) return;
+    if (claimed || isVip) {
+      localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, Date.now().toString());
+      return;
+    }
 
-    // Show after a short delay
-    const timer = setTimeout(() => setIsOpen(true), 2000);
-    return () => clearTimeout(timer);
+    const lastVisit = localStorage.getItem(`${LAST_VISIT_KEY}_${user.id}`);
+    const now = Date.now();
+    localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, now.toString());
+
+    // First ever visit — just record timestamp, no gift yet
+    if (!lastVisit) return;
+
+    const timeSinceLastVisit = now - parseInt(lastVisit, 10);
+    if (timeSinceLastVisit < MIN_AWAY_MS) return;
+
+    // User returned after 30+ min — check if they've played before
+    const checkEngagement = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("games_played")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile && (profile.games_played ?? 0) >= 1) {
+        setTimeout(() => setIsOpen(true), 2000);
+      }
+    };
+    checkEngagement();
   }, [user, vipLoading, isVip]);
 
   const handleClaim = async () => {
