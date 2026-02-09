@@ -17,7 +17,7 @@ const POWER_UP_NAMES: Record<string, string> = {
   "5050": "50/50",
   "freeze": "დროის გაყინვა",
   "replace": "კითხვის შეცვლა",
-  "time-drain": "დროის მოპარვა",
+  "time-drain": "+ 10 წამი",
 };
 
 export function MissionCompleteToast({

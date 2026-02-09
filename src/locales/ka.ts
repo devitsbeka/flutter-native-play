@@ -169,8 +169,8 @@ export const ka = {
       hint: "თუ კითხვა ძალიან რთულია, სცადე ახალი",
     },
     timeDrain: {
-      name: "დრო",
-      description: "ამატებს 5 წამს",
+      name: "+ 10 წამი",
+      description: "ამატებს 10 წამს",
       hint: "კარგია ბოლო წამებში!",
     },
     addPower: {
@@ -616,7 +616,7 @@ export const ka = {
       fiftyFifty: "50/50",
       freeze: "გაყინვა",
       replace: "ჩანაცვლება",
-      timeDrain: "დროის გამოწვა",
+      timeDrain: "+ 10 წამი",
     },
     swipeHint: "← გადაფურცლე ყველა დღის სანახავად →",
   },
@@ -765,7 +765,7 @@ export const ka = {
       fiftyFifty: "50/50",
       freeze: "გაყინვა",
       replace: "ჩანაცვლება",
-      timeDrain: "დროის გამოწვა",
+      timeDrain: "+ 10 წამი",
     },
   },
 
@@ -897,7 +897,7 @@ export const ka = {
     powerUp5050: "50/50",
     powerUpFreeze: "გაყინვა",
     powerUpReplace: "შეცვლა",
-    powerUpTimeDrain: "დრო +5წმ",
+    powerUpTimeDrain: "+ 10 წამი",
     likedIt: "შექმენი ანგარიში და გააგრძელე თამაში",
     createAccountToContinue: "",
     levelCompleted: "გავლილი დონე",
