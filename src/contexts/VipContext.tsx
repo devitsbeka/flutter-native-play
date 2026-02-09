@@ -210,7 +210,6 @@ export function VipProvider({ children }: { children: ReactNode }) {
     getXpMultiplier,
     getMaxDailySpins,
     shouldSkipGameStake,
-    canAccessVipFrames,
     benefits: VIP_BENEFITS,
     tierBenefits: getTierBenefits(),
     isProPlus,

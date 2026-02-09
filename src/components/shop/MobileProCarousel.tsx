@@ -248,19 +248,24 @@ export function MobileProCarousel() {
         </AnimatePresence>
       </div>
 
-      {/* Dot Indicators */}
-      <div className="flex justify-center gap-2 mt-2">
-        {PRO_TIERS.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === currentIndex 
-                ? "bg-purple-500 w-6" 
-                : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-            }`}
-          />
-        ))}
+      {/* Dot Indicators + Card Count */}
+      <div className="flex flex-col items-center gap-1 mt-2">
+        <div className="flex justify-center gap-2">
+          {PRO_TIERS.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentIndex 
+                  ? "bg-purple-500 w-6" 
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              }`}
+            />
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {currentIndex + 1} / {PRO_TIERS.length}
+        </span>
       </div>
     </div>
   );
