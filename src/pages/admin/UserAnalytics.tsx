@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   Users, Search, Globe, Crown, Clock, Gamepad2,
   Coins, Gem, ArrowUpDown, Filter, ChevronDown, BarChart3,
-  RefreshCw
+  RefreshCw, Lightbulb
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ import { UserAnalyticsTable } from '@/components/admin/analytics/UserAnalyticsTa
 import { CountryBreakdownChart } from '@/components/admin/analytics/CountryBreakdownChart';
 import { ActivityTimeline } from '@/components/admin/analytics/ActivityTimeline';
 import { StatsTab } from '@/components/admin/analytics/StatsTab';
+import { InsightsTab } from '@/components/admin/analytics/InsightsTab';
 import { UserDetailModal } from '@/components/admin/analytics/UserDetailModal';
 
 export interface AnalyticsUser {
@@ -58,6 +59,8 @@ export default function UserAnalytics() {
   const [selectedUser, setSelectedUser] = useState<AnalyticsUser | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [updatedAgoText, setUpdatedAgoText] = useState('0s ago');
+  const lastUpdatedRef = useRef<Date>(new Date());
 
   const fetchAllUsers = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setIsRefreshing(true);
@@ -118,7 +121,9 @@ export default function UserAnalytics() {
       });
 
       setUsers(mapped);
-      setLastUpdated(new Date());
+      const now = new Date();
+      setLastUpdated(now);
+      lastUpdatedRef.current = now;
     } catch (err) {
       console.error('Error fetching analytics users:', err);
     } finally {
@@ -133,6 +138,26 @@ export default function UserAnalytics() {
     const interval = setInterval(() => fetchAllUsers(), 30000);
     return () => clearInterval(interval);
   }, [fetchAllUsers]);
+
+  // Realtime subscription for instant new signup detection
+  useEffect(() => {
+    const channel = supabase
+      .channel('analytics-profiles-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
+        fetchAllUsers(true);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchAllUsers]);
+
+  // Live "Updated Xs ago" counter
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const secs = Math.round((Date.now() - lastUpdatedRef.current.getTime()) / 1000);
+      setUpdatedAgoText(secs < 60 ? `${secs}s ago` : `${Math.floor(secs / 60)}m ago`);
+    }, 1000);
+    return () => clearInterval(tick);
+  }, []);
 
   // Computed stats
   const stats = useMemo(() => {
@@ -232,7 +257,7 @@ export default function UserAnalytics() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground">
-              Updated {Math.round((Date.now() - lastUpdated.getTime()) / 1000)}s ago
+              Updated {updatedAgoText}
             </span>
             <Button
               variant="outline"
@@ -256,6 +281,10 @@ export default function UserAnalytics() {
             <TabsTrigger value="stats" className="gap-1.5">
               <BarChart3 className="h-3.5 w-3.5" />
               Stats
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="gap-1.5">
+              <Lightbulb className="h-3.5 w-3.5" />
+              Insights
             </TabsTrigger>
           </TabsList>
 
@@ -342,6 +371,10 @@ export default function UserAnalytics() {
 
           <TabsContent value="stats" className="mt-4">
             <StatsTab />
+          </TabsContent>
+
+          <TabsContent value="insights" className="mt-4">
+            <InsightsTab users={users} />
           </TabsContent>
         </Tabs>
 
