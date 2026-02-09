@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
@@ -27,6 +27,7 @@ interface UniversalBottomNavProps {
   onWatchAdClick?: () => void;
   isGuest?: boolean;
   hidden?: boolean;
+  vipExpiresAt?: string;
 }
 
 export function UniversalBottomNav({ 
@@ -41,6 +42,7 @@ export function UniversalBottomNav({
   onWatchAdClick,
   isGuest = false,
   hidden = false,
+  vipExpiresAt,
 }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -179,6 +181,7 @@ export function UniversalBottomNav({
                 isVip={isVip}
                 canPlay={canPlay}
                 isLoading={vipLoading}
+                vipExpiresAt={vipExpiresAt}
               />
             </div>
           </div>
@@ -324,6 +327,45 @@ function NavButton({
   );
 }
 
+// VIP Badge with countdown support
+function VipBadge({ vipExpiresAt }: { vipExpiresAt?: string }) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!vipExpiresAt) return;
+
+    const calcTimeLeft = () => {
+      const diff = new Date(vipExpiresAt).getTime() - Date.now();
+      if (diff <= 0) return "";
+      if (diff > 24 * 60 * 60 * 1000) return ""; // more than 24h
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    };
+
+    setTimeLeft(calcTimeLeft());
+    const timer = setInterval(() => setTimeLeft(calcTimeLeft()), 1000);
+    return () => clearInterval(timer);
+  }, [vipExpiresAt]);
+
+  return (
+    <div 
+      className="flex items-center gap-0.5 px-2 py-0.5 rounded-full"
+      style={{
+        background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
+        boxShadow: "0 2px 6px rgba(217, 119, 6, 0.5)",
+      }}
+    >
+      {timeLeft ? (
+        <span className="text-[9px] font-bold text-white tabular-nums">{timeLeft}</span>
+      ) : (
+        <span className="text-[11px] font-bold text-white">∞</span>
+      )}
+    </div>
+  );
+}
+
 interface Hex3DPlayButtonProps {
   onClick: () => void;
   isPlayButton: boolean;
@@ -334,6 +376,7 @@ interface Hex3DPlayButtonProps {
   isVip?: boolean;
   canPlay?: boolean;
   isLoading?: boolean;
+  vipExpiresAt?: string;
 }
 
 function Hex3DPlayButton({ 
@@ -346,6 +389,7 @@ function Hex3DPlayButton({
   isVip = false,
   canPlay = true,
   isLoading = false,
+  vipExpiresAt,
 }: Hex3DPlayButtonProps) {
   const colorSchemes = {
     mint: {
@@ -391,17 +435,8 @@ function Hex3DPlayButton({
           className="absolute -top-2 left-1/2 -translate-x-1/2 z-[70]"
         >
           {isVip ? (
-            // VIP badge with crown
-            <div 
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{
-                background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
-                boxShadow: "0 2px 6px rgba(217, 119, 6, 0.5)",
-              }}
-            >
-              <Crown className="w-3 h-3 text-white" />
-              <span className="text-[10px] font-bold text-white">∞</span>
-            </div>
+            // VIP badge - countdown if expiring within 24h, otherwise infinity
+            <VipBadge vipExpiresAt={vipExpiresAt} />
           ) : canPlay ? (
             // Plays remaining badge
             <div 

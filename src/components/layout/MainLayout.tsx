@@ -10,6 +10,7 @@ interface MainLayoutProps {
   canPlay?: boolean;
   isVip?: boolean;
   isGuest?: boolean;
+  vipExpiresAt?: string;
   showPlayButton?: boolean;
   showBottomNav?: boolean;
   className?: string;
@@ -24,6 +25,7 @@ export function MainLayout({
   canPlay,
   isVip,
   isGuest = false,
+  vipExpiresAt,
   showPlayButton = true,
   showBottomNav = true,
   className = "",
@@ -63,6 +65,7 @@ export function MainLayout({
             canPlay={canPlay}
             isVip={isVip}
             isGuest={isGuest}
+            vipExpiresAt={vipExpiresAt}
           />
         </div>
       )}

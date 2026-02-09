@@ -60,6 +60,7 @@ import { getCountryFlag } from "@/data/opponents";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { 
@@ -172,6 +173,7 @@ export default function Index() {
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { subscription } = useVipStatus();
   const { unreadCount } = useNotifications();
   const { hasEnoughCoins, stakeAmount } = useGameStake();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
@@ -429,6 +431,7 @@ export default function Index() {
         canPlay={user ? canPlay : guestPlaysRemaining > 0}
         isVip={isVip}
         isGuest={!user}
+        vipExpiresAt={subscription?.expires_at}
         showPlayButton={true}
         showBottomNav={!isSideMenuOpen}
         disableScroll
