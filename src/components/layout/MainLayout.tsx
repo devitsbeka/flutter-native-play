@@ -65,6 +65,7 @@ export function MainLayout({
             canPlay={canPlay}
             isVip={isVip}
             isGuest={isGuest}
+            vipExpiresAt={vipExpiresAt}
           />
         </div>
       )}

@@ -430,6 +430,7 @@ export default function Index() {
         canPlay={user ? canPlay : guestPlaysRemaining > 0}
         isVip={isVip}
         isGuest={!user}
+        vipExpiresAt={subscription?.expires_at}
         showPlayButton={true}
         showBottomNav={!isSideMenuOpen}
         disableScroll

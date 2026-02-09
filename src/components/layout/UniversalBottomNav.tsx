@@ -393,17 +393,8 @@ function Hex3DPlayButton({
           className="absolute -top-2 left-1/2 -translate-x-1/2 z-[70]"
         >
           {isVip ? (
-            // VIP badge with crown
-            <div 
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-              style={{
-                background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
-                boxShadow: "0 2px 6px rgba(217, 119, 6, 0.5)",
-              }}
-            >
-              <Crown className="w-3 h-3 text-white" />
-              <span className="text-[10px] font-bold text-white">∞</span>
-            </div>
+            // VIP badge - countdown if expiring within 24h, otherwise infinity
+            <VipBadge vipExpiresAt={vipExpiresAt} />
           ) : canPlay ? (
             // Plays remaining badge
             <div 
