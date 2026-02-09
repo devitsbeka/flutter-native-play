@@ -1,34 +1,26 @@
 
 
-## Fix: Hide Question Text for Image Questions Across All Screens
+## Fix: Inconsistent Game Count in User Deep Dive Modal
 
 ### Problem
-Image-based questions show text like "Who is this person?" or "What is this?" which is unanswerable without the image. When displayed, these questions should show ONLY the image + 4 answer options, with no question text.
-
-Currently, `hideQuestionText={!!imageUrl}` is only set in 3 out of 7 screens that use `QuizQuestionCard`. The other 4 screens show the question text even for image questions.
+The header shows "4 games" (from `profiles.games_played`), but the Overview tab shows "0 TOTAL GAMES" because it sums rows from `game_sessions`, `game_plays`, and `room_match_history` tables separately. These tables may not have data for every game type, making the count unreliable.
 
 ### Solution
-Add `hideQuestionText={!!imageUrl}` to every `QuizQuestionCard` usage across all game screens. This ensures image questions never display text -- just the image and answers.
+Use `user.games_played` from the profiles table as the single source of truth for **Total Games** in the Overview tab. Similarly, use `user.games_won` for win rate and other profile-level stats that are already tracked authoritatively.
 
-### Files to Edit
+### Changes
 
-| File | Current Status | Change |
-|------|---------------|--------|
-| `src/components/game/QuizGameScreenProd.tsx` | Already has `hideQuestionText` | No change needed |
-| `src/components/team/MultiplayerGameScreenV2.tsx` | Already has `hideQuestionText` | No change needed |
-| `src/pages/CategoryQuizPage.tsx` | Already has `hideQuestionText` | No change needed |
-| `src/components/game/QuizGameScreen.tsx` | MISSING | Add `hideQuestionText` + pass `imageUrl`/`videoUrl`/`audioUrl` props |
-| `src/components/team/MultiplayerGameScreen.tsx` | MISSING | Add `hideQuestionText` + media props |
-| `src/components/team/MultiplayerObserverScreen.tsx` | MISSING | Add `hideQuestionText` + media props |
-| `src/components/tv/TVQuestionScreenV4.tsx` | MISSING | Add `hideQuestionText` |
-| `src/components/admin/studio/QuestionPreviewPanel.tsx` | MISSING | Add `hideQuestionText` |
+**File: `src/components/admin/analytics/UserDetailModal.tsx`**
 
-### What Changes Per File
+1. In the `overview` useMemo computation (around line 121-161):
+   - Change `totalGames` to use `user.games_played` instead of `gameSessions.length + gamePlays.length + roomHistory.length`
+   - Change `winRate` to use `user.games_won / user.games_played` instead of counting from `game_sessions` alone
+   - Keep `bestStreak` from `profileData` but fall back to `user` data if available
 
-For each missing screen, add this prop to the `QuizQuestionCard`:
-```
-hideQuestionText={!!currentQuestion.imageUrl}
-```
-(adjusted for each file's property naming convention -- e.g. `image_url` vs `imageUrl`)
+2. Keep the per-table counts (matchmaking, category, room) as supplementary detail in the Game History tab -- those are still useful for breakdown purposes.
 
-This is a small, safe change -- just adding one prop to 5 components that already render `QuizQuestionCard`.
+### Result
+- Header and Overview will both show "4 games" consistently
+- Win rate will reflect the same data source as the profile
+- Game History tab still shows the detailed per-table breakdown independently
+
