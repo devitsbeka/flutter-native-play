@@ -190,7 +190,7 @@ export function BetaGiftModal() {
                     onClick={handleClaim}
                     disabled={claiming}
                     showParticles
-                    icon={<img src={unboxingGiftIcon} alt="" className="w-6 h-6 object-contain" />}
+                    icon={<img src={unboxingGiftIcon} alt="" className="w-7 h-7 object-contain" />}
                   >
                     {claiming ? "იტვირთება..." : "მიიღე საჩუქარი"}
                   </ChunkyButton>
