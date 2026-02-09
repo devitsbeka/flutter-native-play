@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { fetchAdminUserIds, isExcludedUser } from '@/lib/excludedUsers';
 
 interface SessionData {
   id: string;
@@ -45,7 +46,8 @@ export function StatsTab() {
 
   const fetchData = async () => {
     try {
-      const [sessionsResult, presenceResult] = await Promise.all([
+      const [adminIds, sessionsResult, presenceResult] = await Promise.all([
+        fetchAdminUserIds(),
         supabase
           .from('user_sessions')
           .select('*')
@@ -56,8 +58,15 @@ export function StatsTab() {
           .select('user_id, status, last_seen, current_page')
       ]);
 
-      if (sessionsResult.data) setSessions(sessionsResult.data as SessionData[]);
-      if (presenceResult.data) setPresenceData(presenceResult.data);
+      const filteredSessions = (sessionsResult.data || []).filter(
+        s => !isExcludedUser(s.user_id, adminIds)
+      ) as SessionData[];
+      const filteredPresence = (presenceResult.data || []).filter(
+        p => !isExcludedUser(p.user_id, adminIds)
+      );
+
+      setSessions(filteredSessions);
+      setPresenceData(filteredPresence);
     } catch (err) {
       console.error('Error fetching stats:', err);
     } finally {

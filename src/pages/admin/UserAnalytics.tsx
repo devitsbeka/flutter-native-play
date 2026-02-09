@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { fetchAdminUserIds, isExcludedUser } from '@/lib/excludedUsers';
 import { UserAnalyticsTable } from '@/components/admin/analytics/UserAnalyticsTable';
 import { CountryBreakdownChart } from '@/components/admin/analytics/CountryBreakdownChart';
 import { ActivityTimeline } from '@/components/admin/analytics/ActivityTimeline';
@@ -61,11 +62,14 @@ export default function UserAnalytics() {
 
   const fetchAllUsers = async () => {
     try {
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, nickname, avatar_url, country_code, games_played, games_won, created_at, coins, gems')
-        .order('created_at', { ascending: false });
+      // Fetch admin IDs and all profiles in parallel
+      const [adminIds, { data: profiles, error: profilesError }] = await Promise.all([
+        fetchAdminUserIds(),
+        supabase
+          .from('profiles')
+          .select('user_id, nickname, avatar_url, country_code, games_played, games_won, created_at, coins, gems')
+          .order('created_at', { ascending: false }),
+      ]);
 
       if (profilesError) throw profilesError;
 
@@ -89,7 +93,10 @@ export default function UserAnalytics() {
 
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
-      const mapped: AnalyticsUser[] = (profiles || []).map(profile => {
+      // Filter out admins and mascots, then map
+      const realProfiles = (profiles || []).filter(p => !isExcludedUser(p.user_id, adminIds));
+
+      const mapped: AnalyticsUser[] = realProfiles.map(profile => {
         const presence = presenceMap.get(profile.user_id);
         let status: 'online' | 'away' | 'offline' = 'offline';
         if (presence) {
