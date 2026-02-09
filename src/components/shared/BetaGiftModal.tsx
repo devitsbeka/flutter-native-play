@@ -178,7 +178,7 @@ export function BetaGiftModal() {
                     boxShadow: "0 3px 0 #C4B5FD",
                   }}
                 >
-                  <img src={crownIcon} alt="" className="w-5 h-5 object-contain" />
+                  <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
                   <span className="font-display text-sm font-bold text-purple-700">
                     1 დღიანი PRO
                   </span>
