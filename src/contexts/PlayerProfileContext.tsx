@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
 import { useVipBenefitsAutoGrant } from "@/hooks/useVipBenefitsAutoGrant";
+import { BetaGiftModal } from "@/components/shared/BetaGiftModal";
 
 interface PlayerProfileContextType {
   openProfile: (userId: string) => void;
@@ -46,6 +47,7 @@ export function PlayerProfileProvider({ children }: { children: React.ReactNode 
         onClose={closeProfile}
         userId={currentProfileUserId}
       />
+      <BetaGiftModal />
     </PlayerProfileContext.Provider>
   );
 }
