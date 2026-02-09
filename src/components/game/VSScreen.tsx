@@ -465,7 +465,8 @@ export function VSScreen() {
 
 {/* Interactive Blob - Icons during spin, Video on reveal */}
             <InteractiveBlobVideo
-              iconUrl={selectedCategory?.id === "__mixed__" ? mysteryBoxIcon : (currentCategory?.image_url || undefined)}
+              iconUrl={selectedCategory?.id === "__mixed__" ? mysteryBoxIcon : undefined}
+              iconSlug={selectedCategory?.id !== "__mixed__" ? currentCategory?.icon_slug ?? undefined : undefined}
               videoSrc={selectedCategory?.videoUrl}
               isLocked={isCategoryLocked}
               shouldAnimate={showCategorySlot && !isCategoryLocked}
