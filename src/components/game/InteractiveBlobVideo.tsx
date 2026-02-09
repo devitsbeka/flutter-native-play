@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useCategories } from "@/hooks/useCategories";
+import { toWebmUrl } from "@/config/videoConfig";
 
-// Soft rounded rectangle path
-const roundedRectPath = "M0.5,0.12 C0.78,0.12 0.88,0.22 0.88,0.5 C0.88,0.78 0.78,0.88 0.5,0.88 C0.22,0.88 0.12,0.78 0.12,0.5 C0.12,0.22 0.22,0.12 0.5,0.12";
-const borderRectPath = "M0.5,0.10 C0.80,0.10 0.90,0.20 0.90,0.5 C0.90,0.80 0.80,0.90 0.5,0.90 C0.20,0.90 0.10,0.80 0.10,0.5 C0.10,0.20 0.20,0.10 0.5,0.10";
+// CSS clip-path squircle paths (pixel units for 220x220 container)
+const MAIN_BLOB_PATH = "M110,26.4 C171.6,26.4 193.6,48.4 193.6,110 C193.6,171.6 171.6,193.6 110,193.6 C48.4,193.6 26.4,171.6 26.4,110 C26.4,48.4 48.4,26.4 110,26.4";
+const BORDER_BLOB_PATH = "M110,22 C176,22 198,44 198,110 C198,176 176,198 110,198 C44,198 22,176 22,110 C22,44 44,22 110,22";
 
 // Build icon URL from slug
 function getIconUrl(slug: string): string {
@@ -25,14 +26,15 @@ const SLOT_COLORS = [
 
 interface InteractiveBlobVideoProps {
   iconUrl?: string;
+  iconSlug?: string;
   videoSrc?: string;
   isLocked: boolean;
   shouldAnimate?: boolean;
 }
 
-const SLOT_SPIN_COUNT = 6; // Number of categories to show before landing
+const SLOT_SPIN_COUNT = 6;
 
-export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimate = false }: InteractiveBlobVideoProps) {
+export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, shouldAnimate = false }: InteractiveBlobVideoProps) {
   const { categories } = useCategories();
   const [slotIndex, setSlotIndex] = useState(0);
   const [iconsPreloaded, setIconsPreloaded] = useState(false);
@@ -40,7 +42,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
   const slotIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const spinCountRef = useRef(0);
   
-  // Get all category icons for slot animation - build URLs from icon_slug
+  // Get all category icons for slot animation
   const categoryIcons = useMemo(() => 
     categories
       .filter(c => c.icon_slug)
@@ -48,10 +50,19 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
     [categories]
   );
 
+  // Resolve the locked icon: iconUrl > iconSlug > nothing
+  const lockedIconUrl = useMemo(() => {
+    if (iconUrl) return iconUrl;
+    if (iconSlug) return getIconUrl(iconSlug);
+    return "";
+  }, [iconUrl, iconSlug]);
+
+  // WebM URL for video
+  const webmSrc = useMemo(() => videoSrc ? toWebmUrl(videoSrc) : undefined, [videoSrc]);
+
   // Generate random slot sequence when animation should start
   useEffect(() => {
     if (shouldAnimate && !isLocked && categoryIcons.length > 0 && iconsPreloaded) {
-      // Pick 5-6 random indices to show before stopping
       const randomIndices: number[] = [];
       const availableIndices = [...Array(categoryIcons.length).keys()];
       
@@ -67,7 +78,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
     }
   }, [shouldAnimate, isLocked, categoryIcons.length, iconsPreloaded]);
 
-  // Preload all category icons immediately when available
+  // Preload all category icons
   useEffect(() => {
     if (categoryIcons.length === 0 || iconsPreloaded) return;
     
@@ -78,21 +89,17 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
       const img = new Image();
       img.onload = () => {
         loadedCount++;
-        if (loadedCount === totalIcons) {
-          setIconsPreloaded(true);
-        }
+        if (loadedCount === totalIcons) setIconsPreloaded(true);
       };
       img.onerror = () => {
         loadedCount++;
-        if (loadedCount === totalIcons) {
-          setIconsPreloaded(true);
-        }
+        if (loadedCount === totalIcons) setIconsPreloaded(true);
       };
       img.src = url;
     });
   }, [categoryIcons, iconsPreloaded]);
 
-  // Slot machine animation - cycles through random sequence only
+  // Slot machine animation
   useEffect(() => {
     if (isLocked || !shouldAnimate || slotSequence.length === 0 || !iconsPreloaded) {
       if (slotIntervalRef.current) {
@@ -102,24 +109,19 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
       return;
     }
 
-    // Start cycling through the random sequence
     slotIntervalRef.current = setInterval(() => {
       spinCountRef.current++;
       if (spinCountRef.current >= slotSequence.length) {
-        // Reset and loop
         spinCountRef.current = 0;
       }
       setSlotIndex(spinCountRef.current);
     }, 150);
 
     return () => {
-      if (slotIntervalRef.current) {
-        clearInterval(slotIntervalRef.current);
-      }
+      if (slotIntervalRef.current) clearInterval(slotIntervalRef.current);
     };
   }, [isLocked, shouldAnimate, slotSequence.length, iconsPreloaded]);
 
-  // Current slot data - use the sequence index to get actual category
   const actualCategoryIndex = slotSequence[slotIndex] ?? 0;
   const currentIconUrl = categoryIcons[actualCategoryIndex] || "";
   const currentColor = SLOT_COLORS[slotIndex % SLOT_COLORS.length];
@@ -127,84 +129,75 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
 
   return (
     <div className="relative w-[220px] h-[220px] select-none">
-      {/* SVG Definitions */}
-      <svg className="absolute w-0 h-0">
-        <defs>
-          <clipPath id="mainBlobClip" clipPathUnits="objectBoundingBox">
-            <path d={roundedRectPath} />
-          </clipPath>
-          <clipPath id="borderBlobClip" clipPathUnits="objectBoundingBox">
-            <path d={borderRectPath} />
-          </clipPath>
-        </defs>
-      </svg>
+      {/* Border layer */}
+      <motion.div
+        className="absolute inset-0"
+        style={{ clipPath: `path('${BORDER_BLOB_PATH}')` }}
+        animate={{
+          background: isLocked 
+            ? "linear-gradient(135deg, hsl(48 70% 80%), hsl(42 65% 75%), hsl(38 60% 78%), hsl(48 70% 80%))"
+            : isSpinning 
+              ? `linear-gradient(135deg, ${currentColor.border}, ${currentColor.particle})`
+              : "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3))",
+        }}
+        transition={{ duration: 0.1 }}
+      />
 
-      {/* Main container */}
-      <div className="absolute inset-0">
-        {/* Border - changes color during spin */}
-        <motion.div
-          className="absolute inset-0"
-          style={{ clipPath: "url(#borderBlobClip)" }}
-          animate={{
-            background: isLocked 
-              ? "linear-gradient(135deg, hsl(48 70% 80%), hsl(42 65% 75%), hsl(38 60% 78%), hsl(48 70% 80%))"
-              : isSpinning 
-                ? `linear-gradient(135deg, ${currentColor.border}, ${currentColor.particle})`
-                : "linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3))",
-          }}
-          transition={{ duration: 0.1 }}
-        />
-
-        {/* Content container with colored background */}
-        <motion.div
-          className="absolute inset-[8px] overflow-hidden"
-          style={{
-            clipPath: "url(#mainBlobClip)",
-            background: isLocked
-              ? "rgba(255,255,255,0.1)"
-              : isSpinning
-                ? currentColor.bg
-                : "rgba(255,255,255,0.2)",
-          }}
-        >
-          <AnimatePresence mode="wait">
-            {isLocked && videoSrc ? (
-              <motion.video
-                key="video"
-                src={videoSrc}
+      {/* Content container */}
+      <motion.div
+        className="absolute inset-[8px] overflow-hidden flex items-center justify-center"
+        style={{
+          clipPath: `path('${MAIN_BLOB_PATH}')`,
+          background: isLocked
+            ? "rgba(255,255,255,0.1)"
+            : isSpinning
+              ? currentColor.bg
+              : "rgba(255,255,255,0.2)",
+        }}
+      >
+        <AnimatePresence mode="wait">
+          {isLocked && videoSrc ? (
+            <motion.div
+              key="video"
+              className="w-full h-full"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <video
                 autoPlay
                 loop
                 muted
                 playsInline
                 className="w-full h-full object-cover"
                 style={{ transform: "scale(1.3)" }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            ) : (
-              <motion.div
-                key={isLocked ? "locked-icon" : slotIndex}
-                className="w-full h-full flex items-center justify-center"
-                initial={{ y: -80, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 80, opacity: 0 }}
-                transition={{ duration: 0.08, ease: "easeOut" }}
               >
-                {(isLocked ? iconUrl : currentIconUrl) && (
-                  <img 
-                    src={isLocked ? iconUrl : currentIconUrl} 
-                    alt="" 
-                    className="w-20 h-20 object-contain drop-shadow-lg"
-                  />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
+                {webmSrc && <source src={webmSrc} type="video/webm" />}
+                <source src={videoSrc} type="video/mp4" />
+              </video>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={isLocked ? "locked-icon" : slotIndex}
+              className="w-full h-full flex items-center justify-center"
+              initial={{ y: -80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ duration: 0.08, ease: "easeOut" }}
+            >
+              {(isLocked ? lockedIconUrl : currentIconUrl) && (
+                <img 
+                  src={isLocked ? lockedIconUrl : currentIconUrl} 
+                  alt="" 
+                  className="w-20 h-20 object-contain drop-shadow-lg"
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
-      {/* Floating particles - during spin with matching colors */}
+      {/* Floating particles - during spin */}
       {isSpinning && (
         <>
           {[...Array(6)].map((_, i) => (
@@ -225,10 +218,7 @@ export function InteractiveBlobVideo({ iconUrl, videoSrc, isLocked, shouldAnimat
                 y: [0, -30],
                 x: [(i % 2 === 0 ? 1 : -1) * 10],
               }}
-              transition={{
-                duration: 0.4,
-                ease: "easeOut",
-              }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
             />
           ))}
         </>
