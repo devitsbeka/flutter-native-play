@@ -145,7 +145,7 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
 
       {/* Content container */}
       <motion.div
-        className="absolute inset-[8px] overflow-hidden flex items-center justify-center"
+        className="absolute inset-0 overflow-hidden flex items-center justify-center"
         style={{
           clipPath: `path('${MAIN_BLOB_PATH}')`,
           background: isLocked
@@ -159,7 +159,7 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
           {isLocked && videoSrc ? (
             <motion.div
               key="video"
-              className="w-full h-full"
+              className="absolute inset-0 flex items-center justify-center"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
@@ -170,7 +170,6 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
                 muted
                 playsInline
                 className="w-full h-full object-cover"
-                style={{ transform: "scale(1.3)" }}
               >
                 {webmSrc && <source src={webmSrc} type="video/webm" />}
                 <source src={videoSrc} type="video/mp4" />
