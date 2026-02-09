@@ -5,7 +5,9 @@ import { GameContainer } from "@/components/game/GameContainer";
 import { ArrowLeft } from "lucide-react";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
+import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 import { useAuth } from "@/hooks/useAuth";
+import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 
 function GameContent() {
   const { startMatchmaking, phase } = useGame();
@@ -15,30 +17,58 @@ function GameContent() {
   const { user, loading: authLoading } = useAuth();
   const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, loading: playLimitLoading } = usePlayLimit();
   const [showLimitModal, setShowLimitModal] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
 
-  // Wait for auth + play limit data to load before making any decisions
-  const dataReady = !authLoading && !playLimitLoading;
+  // Wait for auth to finish loading before making any decisions
+  const authReady = !authLoading;
+  // For logged-in users, also wait for play limit data
+  const dataReady = authReady && (!user || !playLimitLoading);
 
   useEffect(() => {
     // Don't do anything until we have real data
     if (!dataReady) return;
+    // Don't re-run after game already started
+    if (gameStarted || blocked) return;
+    // Only act during home phase
+    if (phase !== "home") return;
 
-    // Guard: if logged-in non-VIP user can't play, show modal and block game start
-    if (user && !canPlay && !isVip && phase === "home") {
+    // === GUEST CHECK ===
+    if (!user) {
+      if (hasReachedGuestPlayLimit()) {
+        setBlocked(true);
+        setShowGuestModal(true);
+        return;
+      }
+      // Record the guest play BEFORE starting - if recording fails, block
+      const recorded = recordGuestPlay();
+      if (!recorded) {
+        setBlocked(true);
+        setShowGuestModal(true);
+        return;
+      }
+      // Guest is allowed
+      setGameStarted(true);
+      startMatchmaking(categoryId || undefined);
+      return;
+    }
+
+    // === LOGGED-IN USER CHECK ===
+    if (!canPlay) {
       setBlocked(true);
       setShowLimitModal(true);
       return;
     }
-    // Auto-start matchmaking when page loads
-    if (phase === "home" && !blocked) {
-      // Safety net: if user navigated directly to /game with a regen play available, consume it
-      if (user && freeGamesExhausted && regenPlayAvailable && !isVip) {
-        useRegenPlay();
-      }
-      startMatchmaking(categoryId || undefined);
+
+    // If user can play but only via regen, consume it first
+    if (freeGamesExhausted && regenPlayAvailable && !isVip) {
+      useRegenPlay(); // fire-and-forget, local state blocks double-use immediately
     }
-  }, [phase, startMatchmaking, categoryId, user, canPlay, isVip, blocked, freeGamesExhausted, regenPlayAvailable, useRegenPlay, dataReady]);
+
+    setGameStarted(true);
+    startMatchmaking(categoryId || undefined);
+  }, [phase, dataReady, gameStarted, blocked, user, canPlay, isVip, freeGamesExhausted, regenPlayAvailable, useRegenPlay, startMatchmaking, categoryId]);
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
@@ -70,7 +100,7 @@ function GameContent() {
         <GameContainer />
       </div>
 
-      {/* Play limit modal - shown when user navigates directly to /game without plays */}
+      {/* Play limit modal - logged-in users */}
       <PlayLimitModal
         isOpen={showLimitModal}
         onClose={() => {
@@ -85,8 +115,22 @@ function GameContent() {
           if (success) {
             setShowLimitModal(false);
             setBlocked(false);
+            setGameStarted(true);
             startMatchmaking(categoryId || undefined);
           }
+        }}
+      />
+
+      {/* Guest play limit modal */}
+      <GuestMaxPlaysModal
+        isOpen={showGuestModal}
+        onClose={() => {
+          setShowGuestModal(false);
+          navigate("/");
+        }}
+        onRegister={() => {
+          setShowGuestModal(false);
+          navigate("/auth");
         }}
       />
     </div>
