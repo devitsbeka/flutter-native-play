@@ -60,6 +60,7 @@ import { getCountryFlag } from "@/data/opponents";
 import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
+import { useVipStatus } from "@/hooks/useVipStatus";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { 

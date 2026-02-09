@@ -326,6 +326,45 @@ function NavButton({
   );
 }
 
+// VIP Badge with countdown support
+function VipBadge({ vipExpiresAt }: { vipExpiresAt?: string }) {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!vipExpiresAt) return;
+
+    const calcTimeLeft = () => {
+      const diff = new Date(vipExpiresAt).getTime() - Date.now();
+      if (diff <= 0) return "";
+      if (diff > 24 * 60 * 60 * 1000) return ""; // more than 24h
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    };
+
+    setTimeLeft(calcTimeLeft());
+    const timer = setInterval(() => setTimeLeft(calcTimeLeft()), 1000);
+    return () => clearInterval(timer);
+  }, [vipExpiresAt]);
+
+  return (
+    <div 
+      className="flex items-center gap-0.5 px-2 py-0.5 rounded-full"
+      style={{
+        background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
+        boxShadow: "0 2px 6px rgba(217, 119, 6, 0.5)",
+      }}
+    >
+      {timeLeft ? (
+        <span className="text-[9px] font-bold text-white tabular-nums">{timeLeft}</span>
+      ) : (
+        <span className="text-[11px] font-bold text-white">∞</span>
+      )}
+    </div>
+  );
+}
+
 interface Hex3DPlayButtonProps {
   onClick: () => void;
   isPlayButton: boolean;
@@ -336,6 +375,7 @@ interface Hex3DPlayButtonProps {
   isVip?: boolean;
   canPlay?: boolean;
   isLoading?: boolean;
+  vipExpiresAt?: string;
 }
 
 function Hex3DPlayButton({ 
@@ -348,6 +388,7 @@ function Hex3DPlayButton({
   isVip = false,
   canPlay = true,
   isLoading = false,
+  vipExpiresAt,
 }: Hex3DPlayButtonProps) {
   const colorSchemes = {
     mint: {
