@@ -206,22 +206,12 @@ export function useDuplicateDetection() {
     setScanResult(null);
 
     try {
-      let query = supabase
-        .from('questions')
-        .select('id, question_text, category_id')
-        .eq('is_active', true);
-      
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
-
-      const { data: questions, error } = await query;
-
-      if (error) throw error;
+      // Fetch ALL questions using paginated fetch
+      const questions = await fetchAllQuestions(categoryId);
 
       // Pre-process all questions once - O(n)
       const processed = preprocessQuestions(
-        (questions || []).map(q => ({ id: q.id, question_text: q.question_text }))
+        questions.map(q => ({ id: q.id, question_text: q.question_text }))
       );
 
       const duplicates: DuplicateResult[] = [];
