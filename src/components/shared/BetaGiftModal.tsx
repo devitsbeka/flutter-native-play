@@ -132,15 +132,7 @@ export function BetaGiftModal() {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="mb-4"
                 >
-                  <div
-                    className="w-24 h-24 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(135deg, #FDE68A 0%, #FBBF24 50%, #F59E0B 100%)",
-                      boxShadow: "0 6px 0 #D97706, 0 0 30px rgba(251,191,36,0.4)",
-                    }}
-                  >
-                    <img src={confettiGunIcon} alt="" className="w-14 h-14 object-contain" />
-                  </div>
+                  <img src={confettiGunIcon} alt="" className="w-[4.5rem] h-[4.5rem] object-contain" />
                 </motion.div>
 
                 {/* Title */}
@@ -198,7 +190,7 @@ export function BetaGiftModal() {
                     onClick={handleClaim}
                     disabled={claiming}
                     showParticles
-                    icon={<img src={unboxingGiftIcon} alt="" className="w-6 h-6 object-contain" />}
+                    icon={<img src={unboxingGiftIcon} alt="" className="w-7 h-7 object-contain" />}
                   >
                     {claiming ? "იტვირთება..." : "მიიღე საჩუქარი"}
                   </ChunkyButton>
