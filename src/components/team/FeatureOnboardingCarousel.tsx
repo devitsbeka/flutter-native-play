@@ -60,7 +60,7 @@ export function FeatureOnboardingCarousel({
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % FEATURE_TOOLTIPS.length);
-    }, 4000);
+    }, 6000);
 
     return () => clearInterval(interval);
   }, [showAllCards, isPaused]);
