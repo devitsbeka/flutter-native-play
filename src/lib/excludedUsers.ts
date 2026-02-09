@@ -15,7 +15,7 @@ export const MASCOT_USER_IDS = new Set([
   '2574663a-d951-4475-9feb-60fef89caf9d', // Ana
   '7570d628-619b-434c-8d5c-fa6007eaa43f', // Luka
   '9b9330ae-740f-4b53-8e40-9202ce3660c9', // Elene
-  '7d75dfbb-bd72-47cc-bfdd-067abeea1721', // Giga
+  // Giga (7d75dfbb-...) removed — real user with 9 games and 11k coins
   // Mariam and Davit not found in DB
 ]);
 
