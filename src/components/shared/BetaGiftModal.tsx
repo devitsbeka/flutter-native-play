@@ -1,0 +1,289 @@
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useAuth } from "@/hooks/useAuth";
+import { useVipStatus } from "@/hooks/useVipStatus";
+import confetti from "canvas-confetti";
+import crownIcon from "@/assets/icons/icon-vip-crown.png";
+import giftIcon from "@/assets/icons/icon-party.png";
+
+// Beta users who should see this modal (by email)
+const BETA_GIFT_EMAILS = [
+  "kanchaveli.b@gmail.com",
+];
+
+const GIFT_STORAGE_KEY = "beta_gift_claimed";
+
+/** Phase 1: Appreciation message + claim button. Phase 2: Success + what's unlocked. */
+type Phase = "offer" | "success";
+
+const UNLOCKED_FEATURES = [
+  { emoji: "🧠", text: "AI-ით ტრივიების შექმნა" },
+  { emoji: "🏠", text: "მეგობრებთან ოთახებში თამაში" },
+  { emoji: "⭐", text: "2x XP ყველა თამაშში" },
+  { emoji: "🎰", text: "დამატებითი ყოველდღიური სპინები" },
+  { emoji: "🚫", text: "სრული თამაში რეკლამების გარეშე" },
+];
+
+export function BetaGiftModal() {
+  const { user } = useAuth();
+  const { isVip, activateVip, loading: vipLoading } = useVipStatus();
+  const [isOpen, setIsOpen] = useState(false);
+  const [phase, setPhase] = useState<Phase>("offer");
+  const [claiming, setClaiming] = useState(false);
+  const hasChecked = useRef(false);
+
+  // Check if this user qualifies
+  useEffect(() => {
+    if (hasChecked.current || vipLoading || !user) return;
+    hasChecked.current = true;
+
+    const email = user.email?.toLowerCase();
+    if (!email || !BETA_GIFT_EMAILS.includes(email)) return;
+
+    // Don't show if already claimed or already VIP
+    const claimed = localStorage.getItem(`${GIFT_STORAGE_KEY}_${user.id}`);
+    if (claimed || isVip) return;
+
+    // Show after a short delay
+    const timer = setTimeout(() => setIsOpen(true), 2000);
+    return () => clearTimeout(timer);
+  }, [user, vipLoading, isVip]);
+
+  const handleClaim = async () => {
+    setClaiming(true);
+    const success = await activateVip("day");
+    if (success) {
+      localStorage.setItem(`${GIFT_STORAGE_KEY}_${user!.id}`, "true");
+      // Fire confetti
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, zIndex: 9999 });
+      setTimeout(() => {
+        confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.65 }, zIndex: 9999 });
+        confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.65 }, zIndex: 9999 });
+      }, 300);
+      setPhase("success");
+    }
+    setClaiming(false);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-[340px] p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
+        <DialogTitle className="sr-only">ბეტა საჩუქარი</DialogTitle>
+        <AnimatePresence mode="wait">
+          {phase === "offer" ? (
+            <motion.div
+              key="offer"
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="relative rounded-3xl overflow-hidden"
+              style={{
+                background: "linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 40%, #F0EBFF 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 16px 40px rgba(0, 0, 0, 0.2)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
+              }}
+            >
+              {/* Decorative top glow */}
+              <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
+                style={{
+                  background: "radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)",
+                }}
+              />
+
+              <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
+                {/* Gift icon with floating animation */}
+                <motion.div
+                  animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="mb-4"
+                >
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #FDE68A 0%, #FBBF24 50%, #F59E0B 100%)",
+                      boxShadow: "0 6px 0 #D97706, 0 0 30px rgba(251,191,36,0.4)",
+                    }}
+                  >
+                    <img src={giftIcon} alt="" className="w-12 h-12 object-contain" />
+                  </div>
+                </motion.div>
+
+                {/* Title */}
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="font-display text-xl font-bold text-gray-900 text-center mb-2"
+                >
+                  გმადლობთ, რომ ჩვენთან ხართ! 🎉
+                </motion.h2>
+
+                {/* Message */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-gray-600 text-center text-sm leading-relaxed mb-6"
+                >
+                  შევამჩნიეთ, რომ აქტიურად იყენებთ ჩვენს აპლიკაციას და ძალიან მადლობელი ვართ!
+                  <br />
+                  <span className="font-semibold text-amber-600">
+                    საჩუქრად გიგზავნით 24 საათიან PRO-ს! 👑
+                  </span>
+                </motion.p>
+
+                {/* Crown badge */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+                  style={{
+                    background: "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%)",
+                    boxShadow: "0 3px 0 #C4B5FD",
+                  }}
+                >
+                  <img src={crownIcon} alt="" className="w-5 h-5 object-contain" />
+                  <span className="font-display text-sm font-bold text-purple-700">
+                    1 დღიანი PRO
+                  </span>
+                </motion.div>
+
+                {/* CTA */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="w-full"
+                >
+                  <ChunkyButton
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    onClick={handleClaim}
+                    disabled={claiming}
+                    showParticles
+                    icon={<span className="text-lg">🎁</span>}
+                  >
+                    {claiming ? "იტვირთება..." : "მიიღე საჩუქარი"}
+                  </ChunkyButton>
+                </motion.div>
+
+                {/* Dismiss */}
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  onClick={handleClose}
+                  className="mt-4 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  მოგვიანებით
+                </motion.button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="success"
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="relative rounded-3xl overflow-hidden"
+              style={{
+                background: "linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 40%, #F0EBFF 100%)",
+                boxShadow: "0 8px 0 #E8E4EC, 0 16px 40px rgba(0, 0, 0, 0.2)",
+                border: "3px solid rgba(255, 255, 255, 0.95)",
+              }}
+            >
+              <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
+                {/* Success crown */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="mb-4"
+                >
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #A78BFA 0%, #7C3AED 50%, #6D28D9 100%)",
+                      boxShadow: "0 6px 0 #5B21B6, 0 0 30px rgba(124,58,237,0.4)",
+                    }}
+                  >
+                    <img src={crownIcon} alt="" className="w-12 h-12 object-contain" />
+                  </div>
+                </motion.div>
+
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="font-display text-xl font-bold text-gray-900 text-center mb-2"
+                >
+                  PRO აქტივირებულია! 🎉
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-gray-500 text-center text-sm mb-5"
+                >
+                  აი რას მიიღებ მომდევნო 24 საათში:
+                </motion.p>
+
+                {/* Unlocked features list */}
+                <div className="w-full space-y-2 mb-6">
+                  {UNLOCKED_FEATURES.map((feature, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + i * 0.06 }}
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
+                      style={{
+                        background: "rgba(255,255,255,0.8)",
+                        boxShadow: "0 2px 0 rgba(0,0,0,0.04)",
+                      }}
+                    >
+                      <span className="text-lg">{feature.emoji}</span>
+                      <span className="text-sm font-medium text-gray-700">{feature.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Close button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="w-full"
+                >
+                  <ChunkyButton
+                    variant="success"
+                    size="lg"
+                    className="w-full"
+                    onClick={handleClose}
+                    icon={<span className="text-lg">🚀</span>}
+                  >
+                    დავიწყოთ!
+                  </ChunkyButton>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </DialogContent>
+    </Dialog>
+  );
+}
