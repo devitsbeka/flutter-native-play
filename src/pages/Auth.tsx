@@ -409,6 +409,30 @@ export default function Auth() {
 
 
       </div>
+
+      {/* Account prompt dialog on failed login */}
+      <AlertDialog open={showAccountPrompt} onOpenChange={setShowAccountPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>გაქვს ანგარიში?</AlertDialogTitle>
+            <AlertDialogDescription>
+              თუ ჯერ არ გაქვს ანგარიში, შექმენი ახალი
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowAccountPrompt(false)}>
+              შესვლა
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setShowAccountPrompt(false);
+              setIsSignUp(true);
+              setErrors({});
+            }}>
+              შექმნა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
