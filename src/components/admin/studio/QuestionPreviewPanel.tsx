@@ -95,6 +95,7 @@ export function QuestionPreviewPanel({
                   }
                   timerSeconds={15}
                   reserveTopSpace={!question.image_url && !question.video_url && !question.audio_url}
+                  hideQuestionText={!!question.image_url}
                 />
 
                 {/* Answer Buttons */}
