@@ -8,6 +8,7 @@ import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
