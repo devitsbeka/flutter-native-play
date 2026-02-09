@@ -765,7 +765,7 @@ export const ka = {
       fiftyFifty: "50/50",
       freeze: "გაყინვა",
       replace: "ჩანაცვლება",
-      timeDrain: "დროის გამოწვა",
+      timeDrain: "+ 10 წამი",
     },
   },
 
