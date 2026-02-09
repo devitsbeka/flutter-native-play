@@ -1,53 +1,34 @@
 
-## Integrate PostHog Analytics
 
-### What This Does
-Adds PostHog product analytics to the app, giving you automatic pageview tracking, session recording capabilities, user identification, and custom event capture -- all without extra configuration.
+## Fix: Hide Question Text for Image Questions Across All Screens
 
-### Changes
+### Problem
+Image-based questions show text like "Who is this person?" or "What is this?" which is unanswerable without the image. When displayed, these questions should show ONLY the image + 4 answer options, with no question text.
 
-#### 1. Install PostHog package
-Add `posthog-js` as a dependency (the official PostHog JavaScript SDK).
+Currently, `hideQuestionText={!!imageUrl}` is only set in 3 out of 7 screens that use `QuizQuestionCard`. The other 4 screens show the question text even for image questions.
 
-#### 2. Create PostHog provider (`src/providers/PostHogProvider.tsx`)
-A new provider component that:
-- Initializes PostHog with your API key (`phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA`)
-- Sets `api_host` to `https://us.i.posthog.com` (PostHog Cloud US)
-- Enables automatic pageview capture (works with React Router)
-- Disables capturing before user consent if needed (can be toggled later)
-- Wraps the app with PostHog's React context so you can use `usePostHog()` hook anywhere
+### Solution
+Add `hideQuestionText={!!imageUrl}` to every `QuizQuestionCard` usage across all game screens. This ensures image questions never display text -- just the image and answers.
 
-#### 3. Add user identification (`src/providers/PostHogProvider.tsx`)
-Inside the provider, listens for auth state changes:
-- When a user logs in: calls `posthog.identify(userId)` with their profile properties (nickname, country, VIP status, coins)
-- When a user logs out: calls `posthog.reset()` to clear the identified user
-- This links anonymous pre-login events to the authenticated user automatically
+### Files to Edit
 
-#### 4. Add route change tracking (`src/providers/PostHogProvider.tsx`)
-Listens to React Router's `useLocation` to fire `posthog.capture('$pageview')` on every route change, so you get full navigation paths in PostHog.
+| File | Current Status | Change |
+|------|---------------|--------|
+| `src/components/game/QuizGameScreenProd.tsx` | Already has `hideQuestionText` | No change needed |
+| `src/components/team/MultiplayerGameScreenV2.tsx` | Already has `hideQuestionText` | No change needed |
+| `src/pages/CategoryQuizPage.tsx` | Already has `hideQuestionText` | No change needed |
+| `src/components/game/QuizGameScreen.tsx` | MISSING | Add `hideQuestionText` + pass `imageUrl`/`videoUrl`/`audioUrl` props |
+| `src/components/team/MultiplayerGameScreen.tsx` | MISSING | Add `hideQuestionText` + media props |
+| `src/components/team/MultiplayerObserverScreen.tsx` | MISSING | Add `hideQuestionText` + media props |
+| `src/components/tv/TVQuestionScreenV4.tsx` | MISSING | Add `hideQuestionText` |
+| `src/components/admin/studio/QuestionPreviewPanel.tsx` | MISSING | Add `hideQuestionText` |
 
-#### 5. Wire into the app (`src/main.tsx`)
-Wrap the app with the PostHog provider at the root level (outside of `BrowserRouter` so it initializes first).
+### What Changes Per File
 
-### What You Get Out of the Box
-- **Pageviews**: every route change automatically tracked
-- **User paths**: see how users navigate through your app
-- **Session recordings**: watch real user sessions (enable in PostHog dashboard)
-- **User identification**: link events to specific users with their profile data
-- **Retention analysis**: see how often users return
-- **Funnel analysis**: track conversion through game flows
+For each missing screen, add this prop to the `QuizQuestionCard`:
+```
+hideQuestionText={!!currentQuestion.imageUrl}
+```
+(adjusted for each file's property naming convention -- e.g. `image_url` vs `imageUrl`)
 
-### Technical Details
-
-| File | Action | Description |
-|------|--------|-------------|
-| `package.json` | Install | Add `posthog-js` dependency |
-| `src/providers/PostHogProvider.tsx` | Create | PostHog init, user identification, pageview tracking |
-| `src/main.tsx` | Edit | Wrap app with PostHogProvider |
-
-**PostHog Configuration:**
-- API Key: `phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA` (publishable, safe in client code)
-- API Host: `https://us.i.posthog.com`
-- Auto capture: enabled (clicks, inputs, form submissions)
-- Pageview capture: manual via React Router (to capture SPA navigation correctly)
-- Session recording: enabled (can be toggled in PostHog dashboard)
+This is a small, safe change -- just adding one prop to 5 components that already render `QuizQuestionCard`.
