@@ -68,6 +68,7 @@ export function MobileProCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
+  const navigate = useNavigate();
   const currentTier = subscription?.vip_tier;
 
   // Auto-rotate every 6 seconds
@@ -77,6 +78,19 @@ export function MobileProCarousel() {
     }, 6000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSwipe = useCallback((_: any, info: PanInfo) => {
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) {
+      setCurrentIndex((prev) => Math.min(prev + 1, PRO_TIERS.length - 1));
+    } else if (info.offset.x > swipeThreshold) {
+      setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    }
+  }, []);
+
+  const handleCardClick = () => {
+    navigate('/profile?tab=PRO');
+  };
 
   const handleUpgrade = async (tierId: SimplifiedTier) => {
     const stripeTierId = SIDEBAR_TO_STRIPE_TIER[tierId];
