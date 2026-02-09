@@ -224,6 +224,17 @@ export function VSScreen() {
     return () => clearTimeout(timer);
   }, [stage]);
 
+  // Timeout: if stuck on "finding-category" for 10s, show connection error
+  useEffect(() => {
+    if (stage !== "finding-category") return;
+
+    const timeout = setTimeout(() => {
+      setConnectionError(true);
+    }, 10_000);
+
+    return () => clearTimeout(timeout);
+  }, [stage]);
+
   // Deduct stake when opponent is found (commit to game)
   useEffect(() => {
     if (stage === "opponent-found" && !stakeDeducted) {
