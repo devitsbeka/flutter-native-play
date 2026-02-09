@@ -1,10 +1,12 @@
 /**
  * AdMob Service for Rewarded Ads
  * Uses @capacitor-community/admob when running on native iOS/Android
+ * Uses Facebook Instant Games ads when running inside Facebook
  * Falls back to simulated ads on web
  */
 
 import { trackingService } from './trackingService';
+import { platform, isFacebookPlatform } from '@/platform';
 
 // AdMob Configuration
 const ADMOB_CONFIG = {
@@ -31,6 +33,7 @@ interface AdServiceCallbacks {
 class AdService {
   private isInitialized = false;
   private isNative = false;
+  private isFacebook = false;
   private AdMob: any = null;
   private RewardAdPluginEvents: any = null;
   private isAdLoading = false;
@@ -56,6 +59,14 @@ class AdService {
     if (this.isInitialized) return true;
 
     try {
+      // Check if running on Facebook Instant Games
+      this.isFacebook = isFacebookPlatform();
+      if (this.isFacebook) {
+        console.log('Running on Facebook Instant Games, using FB ad placements');
+        this.isInitialized = true;
+        return true;
+      }
+
       // Check if running on native platform (Capacitor)
       const isPlatformNative = typeof (window as any).Capacitor !== 'undefined';
       this.isNative = isPlatformNative;
@@ -249,6 +260,25 @@ class AdService {
       callbacks?.onRewardEarned?.({ type: 'vip_skip', amount: 1 });
       callbacks?.onAdDismissed?.();
       return true;
+    }
+
+    // Facebook Instant Games: use the platform adapter for ads
+    if (this.isFacebook) {
+      try {
+        callbacks?.onAdShowed?.();
+        const result = await platform().showRewardedAd();
+        if (result.rewarded) {
+          callbacks?.onRewardEarned?.({ type: result.rewardType || 'plays', amount: result.rewardAmount || 2 });
+          callbacks?.onAdDismissed?.();
+          return true;
+        } else {
+          callbacks?.onAdFailedToShow?.('Ad not available');
+          return false;
+        }
+      } catch (error) {
+        callbacks?.onAdFailedToShow?.((error as Error).message);
+        return false;
+      }
     }
 
     // Load and show in one call

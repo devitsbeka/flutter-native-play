@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { addDays, addMonths, isAfter } from "date-fns";
+import { platform, isFacebookPlatform } from "@/platform";
 
 export interface VipSubscription {
   id: string;
@@ -57,6 +58,8 @@ interface VipContextType {
   isVip: boolean;
   loading: boolean;
   activateVip: (duration: VipDuration) => Promise<boolean>;
+  /** Purchase VIP through the current platform's payment system (FB IAP, Stripe, RevenueCat) */
+  purchaseVip: (duration: VipDuration) => Promise<boolean>;
   getDaysRemaining: () => number;
   getXpMultiplier: () => number;
   getMaxDailySpins: () => number;
@@ -182,6 +185,73 @@ export function VipProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  /**
+   * Purchase VIP through the platform's native payment system.
+   * On Facebook: uses FBInstant.payments → facebook-purchase-webhook edge function.
+   * On web: falls back to activateVip (Stripe flow is handled elsewhere).
+   */
+  const purchaseVip = async (duration: VipDuration): Promise<boolean> => {
+    if (!user) return false;
+
+    if (isFacebookPlatform()) {
+      const productMap: Record<VipDuration, string> = {
+        day: 'vip_1_day',
+        week: 'vip_7_days',
+        month: 'vip_30_days',
+      };
+
+      try {
+        const p = platform();
+        const result = await p.purchaseProduct(
+          productMap[duration],
+          JSON.stringify({ user_id: user.id })
+        );
+
+        if (!result.success) {
+          toast.error("შეძენა ვერ მოხერხდა");
+          return false;
+        }
+
+        // Verify and process the purchase server-side
+        const { error } = await supabase.functions.invoke('facebook-purchase-webhook', {
+          body: {
+            purchaseToken: result.purchaseToken,
+            productId: productMap[duration],
+            userId: user.id,
+          },
+        });
+
+        if (error) {
+          console.error('Purchase verification failed:', error);
+          toast.error("შეძენის დადასტურება ვერ მოხერხდა");
+          return false;
+        }
+
+        // Refresh VIP status from database
+        const { data } = await supabase
+          .from("vip_subscriptions")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (data) {
+          setSubscription(data as VipSubscription);
+          setIsVip(isAfter(new Date(data.expires_at), new Date()));
+        }
+
+        toast.success("VIP აქტივირებულია! 👑");
+        return true;
+      } catch (error) {
+        console.error("Facebook VIP purchase error:", error);
+        toast.error("შეძენა ვერ მოხერხდა");
+        return false;
+      }
+    }
+
+    // On web/native, fall back to the existing direct activation
+    return activateVip(duration);
+  };
+
   const getDaysRemaining = (): number => {
     if (!subscription || !isVip) return 0;
     const now = new Date();
@@ -208,6 +278,7 @@ export function VipProvider({ children }: { children: ReactNode }) {
     isVip,
     loading,
     activateVip,
+    purchaseVip,
     getDaysRemaining,
     getXpMultiplier,
     getMaxDailySpins,

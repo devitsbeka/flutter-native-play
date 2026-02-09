@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:fb": "vite --config vite.config.fb.ts",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:fb": "vite build --config vite.config.fb.ts",
+    "package:fb": "npm run build:fb && bash scripts/package-fb.sh",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:fb": "vite preview --config vite.config.fb.ts"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
