@@ -25,6 +25,7 @@ export function MainLayout({
   canPlay,
   isVip,
   isGuest = false,
+  vipExpiresAt,
   showPlayButton = true,
   showBottomNav = true,
   className = "",
