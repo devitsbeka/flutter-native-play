@@ -243,23 +243,26 @@ export function VSScreen() {
   };
 
   // Handle refresh - re-spin for new opponent and category
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     // Reset local state
     setStage("finding-opponent");
     setSelectedCategory(null);
     setCurrentCategoryIndex(0);
     setStakeDeducted(false);
+    setConnectionError(false);
+    categoryPoolSetForStageRef.current = false;
     
     // Shuffle category pool for new selection - includes Mixed Category
     if (categories.length > 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
       const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
       setCategoryPool(poolWithMixed);
+      categoryPoolSetForStageRef.current = true;
     }
     
     // Re-trigger matchmaking
     startMatchmaking();
-  };
+  }, [categories, startMatchmaking]);
 
   const isOpponentLocked = stage !== "finding-opponent";
   const isCategoryLocked = stage === "category-found" || stage === "ready";
