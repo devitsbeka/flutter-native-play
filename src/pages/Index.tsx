@@ -245,12 +245,7 @@ export default function Index() {
         return;
       }
 
-      // If using a regen play (free games exhausted but regen available), consume it
-      if (regenPlayAvailable && playsRemaining <= 0 && !isVip) {
-        const success = await useRegenPlay();
-        if (!success) return;
-      }
-      
+      // Regen consumption is now handled centrally by PlayGuardContext/Game.tsx
       navigate("/game");
     }
   }, [user, profile, navigate, openAvatarModal, isVip, canPlay, hasEnoughCoins, regenPlayAvailable, playsRemaining, useRegenPlay]);
