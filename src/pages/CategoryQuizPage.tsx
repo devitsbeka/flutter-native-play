@@ -280,6 +280,7 @@ export default function CategoryQuizPage() {
           categorySlug: categoryId,
           levelNumber,
           count: 5,
+          excludeIds: questionIds,
         });
         
         if (result.questions.length === 0) {

@@ -328,7 +328,7 @@ async function getCategoryQuestions(
     query = query.not('id', 'in', `(${excludeIds.join(',')})`);
   }
   
-  let { data: questions } = await query.limit(100);
+  let { data: questions } = await query;
   
   // Fallback 1: try full level range (1-20) with exclusions if not enough
   if (!questions || questions.length < count) {
@@ -348,7 +348,7 @@ async function getCategoryQuestions(
       fallbackQuery = fallbackQuery.not('id', 'in', `(${excludeIds.join(',')})`);
     }
     
-    const { data: fallbackQuestions } = await fallbackQuery.limit(100);
+    const { data: fallbackQuestions } = await fallbackQuery;
     questions = fallbackQuestions || [];
   }
   
@@ -364,8 +364,7 @@ async function getCategoryQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid)
-      .limit(100);
+      .eq('category_id', categoryUuid);
     
     questions = resetQuestions || [];
   }
