@@ -1,68 +1,68 @@
 
+## Fix Play Limit Bypass -- Security Audit and Fixes
 
-## Fix Category Selection Loop / Stuck State on VS Screen
+### Problem Found
+There is a critical hole in the play-limit system: **the regen play is never consumed in most entry points**, allowing unlimited free games.
 
-### Problem
-The VS Screen has a race condition: the category slot animation requires categories to be loaded from the database, but the animation stage timer doesn't wait for them. If categories load slowly (bad connection), the screen gets stuck on "finding-category" forever with no feedback to the user.
+### Root Cause Analysis
 
-### Root Cause (VSScreen.tsx)
-1. Stage transitions are timer-based: `opponent-found` -> 500ms -> `finding-category`
-2. The category animation effect (line 168) has a guard: `if (stage !== "finding-category" || categoryPool.length === 0) return;`
-3. If categories haven't loaded yet, `categoryPool` is empty, and the animation never starts
-4. There is no re-trigger when categories finally load -- the effect only re-runs when `stage` or `categoryPool` changes, but `stage` is already "finding-category" and won't change again
-5. No timeout or error state exists to rescue the user
+The play limit relies on `canPlay = isVip || playsRemaining > 0 || regenPlayAvailable`. When a user exhausts all 5 free plays, `regenPlayAvailable` becomes `true` because `last_play_regen_at` is `null` (first regen is free). This makes `canPlay = true`.
+
+**Hole 1: Regen play consumed in only 1 of 6+ entry points**
+- `Index.tsx handlePlayClick` (line 248-252) is the ONLY place that calls `useRegenPlay()` before navigating to `/game`
+- All `guardPlay()` call sites (SideMenuDrawer, SpotlightSearch, IslandAdventureMap, VideoAdventureMap, LevelBadge) return `true` when `canPlay` is true but never consume the regen
+- `Game.tsx` auto-starts matchmaking if `canPlay` is true, without consuming regen
+- Since `last_play_regen_at` stays `null`, `regenPlayAvailable` stays `true` forever -- unlimited free games
+
+**Hole 2: LevelInfoModal "Continue" button bypasses all checks**
+- `Index.tsx` line 384-388: the level modal's "Continue" button navigates directly to `/game` with the comment "Play limit is already checked" -- but it is not checked
+
+**Hole 3: `useRegenPlay` doesn't update local profile state**
+- After consuming a regen play in the DB, the local `profile` object still has `last_play_regen_at = null` until the realtime subscription delivers the update (could be 1-3 seconds)
+- During this window, `canPlay` is still `true`, allowing a second game start
 
 ### Solution
 
-**File: `src/components/game/VSScreen.tsx`**
+Centralize regen consumption in two places to close all holes:
 
-1. **Fix the race condition**: When the category animation effect runs and `categoryPool` is empty, don't just return -- the effect already depends on `categoryPool` in its dependency array, so when categories load and populate `categoryPool`, the effect SHOULD re-trigger. But the issue is `categoryPool` is set in a separate effect that only runs once (`categoryPool.length === 0` guard). We need to ensure the pool gets populated even if categories load after the stage is set.
+**1. `PlayGuardContext.tsx` -- consume regen when guardPlay allows play**
+- When `guardPlay` returns `true` and the user has exhausted free plays and regen is available, auto-consume the regen play
+- This covers: SideMenuDrawer, SpotlightSearch, IslandAdventureMap, VideoAdventureMap, LevelBadge
 
-   - Change the category pool initialization effect to not guard on `categoryPool.length === 0` when stage is "finding-category" (so it retries when categories arrive)
-   - Or better: make the "finding-category" stage wait until categoryPool is ready before starting the slot animation
+**2. `Game.tsx` -- consume regen before starting matchmaking**
+- Add regen consumption check before `startMatchmaking()` as a safety net for direct navigation
 
-2. **Add a timeout**: If category selection doesn't complete within 10 seconds, show a connection error mini-modal with a retry button.
+**3. `usePlayLimit.ts` -- update local state immediately after consuming regen**
+- After `useRegenPlay()` succeeds, immediately mark `regenPlayAvailable = false` in local state using a ref/state, preventing the race condition window
 
-3. **Add a connection error mini-modal**: A small overlay on the VS screen that says the connection is bad and offers "Try Again" button.
+**4. `Index.tsx` -- fix LevelInfoModal "Continue" to go through guardPlay**
 
-### Changes
+### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/game/VSScreen.tsx` | Fix race condition in category pool init + animation; add 10s timeout with error state; add connection error mini-modal |
+| `src/hooks/usePlayLimit.ts` | Add local state to track regen consumption; immediately set `regenPlayAvailable = false` after `useRegenPlay` succeeds |
+| `src/contexts/PlayGuardContext.tsx` | Make `guardPlay` async; auto-consume regen when allowing play with exhausted free games |
+| `src/pages/Game.tsx` | Add regen consumption before starting matchmaking as safety net |
+| `src/pages/Index.tsx` | Fix LevelInfoModal "Continue" to use guardPlay; remove duplicate regen logic from handlePlayClick (now handled by guardPlay) |
 
 ### Technical Details
 
-**Fix 1 - Race condition (categoryPool init)**
-```text
-Current:
-  useEffect: if categories.length > 0 && categoryPool.length === 0 -> set pool
-  Problem: runs once, if categories arrive late, pool is set but animation already gave up
+**usePlayLimit.ts changes:**
+- Add a `regenConsumedLocally` state/ref that is set to `true` immediately when `useRegenPlay()` succeeds
+- Factor this into `regenPlayAvailable` calculation: `regenPlayAvailable = freeGamesExhausted && !isVip && !regenConsumedLocally && (lastRegenAt === null || ...)`
+- Reset `regenConsumedLocally` when profile updates via realtime (new `last_play_regen_at` value detected)
 
-Fix: The animation effect depends on [stage, categoryPool] so it WILL re-run when categoryPool changes.
-The actual bug is that categoryPool init has the guard "categoryPool.length === 0" which prevents
-re-init on refresh. But the REAL issue is simpler: when handleRefresh resets categoryPool via
-setCategoryPool([...]) on line 251-254, BUT also calls startMatchmaking() which unmounts the component.
-The component remounts fresh with categoryPool=[] and categories might not have loaded yet in the
-new mount's useCategories hook.
+**PlayGuardContext.tsx changes:**
+- Make `guardPlay` consume regen automatically when it would return `true` but user has exhausted free plays
+- Call `useRegenPlay()` inside guardPlay before returning true, when `freeGamesExhausted && regenPlayAvailable`
+- Since this is now async, change the pattern: guardPlay still returns a boolean synchronously but triggers regen consumption as a side effect
 
-Solution: Remove the categoryPool.length === 0 guard from the init effect and instead use a ref
-to track if pool was set for current stage cycle. Also, don't transition to "finding-category"
-until categoryPool is ready.
-```
+**Game.tsx changes:**
+- Before `startMatchmaking()`, check if user needs to consume a regen play
+- If `freeGamesExhausted && regenPlayAvailable && !isVip`, call `useRegenPlay()` first
+- This is the last line of defense for direct URL navigation
 
-**Fix 2 - Timeout**
-```text
-Add a useEffect that starts a 10-second timer when stage is "finding-category".
-If stage doesn't progress to "category-found" within 10s, set an error state.
-```
-
-**Fix 3 - Error mini-modal**
-```text
-Small centered overlay with:
-- Icon: WifiOff or similar
-- Text: "კავშირი შეფერხებულია" (Connection interrupted)  
-- Button: "თავიდან ცდა" (Try again) -> calls handleRefresh
-- Button: "უკან" (Back) -> navigates home
-```
-
+**Index.tsx changes:**
+- LevelInfoModal's "Continue" button should check `guardPlay` before navigating
+- Remove duplicate regen consumption from `handlePlayClick` since `guardPlay` now handles it centrally
