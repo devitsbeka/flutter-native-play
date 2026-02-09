@@ -1,39 +1,29 @@
 
 
-## Fix User Deep Dive: Correct Category Data and Improve Session Stats
+## Make User Analytics Update in Real-Time
 
-### Problems Identified
+### Problem
+The User Analytics page only fetches data once when the page loads. New users who sign up while you're viewing the dashboard won't appear until you manually refresh the browser. This is why you see users in PostHog but not here.
 
-1. **Categories never show up (Fav Category = "---")**: The code joins `game_plays.category_id` (text, e.g. `"georgian_cuisine"`) with `categories.id` (UUID). This join always fails. It should match on `categories.category_id` (text field).
-
-2. **Time Spent and Avg Session = 0s**: The `user_sessions` table has `duration_seconds = null` for most records because `endSession()` fires on `beforeunload`/`visibilitychange` which are unreliable in mobile browsers. Sessions get created but never properly closed.
-
-3. **Return Visits = 0**: Same root cause -- `user_sessions` has very few entries for authenticated users (mostly guest sessions).
-
-4. **Note on Sofio T**: Her 3 games and 0% win rate are actually correct -- she played 3 matchmaking games and lost all 3.
+### Solution
+Add auto-refresh polling and a manual refresh button so the dashboard stays current.
 
 ### Changes
 
-**File: `src/components/admin/analytics/UserDetailModal.tsx`**
+**File: `src/pages/admin/UserAnalytics.tsx`**
 
-1. **Fix category join** (affects Overview + Categories tabs):
-   - Change all `categories.find(c => c.id === catId)` to `categories.find(c => c.category_id === catId)`
-   - This fixes: Fav Category display, Categories tab breakdown, and category names in Game History
+1. Add a polling interval (every 30 seconds) that re-fetches all user data automatically
+2. Add a visible "Refresh" button next to the header so you can manually trigger a data reload anytime
+3. Show a "Last updated: X seconds ago" indicator so you know how fresh the data is
 
-2. **Compute Time Spent from game data when sessions are missing**:
-   - For `totalTimeSeconds`: if `user_sessions` data is empty/zero, estimate from `game_sessions` and `game_plays` counts (avg ~2min per game as fallback)
-   - For `uniqueDays` (Return Visits): also count distinct dates from `game_sessions.created_at` and `game_plays.played_at` to capture activity even without session tracking
+**File: `src/lib/excludedUsers.ts`**
 
-3. **Fix Avg Session**: When session duration data is null, calculate from session_start to session_end timestamps directly, or from the last heartbeat
+4. Remove `Giga` (`7d75dfbb-...`) from the mascot list -- this appears to be a real user with 9 games played and 11,415 coins. Verify if any other IDs in the mascot list are actually real users that should be shown.
 
-**File: `src/hooks/useSessionTracker.ts`**
+### Technical Details
 
-4. **Improve session duration reliability**:
-   - Add a periodic heartbeat (every 30s) that updates `duration_seconds` on the active session, so even if `endSession` never fires, we still have approximate duration data
-   - Use `navigator.sendBeacon` for the `beforeunload` handler to improve reliability on mobile
+- Polling uses `setInterval` with cleanup on unmount
+- The refresh button calls the existing `fetchAllUsers` function
+- A timestamp state tracks the last successful fetch for the "last updated" display
+- No database changes needed
 
-### Result
-- Categories will display correctly in Overview (Fav Category) and Categories tab
-- Time Spent will show real data from either sessions or game activity
-- Return Visits will count days with any activity, not just sessions
-- Future sessions will have reliable duration data via heartbeat
