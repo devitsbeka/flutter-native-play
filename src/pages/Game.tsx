@@ -12,12 +12,18 @@ function GameContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get("category");
-  const { user } = useAuth();
-  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { user, loading: authLoading } = useAuth();
+  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, loading: playLimitLoading } = usePlayLimit();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [blocked, setBlocked] = useState(false);
 
+  // Wait for auth + play limit data to load before making any decisions
+  const dataReady = !authLoading && !playLimitLoading;
+
   useEffect(() => {
+    // Don't do anything until we have real data
+    if (!dataReady) return;
+
     // Guard: if logged-in non-VIP user can't play, show modal and block game start
     if (user && !canPlay && !isVip && phase === "home") {
       setBlocked(true);
@@ -28,11 +34,11 @@ function GameContent() {
     if (phase === "home" && !blocked) {
       // Safety net: if user navigated directly to /game with a regen play available, consume it
       if (user && freeGamesExhausted && regenPlayAvailable && !isVip) {
-        useRegenPlay(); // fire-and-forget, local state blocks double-use immediately
+        useRegenPlay();
       }
       startMatchmaking(categoryId || undefined);
     }
-  }, [phase, startMatchmaking, categoryId, user, canPlay, isVip, blocked, freeGamesExhausted, regenPlayAvailable, useRegenPlay]);
+  }, [phase, startMatchmaking, categoryId, user, canPlay, isVip, blocked, freeGamesExhausted, regenPlayAvailable, useRegenPlay, dataReady]);
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
