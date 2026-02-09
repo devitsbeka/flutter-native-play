@@ -383,6 +383,7 @@ export default function Index() {
         levelInfo={levelInfo}
         onContinue={() => {
           setShowLevelModal(false);
+          // Play limit is already checked via handlePlayClick flow
           navigate("/game");
         }}
       />

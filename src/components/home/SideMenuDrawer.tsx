@@ -10,6 +10,7 @@ import { MissionsModal } from "./MissionsModal";
 import { DailyRewardsModal } from "./DailyRewardsModal";
 import { ChestRewardModal } from "./ChestRewardModal";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { usePlayGuard } from "@/contexts/PlayGuardContext";
 
 import { TeamMenuScreen } from "@/components/team/TeamMenuScreen";
 import { CategorySelectorModal } from "@/components/team/CategorySelectorModal";
@@ -32,6 +33,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   const { user, profile, signOut, loading } = useAuth();
   const { t } = useLanguage();
   const { openAvatarModal } = useAvatarModal();
+  const { guardPlay } = usePlayGuard();
   const [isMissionsOpen, setIsMissionsOpen] = useState(false);
   const [isDailyRewardsOpen, setIsDailyRewardsOpen] = useState(false);
   const [isChestModalOpen, setIsChestModalOpen] = useState(false);
@@ -47,6 +49,7 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
   };
 
   const handlePlayClick = () => {
+    if (!guardPlay(() => { onClose(); navigate('/game'); })) return;
     onClose();
     navigate('/game');
   };
@@ -103,6 +106,11 @@ export function SideMenuDrawer({ isOpen, onClose }: SideMenuDrawerProps) {
               navigate('/team', { state: { openPersonalTrivia: true } });
             }}
             onSelectRandom={() => {
+              if (!guardPlay(() => {
+                setIsTeamMenuOpen(false);
+                onClose();
+                navigate('/game');
+              })) return;
               setIsTeamMenuOpen(false);
               onClose();
               navigate('/game');

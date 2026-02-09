@@ -12,6 +12,7 @@ import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { VipProvider } from "@/contexts/VipContext";
 import { FriendsProvider } from "@/contexts/FriendsContext";
+import { PlayGuardProvider } from "@/contexts/PlayGuardContext";
 import { PendingChallengesProvider } from "@/contexts/PendingChallengesContext";
 import { TVGameProvider } from "@/contexts/TVGameContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -111,6 +112,7 @@ const App = () => (
       <VipProvider>
       <SoundProvider>
         <FriendsProvider>
+        <PlayGuardProvider>
         <PendingChallengesProvider>
         <NotificationsProvider>
           <OnboardingProvider>
@@ -212,6 +214,7 @@ const App = () => (
           </OnboardingProvider>
         </NotificationsProvider>
         </PendingChallengesProvider>
+        </PlayGuardProvider>
         </FriendsProvider>
       </SoundProvider>
       </VipProvider>

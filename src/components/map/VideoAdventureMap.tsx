@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePlayGuard } from "@/contexts/PlayGuardContext";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { PowerUpsBar } from "./PowerUpsBar";
@@ -22,6 +23,7 @@ type VideoPhase = "default" | "video-b" | "video-c";
 
 export function VideoAdventureMap() {
   const navigate = useNavigate();
+  const { guardPlay } = usePlayGuard();
   const { user } = useAuth();
   const [totalPoints, setTotalPoints] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -475,6 +477,7 @@ export function VideoAdventureMap() {
         levelInfo={calculateLevel(totalPoints)}
         onContinue={() => {
           setShowLevelModal(false);
+          if (!guardPlay(() => navigate("/game"))) return;
           navigate("/game");
         }}
       />
