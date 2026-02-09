@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useCategories } from "@/hooks/useCategories";
 
 // Soft rounded rectangle path
-const roundedRectPath = "M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 C0.94,0.82 0.82,0.94 0.5,0.94 C0.18,0.94 0.06,0.82 0.06,0.5 C0.06,0.18 0.18,0.06 0.5,0.06";
-const borderRectPath = "M0.5,0.04 C0.84,0.04 0.96,0.16 0.96,0.5 C0.96,0.84 0.84,0.96 0.5,0.96 C0.16,0.96 0.04,0.84 0.04,0.5 C0.04,0.16 0.16,0.04 0.5,0.04";
+const roundedRectPath = "M0.5,0.12 C0.78,0.12 0.88,0.22 0.88,0.5 C0.88,0.78 0.78,0.88 0.5,0.88 C0.22,0.88 0.12,0.78 0.12,0.5 C0.12,0.22 0.22,0.12 0.5,0.12";
+const borderRectPath = "M0.5,0.10 C0.80,0.10 0.90,0.20 0.90,0.5 C0.90,0.80 0.80,0.90 0.5,0.90 C0.20,0.90 0.10,0.80 0.10,0.5 C0.10,0.20 0.20,0.10 0.5,0.10";
 
 // Build icon URL from slug
 function getIconUrl(slug: string): string {
