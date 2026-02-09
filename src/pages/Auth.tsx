@@ -14,6 +14,16 @@ import { z } from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -26,6 +36,7 @@ export default function Auth() {
   const [nickname, setNickname] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showAccountPrompt, setShowAccountPrompt] = useState(false);
 
   const { signIn, signInWithUsername, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
   const isIOS = Capacitor.getPlatform() === 'ios';
@@ -147,7 +158,7 @@ export default function Auth() {
           : await signInWithUsername(email, password);
         
         if (authResult.error) {
-          notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
+          setShowAccountPrompt(true);
         } else {
           notify.success(t("auth.welcomeBack"), { icon: toastIcon(triviaBuzzer) });
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
@@ -398,6 +409,30 @@ export default function Auth() {
 
 
       </div>
+
+      {/* Account prompt dialog on failed login */}
+      <AlertDialog open={showAccountPrompt} onOpenChange={setShowAccountPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>გაქვს ანგარიში?</AlertDialogTitle>
+            <AlertDialogDescription>
+              თუ ჯერ არ გაქვს ანგარიში, შექმენი ახალი
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowAccountPrompt(false)}>
+              შესვლა
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setShowAccountPrompt(false);
+              setIsSignUp(true);
+              setErrors({});
+            }}>
+              შექმნა
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
