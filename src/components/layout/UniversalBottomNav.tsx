@@ -42,6 +42,7 @@ export function UniversalBottomNav({
   onWatchAdClick,
   isGuest = false,
   hidden = false,
+  vipExpiresAt,
 }: UniversalBottomNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
