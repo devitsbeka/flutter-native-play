@@ -1,57 +1,68 @@
 
-## Fix Return Gift Logic and Add Floating Gift Icon
+
+## Fix Category Selection Loop / Stuck State on VS Screen
 
 ### Problem
-The current BetaGiftModal has two issues:
-1. **One-time only**: The gift is tracked with `returnee_gift_claimed` in localStorage, so it only works once ever. You want it to trigger every time a user returns after 30+ minutes of absence (as long as they're not already VIP).
-2. **No fallback when dismissed**: When user clicks "მოგვიანებით", the gift opportunity is lost for that session with no way to reclaim it.
+The VS Screen has a race condition: the category slot animation requires categories to be loaded from the database, but the animation stage timer doesn't wait for them. If categories load slowly (bad connection), the screen gets stuck on "finding-category" forever with no feedback to the user.
+
+### Root Cause (VSScreen.tsx)
+1. Stage transitions are timer-based: `opponent-found` -> 500ms -> `finding-category`
+2. The category animation effect (line 168) has a guard: `if (stage !== "finding-category" || categoryPool.length === 0) return;`
+3. If categories haven't loaded yet, `categoryPool` is empty, and the animation never starts
+4. There is no re-trigger when categories finally load -- the effect only re-runs when `stage` or `categoryPool` changes, but `stage` is already "finding-category" and won't change again
+5. No timeout or error state exists to rescue the user
 
 ### Solution
 
-#### 1. Make the gift repeatable (BetaGiftModal.tsx)
-- Remove the `returnee_gift_claimed` one-time check. Instead, only check:
-  - User is not currently VIP
-  - User has been away 30+ minutes (using `last_visit_ts`)
-  - User has played at least 1 game
-- Keep updating `last_visit_ts` on every visit so the 30-minute window resets correctly.
+**File: `src/components/game/VSScreen.tsx`**
 
-#### 2. Add floating gift icon when dismissed
-- When user clicks "მოგვიანებით" or clicks outside the modal, instead of just closing, store a "pending gift" state.
-- Show a floating gift icon (using the uploaded `gift-box.png`) on the main page -- a bouncing/pulsing button in the bottom-right area.
-- Clicking the floating icon re-opens the modal with the same offer.
-- After claiming, the floating icon disappears.
+1. **Fix the race condition**: When the category animation effect runs and `categoryPool` is empty, don't just return -- the effect already depends on `categoryPool` in its dependency array, so when categories load and populate `categoryPool`, the effect SHOULD re-trigger. But the issue is `categoryPool` is set in a separate effect that only runs once (`categoryPool.length === 0` guard). We need to ensure the pool gets populated even if categories load after the stage is set.
 
-#### 3. Use uploaded assets
-- Copy `gift-box.png` to `src/assets/icons/gift-box.png` for the floating icon (closed gift).
-- Copy `unboxing-gift-2.png` to `src/assets/icons/unboxing-gift-2.png` for the opened gift in the claim button.
+   - Change the category pool initialization effect to not guard on `categoryPool.length === 0` when stage is "finding-category" (so it retries when categories arrive)
+   - Or better: make the "finding-category" stage wait until categoryPool is ready before starting the slot animation
 
-### Files to Change
+2. **Add a timeout**: If category selection doesn't complete within 10 seconds, show a connection error mini-modal with a retry button.
+
+3. **Add a connection error mini-modal**: A small overlay on the VS screen that says the connection is bad and offers "Try Again" button.
+
+### Changes
 
 | File | Change |
 |------|--------|
-| `src/assets/icons/gift-box.png` | New -- copy uploaded gift-box image |
-| `src/assets/icons/unboxing-gift-2.png` | New -- copy uploaded unboxing gift image |
-| `src/components/shared/BetaGiftModal.tsx` | Remove one-time claim check; add `onDismiss` callback prop; make repeatable |
-| `src/components/shared/FloatingGiftButton.tsx` | New -- floating pulsing gift icon component |
-| `src/contexts/PlayerProfileContext.tsx` | Add state for pending gift; render FloatingGiftButton when gift was dismissed; wire modal open/close |
+| `src/components/game/VSScreen.tsx` | Fix race condition in category pool init + animation; add 10s timeout with error state; add connection error mini-modal |
 
 ### Technical Details
 
-**BetaGiftModal changes:**
-- Remove `GIFT_STORAGE_KEY` and the `claimed` localStorage check
-- Keep `isVip` check (don't offer to active VIP users)
-- Add `onDismiss` prop so parent knows when user chose "მოგვიანებით"
-- Add `onClaimed` prop so parent knows when gift was claimed
+**Fix 1 - Race condition (categoryPool init)**
+```text
+Current:
+  useEffect: if categories.length > 0 && categoryPool.length === 0 -> set pool
+  Problem: runs once, if categories arrive late, pool is set but animation already gave up
 
-**FloatingGiftButton:**
-- Positioned fixed bottom-right (above any bottom nav)
-- Uses `gift-box.png` with a bounce + glow animation
-- Small badge/shimmer effect to draw attention
-- Clicking it calls `onOpen` to reshow the modal
+Fix: The animation effect depends on [stage, categoryPool] so it WILL re-run when categoryPool changes.
+The actual bug is that categoryPool init has the guard "categoryPool.length === 0" which prevents
+re-init on refresh. But the REAL issue is simpler: when handleRefresh resets categoryPool via
+setCategoryPool([...]) on line 251-254, BUT also calls startMatchmaking() which unmounts the component.
+The component remounts fresh with categoryPool=[] and categories might not have loaded yet in the
+new mount's useCategories hook.
 
-**PlayerProfileContext orchestration:**
-- Track `pendingGift` boolean state
-- When BetaGiftModal triggers and user dismisses, set `pendingGift = true`
-- Show FloatingGiftButton when `pendingGift` is true
-- When FloatingGiftButton clicked, reopen BetaGiftModal
-- When gift claimed, set `pendingGift = false`
+Solution: Remove the categoryPool.length === 0 guard from the init effect and instead use a ref
+to track if pool was set for current stage cycle. Also, don't transition to "finding-category"
+until categoryPool is ready.
+```
+
+**Fix 2 - Timeout**
+```text
+Add a useEffect that starts a 10-second timer when stage is "finding-category".
+If stage doesn't progress to "category-found" within 10s, set an error state.
+```
+
+**Fix 3 - Error mini-modal**
+```text
+Small centered overlay with:
+- Icon: WifiOff or similar
+- Text: "კავშირი შეფერხებულია" (Connection interrupted)  
+- Button: "თავიდან ცდა" (Try again) -> calls handleRefresh
+- Button: "უკან" (Back) -> navigates home
+```
+
