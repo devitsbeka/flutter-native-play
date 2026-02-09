@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { PlayerProfileModal } from "@/components/profile/PlayerProfileModal";
 import { useVipBenefitsAutoGrant } from "@/hooks/useVipBenefitsAutoGrant";
-import { BetaGiftModal } from "@/components/shared/BetaGiftModal";
+import { BetaGiftModal, useReturnGiftEligibility } from "@/components/shared/BetaGiftModal";
+import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
+import { AnimatePresence } from "framer-motion";
 
 interface PlayerProfileContextType {
   openProfile: (userId: string) => void;
@@ -14,8 +16,6 @@ const PlayerProfileContext = createContext<PlayerProfileContextType | null>(null
 export function usePlayerProfile() {
   const context = useContext(PlayerProfileContext);
   if (!context) {
-    // Return a no-op fallback for components that might render during initial load
-    // This prevents crashes during hot reload or when context isn't ready
     return {
       openProfile: () => {},
       closeProfile: () => {},
@@ -30,6 +30,36 @@ export function PlayerProfileProvider({ children }: { children: React.ReactNode 
 
   // Auto-grant VIP daily power-ups on login
   useVipBenefitsAutoGrant();
+
+  // Return gift state
+  const isEligible = useReturnGiftEligibility();
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
+  const [pendingGift, setPendingGift] = useState(false);
+  const [giftClaimed, setGiftClaimed] = useState(false);
+
+  // Auto-open modal when eligible (with delay)
+  React.useEffect(() => {
+    if (isEligible && !giftClaimed) {
+      const timer = setTimeout(() => setGiftModalOpen(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isEligible, giftClaimed]);
+
+  const handleGiftDismiss = useCallback(() => {
+    setGiftModalOpen(false);
+    setPendingGift(true);
+  }, []);
+
+  const handleGiftClaimed = useCallback(() => {
+    setGiftModalOpen(false);
+    setPendingGift(false);
+    setGiftClaimed(true);
+  }, []);
+
+  const handleFloatingGiftClick = useCallback(() => {
+    setPendingGift(false);
+    setGiftModalOpen(true);
+  }, []);
 
   const openProfile = useCallback((userId: string) => {
     setCurrentProfileUserId(userId);
@@ -47,7 +77,16 @@ export function PlayerProfileProvider({ children }: { children: React.ReactNode 
         onClose={closeProfile}
         userId={currentProfileUserId}
       />
-      <BetaGiftModal />
+      <BetaGiftModal
+        isOpen={giftModalOpen}
+        onDismiss={handleGiftDismiss}
+        onClaimed={handleGiftClaimed}
+      />
+      <AnimatePresence>
+        {pendingGift && !giftModalOpen && (
+          <FloatingGiftButton onClick={handleFloatingGiftClick} />
+        )}
+      </AnimatePresence>
     </PlayerProfileContext.Provider>
   );
 }

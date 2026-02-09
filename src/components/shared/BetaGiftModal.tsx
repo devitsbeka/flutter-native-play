@@ -13,15 +13,19 @@ import roomsIcon from "@/assets/icons/rooms-icon.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
 import chestIcon from "@/assets/icons/icon-chest-box.png";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
-import unboxingGiftIcon from "@/assets/icons/unboxing-gift.png";
+import unboxingGiftIcon from "@/assets/icons/unboxing-gift-2.png";
 
-const GIFT_STORAGE_KEY = "returnee_gift_claimed";
 const LAST_VISIT_KEY = "last_visit_ts";
 /** Minimum time away (ms) to qualify as a "return" — 30 minutes */
 const MIN_AWAY_MS = 30 * 60 * 1000;
 
-/** Phase 1: Appreciation message + claim button. Phase 2: Success + what's unlocked. */
 type Phase = "offer" | "success";
+
+interface BetaGiftModalProps {
+  isOpen: boolean;
+  onDismiss: () => void;
+  onClaimed: () => void;
+}
 
 const UNLOCKED_FEATURES = [
   { icon: aiSparkleIcon, text: "AI-ით ტრივიების შექმნა" },
@@ -31,22 +35,22 @@ const UNLOCKED_FEATURES = [
   { icon: adFreeIcon, text: "სრული თამაში რეკლამების გარეშე" },
 ];
 
-export function BetaGiftModal() {
+/**
+ * Hook that checks if the user qualifies for a return gift.
+ * Returns true once if user returned after 30+ min, is not VIP, and played ≥1 game.
+ */
+export function useReturnGiftEligibility(): boolean {
   const { user } = useAuth();
-  const { isVip, activateVip, loading: vipLoading } = useVipStatus();
-  const [isOpen, setIsOpen] = useState(false);
-  const [phase, setPhase] = useState<Phase>("offer");
-  const [claiming, setClaiming] = useState(false);
+  const { isVip, loading: vipLoading } = useVipStatus();
+  const [eligible, setEligible] = useState(false);
   const hasChecked = useRef(false);
 
-  // Detect returning users who have been away 30+ min and played at least 1 game
   useEffect(() => {
     if (hasChecked.current || vipLoading || !user) return;
     hasChecked.current = true;
 
-    // Don't show if already claimed or already VIP
-    const claimed = localStorage.getItem(`${GIFT_STORAGE_KEY}_${user.id}`);
-    if (claimed || isVip) {
+    // Don't offer to active VIP users
+    if (isVip) {
       localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, Date.now().toString());
       return;
     }
@@ -55,7 +59,7 @@ export function BetaGiftModal() {
     const now = Date.now();
     localStorage.setItem(`${LAST_VISIT_KEY}_${user.id}`, now.toString());
 
-    // First ever visit — just record timestamp, no gift yet
+    // First ever visit — just record timestamp
     if (!lastVisit) return;
 
     const timeSinceLastVisit = now - parseInt(lastVisit, 10);
@@ -70,18 +74,29 @@ export function BetaGiftModal() {
         .single();
 
       if (profile && (profile.games_played ?? 0) >= 1) {
-        setTimeout(() => setIsOpen(true), 2000);
+        setEligible(true);
       }
     };
     checkEngagement();
   }, [user, vipLoading, isVip]);
 
+  return eligible;
+}
+
+export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalProps) {
+  const { activateVip } = useVipStatus();
+  const [phase, setPhase] = useState<Phase>("offer");
+  const [claiming, setClaiming] = useState(false);
+
+  // Reset phase when modal reopens
+  useEffect(() => {
+    if (isOpen) setPhase("offer");
+  }, [isOpen]);
+
   const handleClaim = async () => {
     setClaiming(true);
     const success = await activateVip("day");
     if (success) {
-      localStorage.setItem(`${GIFT_STORAGE_KEY}_${user!.id}`, "true");
-      // Fire confetti
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, zIndex: 9999 });
       setTimeout(() => {
         confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.65 }, zIndex: 9999 });
@@ -93,7 +108,11 @@ export function BetaGiftModal() {
   };
 
   const handleClose = () => {
-    setIsOpen(false);
+    if (phase === "success") {
+      onClaimed();
+    } else {
+      onDismiss();
+    }
   };
 
   if (!isOpen) return null;
@@ -117,7 +136,6 @@ export function BetaGiftModal() {
                 border: "3px solid rgba(255, 255, 255, 0.95)",
               }}
             >
-              {/* Decorative top glow */}
               <div
                 className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full pointer-events-none"
                 style={{
@@ -126,7 +144,6 @@ export function BetaGiftModal() {
               />
 
               <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-                {/* Confetti gun icon with floating animation */}
                 <motion.div
                   animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -135,7 +152,6 @@ export function BetaGiftModal() {
                   <img src={confettiGunIcon} alt="" className="w-[4.5rem] h-[4.5rem] object-contain" />
                 </motion.div>
 
-                {/* Title */}
                 <motion.h2
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -145,7 +161,6 @@ export function BetaGiftModal() {
                   მადლობა, რომ ჩვენთან ხარ!
                 </motion.h2>
 
-                {/* Message */}
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -159,7 +174,6 @@ export function BetaGiftModal() {
                   სასიამოვნო გართობას გისურვებთ!
                 </motion.p>
 
-                {/* Crown badge */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -176,7 +190,6 @@ export function BetaGiftModal() {
                   </span>
                 </motion.div>
 
-                {/* CTA */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -196,7 +209,6 @@ export function BetaGiftModal() {
                   </ChunkyButton>
                 </motion.div>
 
-                {/* Dismiss */}
                 <motion.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -223,7 +235,6 @@ export function BetaGiftModal() {
               }}
             >
               <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-                {/* Success crown */}
                 <motion.div
                   initial={{ scale: 0, rotate: -30 }}
                   animate={{ scale: 1, rotate: 0 }}
@@ -259,7 +270,6 @@ export function BetaGiftModal() {
                   აი რას მიიღებ მომდევნო 24 საათში:
                 </motion.p>
 
-                {/* Unlocked features list */}
                 <div className="w-full space-y-2 mb-6">
                   {UNLOCKED_FEATURES.map((feature, i) => (
                     <motion.div
@@ -279,7 +289,6 @@ export function BetaGiftModal() {
                   ))}
                 </div>
 
-                {/* Close button */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
