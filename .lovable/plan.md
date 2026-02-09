@@ -1,37 +1,44 @@
 
-## Fix: Broken Avatar on Profile Page (and other locations)
 
-### Root Cause
+## PRO Play Button Badge: Limitless Only + 24h Countdown
 
-The **Profile page** (`src/pages/Profile.tsx`, line 111) renders the avatar using a raw `<img>` tag:
+### What Changes
 
-```
-<img src={profile.avatar_url || "/placeholder.svg"} />
-```
+**1. Remove crown icon from the badge above the play button**
+Currently the badge above the play button shows a crown icon + infinity symbol. Since the crown is already displayed inside the play button itself, the badge will show only the `∞` symbol -- cleaner and less redundant.
 
-This does NOT pass the URL through `resolveAvatarUrl()`, which is needed to convert local asset paths (like `/src/assets/avatars/mascot-avatar-3.png`) into actual bundled URLs. The **Home screen** works because `AvatarCircle` calls `resolveAvatarUrl()` internally.
+**2. Add countdown timer for short-duration PRO users**
+Users who received a 24-hour PRO reward (e.g., via beta gift) will see a countdown timer above the play button showing how much time remains (e.g., `02:45:30`). This helps them know when their PRO access expires. The countdown will only appear when the PRO subscription expires within 24 hours.
 
-Similarly, several **admin components** use plain `<AvatarImage>` instead of `<ResolvedAvatarImage>`, which causes the same issue there.
+### Technical Details
 
-### Affected Files
+**File: `src/components/layout/UniversalBottomNav.tsx`**
 
-| File | Issue |
-|------|-------|
-| `src/pages/Profile.tsx` (line 111) | Raw `<img src={profile.avatar_url}>` -- **main user-facing bug** |
-| `src/components/admin/analytics/UserDetailModal.tsx` | Uses `AvatarImage` instead of `ResolvedAvatarImage` |
-| `src/components/admin/analytics/InsightsTab.tsx` | Uses `AvatarImage` instead of `ResolvedAvatarImage` |
-| `src/components/admin/analytics/UserAnalyticsTable.tsx` | Uses `AvatarImage` instead of `ResolvedAvatarImage` |
-| `src/components/admin/GameStatsModal.tsx` | Uses `AvatarImage` instead of `ResolvedAvatarImage` |
-| `src/components/admin/AdsAnalyticsModal.tsx` | Uses `AvatarImage` instead of `ResolvedAvatarImage` |
+| Section | Current | New |
+|---------|---------|-----|
+| VIP badge (line 393-404) | Crown icon + `∞` text | Only `∞` text, slightly larger |
+| Props | `isVip`, `canPlay`, etc. | Add `vipExpiresAt?: string` prop |
+| Countdown | Not present | Show `HH:MM` countdown when VIP expires within 24h |
 
-### Changes
+The `Hex3DPlayButton` component will receive the VIP expiry timestamp. When the subscription expires within 24 hours, instead of (or alongside) the `∞` badge, a small countdown timer will be shown above the play button.
 
-**1. `src/pages/Profile.tsx`** -- Fix the main avatar display
-- Import `resolveAvatarUrl` from `@/utils/avatarUtils`
-- Wrap the `<img>` src: `src={resolveAvatarUrl(profile.avatar_url) || "/placeholder.svg"}`
+**File: `src/pages/Index.tsx`**
 
-**2. Admin components (5 files)** -- Swap `AvatarImage` to `ResolvedAvatarImage`
-- Replace `import { AvatarImage }` with `import { ResolvedAvatarImage }` 
-- Replace `<AvatarImage src={...} />` with `<ResolvedAvatarImage src={...} />`
+Pass `subscription?.expires_at` to the bottom nav so the play button can show the countdown.
 
-This ensures every avatar rendering location uses the same resolution pipeline, so local asset paths, Vite-hashed paths, and external URLs all work correctly.
+**File: `src/components/layout/MainLayout.tsx`**
+
+Thread the `vipExpiresAt` prop through to `UniversalBottomNav`.
+
+### Implementation
+
+1. In `UniversalBottomNav.tsx` / `Hex3DPlayButton`:
+   - Remove `<Crown>` icon from the VIP badge, keep only `∞`
+   - Add a `vipExpiresAt` prop
+   - When `isVip` and expiry is within 24 hours: show a compact countdown (`HH:MM:SS`) in the badge position instead of `∞`
+   - Use a `useState` + `setInterval` (1s) to tick the countdown
+   - When expiry is more than 24h away (or no expiry): show the `∞` badge as before (without crown)
+
+2. In `Index.tsx`: import `subscription` from `useVipStatus()` and pass `subscription?.expires_at` down through the layout
+
+3. In `MainLayout.tsx`: add `vipExpiresAt` to the props interface and forward it to `UniversalBottomNav`
