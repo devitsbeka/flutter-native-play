@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import shopBgVideo from "@/assets/shopbg.mp4";
@@ -67,6 +68,7 @@ export function MobileProCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { subscription } = useVipStatus();
   const { initiateProCheckout, isProcessing } = useProPurchase();
+  const navigate = useNavigate();
   const currentTier = subscription?.vip_tier;
 
   // Auto-rotate every 6 seconds
@@ -76,6 +78,19 @@ export function MobileProCarousel() {
     }, 6000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSwipe = useCallback((_: any, info: PanInfo) => {
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) {
+      setCurrentIndex((prev) => Math.min(prev + 1, PRO_TIERS.length - 1));
+    } else if (info.offset.x > swipeThreshold) {
+      setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    }
+  }, []);
+
+  const handleCardClick = () => {
+    navigate('/profile?tab=PRO');
+  };
 
   const handleUpgrade = async (tierId: SimplifiedTier) => {
     const stripeTierId = SIDEBAR_TO_STRIPE_TIER[tierId];
@@ -88,7 +103,10 @@ export function MobileProCarousel() {
   return (
     <div className="px-4 pt-4 pb-2 md:pb-4">
       {/* Combined PRO Card with Mascot */}
-      <div className="relative overflow-hidden rounded-3xl">
+      <div 
+        className="relative overflow-hidden rounded-3xl cursor-pointer"
+        onClick={handleCardClick}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={tier.id}
@@ -96,10 +114,15 @@ export function MobileProCarousel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.3}
+            onDragEnd={handleSwipe}
             className="relative rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px]"
             style={{
               background: tier.gradient,
               opacity: isProcessing ? 0.7 : 1,
+              touchAction: "pan-y",
             }}
           >
             {/* Popular Badge */}
@@ -225,19 +248,24 @@ export function MobileProCarousel() {
         </AnimatePresence>
       </div>
 
-      {/* Dot Indicators */}
-      <div className="flex justify-center gap-2 mt-2">
-        {PRO_TIERS.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === currentIndex 
-                ? "bg-purple-500 w-6" 
-                : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-            }`}
-          />
-        ))}
+      {/* Dot Indicators + Card Count */}
+      <div className="flex flex-col items-center gap-1 mt-2">
+        <div className="flex justify-center gap-2">
+          {PRO_TIERS.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentIndex 
+                  ? "bg-purple-500 w-6" 
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              }`}
+            />
+          ))}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {currentIndex + 1} / {PRO_TIERS.length}
+        </span>
       </div>
     </div>
   );
