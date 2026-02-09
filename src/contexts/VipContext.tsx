@@ -61,7 +61,6 @@ interface VipContextType {
   getXpMultiplier: () => number;
   getMaxDailySpins: () => number;
   shouldSkipGameStake: () => boolean;
-  canAccessVipFrames: () => boolean;
   benefits: typeof VIP_BENEFITS;
   tierBenefits: typeof VIP_BENEFITS_BY_TIER.pro;
   isProPlus: () => boolean;
