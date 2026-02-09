@@ -77,6 +77,7 @@ export function VSScreen() {
   const [stage, setStage] = useState<GameStage>("finding-opponent");
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [stakeDeducted, setStakeDeducted] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   
   // Opponent slot state
   const [currentAvatar, setCurrentAvatar] = useState<string>(slotAvatars[0]);
@@ -95,6 +96,7 @@ export function VSScreen() {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
   const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const categoryPoolSetForStageRef = useRef(false);
 
   // Player data
   const playerCoins = profile?.coins || 0;
