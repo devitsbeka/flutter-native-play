@@ -7,7 +7,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
@@ -170,7 +171,7 @@ export function GameStatsModal({ isOpen, onClose }: Props) {
                     <div key={player.user_id} className="flex items-center gap-2 text-sm">
                       <span className="w-5 text-xs text-muted-foreground font-mono">{i + 1}.</span>
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={player.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={player.avatar_url || undefined} />
                         <AvatarFallback className="text-[10px]">{player.nickname.slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       <span className="flex-1 truncate">{player.nickname}</span>

@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -238,7 +239,7 @@ export function UserDetailModal({ user, open, onClose }: Props) {
         <div className="border-b border-border/50 p-5">
           <div className="flex items-center gap-4">
             <Avatar className="h-14 w-14">
-              <AvatarImage src={user.avatar_url || undefined} />
+              <ResolvedAvatarImage src={user.avatar_url || undefined} />
               <AvatarFallback className="text-lg">{user.nickname.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

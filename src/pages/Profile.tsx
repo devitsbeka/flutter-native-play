@@ -8,6 +8,7 @@ import { getRankFromPoints } from "@/data/opponents";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProPlansSection, ProTier } from "@/components/profile/ProPlansSection";
 import { useVipStatus } from "@/hooks/useVipStatus";
@@ -108,7 +109,7 @@ export default function Profile() {
                   {/* Static Avatar */}
                   <div className="relative w-36 h-36 rounded-full ring-4 ring-primary overflow-hidden transition-all group-hover:ring-primary/80">
                     <img 
-                      src={profile.avatar_url || "/placeholder.svg"}
+                      src={resolveAvatarUrl(profile.avatar_url) || "/placeholder.svg"}
                       alt="Avatar"
                       className="w-full h-full object-cover"
                       style={{ opacity: showVideo && profile.animated_avatar_url ? 0 : 1, transition: "opacity 0.3s" }}

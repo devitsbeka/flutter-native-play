@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { TrendingUp, TrendingDown, Users, Gamepad2, Target, RotateCcw, Coins, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -236,7 +237,7 @@ export function InsightsTab({ users }: InsightsTabProps) {
                   <div key={user.user_id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
                     <div className="relative">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={user.avatar_url || undefined} />
                         <AvatarFallback className="text-xs">{user.nickname.slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       {user.status === 'online' && (

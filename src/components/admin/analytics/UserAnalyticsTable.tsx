@@ -3,7 +3,8 @@ import { ka } from 'date-fns/locale';
 import { ArrowUpDown, Crown, Coins, Gem, Gamepad2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { AnalyticsUser } from '@/pages/admin/UserAnalytics';
@@ -92,7 +93,7 @@ export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggl
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar_url || undefined} />
+                      <ResolvedAvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback className="text-xs">
                         {user.nickname.slice(0, 2)}
                       </AvatarFallback>
