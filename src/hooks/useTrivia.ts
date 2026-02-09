@@ -58,9 +58,11 @@ export function useTrivia() {
       setPreparationProgress(10);
 
       // Use unified questionService for all fetching
+      // __mixed__ is a virtual category - treat as VS mode (random from all categories)
+      const isMixed = category === '__mixed__';
       const result = await getQuestions({
-        mode: category ? 'category' : 'vs',
-        categorySlug: category,
+        mode: (category && !isMixed) ? 'category' : 'vs',
+        categorySlug: isMixed ? undefined : category,
         levelNumber: level,
         count: amount,
         excludeIds: excludeHashes,
