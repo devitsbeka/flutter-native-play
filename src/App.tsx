@@ -10,6 +10,7 @@ import { BackgroundGenerationProvider } from "@/contexts/BackgroundGenerationCon
 import { PlayerProfileProvider } from "@/contexts/PlayerProfileContext";
 import { AvatarModalProvider } from "@/contexts/AvatarModalContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { PostHogProvider } from "@/providers/PostHogProvider";
 import { VipProvider } from "@/contexts/VipContext";
 import { FriendsProvider } from "@/contexts/FriendsContext";
 import { PlayGuardProvider } from "@/contexts/PlayGuardContext";
@@ -109,6 +110,7 @@ const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 const App = () => (
   <LanguageProvider>
     <AuthProvider>
+      <PostHogProvider>
       <VipProvider>
       <SoundProvider>
         <FriendsProvider>
@@ -218,6 +220,7 @@ const App = () => (
         </FriendsProvider>
       </SoundProvider>
       </VipProvider>
+    </PostHogProvider>
     </AuthProvider>
   </LanguageProvider>
 );
