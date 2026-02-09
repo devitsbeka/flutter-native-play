@@ -169,8 +169,8 @@ export const ka = {
       hint: "თუ კითხვა ძალიან რთულია, სცადე ახალი",
     },
     timeDrain: {
-      name: "დრო",
-      description: "ამატებს 5 წამს",
+      name: "+ 10 წამი",
+      description: "ამატებს 10 წამს",
       hint: "კარგია ბოლო წამებში!",
     },
     addPower: {
