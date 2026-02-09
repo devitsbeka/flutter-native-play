@@ -109,7 +109,12 @@ export function AuthRequiredModal({
           if (error.message?.includes("already registered")) {
             toast.error("ეს სახელი უკვე დაკავებულია");
           } else {
-            toast.error(error.message || "შეცდომა, სცადე თავიდან");
+            const m = error.message || "";
+            if (m.includes("Failed to lookup user") || m.includes("Invalid login credentials")) {
+              toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+            } else {
+              toast.error("შეცდომა, სცადე თავიდან");
+            }
           }
           return;
         }
@@ -138,7 +143,12 @@ export function AuthRequiredModal({
         }
       }
     } catch (err: any) {
-      toast.error(err?.message || "შეცდომა, სცადე თავიდან");
+      const msg = err?.message || "";
+      if (msg.includes("Failed to lookup user") || msg.includes("Invalid login credentials")) {
+        toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+      } else {
+        toast.error("შეცდომა, სცადე თავიდან");
+      }
     } finally {
       setIsSubmitting(false);
     }

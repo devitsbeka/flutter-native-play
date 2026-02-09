@@ -80,7 +80,12 @@ export function DesktopGuestSplitLayout({
         await onSignIn(username, password);
       }
     } catch (err: any) {
-      toast.error(err?.message || "შეცდომა, სცადე თავიდან");
+      const msg = err?.message || "";
+      if (msg.includes("Failed to lookup user") || msg.includes("Invalid login credentials")) {
+        toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+      } else {
+        toast.error("შეცდომა, სცადე თავიდან");
+      }
     } finally {
       setIsSubmitting(false);
     }
