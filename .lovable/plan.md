@@ -1,69 +1,59 @@
 
 
-## Upgrade User Analytics to Real-Time Actionable Dashboard
+## Fix VS Screen Blob: Rounded Corners, Video, and Icon Centering
 
-### Problems Found
+### Problems Identified
 
-1. **Data IS loading** (63 real users in DB, 62 shown -- off by 1 due to timing), but:
-   - The "Updated Xs ago" counter is static -- it only recalculates when the component re-renders, not every second, so it always shows "0s ago"
-   - No Supabase realtime subscription -- relies solely on 30s polling, meaning a new signup can take up to 30s to appear
-   - No visual indicator that data refreshed (no flash/animation)
+**1. No Rounded Corners (Square Blob)**
+The SVG clip-path defs are defined inside an SVG element with `className="absolute w-0 h-0"`. On many mobile browsers, an SVG with zero dimensions fails to expose its `<clipPath>` definitions, so `clip-path: url(#mainBlobClip)` silently falls back to no clipping -- resulting in a plain square.
 
-2. **The dashboard is just a user list, not analytics.** You have rich data (24 signups today, 68 games, 22 unique players, 50 sessions) but it's hidden behind a flat table. There's no way to see trends, funnels, or retention at a glance.
+**2. No Video Showing When Category is Locked**
+When the category locks in, the component receives `iconUrl={currentCategory?.image_url || undefined}`. Since `image_url` is NULL for every category in the database, the locked state has no icon to show AND the video may fail to render because:
+- The `<video>` uses only MP4 src (no WebM source element for better mobile support)
+- If the video file doesn't load, there's no fallback -- the blob shows nothing meaningful
 
-### Solution: Transform into a Real Analytics Dashboard
+**3. Wrong/Missing Icon When Locked**
+The locked state tries to show `iconUrl` (which is null), instead of building a URL from the category's `icon_slug`. For example, "Georgian Culture" has `icon_slug: "grape"` but the code never uses it as a fallback.
 
-#### Part 1: Fix Real-Time Updates
+**4. Icons Not Centered During Spin**
+The `inset-[8px]` content container combined with the clip-path creates an uneven visual area. Icons during the slot spin appear slightly off-center within the clipped shape.
 
-**File: `src/pages/admin/UserAnalytics.tsx`**
-- Add a Supabase realtime subscription on the `profiles` table to instantly detect new signups (INSERT events trigger immediate re-fetch)
-- Add a 1-second interval timer that updates the "Updated Xs ago" counter live
-- Flash the stat cards briefly when values change (e.g., total users goes from 62 to 63)
+### Solution
 
-#### Part 2: Add Actionable Analytics Cards (New Users Tab)
+#### File: `src/components/game/InteractiveBlobVideo.tsx`
 
-**File: `src/pages/admin/UserAnalytics.tsx`** -- Add a third tab: "Insights"
+1. **Replace SVG clip-path with CSS `clip-path: path()`** -- Instead of referencing SVG defs via `url(#id)`, apply the squircle path directly as an inline CSS `clip-path: path(...)`. This is universally supported and eliminates the zero-dimension SVG bug entirely. Remove the hidden SVG element.
 
-**New file: `src/components/admin/analytics/InsightsTab.tsx`**
+2. **Accept `iconSlug` prop** -- Add an `iconSlug` prop so the component can build the icon URL from the slug when no video or image_url is available. When locked: show video first, fall back to icon_slug URL, then fall back to passed iconUrl.
 
-This tab will show 4 key sections, all derived from existing data (no new tables needed):
+3. **Add `<source>` element for WebM** -- Use both WebM and MP4 sources in the video element for better mobile compatibility and faster loading.
 
-1. **Signup Trend** (last 7 days bar chart)
-   - Daily signup count from `profiles.created_at`
-   - Today's count highlighted vs yesterday
-   - "Growth" percentage (today vs yesterday)
+4. **Fix icon centering** -- Ensure the icon container uses proper centering within the clipped area by removing the `inset-[8px]` offset from the content container and applying it via padding instead.
 
-2. **User Engagement Funnel**
-   - Total signups → Played at least 1 game → Played 5+ games → Played 10+ games
-   - Shows conversion rate at each step
-   - Helps you see where users drop off
+#### File: `src/components/game/VSScreen.tsx`
 
-3. **Today's New Users** (mini cards, not a table)
-   - Each new user today shown as a card with: name, time since signup, games played since joining, coins earned
-   - Sorted by signup time (newest first)
-   - Live badge if they're currently online
+5. **Pass `iconSlug` to InteractiveBlobVideo** -- Pass `currentCategory?.icon_slug` so the blob can build the correct icon URL when video isn't available. For mixed category, continue using mystery-box icon.
 
-4. **Retention Overview**
-   - Day 0 (signed up today, played today): X%
-   - Users who signed up yesterday and came back today: X%
-   - Week 1 retention: users from 7 days ago who were active in last 24h
-   - Simple visual with percentages
-
-#### Part 3: Improve the Users Tab
-
-**File: `src/components/admin/analytics/UserAnalyticsTable.tsx`**
-- Add a "NEW" badge next to users who signed up today
-- Sort online users to the top by default
+6. **Pass WebM video URL** -- Use `toWebmUrl()` to provide a WebM source alongside the MP4 for the selected category video.
 
 ### Technical Details
 
-- Realtime subscription uses `postgres_changes` on `profiles` table (INSERT event)
-- The "Updated ago" counter uses a separate `useState` + `setInterval(1000)` that reads from the `lastUpdated` ref
-- Engagement funnel queries `profiles.games_played` field (already fetched, no extra DB calls)
-- Retention calculation uses `profiles.created_at` cross-referenced with `user_presence.last_seen`
-- Signup trend aggregates `profiles.created_at` by date (single query, already in memory)
-- All new analytics are computed from data already fetched -- no additional database queries needed for the funnel and trend sections
+The CSS `clip-path: path()` approach converts the SVG path from `objectBoundingBox` units (0-1 range) to pixel units matching the 220x220 container:
 
-### No Database Changes Required
-All the data needed is already in `profiles`, `user_presence`, and `game_plays` tables.
+```text
+Before (SVG, broken on mobile):
+  clipPath: "url(#mainBlobClip)"
+  
+After (CSS, reliable everywhere):
+  clipPath: "path('M110,26.4 C171.6,26.4 ...')"
+```
 
+The path coordinates are computed by multiplying the 0-1 values by 220 (the container size).
+
+For the icon fallback chain when locked:
+```text
+1. Show video (WebM with MP4 fallback)
+2. If no video: show icon from icon_slug URL
+3. If no icon_slug: show passed iconUrl  
+4. If nothing: show empty container
+```
