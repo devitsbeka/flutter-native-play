@@ -158,7 +158,7 @@ export default function Auth() {
           : await signInWithUsername(email, password);
         
         if (authResult.error) {
-          notify.error(t("common.error"), { description: t("auth.invalidCredentials") });
+          setShowAccountPrompt(true);
         } else {
           notify.success(t("auth.welcomeBack"), { icon: toastIcon(triviaBuzzer) });
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
