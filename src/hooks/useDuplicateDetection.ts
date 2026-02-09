@@ -84,6 +84,44 @@ function preprocessQuestions(questions: { id: string; question_text: string }[])
   }));
 }
 
+/**
+ * Paginated fetch to bypass Supabase's 1000-row default limit
+ */
+async function fetchAllQuestions(categoryId?: string): Promise<{ id: string; question_text: string; category_id: string }[]> {
+  const PAGE_SIZE = 1000;
+  let allData: { id: string; question_text: string; category_id: string }[] = [];
+  let page = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    let query = supabase
+      .from('questions')
+      .select('id, question_text, category_id')
+      .eq('is_active', true);
+
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
+    }
+
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data, error } = await query.range(from, to);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      allData = allData.concat(data);
+    }
+
+    if (!data || data.length < PAGE_SIZE) {
+      hasMore = false;
+    }
+    page++;
+  }
+
+  return allData;
+}
+
 export function useDuplicateDetection() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<DuplicateScanResult | null>(null);
@@ -98,19 +136,8 @@ export function useDuplicateDetection() {
     setScanResult(null);
 
     try {
-      // Fetch existing questions from database
-      let query = supabase
-        .from('questions')
-        .select('id, question_text, category_id')
-        .eq('is_active', true);
-      
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
-
-      const { data: existingQuestions, error } = await query;
-
-      if (error) throw error;
+      // Fetch ALL existing questions using paginated fetch
+      const existingQuestions = await fetchAllQuestions(categoryId);
 
       // Pre-process existing questions - O(n)
       const processedExisting = preprocessQuestions(
@@ -179,22 +206,12 @@ export function useDuplicateDetection() {
     setScanResult(null);
 
     try {
-      let query = supabase
-        .from('questions')
-        .select('id, question_text, category_id')
-        .eq('is_active', true);
-      
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
-
-      const { data: questions, error } = await query;
-
-      if (error) throw error;
+      // Fetch ALL questions using paginated fetch
+      const questions = await fetchAllQuestions(categoryId);
 
       // Pre-process all questions once - O(n)
       const processed = preprocessQuestions(
-        (questions || []).map(q => ({ id: q.id, question_text: q.question_text }))
+        questions.map(q => ({ id: q.id, question_text: q.question_text }))
       );
 
       const duplicates: DuplicateResult[] = [];
