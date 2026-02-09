@@ -4,6 +4,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { getCountryCodeFromIP } from "@/hooks/useGeoLocation";
+import { isFacebookPlatform } from "@/platform";
 
 export interface Profile {
   id: string;
@@ -26,6 +27,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  /** True when running inside Facebook Instant Games (auth is automatic) */
+  isFacebook: boolean;
   signUp: (email: string, password: string, nickname: string) => Promise<{ data: any; error: any }>;
   signUpWithUsername: (username: string, password: string) => Promise<{ data: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
@@ -336,6 +339,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         loading,
+        isFacebook: isFacebookPlatform(),
         signUp,
         signUpWithUsername,
         signIn,
