@@ -2,9 +2,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArrowLeft, HelpCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, HelpCircle, RefreshCw, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
@@ -77,6 +77,7 @@ export function VSScreen() {
   const [stage, setStage] = useState<GameStage>("finding-opponent");
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [stakeDeducted, setStakeDeducted] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
   
   // Opponent slot state
   const [currentAvatar, setCurrentAvatar] = useState<string>(slotAvatars[0]);
@@ -95,6 +96,7 @@ export function VSScreen() {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<{id: string; name: string; videoUrl: string} | null>(null);
   const categoryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const categoryPoolSetForStageRef = useRef(false);
 
   // Player data
   const playerCoins = profile?.coins || 0;
@@ -106,15 +108,16 @@ export function VSScreen() {
   const currentCategory = categoryPool[currentCategoryIndex];
   const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "") : "";
 
-  // Initialize category pool when categories load - includes Mixed Category
+  // Initialize category pool when categories load - always re-init when categories change
+  // to fix race condition where categories load after stage already moved to "finding-category"
   useEffect(() => {
-    if (categories.length > 0 && categoryPool.length === 0) {
+    if (categories.length > 0 && !categoryPoolSetForStageRef.current) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      // Include Mixed Category in the pool
       const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
       setCategoryPool(poolWithMixed);
+      categoryPoolSetForStageRef.current = true;
     }
-  }, [categories, categoryPool.length]);
+  }, [categories]);
 
   // Stage 1: Opponent slot machine animation
   useEffect(() => {
@@ -221,6 +224,17 @@ export function VSScreen() {
     return () => clearTimeout(timer);
   }, [stage]);
 
+  // Timeout: if stuck on "finding-category" for 10s, show connection error
+  useEffect(() => {
+    if (stage !== "finding-category") return;
+
+    const timeout = setTimeout(() => {
+      setConnectionError(true);
+    }, 10_000);
+
+    return () => clearTimeout(timeout);
+  }, [stage]);
+
   // Deduct stake when opponent is found (commit to game)
   useEffect(() => {
     if (stage === "opponent-found" && !stakeDeducted) {
@@ -240,23 +254,26 @@ export function VSScreen() {
   };
 
   // Handle refresh - re-spin for new opponent and category
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     // Reset local state
     setStage("finding-opponent");
     setSelectedCategory(null);
     setCurrentCategoryIndex(0);
     setStakeDeducted(false);
+    setConnectionError(false);
+    categoryPoolSetForStageRef.current = false;
     
     // Shuffle category pool for new selection - includes Mixed Category
     if (categories.length > 0) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
       const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
       setCategoryPool(poolWithMixed);
+      categoryPoolSetForStageRef.current = true;
     }
     
     // Re-trigger matchmaking
     startMatchmaking();
-  };
+  }, [categories, startMatchmaking]);
 
   const isOpponentLocked = stage !== "finding-opponent";
   const isCategoryLocked = stage === "category-found" || stage === "ready";
@@ -566,6 +583,65 @@ export function VSScreen() {
         isOpen={showHelpModal} 
         onClose={() => setShowHelpModal(false)} 
       />
+
+      {/* Connection Error Mini-Modal */}
+      <AnimatePresence>
+        {connectionError && (
+          <motion.div
+            className="absolute inset-0 z-50 flex items-center justify-center p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div
+              className="relative rounded-3xl p-6 flex flex-col items-center gap-4 w-full max-w-xs text-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(126,122,219,0.95) 0%, rgba(100,96,200,0.95) 100%)",
+                border: "2px solid rgba(255,255,255,0.2)",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+              }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", bounce: 0.2 }}
+            >
+              <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center">
+                <WifiOff className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg mb-1">კავშირი შეფერხებულია</h3>
+                <p className="text-white/70 text-sm">სცადეთ თავიდან ან დაბრუნდით მთავარ გვერდზე</p>
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <motion.button
+                  className="w-full py-3 rounded-2xl font-bold text-sm"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,165,0,0.25) 100%)",
+                    border: "2px solid rgba(255,215,0,0.5)",
+                    color: "white",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleRefresh}
+                >
+                  თავიდან ცდა
+                </motion.button>
+                <motion.button
+                  className="w-full py-2.5 rounded-2xl font-medium text-sm text-white/70"
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate("/")}
+                >
+                  უკან
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </div>
     </div>
   );
