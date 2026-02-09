@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Users, Search, Globe, Crown, Clock, Gamepad2,
-  Coins, Gem, ArrowUpDown, Filter, ChevronDown, BarChart3
+  Coins, Gem, ArrowUpDown, Filter, ChevronDown, BarChart3,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -55,14 +56,12 @@ export default function UserAnalytics() {
   const [sortField, setSortField] = useState<SortField>('last_seen');
   const [sortAsc, setSortAsc] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AnalyticsUser | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchAllUsers();
-  }, []);
-
-  const fetchAllUsers = async () => {
+  const fetchAllUsers = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
     try {
-      // Fetch admin IDs and all profiles in parallel
       const [adminIds, { data: profiles, error: profilesError }] = await Promise.all([
         fetchAdminUserIds(),
         supabase
@@ -73,27 +72,21 @@ export default function UserAnalytics() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch presence data (last 24 hours)
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const { data: presenceData } = await supabase
         .from('user_presence')
         .select('user_id, status, current_page, last_seen, country_code')
         .gte('last_seen', dayAgo);
 
-      // Fetch active VIP subscriptions
       const { data: vipData } = await supabase
         .from('vip_subscriptions')
         .select('user_id')
         .gte('expires_at', new Date().toISOString());
 
-      const presenceMap = new Map(
-        (presenceData || []).map(p => [p.user_id, p])
-      );
+      const presenceMap = new Map((presenceData || []).map(p => [p.user_id, p]));
       const vipSet = new Set((vipData || []).map(v => v.user_id));
-
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
-      // Filter out admins and mascots, then map
       const realProfiles = (profiles || []).filter(p => !isExcludedUser(p.user_id, adminIds));
 
       const mapped: AnalyticsUser[] = realProfiles.map(profile => {
@@ -125,12 +118,21 @@ export default function UserAnalytics() {
       });
 
       setUsers(mapped);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching analytics users:', err);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, []);
+
+  // Initial fetch + 30s polling
+  useEffect(() => {
+    fetchAllUsers();
+    const interval = setInterval(() => fetchAllUsers(), 30000);
+    return () => clearInterval(interval);
+  }, [fetchAllUsers]);
 
   // Computed stats
   const stats = useMemo(() => {
@@ -218,13 +220,30 @@ export default function UserAnalytics() {
     <ScrollArea className="h-[calc(100vh-6rem)]">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-primary/10 rounded-xl">
-            <Users className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">User Analytics</h1>
+              <p className="text-sm text-muted-foreground">მომხმარებლების სრული ანალიტიკა</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">User Analytics</h1>
-            <p className="text-sm text-muted-foreground">მომხმარებლების სრული ანალიტიკა</p>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">
+              Updated {Math.round((Date.now() - lastUpdated.getTime()) / 1000)}s ago
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchAllUsers(true)}
+              disabled={isRefreshing}
+              className="gap-1.5"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+              Refresh
+            </Button>
           </div>
         </div>
 
