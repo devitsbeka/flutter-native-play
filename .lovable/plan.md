@@ -1,40 +1,69 @@
 
 
-## Fix Category Blob Shape on VS Screen
+## Upgrade User Analytics to Real-Time Actionable Dashboard
 
-### Problem
-The blob container on the VS screen renders category videos/images inside a shape that looks too square -- almost like a picture frame with barely-rounded corners. The user's screenshot of "საქართველოს ისტორია" (Georgian History) shows the video appearing in a rectangle with near-90-degree corners instead of a soft, organic blob shape.
+### Problems Found
 
-### Root Cause
-The SVG clip path in `InteractiveBlobVideo.tsx` defines a "squircle" (rounded rectangle) that is too close to a regular square:
+1. **Data IS loading** (63 real users in DB, 62 shown -- off by 1 due to timing), but:
+   - The "Updated Xs ago" counter is static -- it only recalculates when the component re-renders, not every second, so it always shows "0s ago"
+   - No Supabase realtime subscription -- relies solely on 30s polling, meaning a new signup can take up to 30s to appear
+   - No visual indicator that data refreshed (no flash/animation)
 
-```text
-Current path control points:
-  Corner radius ~6% inset --> very subtle rounding
-  Result: nearly square shape
-```
+2. **The dashboard is just a user list, not analytics.** You have rich data (24 signups today, 68 games, 22 unique players, 50 sessions) but it's hidden behind a flat table. There's no way to see trends, funnels, or retention at a glance.
 
-The path `M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 ...` has control points at 0.06/0.94 which means only 6% rounding on each corner -- visually almost a square.
+### Solution: Transform into a Real Analytics Dashboard
 
-### Solution
-Make the blob path significantly more rounded/organic by increasing the corner radius. Change from ~6% to ~15-18% inset so the shape reads as a soft, pillowy blob rather than a framed picture.
+#### Part 1: Fix Real-Time Updates
 
-### Changes
+**File: `src/pages/admin/UserAnalytics.tsx`**
+- Add a Supabase realtime subscription on the `profiles` table to instantly detect new signups (INSERT events trigger immediate re-fetch)
+- Add a 1-second interval timer that updates the "Updated Xs ago" counter live
+- Flash the stat cards briefly when values change (e.g., total users goes from 62 to 63)
 
-**File: `src/components/game/InteractiveBlobVideo.tsx`**
+#### Part 2: Add Actionable Analytics Cards (New Users Tab)
 
-1. Update `roundedRectPath` with more aggressive corner rounding (control points moved from 0.06/0.94 to ~0.12/0.88), creating a visibly softer squircle
-2. Update `borderRectPath` to match (slightly larger for the border outline)
-3. These are the ONLY two lines that need changing -- the clip paths are referenced everywhere else by ID
+**File: `src/pages/admin/UserAnalytics.tsx`** -- Add a third tab: "Insights"
 
-### Visual Effect
+**New file: `src/components/admin/analytics/InsightsTab.tsx`**
 
-```text
-Before:  Nearly square with barely-visible corner rounding (6%)
-After:   Soft, pillow-like rounded squircle (15-18% radius)
-```
+This tab will show 4 key sections, all derived from existing data (no new tables needed):
 
-All 45 categories already have video mappings in `CATEGORY_VIDEOS`, and all have `icon_slug` values for the slot-machine spin phase. The `image_url` field in the database is NULL for all categories, but this is expected -- the system uses videos from `videoConfig.ts` and 3D icons from the icon library instead.
+1. **Signup Trend** (last 7 days bar chart)
+   - Daily signup count from `profiles.created_at`
+   - Today's count highlighted vs yesterday
+   - "Growth" percentage (today vs yesterday)
 
-No database changes needed. Only the two SVG path strings in `InteractiveBlobVideo.tsx` need updating.
+2. **User Engagement Funnel**
+   - Total signups → Played at least 1 game → Played 5+ games → Played 10+ games
+   - Shows conversion rate at each step
+   - Helps you see where users drop off
+
+3. **Today's New Users** (mini cards, not a table)
+   - Each new user today shown as a card with: name, time since signup, games played since joining, coins earned
+   - Sorted by signup time (newest first)
+   - Live badge if they're currently online
+
+4. **Retention Overview**
+   - Day 0 (signed up today, played today): X%
+   - Users who signed up yesterday and came back today: X%
+   - Week 1 retention: users from 7 days ago who were active in last 24h
+   - Simple visual with percentages
+
+#### Part 3: Improve the Users Tab
+
+**File: `src/components/admin/analytics/UserAnalyticsTable.tsx`**
+- Add a "NEW" badge next to users who signed up today
+- Sort online users to the top by default
+
+### Technical Details
+
+- Realtime subscription uses `postgres_changes` on `profiles` table (INSERT event)
+- The "Updated ago" counter uses a separate `useState` + `setInterval(1000)` that reads from the `lastUpdated` ref
+- Engagement funnel queries `profiles.games_played` field (already fetched, no extra DB calls)
+- Retention calculation uses `profiles.created_at` cross-referenced with `user_presence.last_seen`
+- Signup trend aggregates `profiles.created_at` by date (single query, already in memory)
+- All new analytics are computed from data already fetched -- no additional database queries needed for the funnel and trend sections
+
+### No Database Changes Required
+All the data needed is already in `profiles`, `user_presence`, and `game_plays` tables.
 
