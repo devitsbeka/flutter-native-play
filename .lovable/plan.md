@@ -1,65 +1,35 @@
 
-## Fix Question Repetition in Category Mode
+## Fix Duplicate Question Scanner
 
 ### Problem
-Users are seeing repeated questions after just 2-3 questions when playing categories like "ქართული ლიტერატურა". This happens because:
+The scanner says "no duplicates found" even though there are **119 question texts with exact duplicates** across 8,650 active questions. The root cause is that the Supabase client has a **default limit of 1,000 rows per query**. The scanner's query fetches at most 1,000 questions, meaning it only compares a fraction of the database.
 
-1. **Duplicate questions exist in the database** -- 6 pairs of identical questions (same text + same answer) with different IDs. Since each has a different ID, the deduplication tracker treats them as separate questions, so users see the "same" question twice.
-2. **No database-level randomization** -- the query uses `limit(100)` without any random ordering, meaning it always fetches the same first 100 rows. This reduces variety.
-3. **Limited fetch window** -- only 100 questions are fetched per query, even when 177+ are available in the level range.
+### Solution
 
-### Fix Plan
+**File: `src/hooks/useDuplicateDetection.ts`** -- `scanDatabaseForDuplicates` function
 
-#### Step 1: Deactivate duplicate questions in the database
-Hide one copy of each true duplicate (same question_text + same correct_answer) so users never encounter them:
-
-```sql
--- Deactivate duplicates (keep the first one, hide the second)
-UPDATE questions SET in_production = false 
-WHERE id IN (
-  'c280f334-1d4e-4d32-87d0-12fb3053c10e',  -- გეოგრაფია duplicate
-  'bd17ed2a-6c33-45fb-9461-045bff7d4512',  -- მეცნიერება duplicate  
-  'c04bee00-214a-4aa7-9f99-888f7b044cb1',  -- პოლიტიკა duplicate
-  '319f35a5-171b-4bd5-b13b-08f636646370',  -- ფილოსოფია duplicate
-  'd751415c-f908-44bf-b0c9-e669f05d456e',  -- ქართული ლიტერატურა duplicate
-  '43d6f9ec-96f3-48e2-8b55-4ba6c1636a1e'   -- ცხოველები duplicate
-);
-```
-
-#### Step 2: Improve question fetching in `questionService.ts`
-
-**File: `src/services/questionService.ts`** -- `getCategoryQuestions` function
-
-- Remove the `limit(100)` cap -- fetch ALL valid questions from the category/level range, then shuffle and pick client-side. With ~200 questions per category, this is perfectly fine for performance.
-- This ensures full pool coverage and true random selection from the entire available set.
-- Apply the same fix to fallback queries (fallback 1 and fallback 2).
+Replace the single query with a **paginated fetch** that loads all questions in batches of 1,000 until the full set is retrieved. Then run the existing comparison logic on the complete dataset.
 
 Changes:
-- Line 331: Remove `.limit(100)` from primary query
-- Line 351: Remove `.limit(100)` from fallback 1 query
-- Line 368: Remove `.limit(100)` from fallback 2 query
+1. Create a helper function `fetchAllQuestions(categoryId?)` that paginates through the `questions` table in chunks of 1,000 using `.range()`, accumulating all results.
+2. Update `scanDatabaseForDuplicates` to use this helper instead of the current single query.
+3. Also update `checkForDuplicates` (the import-time checker) with the same paginated fetch for consistency.
 
-#### Step 3: Add current-session deduplication in `CategoryQuizPage.tsx`
+### Technical Details
 
-**File: `src/pages/CategoryQuizPage.tsx`**
+```text
+Current flow:
+  query.eq('is_active', true) --> returns max 1000 rows --> compare
 
-- Pass the current session's question IDs as `excludeIds` to `getQuestions()` to provide an extra safety net against repeats within and across sessions:
-
-```typescript
-const result = await getQuestions({
-  mode: 'category',
-  categorySlug: categoryId,
-  levelNumber,
-  count: 5,
-  excludeIds: questionIds, // pass previously loaded question IDs
-});
+Fixed flow:
+  page 0: range(0, 999)    --> 1000 rows
+  page 1: range(1000, 1999) --> 1000 rows
+  ...
+  page N: range(N*1000, ...) --> < 1000 rows (done)
+  --> merge all --> compare all pairs
 ```
 
-This ensures that even if localStorage tracking has gaps, the currently loaded questions are always excluded.
+The comparison logic (O(n^2) with early exits) remains unchanged -- it already works correctly. Only the data fetching is broken.
 
-### Summary of changes
-| What | Where | Why |
-|------|-------|-----|
-| Deactivate 6 duplicate question pairs | Database | Same question with different IDs bypasses tracking |
-| Remove `limit(100)` on queries | `questionService.ts` | Ensures full pool is considered, not just first 100 rows |
-| Pass session question IDs as excludeIds | `CategoryQuizPage.tsx` | Extra safety layer against repeats |
+### Additional improvement
+Since the scanner UI shows 80% threshold by default but the user screenshot shows it still finds nothing, this confirms the data fetching is the sole issue. Georgian text keywords work fine with the Jaccard similarity -- exact duplicates would score 1.0 and be caught at any threshold.
