@@ -328,7 +328,7 @@ async function getCategoryQuestions(
     query = query.not('id', 'in', `(${excludeIds.join(',')})`);
   }
   
-  let { data: questions } = await query.limit(100);
+  let { data: questions } = await query;
   
   // Fallback 1: try full level range (1-20) with exclusions if not enough
   if (!questions || questions.length < count) {
