@@ -108,15 +108,16 @@ export function VSScreen() {
   const currentCategory = categoryPool[currentCategoryIndex];
   const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "") : "";
 
-  // Initialize category pool when categories load - includes Mixed Category
+  // Initialize category pool when categories load - always re-init when categories change
+  // to fix race condition where categories load after stage already moved to "finding-category"
   useEffect(() => {
-    if (categories.length > 0 && categoryPool.length === 0) {
+    if (categories.length > 0 && !categoryPoolSetForStageRef.current) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
-      // Include Mixed Category in the pool
       const poolWithMixed = [MIXED_CATEGORY as typeof categories[0], ...shuffled.slice(0, Math.min(7, shuffled.length))];
       setCategoryPool(poolWithMixed);
+      categoryPoolSetForStageRef.current = true;
     }
-  }, [categories, categoryPool.length]);
+  }, [categories]);
 
   // Stage 1: Opponent slot machine animation
   useEffect(() => {
