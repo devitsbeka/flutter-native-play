@@ -1,41 +1,37 @@
 
 
-## One-Time 24hr PRO Gift with Interactive Feature Clues
+## Shop PRO Cards: Swipe, Card Count, Click-to-Profile, Remove Frames
 
 ### Changes
 
-**1. Make the gift one-time per user (BetaGiftModal.tsx)**
-- Add a `returnee_gift_claimed_{userId}` localStorage key that is set after claiming
-- In `useReturnGiftEligibility`, skip eligibility if this key exists
-- This ensures the gift is given only once, ever
+**1. Add swipe navigation to MobileProCarousel (MobileProCarousel.tsx)**
+- Replace the auto-rotate AnimatePresence with touch/swipe support using `framer-motion` drag gestures
+- Users can swipe left/right to navigate between the 2 PRO cards
+- Keep the dot indicators as-is but also add a "1/2" style card count label below the card
 
-**2. Replace success phase benefits with interactive feature clues (BetaGiftModal.tsx)**
-- Replace the current `UNLOCKED_FEATURES` list in the success phase with 3 interactive action cards:
+**2. Show card count below the carousel (MobileProCarousel.tsx)**
+- Add a text indicator like "1 / 2" centered below the dots to show current position out of total
 
-| Icon | Text | Action on tap |
-|------|------|---------------|
-| `trivia-icon.png` | შექმენი ტრივია | Navigate to trivia creation |
-| `rooms-icon.png` | ითამაშე მეგობრებთან | Navigate to room creation |
-| `retro-tv-colored.png` | ითამაშე TV-ზე | Navigate to TV mode |
+**3. Click on PRO card navigates to profile PRO tab (MobileProCarousel.tsx)**
+- Tapping anywhere on the card (except the CTA button) navigates to `/profile?tab=PRO`
+- The existing "შეძენა" button keeps its current purchase behavior (stopPropagation)
 
-- Each card will be a tappable row with the icon, a short label, and a chevron arrow
-- Tapping a card closes the modal and navigates to the relevant feature
-- Keep the "დავიწყოთ!" button at the bottom for users who just want to dismiss
-
-**3. Add 24hr timer badge in success phase**
-- Show a small badge like "24 საათი" with a clock/hourglass icon to reinforce the time limit
+**4. Remove frames from PRO benefits (multiple files)**
+- Remove any "ჩარჩო" or "frame" references from PRO tier benefits in `ProPlansSection.tsx` if present
+- Remove `canAccessVipFrames` from `VipContext.tsx` (or leave as no-op for safety)
+- Note: The current `PRO_TIERS` benefits in `ProPlansSection.tsx` and `MobileProCarousel.tsx` don't mention frames, so the main cleanup targets are `VipContext.tsx` and any shop tab references
 
 ### Files to Change
 
 | File | Change |
 |------|--------|
-| `src/components/shared/BetaGiftModal.tsx` | Add one-time claim key; replace success UNLOCKED_FEATURES with 3 interactive action cards that navigate to features; add 24hr timer badge |
+| `src/components/shop/MobileProCarousel.tsx` | Add swipe gestures via framer-motion drag; add "1/2" card count below dots; wrap card in clickable container that navigates to `/profile?tab=PRO` |
+| `src/contexts/VipContext.tsx` | Remove `canAccessVipFrames` function (or make it always return false) |
 
 ### Technical Details
 
-- Import `useNavigate` from react-router-dom
-- Import `retro-tv-colored.png` for TV icon (already used elsewhere)
-- The 3 action cards navigate to: `/social?tab=my-trivia`, `/social?tab=rooms`, and the TV mode entry point
-- `handleClose` on success will call `onClaimed` which already handles cleanup
-- One-time key: `localStorage.setItem(\`returnee_gift_claimed_\${userId}\`, "true")` set in `handleClaim` after success
-- In `useReturnGiftEligibility`: check `localStorage.getItem(\`returnee_gift_claimed_\${userId}\`)` and skip if truthy
+- Use `framer-motion`'s `drag="x"` on the card with `onDragEnd` to detect swipe direction and change `currentIndex`
+- Card click handler: `navigate('/profile?tab=PRO')` using react-router-dom
+- The CTA button already has `e.stopPropagation()` so it won't trigger navigation
+- Card count rendered as a simple `<p>` element: `{currentIndex + 1} / {PRO_TIERS.length}`
+- For `canAccessVipFrames`: update to return `false` and keep the function signature to avoid breaking imports, or remove if no other files depend on it
