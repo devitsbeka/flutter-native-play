@@ -1,77 +1,53 @@
 
+## Integrate PostHog Analytics
 
-## User Deep Dive Modal - Analytics Drill-Down
+### What This Does
+Adds PostHog product analytics to the app, giving you automatic pageview tracking, session recording capabilities, user identification, and custom event capture -- all without extra configuration.
 
-### Overview
-When you click on any user row in the User Analytics table, a full-screen dialog will open showing comprehensive behavioral analytics for that user. This gives you everything you need to understand how each user interacts with the app.
+### Changes
 
-### What You'll See
+#### 1. Install PostHog package
+Add `posthog-js` as a dependency (the official PostHog JavaScript SDK).
 
-The modal will have a **header** showing the user's profile (avatar, nickname, VIP status, country, join date, coins/gems balance) and **4 tabbed sections** below:
+#### 2. Create PostHog provider (`src/providers/PostHogProvider.tsx`)
+A new provider component that:
+- Initializes PostHog with your API key (`phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA`)
+- Sets `api_host` to `https://us.i.posthog.com` (PostHog Cloud US)
+- Enables automatic pageview capture (works with React Router)
+- Disables capturing before user consent if needed (can be toggled later)
+- Wraps the app with PostHog's React context so you can use `usePostHog()` hook anywhere
 
----
+#### 3. Add user identification (`src/providers/PostHogProvider.tsx`)
+Inside the provider, listens for auth state changes:
+- When a user logs in: calls `posthog.identify(userId)` with their profile properties (nickname, country, VIP status, coins)
+- When a user logs out: calls `posthog.reset()` to clear the identified user
+- This links anonymous pre-login events to the authenticated user automatically
 
-#### Tab 1: Overview (Summary Cards)
-Quick-glance stats at the top:
-- Total games played (matchmaking + category + rooms)
-- Win rate (from game_sessions won/lost)
-- Total time spent in app (sum of session durations)
-- Number of return visits (unique session days)
-- Current streak and best streak
-- Favorite category (most played)
-- Average session duration
-- Bounce rate (% of sessions under 10s)
+#### 4. Add route change tracking (`src/providers/PostHogProvider.tsx`)
+Listens to React Router's `useLocation` to fire `posthog.capture('$pageview')` on every route change, so you get full navigation paths in PostHog.
 
-#### Tab 2: Game History
-- **Matchmaking Games** table: opponent, score, result (won/lost), date (from `game_sessions`)
-- **Category Games** table: category name, level, score, stars earned, date (from `game_plays`)
-- **Room Games** table: room code, players, score, won/lost, date (from `room_match_history`)
-- Each section shows the last 20 entries, sorted by most recent
+#### 5. Wire into the app (`src/main.tsx`)
+Wrap the app with the PostHog provider at the root level (outside of `BrowserRouter` so it initializes first).
 
-#### Tab 3: Category Breakdown
-- Bar chart or list showing which categories the user plays most (from `game_plays` grouped by `category_id`)
-- For each category: total plays, average score, accuracy rate (score/total_questions), highest level reached
-- This tells you which content resonates with each user
-
-#### Tab 4: Sessions & Behavior
-- **Session Timeline**: list of recent sessions with start time, duration, pages visited, entry/exit page, device, browser (from `user_sessions`)
-- **Activity Pattern**: which days and hours this user is most active
-- **Device Info**: what devices/browsers they use
-- **Daily Play Usage**: plays used per day, ads watched (from `user_daily_plays`)
-
----
+### What You Get Out of the Box
+- **Pageviews**: every route change automatically tracked
+- **User paths**: see how users navigate through your app
+- **Session recordings**: watch real user sessions (enable in PostHog dashboard)
+- **User identification**: link events to specific users with their profile data
+- **Retention analysis**: see how often users return
+- **Funnel analysis**: track conversion through game flows
 
 ### Technical Details
 
-| Component | Description |
-|-----------|-------------|
-| **New file**: `src/components/admin/analytics/UserDetailModal.tsx` | Main modal component with tabs and data fetching |
-| **Edit**: `src/components/admin/analytics/UserAnalyticsTable.tsx` | Add `onClick` handler to each user row + pass selected user callback |
-| **Edit**: `src/pages/admin/UserAnalytics.tsx` | Add state for selected user and render the modal |
+| File | Action | Description |
+|------|--------|-------------|
+| `package.json` | Install | Add `posthog-js` dependency |
+| `src/providers/PostHogProvider.tsx` | Create | PostHog init, user identification, pageview tracking |
+| `src/main.tsx` | Edit | Wrap app with PostHogProvider |
 
-#### Data Queries (all filtered by `user_id`)
-
-```text
-1. game_sessions       -> matchmaking history (opponent, scores, won/lost)
-2. game_plays           -> category plays (category_id, level, score, stars)
-3. room_match_history   -> room games (filter player_scores JSON by user_id)
-4. user_sessions        -> session behavior (duration, pages, device, bounce)
-5. user_daily_plays     -> daily play usage and ad watches
-6. categories           -> category names for display
-7. profiles             -> already available from parent (coins, gems, streak, etc.)
-```
-
-#### UI Pattern
-- Uses the existing `Dialog` component (same pattern as `GameStatsModal`)
-- Full-width dialog (`max-w-4xl`) with `ScrollArea` for content
-- `Tabs` component for the 4 sections
-- Row click makes the entire row a clickable surface with hover cursor
-- Loading spinner per tab while data fetches
-
-#### Key Metrics Calculated Client-Side
-- **Win rate**: `game_sessions WHERE status = 'won'` / total
-- **Total time spent**: `SUM(user_sessions.duration_seconds)`
-- **Return visits**: count of unique session dates
-- **Favorite category**: most frequent `category_id` in `game_plays`
-- **Category accuracy**: `AVG(score / total_questions)` per category
-
+**PostHog Configuration:**
+- API Key: `phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA` (publishable, safe in client code)
+- API Host: `https://us.i.posthog.com`
+- Auto capture: enabled (clicks, inputs, form submissions)
+- Pageview capture: manual via React Router (to capture SPA navigation correctly)
+- Session recording: enabled (can be toggled in PostHog dashboard)
