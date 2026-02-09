@@ -331,7 +331,23 @@ export default function Auth() {
             {loading ? t("common.loading") : isSignUp ? t("auth.createAccount") : t("auth.signIn")}
           </ChunkyButton>
 
-          {/* Social sign-in divider */}
+          {/* Toggle between Sign Up and Sign In - prominent placement */}
+          <div className="mt-3 text-center">
+            <p className="text-base text-foreground/80">
+              {isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setErrors({});
+                }}
+                className="text-primary font-bold text-lg hover:underline"
+              >
+                {isSignUp ? t("auth.signIn") : t("auth.signUp")}
+              </button>
+            </p>
+          </div>
+
           <div className="flex items-center gap-3 mt-4">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground">{t("common.or") || "or"}</span>
@@ -380,27 +396,6 @@ export default function Auth() {
           </button>
         </motion.form>
 
-        {/* Toggle */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mt-6 text-center"
-        >
-          <p className="text-foreground/80">
-            {isSignUp ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}{" "}
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setErrors({});
-              }}
-              className="text-primary font-semibold hover:underline"
-            >
-              {isSignUp ? t("auth.signIn") : t("auth.signUp")}
-            </button>
-          </p>
-        </motion.div>
 
       </div>
     </div>
