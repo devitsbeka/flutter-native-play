@@ -103,7 +103,10 @@ export function MobileProCarousel() {
   return (
     <div className="px-4 pt-4 pb-2 md:pb-4">
       {/* Combined PRO Card with Mascot */}
-      <div className="relative overflow-hidden rounded-3xl">
+      <div 
+        className="relative overflow-hidden rounded-3xl cursor-pointer"
+        onClick={handleCardClick}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={tier.id}
@@ -111,10 +114,15 @@ export function MobileProCarousel() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.3}
+            onDragEnd={handleSwipe}
             className="relative rounded-2xl overflow-hidden flex min-h-[280px] md:min-h-[300px]"
             style={{
               background: tier.gradient,
               opacity: isProcessing ? 0.7 : 1,
+              touchAction: "pan-y",
             }}
           >
             {/* Popular Badge */}
