@@ -14,6 +14,7 @@ interface Props {
   sortField: string;
   sortAsc: boolean;
   onToggleSort: (field: 'last_seen' | 'games_played' | 'coins' | 'created_at') => void;
+  onUserClick?: (user: AnalyticsUser) => void;
 }
 
 const statusConfig = {
@@ -31,7 +32,7 @@ const countryFlag = (code: string | null) => {
     .join('');
 };
 
-export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggleSort }: Props) {
+export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggleSort, onUserClick }: Props) {
   if (loading) {
     return (
       <Card>
@@ -82,7 +83,8 @@ export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggl
             users.slice(0, 100).map(user => (
               <div
                 key={user.user_id}
-                className="grid grid-cols-[2fr_100px_80px_120px_100px_120px_100px] gap-2 px-4 py-2.5 border-b border-border/30 hover:bg-accent/30 transition-colors items-center text-sm"
+                onClick={() => onUserClick?.(user)}
+                className="grid grid-cols-[2fr_100px_80px_120px_100px_120px_100px] gap-2 px-4 py-2.5 border-b border-border/30 hover:bg-accent/30 transition-colors items-center text-sm cursor-pointer"
               >
                 {/* User info */}
                 <div className="flex items-center gap-3 min-w-0">

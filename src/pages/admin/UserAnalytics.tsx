@@ -22,6 +22,7 @@ import { UserAnalyticsTable } from '@/components/admin/analytics/UserAnalyticsTa
 import { CountryBreakdownChart } from '@/components/admin/analytics/CountryBreakdownChart';
 import { ActivityTimeline } from '@/components/admin/analytics/ActivityTimeline';
 import { StatsTab } from '@/components/admin/analytics/StatsTab';
+import { UserDetailModal } from '@/components/admin/analytics/UserDetailModal';
 
 export interface AnalyticsUser {
   user_id: string;
@@ -51,6 +52,7 @@ export default function UserAnalytics() {
   const [vipFilter, setVipFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('last_seen');
   const [sortAsc, setSortAsc] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AnalyticsUser | null>(null);
 
   useEffect(() => {
     fetchAllUsers();
@@ -296,6 +298,7 @@ export default function UserAnalytics() {
               sortField={sortField}
               sortAsc={sortAsc}
               onToggleSort={toggleSort}
+              onUserClick={setSelectedUser}
             />
 
             {/* Bottom Row: Country Breakdown + Activity */}
@@ -313,6 +316,13 @@ export default function UserAnalytics() {
             <StatsTab />
           </TabsContent>
         </Tabs>
+
+        {/* User Detail Modal */}
+        <UserDetailModal
+          user={selectedUser}
+          open={!!selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
       </div>
     </ScrollArea>
   );
