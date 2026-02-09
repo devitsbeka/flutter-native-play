@@ -192,7 +192,6 @@ export function VipProvider({ children }: { children: ReactNode }) {
   const getXpMultiplier = (): number => isVip ? 2 : 1;
   const getMaxDailySpins = (): number => isVip ? 4 : 1;
   const shouldSkipGameStake = (): boolean => isVip;
-  const canAccessVipFrames = (): boolean => isVip;
 
   const getTierBenefits = () => {
     if (!subscription?.vip_tier) return VIP_BENEFITS_BY_TIER.pro;
