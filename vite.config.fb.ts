@@ -7,77 +7,69 @@
  *   - Entry: fb-instant.html (loads FBInstant SDK before React)
  *   - Base: './' (relative paths required inside FB iframe)
  *   - Output: dist-fb/ (separate from web dist/)
- *   - Aggressive code splitting for fast initial load (<1 MB target)
- *   - Excludes Capacitor plugins, Three.js, Cobe, heavy animation libs
+ *   - Post-build: rename fb-instant.html → index.html (FB requires index.html at root)
  *   - Defines VITE_PLATFORM=facebook for conditional compilation
  */
 
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
+
+/**
+ * Vite plugin that renames fb-instant.html → index.html after build.
+ * Facebook Instant Games requires index.html at the zip root.
+ */
+function renameFbEntryPlugin(): Plugin {
+  return {
+    name: 'rename-fb-entry',
+    closeBundle() {
+      const distDir = path.resolve(__dirname, 'dist-fb');
+      const src = path.join(distDir, 'fb-instant.html');
+      const dest = path.join(distDir, 'index.html');
+      if (fs.existsSync(src)) {
+        fs.renameSync(src, dest);
+        console.log('\n  Renamed fb-instant.html → index.html (Facebook requirement)\n');
+      }
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => ({
   // Relative paths - required for Facebook iframe serving
   base: './',
 
-  // Use fb-instant.html as entry
+  server: {
+    host: "::",
+    port: 8081,
+  },
+
   build: {
     outDir: 'dist-fb',
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'fb-instant.html'),
+        'fb-instant': path.resolve(__dirname, 'fb-instant.html'),
       },
       output: {
-        // Aggressive code splitting for fast initial load
         manualChunks: {
-          // Core React in its own chunk (~140KB gzipped)
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // Supabase client
           'vendor-supabase': ['@supabase/supabase-js'],
-          // UI framework
           'vendor-ui': ['tailwind-merge', 'clsx', 'class-variance-authority'],
-          // TanStack Query
           'vendor-query': ['@tanstack/react-query'],
-          // Animation (only framer-motion, skip GSAP/Lottie/Three.js)
-          'vendor-animation': ['framer-motion'],
         },
       },
-      // Exclude heavy native-only dependencies
-      external: [
-        '@capacitor/core',
-        '@capacitor/ios',
-        '@capacitor/android',
-        '@capacitor/camera',
-        '@capacitor/haptics',
-        '@capacitor/push-notifications',
-        '@capacitor-community/admob',
-        '@capacitor-community/apple-sign-in',
-        '@revenuecat/purchases-capacitor',
-        // Heavy 3D/globe libraries not needed on Facebook
-        'three',
-        '@react-three/fiber',
-        '@react-three/drei',
-        'three-globe',
-        'cobe',
-        'vanta',
-        // GSAP can be replaced with CSS animations
-        'gsap',
-      ],
     },
     // Target modern browsers (FB iframe always runs in a modern browser)
     target: 'es2020',
-    // Aggressive minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: true,
-      },
-    },
+    // Don't generate source maps for the FB upload
+    sourcemap: false,
   },
 
-  plugins: [react()],
+  plugins: [
+    react(),
+    renameFbEntryPlugin(),
+  ],
 
   resolve: {
     alias: {

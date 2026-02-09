@@ -28,13 +28,20 @@ cp "$PROJECT_DIR/fbapp-config.json" "$DIST_DIR/fbapp-config.json"
 rm -f "$OUTPUT"
 
 # Create the zip from within dist-fb/ so paths are relative
+# Exclude: source maps, videos (too large for FB 200MB limit - load from CDN at runtime),
+# temp files, and unnecessary data files
 cd "$DIST_DIR"
-zip -r "$OUTPUT" . -x "*.map"
+zip -r "$OUTPUT" . \
+  -x "*.map" \
+  "videos/*" \
+  "temp/*" \
+  "data/missing-icons.zip"
 
 # Report
 SIZE=$(du -sh "$OUTPUT" | cut -f1)
 echo ""
 echo "Facebook Instant Games build packaged:"
 echo "  Output: fb-build.zip ($SIZE)"
+echo "  Max allowed: 200 MB"
 echo "  Upload at: https://developers.facebook.com/apps/2784020051933983/instant-games/hosting/"
 echo ""
