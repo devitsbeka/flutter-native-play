@@ -80,7 +80,9 @@ export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggl
               მომხმარებლები ვერ მოიძებნა
             </div>
           ) : (
-            users.slice(0, 100).map(user => (
+            users.slice(0, 100).map(user => {
+              const isNewToday = new Date(user.created_at) >= new Date(new Date().setHours(0, 0, 0, 0));
+              return (
               <div
                 key={user.user_id}
                 onClick={() => onUserClick?.(user)}
@@ -103,6 +105,7 @@ export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggl
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="font-medium truncate">{user.nickname}</span>
+                      {isNewToday && <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-primary/15 text-primary">NEW</Badge>}
                       {user.isVip && <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
                     </div>
                     {user.current_page && user.status === 'online' && (
@@ -155,7 +158,8 @@ export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggl
                   {new Date(user.created_at).toLocaleDateString('ka-GE', { month: 'short', day: 'numeric' })}
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 
