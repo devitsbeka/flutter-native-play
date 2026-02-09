@@ -6,7 +6,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import confetti from "canvas-confetti";
 import crownIcon from "@/assets/icons/icon-vip-crown.png";
-import giftIcon from "@/assets/icons/icon-party.png";
+import confettiGunIcon from "@/assets/icons/confetti-gun.png";
+import aiSparkleIcon from "@/assets/icons/icon-ai-sparkle.png";
+import roomsIcon from "@/assets/icons/rooms-icon.png";
+import xpIcon from "@/assets/icons/icon-xp.png";
+import chestIcon from "@/assets/icons/icon-chest-box.png";
+import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 
 // Beta users who should see this modal (by email)
 const BETA_GIFT_EMAILS = [
@@ -19,11 +24,11 @@ const GIFT_STORAGE_KEY = "beta_gift_claimed";
 type Phase = "offer" | "success";
 
 const UNLOCKED_FEATURES = [
-  { emoji: "🧠", text: "AI-ით ტრივიების შექმნა" },
-  { emoji: "🏠", text: "მეგობრებთან ოთახებში თამაში" },
-  { emoji: "⭐", text: "2x XP ყველა თამაშში" },
-  { emoji: "🎰", text: "დამატებითი ყოველდღიური სპინები" },
-  { emoji: "🚫", text: "სრული თამაში რეკლამების გარეშე" },
+  { icon: aiSparkleIcon, text: "AI-ით ტრივიების შექმნა" },
+  { icon: roomsIcon, text: "მეგობრებთან ოთახებში თამაში" },
+  { icon: xpIcon, text: "2x XP ყველა თამაშში" },
+  { icon: chestIcon, text: "დამატებითი ყოველდღიური სპინები" },
+  { icon: adFreeIcon, text: "სრული თამაში რეკლამების გარეშე" },
 ];
 
 export function BetaGiftModal() {
@@ -101,20 +106,20 @@ export function BetaGiftModal() {
               />
 
               <div className="relative flex flex-col items-center px-6 pt-8 pb-6">
-                {/* Gift icon with floating animation */}
+                {/* Confetti gun icon with floating animation */}
                 <motion.div
                   animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="mb-4"
                 >
                   <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center"
+                    className="w-24 h-24 rounded-full flex items-center justify-center"
                     style={{
                       background: "linear-gradient(135deg, #FDE68A 0%, #FBBF24 50%, #F59E0B 100%)",
                       boxShadow: "0 6px 0 #D97706, 0 0 30px rgba(251,191,36,0.4)",
                     }}
                   >
-                    <img src={giftIcon} alt="" className="w-12 h-12 object-contain" />
+                    <img src={confettiGunIcon} alt="" className="w-14 h-14 object-contain" />
                   </div>
                 </motion.div>
 
@@ -125,7 +130,7 @@ export function BetaGiftModal() {
                   transition={{ delay: 0.1 }}
                   className="font-display text-xl font-bold text-gray-900 text-center mb-2"
                 >
-                  გმადლობთ, რომ ჩვენთან ხართ! 🎉
+                  გმადლობთ, რომ ჩვენთან ხართ!
                 </motion.h2>
 
                 {/* Message */}
@@ -138,7 +143,7 @@ export function BetaGiftModal() {
                   შევამჩნიეთ, რომ აქტიურად იყენებთ ჩვენს აპლიკაციას და ძალიან მადლობელი ვართ!
                   <br />
                   <span className="font-semibold text-amber-600">
-                    საჩუქრად გიგზავნით 24 საათიან PRO-ს! 👑
+                    საჩუქრად გიგზავნით 24 საათიან PRO-ს!
                   </span>
                 </motion.p>
 
@@ -173,7 +178,7 @@ export function BetaGiftModal() {
                     onClick={handleClaim}
                     disabled={claiming}
                     showParticles
-                    icon={<span className="text-lg">🎁</span>}
+                    icon={<img src={chestIcon} alt="" className="w-5 h-5 object-contain" />}
                   >
                     {claiming ? "იტვირთება..." : "მიიღე საჩუქარი"}
                   </ChunkyButton>
@@ -230,7 +235,7 @@ export function BetaGiftModal() {
                   transition={{ delay: 0.1 }}
                   className="font-display text-xl font-bold text-gray-900 text-center mb-2"
                 >
-                  PRO აქტივირებულია! 🎉
+                  PRO აქტივირებულია!
                 </motion.h2>
 
                 <motion.p
@@ -256,7 +261,7 @@ export function BetaGiftModal() {
                         boxShadow: "0 2px 0 rgba(0,0,0,0.04)",
                       }}
                     >
-                      <span className="text-lg">{feature.emoji}</span>
+                      <img src={feature.icon} alt="" className="w-6 h-6 object-contain" />
                       <span className="text-sm font-medium text-gray-700">{feature.text}</span>
                     </motion.div>
                   ))}
@@ -274,7 +279,7 @@ export function BetaGiftModal() {
                     size="lg"
                     className="w-full"
                     onClick={handleClose}
-                    icon={<span className="text-lg">🚀</span>}
+                    icon={<img src={confettiGunIcon} alt="" className="w-5 h-5 object-contain" />}
                   >
                     დავიწყოთ!
                   </ChunkyButton>
