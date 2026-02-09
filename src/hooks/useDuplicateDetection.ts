@@ -136,19 +136,8 @@ export function useDuplicateDetection() {
     setScanResult(null);
 
     try {
-      // Fetch existing questions from database
-      let query = supabase
-        .from('questions')
-        .select('id, question_text, category_id')
-        .eq('is_active', true);
-      
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
-
-      const { data: existingQuestions, error } = await query;
-
-      if (error) throw error;
+      // Fetch ALL existing questions using paginated fetch
+      const existingQuestions = await fetchAllQuestions(categoryId);
 
       // Pre-process existing questions - O(n)
       const processedExisting = preprocessQuestions(
