@@ -239,7 +239,7 @@ export function UserDetailModal({ user, open, onClose }: Props) {
         <div className="border-b border-border/50 p-5">
           <div className="flex items-center gap-4">
             <Avatar className="h-14 w-14">
-              <AvatarImage src={user.avatar_url || undefined} />
+              <ResolvedAvatarImage src={user.avatar_url || undefined} />
               <AvatarFallback className="text-lg">{user.nickname.slice(0, 2)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

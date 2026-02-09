@@ -158,7 +158,7 @@ export function AdsAnalyticsModal({ isOpen, onClose }: Props) {
                     <div key={watcher.user_id} className="flex items-center gap-2 text-sm">
                       <span className="w-5 text-xs text-muted-foreground font-mono">{i + 1}.</span>
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={watcher.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={watcher.avatar_url || undefined} />
                         <AvatarFallback className="text-[10px]">{watcher.nickname.slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       <span className="flex-1 truncate">{watcher.nickname}</span>

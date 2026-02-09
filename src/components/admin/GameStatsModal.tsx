@@ -171,7 +171,7 @@ export function GameStatsModal({ isOpen, onClose }: Props) {
                     <div key={player.user_id} className="flex items-center gap-2 text-sm">
                       <span className="w-5 text-xs text-muted-foreground font-mono">{i + 1}.</span>
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={player.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={player.avatar_url || undefined} />
                         <AvatarFallback className="text-[10px]">{player.nickname.slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       <span className="flex-1 truncate">{player.nickname}</span>

@@ -237,7 +237,7 @@ export function InsightsTab({ users }: InsightsTabProps) {
                   <div key={user.user_id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
                     <div className="relative">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar_url || undefined} />
+                        <ResolvedAvatarImage src={user.avatar_url || undefined} />
                         <AvatarFallback className="text-xs">{user.nickname.slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       {user.status === 'online' && (

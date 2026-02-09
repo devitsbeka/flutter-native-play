@@ -93,7 +93,7 @@ export function UserAnalyticsTable({ users, loading, sortField, sortAsc, onToggl
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar_url || undefined} />
+                      <ResolvedAvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback className="text-xs">
                         {user.nickname.slice(0, 2)}
                       </AvatarFallback>
