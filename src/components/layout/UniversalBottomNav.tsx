@@ -27,6 +27,7 @@ interface UniversalBottomNavProps {
   onWatchAdClick?: () => void;
   isGuest?: boolean;
   hidden?: boolean;
+  vipExpiresAt?: string;
 }
 
 export function UniversalBottomNav({ 
