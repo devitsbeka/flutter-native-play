@@ -172,6 +172,7 @@ export default function Index() {
   const { canClaimDaily, canClaimChest } = useRewardTimers();
   const { missions, completedCount, totalCount } = useMissions();
   const { playsRemaining, maxPlays, canPlay, isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { subscription } = useVipStatus();
   const { unreadCount } = useNotifications();
   const { hasEnoughCoins, stakeAmount } = useGameStake();
   const totalPowerUps = Object.values(powerUps).reduce((sum, count) => sum + count, 0);
