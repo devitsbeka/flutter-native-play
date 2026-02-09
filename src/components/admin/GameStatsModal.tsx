@@ -7,7 +7,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ResolvedAvatarImage } from '@/components/ui/resolved-avatar-image';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
