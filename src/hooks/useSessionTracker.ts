@@ -154,6 +154,23 @@ export const useSessionTracker = () => {
     }
   }, [location.pathname]);
 
+  // Heartbeat: update duration every 30s so we always have approximate data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!sessionIdRef.current || !hasStartedRef.current) return;
+      const durationSeconds = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+      supabase
+        .from('user_sessions')
+        .update({ duration_seconds: durationSeconds, exit_page: exitPageRef.current })
+        .eq('id', sessionIdRef.current)
+        .then(({ error }) => {
+          if (error) logger.debug('Heartbeat update failed:', error.message);
+        });
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Lifecycle: start on mount, end on unload/hide
   useEffect(() => {
     startSession();
@@ -162,7 +179,6 @@ export const useSessionTracker = () => {
       if (document.visibilityState === 'hidden') {
         endSession();
       } else if (document.visibilityState === 'visible') {
-        // If returning after session ended, start a new one
         if (isEndingRef.current || !sessionIdRef.current) {
           hasStartedRef.current = false;
           isEndingRef.current = false;
@@ -172,7 +188,35 @@ export const useSessionTracker = () => {
     };
 
     const handleBeforeUnload = () => {
-      endSession();
+      // Use sendBeacon for reliability on mobile
+      if (sessionIdRef.current) {
+        const durationSeconds = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+        const body = JSON.stringify({
+          duration_seconds: durationSeconds,
+          session_end: new Date().toISOString(),
+          exit_page: exitPageRef.current,
+          pages_visited: pagesVisitedRef.current,
+          is_bounce: durationSeconds < 10,
+        });
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`;
+        const headers = {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Prefer': 'return=minimal',
+        };
+        const blob = new Blob([body], { type: 'application/json' });
+        try {
+          // Try sendBeacon first (most reliable on mobile)
+          const sent = navigator.sendBeacon?.(url, blob);
+          if (!sent) {
+            // Fallback to regular update
+            endSession();
+          }
+        } catch {
+          endSession();
+        }
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
