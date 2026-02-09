@@ -13,6 +13,7 @@ import roomsIcon from "@/assets/icons/rooms-icon.png";
 import xpIcon from "@/assets/icons/icon-xp.png";
 import chestIcon from "@/assets/icons/icon-chest-box.png";
 import adFreeIcon from "@/assets/icons/icon-ad-free.png";
+import unboxingGiftIcon from "@/assets/icons/unboxing-gift.png";
 
 const GIFT_STORAGE_KEY = "returnee_gift_claimed";
 const LAST_VISIT_KEY = "last_visit_ts";
