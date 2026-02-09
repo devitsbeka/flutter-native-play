@@ -130,7 +130,7 @@ export function BetaGiftModal() {
                   transition={{ delay: 0.1 }}
                   className="font-display text-xl font-bold text-gray-900 text-center mb-2"
                 >
-                  გმადლობთ, რომ ჩვენთან ხართ!
+                  მადლობა, რომ ჩვენთან ხარ!
                 </motion.h2>
 
                 {/* Message */}
@@ -140,11 +140,11 @@ export function BetaGiftModal() {
                   transition={{ delay: 0.15 }}
                   className="text-gray-600 text-center text-sm leading-relaxed mb-6"
                 >
-                  შევამჩნიეთ, რომ აქტიურად იყენებთ ჩვენს აპლიკაციას და ძალიან მადლობელი ვართ!
-                  <br />
                   <span className="font-semibold text-amber-600">
-                    საჩუქრად გიგზავნით 24 საათიან PRO-ს!
+                    საჩუქრად გიგზავნით 24 საათიან PRO-ს.
                   </span>
+                  <br />
+                  სასიამოვნო გართობას გისურვებთ!
                 </motion.p>
 
                 {/* Crown badge */}
