@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { PostHogProvider } from "@/providers/PostHogProvider";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -26,7 +27,9 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ThemeProvider defaultTheme="light" storageKey="quiz-theme">
-          <App />
+          <PostHogProvider>
+            <App />
+          </PostHogProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
