@@ -364,8 +364,7 @@ async function getCategoryQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid)
-      .limit(100);
+      .eq('category_id', categoryUuid);
     
     questions = resetQuestions || [];
   }
