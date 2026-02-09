@@ -130,13 +130,32 @@ export function UserDetailModal({ user, open, onClose }: Props) {
     const gamesWon = user.games_won ?? 0;
     const winRate = totalGames > 0 ? Math.round((gamesWon / totalGames) * 100) : 0;
 
-    const totalTimeSeconds = userSessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
+    // Time spent: use session data, fallback to game-based estimate
+    let totalTimeSeconds = userSessions.reduce((sum, s) => {
+      if (s.duration_seconds) return sum + s.duration_seconds;
+      // Fallback: calculate from start/end timestamps
+      if (s.session_start && s.session_end) {
+        return sum + Math.max(0, Math.floor((new Date(s.session_end).getTime() - new Date(s.session_start).getTime()) / 1000));
+      }
+      return sum;
+    }, 0);
+    // If sessions give 0, estimate from game activity (~2min per game)
+    if (totalTimeSeconds === 0 && totalGames > 0) {
+      totalTimeSeconds = totalGames * 120;
+    }
 
-    const uniqueDays = new Set(userSessions.map(s => s.session_start?.slice(0, 10))).size;
+    // Return visits: unique days from sessions + game activity
+    const activityDays = new Set<string>();
+    userSessions.forEach(s => { if (s.session_start) activityDays.add(s.session_start.slice(0, 10)); });
+    gameSessions.forEach(s => { if (s.created_at) activityDays.add(s.created_at.slice(0, 10)); });
+    gamePlays.forEach(p => { if (p.played_at) activityDays.add(p.played_at.slice(0, 10)); });
+    const uniqueDays = activityDays.size;
 
-    const avgSessionDuration = userSessions.length > 0
-      ? Math.round(totalTimeSeconds / userSessions.length)
-      : 0;
+    // Avg session: use sessions with actual duration data
+    const sessionsWithDuration = userSessions.filter(s => s.duration_seconds || (s.session_start && s.session_end));
+    const avgSessionDuration = sessionsWithDuration.length > 0
+      ? Math.round(totalTimeSeconds / sessionsWithDuration.length)
+      : (totalGames > 0 ? 120 : 0);
 
     const bounces = userSessions.filter(s => s.is_bounce).length;
     const bounceRate = userSessions.length > 0 ? Math.round((bounces / userSessions.length) * 100) : 0;
@@ -149,7 +168,7 @@ export function UserDetailModal({ user, open, onClose }: Props) {
     let favCatId = '';
     let maxPlays = 0;
     catCounts.forEach((count, id) => { if (count > maxPlays) { maxPlays = count; favCatId = id; } });
-    const favCat = categories.find(c => c.id === favCatId);
+    const favCat = categories.find(c => c.category_id === favCatId);
 
     return {
       totalGames, totalMatchmaking, totalCategory, totalRoom,
@@ -174,7 +193,7 @@ export function UserDetailModal({ user, open, onClose }: Props) {
       map.set(p.category_id, entry);
     });
     return Array.from(map.entries()).map(([catId, data]) => {
-      const cat = categories.find(c => c.id === catId);
+      const cat = categories.find(c => c.category_id === catId);
       return {
         categoryId: catId,
         name: cat?.name || 'Unknown',
@@ -347,7 +366,7 @@ export function UserDetailModal({ user, open, onClose }: Props) {
                           <div>Date</div>
                         </div>
                         {gamePlays.slice(0, 20).map(p => {
-                          const cat = categories.find(c => c.id === p.category_id);
+                          const cat = categories.find(c => c.category_id === p.category_id);
                           return (
                             <div key={p.id} className="grid grid-cols-[1fr_50px_50px_50px_100px] gap-2 px-3 py-2 text-xs border-b border-border/20 last:border-0">
                               <div className="truncate">{cat?.name || 'Unknown'}</div>
