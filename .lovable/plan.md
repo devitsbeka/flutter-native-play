@@ -1,43 +1,25 @@
 
+## Show "Do you have an account?" prompt on failed login
 
-## Two Changes
+When a user tries to sign in and gets an error (account not found / invalid credentials), instead of just showing a toast error, we will display a helpful modal/dialog asking: **"გაქვს ანგარიში?"** (Do you have an account?) with two clear action buttons: **"შექმნა"** (Create) and **"შესვლა"** (Sign In).
 
-### 1. Translate "Failed to lookup user" error
+### What changes
 
-The raw English error from the authentication backend ("Failed to lookup user") is shown to users when they try to sign in with a non-existent account. This happens in multiple components that display `err?.message` directly.
+**File: `src/pages/Auth.tsx`**
 
-**Fix**: Replace all raw error message displays with a Georgian translation. The error means the user doesn't exist, so the appropriate message is something like: "მომხმარებელი ვერ მოიძებნა" (User not found).
+1. Add a state variable `showAccountPrompt` (boolean, default `false`).
+2. On login failure (line 149-150), instead of only showing a toast, set `showAccountPrompt = true`.
+3. Add an `AlertDialog` (from `@radix-ui/react-alert-dialog`) that renders when `showAccountPrompt` is `true`:
+   - Title: **"გაქვს ანგარიში?"** (Do you have an account?)
+   - Description: **"თუ ჯერ არ გაქვს ანგარიში, შექმენი ახალი"** (If you don't have an account yet, create a new one)
+   - Two buttons:
+     - **"შექმნა"** (Create) -- switches to signup mode (`setIsSignUp(true)`) and closes the dialog
+     - **"შესვლა"** (Sign In) -- closes the dialog so the user can retry with correct credentials
+4. Remove or keep the existing toast -- replace it with this dialog for a better UX.
 
-**Files to update:**
-- `src/components/home/GuestWelcomePanel.tsx` (line 81)
-- `src/components/home/DesktopGuestSplitLayout.tsx` (line 83)
-- `src/components/shared/AuthRequiredModal.tsx` (lines 112, 141)
+### Technical details
 
-In each of these, instead of showing `err?.message` or `error.message`, we will check if the message contains "Failed to lookup user" or "Invalid login credentials" and show a translated Georgian message instead.
-
-### 2. Move Registration link to be more prominent on Auth page
-
-Currently the "არ გაქვს ანგარიში? რეგისტრაცია" toggle is at the very bottom of the Auth page (after Google and Apple buttons). Users who don't have accounts miss it and keep trying to sign in.
-
-**Fix**: Move the sign-up/sign-in toggle to appear right after the main "შესვლა" button (before the social login divider), making it much more visible.
-
-**File to update:**
-- `src/pages/Auth.tsx` -- move the toggle block (lines 383-403) to right after the submit button (after line 332), and remove it from the bottom. Also make the registration link slightly larger/bolder so it stands out.
-
-### Technical Details
-
-A helper function will be added to translate common auth errors:
-
-```typescript
-const translateAuthError = (message: string): string => {
-  if (message.includes("Failed to lookup user") || message.includes("Invalid login credentials")) {
-    return "მომხმარებელი ვერ მოიძებნა. გაქვს ანგარიში?";
-  }
-  if (message.includes("already registered")) {
-    return "ეს სახელი უკვე დაკავებულია";
-  }
-  return "შეცდომა, სცადე თავიდან";
-};
-```
-
-This will be used in all 3 components instead of raw error messages.
+- Uses the existing `AlertDialog` component from `src/components/ui/alert-dialog.tsx`
+- The dialog will have the primary/accent colored button on "შექმნა" to guide users toward registration
+- "შესვლა" will be a secondary/outline button to let them retry
+- The dialog auto-closes when either button is pressed, resetting `showAccountPrompt` to `false`
