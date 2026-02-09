@@ -38,6 +38,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ResolvedAvatarImage } from "@/components/ui/resolved-avatar-image";
 import { Input } from "@/components/ui/input";
 import { SearchHorizontalLists } from "./SearchHorizontalLists";
+import { usePlayGuard } from "@/contexts/PlayGuardContext";
 
 interface SpotlightSearchProps {
   className?: string;
@@ -68,6 +69,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
   const mobileInputRef = React.useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { guardPlay } = usePlayGuard();
   
   // Data hooks
   const { categories } = useCategories();
@@ -205,7 +207,13 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
         navigate("/team", { state: { openCreateRoom: true } });
         break;
       case "navigate":
-        if (cmd.path) navigate(cmd.path);
+        if (cmd.path) {
+          // Guard game-starting paths
+          if (cmd.path === "/game") {
+            if (!guardPlay(() => navigate("/game"))) return;
+          }
+          navigate(cmd.path);
+        }
         break;
       case "logout":
         await signOut();
@@ -455,7 +463,10 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ className, variant = 
                     <span className="ml-auto text-xs text-muted-foreground font-mono">/newroom</span>
                   </CommandItem>
                   <CommandItem 
-                    onSelect={() => { setOpen(false); navigate("/game"); }}
+                    onSelect={() => { 
+                      if (!guardPlay(() => { setOpen(false); navigate("/game"); })) { setOpen(false); return; }
+                      setOpen(false); navigate("/game"); 
+                    }}
                     className="flex items-center gap-3 cursor-pointer"
                   >
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500">

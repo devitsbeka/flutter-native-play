@@ -11,6 +11,7 @@ import { useLevelPositions } from "@/hooks/useLevelPositions";
 import { useAuth } from "@/hooks/useAuth";
 import { SideMenuDrawer } from "@/components/home/SideMenuDrawer";
 import SVGClouds from "./SVGClouds";
+import { usePlayGuard } from "@/contexts/PlayGuardContext";
 
 import islandBackground from "@/assets/map/island-background.svg";
 import iconCoin from "@/assets/icons/icon-coin.png";
@@ -56,6 +57,7 @@ export function IslandAdventureMap() {
   const { positions: levelPositions, loading: positionsLoading } = useLevelPositions();
   const { profile } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { guardPlay } = usePlayGuard();
   
   const loading = progressLoading || positionsLoading;
   
@@ -222,15 +224,19 @@ export function IslandAdventureMap() {
       setSelectedCompletedLevel(levelId);
       setCompletedModalOpen(true);
     } else {
-      // Current level - navigate to game
-      navigate(`/game?level=${levelId}`);
+      // Current level - guard play limit then navigate to game
+      const dest = `/game?level=${levelId}`;
+      if (!guardPlay(() => navigate(dest))) return;
+      navigate(dest);
     }
   };
 
   const handleReplayLevel = () => {
     if (selectedCompletedLevel) {
       setCompletedModalOpen(false);
-      navigate(`/game?level=${selectedCompletedLevel}`);
+      const dest = `/game?level=${selectedCompletedLevel}`;
+      if (!guardPlay(() => navigate(dest))) return;
+      navigate(dest);
     }
   };
 
