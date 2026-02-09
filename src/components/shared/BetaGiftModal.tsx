@@ -315,7 +315,7 @@ function SuccessPhase({
           transition={{ delay: 0.1 }}
           className="font-display text-xl font-bold text-gray-900 text-center mb-2"
         >
-          PRO აქტივირებულია!
+          PRO გააქტიურდა!
         </motion.h2>
 
         {/* 24hr badge */}
