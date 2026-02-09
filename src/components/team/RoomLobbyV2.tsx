@@ -880,7 +880,29 @@ export function RoomLobbyV2() {
         {isHost && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={tvHintGlow
+              ? {
+                  opacity: 1,
+                  y: 0,
+                  boxShadow: [
+                    "0 0 0px rgba(139,92,246,0)",
+                    "0 0 24px rgba(139,92,246,0.6)",
+                    "0 0 0px rgba(139,92,246,0)",
+                  ],
+                }
+              : { opacity: 1, y: 0 }
+            }
+            transition={tvHintGlow
+              ? { boxShadow: { repeat: 2, duration: 1 }, opacity: { duration: 0.3 }, y: { duration: 0.3 } }
+              : undefined
+            }
+            onAnimationComplete={() => {
+              if (tvHintGlow) {
+                setTvHintGlow(false);
+                searchParams.delete("tvHint");
+                setSearchParams(searchParams, { replace: true });
+              }
+            }}
             className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
           >
             <div className="flex items-center justify-between">
