@@ -348,7 +348,7 @@ async function getCategoryQuestions(
       fallbackQuery = fallbackQuery.not('id', 'in', `(${excludeIds.join(',')})`);
     }
     
-    const { data: fallbackQuestions } = await fallbackQuery.limit(100);
+    const { data: fallbackQuestions } = await fallbackQuery;
     questions = fallbackQuestions || [];
   }
   
