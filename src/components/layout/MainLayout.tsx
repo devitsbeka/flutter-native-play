@@ -10,6 +10,7 @@ interface MainLayoutProps {
   canPlay?: boolean;
   isVip?: boolean;
   isGuest?: boolean;
+  vipExpiresAt?: string;
   showPlayButton?: boolean;
   showBottomNav?: boolean;
   className?: string;
