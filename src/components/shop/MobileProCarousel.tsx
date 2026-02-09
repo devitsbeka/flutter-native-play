@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Crown, Users, Sparkles, Check, ChevronRight, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useVipStatus } from "@/hooks/useVipStatus";
 import { useProPurchase, type ProTierId } from "@/hooks/useProPurchase";
 import shopBgVideo from "@/assets/shopbg.mp4";
