@@ -897,7 +897,7 @@ export const ka = {
     powerUp5050: "50/50",
     powerUpFreeze: "გაყინვა",
     powerUpReplace: "შეცვლა",
-    powerUpTimeDrain: "დრო +5წმ",
+    powerUpTimeDrain: "+ 10 წამი",
     likedIt: "შექმენი ანგარიში და გააგრძელე თამაში",
     createAccountToContinue: "",
     levelCompleted: "გავლილი დონე",

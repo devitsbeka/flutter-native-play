@@ -24,7 +24,7 @@ const POWER_UP_NAMES: Record<PowerUpType, string> = {
   "5050": "50/50",
   "freeze": "გაყინვა",
   "replace": "შეცვლა",
-  "time-drain": "დრო+",
+  "time-drain": "+ 10 წამი",
 };
 
 const POWER_UP_GRADIENTS: Record<PowerUpType, string> = {
