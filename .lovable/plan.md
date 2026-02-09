@@ -1,29 +1,40 @@
 
 
-## Make User Analytics Update in Real-Time
+## Fix Category Blob Shape on VS Screen
 
 ### Problem
-The User Analytics page only fetches data once when the page loads. New users who sign up while you're viewing the dashboard won't appear until you manually refresh the browser. This is why you see users in PostHog but not here.
+The blob container on the VS screen renders category videos/images inside a shape that looks too square -- almost like a picture frame with barely-rounded corners. The user's screenshot of "საქართველოს ისტორია" (Georgian History) shows the video appearing in a rectangle with near-90-degree corners instead of a soft, organic blob shape.
+
+### Root Cause
+The SVG clip path in `InteractiveBlobVideo.tsx` defines a "squircle" (rounded rectangle) that is too close to a regular square:
+
+```text
+Current path control points:
+  Corner radius ~6% inset --> very subtle rounding
+  Result: nearly square shape
+```
+
+The path `M0.5,0.06 C0.82,0.06 0.94,0.18 0.94,0.5 ...` has control points at 0.06/0.94 which means only 6% rounding on each corner -- visually almost a square.
 
 ### Solution
-Add auto-refresh polling and a manual refresh button so the dashboard stays current.
+Make the blob path significantly more rounded/organic by increasing the corner radius. Change from ~6% to ~15-18% inset so the shape reads as a soft, pillowy blob rather than a framed picture.
 
 ### Changes
 
-**File: `src/pages/admin/UserAnalytics.tsx`**
+**File: `src/components/game/InteractiveBlobVideo.tsx`**
 
-1. Add a polling interval (every 30 seconds) that re-fetches all user data automatically
-2. Add a visible "Refresh" button next to the header so you can manually trigger a data reload anytime
-3. Show a "Last updated: X seconds ago" indicator so you know how fresh the data is
+1. Update `roundedRectPath` with more aggressive corner rounding (control points moved from 0.06/0.94 to ~0.12/0.88), creating a visibly softer squircle
+2. Update `borderRectPath` to match (slightly larger for the border outline)
+3. These are the ONLY two lines that need changing -- the clip paths are referenced everywhere else by ID
 
-**File: `src/lib/excludedUsers.ts`**
+### Visual Effect
 
-4. Remove `Giga` (`7d75dfbb-...`) from the mascot list -- this appears to be a real user with 9 games played and 11,415 coins. Verify if any other IDs in the mascot list are actually real users that should be shown.
+```text
+Before:  Nearly square with barely-visible corner rounding (6%)
+After:   Soft, pillow-like rounded squircle (15-18% radius)
+```
 
-### Technical Details
+All 45 categories already have video mappings in `CATEGORY_VIDEOS`, and all have `icon_slug` values for the slot-machine spin phase. The `image_url` field in the database is NULL for all categories, but this is expected -- the system uses videos from `videoConfig.ts` and 3D icons from the icon library instead.
 
-- Polling uses `setInterval` with cleanup on unmount
-- The refresh button calls the existing `fetchAllUsers` function
-- A timestamp state tracks the last successful fetch for the "last updated" display
-- No database changes needed
+No database changes needed. Only the two SVG path strings in `InteractiveBlobVideo.tsx` need updating.
 
