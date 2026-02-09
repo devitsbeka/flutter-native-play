@@ -9,8 +9,7 @@ interface PlayGuardContextValue {
    * Call before any game-starting action.
    * Returns true if user can play (VIP or has remaining plays).
    * If user can't play, it shows the PlayLimitModal and returns false.
-   * Pass an optional onAllow callback that fires if/when the user gets access
-   * (e.g. uses a regen play from inside the modal).
+   * Auto-consumes regen play when allowing play with exhausted free games.
    */
   guardPlay: (onAllow?: () => void) => boolean;
 }
@@ -31,6 +30,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
     canPlay,
     isVip,
     regenPlayAvailable,
+    freeGamesExhausted,
     timeUntilNextPlay,
     useRegenPlay,
   } = usePlayLimit();
@@ -43,14 +43,21 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
       // Guests are handled separately by each page (Index.tsx)
       if (!user) return true;
 
-      if (canPlay) return true;
+      if (canPlay) {
+        // If user can play but only via regen (free games exhausted), consume the regen
+        // This is fire-and-forget: useRegenPlay immediately sets local state to block double-use
+        if (freeGamesExhausted && regenPlayAvailable && !isVip) {
+          useRegenPlay();
+        }
+        return true;
+      }
 
       // User can't play — show modal
       onAllowRef.current = onAllow;
       setShowModal(true);
       return false;
     },
-    [user, canPlay],
+    [user, canPlay, freeGamesExhausted, regenPlayAvailable, isVip, useRegenPlay],
   );
 
   const handlePlayWithRegen = useCallback(async () => {

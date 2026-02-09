@@ -378,7 +378,11 @@ export default function Index() {
         levelInfo={levelInfo}
         onContinue={() => {
           setShowLevelModal(false);
-          // Play limit is already checked via handlePlayClick flow
+          // Check play limit before navigating (was previously bypassed)
+          if (user && !canPlay && !isVip) {
+            setShowGuestMaxPlaysModal(true);
+            return;
+          }
           navigate("/game");
         }}
       />

@@ -13,7 +13,7 @@ function GameContent() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get("category");
   const { user } = useAuth();
-  const { canPlay, isVip, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [blocked, setBlocked] = useState(false);
 
@@ -26,9 +26,13 @@ function GameContent() {
     }
     // Auto-start matchmaking when page loads
     if (phase === "home" && !blocked) {
+      // Safety net: if user navigated directly to /game with a regen play available, consume it
+      if (user && freeGamesExhausted && regenPlayAvailable && !isVip) {
+        useRegenPlay(); // fire-and-forget, local state blocks double-use immediately
+      }
       startMatchmaking(categoryId || undefined);
     }
-  }, [phase, startMatchmaking, categoryId, user, canPlay, isVip, blocked]);
+  }, [phase, startMatchmaking, categoryId, user, canPlay, isVip, blocked, freeGamesExhausted, regenPlayAvailable, useRegenPlay]);
 
   // Phases that have their own full-screen background
   const hasOwnBackground = phase === "home" || phase === "matchmaking" || phase === "preparing" || phase === "vs-screen" || phase === "playing" || phase === "question-result" || phase === "match-result";
