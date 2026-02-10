@@ -55,10 +55,12 @@ export default function CategoryPage() {
   const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { clearNewLevelBadge } = useNewLevels();
+  const { canPlayLevel, isCategoryBlocked, getLevelsPlayedInCategory, maxFreeLevelsPerCategory, isVip } = useCategoryPlayLimit();
 
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
   
   // Check if user is a guest
   const isGuest = !user;
