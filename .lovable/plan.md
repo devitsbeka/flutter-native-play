@@ -1,74 +1,64 @@
 
+## Create 8 New Fake Accounts with Real Photo Avatars
 
-## Fix Answer-Revealing Icons on Mascot Trivias
+### Goal
+Create 8 new user accounts with real human photos (instead of mascot illustrations) to showcase that users can upload their own photos and get animated avatars. Each account needs at least 1 published trivia.
 
-### Problem
-Several trivia icons reveal the correct answer instead of representing the question's context/clue. For example, showing a `canada-flag` icon for the question "Which country's flag has a maple leaf?" gives away the answer (Canada). The icon should be `maple-leaf` -- the clue mentioned in the question, not the answer itself.
+### Account Mapping
 
-### Principle
-**Icons must represent the question context (what the question talks about), never the correct answer.**
+| # | Username | Photo | Email (internal) |
+|---|----------|-------|------------------|
+| 1 | levan_88 | image-431.png (young man) | levan_88@mytrivia.local |
+| 2 | Natato | image-432.png (red-haired woman) | natato@mytrivia.local |
+| 3 | Elene_E | image-433.png (blue-eyed woman) | elene_e@mytrivia.local |
+| 4 | Sofia | image-434.png (blonde woman) | sofia@mytrivia.local |
+| 5 | LASH10 | image-435.png (man with glasses) | lash10@mytrivia.local |
+| 6 | Nona_12 | image-436.png (woman with headband) | nona_12@mytrivia.local |
+| 7 | Grigoli_a | image-437.png (bearded man with glasses) | grigoli_a@mytrivia.local |
+| 8 | Kosta | image-438.png (curly-haired man) | kosta@mytrivia.local |
 
-### Fixes Needed (Answer-Revealing Icons Only)
+### Implementation Steps
 
-**Irakli - "ინტელექტის ტესტი"** (id: e03a0467)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Which country's flag has maple leaf? | `canada-flag` | Answer (Canada) | `maple-leaf` | The clue IS the maple leaf |
-| Which planet is called the red planet? | `mars` | Answer (Mars) | `star` | Generic space/planet context |
+**Step 1: Upload Photos to Storage**
+- Copy all 8 uploaded images into the project
+- Upload them to the `avatars` storage bucket so they have public URLs
 
-**Elene - "ადამიანის სხეული"** (id: 3501fa1e)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| What is the nerve cell called? | `neuron` | Answer (neuron) | `brain` | Brain/nervous system context |
-| Which organ produces bile? | `liver` | Answer (liver) | `stethoscope` | Generic medical context |
-| Where does oxygen exchange happen? | `lungs` | Answer (lungs) | `wind` | Oxygen/air context |
+**Step 2: Create Auth Users**
+- Create 8 auth users in the database using the `@mytrivia.local` pseudo-email pattern (matching existing mascots)
+- Each with a simple password
 
-**Elene - "მეცნიერების აღმოჩენები"** (id: 4c04280a)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Which is the largest planet? | `jupiter` | Answer (Jupiter) | `star` | Generic space context |
-| Smallest particle keeping element properties? | `atom` | Answer (atom) | `microscope` | Examining tiny things |
+**Step 3: Create Profiles**
+- Insert profile rows for each user with:
+  - `nickname` matching the requested username
+  - `avatar_url` pointing to the uploaded photo in storage
+  - `country_code: 'GE'` (default Georgian)
+  - `coins` varied (1000-4000 range for realism)
 
-**Dato - "მრავალფეროვანი კითხვები"** (id: e38f80a1)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Which bird is the fastest? | `falcon` | Answer (peregrine falcon) | `feather` | Bird/flight context |
+**Step 4: Create 1 Published Trivia Per Account**
+Each account gets a unique Georgian-language trivia with 5 questions. Trivia topics will be varied and interesting:
 
-**Keti - "ვინ იცის მეტი?"** (id: 89b6bba6)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Most famous Japanese dish? | `sushi` | Answer (sushi) | `chopsticks` | Japanese cuisine context |
+| Username | Trivia Title | Topic | Icon |
+|----------|-------------|-------|------|
+| levan_88 | "ტექნოლოგიები" | Technology | `rocket` |
+| Natato | "კინო და ფილმები" | Movies | `star` |
+| Elene_E | "გეოგრაფია" | Geography | `compass` |
+| Sofia | "ხელოვნება" | Art | `diamond` |
+| LASH10 | "სპორტი" | Sports | `football` |
+| Nona_12 | "კულინარია" | Food/Cooking | `coffee` |
+| Grigoli_a | "ასტრონომია" | Astronomy | `telescope` |
+| Kosta | "მუსიკა" | Music | `guitar` |
 
-**Nino - "შერეული ვიქტორინა"** (id: 99116cb9)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Which is the largest planet? | `jupiter` | Answer (Jupiter) | `star` | Generic space context |
-| Which sport has the heaviest ball? | `bowling-ball` | Answer (bowling) | `weight` | Heavy/weight context |
+Each trivia will have 5 Georgian-language questions with 4 answer choices, following the same JSONB structure as existing mascot trivias. Icons will be context-based (not answer-revealing).
 
-**Salome - "ტესტი ერუდიტებისთვის"** (id: 93eb9637)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Which animal can change color? | `chameleon` | Answer (chameleon) | `rainbow` | Color-changing context |
+### Technical Details
 
-**Tornike - "ყველაფერი ცოტ-ცოტა"** (id: 441639c7)
-| Question | Current Icon | Reveals | Fix | Reason |
-|----------|-------------|---------|-----|--------|
-| Which is the fastest animal? | `cheetah` | Answer (cheetah) | `lightning` | Speed context |
+- Auth users are created via SQL insert into `auth.users` (same method used for existing mascots)
+- Profile trigger `handle_new_user` will auto-create profiles, but we may insert profiles directly for more control
+- Trivia questions inserted into `user_quiz_posts` with `is_public: true`
+- Question format matches existing: `{question_text, correct_answer, incorrect_answers[], difficulty, icon_slug}`
+- No code changes needed -- this is purely database seeding
 
-### Icons That Are Fine (Context-Based, Not Answer-Revealing)
-These were set correctly and stay as-is:
-- `eiffel-tower` -- question mentions Eiffel Tower, answer is Paris
-- `sun` -- question mentions sun rays, answer is vitamin D
-- `football` -- question about football, answer is a player/country
-- `maple-leaf` (new) -- question clue, answer is Canada
-- `machu-picchu` -- question mentions Machu Picchu, answer is Peru
-- `pizza` -- question mentions pizza, answer is Italy
-- `colosseum` -- question mentions Colosseum, answer is Rome
-- `emerald` -- question mentions emerald, answer is green
-- `bone` -- generic (answer is specifically femur, not "bone")
-
-### Technical Implementation
-SQL UPDATE statements targeting the `questions` JSONB column. Each fix updates a specific array index's `icon_slug` field. All replacement slugs have been verified to exist in `icon_library`.
-
-Total: 13 icon fixes across 8 trivias.
-
+### What This Achieves
+- New users see real human avatars alongside mascot avatars in leaderboards, trivia feeds, etc.
+- Demonstrates that the app supports real photo avatars (not just mascots)
+- Encourages users to upload their own photos
