@@ -146,22 +146,9 @@ export function toMobileWebmUrl(mp4Url: string): string {
   return `${dir}/mobile/${filename}`;
 }
 
-// Convert an MP4 path to its desktop HD WebM equivalent (1280px)
-export function toDesktopHdWebmUrl(mp4Url: string): string {
-  const lastSlash = mp4Url.lastIndexOf("/");
-  const dir = mp4Url.substring(0, lastSlash);
-  const filename = mp4Url.substring(lastSlash + 1).replace(/\.mp4$/, ".webm");
-  return `${dir}/desktop/${filename}`;
-}
-
 // Check if user is on a mobile-sized viewport (< 768px)
 export function isMobileViewport(): boolean {
   return typeof window !== "undefined" && window.innerWidth < 768;
-}
-
-// Check if user is on a large desktop viewport (>= 1024px)
-export function isDesktopHdViewport(): boolean {
-  return typeof window !== "undefined" && window.innerWidth >= 1024;
 }
 
 // Get the best video URL for current device: mobile WebM, desktop WebM, or MP4 fallback
@@ -169,12 +156,6 @@ export function getResponsiveVideoSrc(mp4Url: string): {
   webm: string;
   mp4: string;
 } {
-  if (isDesktopHdViewport()) {
-    return { webm: toDesktopHdWebmUrl(mp4Url), mp4: mp4Url };
-  }
-  if (isMobileViewport()) {
-    return { webm: toMobileWebmUrl(mp4Url), mp4: mp4Url };
-  }
   return { webm: toWebmUrl(mp4Url), mp4: mp4Url };
 }
 
@@ -186,10 +167,6 @@ export function getAllVideoUrls(): string[] {
   ];
   const uniqueMp4 = [...new Set(allMp4Urls)];
 
-  // Preload the best quality for current viewport
-  if (isDesktopHdViewport()) {
-    return uniqueMp4.map((url) => toDesktopHdWebmUrl(url));
-  }
   return uniqueMp4.map((url) => toWebmUrl(url));
 }
 

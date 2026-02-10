@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from "react";
 import { Heart } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
-import { CATEGORY_VIDEOS, toDesktopHdWebmUrl } from "@/config/videoConfig";
+import { CATEGORY_VIDEOS, toWebmUrl } from "@/config/videoConfig";
 
 
 interface AirbnbCategoryCardProps {
@@ -67,7 +67,7 @@ function prefetchVideo(videoUrl: string) {
   const link = document.createElement("link");
   link.rel = "prefetch";
   link.as = "video";
-  link.href = toDesktopHdWebmUrl(videoUrl);
+  link.href = toWebmUrl(videoUrl);
   document.head.appendChild(link);
 }
 
