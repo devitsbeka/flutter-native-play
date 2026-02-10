@@ -22,7 +22,6 @@ export function NotEnoughCoinsModal({
   onClose,
   currentCoins,
   requiredCoins,
-  onWatchAd,
   onExchangeGems,
   onOpenDailyRewards,
   userGems,
