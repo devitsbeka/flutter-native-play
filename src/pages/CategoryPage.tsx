@@ -146,10 +146,12 @@ export default function CategoryPage() {
         const isCurrent = hasEnoughQuestions && level === currentLevel;
         const isComingSoon = !hasEnoughQuestions; // Not enough questions for this level yet
         const stars = getLevelStars(categoryId || "", level);
+        // PRO-locked: level is beyond the free limit and user is not VIP
+        const isProLocked = !isVip && !isComingSoon && hasEnoughQuestions && level > maxFreeLevelsPerCategory && !completed;
 
-        return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars };
+        return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars, isProLocked };
       }),
-    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars]
+    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars, isVip, maxFreeLevelsPerCategory]
   );
 
   if (categoriesLoading) {
