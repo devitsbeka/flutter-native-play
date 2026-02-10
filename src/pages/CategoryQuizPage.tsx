@@ -8,6 +8,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
