@@ -269,7 +269,7 @@ export default function PowerUps() {
       trackShopItemPurchased({
         itemId: item.id,
         productType,
-        currency: item.currency === "lari" ? "lari" : "gems",
+        currency: item.currency,
         price: item.price,
       });
       setPurchasedItems((prev) => new Set([...prev, item.id]));

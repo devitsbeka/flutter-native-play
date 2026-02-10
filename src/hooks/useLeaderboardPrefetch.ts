@@ -33,8 +33,8 @@ function generateFakeUsers(tier: number, count: number = 15, lowestRealUserCoins
   // AI users get coins BELOW the lowest real user (or tier-appropriate defaults if no real users)
   const maxAiCoins = lowestRealUserCoins 
     ? Math.max(lowestRealUserCoins - 1, 100) 
-    : (tier === 3 ? 9000 : tier === 2 ? 2500 : 1500);
-  const minAiCoins = tier === 3 ? 5000 : tier === 2 ? 1000 : 200;
+    : (tier === 3 ? 9000 : tier === 2 ? 3500 : 900);
+  const minAiCoins = tier === 3 ? 5000 : tier === 2 ? 1500 : 200;
   
   const seededRandom = (i: number) => {
     const x = Math.sin(tier * 1000 + i) * 10000;
