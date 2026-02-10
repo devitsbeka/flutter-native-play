@@ -420,7 +420,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex-1 flex flex-col relative"
+                className="flex-1 flex flex-col relative pt-[100px]"
               >
                 {/* Left Arrow Navigation */}
                 {questions.length > 1 && currentQuestionIndex > 0 && (
