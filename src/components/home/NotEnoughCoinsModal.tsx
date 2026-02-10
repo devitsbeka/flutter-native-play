@@ -11,7 +11,6 @@ interface NotEnoughCoinsModalProps {
   onClose: () => void;
   currentCoins: number;
   requiredCoins: number;
-  onWatchAd: () => void;
   onExchangeGems: () => void;
   onOpenDailyRewards: () => void;
   userGems: number;
