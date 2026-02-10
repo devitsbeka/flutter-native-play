@@ -24,6 +24,7 @@ export const REWARDS = {
   // ===== LEVEL UP REWARDS (SIMPLIFIED) =====
   LEVEL_UP_COINS: 150,              // Fixed 150 coins per level
   LEVEL_UP_POWER_UP_TYPES: ["5050", "freeze", "replace", "time-drain"] as string[],
+  LEVEL_UP_CORRECT_ANSWERS_THRESHOLD: 20, // Level-up modal every 20 correct answers
   
   // DEPRECATED - kept for backwards compatibility
   LEVEL_UP_COINS_PER_LEVEL: 100,

@@ -326,11 +326,19 @@ export function MatchResultScreen() {
           setCoinChange(-netLoss); // -500 (already paid)
         }
 
-        // Simplified level-up rewards: 150 coins + 1 random power-up
+        // === Correct-answer milestone level-up (every 20 correct answers) ===
+        const sessionData = missionTracker.getSessionData();
+        const sessionCorrectAnswers = sessionData.correctAnswers;
+        const oldTotalCorrect = (currentProfile as any).total_correct_answers || 0;
+        const newTotalCorrect = oldTotalCorrect + sessionCorrectAnswers;
+        const threshold = REWARDS.LEVEL_UP_CORRECT_ANSWERS_THRESHOLD;
+        const oldMilestone = Math.floor(oldTotalCorrect / threshold);
+        const newMilestone = Math.floor(newTotalCorrect / threshold);
+        
         let levelUpCoins = 0;
         let randomPowerUp: string | undefined;
         
-        if (newLevelInfo.level > oldLevelInfo.level) {
+        if (newMilestone > oldMilestone) {
           levelUpCoins = REWARDS.LEVEL_UP_COINS;
           const powerUpTypes = REWARDS.LEVEL_UP_POWER_UP_TYPES;
           randomPowerUp = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
@@ -361,8 +369,15 @@ export function MatchResultScreen() {
           best_streak: isWin 
             ? Math.max(currentProfile.best_streak || 0, (currentProfile.current_streak || 0) + 1)
             : currentProfile.best_streak,
-          // coins removed — handled atomically by awardWin/awardDraw/awardLose RPC calls
         });
+
+        // Update total_correct_answers separately (not in updateProfile to avoid type issues)
+        if (sessionCorrectAnswers > 0) {
+          await supabase
+            .from("profiles")
+            .update({ total_correct_answers: newTotalCorrect } as any)
+            .eq("user_id", currentUser.id);
+        }
 
         // Level-up coins added atomically via RPC (separate from game rewards)
         if (levelUpCoins > 0) {
@@ -380,10 +395,9 @@ export function MatchResultScreen() {
           completed_at: new Date().toISOString(),
         });
 
-        if (newLevelInfo.level > oldLevelInfo.level) {
-          setPreviousLevel(oldLevelInfo.level);
-          setNewLevel(newLevelInfo.level);
-          // Use requestAnimationFrame for smoother timing
+        if (newMilestone > oldMilestone) {
+          setPreviousLevel(newMilestone);
+          setNewLevel(newMilestone);
           requestAnimationFrame(() => {
             setTimeout(() => {
               setShowLevelUp(true);
