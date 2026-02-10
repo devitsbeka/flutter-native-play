@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Pencil, Smile, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -58,6 +59,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+  const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   // Determine if this is a collection or a quiz
   const isCollection = quiz?.hasOwnProperty('quiz_collections') || (quiz && !quiz.hasOwnProperty('questions'));
   const tableName = isCollection ? "quiz_collections" : "user_quiz_posts";
@@ -475,17 +477,33 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               </div>
                             )}
                             
-                            {/* Large Tappable Icon */}
-                            <div className="flex flex-col items-center gap-1.5 relative z-10">
-                              <QuestionIconPicker
-                                selectedSlug={q.icon_slug || null}
-                                onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
-                                creatorMode
-                                questionText={q.question_text}
-                                correctAnswer={q.correct_answer}
-                                incorrectAnswers={q.incorrect_answers}
-                                large
-                              />
+                            {/* Large Tappable Icon - opens portal picker */}
+                            <div className="flex flex-col items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setIconPickerIndex(index)}
+                                className="rounded-2xl flex items-center justify-center transition-all flex-shrink-0 relative active:scale-95 overflow-visible bg-white/15 border-2 border-dashed border-white/30 hover:bg-white/20 hover:border-white/40"
+                                style={{ width: 80, height: 80 }}
+                              >
+                                {q.icon_slug ? (
+                                  <>
+                                    <img
+                                      src={`https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${q.icon_slug}.png`}
+                                      alt=""
+                                      style={{ width: 80, height: 80 }}
+                                      className="object-contain"
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  </>
+                                ) : (
+                                  <>
+                                    <Smile style={{ width: 50, height: 50 }} className="text-white/60" />
+                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200">
+                                      <Plus className="w-3 h-3 text-slate-600" />
+                                    </div>
+                                  </>
+                                )}
+                              </button>
                               {missingIcon && !hasCriticalIssue && (
                                 <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
                               )}
@@ -602,6 +620,24 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 ));
               }}
             />
+          )}
+
+          {/* Portal-rendered Icon Picker for question cards */}
+          {iconPickerIndex !== null && questions[iconPickerIndex] && createPortal(
+            <QuestionIconPicker
+              selectedSlug={questions[iconPickerIndex].icon_slug || null}
+              onSelect={(slug) => {
+                updateQuestionIcon(iconPickerIndex, slug || undefined);
+                setIconPickerIndex(null);
+              }}
+              creatorMode
+              questionText={questions[iconPickerIndex].question_text}
+              correctAnswer={questions[iconPickerIndex].correct_answer}
+              incorrectAnswers={questions[iconPickerIndex].incorrect_answers}
+              isOpen={true}
+              onClose={() => setIconPickerIndex(null)}
+            />,
+            document.body
           )}
 
           {/* Fixed Footer - Save Button (always visible) */}
