@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tv, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { resolveAvatarUrl } from '@/utils/avatarUtils';
+import { GuestJoinModal } from '@/components/controller/GuestJoinModal';
 
 interface ControllerCodeEntryProps {
   initialCode?: string;
@@ -17,6 +18,7 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
   const [code, setCode] = useState(initialCode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showGuestModal, setShowGuestModal] = useState(false);
   const { joinSession } = useTVGame();
   const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -33,12 +35,10 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
       const trimmed = (initialCode || '').trim();
       if (!trimmed || loading) return;
 
-      // If user is not authenticated, redirect to auth with return URL
+      // If user is not authenticated, show guest join modal
       if (!user) {
-        const returnUrl = isUuid(trimmed) 
-          ? `/join/session/${trimmed}` 
-          : `/join?code=${trimmed}`;
-        navigate(`/auth?returnTo=${encodeURIComponent(returnUrl)}`);
+        setCode(trimmed);
+        setShowGuestModal(true);
         return;
       }
 
@@ -100,11 +100,8 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
     if (user && profile) {
       await handleJoin(code, profile.nickname, profile.avatar_url || profile.animated_avatar_url || undefined);
     } else {
-      // Redirect to auth with return URL
-      const returnUrl = isUuid(code) 
-        ? `/join/session/${code}` 
-        : `/join?code=${code}`;
-      navigate(`/auth?returnTo=${encodeURIComponent(returnUrl)}`);
+      // Show guest join modal for unauthenticated users
+      setShowGuestModal(true);
     }
   };
 
@@ -124,6 +121,27 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
       </div>
     );
   }
+
+  const handleGuestJoin = async (nickname: string) => {
+    const codeToUse = code || initialCode;
+    if (!codeToUse) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    const normalized = codeToUse.trim();
+    const codeForJoin = isUuid(normalized) ? normalized : normalized.toUpperCase();
+    
+    const success = await joinSession(codeForJoin, nickname);
+    
+    if (success) {
+      setShowGuestModal(false);
+      onJoined();
+    } else {
+      setError('თამაში ვერ მოიძებნა. შეამოწმეთ კოდი.');
+    }
+    setLoading(false);
+  };
 
   return (
     <>
@@ -188,6 +206,13 @@ export const ControllerCodeEntry: React.FC<ControllerCodeEntryProps> = ({ initia
           </ChunkyButton>
         </motion.div>
       </div>
+
+      <GuestJoinModal
+        isOpen={showGuestModal}
+        onJoinAsGuest={handleGuestJoin}
+        onClose={() => setShowGuestModal(false)}
+        code={code || initialCode}
+      />
     </>
   );
 };

@@ -203,12 +203,6 @@ export const GuestJoinModal = React.forwardRef<HTMLDivElement, GuestJoinModalPro
         </AnimatePresence>
       </motion.div>
 
-      {/* Game Code Display */}
-      <div className="mt-6 text-center">
-        <p className="text-purple-300/60 text-sm">
-          თამაშის კოდი: <span className="font-mono font-bold text-purple-200">{code}</span>
-        </p>
-      </div>
     </div>
   );
 
