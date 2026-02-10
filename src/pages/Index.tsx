@@ -416,7 +416,6 @@ export default function Index() {
         currentCoins={coins}
         requiredCoins={stakeAmount}
         userGems={gems}
-        onWatchAd={handleWatchAdForCoins}
         onExchangeGems={handleExchangeGems}
         onOpenDailyRewards={() => {
           setShowNotEnoughCoinsModal(false);
