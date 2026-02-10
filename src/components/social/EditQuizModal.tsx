@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { QuestionIconPicker } from "./QuestionIconPicker";
 import { CoverImagePicker } from "./CoverImagePicker";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
+import { EditQuestionDialog } from "./EditQuestionDialog";
 import { hasAnswerInQuestion } from "@/utils/questionValidation";
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
@@ -56,7 +57,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
-
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   // Determine if this is a collection or a quiz
   const isCollection = quiz?.hasOwnProperty('quiz_collections') || (quiz && !quiz.hasOwnProperty('questions'));
   const tableName = isCollection ? "quiz_collections" : "user_quiz_posts";
@@ -448,6 +449,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                   opts={{ 
                     align: "center",
                     loop: false,
+                    watchDrag: false,
                   }}
                   className="flex-1"
                 >
@@ -474,7 +476,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             )}
                             
                             {/* Large Tappable Icon */}
-                            <div className="flex flex-col items-center gap-1.5 relative z-10" onPointerDownCapture={(e) => e.stopPropagation()} onTouchStartCapture={(e) => e.stopPropagation()}>
+                            <div className="flex flex-col items-center gap-1.5 relative z-10">
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
@@ -489,15 +491,24 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               )}
                             </div>
                             
-                            {/* Question Text (READ-ONLY) */}
-                            <div className="text-center">
+                            {/* Question Text - Tappable to edit */}
+                            <button
+                              onClick={() => setEditingQuestionIndex(index)}
+                              className="text-center w-full rounded-xl p-2 hover:bg-white/10 transition-colors"
+                            >
                               <p className="text-lg font-medium text-white leading-relaxed">
                                 {q.question_text}
                               </p>
-                            </div>
+                              <span className="text-xs text-white/50 mt-1 flex items-center justify-center gap-1">
+                                <Pencil className="w-3 h-3" /> შეცვლა
+                              </span>
+                            </button>
                             
                             {/* Answers (READ-ONLY) - Game Style */}
-                            <div className="space-y-2.5">
+                            <button
+                              onClick={() => setEditingQuestionIndex(index)}
+                              className="space-y-2.5 w-full text-left rounded-xl p-1 hover:bg-white/5 transition-colors"
+                            >
                               {/* Correct Answer - Green chunky button */}
                               <div className="relative">
                                 <div className="absolute inset-0 bg-emerald-700 rounded-xl translate-y-1" />
@@ -524,7 +535,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                   </div>
                                 </div>
                               ))}
-                            </div>
+                            </button>
                             
                             {/* Delete Question Button */}
                             <AnimatePresence mode="wait">
@@ -576,6 +587,22 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Edit Question Dialog */}
+          {editingQuestionIndex !== null && questions[editingQuestionIndex] && (
+            <EditQuestionDialog
+              open={editingQuestionIndex !== null}
+              onOpenChange={(open) => {
+                if (!open) setEditingQuestionIndex(null);
+              }}
+              question={questions[editingQuestionIndex]}
+              onSave={(updated) => {
+                setQuestions(prev => prev.map((q, i) => 
+                  i === editingQuestionIndex ? { ...q, ...updated } : q
+                ));
+              }}
+            />
+          )}
 
           {/* Fixed Footer - Save Button (always visible) */}
           <div className={`flex-shrink-0 fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 ${
