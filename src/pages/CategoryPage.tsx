@@ -6,6 +6,7 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNewLevels } from "@/hooks/useNewLevels";
+import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
@@ -13,11 +14,13 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
+import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import { CATEGORY_VIDEOS, CATEGORY_IMAGES, MAP_VIDEOS } from "@/config/videoConfig";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import crystalHourglass from "@/assets/crystal-hourglass.png";
+import crownIcon from "@/assets/icons/crown-2.png";
 
 // Pastel color palettes for consistent styling with Discover page
 const PASTEL_PALETTES = [
