@@ -67,7 +67,7 @@ function prefetchVideo(videoUrl: string) {
   const link = document.createElement("link");
   link.rel = "prefetch";
   link.as = "video";
-  link.href = toDesktopHdWebmUrl(videoUrl);
+  link.href = toWebmUrl(videoUrl);
   document.head.appendChild(link);
 }
 
