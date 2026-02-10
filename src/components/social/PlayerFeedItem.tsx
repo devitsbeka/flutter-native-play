@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 
-import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass } from "lucide-react";
+import { UserPlus, UserCheck, Clock, Play, Layers, Hourglass, Pencil } from "lucide-react";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
@@ -16,6 +16,12 @@ import bookmark3dIcon from "@/assets/icons/bookmark-3d.png";
 import { formatDistanceToNow } from "date-fns";
 import { ka, enUS } from "date-fns/locale";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
+// Lazy load EditQuizModal for admin editing
+const EditQuizModal = lazy(() =>
+  import("@/components/social/EditQuizModal").then(m => ({ default: m.EditQuizModal }))
+);
 
 interface PlayerFeedItemProps {
   player: PlayerInfo;
@@ -62,9 +68,11 @@ export function PlayerFeedItem({
   const { sendFriendRequest, acceptFriendRequest } = useFriends();
   const { openProfile } = usePlayerProfile();
   const { language } = useLanguage();
+  const { isAdmin } = useAdminRole();
   const [friendshipStatus, setFriendshipStatus] = useState(player.friendship_status);
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const { isVip, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
 
   const handleAddFriend = async (e: React.MouseEvent) => {
@@ -312,8 +320,19 @@ export function PlayerFeedItem({
               </button>
             </div>
             
-            {/* Play Button - text pill when not played, icon circle when played */}
-            {isPlayed ? (
+            {/* Admin Edit Button or Play Button */}
+            {isAdmin && isTrivia ? (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowEditModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-background border-2 border-primary rounded-full transition-colors hover:bg-primary/10"
+              >
+                <Pencil className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">რედაქტირება</span>
+              </button>
+            ) : isPlayed ? (
               <button 
                 onClick={handlePlayClick}
                 className="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center transition-colors hover:bg-purple-600"
@@ -351,6 +370,32 @@ export function PlayerFeedItem({
           }
         }}
       />
+
+      {/* Admin Edit Modal for trivia */}
+      {showEditModal && isTrivia && triviaItem && (
+        <Suspense fallback={null}>
+          <EditQuizModal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            quiz={{
+              id: triviaItem.id,
+              title: triviaItem.title,
+              description: (triviaItem as any).description || "",
+              subject: (triviaItem as any).subject || "",
+              hashtags: (triviaItem as any).hashtags || [],
+              cover_image: triviaItem.coverImage || null,
+              cover_gradient: triviaItem.coverGradient || "",
+              questions: triviaItem.questions?.map((q: any) => ({
+                question_text: q.question || q.question_text,
+                correct_answer: q.correct_answer,
+                incorrect_answers: q.incorrect_answers || [],
+                icon_slug: q.icon_slug || q.iconSlug || null,
+              })) || [],
+              is_public: true,
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
