@@ -70,18 +70,18 @@ export function NotEnoughCoinsModal({
 
       {/* Options */}
       <div className="space-y-3 mb-4">
-        {/* Watch Ad */}
+        {/* Become PRO */}
         <button
-          onClick={onWatchAd}
+          onClick={() => { onClose(); navigate('/profile?tab=PRO'); }}
           className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-amber-50 transition-all"
           style={{ boxShadow: "0 2px 0 #E5E7EB" }}
         >
           <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
-            <Play className="w-6 h-6 text-amber-600" />
+            <Crown className="w-6 h-6 text-amber-600" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-gray-800">{t("modals.watchAd")}</p>
-            <p className="text-sm text-gray-500">+{REWARDS.AD_WATCH_COINS} {t("modals.coin")}</p>
+            <p className="font-bold text-gray-800">გახდი PRO</p>
+            <p className="text-sm text-gray-500">ულიმიტო თამაშები და ფუნქციები</p>
           </div>
         </button>
 
