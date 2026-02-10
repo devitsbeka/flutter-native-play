@@ -405,8 +405,7 @@ export function MatchResultScreen() {
           });
         }
 
-        // Update mission progress
-        const sessionData = missionTracker.getSessionData();
+        // Update mission progress (sessionData already captured above)
         
         // Helper to show toast if mission completed
         const handleMissionResult = (result: { 
