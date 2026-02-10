@@ -168,7 +168,7 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
     }
   }, [user?.id, leaderboard, userLeagueData, viewingTier]);
 
-  // Sync XP from profile - debounced
+  // Sync XP from profile + auto-promote tier based on coins
   const lastSyncedPoints = useRef<number | null>(null);
   
   useEffect(() => {
@@ -177,17 +177,29 @@ export function useLeagueLeaderboard(viewingTier?: number, region?: string) {
     
     const syncXp = async () => {
       lastSyncedPoints.current = profile.total_points;
+      
+      // Determine correct tier based on coins
+      const coins = profile.coins ?? 0;
+      const correctTier = coins > 9000 ? 3 : coins > 3500 ? 2 : 1;
+      
       await supabase
         .from("user_league_data")
         .update({ 
           weekly_xp: profile.total_points,
-          current_xp: profile.total_points 
+          current_xp: profile.total_points,
+          ...(correctTier !== userTier ? { league_tier: correctTier } : {}),
         })
         .eq("user_id", user.id);
+      
+      // Invalidate cache if tier changed
+      if (correctTier !== userTier) {
+        queryClient.invalidateQueries({ queryKey: ["userLeagueData"] });
+        queryClient.invalidateQueries({ queryKey: ["leagueLeaderboard"] });
+      }
     };
 
     syncXp();
-  }, [profile?.total_points, user?.id]);
+  }, [profile?.total_points, profile?.coins, user?.id, userTier, queryClient]);
 
   const currentLeague = LEAGUES.find(l => l.tier === activeTier) || LEAGUES[0];
   const userEntry = leaderboard?.find(e => e.user_id === user?.id);
