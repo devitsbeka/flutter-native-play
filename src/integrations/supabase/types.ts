@@ -1427,6 +1427,7 @@ export type Database = {
           region: string | null
           security_answer_hash: string | null
           security_question_id: number | null
+          total_correct_answers: number | null
           total_points: number | null
           updated_at: string
           user_id: string
@@ -1450,6 +1451,7 @@ export type Database = {
           region?: string | null
           security_answer_hash?: string | null
           security_question_id?: number | null
+          total_correct_answers?: number | null
           total_points?: number | null
           updated_at?: string
           user_id: string
@@ -1473,6 +1475,7 @@ export type Database = {
           region?: string | null
           security_answer_hash?: string | null
           security_question_id?: number | null
+          total_correct_answers?: number | null
           total_points?: number | null
           updated_at?: string
           user_id?: string
