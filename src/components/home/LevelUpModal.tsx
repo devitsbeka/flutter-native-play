@@ -154,7 +154,7 @@ export function LevelUpModal({ isOpen, onClose, newLevel, previousLevel, awarded
               transition={{ delay: 0.5 }}
               className="text-center text-gray-500 text-lg font-medium mb-6"
             >
-              {t("modals.levelLabel")} {previousLevel} → {t("modals.levelLabel")} {newLevel}
+              🎯 {newLevel * REWARDS.LEVEL_UP_CORRECT_ANSWERS_THRESHOLD} {t("modals.correctAnswers")}
             </motion.p>
 
             {/* Rewards section - Simplified */}
