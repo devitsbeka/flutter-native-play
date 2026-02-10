@@ -1345,6 +1345,26 @@ serve(async (req) => {
       );
     }
 
+    // PRIORITY QUERY: Find exact slug/title matches for the original query term first
+    // This ensures that typing "khinkali" always returns the khinkali icon regardless of fuzzy noise
+    const queryLowerSanitized = query.toLowerCase().replace(/[,(){}[\]'"\\]/g, '').trim();
+    let priorityIconIds = new Set<string>();
+    let priorityIcons: any[] = [];
+    
+    if (queryLowerSanitized.length >= 2) {
+      const { data: exactMatches } = await supabase
+        .from('icon_library')
+        .select('id, slug, title, icon_url, tags')
+        .or(`slug.ilike.%${queryLowerSanitized}%,title.ilike.%${queryLowerSanitized}%`)
+        .limit(10);
+      
+      if (exactMatches && exactMatches.length > 0) {
+        priorityIcons = exactMatches;
+        exactMatches.forEach(icon => priorityIconIds.add(icon.id));
+        console.log(`Priority exact matches for "${queryLowerSanitized}": ${exactMatches.map(i => i.slug).join(', ')}`);
+      }
+    }
+
     // Build OR conditions for search
     const orConditions = sanitizedTerms.map(term => 
       `title.ilike.%${term}%,slug.ilike.%${term}%`
@@ -1414,8 +1434,20 @@ serve(async (req) => {
         }
       }
       
+      // Boost score for priority (exact slug/title) matches
+      if (priorityIconIds.has(icon.id)) {
+        score += 1000;
+      }
+      
       return { ...icon, score };
     });
+
+    // Merge priority icons that weren't in the main results
+    for (const pIcon of priorityIcons) {
+      if (!scoredIcons.some(s => s.id === pIcon.id)) {
+        scoredIcons.push({ ...pIcon, score: 1000 });
+      }
+    }
 
     // Sort by score and take top results
     scoredIcons.sort((a, b) => b.score - a.score);
