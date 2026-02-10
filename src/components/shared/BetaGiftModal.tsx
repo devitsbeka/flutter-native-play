@@ -31,7 +31,7 @@ interface BetaGiftModalProps {
 const FEATURE_CLUES = [
   { icon: triviaIcon, text: "შექმენი ტრივია", path: "/team" },
   { icon: roomsIcon, text: "ითამაშე მეგობრებთან", path: "/team" },
-  { icon: retroTvIcon, text: "ითამაშე TV-ზე", path: "/tv" },
+  { icon: retroTvIcon, text: "ითამაშე TV-ზე", path: "/team?tvHint=true" },
 ];
 
 /**

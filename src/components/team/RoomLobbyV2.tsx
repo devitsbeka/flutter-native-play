@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import retroTvIcon from "@/assets/images/retro-tv.png";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Share2, ArrowLeft, Edit2, MessageCircle, Send, X, Trash2, Play, Tv, AlertTriangle, Palette, MoreVertical, Info, LogOut, Plus } from "lucide-react";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { isRoomActive } from "@/hooks/useMyRooms";
@@ -47,6 +47,7 @@ import {
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { playSound } = useSound();
   const { t } = useLanguage();
@@ -73,6 +74,7 @@ export function RoomLobbyV2() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [tvHintGlow, setTvHintGlow] = useState(() => searchParams.get("tvHint") === "true");
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [startAfterPick, setStartAfterPick] = useState(false); // Flag to auto-start game after category pick
@@ -880,7 +882,29 @@ export function RoomLobbyV2() {
         {isHost && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={tvHintGlow
+              ? {
+                  opacity: 1,
+                  y: 0,
+                  boxShadow: [
+                    "0 0 0px rgba(139,92,246,0)",
+                    "0 0 24px rgba(139,92,246,0.6)",
+                    "0 0 0px rgba(139,92,246,0)",
+                  ],
+                }
+              : { opacity: 1, y: 0 }
+            }
+            transition={tvHintGlow
+              ? { boxShadow: { repeat: 2, duration: 1 }, opacity: { duration: 0.3 }, y: { duration: 0.3 } }
+              : undefined
+            }
+            onAnimationComplete={() => {
+              if (tvHintGlow) {
+                setTvHintGlow(false);
+                searchParams.delete("tvHint");
+                setSearchParams(searchParams, { replace: true });
+              }
+            }}
             className="w-full p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-6"
           >
             <div className="flex items-center justify-between">
