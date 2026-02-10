@@ -156,12 +156,6 @@ export function getResponsiveVideoSrc(mp4Url: string): {
   webm: string;
   mp4: string;
 } {
-  if (isDesktopHdViewport()) {
-    return { webm: toDesktopHdWebmUrl(mp4Url), mp4: mp4Url };
-  }
-  if (isMobileViewport()) {
-    return { webm: toMobileWebmUrl(mp4Url), mp4: mp4Url };
-  }
   return { webm: toWebmUrl(mp4Url), mp4: mp4Url };
 }
 
