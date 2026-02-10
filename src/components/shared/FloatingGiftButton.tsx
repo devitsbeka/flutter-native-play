@@ -50,7 +50,7 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 1, repeat: Infinity }}
       >
-        <span className="text-white font-bold">!</span>
+        <span className="text-white font-bold">1</span>
       </motion.div>
     </motion.button>
   );
