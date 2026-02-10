@@ -120,6 +120,11 @@ export default function CategoryPage() {
       setShowAuthModal(true);
       return;
     }
+    // Check category limits
+    if (!canPlayLevel(categoryId || "", currentLevel)) {
+      setShowProModal(true);
+      return;
+    }
     navigate(`/play/${categoryId}/${currentLevel}`);
   };
 
