@@ -47,6 +47,7 @@ import {
 
 export function RoomLobbyV2() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { playSound } = useSound();
   const { t } = useLanguage();
@@ -73,6 +74,7 @@ export function RoomLobbyV2() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGradientPicker, setShowGradientPicker] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [tvHintGlow, setTvHintGlow] = useState(() => searchParams.get("tvHint") === "true");
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [startAfterPick, setStartAfterPick] = useState(false); // Flag to auto-start game after category pick
