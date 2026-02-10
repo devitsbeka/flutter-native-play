@@ -1,4 +1,5 @@
-import { Play, Gift } from "lucide-react";
+import { Crown, Gift } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { GameModal, GameModalFooter } from "@/components/ui/game-modal";
 import { REWARDS } from "@/config/rewardConfig";
 import coinIcon from "@/assets/icons/icon-coin.png";
