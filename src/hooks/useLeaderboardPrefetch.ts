@@ -30,11 +30,15 @@ const AI_NAMES: Record<number, string[]> = {
 function generateFakeUsers(tier: number, count: number = 15, lowestRealUserCoins?: number) {
   const names = AI_NAMES[tier] || AI_NAMES[1];
   
-  // AI users get coins BELOW the lowest real user (or tier-appropriate defaults if no real users)
+  // Strict tier ranges: Bronze 200-900, Silver 1500-3500, Gold 5000-9000
+  const tierMax = tier === 3 ? 9000 : tier === 2 ? 3500 : 900;
+  const tierMin = tier === 3 ? 5000 : tier === 2 ? 1500 : 200;
+  
+  // AI users get coins BELOW the lowest real user, but always clamped within tier range
   const maxAiCoins = lowestRealUserCoins 
-    ? Math.max(lowestRealUserCoins - 1, 100) 
-    : (tier === 3 ? 9000 : tier === 2 ? 3500 : 900);
-  const minAiCoins = tier === 3 ? 5000 : tier === 2 ? 1500 : 200;
+    ? Math.min(Math.max(lowestRealUserCoins - 1, tierMin), tierMax) 
+    : tierMax;
+  const minAiCoins = tierMin;
   
   const seededRandom = (i: number) => {
     const x = Math.sin(tier * 1000 + i) * 10000;
