@@ -1,47 +1,116 @@
 
 
-## Reduce Level-Up Frequency and Actually Gift Rewards
+## Fix Irrelevant Icons on Mascot Account Trivias
 
 ### Problem
-The "დონემ აიწია" (Level Up) modal appears almost every game because the XP thresholds for early levels are very low (Level 2 = 100 XP, Level 3 = 348 XP), and each game awards hundreds of XP points. Users see it so often it loses its impact, and they don't believe the power-up rewards are real.
+Many mascot trivia questions use generic/non-existent icon slugs (like `science`, `landmark`, `food`, `sports`, `animal`, etc.) that either don't exist in the icon library or are too generic. For example, Irakli's "ინტელექტის ტესტი" shows an Indian flag icon for a question about Canada's maple leaf flag, and the Leaning Tower of Pisa for an Eiffel Tower question.
 
-### Solution
-Gate the level-up celebration on **cumulative correct answers** instead of raw XP thresholds. The level-up modal will only appear after every **20 correct answers** across all games, making it feel earned and special. The power-up reward will continue to be genuinely credited to the user's account (this already works, but users didn't trust it because it appeared too often).
+### What Will Change
+Direct database updates to the `questions` JSONB column in `user_quiz_posts` for all 16 mascot trivias. Each question gets a specific, relevant icon slug that exists in the icon library.
 
-### How It Works
+### Icon Fixes Per Trivia
 
-1. **Track correct answers on profile**: Add a `total_correct_answers` column to the `profiles` table
-2. **Increment after each game**: After a match, add the number of correct answers from that session to the running total
-3. **Level-up trigger**: Instead of checking `newLevel > oldLevel`, check if the player crossed a 20-answer milestone (e.g., 20, 40, 60, 80...)
-4. **Level calculation stays the same**: The XP-based level system still works for the level badge and progress bar -- only the celebration modal timing changes
+**Ana - "მსოფლიო ხელოვნება"** (id: 289655cd)
+- All 7 questions use `artist` -- OK, consistent art theme. Keep as-is.
 
-### Changes
+**Ana - "ცნობილი ნახატები"** (id: ad3f3c94)
+- All use `basic-painting-set` -- OK but could be better. Replace all with `mona-lisa` for the painting theme.
 
-| File | Change |
-|------|--------|
-| Database | Add `total_correct_answers` integer column (default 0) to `profiles` table |
-| `src/components/game/MatchResultScreen.tsx` | Replace level-crossing check with correct-answer milestone check (every 20). Update `total_correct_answers` alongside other stats. Use `missionTracker.getSessionData().correctAnswers` for the count. |
-| `src/components/home/LevelUpModal.tsx` | Update displayed level to reflect milestone number (total_correct_answers / 20) instead of XP level, or keep showing the XP level -- whichever feels better |
-| `src/config/rewardConfig.ts` | Add `LEVEL_UP_CORRECT_ANSWERS_THRESHOLD: 20` constant |
+**Ana - "თანამედროვე ხელოვნება"** (id: 6a8e8565)
+- All use `artist` -- OK, keep as-is.
 
-### Technical Details
+**Ana - "რენესანსის ოსტატები"** (id: 36ac459c)
+- All use `basic-painting-set` -- OK, keep as-is.
 
-**MatchResultScreen.tsx key change (lines 304-392):**
-- After game ends, get `correctAnswers` from `missionTracker.getSessionData()`
-- Calculate: `oldMilestone = Math.floor(oldCorrectAnswers / 20)` and `newMilestone = Math.floor(newCorrectAnswers / 20)`
-- If `newMilestone > oldMilestone`: show level-up modal, credit 150 coins + 1 random power-up (same as now)
-- Update profile with `total_correct_answers: newCorrectAnswers`
-- The XP-based level still updates silently (total_points) for the level badge
+**Dato - "მრავალფეროვანი კითხვები"** (id: e38f80a1)
+- `science` (liquid metal) -> `beaker`
+- `landmark` (Machu Picchu) -> `machu-picchu`
+- `phone` (telephone invention) -> `phone` (exists, OK)
+- `tv` (Breaking Bad) -> keep `tv` -- need to check... Actually the icon_library doesn't have `tv`. Let me use `television`.
+- `bird` (fastest bird) -> `falcon`
 
-**Database migration:**
-```sql
-ALTER TABLE profiles 
-ADD COLUMN IF NOT EXISTS total_correct_answers integer DEFAULT 0;
-```
+**Elene - "ადამიანის სხეული"** (id: 3501fa1e)
+- All 7 questions use `heart` -- should be per-question:
+  - Bone question -> `bone`
+  - Liver/bile question -> `liver`
+  - Heart chambers -> `heart` (keep)
+  - Eye/retina -> keep `heart` (no eye icon available)
+  - Neuron -> `neuron`
+  - Insulin -> keep `heart`
+  - Lungs -> `lungs`
 
-**rewardConfig.ts addition:**
-```
-LEVEL_UP_CORRECT_ANSWERS_THRESHOLD: 20
-```
+**Elene - "მეცნიერების აღმოჩენები"** (id: 4c04280a)
+- All use `astronomy-starter-kit` -- should be per-question:
+  - Water formula -> `beaker`
+  - Jupiter -> `jupiter`
+  - Newton/gravity -> `scientist`
+  - Nitrogen/atmosphere -> `earth`
+  - Atom -> `atom`
+  - Speed of light -> `prism`
+  - Einstein -> `scientist`
 
-This means a user who gets ~5 correct answers per game will see the level-up modal roughly every 4 games instead of every game -- much more impactful and rewarding.
+**Giorgi - "ფეხბურთის ვარსკვლავები"** (id: dd1cbd88)
+- All use `basic-soccer-ball` -- OK, consistent. Keep as-is.
+
+**Giorgi - "ქართული ფეხბურთი"** (id: 7b6f237a)
+- All use `soccer-net` -- OK. Keep as-is.
+
+**Irakli - "ინტელექტის ტესტი"** (id: e03a0467)
+- `flag` (Canada maple leaf) -> `canada-flag`
+- `planet` (Mars red planet) -> `mars`
+- `football` (Ronaldo goals) -> `football` (exists, OK)
+- `sun` (vitamin D) -> `sun` (exists, OK)
+- `tower` (Eiffel tower) -> `eiffel-tower`
+
+**Keti - "ვინ იცის მეტი?"** (id: 89b6bba6)
+- `mountain` (Everest) -> `mountain` (exists, OK)
+- `food` (sushi) -> `sushi`
+- `wall` (Berlin Wall) -> `wall` (exists, OK)
+- `movie` (Oscars/Titanic) -> `movie` (exists, OK)
+- `dna` (DNA B-form) -> `dna` (exists, OK)
+
+**Luka - "ესპორტის სამყარო"** (id: ea14ceba)
+- All use `joystick` -- exists, OK. Keep as-is.
+
+**Luka - "გეიმინგის ისტორია"** (id: 90b27aff)
+- All use `joystick` -- exists, OK. Keep as-is.
+
+**Nino - "შერეული ვიქტორინა"** (id: 99116cb9)
+- `planet` (Jupiter) -> `jupiter`
+- `food` (pizza/Italy) -> `pizza`
+- `book` (Vepkhistkaosani) -> `book` (exists, OK)
+- `sports` (heaviest ball) -> `bowling-ball`
+- `ocean` (smallest ocean) -> `ocean` (exists, OK)
+
+**Saba - "გამოიცანი!"** (id: 37f690a4)
+- `movie` (DiCaprio/Titanic) -> `movie` (exists, OK)
+- `tooth` (adult teeth count) -> `tooth` (exists, OK)
+- `globe` (Tokyo/Japan capital) -> `globe` (exists, OK)
+- `olympic` (first Olympics) -> `gold-medal`
+- `gem` (emerald color) -> `emerald`
+
+**Salome - "ტესტი ერუდიტებისთვის"** (id: 93eb9637)
+- `music` (Michael Jackson) -> `treble-clef`
+- `desert` (Atacama) -> `cactus`
+- `animal` (chameleon) -> `chameleon`
+- `football` (Brazil World Cup) -> `football` (exists, OK)
+- `body` (largest organ/skin) -> `human-heart` (closest medical icon)
+
+**Tornike - "ყველაფერი ცოტ-ცოტა"** (id: 441639c7)
+- `river` (Nile) -> `river` (exists, OK)
+- `war` (WWII start) -> `tank`
+- `science` (Fe/iron) -> `beaker`
+- `landmark` (Colosseum/Rome) -> `colosseum`
+- `animal` (cheetah fastest) -> `cheetah`
+
+### Technical Implementation
+
+A single edge function or a set of SQL UPDATE statements that modify the `questions` JSONB for each trivia. Each UPDATE targets one `user_quiz_posts` row by its `id` and replaces icon_slug values inside the JSONB array.
+
+Total: ~10 trivias need icon fixes (6 are fine as-is).
+
+### Summary of Fixes
+- 10 trivias updated with question-specific icons
+- All replacement slugs verified to exist in the `icon_library` table
+- No code changes needed -- purely database content fixes
+
