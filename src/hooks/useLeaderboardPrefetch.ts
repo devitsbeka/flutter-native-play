@@ -109,9 +109,19 @@ async function fetchLeaderboardFast(tier: number, region?: string) {
     
     const profileMap = new Map(profiles.map(p => [p.user_id, p]));
     
+    // Fetch admin IDs for filtering
+    const { data: adminData } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+    const adminIds = new Set((adminData || []).map(r => r.user_id));
+
     realEntries = leagueUsers
       .filter(u => {
         const profile = profileMap.get(u.user_id);
+        if (!profile) return false;
+        if (profile.nickname === '[წაშლილი]') return false;
+        if (adminIds.has(u.user_id)) return false;
         return !region || region === 'global' || profile?.region === region;
       })
       .map((u) => {
