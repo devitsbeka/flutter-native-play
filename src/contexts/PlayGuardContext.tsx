@@ -3,6 +3,8 @@ import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useAuth } from "@/hooks/useAuth";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
+import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 
 interface PlayGuardContextValue {
   /**
@@ -12,6 +14,12 @@ interface PlayGuardContextValue {
    * Auto-consumes regen play when allowing play with exhausted free games.
    */
   guardPlay: (onAllow?: () => void) => boolean;
+  /**
+   * Call before starting a category level.
+   * Returns true if user can play (VIP or within limits).
+   * Shows ProRequiredModal if blocked.
+   */
+  guardCategoryPlay: (categoryId: string, levelNumber?: number) => boolean;
 }
 
 const PlayGuardContext = createContext<PlayGuardContextValue | null>(null);
