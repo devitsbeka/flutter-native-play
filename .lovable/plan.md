@@ -1,64 +1,25 @@
 
-## Create 8 New Fake Accounts with Real Photo Avatars
 
-### Goal
-Create 8 new user accounts with real human photos (instead of mascot illustrations) to showcase that users can upload their own photos and get animated avatars. Each account needs at least 1 published trivia.
+## Admin Edit Access for Fake Account Trivias
 
-### Account Mapping
+### What this does
+As an admin, when you visit any trivia lobby page, you'll see an "Edit" button instead of "Play". This lets you edit any user's trivia -- add/remove questions, change icons, edit question text and answers, etc. The existing `EditQuizModal` will be reused since it already supports full editing.
 
-| # | Username | Photo | Email (internal) |
-|---|----------|-------|------------------|
-| 1 | levan_88 | image-431.png (young man) | levan_88@mytrivia.local |
-| 2 | Natato | image-432.png (red-haired woman) | natato@mytrivia.local |
-| 3 | Elene_E | image-433.png (blue-eyed woman) | elene_e@mytrivia.local |
-| 4 | Sofia | image-434.png (blonde woman) | sofia@mytrivia.local |
-| 5 | LASH10 | image-435.png (man with glasses) | lash10@mytrivia.local |
-| 6 | Nona_12 | image-436.png (woman with headband) | nona_12@mytrivia.local |
-| 7 | Grigoli_a | image-437.png (bearded man with glasses) | grigoli_a@mytrivia.local |
-| 8 | Kosta | image-438.png (curly-haired man) | kosta@mytrivia.local |
+### Changes
 
-### Implementation Steps
+**1. TriviaLobby.tsx -- Show Edit button for admins**
+- Import and use the `useAdminRole` hook
+- Show the "რედაქტირება" (Edit) button for admins in addition to owners
+- For admins viewing others' trivias: show Edit as the primary action, and keep Play as secondary
+- Update the `isOwner` check to `isOwner || isAdmin` for the edit button visibility
 
-**Step 1: Upload Photos to Storage**
-- Copy all 8 uploaded images into the project
-- Upload them to the `avatars` storage bucket so they have public URLs
-
-**Step 2: Create Auth Users**
-- Create 8 auth users in the database using the `@mytrivia.local` pseudo-email pattern (matching existing mascots)
-- Each with a simple password
-
-**Step 3: Create Profiles**
-- Insert profile rows for each user with:
-  - `nickname` matching the requested username
-  - `avatar_url` pointing to the uploaded photo in storage
-  - `country_code: 'GE'` (default Georgian)
-  - `coins` varied (1000-4000 range for realism)
-
-**Step 4: Create 1 Published Trivia Per Account**
-Each account gets a unique Georgian-language trivia with 5 questions. Trivia topics will be varied and interesting:
-
-| Username | Trivia Title | Topic | Icon |
-|----------|-------------|-------|------|
-| levan_88 | "ტექნოლოგიები" | Technology | `rocket` |
-| Natato | "კინო და ფილმები" | Movies | `star` |
-| Elene_E | "გეოგრაფია" | Geography | `compass` |
-| Sofia | "ხელოვნება" | Art | `diamond` |
-| LASH10 | "სპორტი" | Sports | `football` |
-| Nona_12 | "კულინარია" | Food/Cooking | `coffee` |
-| Grigoli_a | "ასტრონომია" | Astronomy | `telescope` |
-| Kosta | "მუსიკა" | Music | `guitar` |
-
-Each trivia will have 5 Georgian-language questions with 4 answer choices, following the same JSONB structure as existing mascot trivias. Icons will be context-based (not answer-revealing).
+**2. Feed/Post cards -- Admin edit access**
+- On the home feed where trivia posts appear (image 1 from screenshots), replace the "ითამაშე" (Play) button with "რედაქტირება" (Edit) for admins, or add an edit icon button next to it
 
 ### Technical Details
 
-- Auth users are created via SQL insert into `auth.users` (same method used for existing mascots)
-- Profile trigger `handle_new_user` will auto-create profiles, but we may insert profiles directly for more control
-- Trivia questions inserted into `user_quiz_posts` with `is_public: true`
-- Question format matches existing: `{question_text, correct_answer, incorrect_answers[], difficulty, icon_slug}`
-- No code changes needed -- this is purely database seeding
+- The `useAdminRole` hook already exists and checks via `has_role` RPC
+- The `EditQuizModal` component already handles full trivia editing (title, questions, answers, icons, cover image/gradient)
+- No database changes needed -- admins can already update `user_quiz_posts` since RLS likely allows it through service role or admin policies
+- The edit modal's save function uses `supabase.from('user_quiz_posts').update(...)` which will need to work for non-owners; we'll verify the RLS policy allows admin updates
 
-### What This Achieves
-- New users see real human avatars alongside mascot avatars in leaderboards, trivia feeds, etc.
-- Demonstrates that the app supports real photo avatars (not just mascots)
-- Encourages users to upload their own photos
