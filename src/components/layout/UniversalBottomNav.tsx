@@ -360,7 +360,7 @@ function VipBadge({ vipExpiresAt }: { vipExpiresAt?: string }) {
       {timeLeft ? (
         <span className="text-[9px] font-bold text-white tabular-nums">{timeLeft}</span>
       ) : (
-        <span className="text-[11px] font-bold text-white">∞</span>
+        <span className="text-[12px] font-bold text-white">∞</span>
       )}
     </div>
   );

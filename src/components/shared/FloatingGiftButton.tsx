@@ -15,8 +15,8 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
       onClick={onClick}
       className="fixed bottom-24 right-4 z-50 w-16 h-16 rounded-full flex items-center justify-center"
       style={{
-        background: "linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%)",
-        boxShadow: "0 4px 0 #92400E, 0 0 20px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.2)",
+        background: "linear-gradient(135deg, #6EE7B7 0%, #10B981 50%, #059669 100%)",
+        boxShadow: "0 4px 0 #065F46, 0 0 20px rgba(16,185,129,0.4), 0 0 40px rgba(16,185,129,0.2)",
       }}
     >
       {/* Pulsing glow ring */}
@@ -24,8 +24,8 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
         className="absolute inset-0 rounded-full"
         animate={{
           boxShadow: [
-            "0 0 0 0 rgba(245,158,11,0.4)",
-            "0 0 0 10px rgba(245,158,11,0)",
+            "0 0 0 0 rgba(16,185,129,0.4)",
+            "0 0 0 10px rgba(16,185,129,0)",
           ],
         }}
         transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
@@ -50,7 +50,7 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 1, repeat: Infinity }}
       >
-        <span className="text-white font-bold">!</span>
+        <span className="text-white font-bold">1</span>
       </motion.div>
     </motion.button>
   );
