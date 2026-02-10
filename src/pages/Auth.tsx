@@ -37,6 +37,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
+  const [autoRegistering, setAutoRegistering] = useState(false);
 
   const { signIn, signInWithUsername, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
   const isIOS = Capacitor.getPlatform() === 'ios';
