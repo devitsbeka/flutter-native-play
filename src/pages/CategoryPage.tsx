@@ -175,14 +175,27 @@ export default function CategoryPage() {
     );
   }
 
-  const handleLevelClick = (level: number, isUnlocked: boolean) => {
-    if (!isUnlocked) return;
+  const handleLevelClick = (level: number, isUnlocked: boolean, isProLocked: boolean) => {
+    if (!isUnlocked && !isProLocked) return;
+    
+    // PRO-locked level
+    if (isProLocked) {
+      setShowProModal(true);
+      return;
+    }
     
     // Require authentication to play
     if (isGuest) {
       setShowAuthModal(true);
       return;
     }
+
+    // Check category play limits (DB-based, no holes)
+    if (!canPlayLevel(categoryId || "", level)) {
+      setShowProModal(true);
+      return;
+    }
+
     navigate(`/play/${categoryId}/${level}`);
   };
 
