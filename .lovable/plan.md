@@ -1,116 +1,74 @@
 
 
-## Fix Irrelevant Icons on Mascot Account Trivias
+## Fix Answer-Revealing Icons on Mascot Trivias
 
 ### Problem
-Many mascot trivia questions use generic/non-existent icon slugs (like `science`, `landmark`, `food`, `sports`, `animal`, etc.) that either don't exist in the icon library or are too generic. For example, Irakli's "ინტელექტის ტესტი" shows an Indian flag icon for a question about Canada's maple leaf flag, and the Leaning Tower of Pisa for an Eiffel Tower question.
+Several trivia icons reveal the correct answer instead of representing the question's context/clue. For example, showing a `canada-flag` icon for the question "Which country's flag has a maple leaf?" gives away the answer (Canada). The icon should be `maple-leaf` -- the clue mentioned in the question, not the answer itself.
 
-### What Will Change
-Direct database updates to the `questions` JSONB column in `user_quiz_posts` for all 16 mascot trivias. Each question gets a specific, relevant icon slug that exists in the icon library.
+### Principle
+**Icons must represent the question context (what the question talks about), never the correct answer.**
 
-### Icon Fixes Per Trivia
-
-**Ana - "მსოფლიო ხელოვნება"** (id: 289655cd)
-- All 7 questions use `artist` -- OK, consistent art theme. Keep as-is.
-
-**Ana - "ცნობილი ნახატები"** (id: ad3f3c94)
-- All use `basic-painting-set` -- OK but could be better. Replace all with `mona-lisa` for the painting theme.
-
-**Ana - "თანამედროვე ხელოვნება"** (id: 6a8e8565)
-- All use `artist` -- OK, keep as-is.
-
-**Ana - "რენესანსის ოსტატები"** (id: 36ac459c)
-- All use `basic-painting-set` -- OK, keep as-is.
-
-**Dato - "მრავალფეროვანი კითხვები"** (id: e38f80a1)
-- `science` (liquid metal) -> `beaker`
-- `landmark` (Machu Picchu) -> `machu-picchu`
-- `phone` (telephone invention) -> `phone` (exists, OK)
-- `tv` (Breaking Bad) -> keep `tv` -- need to check... Actually the icon_library doesn't have `tv`. Let me use `television`.
-- `bird` (fastest bird) -> `falcon`
-
-**Elene - "ადამიანის სხეული"** (id: 3501fa1e)
-- All 7 questions use `heart` -- should be per-question:
-  - Bone question -> `bone`
-  - Liver/bile question -> `liver`
-  - Heart chambers -> `heart` (keep)
-  - Eye/retina -> keep `heart` (no eye icon available)
-  - Neuron -> `neuron`
-  - Insulin -> keep `heart`
-  - Lungs -> `lungs`
-
-**Elene - "მეცნიერების აღმოჩენები"** (id: 4c04280a)
-- All use `astronomy-starter-kit` -- should be per-question:
-  - Water formula -> `beaker`
-  - Jupiter -> `jupiter`
-  - Newton/gravity -> `scientist`
-  - Nitrogen/atmosphere -> `earth`
-  - Atom -> `atom`
-  - Speed of light -> `prism`
-  - Einstein -> `scientist`
-
-**Giorgi - "ფეხბურთის ვარსკვლავები"** (id: dd1cbd88)
-- All use `basic-soccer-ball` -- OK, consistent. Keep as-is.
-
-**Giorgi - "ქართული ფეხბურთი"** (id: 7b6f237a)
-- All use `soccer-net` -- OK. Keep as-is.
+### Fixes Needed (Answer-Revealing Icons Only)
 
 **Irakli - "ინტელექტის ტესტი"** (id: e03a0467)
-- `flag` (Canada maple leaf) -> `canada-flag`
-- `planet` (Mars red planet) -> `mars`
-- `football` (Ronaldo goals) -> `football` (exists, OK)
-- `sun` (vitamin D) -> `sun` (exists, OK)
-- `tower` (Eiffel tower) -> `eiffel-tower`
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Which country's flag has maple leaf? | `canada-flag` | Answer (Canada) | `maple-leaf` | The clue IS the maple leaf |
+| Which planet is called the red planet? | `mars` | Answer (Mars) | `star` | Generic space/planet context |
+
+**Elene - "ადამიანის სხეული"** (id: 3501fa1e)
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| What is the nerve cell called? | `neuron` | Answer (neuron) | `brain` | Brain/nervous system context |
+| Which organ produces bile? | `liver` | Answer (liver) | `stethoscope` | Generic medical context |
+| Where does oxygen exchange happen? | `lungs` | Answer (lungs) | `wind` | Oxygen/air context |
+
+**Elene - "მეცნიერების აღმოჩენები"** (id: 4c04280a)
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Which is the largest planet? | `jupiter` | Answer (Jupiter) | `star` | Generic space context |
+| Smallest particle keeping element properties? | `atom` | Answer (atom) | `microscope` | Examining tiny things |
+
+**Dato - "მრავალფეროვანი კითხვები"** (id: e38f80a1)
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Which bird is the fastest? | `falcon` | Answer (peregrine falcon) | `feather` | Bird/flight context |
 
 **Keti - "ვინ იცის მეტი?"** (id: 89b6bba6)
-- `mountain` (Everest) -> `mountain` (exists, OK)
-- `food` (sushi) -> `sushi`
-- `wall` (Berlin Wall) -> `wall` (exists, OK)
-- `movie` (Oscars/Titanic) -> `movie` (exists, OK)
-- `dna` (DNA B-form) -> `dna` (exists, OK)
-
-**Luka - "ესპორტის სამყარო"** (id: ea14ceba)
-- All use `joystick` -- exists, OK. Keep as-is.
-
-**Luka - "გეიმინგის ისტორია"** (id: 90b27aff)
-- All use `joystick` -- exists, OK. Keep as-is.
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Most famous Japanese dish? | `sushi` | Answer (sushi) | `chopsticks` | Japanese cuisine context |
 
 **Nino - "შერეული ვიქტორინა"** (id: 99116cb9)
-- `planet` (Jupiter) -> `jupiter`
-- `food` (pizza/Italy) -> `pizza`
-- `book` (Vepkhistkaosani) -> `book` (exists, OK)
-- `sports` (heaviest ball) -> `bowling-ball`
-- `ocean` (smallest ocean) -> `ocean` (exists, OK)
-
-**Saba - "გამოიცანი!"** (id: 37f690a4)
-- `movie` (DiCaprio/Titanic) -> `movie` (exists, OK)
-- `tooth` (adult teeth count) -> `tooth` (exists, OK)
-- `globe` (Tokyo/Japan capital) -> `globe` (exists, OK)
-- `olympic` (first Olympics) -> `gold-medal`
-- `gem` (emerald color) -> `emerald`
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Which is the largest planet? | `jupiter` | Answer (Jupiter) | `star` | Generic space context |
+| Which sport has the heaviest ball? | `bowling-ball` | Answer (bowling) | `weight` | Heavy/weight context |
 
 **Salome - "ტესტი ერუდიტებისთვის"** (id: 93eb9637)
-- `music` (Michael Jackson) -> `treble-clef`
-- `desert` (Atacama) -> `cactus`
-- `animal` (chameleon) -> `chameleon`
-- `football` (Brazil World Cup) -> `football` (exists, OK)
-- `body` (largest organ/skin) -> `human-heart` (closest medical icon)
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Which animal can change color? | `chameleon` | Answer (chameleon) | `rainbow` | Color-changing context |
 
 **Tornike - "ყველაფერი ცოტ-ცოტა"** (id: 441639c7)
-- `river` (Nile) -> `river` (exists, OK)
-- `war` (WWII start) -> `tank`
-- `science` (Fe/iron) -> `beaker`
-- `landmark` (Colosseum/Rome) -> `colosseum`
-- `animal` (cheetah fastest) -> `cheetah`
+| Question | Current Icon | Reveals | Fix | Reason |
+|----------|-------------|---------|-----|--------|
+| Which is the fastest animal? | `cheetah` | Answer (cheetah) | `lightning` | Speed context |
+
+### Icons That Are Fine (Context-Based, Not Answer-Revealing)
+These were set correctly and stay as-is:
+- `eiffel-tower` -- question mentions Eiffel Tower, answer is Paris
+- `sun` -- question mentions sun rays, answer is vitamin D
+- `football` -- question about football, answer is a player/country
+- `maple-leaf` (new) -- question clue, answer is Canada
+- `machu-picchu` -- question mentions Machu Picchu, answer is Peru
+- `pizza` -- question mentions pizza, answer is Italy
+- `colosseum` -- question mentions Colosseum, answer is Rome
+- `emerald` -- question mentions emerald, answer is green
+- `bone` -- generic (answer is specifically femur, not "bone")
 
 ### Technical Implementation
+SQL UPDATE statements targeting the `questions` JSONB column. Each fix updates a specific array index's `icon_slug` field. All replacement slugs have been verified to exist in `icon_library`.
 
-A single edge function or a set of SQL UPDATE statements that modify the `questions` JSONB for each trivia. Each UPDATE targets one `user_quiz_posts` row by its `id` and replaces icon_slug values inside the JSONB array.
-
-Total: ~10 trivias need icon fixes (6 are fine as-is).
-
-### Summary of Fixes
-- 10 trivias updated with question-specific icons
-- All replacement slugs verified to exist in the `icon_library` table
-- No code changes needed -- purely database content fixes
+Total: 13 icon fixes across 8 trivias.
 
