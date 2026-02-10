@@ -426,7 +426,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 {questions.length > 1 && currentQuestionIndex > 0 && (
                   <button
                     onClick={() => carouselApi?.scrollTo(currentQuestionIndex - 1)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-[5] w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors pointer-events-auto"
                   >
                     <ChevronLeft className="w-6 h-6 text-white" />
                   </button>
@@ -436,7 +436,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                 {questions.length > 1 && currentQuestionIndex < questions.length - 1 && (
                   <button
                     onClick={() => carouselApi?.scrollTo(currentQuestionIndex + 1)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-[5] w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors pointer-events-auto"
                   >
                     <ChevronRight className="w-6 h-6 text-white" />
                   </button>
@@ -474,7 +474,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             )}
                             
                             {/* Large Tappable Icon */}
-                            <div className="flex flex-col items-center gap-1.5">
+                            <div className="flex flex-col items-center gap-1.5 relative z-10">
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
