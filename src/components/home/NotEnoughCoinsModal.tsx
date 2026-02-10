@@ -24,8 +24,9 @@ export function NotEnoughCoinsModal({
   onExchangeGems,
   onOpenDailyRewards,
   userGems,
-}: NotEnoughCoinsModalProps) {
+}: Omit<NotEnoughCoinsModalProps, never>) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const coinsNeeded = requiredCoins - currentCoins;
   const gemsNeeded = Math.ceil(coinsNeeded / REWARDS.GEM_TO_COINS_RATE);
   const canExchangeGems = userGems >= gemsNeeded;
