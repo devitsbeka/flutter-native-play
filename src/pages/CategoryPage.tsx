@@ -208,6 +208,12 @@ export default function CategoryPage() {
         returnToPath={`/category/${categoryId}`}
         message="შედი ანგარიშზე თამაშის დასაწყებად"
       />
+      {/* PRO Required Modal */}
+      <ProRequiredModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        feature="general"
+      />
       {/* Level Unlock Animation */}
       <LevelUnlockAnimation
         isVisible={showUnlockAnimation}
