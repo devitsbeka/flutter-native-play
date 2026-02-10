@@ -8,6 +8,7 @@ import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlayerProfile } from "@/contexts/PlayerProfileContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import medalGold from "@/assets/icons/medal-gold.png";
 import medalSilver from "@/assets/icons/medal-silver.png";
 import medalBronze from "@/assets/icons/medal-bronze.png";
@@ -94,6 +95,7 @@ export default function TriviaLobby() {
   const navigate = useNavigate();
   const { openProfile } = usePlayerProfile();
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -102,6 +104,7 @@ export default function TriviaLobby() {
   const [isRemoving, setIsRemoving] = useState(false);
   
   const isOwner = user?.id === trivia?.user_id;
+  const canEdit = isOwner || isAdmin;
 
   const handleBack = () => {
     navigate(-1);
@@ -357,7 +360,7 @@ export default function TriviaLobby() {
       {/* Bottom Buttons - always visible */}
       <div className="flex-shrink-0 p-4 pb-6 bg-background border-t border-border/50">
         <div className="max-w-xl mx-auto space-y-2">
-          {isOwner && (
+          {canEdit && (
             <ChunkyButton 
               variant="secondary" 
               size="lg" 
