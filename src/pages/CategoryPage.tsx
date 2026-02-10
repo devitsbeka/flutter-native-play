@@ -240,7 +240,7 @@ export default function CategoryPage() {
             <PingPongVideo 
               src={CATEGORY_VIDEOS[(category as any).category_id || categoryId || ""] || CATEGORY_VIDEOS.animals}
               posterUrl={CATEGORY_IMAGES[(category as any).category_id || categoryId || ""] || undefined}
-              forceDesktopQuality
+              
             />
           </div>
           {/* Refined gradient overlay */}

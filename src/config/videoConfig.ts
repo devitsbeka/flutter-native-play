@@ -167,10 +167,6 @@ export function getAllVideoUrls(): string[] {
   ];
   const uniqueMp4 = [...new Set(allMp4Urls)];
 
-  // Preload the best quality for current viewport
-  if (isDesktopHdViewport()) {
-    return uniqueMp4.map((url) => toDesktopHdWebmUrl(url));
-  }
   return uniqueMp4.map((url) => toWebmUrl(url));
 }
 

@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from "react";
 import { getVideoBlobUrl } from "@/components/game/VideoPreloader";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { useResponsiveVideo } from "@/hooks/useResponsiveVideo";
-import { toDesktopHdWebmUrl } from "@/config/videoConfig";
 
 interface PingPongVideoProps {
   src: string;
@@ -10,8 +9,6 @@ interface PingPongVideoProps {
   className?: string;
   rootMargin?: string;
   style?: React.CSSProperties;
-  /** When true, skip mobile WebM and always use desktop 720px variant */
-  forceDesktopQuality?: boolean;
   /** When false, video will not load or play (default: true) */
   active?: boolean;
 }
@@ -22,7 +19,6 @@ export function PingPongVideo({
   className = "",
   rootMargin = "200px",
   style,
-  forceDesktopQuality = false,
   active = true,
 }: PingPongVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -30,11 +26,10 @@ export function PingPongVideo({
   const [isInView, setIsInView] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [posterError, setPosterError] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   // Get responsive video URLs (WebM + MP4, sized for viewport)
-  const { webm: responsiveWebm, mp4: mp4Src } = useResponsiveVideo(src);
-  // If forceDesktopQuality, always use desktop HD WebM (1280px) for crisp display
-  const webmSrc = forceDesktopQuality ? toDesktopHdWebmUrl(src) : responsiveWebm;
+  const { webm: webmSrc, mp4: mp4Src } = useResponsiveVideo(src);
 
   // Get preloaded blob URL if available, fallback to WebM source
   const preloadedUrl = getVideoBlobUrl(webmSrc);
@@ -98,12 +93,24 @@ export function PingPongVideo({
           }
         };
 
+        const handleError = () => {
+          if (!cancelled) {
+            // Release queue slot so other videos can load
+            videoLoadQueue.release(videoSrc);
+            // Mark as error so poster stays visible instead of permanent blank
+            setVideoError(true);
+            setIsReady(true);
+          }
+        };
+
         video.addEventListener("canplay", handleCanPlay, { once: true });
         video.addEventListener("loadeddata", handleCanPlay, { once: true });
+        video.addEventListener("error", handleError, { once: true });
 
         cleanupListeners = () => {
           video.removeEventListener("canplay", handleCanPlay);
           video.removeEventListener("loadeddata", handleCanPlay);
+          video.removeEventListener("error", handleError);
         };
 
         if (video.readyState >= 3) {
@@ -127,7 +134,7 @@ export function PingPongVideo({
   // Handle page visibility changes
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !isReady || !isInView) return;
+    if (!video || !isReady || !isInView || videoError) return;
 
     const handleVisibility = () => {
       if (document.hidden) {
@@ -139,17 +146,17 @@ export function PingPongVideo({
 
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [isReady, isInView]);
+  }, [isReady, isInView, videoError]);
 
   return (
     <div ref={containerRef} className="absolute inset-0">
-      {/* Poster image - shows instantly while video loads, hidden on error */}
+      {/* Poster image - shows instantly while video loads, stays visible on video error */}
       {posterUrl && !posterError && (
         <img
           src={posterUrl}
           alt=""
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-            isReady ? 'opacity-0' : 'opacity-100'
+            isReady && !videoError ? 'opacity-0' : 'opacity-100'
           }`}
           loading="lazy"
           onError={() => setPosterError(true)}
@@ -163,7 +170,7 @@ export function PingPongVideo({
         preload="none"
         style={style}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-          isReady ? 'opacity-100' : 'opacity-0'
+          isReady && !videoError ? 'opacity-100' : 'opacity-0'
         } ${className}`}
       >
         <source src={videoSrc} type="video/webm" />
