@@ -1,25 +1,30 @@
 
 
-## Admin Edit Access for Fake Account Trivias
+## Fix: Make Questions Fully Editable in Edit Modal
 
-### What this does
-As an admin, when you visit any trivia lobby page, you'll see an "Edit" button instead of "Play". This lets you edit any user's trivia -- add/remove questions, change icons, edit question text and answers, etc. The existing `EditQuizModal` will be reused since it already supports full editing.
+### Problem
+The Embla carousel intercepts all touch/pointer events for its drag-to-swipe functionality, which prevents clicking on any interactive element inside the question cards (icon picker, question text, answers, delete button).
 
-### Changes
+### Solution
 
-**1. TriviaLobby.tsx -- Show Edit button for admins**
-- Import and use the `useAdminRole` hook
-- Show the "რედაქტირება" (Edit) button for admins in addition to owners
-- For admins viewing others' trivias: show Edit as the primary action, and keep Play as secondary
-- Update the `isOwner` check to `isOwner || isAdmin` for the edit button visibility
+**1. Disable carousel drag gestures** (`EditQuizModal.tsx`)
+- Set `watchDrag: false` in carousel options since navigation arrows and dot indicators already exist for switching between questions
+- This single change fixes ALL click/tap issues at once — no more `stopPropagation` hacks needed
+- Remove the `onPointerDownCapture`/`onTouchStartCapture` workaround
 
-**2. Feed/Post cards -- Admin edit access**
-- On the home feed where trivia posts appear (image 1 from screenshots), replace the "ითამაშე" (Play) button with "რედაქტირება" (Edit) for admins, or add an edit icon button next to it
+**2. Make questions and answers editable** (`EditQuizModal.tsx`)
+- When a question card's text or answer is tapped, open the existing `EditQuestionDialog` component for full editing (question text, correct answer, incorrect answers)
+- Add an "Edit" button on each question card that opens `EditQuestionDialog`
+- Pass the current question data to the dialog and update state on save
 
 ### Technical Details
 
-- The `useAdminRole` hook already exists and checks via `has_role` RPC
-- The `EditQuizModal` component already handles full trivia editing (title, questions, answers, icons, cover image/gradient)
-- No database changes needed -- admins can already update `user_quiz_posts` since RLS likely allows it through service role or admin policies
-- The edit modal's save function uses `supabase.from('user_quiz_posts').update(...)` which will need to work for non-owners; we'll verify the RLS policy allows admin updates
+Changes to `src/components/social/EditQuizModal.tsx`:
+- Import `EditQuestionDialog` from `./EditQuestionDialog`
+- Add `watchDrag: false` to carousel opts (line ~449)
+- Remove `onPointerDownCapture`/`onTouchStartCapture` from the icon wrapper
+- Add state for `editingQuestionIndex` (which question is being edited)
+- Add a tap handler on the question card or an edit button that sets `editingQuestionIndex`
+- Render `EditQuestionDialog` when `editingQuestionIndex !== null`
+- On save from dialog, update the `questions` state array at the given index
 
