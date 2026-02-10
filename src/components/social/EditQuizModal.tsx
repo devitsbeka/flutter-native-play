@@ -474,7 +474,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                             )}
                             
                             {/* Large Tappable Icon */}
-                            <div className="flex flex-col items-center gap-1.5 relative z-10">
+                            <div className="flex flex-col items-center gap-1.5 relative z-10" onPointerDownCapture={(e) => e.stopPropagation()} onTouchStartCapture={(e) => e.stopPropagation()}>
                               <QuestionIconPicker
                                 selectedSlug={q.icon_slug || null}
                                 onSelect={(slug) => updateQuestionIcon(index, slug || undefined)}
