@@ -3,6 +3,7 @@ import { FakeOpponent, generateFakeOpponent } from "@/data/opponents";
 import { TriviaQuestion, useTrivia, calculateScore } from "@/hooks/useTrivia";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { missionTracker } from "@/services/missionTracker";
+import posthog from "posthog-js";
 
 export type GamePhase = "home" | "matchmaking" | "preparing" | "vs-screen" | "playing" | "question-result" | "match-result";
 export type PowerUpType = "fifty-fifty" | "freeze" | "replace" | "time-drain";
@@ -234,6 +235,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         hiddenAnswers: [],
         replacedAnswer: null,
       }));
+
+      posthog.capture("pvp_game_started", {
+        category_id: categoryId,
+        question_count: questions.length,
+        opponent_name: state.opponent?.name || "unknown",
+      });
     } catch (error) {
       console.error("Error fetching questions:", error);
       setState(prev => ({ ...prev, phase: "home" }));
@@ -258,6 +265,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           ? { ...p, available: Math.max(0, p.available - 1), usedThisQuestion: true }
           : p
       );
+
+      // PostHog: track power-up used in PvP
+      posthog.capture("power_up_used", {
+        power_up_type: type,
+        context: "pvp",
+      });
 
       let updates: Partial<GameState> = {
         playerPowerUps: newPowerUps,
@@ -315,7 +328,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (!currentQuestion) return prev;
 
       const isCorrect = answer === currentQuestion.correctAnswer;
-      
+
       // Track mission progress
       if (isCorrect) {
         missionTracker.recordCorrectAnswer();
@@ -323,7 +336,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       // Track category played
       const categoryId = currentQuestion.categoryId || currentQuestion.category;
       missionTracker.recordCategoryPlayed(categoryId);
-      
+
       const points = calculateScore(
         isCorrect,
         timeRemaining,
@@ -331,6 +344,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         currentQuestion.difficulty,
         prev.streak
       );
+
+      // PostHog: track question answered
+      posthog.capture("pvp_question_answered", {
+        category_id: categoryId,
+        question_number: prev.currentQuestionIndex + 1,
+        is_correct: isCorrect,
+        points,
+        streak: isCorrect ? prev.streak + 1 : 0,
+        time_remaining: timeRemaining,
+        difficulty: currentQuestion.difficulty,
+      });
 
       const opponentCorrect = prev.opponentFrozen ? false : Math.random() < 0.7;
       const opponentTime = prev.timePerQuestion * (0.3 + Math.random() * 0.5);
@@ -382,6 +406,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const nextIndex = prev.currentQuestionIndex + 1;
       
       if (nextIndex >= prev.questions.length) {
+        // PostHog: track PvP game finished
+        const correctCount = prev.userAnswerHistory.filter(a => a.correct).length;
+        posthog.capture("pvp_game_finished", {
+          user_score: prev.userScore,
+          opponent_score: prev.opponentScore,
+          total_questions: prev.questions.length,
+          correct_answers: correctCount,
+          result: prev.userScore > prev.opponentScore ? "win" : prev.userScore === prev.opponentScore ? "tie" : "loss",
+        });
         return { ...prev, phase: "match-result" };
       }
 
@@ -409,7 +442,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const finishMatch = useCallback(() => {
-    setState(prev => ({ ...prev, phase: "match-result" }));
+    setState(prev => {
+      // PostHog: track PvP game finished (when finishMatch called directly)
+      const correctCount = prev.userAnswerHistory.filter(a => a.correct).length;
+      posthog.capture("pvp_game_finished", {
+        user_score: prev.userScore,
+        opponent_score: prev.opponentScore,
+        total_questions: prev.questions.length,
+        correct_answers: correctCount,
+        result: prev.userScore > prev.opponentScore ? "win" : prev.userScore === prev.opponentScore ? "tie" : "loss",
+      });
+      return { ...prev, phase: "match-result" };
+    });
   }, []);
 
   const resetGame = useCallback(() => {

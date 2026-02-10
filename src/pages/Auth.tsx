@@ -12,6 +12,7 @@ import { ArrowLeft, Mail, Lock, User, Apple, Gift } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { z } from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trackSignupCompleted, trackLoginCompleted, trackAuthFailed, trackOAuthInitiated } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import {
@@ -92,12 +93,14 @@ export default function Auth() {
 
         const { error, data } = await signUp(email, password, nickname);
         if (error) {
+          trackAuthFailed('email', error.message || 'unknown');
           if (error.message.includes("already registered")) {
             notify.error(t("auth.alreadyHaveAccount"), { description: t("auth.invalidCredentials") });
           } else {
             notify.error(t("common.error"), { description: error.message });
           }
         } else {
+          trackSignupCompleted('email', !!referralCode);
           // Handle referral code if present
           if (referralCode && data?.user) {
             try {
@@ -154,13 +157,15 @@ export default function Auth() {
         }
 
         const isEmail = email.includes('@');
-        const authResult = isEmail 
-          ? await signIn(email, password) 
+        const authResult = isEmail
+          ? await signIn(email, password)
           : await signInWithUsername(email, password);
-        
+
         if (authResult.error) {
+          trackAuthFailed(isEmail ? 'email' : 'username', authResult.error.message || 'unknown');
           setShowAccountPrompt(true);
         } else {
+          trackLoginCompleted(isEmail ? 'email' : 'username');
           notify.success(t("auth.welcomeBack"), { icon: toastIcon(triviaBuzzer) });
           navigate(returnTo ? decodeURIComponent(returnTo) : "/");
         }
@@ -174,6 +179,7 @@ export default function Auth() {
 
   const handleAppleSignIn = async () => {
     setLoading(true);
+    trackOAuthInitiated('apple');
     try {
       // Store returnTo for OAuth redirect
       if (returnTo) {
@@ -195,6 +201,7 @@ export default function Auth() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    trackOAuthInitiated('google');
     try {
       // Store returnTo for OAuth redirect (will be checked after OAuth callback)
       if (returnTo) {
@@ -436,12 +443,14 @@ export default function Auth() {
                     : await signUpWithUsername(email, password);
 
                   if (result.error) {
+                    trackAuthFailed(isEmail ? 'email' : 'username', result.error.message || 'unknown');
                     if (result.error.message?.includes("already registered")) {
                       notify.error("ეს მომხმარებელი უკვე რეგისტრირებულია", { description: "სცადე სხვა პაროლი" });
                     } else {
                       notify.error(t("common.error"), { description: result.error.message });
                     }
                   } else {
+                    trackSignupCompleted(isEmail ? 'email' : 'username', false);
                     notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
                     navigate(returnTo ? decodeURIComponent(returnTo) : "/");
                   }

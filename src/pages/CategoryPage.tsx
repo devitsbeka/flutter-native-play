@@ -18,6 +18,7 @@ import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import { CATEGORY_VIDEOS, CATEGORY_IMAGES, MAP_VIDEOS } from "@/config/videoConfig";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { toast } from "sonner";
+import { trackCategoryViewed, trackLevelSelected } from "@/lib/analytics";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import crystalHourglass from "@/assets/crystal-hourglass.png";
 import crownIcon from "@/assets/icons/crown-2.png";
@@ -106,6 +107,13 @@ export default function CategoryPage() {
       clearNewLevelBadge(category.uuid, category.totalLevels);
     }
   }, [user, category?.uuid, category?.totalLevels, clearNewLevelBadge]);
+
+  // Track category viewed
+  useEffect(() => {
+    if (categoryId) {
+      trackCategoryViewed(categoryId, "direct");
+    }
+  }, [categoryId]);
 
   const handleUnlockComplete = useCallback(() => {
     setShowUnlockAnimation(false);
@@ -196,6 +204,7 @@ export default function CategoryPage() {
       return;
     }
 
+    trackLevelSelected(categoryId || "", level);
     navigate(`/play/${categoryId}/${level}`);
   };
 

@@ -47,6 +47,7 @@ import { PowerUpEffectOverlay } from "@/components/game/PowerUpEffectOverlay";
 import { ActivePowerUpIndicator, PowerUpScreenEffect } from "@/components/game/ActivePowerUpIndicator";
 import { preloadQuestionIcons } from "@/hooks/useAIIcon";
 import { useAIIconSlug } from "@/hooks/useAIIconSlug";
+import { trackQuizStarted, trackQuizQuestionAnswered, trackQuizCompleted, trackQuizAbandoned, trackPowerUpUsed } from "@/lib/analytics";
 import puzzleSphereIcon from "@/assets/icons/puzzle-sphere.png";
 
 // Import mascot avatars for opponent
@@ -322,7 +323,9 @@ export default function CategoryQuizPage() {
         
         setQuestionIds(mapped.map(q => q.id));
         setQuestions(mapped);
-        
+
+        trackQuizStarted(categoryId!, parseInt(levelId || "1"), mapped.length);
+
         // Trigger background AI icon analysis
         preloadQuestionIcons(
           mapped.map(q => ({
@@ -395,7 +398,17 @@ export default function CategoryQuizPage() {
       setSavedStars(result.stars);
       const earned = score * 10 + result.stars * 20;
       setPointsEarned(earned);
-      
+
+      trackQuizCompleted({
+        categoryId: categoryId!,
+        levelNumber: parseInt(levelId || "1"),
+        score,
+        totalQuestions: questions.length,
+        stars: result.stars,
+        pointsEarned: earned,
+        unlockedNextLevel: !!result.unlockedLevel,
+      });
+
       // Store unlock info for animation on category page
       if (result.unlockedLevel) {
         setUnlockedLevel(result.unlockedLevel);
@@ -563,8 +576,19 @@ export default function CategoryQuizPage() {
     if (!isAnswered) {
       setIsAnswered(true);
       setSelectedAnswer(null);
+
+      trackQuizQuestionAnswered({
+        categoryId: categoryId!,
+        levelNumber: parseInt(levelId || "1"),
+        questionIndex: currentQuestionIndex,
+        isCorrect: false,
+        timeRemaining: 0,
+        difficulty: questions[currentQuestionIndex]?.difficulty || "easy",
+        usedPowerUp: usedPowerUpsThisQuestion.size > 0,
+        powerUpType: null,
+      });
     }
-  }, [isAnswered]);
+  }, [isAnswered, categoryId, levelId, currentQuestionIndex, questions, usedPowerUpsThisQuestion]);
 
   const handleAnswerSelect = (answer: string) => {
     if (isAnswered) return;
@@ -573,9 +597,21 @@ export default function CategoryQuizPage() {
     setIsAnswered(true);
 
     const currentQuestion = questions[currentQuestionIndex];
-    if (answer === currentQuestion?.correct_answer) {
+    const isCorrect = answer === currentQuestion?.correct_answer;
+    if (isCorrect) {
       setScore((prev) => prev + 1);
     }
+
+    trackQuizQuestionAnswered({
+      categoryId: categoryId!,
+      levelNumber: parseInt(levelId || "1"),
+      questionIndex: currentQuestionIndex,
+      isCorrect,
+      timeRemaining,
+      difficulty: currentQuestion?.difficulty || "easy",
+      usedPowerUp: usedPowerUpsThisQuestion.size > 0,
+      powerUpType: usedPowerUpsThisQuestion.size > 0 ? Array.from(usedPowerUpsThisQuestion)[0] : null,
+    });
   };
 
   const handleNextQuestion = () => {
@@ -627,6 +663,8 @@ export default function CategoryQuizPage() {
 
     // Mark as used this question
     setUsedPowerUpsThisQuestion(prev => new Set(prev).add(type));
+
+    trackPowerUpUsed(type, "quiz", categoryId!);
 
     // Show power-up effect animation
     setActivePowerUpEffect(type);
@@ -1232,8 +1270,9 @@ export default function CategoryQuizPage() {
             <AlertDialogCancel className="flex-1 m-0 bg-slate-100 border-0 text-slate-700 hover:bg-slate-200">
               გაგრძელება
             </AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={() => {
+                trackQuizAbandoned(categoryId!, parseInt(levelId || "1"), currentQuestionIndex, questions.length);
                 setShowExitDialog(false);
                 navigate(`/category/${categoryId}`);
               }}

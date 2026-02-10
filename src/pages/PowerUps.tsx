@@ -13,6 +13,7 @@ import { useShopPageData } from "@/hooks/useShopPageData";
 import { useGemPurchase } from "@/hooks/useGemPurchase";
 import { REWARDS } from "@/config/rewardConfig";
 
+import { trackPowerUpPurchased, trackShopItemPurchased } from "@/lib/analytics";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GlobalSplineBackground } from "@/components/GlobalSplineBackground";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
@@ -116,6 +117,13 @@ export default function PowerUps() {
         await addPowerUp(powerType, 1);
         await refetch();
         playSound("reward");
+        trackPowerUpPurchased({
+          powerUpType: powerType,
+          quantity: 1,
+          currency: "coins",
+          price,
+          isBundle: false,
+        });
       }
     } catch (error) {
       console.error("Single power purchase failed:", error);
@@ -258,6 +266,12 @@ export default function PowerUps() {
       }
 
       playSound("reward");
+      trackShopItemPurchased({
+        itemId: item.id,
+        productType,
+        currency: item.currency === "lari" ? "lari" : "gems",
+        price: item.price,
+      });
       setPurchasedItems((prev) => new Set([...prev, item.id]));
       setSuccessItem({ name: item.name, quantity: item.amount || 1 });
       setShowSuccess(true);
