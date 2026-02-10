@@ -122,6 +122,7 @@ export default function CategoryQuizPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { updateLevelProgress } = useCategoryProgress();
+  const { canPlayLevel, loading: limitLoading } = useCategoryPlayLimit();
   
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
