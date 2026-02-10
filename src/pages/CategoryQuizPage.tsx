@@ -8,6 +8,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { getCategoryById } from "@/data/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { useToast } from "@/hooks/use-toast";
 import { showMissionCompleteToast } from "@/components/mission/MissionCompleteToast";
 import { useCategoryProgress } from "@/hooks/useCategoryProgress";
@@ -121,6 +122,7 @@ export default function CategoryQuizPage() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { updateLevelProgress } = useCategoryProgress();
+  const { canPlayLevel, loading: limitLoading } = useCategoryPlayLimit();
   
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -207,6 +209,16 @@ export default function CategoryQuizPage() {
       setPlayerScore(0);
     }
   }, [levelId]);
+
+  // Category play limit guard — redirect if user exceeded limits (prevents URL bypass)
+  useEffect(() => {
+    if (limitLoading || !categoryId) return;
+    const levelNumber = parseInt(levelId || "1");
+    if (!canPlayLevel(categoryId, levelNumber)) {
+      toast.error("PRO გახდი მეტი დონეების სათამაშოდ");
+      navigate(`/category/${categoryId}`, { replace: true });
+    }
+  }, [limitLoading, categoryId, levelId, canPlayLevel, navigate]);
 
   // Store database category with icon_slug
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null; total_levels: number } | null>(null);

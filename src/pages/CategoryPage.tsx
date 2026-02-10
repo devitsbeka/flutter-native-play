@@ -6,6 +6,7 @@ import { useCategoryProgress } from "@/hooks/useCategoryProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNewLevels } from "@/hooks/useNewLevels";
+import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LevelUnlockAnimation } from "@/components/game/LevelUnlockAnimation";
@@ -13,11 +14,13 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { PingPongVideo } from "@/components/shared/PingPongVideo";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
+import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 import { CATEGORY_VIDEOS, CATEGORY_IMAGES, MAP_VIDEOS } from "@/config/videoConfig";
 import { videoLoadQueue } from "@/utils/videoLoadQueue";
 import { toast } from "sonner";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import crystalHourglass from "@/assets/crystal-hourglass.png";
+import crownIcon from "@/assets/icons/crown-2.png";
 
 // Pastel color palettes for consistent styling with Discover page
 const PASTEL_PALETTES = [
@@ -52,10 +55,12 @@ export default function CategoryPage() {
   const { categories, loading: categoriesLoading } = useCategories();
   const { getCategoryProgress, getLevelStars, isLevelCompleted, loading, refetch } = useCategoryProgress();
   const { clearNewLevelBadge } = useNewLevels();
+  const { canPlayLevel, isCategoryBlocked, getLevelsPlayedInCategory, maxFreeLevelsPerCategory, isVip } = useCategoryPlayLimit();
 
   const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
   const [unlockedLevel, setUnlockedLevel] = useState<number | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
   
   // Check if user is a guest
   const isGuest = !user;
@@ -115,6 +120,11 @@ export default function CategoryPage() {
       setShowAuthModal(true);
       return;
     }
+    // Check category limits
+    if (!canPlayLevel(categoryId || "", currentLevel)) {
+      setShowProModal(true);
+      return;
+    }
     navigate(`/play/${categoryId}/${currentLevel}`);
   };
 
@@ -136,10 +146,12 @@ export default function CategoryPage() {
         const isCurrent = hasEnoughQuestions && level === currentLevel;
         const isComingSoon = !hasEnoughQuestions; // Not enough questions for this level yet
         const stars = getLevelStars(categoryId || "", level);
+        // PRO-locked: level is beyond the free limit and user is not VIP
+        const isProLocked = !isVip && !isComingSoon && hasEnoughQuestions && level > maxFreeLevelsPerCategory && !completed;
 
-        return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars };
+        return { level, isCompleted: completed, isUnlocked, isCurrent, isComingSoon, stars, isProLocked };
       }),
-    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars]
+    [TOTAL_DISPLAY_LEVELS, availableLevels, categoryId, currentLevel, isLevelCompleted, getLevelStars, isVip, maxFreeLevelsPerCategory]
   );
 
   if (categoriesLoading) {
@@ -163,14 +175,27 @@ export default function CategoryPage() {
     );
   }
 
-  const handleLevelClick = (level: number, isUnlocked: boolean) => {
-    if (!isUnlocked) return;
+  const handleLevelClick = (level: number, isUnlocked: boolean, isProLocked: boolean) => {
+    if (!isUnlocked && !isProLocked) return;
+    
+    // PRO-locked level
+    if (isProLocked) {
+      setShowProModal(true);
+      return;
+    }
     
     // Require authentication to play
     if (isGuest) {
       setShowAuthModal(true);
       return;
     }
+
+    // Check category play limits (DB-based, no holes)
+    if (!canPlayLevel(categoryId || "", level)) {
+      setShowProModal(true);
+      return;
+    }
+
     navigate(`/play/${categoryId}/${level}`);
   };
 
@@ -182,6 +207,12 @@ export default function CategoryPage() {
         onClose={() => setShowAuthModal(false)}
         returnToPath={`/category/${categoryId}`}
         message="შედი ანგარიშზე თამაშის დასაწყებად"
+      />
+      {/* PRO Required Modal */}
+      <ProRequiredModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        feature="general"
       />
       {/* Level Unlock Animation */}
       <LevelUnlockAnimation
@@ -346,7 +377,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-3">
-            {levels.map(({ level, isCompleted, isUnlocked, isCurrent, isComingSoon, stars }) => {
+            {levels.map(({ level, isCompleted, isUnlocked, isCurrent, isComingSoon, stars, isProLocked }) => {
               const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
               
               const getCompletedGradient = (starCount: number) => {
@@ -360,6 +391,7 @@ export default function CategoryPage() {
               
               const getLevelBackground = () => {
                 if (isComingSoon) return "linear-gradient(135deg, #F8FAFC, #F1F5F9)";
+                if (isProLocked) return "linear-gradient(135deg, #F3E8FF, #E9D5FF)";
                 if (!isUnlocked) return "linear-gradient(135deg, #E2E8F0, #CBD5E1)";
                 if (isCompleted && stars > 0) return getCompletedGradient(stars);
                 return "linear-gradient(135deg, #FFFFFF, #F1F5F9)";
@@ -368,24 +400,26 @@ export default function CategoryPage() {
               return (
                 <motion.button
                   key={level}
-                  onClick={() => !isComingSoon && handleLevelClick(level, isUnlocked)}
-                  disabled={!isUnlocked || isComingSoon}
-                  whileHover={isUnlocked && !isComingSoon ? { scale: 1.05 } : undefined}
-                  whileTap={isUnlocked && !isComingSoon ? { scale: 0.95 } : undefined}
+                  onClick={() => !isComingSoon && handleLevelClick(level, isUnlocked || isProLocked, isProLocked)}
+                  disabled={isComingSoon || (!isUnlocked && !isProLocked)}
+                  whileHover={(isUnlocked || isProLocked) && !isComingSoon ? { scale: 1.05 } : undefined}
+                  whileTap={(isUnlocked || isProLocked) && !isComingSoon ? { scale: 0.95 } : undefined}
                   initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
                   animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
                   transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
                   className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
-                    isCurrent ? "ring-4 ring-primary ring-offset-2 ring-offset-background" : ""
+                    isCurrent && !isProLocked ? "ring-4 ring-primary ring-offset-2 ring-offset-background" : ""
                   } ${
                     isComingSoon
                       ? "opacity-40 cursor-not-allowed border-2 border-dashed border-slate-300"
-                      : !isUnlocked
-                        ? "opacity-60 cursor-not-allowed"
-                        : ""
+                      : isProLocked
+                        ? "opacity-80 cursor-pointer border border-purple-300/50"
+                        : !isUnlocked
+                          ? "opacity-60 cursor-not-allowed"
+                          : ""
                   }`}
                   style={{
-                    boxShadow: isUnlocked && !isComingSoon
+                    boxShadow: isUnlocked && !isComingSoon && !isProLocked
                       ? "0 4px 0 0 hsl(0 0% 0% / 0.15), 0 6px 12px -4px hsl(0 0% 0% / 0.2)"
                       : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
                     background: getLevelBackground(),
@@ -395,6 +429,11 @@ export default function CategoryPage() {
                     <div className="flex flex-col items-center gap-0.5">
                       <Clock className="h-4 w-4 text-slate-400" />
                       <span className="text-xs text-slate-400 font-medium">{level}</span>
+                    </div>
+                  ) : isProLocked ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="font-bold text-lg text-purple-400/70">{level}</span>
+                      <img src={crownIcon} alt="PRO" className="h-4 w-4 object-contain opacity-60" />
                     </div>
                   ) : !isUnlocked ? (
                     <Lock className="h-5 w-5 text-slate-400" />
@@ -418,7 +457,7 @@ export default function CategoryPage() {
                     </>
                   )}
 
-                  {isCurrent && isUnlocked && !isComingSoon && (
+                  {isCurrent && isUnlocked && !isComingSoon && !isProLocked && (
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}

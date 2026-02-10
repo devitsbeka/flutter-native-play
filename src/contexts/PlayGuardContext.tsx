@@ -3,6 +3,8 @@ import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useAuth } from "@/hooks/useAuth";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { getGuestProgress } from "@/hooks/useGuestProgress";
+import { useCategoryPlayLimit } from "@/hooks/useCategoryPlayLimit";
+import { ProRequiredModal } from "@/components/shared/ProRequiredModal";
 
 interface PlayGuardContextValue {
   /**
@@ -12,6 +14,12 @@ interface PlayGuardContextValue {
    * Auto-consumes regen play when allowing play with exhausted free games.
    */
   guardPlay: (onAllow?: () => void) => boolean;
+  /**
+   * Call before starting a category level.
+   * Returns true if user can play (VIP or within limits).
+   * Shows ProRequiredModal if blocked.
+   */
+  guardCategoryPlay: (categoryId: string, levelNumber?: number) => boolean;
 }
 
 const PlayGuardContext = createContext<PlayGuardContextValue | null>(null);
@@ -34,8 +42,10 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
     timeUntilNextPlay,
     useRegenPlay,
   } = usePlayLimit();
+  const { canPlayLevel } = useCategoryPlayLimit();
 
   const [showModal, setShowModal] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
   const onAllowRef = useRef<(() => void) | undefined>();
 
   const guardPlay = useCallback(
@@ -60,6 +70,16 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
     [user, canPlay, freeGamesExhausted, regenPlayAvailable, isVip, useRegenPlay],
   );
 
+  const guardCategoryPlay = useCallback(
+    (categoryId: string, levelNumber?: number) => {
+      if (!user) return true; // Guests handled by auth gates
+      if (canPlayLevel(categoryId, levelNumber)) return true;
+      setShowProModal(true);
+      return false;
+    },
+    [user, canPlayLevel],
+  );
+
   const handlePlayWithRegen = useCallback(async () => {
     const success = await useRegenPlay();
     if (success) {
@@ -75,7 +95,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <PlayGuardContext.Provider value={{ guardPlay }}>
+    <PlayGuardContext.Provider value={{ guardPlay, guardCategoryPlay }}>
       {children}
       <PlayLimitModal
         isOpen={showModal}
@@ -84,6 +104,11 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
         regenPlayAvailable={regenPlayAvailable}
         timeUntilNextPlay={timeUntilNextPlay}
         onPlayWithRegen={handlePlayWithRegen}
+      />
+      <ProRequiredModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        feature="general"
       />
     </PlayGuardContext.Provider>
   );
