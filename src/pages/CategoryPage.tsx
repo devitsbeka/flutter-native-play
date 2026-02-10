@@ -377,7 +377,7 @@ export default function CategoryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-3">
-            {levels.map(({ level, isCompleted, isUnlocked, isCurrent, isComingSoon, stars }) => {
+            {levels.map(({ level, isCompleted, isUnlocked, isCurrent, isComingSoon, stars, isProLocked }) => {
               const justUnlocked = unlockedLevel === level && !showUnlockAnimation;
               
               const getCompletedGradient = (starCount: number) => {
@@ -391,6 +391,7 @@ export default function CategoryPage() {
               
               const getLevelBackground = () => {
                 if (isComingSoon) return "linear-gradient(135deg, #F8FAFC, #F1F5F9)";
+                if (isProLocked) return "linear-gradient(135deg, #F3E8FF, #E9D5FF)";
                 if (!isUnlocked) return "linear-gradient(135deg, #E2E8F0, #CBD5E1)";
                 if (isCompleted && stars > 0) return getCompletedGradient(stars);
                 return "linear-gradient(135deg, #FFFFFF, #F1F5F9)";
@@ -399,24 +400,26 @@ export default function CategoryPage() {
               return (
                 <motion.button
                   key={level}
-                  onClick={() => !isComingSoon && handleLevelClick(level, isUnlocked)}
-                  disabled={!isUnlocked || isComingSoon}
-                  whileHover={isUnlocked && !isComingSoon ? { scale: 1.05 } : undefined}
-                  whileTap={isUnlocked && !isComingSoon ? { scale: 0.95 } : undefined}
+                  onClick={() => !isComingSoon && handleLevelClick(level, isUnlocked || isProLocked, isProLocked)}
+                  disabled={isComingSoon || (!isUnlocked && !isProLocked)}
+                  whileHover={(isUnlocked || isProLocked) && !isComingSoon ? { scale: 1.05 } : undefined}
+                  whileTap={(isUnlocked || isProLocked) && !isComingSoon ? { scale: 0.95 } : undefined}
                   initial={justUnlocked ? { scale: 0.8, opacity: 0 } : undefined}
                   animate={justUnlocked ? { scale: 1, opacity: 1 } : undefined}
                   transition={justUnlocked ? { type: "spring", stiffness: 400, damping: 20 } : undefined}
                   className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center ${
-                    isCurrent ? "ring-4 ring-primary ring-offset-2 ring-offset-background" : ""
+                    isCurrent && !isProLocked ? "ring-4 ring-primary ring-offset-2 ring-offset-background" : ""
                   } ${
                     isComingSoon
                       ? "opacity-40 cursor-not-allowed border-2 border-dashed border-slate-300"
-                      : !isUnlocked
-                        ? "opacity-60 cursor-not-allowed"
-                        : ""
+                      : isProLocked
+                        ? "opacity-80 cursor-pointer border border-purple-300/50"
+                        : !isUnlocked
+                          ? "opacity-60 cursor-not-allowed"
+                          : ""
                   }`}
                   style={{
-                    boxShadow: isUnlocked && !isComingSoon
+                    boxShadow: isUnlocked && !isComingSoon && !isProLocked
                       ? "0 4px 0 0 hsl(0 0% 0% / 0.15), 0 6px 12px -4px hsl(0 0% 0% / 0.2)"
                       : "0 2px 0 0 hsl(0 0% 0% / 0.05)",
                     background: getLevelBackground(),
@@ -426,6 +429,11 @@ export default function CategoryPage() {
                     <div className="flex flex-col items-center gap-0.5">
                       <Clock className="h-4 w-4 text-slate-400" />
                       <span className="text-xs text-slate-400 font-medium">{level}</span>
+                    </div>
+                  ) : isProLocked ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="font-bold text-lg text-purple-400/70">{level}</span>
+                      <img src={crownIcon} alt="PRO" className="h-4 w-4 object-contain opacity-60" />
                     </div>
                   ) : !isUnlocked ? (
                     <Lock className="h-5 w-5 text-slate-400" />
@@ -449,7 +457,7 @@ export default function CategoryPage() {
                     </>
                   )}
 
-                  {isCurrent && isUnlocked && !isComingSoon && (
+                  {isCurrent && isUnlocked && !isComingSoon && !isProLocked && (
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
