@@ -210,6 +210,16 @@ export default function CategoryQuizPage() {
     }
   }, [levelId]);
 
+  // Category play limit guard — redirect if user exceeded limits (prevents URL bypass)
+  useEffect(() => {
+    if (limitLoading || !categoryId) return;
+    const levelNumber = parseInt(levelId || "1");
+    if (!canPlayLevel(categoryId, levelNumber)) {
+      toast.error("PRO გახდი მეტი დონეების სათამაშოდ");
+      navigate(`/category/${categoryId}`, { replace: true });
+    }
+  }, [limitLoading, categoryId, levelId, canPlayLevel, navigate]);
+
   // Store database category with icon_slug
   const [dbCategory, setDbCategory] = useState<{ id: string; name: string; icon_slug: string | null; total_levels: number } | null>(null);
   const category = getCategoryById(categoryId || "");
