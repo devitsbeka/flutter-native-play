@@ -121,7 +121,7 @@ export function GlobalSplineBackground() {
       {/* Video background */}
       <div 
         className="fixed inset-0 pointer-events-none"
-        style={{ zIndex: 0 }}
+        style={{ zIndex: 0, backgroundColor: '#F9DBFF' }}
       >
         <video
           autoPlay
