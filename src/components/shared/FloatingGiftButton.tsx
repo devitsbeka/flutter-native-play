@@ -24,8 +24,8 @@ export function FloatingGiftButton({ onClick }: FloatingGiftButtonProps) {
         className="absolute inset-0 rounded-full"
         animate={{
           boxShadow: [
-            "0 0 0 0 rgba(245,158,11,0.4)",
-            "0 0 0 10px rgba(245,158,11,0)",
+            "0 0 0 0 rgba(16,185,129,0.4)",
+            "0 0 0 10px rgba(16,185,129,0)",
           ],
         }}
         transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
