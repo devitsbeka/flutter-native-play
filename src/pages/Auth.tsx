@@ -39,7 +39,7 @@ export default function Auth() {
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const [autoRegistering, setAutoRegistering] = useState(false);
 
-  const { signIn, signInWithUsername, signUp, signInWithApple, signInWithGoogle, user } = useAuth();
+  const { signIn, signInWithUsername, signUp, signUpWithUsername, signInWithApple, signInWithGoogle, user } = useAuth();
   const isIOS = Capacitor.getPlatform() === 'ios';
   const { notify } = useNotificationModal();
   const navigate = useNavigate();
