@@ -411,25 +411,49 @@ export default function Auth() {
 
       </div>
 
-      {/* Account prompt dialog on failed login */}
-      <AlertDialog open={showAccountPrompt} onOpenChange={setShowAccountPrompt}>
+      {/* Account not found dialog on failed login */}
+      <AlertDialog open={showAccountPrompt} onOpenChange={(open) => { if (!autoRegistering) setShowAccountPrompt(open); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>გაქვს ანგარიში?</AlertDialogTitle>
+            <AlertDialogTitle>მომხმარებელი ვერ მოიძებნა</AlertDialogTitle>
             <AlertDialogDescription>
-              თუ ჯერ არ გაქვს ანგარიში, შექმენი ახალი
+              ამ მონაცემებით ანგარიში არ არსებობს. შექმენი ანგარიში ერთი დაჭერით!
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowAccountPrompt(false)}>
-              შესვლა
+            <AlertDialogCancel disabled={autoRegistering} onClick={() => setShowAccountPrompt(false)}>
+              უკან
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              setShowAccountPrompt(false);
-              setIsSignUp(true);
-              setErrors({});
-            }}>
-              შექმნა
+            <AlertDialogAction
+              disabled={autoRegistering}
+              onClick={async (e) => {
+                e.preventDefault();
+                setAutoRegistering(true);
+                try {
+                  const isEmail = email.includes('@');
+                  const result = isEmail
+                    ? await signUp(email, password, email.split('@')[0])
+                    : await signUpWithUsername(email, password);
+
+                  if (result.error) {
+                    if (result.error.message?.includes("already registered")) {
+                      notify.error("ეს მომხმარებელი უკვე რეგისტრირებულია", { description: "სცადე სხვა პაროლი" });
+                    } else {
+                      notify.error(t("common.error"), { description: result.error.message });
+                    }
+                  } else {
+                    notify.success(t("common.welcome"), { description: t("auth.accountCreated"), icon: toastIcon(ICON_URLS.partyPopper) });
+                    navigate(returnTo ? decodeURIComponent(returnTo) : "/");
+                  }
+                } catch (err) {
+                  notify.error(t("common.error"), { description: t("errors.generic") });
+                } finally {
+                  setAutoRegistering(false);
+                  setShowAccountPrompt(false);
+                }
+              }}
+            >
+              {autoRegistering ? "იქმნება..." : "ანგარიშის შექმნა"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
