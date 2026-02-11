@@ -25,6 +25,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import { ReturningUserPicker } from "@/components/auth/ReturningUserPicker";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -39,6 +40,15 @@ export default function Auth() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const [autoRegistering, setAutoRegistering] = useState(false);
+  const [showReturningUser, setShowReturningUser] = useState(() => {
+    try { return !!localStorage.getItem('mytrivia_last_user'); } catch { return false; }
+  });
+  const lastUserData = (() => {
+    try {
+      const stored = localStorage.getItem('mytrivia_last_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  })();
 
   const { signIn, signInWithUsername, signUp, signUpWithUsername, signInWithApple, signInWithGoogle, user } = useAuth();
   const isIOS = Capacitor.getPlatform() === 'ios';
@@ -218,6 +228,30 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Show Netflix-style returning user picker if we have saved user data
+  if (showReturningUser && lastUserData && !user) {
+    return (
+      <ReturningUserPicker
+        user={lastUserData}
+        onSignIn={async (pwd: string) => {
+          const identifier = lastUserData.identifier;
+          const isEmail = identifier.includes('@');
+          const result = isEmail
+            ? await signIn(identifier, pwd)
+            : await signInWithUsername(identifier, pwd);
+          if (result.error) throw result.error;
+        }}
+        onAddUser={() => {
+          setShowReturningUser(false);
+          setIsSignUp(true);
+        }}
+        onSwitchUser={() => {
+          setShowReturningUser(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col p-6 bg-gradient-to-b from-background via-background to-primary/10 relative z-10">
