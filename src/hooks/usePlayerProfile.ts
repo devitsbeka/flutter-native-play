@@ -38,6 +38,7 @@ export interface PlayerProfileData {
     title: string;
     description: string | null;
     cover_image: string | null;
+    icon_slug: string | null;
     plays_count: number | null;
     likes_count: number | null;
     created_at: string | null;
@@ -104,7 +105,7 @@ export function usePlayerProfile(userId: string | null) {
         // Fetch public trivias
         const { data: trivias } = await supabase
           .from("user_quiz_posts")
-          .select("id, title, description, cover_image, plays_count, likes_count, created_at")
+          .select("id, title, description, cover_image, icon_slug, plays_count, likes_count, created_at")
           .eq("user_id", userId)
           .eq("is_public", true)
           .order("created_at", { ascending: false })
