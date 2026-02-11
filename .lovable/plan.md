@@ -1,19 +1,26 @@
 
 
-## Fix: Delete Button Hidden Behind Footer
+## Fix: Delete Button Hidden and Question Edits Not Applying
 
-### Problem
-The question card content (icon + question text + 4 answers + delete button) is taller than the available screen space between the fixed header and the fixed footer. The `CarouselItem` uses `items-center` which vertically centers content but prevents scrolling, so the delete button at the bottom is permanently hidden behind the save footer.
+### Problem 1: Delete Button Hidden Behind Footer
+The Embla carousel viewport sets `overflow: hidden` on its container, which means `overflow-y-auto` on individual `CarouselItem` elements has no effect -- content is simply clipped. The delete button at the bottom of each question card is cut off by the fixed save footer.
 
-### Solution
-Make each `CarouselItem` vertically scrollable so users can scroll down to reach the delete button when the card is taller than the viewport.
+**Fix**: Increase the bottom margin on the card itself (`mb-4` to `mb-32`) so the delete button sits well above the footer area, and ensure the carousel content area scrolls properly by removing the ineffective `overflow-y-auto` and using `pt-4` with generous bottom padding.
 
-### Changes in `src/components/social/EditQuizModal.tsx`
+### Problem 2: Question Edits Not Persisting
+The `onSave` callback in `EditQuestionDialog` uses `editingQuestionIndex` captured in a closure. When React batches the state updates from `onSave` and `onOpenChange(false)` (which sets `editingQuestionIndex` to null), there's a risk of the updater function running with a stale or null index.
 
-**Line 469** -- Change the CarouselItem class:
-- From: `flex items-center justify-center px-4 pb-24`
-- To: `flex items-start justify-center px-4 pb-24 overflow-y-auto`
+**Fix**: Capture `editingQuestionIndex` in a `useRef` so the `onSave` callback always reads the current value, regardless of React batching or closure timing.
 
-Replacing `items-center` with `items-start` ensures the card starts at the top and the user can scroll down to see the delete button. Adding `overflow-y-auto` enables scrolling within the carousel item when content overflows.
+### Changes (all in `src/components/social/EditQuizModal.tsx`)
 
-This is a single-line class change.
+1. **Add a ref to track editing index reliably**:
+   - Create `const editingIndexRef = useRef<number | null>(null)`
+   - Keep it in sync: whenever `editingQuestionIndex` changes, update the ref
+   - In the `onSave` callback, read from `editingIndexRef.current` instead of the closure variable
+
+2. **Fix delete button visibility**:
+   - Change the card's bottom margin from `mb-4` to `mb-36` so the delete button clears the fixed footer
+   - Remove `overflow-y-auto` from CarouselItem (it doesn't work with Embla's `overflow: hidden`)
+
+3. **Keep `items-start`** from the previous fix so content aligns to the top of the viewport.
