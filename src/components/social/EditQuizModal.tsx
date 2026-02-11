@@ -623,10 +623,13 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
               onSave={(updated) => {
                 const idx = editingIndexRef.current;
                 if (idx !== null) {
-                  setQuestions(prev => prev.map((q, i) => 
-                    i === idx ? { ...q, ...updated } : q
-                  ));
+                  setQuestions(prev => {
+                    const newQuestions = [...prev];
+                    newQuestions[idx] = { ...newQuestions[idx], ...updated };
+                    return newQuestions;
+                  });
                 }
+                setEditingQuestionIndex(null);
               }}
             />
           )}
