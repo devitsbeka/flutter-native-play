@@ -1128,6 +1128,186 @@ export const ka = {
     badgeBestPrice: "საუკეთესო ფასი",
     badgeBestValue: "საუკეთესო ღირებულება",
   },
+
+  // ==========================================
+  // Guest Modal / სტუმრის მოდალი
+  // ==========================================
+  guestModal: {
+    title: "შექმენი ანგარიში და გააგრძელე თამაში",
+    createAnimatedAvatar: "შექმენი ანიმირებული ავატარი",
+    saveProgress: "შეინახე პროგრესი",
+    unlockAllFeatures: "გახსენი ყველა ფუნქცია",
+    letsGo: "დავიწყოთ!",
+  },
+
+  // ==========================================
+  // Auth Modal / ავტორიზაციის მოდალი
+  // ==========================================
+  authModal: {
+    dialogTitle: "ავტორიზაცია",
+    hello: "გამარჯობა!",
+    createAccountSubtitle: "შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ",
+    defaultMessage: "შესაძენად საჭიროა შესვლა",
+    usernamePlaceholder: "სახელი",
+    emailOrUsername: "ელფოსტა ან სახელი",
+    password: "პაროლი",
+    createAccount: "შექმენი ანგარიში",
+    signIn: "შესვლა",
+    alreadyHaveAccount: "უკვე გაქვს ანგარიში?",
+    noAccount: "არ გაქვს ანგარიში?",
+    create: "შექმენი",
+    or: "ან",
+    takePhoto: "გადაიღე ფოტო",
+    chooseFromGallery: "აირჩიე გალერიიდან",
+    // Validation
+    usernameRequired: "სახელი საჭიროა",
+    usernameMin: "მინ. 3 სიმბოლო",
+    usernameChars: "მხოლოდ ასოები, ციფრები და _",
+    passwordRequired: "პაროლი საჭიროა",
+    passwordMin: "მინ. 6 სიმბოლო",
+    // Toasts
+    usernameTaken: "ეს სახელი უკვე დაკავებულია",
+    userNotFound: "მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი",
+    genericError: "შეცდომა, სცადე თავიდან",
+    accountCreated: "ანგარიში შეიქმნა!",
+    invalidCredentials: "არასწორი მონაცემები",
+    googleSignInFailed: "Google-ით შესვლა ვერ მოხერხდა",
+    appleSignInFailed: "Apple-ით შესვლა ვერ მოხერხდა",
+  },
+
+  // ==========================================
+  // PRO Modal / PRO მოდალი
+  // ==========================================
+  proModal: {
+    dialogTitle: "PRO ფუნქცია",
+    title: "PRO ფუნქცია",
+    becomePro: "გახდი PRO",
+    loading: "იტვირთება...",
+    cancel: "გაუქმება",
+    featureRooms: "ოთახების შესაქმნელად",
+    featureTrivia: "ტრივიას შესაქმნელად",
+    featureCollection: "კოლექციის შესაქმნელად",
+    featureAvatar: "3D ავატარის შესაქმნელად",
+    featureAnimation: "ავატარის ანიმაციისთვის",
+    featureGeneral: "ამ ფუნქციისთვის",
+    becomeProSuffix: "გახდი PRO მომხმარებელი",
+  },
+
+  // ==========================================
+  // Completed Level Modal / დასრულებული დონის მოდალი
+  // ==========================================
+  completedLevel: {
+    levelTitle: "დონე {level}",
+    completed: "დასრულებულია!",
+    bestScore: "საუკეთესო შედეგი",
+    accuracy: "სიზუსტე",
+    pointsEarned: "მიღებული ქულები",
+    completedAt: "დასრულდა",
+    close: "დახურვა",
+    playAgain: "თავიდან ითამაშე",
+  },
+
+  // ==========================================
+  // Power-Up Detail Modal / ძალის დეტალის მოდალი
+  // ==========================================
+  powerUpDetail: {
+    add: "დამატება",
+    close: "დახურვა",
+  },
+
+  // ==========================================
+  // Guest Join Modal / სტუმრის შესვლის მოდალი
+  // ==========================================
+  guestJoin: {
+    title: "შემოგვიერთდი!",
+    subtitle: "შეიყვანე შენი სახელი თამაშისთვის",
+    namePlaceholder: "შენი სახელი...",
+    joinGame: "თამაშში შესვლა",
+    joining: "შემოსვლა...",
+    or: "ან",
+    createAccount: "შექმენი ანგარიში",
+    createAccountButton: "ანგარიშის შექმნა",
+    benefitAvatar: "Custom 3D ავატარი",
+    benefitRewards: "ყოველდღიური ჯილდოები",
+    benefitProgress: "პროგრესის თრექინგი",
+    // Validation
+    minChars: "მინიმუმ 2 სიმბოლო",
+    maxChars: "მაქსიმუმ 20 სიმბოლო",
+    lettersOnly: "მხოლოდ ასოები და რიცხვები",
+    reservedName: "ეს სახელი დაცულია",
+  },
+
+  // ==========================================
+  // Controller Waiting / კონტროლერის ლოდინი
+  // ==========================================
+  controllerWaiting: {
+    waitingForHost: "ველოდებით ჰოსტს",
+    nextRoundSoon: "შემდეგი რაუნდი მალე დაიწყება",
+    waiting: "მოლოდინი...",
+  },
+
+  // ==========================================
+  // Game Invite Modal / თამაშის მოწვევის მოდალი
+  // ==========================================
+  gameInvite: {
+    title: "თამაშის მოწვევა",
+    invitesYou: "გიწვევს თამაშში!",
+    friend: "მეგობარი",
+    category: "კატეგორია",
+    remaining: "დარჩენილია",
+    decline: "უარყოფა",
+    accept: "მიღება",
+  },
+
+  // ==========================================
+  // Category Wheel Modal / კატეგორიის ბორბლის მოდალი
+  // ==========================================
+  categoryWheel: {
+    spinning: "ბრუნვა...",
+    categoryRevealed: "კატეგორია!",
+    choosingCategory: "კატეგორიის არჩევა",
+    gameStarting: "თამაში იწყება...",
+  },
+
+  // ==========================================
+  // Play Limit Modal (registered) / თამაშის ლიმიტი (რეგისტრირებული)
+  // ==========================================
+  playLimit: {
+    limitReached: "თამაშის ლიმიტი ამოწურულია",
+    becomeProDescription: "გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა.",
+    unlimitedGames: "შეუზღუდავი თამაშები",
+    exclusiveFeatures: "ექსკლუზიური ფუნქციები",
+    becomePro: "გახდი PRO",
+    freePlayReady: "უფასო თამაში მზადაა!",
+    playNow: "ითამაშე ახლა",
+    nextFreePlay: "შემდეგი უფასო თამაში: {time}",
+    freePlayInterval: "3 საათში 1 თამაში უფასოდ",
+  },
+
+  // ==========================================
+  // Notifications Panel / შეტყობინებების პანელი
+  // ==========================================
+  notificationsPanel: {
+    activity: "აქტივობა",
+    gamesTab: "თამაშები",
+    socialTab: "მეგობრები",
+    triviaTab: "ტრივია",
+    noNotifications: "შეტყობინებები არ არის",
+    noGamesNotifications: "თამაშების შეტყობინებები არ არის",
+    noSocialNotifications: "მეგობრების შეტყობინებები არ არის",
+    noTriviaNotifications: "ტრივიის შეტყობინებები არ არის",
+    viewAll: "ყველას ნახვა",
+    // Toasts
+    friendRequestAccepted: "მეგობრის მოთხოვნა მიღებულია!",
+    friendRequestDeclined: "მოთხოვნა უარყოფილია",
+    inviteDeclined: "მოწვევა უარყოფილია",
+    errorOccurred: "შეცდომა მოხდა",
+    urlCopied: "URL დაკოპირდა! გახსენი ტრივია My Trivia-ში გარეკანის გამოსაყენებლად",
+    copyFailed: "კოპირება ვერ მოხერხდა",
+    avatarAlreadySet: "ავატარი უკვე დაყენებულია!",
+    roomNotFound: "ოთახი ვეღარ მოიძებნა",
+    navigationFailed: "ვერ მოხერხდა თამაშზე გადასვლა",
+  },
 };
 
 export type KaTranslations = typeof ka;

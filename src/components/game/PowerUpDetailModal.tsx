@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { t } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { GameModal } from "@/components/ui/game-modal";
 import { TimeIcon } from "@/components/shared/TimeIcon";
 
@@ -44,6 +45,7 @@ const powerUpTranslationKeys: Record<PowerUpType, string> = {
 
 
 export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerUpDetailModalProps) {
+  const { t: tl } = useLanguage();
   const isTimeDrain = type === "time-drain";
   const imageSrc = isTimeDrain ? undefined : powerUpAssets[type as Exclude<PowerUpType, "time-drain">];
   const titleGradient = powerUpTitleGradients[type];
@@ -98,12 +100,12 @@ export function PowerUpDetailModal({ isOpen, onClose, type, onAddClick }: PowerU
         </span>
       }
       subtitle={t(`powerups.${translationKey}.description`)}
-      primaryLabel="დამატება"
+      primaryLabel={tl("powerUpDetail.add")}
       onPrimaryClick={() => {
         onClose();
         onAddClick?.();
       }}
-      secondaryLabel="დახურვა"
+      secondaryLabel={tl("powerUpDetail.close")}
       onSecondaryClick={onClose}
       variant="primary"
     >

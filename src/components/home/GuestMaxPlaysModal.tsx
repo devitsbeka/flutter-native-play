@@ -3,6 +3,7 @@ import React from "react";
 import { Sparkles, Trophy, Lock } from "lucide-react";
 import { GameModal } from "@/components/ui/game-modal";
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GuestMaxPlaysModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface GuestMaxPlaysModalProps {
 
 export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlaysModalProps>(
   function GuestMaxPlaysModal({ isOpen, onClose, onRegister, onContinuePlaying, isBlocking = false, inline }, ref) {
+    const { t } = useLanguage();
 
     const handleClose = () => {
       if (isBlocking) return;
@@ -32,7 +34,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           onClose={isBlocking ? undefined : handleClose}
           variant="primary"
           iconSrc={triviaBuzzer}
-          title="შექმენი ანგარიში და გააგრძელე თამაში"
+          title={t("guestModal.title")}
           showSparkles
           showStars
           inline={inline}
@@ -42,15 +44,15 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
           <div className="flex flex-col gap-3 mb-5">
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[hsl(270,80%,95%)] border border-[hsl(270,60%,85%)]">
               <Sparkles className="w-5 h-5 text-[hsl(270,60%,50%)] shrink-0" />
-              <span className="text-sm font-medium text-foreground">შექმენი ანიმირებული ავატარი</span>
+              <span className="text-sm font-medium text-foreground">{t("guestModal.createAnimatedAvatar")}</span>
             </div>
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[hsl(140,60%,93%)] border border-[hsl(140,40%,80%)]">
               <Trophy className="w-5 h-5 text-[hsl(140,50%,40%)] shrink-0" />
-              <span className="text-sm font-medium text-foreground">შეინახე პროგრესი</span>
+              <span className="text-sm font-medium text-foreground">{t("guestModal.saveProgress")}</span>
             </div>
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-[hsl(210,60%,95%)] border border-[hsl(210,40%,85%)]">
               <Lock className="w-5 h-5 text-[hsl(210,50%,50%)] shrink-0" />
-              <span className="text-sm font-medium text-foreground">გახსენი ყველა ფუნქცია</span>
+              <span className="text-sm font-medium text-foreground">{t("guestModal.unlockAllFeatures")}</span>
             </div>
           </div>
 
@@ -62,7 +64,7 @@ export const GuestMaxPlaysModal = React.forwardRef<HTMLDivElement, GuestMaxPlays
             onClick={onRegister}
           >
             <Sparkles className="w-5 h-5" />
-            დავიწყოთ!
+            {t("guestModal.letsGo")}
           </ChunkyButton>
         </GameModal>
       </div>
