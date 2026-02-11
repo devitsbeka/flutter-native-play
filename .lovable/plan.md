@@ -1,41 +1,55 @@
 
 
-## Fix: Admin Buttons Not Working (Z-Index Stacking Issue)
+## Fix: Admin Avatar Upload, Profile Edit, and Dialog Visibility
 
-### Root Cause
+### Problems Found
 
-The `PlayerProfileModal` renders at `z-[100]`. The modals it opens are stuck behind it:
+1. **Avatar upload blocked by storage RLS**: The `avatars` bucket only allows users to upload to their own folder (`auth.uid() = foldername`). When an admin uploads to a mascot's folder (e.g., `mascot-id/avatar.png`), the policy rejects it.
 
-| Component | Current z-index | Result |
-|-----------|----------------|--------|
-| PlayerProfileModal | z-[100] | Visible |
-| CreateQuizModal root | z-50 | Hidden behind profile modal |
-| AdminProfileEditor DialogContent | z-[250] | Content is high, but Dialog overlay is default |
+2. **Profile update blocked by table RLS**: The `profiles` table UPDATE policy only allows `auth.uid() = user_id`. An admin cannot update another user's profile row.
 
-The `CreateQuizModal` at `z-50` is completely covered by the profile modal at `z-[100]`, so clicking "ტრივია" opens the modal but you can't see or interact with it.
+3. **Edit dialog shows dark overlay but no content**: The `AdminProfileEditor` dialog has z-index and positioning issues causing the content to not render visibly on top of the profile modal.
 
-The `AdminProfileEditor` uses Radix Dialog -- the `DialogContent` has `z-[250]` but the Dialog's portal overlay renders at default z-index, so it may also be partially blocked.
+### Fixes
 
-### Fix
+#### 1. Database Migration: Add Admin RLS Policies
 
-#### 1. `src/components/social/CreateQuizModal.tsx` (line 1031)
+Add two new policies:
 
-Increase the root container z-index from `z-50` to `z-[200]` so it renders above the profile modal:
+**Storage** - Allow admins to upload/update avatars for any user:
+```sql
+CREATE POLICY "Admins can upload avatars"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'avatars' AND has_role(auth.uid(), 'admin'));
 
+CREATE POLICY "Admins can update avatars"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'avatars' AND has_role(auth.uid(), 'admin'));
 ```
-Before: className="fixed inset-0 z-50 flex flex-col"
-After:  className="fixed inset-0 z-[200] flex flex-col"
+
+**Profiles table** - Allow admins to update any profile:
+```sql
+CREATE POLICY "Admins can update any profile"
+  ON public.profiles FOR UPDATE
+  USING (has_role(auth.uid(), 'admin'));
 ```
 
-Also update the inner header (line 1035) from `z-50` to `z-[201]` and the footer (line 875) from `z-50` to `z-[201]`.
+#### 2. Fix AdminProfileEditor Dialog (`src/components/profile/AdminProfileEditor.tsx`)
 
-#### 2. `src/components/profile/AdminProfileEditor.tsx` (line 64)
+The current approach wraps `DialogContent` in a manual `div` with positioning overrides, which conflicts with Radix Dialog's portal behavior. Fix by:
 
-The Dialog itself needs a container class or a portal-level z-index. Wrap the Dialog or add a style to ensure the portal renders above z-[100]. The `DialogContent` already has `z-[250]`, but the overlay also needs it.
+- Removing the extra wrapper `div` around `DialogContent`
+- Adding proper z-index classes directly to `DialogContent`
+- Ensuring the overlay and content both render above `z-[100]` (the profile modal)
+
+#### 3. Sync State in AdminProfileEditor
+
+The component initializes state with `useState(currentNickname)` but doesn't update when props change (e.g., when reopening). Add `useEffect` or key-based reset to sync state when the dialog opens with new data.
 
 ### Files Changed
+
 | File | Change |
 |------|--------|
-| `src/components/social/CreateQuizModal.tsx` | Raise root, header, and footer z-indexes above z-[100] |
-| `src/components/profile/AdminProfileEditor.tsx` | Ensure Dialog overlay also renders above profile modal |
+| Database migration | Add admin RLS for avatars storage + profiles table |
+| `src/components/profile/AdminProfileEditor.tsx` | Fix dialog rendering, sync state on prop changes |
 
