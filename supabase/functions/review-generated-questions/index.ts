@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,7 @@ interface QuestionInput {
   question_text: string;
   correct_answer: string;
   incorrect_answers: string[];
+  category_id?: string;
 }
 
 interface ReviewResult {
@@ -23,6 +25,9 @@ interface ReviewResult {
   confusion_score: number;
   confusion_issues: string[];
   recommendations: string[];
+  is_semantic_duplicate: boolean;
+  duplicate_of?: string;
+  duplicate_reason?: string;
 }
 
 function calculateGrade(score: number): 'A' | 'B' | 'C' | 'D' {
@@ -32,12 +37,60 @@ function calculateGrade(score: number): 'A' | 'B' | 'C' | 'D' {
   return 'D';
 }
 
-async function reviewQuestion(question: QuestionInput, apiKey: string): Promise<ReviewResult> {
+/**
+ * Fetch all existing questions for a category (paginated to handle large datasets)
+ */
+async function fetchExistingQuestions(
+  supabase: ReturnType<typeof createClient>,
+  categoryId: string
+): Promise<{ question_text: string; correct_answer: string }[]> {
+  const all: { question_text: string; correct_answer: string }[] = [];
+  let offset = 0;
+  const batchSize = 1000;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('questions')
+      .select('question_text, correct_answer')
+      .eq('category_id', categoryId)
+      .eq('is_active', true)
+      .range(offset, offset + batchSize - 1);
+
+    if (error) {
+      console.error('Error fetching existing questions:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    offset += data.length;
+    if (data.length < batchSize) break;
+    if (offset >= 50000) break;
+  }
+
+  return all;
+}
+
+async function reviewQuestionWithDuplicateCheck(
+  question: QuestionInput,
+  existingQuestions: { question_text: string; correct_answer: string }[],
+  apiKey: string
+): Promise<ReviewResult> {
+  // Build a sample of existing questions for the AI to compare against.
+  // To stay within context limits, send up to 100 existing questions.
+  // Prioritize by simple text overlap for relevance.
+  const existingSample = existingQuestions.length <= 100
+    ? existingQuestions
+    : selectRelevantExisting(question.question_text, existingQuestions, 100);
+
+  const existingList = existingSample
+    .map((eq, i) => `${i + 1}. Q: ${eq.question_text} | A: ${eq.correct_answer}`)
+    .join('\n');
+
   const systemPrompt = `You are an expert Georgian language trivia question evaluator. You must analyze questions with extreme precision and return a JSON response.
 
 Evaluate each question on three criteria:
 
-1. GRAMMAR (30% weight): Check Georgian spelling, verb conjugation, case endings, and proper phrasing. Look for:
+1. GRAMMAR (30% weight): Check spelling, verb conjugation, case endings, and proper phrasing. Look for:
    - Spelling errors
    - Incorrect verb forms
    - Wrong case endings
@@ -57,6 +110,14 @@ Evaluate each question on three criteria:
    - Would a knowledgeable person be able to answer confidently?
    - Is the difficulty appropriate?
 
+4. SEMANTIC DUPLICATE CHECK: This is CRITICAL. Compare the new question against the existing questions list below. A question is a semantic duplicate if:
+   - It asks about the SAME fact/concept/topic even with different wording
+   - It tests the same knowledge point with rephrased text
+   - The correct answer is the same AND the questions are about the same subject
+   - Example: "What is the capital of France?" and "Which city serves as France's capital?" are semantic duplicates
+   - Even if wording is very different, if the underlying knowledge being tested is the same, it IS a duplicate
+   - Be STRICT about this - we want zero redundancy in our question pool
+
 You MUST respond with valid JSON in this exact format:
 {
   "grammar_score": <0-100>,
@@ -65,16 +126,22 @@ You MUST respond with valid JSON in this exact format:
   "uniqueness_issues": ["issue1", "issue2"],
   "confusion_score": <0-100>,
   "confusion_issues": ["issue1", "issue2"],
-  "recommendations": ["recommendation1", "recommendation2"]
+  "recommendations": ["recommendation1", "recommendation2"],
+  "is_semantic_duplicate": <true/false>,
+  "duplicate_of": "<the existing question text that this is a duplicate of, or null>",
+  "duplicate_reason": "<explanation of why this is a semantic duplicate, or null>"
 }`;
 
-  const userPrompt = `Analyze this trivia question:
+  const userPrompt = `Analyze this NEW trivia question:
 
 Question: ${question.question_text}
 Correct Answer: ${question.correct_answer}
 Incorrect Answers: ${JSON.stringify(question.incorrect_answers)}
 
-Evaluate grammar, answer uniqueness, and clarity. Be strict - quality matters.`;
+EXISTING QUESTIONS IN THE SAME CATEGORY (check for semantic duplicates):
+${existingList || '(No existing questions in this category)'}
+
+Evaluate grammar, answer uniqueness, clarity, AND check if this question is a semantic duplicate of any existing question. Be VERY strict on duplicate detection - even subtle rephrasing of the same knowledge should be flagged.`;
 
   try {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -84,7 +151,7 @@ Evaluate grammar, answer uniqueness, and clarity. Be strict - quality matters.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
@@ -101,23 +168,27 @@ Evaluate grammar, answer uniqueness, and clarity. Be strict - quality matters.`;
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
-    
+
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1].trim();
     }
-    
+
     const parsed = JSON.parse(jsonStr);
-    
+
     const grammarScore = Math.min(100, Math.max(0, parsed.grammar_score || 0));
     const uniquenessScore = Math.min(100, Math.max(0, parsed.uniqueness_score || 0));
     const confusionScore = Math.min(100, Math.max(0, parsed.confusion_score || 0));
-    
+    const isSemanticDuplicate = !!parsed.is_semantic_duplicate;
+
+    // If it's a semantic duplicate, heavily penalize the overall score
+    const duplicatePenalty = isSemanticDuplicate ? 0.3 : 1;
+
     const overallScore = Math.round(
-      grammarScore * 0.3 + 
-      uniquenessScore * 0.4 + 
-      confusionScore * 0.3
+      (grammarScore * 0.3 +
+        uniquenessScore * 0.4 +
+        confusionScore * 0.3) * duplicatePenalty
     );
 
     return {
@@ -131,6 +202,9 @@ Evaluate grammar, answer uniqueness, and clarity. Be strict - quality matters.`;
       confusion_score: confusionScore,
       confusion_issues: parsed.confusion_issues || [],
       recommendations: parsed.recommendations || [],
+      is_semantic_duplicate: isSemanticDuplicate,
+      duplicate_of: parsed.duplicate_of || undefined,
+      duplicate_reason: parsed.duplicate_reason || undefined,
     };
   } catch (error) {
     console.error("Error reviewing question:", question.id, error);
@@ -145,8 +219,36 @@ Evaluate grammar, answer uniqueness, and clarity. Be strict - quality matters.`;
       confusion_score: 0,
       confusion_issues: [],
       recommendations: ["Re-run review"],
+      is_semantic_duplicate: false,
     };
   }
+}
+
+/**
+ * Select the most relevant existing questions by simple keyword overlap
+ * to keep AI context focused and within token limits
+ */
+function selectRelevantExisting(
+  newQuestionText: string,
+  existing: { question_text: string; correct_answer: string }[],
+  limit: number
+): { question_text: string; correct_answer: string }[] {
+  const words = new Set(
+    newQuestionText.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter(w => w.length > 2)
+  );
+
+  const scored = existing.map(eq => {
+    const eqWords = eq.question_text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/);
+    let overlap = 0;
+    for (const w of eqWords) {
+      if (words.has(w)) overlap++;
+    }
+    return { eq, overlap };
+  });
+
+  // Sort by overlap descending, take top `limit`
+  scored.sort((a, b) => b.overlap - a.overlap);
+  return scored.slice(0, limit).map(s => s.eq);
 }
 
 serve(async (req) => {
@@ -155,7 +257,10 @@ serve(async (req) => {
   }
 
   try {
-    const { questions } = await req.json() as { questions: QuestionInput[] };
+    const { questions, categoryId } = await req.json() as {
+      questions: QuestionInput[];
+      categoryId?: string;
+    };
 
     if (!questions || questions.length === 0) {
       return new Response(JSON.stringify({ results: [], total: 0 }), {
@@ -168,21 +273,56 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Process in batches of 5
-    const batchSize = 5;
+    // Fetch existing questions for semantic duplicate detection
+    let existingQuestions: { question_text: string; correct_answer: string }[] = [];
+
+    if (categoryId) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      existingQuestions = await fetchExistingQuestions(supabase, categoryId);
+      console.log(`Loaded ${existingQuestions.length} existing questions from category for semantic duplicate check`);
+    }
+
+    // If questions span multiple categories, group and fetch per category
+    const categoryIds = [...new Set(questions.map(q => q.category_id).filter(Boolean))];
+    const existingByCategory: Record<string, { question_text: string; correct_answer: string }[]> = {};
+
+    if (!categoryId && categoryIds.length > 0) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      for (const catId of categoryIds) {
+        existingByCategory[catId!] = await fetchExistingQuestions(supabase, catId!);
+        console.log(`Loaded ${existingByCategory[catId!].length} existing questions for category ${catId}`);
+      }
+    }
+
+    // Process in batches of 3 (slightly smaller since prompts are larger with existing questions)
+    const batchSize = 3;
     const results: ReviewResult[] = [];
-    
+
     for (let i = 0; i < questions.length; i += batchSize) {
       const batch = questions.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(q => reviewQuestion(q, LOVABLE_API_KEY))
+        batch.map(q => {
+          const existing = categoryId
+            ? existingQuestions
+            : (q.category_id ? existingByCategory[q.category_id] || [] : []);
+          return reviewQuestionWithDuplicateCheck(q, existing, LOVABLE_API_KEY);
+        })
       );
       results.push(...batchResults);
-      
+
       if (i + batchSize < questions.length) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+
+    const duplicateCount = results.filter(r => r.is_semantic_duplicate).length;
+    console.log(`Review complete: ${results.length} questions, ${duplicateCount} semantic duplicates found`);
 
     return new Response(JSON.stringify({ results, total: results.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -190,8 +330,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Review error:", error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : "Unknown error" 
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : "Unknown error"
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

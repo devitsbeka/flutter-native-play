@@ -413,8 +413,12 @@ const QuestionCard = React.memo(function QuestionCard({
               {question.difficulty}
             </Badge>
             {question.isDuplicate && (
-              <Badge variant="destructive" className="text-xs">
-                Duplicate
+              <Badge variant="destructive" className="text-xs" title={
+                question.qualityData?.duplicate_reason || 
+                question.warnings.find(w => w.includes('duplicate') || w.includes('Similar')) || 
+                'Duplicate detected'
+              }>
+                {question.qualityData?.is_semantic_duplicate ? '🧠 Semantic Dup' : 'Duplicate'}
               </Badge>
             )}
             {!question.isValid && !question.isDuplicate && (

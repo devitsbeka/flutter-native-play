@@ -37,6 +37,9 @@ export interface GeneratedQuestion {
     confusion_score: number;
     confusion_issues: string[];
     recommendations: string[];
+    is_semantic_duplicate?: boolean;
+    duplicate_of?: string;
+    duplicate_reason?: string;
   };
   isReviewingQuality?: boolean;
 }
@@ -370,15 +373,20 @@ export default function Flow() {
     setIsReviewingQuality(true);
     
     try {
+      // Get unique category IDs for semantic duplicate checking
+      const categoryIds = [...new Set(questions.map(q => q.categoryId))];
+      const primaryCategoryId = categoryIds.length === 1 ? categoryIds[0] : undefined;
+
       const payload = questions.map(q => ({
         id: q.id,
         question_text: q.questionText,
         correct_answer: q.correctAnswer,
         incorrect_answers: q.incorrectAnswers,
+        category_id: q.categoryId,
       }));
 
       const { data, error } = await supabase.functions.invoke('review-generated-questions', {
-        body: { questions: payload },
+        body: { questions: payload, categoryId: primaryCategoryId },
       });
 
       if (error) {
@@ -391,10 +399,23 @@ export default function Flow() {
       setGeneratedQuestions(prev => prev.map(q => {
         const review = results.find((r: any) => r.id === q.id);
         if (!review) return q;
+        
+        const isSemanticDup = !!review.is_semantic_duplicate;
+        const dupWarnings: string[] = [];
+        if (isSemanticDup && review.duplicate_reason) {
+          dupWarnings.push(`Semantic duplicate: ${review.duplicate_reason}`);
+        }
+        if (isSemanticDup && review.duplicate_of) {
+          dupWarnings.push(`Similar to: "${review.duplicate_of.substring(0, 50)}..."`);
+        }
+
         return {
           ...q,
           qualityScore: review.overall_score,
           qualityGrade: review.grade,
+          isDuplicate: q.isDuplicate || isSemanticDup,
+          warnings: isSemanticDup ? [...q.warnings, ...dupWarnings] : q.warnings,
+          isValid: isSemanticDup ? false : q.isValid,
           qualityData: {
             grammar_score: review.grammar_score,
             grammar_issues: review.grammar_issues,
@@ -403,6 +424,9 @@ export default function Flow() {
             confusion_score: review.confusion_score,
             confusion_issues: review.confusion_issues,
             recommendations: review.recommendations,
+            is_semantic_duplicate: isSemanticDup,
+            duplicate_of: review.duplicate_of,
+            duplicate_reason: review.duplicate_reason,
           },
         };
       }));
