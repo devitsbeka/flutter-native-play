@@ -41,6 +41,8 @@ export default function Auth() {
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const [autoRegistering, setAutoRegistering] = useState(false);
   const [showReturningUser, setShowReturningUser] = useState(() => {
+    // Skip returning user picker if navigating directly to signup
+    if (searchParams.get('mode') === 'signup') return false;
     try { return !!localStorage.getItem('mytrivia_last_user'); } catch { return false; }
   });
   const lastUserData = (() => {
