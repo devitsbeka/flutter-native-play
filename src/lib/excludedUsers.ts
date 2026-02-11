@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Mascot/fake account user IDs (hardcoded)
 export const MASCOT_USER_IDS = new Set([
+  // Mascot-based accounts
   'b1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', // Tornike
   'c2b3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e', // Nino
   'd3c4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f', // Saba
@@ -15,6 +16,15 @@ export const MASCOT_USER_IDS = new Set([
   '2574663a-d951-4475-9feb-60fef89caf9d', // Ana
   '7570d628-619b-434c-8d5c-fa6007eaa43f', // Luka
   '9b9330ae-740f-4b53-8e40-9202ce3660c9', // Elene
+  // Photo-based fake accounts
+  'a1b2c3d4-1111-4000-8000-000000000001', // levan_88
+  'a1b2c3d4-2222-4000-8000-000000000002', // Natato
+  'a1b2c3d4-3333-4000-8000-000000000003', // Elene_E
+  'a1b2c3d4-4444-4000-8000-000000000004', // Sofia
+  'a1b2c3d4-5555-4000-8000-000000000005', // LASH10
+  'a1b2c3d4-6666-4000-8000-000000000006', // Nona_12
+  'a1b2c3d4-7777-4000-8000-000000000007', // Grigoli_a
+  'a1b2c3d4-8888-4000-8000-000000000008', // Kosta
   // Giga (7d75dfbb-...) removed — real user with 9 games and 11k coins
   // Mariam and Davit not found in DB
 ]);
