@@ -7,7 +7,7 @@ import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { PlayLimitModal } from "@/components/home/PlayLimitModal";
 import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 import { useAuth } from "@/hooks/useAuth";
-import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
+import { hasReachedGuestPlayLimit, recordGuestPlay, getGuestPlays } from "@/hooks/useGuestPlays";
 
 function GameContent() {
   const { startMatchmaking, phase } = useGame();
@@ -18,6 +18,7 @@ function GameContent() {
   const { canPlay, isVip, freeGamesExhausted, regenPlayAvailable, timeUntilNextPlay, useRegenPlay, loading: playLimitLoading } = usePlayLimit();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
+  const [guestModalBlocking, setGuestModalBlocking] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
 
@@ -38,17 +39,28 @@ function GameContent() {
     if (!user) {
       if (hasReachedGuestPlayLimit()) {
         setBlocked(true);
+        setGuestModalBlocking(true);
         setShowGuestModal(true);
         return;
       }
-      // Record the guest play BEFORE starting - if recording fails, block
+
+      const guestData = getGuestPlays();
+
+      // If guest has played before, show interstitial modal (dismissable)
+      if (guestData.playsUsed > 0) {
+        setShowGuestModal(true);
+        setGuestModalBlocking(false);
+        return; // Wait for user to dismiss or register
+      }
+
+      // First game - play freely
       const recorded = recordGuestPlay();
       if (!recorded) {
         setBlocked(true);
+        setGuestModalBlocking(true);
         setShowGuestModal(true);
         return;
       }
-      // Guest is allowed
       setGameStarted(true);
       startMatchmaking(categoryId || undefined);
       return;
@@ -124,13 +136,26 @@ function GameContent() {
       {/* Guest play limit modal */}
       <GuestMaxPlaysModal
         isOpen={showGuestModal}
+        isBlocking={guestModalBlocking}
         onClose={() => {
           setShowGuestModal(false);
           navigate("/");
         }}
         onRegister={() => {
           setShowGuestModal(false);
-          navigate("/auth");
+          navigate("/auth?mode=signup");
+        }}
+        onContinuePlaying={() => {
+          setShowGuestModal(false);
+          const recorded = recordGuestPlay();
+          if (!recorded) {
+            setBlocked(true);
+            setGuestModalBlocking(true);
+            setShowGuestModal(true);
+            return;
+          }
+          setGameStarted(true);
+          startMatchmaking(categoryId || undefined);
         }}
       />
     </div>
