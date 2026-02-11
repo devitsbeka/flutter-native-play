@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, BellOff, Gamepad2, Users, Sparkles } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { useGenerationNotifications } from '@/hooks/useGenerationNotifications';
 import { useFriends } from '@/hooks/useFriends';
@@ -44,6 +45,7 @@ interface NotificationsPanelProps {
 
 export function NotificationsPanel({ isOpen, onClose, defaultTab }: NotificationsPanelProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const { generationNotifications } = useGenerationNotifications();
   const { acceptFriendRequest, declineFriendRequest } = useFriends();
@@ -135,16 +137,16 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
   const handleUseGeneratedImage = (imageUrl: string, type: 'avatar' | 'cover') => {
     if (type === 'cover') {
       navigator.clipboard.writeText(imageUrl).then(() => {
-        toast.success("URL დაკოპირდა! გახსენი ტრივია My Trivia-ში გარეკანის გამოსაყენებლად", {
+        toast.success(t("notificationsPanel.urlCopied"), {
           duration: 4000,
         });
         onClose();
         navigate('/explore?tab=my-trivia');
       }).catch(() => {
-        toast.error("კოპირება ვერ მოხერხდა");
+        toast.error(t("notificationsPanel.copyFailed"));
       });
     } else if (type === 'avatar') {
-      toast.success("ავატარი უკვე დაყენებულია!", { duration: 3000 });
+      toast.success(t("notificationsPanel.avatarAlreadySet"), { duration: 3000 });
       onClose();
       navigate('/profile');
     }
@@ -177,9 +179,9 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         })
         .eq('id', notificationId);
         
-      toast.success("მეგობრის მოთხოვნა მიღებულია!");
+      toast.success(t("notificationsPanel.friendRequestAccepted"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("notificationsPanel.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -212,9 +214,9 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         })
         .eq('id', notificationId);
         
-      toast.success("მოთხოვნა უარყოფილია");
+      toast.success(t("notificationsPanel.friendRequestDeclined"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("notificationsPanel.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -230,7 +232,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
         navigate(`/team?join=${roomCode}`);
       }
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("notificationsPanel.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -241,9 +243,9 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
     try {
       await declineInvitation(invitationId);
       await deleteNotification(notificationId);
-      toast.success("მოწვევა უარყოფილია");
+      toast.success(t("notificationsPanel.inviteDeclined"));
     } catch (error) {
-      toast.error("შეცდომა მოხდა");
+      toast.error(t("notificationsPanel.errorOccurred"));
     } finally {
       setActionLoading(null);
     }
@@ -289,10 +291,10 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
           }
 
           // No valid room data - show error
-          toast.error('ოთახი ვეღარ მოიძებნა');
+          toast.error(t("notificationsPanel.roomNotFound"));
         } catch (error) {
           console.error('Navigation error:', error);
-          toast.error('ვერ მოხერხდა თამაშზე გადასვლა');
+          toast.error(t("notificationsPanel.navigationFailed"));
         }
         break;
       }
@@ -368,7 +370,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
             {/* Header */}
             <div className="px-4 pt-4 pb-3 border-b border-border">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-base text-foreground">აქტივობა</h2>
+                <h2 className="font-bold text-base text-foreground">{t("notificationsPanel.activity")}</h2>
                 <button
                   onClick={onClose}
                   className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
@@ -384,7 +386,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                 <TabsList className="grid grid-cols-3 w-full bg-card/60 backdrop-blur-sm rounded-xl p-1 h-auto">
                   <TabsTrigger value="games" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
                     <Gamepad2 className="w-3.5 h-3.5" />
-                    <span>თამაშები</span>
+                    <span>{t("notificationsPanel.gamesTab")}</span>
                     {getUnreadCount('games') > 0 && (
                       <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                         {getUnreadCount('games')}
@@ -393,7 +395,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                   </TabsTrigger>
                   <TabsTrigger value="social" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
                     <Users className="w-3.5 h-3.5" />
-                    <span>მეგობრები</span>
+                    <span>{t("notificationsPanel.socialTab")}</span>
                     {getUnreadCount('social') > 0 && (
                       <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                         {getUnreadCount('social')}
@@ -402,7 +404,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                   </TabsTrigger>
                   <TabsTrigger value="trivia" className="flex items-center gap-1.5 text-xs py-2 data-[state=active]:bg-background">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>ტრივია</span>
+                    <span>{t("notificationsPanel.triviaTab")}</span>
                     {getUnreadCount('trivia') > 0 && (
                       <span className="ml-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-medium">
                         {getUnreadCount('trivia')}
@@ -425,7 +427,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                     <BellOff className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground text-center">
-                    შეტყობინებები არ არის
+                    {t("notificationsPanel.noNotifications")}
                   </p>
                 </div>
               ) : !hasTabContent ? (
@@ -434,9 +436,9 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                     <BellOff className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground text-center">
-                    {activeTab === 'games' && 'თამაშების შეტყობინებები არ არის'}
-                    {activeTab === 'social' && 'მეგობრების შეტყობინებები არ არის'}
-                    {activeTab === 'trivia' && 'ტრივიის შეტყობინებები არ არის'}
+                    {activeTab === 'games' && t("notificationsPanel.noGamesNotifications")}
+                    {activeTab === 'social' && t("notificationsPanel.noSocialNotifications")}
+                    {activeTab === 'trivia' && t("notificationsPanel.noTriviaNotifications")}
                   </p>
                 </div>
               ) : (
@@ -485,7 +487,7 @@ export function NotificationsPanel({ isOpen, onClose, defaultTab }: Notification
                   className="w-full mt-4 flex items-center justify-center px-4 py-3 rounded-xl bg-card/60 backdrop-blur-sm text-foreground font-medium hover:bg-card/80 transition-colors"
                   whileTap={{ scale: 0.98 }}
                 >
-                  ყველას ნახვა
+                  {t("notificationsPanel.viewAll")}
                 </motion.button>
               )}
 

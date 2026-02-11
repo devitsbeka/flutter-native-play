@@ -1087,6 +1087,7 @@ export const en: KaTranslations = {
     adFailed: "Ad failed to load",
     watchFailed: "Please try again",
     errorOccurred: "An error occurred",
+    spinButton: "SPIN",
   },
 
   // ==========================================

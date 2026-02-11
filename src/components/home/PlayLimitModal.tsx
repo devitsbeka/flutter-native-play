@@ -69,7 +69,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
                 transition={{ delay: 0.1 }}
               >
                 <Sparkles className="h-5 w-5 text-primary shrink-0" />
-                <p className="text-sm font-medium text-foreground">{t("modals.createAnimatedAvatar") || "შექმენი ანიმირებული ავატარი"}</p>
+                <p className="text-sm font-medium text-foreground">{t("modals.createAnimatedAvatar")}</p>
               </motion.div>
               
               <motion.div 
@@ -84,7 +84,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
                 transition={{ delay: 0.15 }}
               >
                 <Trophy className="h-5 w-5 text-green-600 shrink-0" />
-                <p className="text-sm font-medium text-foreground">{t("modals.saveProgress") || "შეინახე პროგრესი"}</p>
+                <p className="text-sm font-medium text-foreground">{t("modals.saveProgress")}</p>
               </motion.div>
 
               <motion.div 
@@ -121,7 +121,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
           onClose={onClose}
           variant="primary"
           iconSrc={crownIcon}
-          title="თამაშის ლიმიტი ამოწურულია"
+          title={t("playLimit.limitReached")}
           showSparkles
           showStars
           inline={inline}
@@ -135,7 +135,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
             >
-              გახდი PRO და ითამაშე შეუზღუდავად, შექმენი შენი ტრივიები და ბევრი სხვა.
+              {t("playLimit.becomeProDescription")}
             </motion.p>
 
             {/* PRO Benefits */}
@@ -151,7 +151,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               transition={{ delay: 0.15 }}
             >
               <Crown className="h-5 w-5 text-amber-500 shrink-0" />
-              <p className="text-sm font-medium text-foreground">შეუზღუდავი თამაშები</p>
+              <p className="text-sm font-medium text-foreground">{t("playLimit.unlimitedGames")}</p>
             </motion.div>
 
             <motion.div 
@@ -166,13 +166,13 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               transition={{ delay: 0.2 }}
             >
               <Sparkles className="h-5 w-5 text-primary shrink-0" />
-              <p className="text-sm font-medium text-foreground">ექსკლუზიური ფუნქციები</p>
+              <p className="text-sm font-medium text-foreground">{t("playLimit.exclusiveFeatures")}</p>
             </motion.div>
           </div>
 
           {/* PRO button always first */}
           <GameModalFooter
-            primaryLabel="გახდი PRO"
+            primaryLabel={t("playLimit.becomePro")}
             onPrimary={handleUpgradeToPro}
             primaryIcon={<Crown className="w-5 h-5" />}
           />
@@ -189,7 +189,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <p className="text-xs font-bold text-green-600 mb-2">უფასო თამაში მზადაა!</p>
+              <p className="text-xs font-bold text-green-600 mb-2">{t("playLimit.freePlayReady")}</p>
               <button
                 onClick={onPlayWithRegen}
                 className="flex items-center justify-center gap-2 mx-auto rounded-xl px-5 py-2 text-sm font-bold text-white transition-transform active:scale-95"
@@ -199,7 +199,7 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
                 }}
               >
                 <Play className="w-4 h-4" />
-                ითამაშე ახლა
+                {t("playLimit.playNow")}
               </button>
             </motion.div>
           ) : timeUntilNextPlay ? (
@@ -215,9 +215,9 @@ export const PlayLimitModal = React.forwardRef<HTMLDivElement, PlayLimitModalPro
             >
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Hourglass className="h-4 w-4 text-foreground/50" />
-                <p className="text-xs font-semibold text-foreground/70">შემდეგი უფასო თამაში: {timeUntilNextPlay}</p>
+                <p className="text-xs font-semibold text-foreground/70">{t("playLimit.nextFreePlay", { time: timeUntilNextPlay })}</p>
               </div>
-              <p className="text-[11px] text-foreground/40">3 საათში 1 თამაში უფასოდ</p>
+              <p className="text-[11px] text-foreground/40">{t("playLimit.freePlayInterval")}</p>
             </motion.div>
           ) : null}
         </GameModal>

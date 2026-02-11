@@ -4,6 +4,7 @@ import { Lock, User, Loader2, Sparkles, X, Camera, ImagePlus } from "lucide-reac
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useCamera } from "@/hooks/useCamera";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { lovable } from "@/integrations/lovable";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -21,18 +22,18 @@ interface AuthRequiredModalProps {
 }
 
 // Validation helpers
-const validateUsername = (value: string): string | undefined => {
-  if (!value.trim()) return "სახელი საჭიროა";
-  if (value.length < 3) return "მინ. 3 სიმბოლო";
+const validateUsername = (value: string, t: (key: string) => string): string | undefined => {
+  if (!value.trim()) return t("authModal.usernameRequired");
+  if (value.length < 3) return t("authModal.usernameMin");
   if (!/^[a-zA-Z0-9_\u10A0-\u10FF]+$/.test(value)) {
-    return "მხოლოდ ასოები, ციფრები და _";
+    return t("authModal.usernameChars");
   }
   return undefined;
 };
 
-const validatePassword = (value: string): string | undefined => {
-  if (!value) return "პაროლი საჭიროა";
-  if (value.length < 6) return "მინ. 6 სიმბოლო";
+const validatePassword = (value: string, t: (key: string) => string): string | undefined => {
+  if (!value) return t("authModal.passwordRequired");
+  if (value.length < 6) return t("authModal.passwordMin");
   return undefined;
 };
 
@@ -44,6 +45,7 @@ export function AuthRequiredModal({
 }: AuthRequiredModalProps) {
   const navigate = useNavigate();
   const { signIn, signUpWithUsername, signInWithGoogle, signInWithApple } = useAuth();
+  const { t } = useLanguage();
   
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -93,8 +95,8 @@ export function AuthRequiredModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const uError = isSignUp ? validateUsername(username) : (!username.trim() ? "სახელი საჭიროა" : undefined);
-    const pError = validatePassword(password);
+    const uError = isSignUp ? validateUsername(username, t) : (!username.trim() ? t("authModal.usernameRequired") : undefined);
+    const pError = validatePassword(password, t);
     
     setUsernameError(uError);
     setPasswordError(pError);
@@ -107,18 +109,18 @@ export function AuthRequiredModal({
         const { error } = await signUpWithUsername(username, password);
         if (error) {
           if (error.message?.includes("already registered")) {
-            toast.error("ეს სახელი უკვე დაკავებულია");
+            toast.error(t("authModal.usernameTaken"));
           } else {
             const m = error.message || "";
             if (m.includes("Failed to lookup user") || m.includes("Invalid login credentials")) {
-              toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+              toast.error(t("authModal.userNotFound"));
             } else {
-              toast.error("შეცდომა, სცადე თავიდან");
+              toast.error(t("authModal.genericError"));
             }
           }
           return;
         }
-        toast.success("ანგარიში შეიქმნა!");
+        toast.success(t("authModal.accountCreated"));
         localStorage.setItem('lastLoginEmail', username);
         onClose();
       } else {
@@ -133,7 +135,7 @@ export function AuthRequiredModal({
         }
         
         if (error) {
-          toast.error("არასწორი მონაცემები");
+          toast.error(t("authModal.invalidCredentials"));
           return;
         }
         localStorage.setItem('lastLoginEmail', username);
@@ -145,9 +147,9 @@ export function AuthRequiredModal({
     } catch (err: any) {
       const msg = err?.message || "";
       if (msg.includes("Failed to lookup user") || msg.includes("Invalid login credentials")) {
-        toast.error("მომხმარებელი ვერ მოიძებნა. დარწმუნდი რომ სწორი მონაცემები შეიყვანე ან დარეგისტრირდი");
+        toast.error(t("authModal.userNotFound"));
       } else {
-        toast.error("შეცდომა, სცადე თავიდან");
+        toast.error(t("authModal.genericError"));
       }
     } finally {
       setIsSubmitting(false);
@@ -160,10 +162,10 @@ export function AuthRequiredModal({
         redirect_uri: window.location.origin + (returnToPath || "/"),
       });
       if (result.error) {
-        toast.error("Google-ით შესვლა ვერ მოხერხდა");
+        toast.error(t("authModal.googleSignInFailed"));
       }
     } catch (err) {
-      toast.error("Google-ით შესვლა ვერ მოხერხდა");
+      toast.error(t("authModal.googleSignInFailed"));
     }
   };
 
@@ -171,12 +173,12 @@ export function AuthRequiredModal({
     try {
       const { error } = await signInWithApple();
       if (error) {
-        toast.error("Apple-ით შესვლა ვერ მოხერხდა");
+        toast.error(t("authModal.appleSignInFailed"));
       } else {
         onClose();
       }
     } catch (err) {
-      toast.error("Apple-ით შესვლა ვერ მოხერხდა");
+      toast.error(t("authModal.appleSignInFailed"));
     }
   };
 
@@ -185,7 +187,7 @@ export function AuthRequiredModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[400px] p-0 gap-0 bg-background border-none rounded-3xl overflow-hidden">
-        <DialogTitle className="sr-only">ავტორიზაცია</DialogTitle>
+        <DialogTitle className="sr-only">{t("authModal.dialogTitle")}</DialogTitle>
         
         {/* Close button */}
         <button
@@ -233,8 +235,8 @@ export function AuthRequiredModal({
                       className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
                     >
                       <Camera className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">გადაიღე ფოტო</span>
-                    </button>
+                       <span className="text-sm font-medium">{t("authModal.takePhoto")}</span>
+                     </button>
                     <button
                       type="button"
                       onClick={handleSelectFromGallery}
@@ -242,15 +244,15 @@ export function AuthRequiredModal({
                       className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-muted transition-colors text-left"
                     >
                       <ImagePlus className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">აირჩიე გალერიიდან</span>
-                    </button>
+                       <span className="text-sm font-medium">{t("authModal.chooseFromGallery")}</span>
+                     </button>
                   </div>
                 </PopoverContent>
               </Popover>
               
-              <h2 className="font-slackey text-2xl text-foreground mt-3">გამარჯობა!</h2>
+              <h2 className="font-slackey text-2xl text-foreground mt-3">{t("authModal.hello")}</h2>
               <p className="text-sm text-muted-foreground text-center mt-1">
-                შექმენი ანგარიში და ჩაერთე თამაშში უფასოდ
+                {t("authModal.createAccountSubtitle")}
               </p>
             </div>
           ) : (
@@ -264,7 +266,7 @@ export function AuthRequiredModal({
               </motion.div>
 
               <p className="text-base text-foreground font-semibold text-center">
-                {message || "შესაძენად საჭიროა შესვლა"}
+                {message || t("authModal.defaultMessage")}
               </p>
             </div>
           )}
@@ -283,7 +285,7 @@ export function AuthRequiredModal({
                   setUsername(e.target.value);
                   if (usernameError) setUsernameError(undefined);
                 }}
-                placeholder={isSignUp ? "სახელი" : "ელფოსტა ან სახელი"}
+                placeholder={isSignUp ? t("authModal.usernamePlaceholder") : t("authModal.emailOrUsername")}
                 disabled={loading}
                 className="w-full pl-10 pr-3 py-[14px] rounded-xl bg-background border-2 border-border 
                            focus:border-primary outline-none text-base font-medium
@@ -307,7 +309,7 @@ export function AuthRequiredModal({
                   setPassword(e.target.value);
                   if (passwordError) setPasswordError(undefined);
                 }}
-                placeholder="პაროლი"
+                placeholder={t("authModal.password")}
                 disabled={loading}
                 className="w-full pl-10 pr-3 py-[14px] rounded-xl bg-background border-2 border-border 
                            focus:border-primary outline-none text-base font-medium
@@ -332,12 +334,12 @@ export function AuthRequiredModal({
               ) : isSignUp ? (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  შექმენი ანგარიში
+                  {t("authModal.createAccount")}
                 </>
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  შესვლა
+                  {t("authModal.signIn")}
                 </>
               )}
             </ChunkyButton>
@@ -346,24 +348,24 @@ export function AuthRequiredModal({
             <p className="text-sm text-muted-foreground text-center mt-2">
               {isSignUp ? (
                 <>
-                  უკვე გაქვს ანგარიში?{" "}
+                  {t("authModal.alreadyHaveAccount")}{" "}
                   <button 
                     type="button" 
                     onClick={() => handleToggleMode(false)}
                     className="text-primary font-semibold hover:underline"
                   >
-                    შესვლა
+                    {t("authModal.signIn")}
                   </button>
                 </>
               ) : (
                 <>
-                  არ გაქვს ანგარიში?{" "}
+                  {t("authModal.noAccount")}{" "}
                   <button 
                     type="button" 
                     onClick={() => handleToggleMode(true)}
                     className="text-primary font-semibold hover:underline"
                   >
-                    შექმენი
+                    {t("authModal.create")}
                   </button>
                 </>
               )}
@@ -373,7 +375,7 @@ export function AuthRequiredModal({
           {/* Divider */}
           <div className="flex items-center gap-3 w-full my-3">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground font-medium">ან</span>
+            <span className="text-xs text-muted-foreground font-medium">{t("authModal.or")}</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 

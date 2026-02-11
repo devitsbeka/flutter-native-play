@@ -939,6 +939,7 @@ export const es: KaTranslations = {
     adFailed: "Error al cargar el anuncio",
     watchFailed: "Por favor, inténtalo de nuevo",
     errorOccurred: "Ha ocurrido un error",
+    spinButton: "GIRAR",
   },
   gameExtra: { prize: "Premio" },
   iap: {

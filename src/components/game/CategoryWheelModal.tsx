@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
+import { useLanguage } from "@/contexts/LanguageContext";
 import confetti from "canvas-confetti";
 
 interface CategoryWheelModalProps {
@@ -22,6 +23,7 @@ export function CategoryWheelModal({
   opponentAvatar,
 }: CategoryWheelModalProps) {
   const { categories } = useCategories();
+  const { t } = useLanguage();
   const [wheelCategories, setWheelCategories] = useState<Array<{ id: string; name: string; icon: string }>>([]);
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -121,7 +123,7 @@ export function CategoryWheelModal({
             <div className="w-10" />
             
             <h1 className="flex-1 text-center font-display text-lg font-bold text-foreground">
-              {phase === "spinning" ? "ბრუნვა..." : phase === "revealing" || phase === "done" ? "კატეგორია!" : "კატეგორიის არჩევა"}
+              {phase === "spinning" ? t("categoryWheel.spinning") : phase === "revealing" || phase === "done" ? t("categoryWheel.categoryRevealed") : t("categoryWheel.choosingCategory")}
             </h1>
             
             <div className="w-10" />
@@ -254,7 +256,7 @@ export function CategoryWheelModal({
                 <h2 className="text-2xl font-display font-bold text-foreground">
                   {selectedCategory.name}
                 </h2>
-                <p className="text-muted-foreground text-sm mt-1">თამაში იწყება...</p>
+                <p className="text-muted-foreground text-sm mt-1">{t("categoryWheel.gameStarting")}</p>
               </motion.div>
             )}
           </AnimatePresence>
