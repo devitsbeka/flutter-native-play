@@ -172,29 +172,72 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
 
     setUploadingAvatar(true);
     try {
-      const ext = file.name.split(".").pop() || "png";
-      const path = `${userId}/avatar.${ext}`;
+      // Step 1: Upload raw photo to storage
+      const rawPath = `${userId}/avatar_raw_${Date.now()}.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true });
+        .upload(rawPath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
         .from("avatars")
-        .getPublicUrl(path);
+        .getPublicUrl(rawPath);
 
-      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      const rawPublicUrl = urlData.publicUrl;
 
+      // Step 2: Generate AI avatar from the uploaded photo
+      toast.info("AI ავატარი გენერირდება...", { duration: 10000 });
+
+      const { data: aiData, error: aiError } = await supabase.functions.invoke("generate-avatar", {
+        body: { imageUrl: rawPublicUrl },
+      });
+
+      if (aiError || !aiData?.success) {
+        console.warn("AI generation failed, falling back to raw photo:", aiError || aiData?.error);
+        toast.warning("AI გენერაცია ვერ მოხერხდა, ორიგინალი ფოტო შეინახა");
+        
+        // Fallback: use raw photo
+        const fallbackUrl = `${rawPublicUrl}?t=${Date.now()}`;
+        await supabase.from("profiles").update({ avatar_url: fallbackUrl }).eq("user_id", userId);
+        refetch();
+        return;
+      }
+
+      // Step 3: Convert base64 AI avatar to blob and upload to storage
+      const avatarBase64 = aiData.avatarUrl;
+      const base64Data = avatarBase64.includes(",") ? avatarBase64.split(",")[1] : avatarBase64;
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const aiBlob = new Blob([byteArray], { type: "image/png" });
+
+      const aiPath = `${userId}/avatar_ai_${Date.now()}.png`;
+      const { error: aiUploadError } = await supabase.storage
+        .from("avatars")
+        .upload(aiPath, aiBlob, { upsert: true });
+
+      if (aiUploadError) throw aiUploadError;
+
+      const { data: aiUrlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(aiPath);
+
+      const finalUrl = `${aiUrlData.publicUrl}?t=${Date.now()}`;
+
+      // Step 4: Update profile with AI-generated avatar
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: finalUrl })
         .eq("user_id", userId);
 
       if (updateError) throw updateError;
 
-      toast.success("ავატარი განახლდა");
+      toast.success("AI ავატარი შეიქმნა! ✨");
       refetch();
     } catch (err) {
       console.error("Avatar upload error:", err);
