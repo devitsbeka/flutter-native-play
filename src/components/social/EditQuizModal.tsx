@@ -466,7 +466,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
                       
                       return (
-                        <CarouselItem key={index} className="flex items-center justify-center px-4 pb-24">
+                        <CarouselItem key={index} className="flex items-start justify-center px-4 pb-24 overflow-y-auto">
                           <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-5 space-y-4 shadow-xl mb-4">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
