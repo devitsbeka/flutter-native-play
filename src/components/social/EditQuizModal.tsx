@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2, Globe, Lock, Trash2, Check, AlertTriangle, ImageIcon, Pencil, Smile, Plus } from "lucide-react";
@@ -59,6 +59,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [deleteQuestionIndex, setDeleteQuestionIndex] = useState<number | null>(null);
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+  const editingIndexRef = useRef<number | null>(null);
+  editingIndexRef.current = editingQuestionIndex;
   const [iconPickerIndex, setIconPickerIndex] = useState<number | null>(null);
   // Determine if this is a collection or a quiz
   const isCollection = quiz?.hasOwnProperty('quiz_collections') || (quiz && !quiz.hasOwnProperty('questions'));
@@ -466,8 +468,8 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                       const hasCriticalIssue = answerInQuestion || iconRevealsAnswer;
                       
                       return (
-                        <CarouselItem key={index} className="flex items-start justify-center px-4 pb-24 overflow-y-auto">
-                          <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-5 space-y-4 shadow-xl mb-4">
+                        <CarouselItem key={index} className="flex items-start justify-center px-4 pb-24">
+                          <div className="w-full max-w-sm bg-[#6B5B95] rounded-2xl border border-white/10 p-5 space-y-4 shadow-xl mb-36">
                             {/* Validation Warnings */}
                             {hasCriticalIssue && (
                               <div className="flex items-center gap-2 text-xs text-red-200 bg-red-500/20 px-3 py-2 rounded-lg border border-red-400/30">
@@ -619,9 +621,12 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
               }}
               question={questions[editingQuestionIndex]}
               onSave={(updated) => {
-                setQuestions(prev => prev.map((q, i) => 
-                  i === editingQuestionIndex ? { ...q, ...updated } : q
-                ));
+                const idx = editingIndexRef.current;
+                if (idx !== null) {
+                  setQuestions(prev => prev.map((q, i) => 
+                    i === idx ? { ...q, ...updated } : q
+                  ));
+                }
               }}
             />
           )}
