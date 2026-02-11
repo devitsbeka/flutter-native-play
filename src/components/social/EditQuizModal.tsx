@@ -164,6 +164,9 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
       queryClient.invalidateQueries({ queryKey: ["my-collections"] });
       queryClient.invalidateQueries({ queryKey: ["quiz-posts-with-profiles"] });
       queryClient.invalidateQueries({ queryKey: ["collection-quizzes"] });
+      queryClient.invalidateQueries({ queryKey: ["trivia-details-with-creator", quiz.id] });
+      queryClient.invalidateQueries({ queryKey: ["trivia-leaderboard", quiz.id] });
+      queryClient.invalidateQueries({ queryKey: ["trivia-stats", quiz.id] });
       onClose();
     } catch (error) {
       console.error("Error updating:", error);
