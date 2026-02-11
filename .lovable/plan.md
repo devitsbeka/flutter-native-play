@@ -1,38 +1,31 @@
 
 
-## Mix Mascot + AI-Generated Avatars in VS Screen Slot Animation
+## Show Round Icon on Profile Instead of Joystick
 
-### Current Behavior
-The VS screen opponent search animation cycles through only the 8 mascot emoji avatars (`mascot-avatar-1.png` through `mascot-avatar-8.png`). This makes the search look monotonous and doesn't reflect the variety of player avatars in the app.
+### Problem
+When a round/trivia has an `icon_slug` set (via the editor's icon picker), the profile still shows a generic joystick (Gamepad2) icon for every trivia item.
 
-### What Changes
-During the "finding opponent" slot machine animation, the cycling avatars will be a shuffled mix of:
-- 8 mascot avatars (local assets, already imported)
-- AI-generated photo-based avatars (fetched from the database at mount)
+### Changes
 
-This creates a more dynamic, realistic search animation showing both avatar types -- exactly like the reference screenshots.
+#### 1. Fetch `icon_slug` in the hook (`src/hooks/usePlayerProfile.ts`)
 
-### Technical Details
+Add `icon_slug` to the `select` query for trivias and update the `PlayerProfileData` interface to include the field.
 
-**File: `src/components/game/VSScreen.tsx`**
+- Line 107: Change select from `"id, title, description, cover_image, plays_count, likes_count, created_at"` to also include `icon_slug`
+- Lines 36-44: Add `icon_slug: string | null` to the trivias type
 
-1. Add a `useEffect` that fetches AI-generated avatar URLs from the `profiles` table on mount:
-   - Query profiles where `avatar_url` contains `avatar_ai` (the AI-generated pattern)
-   - Limit to ~10 results, randomly ordered
-   - Extract just the URLs
+#### 2. Render 3D icon on profile (`src/components/profile/PlayerProfileModal.tsx`)
 
-2. Create a combined `slotAvatars` array that merges:
-   - The 8 existing mascot imports
-   - The fetched AI avatar URLs (up to 8-10)
-   - Shuffled together randomly
+Replace the `Gamepad2` fallback icon in the trivia list with a `DynamicIcon` component that uses the trivia's `icon_slug`:
 
-3. The slot cycling logic (lines 136-139) already picks random entries from `slotAvatars`, so it will naturally alternate between mascot and AI avatars once the array is mixed.
+- If `trivia.icon_slug` is set: render `DynamicIcon` with that slug (shows the 3D icon from the library)
+- If no icon_slug and no cover_image: fall back to the current `Gamepad2` icon
 
-4. Handle the async nature: start with mascot-only avatars, then once the DB fetch completes, merge in the AI ones. Since the animation runs for ~12 cycles over a few seconds, the fetch will complete well before the animation ends.
+This is a minimal 2-file change that connects the existing icon_slug data to the profile display.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/game/VSScreen.tsx` | Fetch AI avatar URLs from DB, merge with mascot avatars in slot array |
-
+| `src/hooks/usePlayerProfile.ts` | Add `icon_slug` to interface + select query |
+| `src/components/profile/PlayerProfileModal.tsx` | Import `DynamicIcon`, use it when `icon_slug` is available |
