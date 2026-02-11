@@ -1,6 +1,60 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+
+import mascotAvatar1 from "@/assets/avatars/mascot-avatar-1.png";
+import mascotAvatar2 from "@/assets/avatars/mascot-avatar-2.png";
+import mascotAvatar3 from "@/assets/avatars/mascot-avatar-3.png";
+import mascotAvatar4 from "@/assets/avatars/mascot-avatar-4.png";
+import mascotAvatar5 from "@/assets/avatars/mascot-avatar-5.png";
+import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
+import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
+import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
+
+const FAKE_AVATARS = [
+  mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
+  mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8,
+];
+
+const FAKE_NAMES = [
+  "Giorgi K.", "Mariami G.", "Nika T.", "Ana B.", "Daviti M.",
+  "Elene S.", "Luka Ch.", "Tamari P.", "Nino R.", "Alexandre D.",
+];
+
+function generateFakeTriviaLeaderboard(triviaId: string, questionCount: number): TriviaLeaderboardEntry[] {
+  // Seed based on triviaId for consistency
+  const seed = triviaId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const seededRandom = (i: number) => {
+    const x = Math.sin(seed * 100 + i * 37) * 10000;
+    return x - Math.floor(x);
+  };
+
+  const count = 3 + Math.floor(seededRandom(99) * 5); // 3-7 fake users
+  const now = Date.now();
+
+  const entries: TriviaLeaderboardEntry[] = Array.from({ length: count }, (_, i) => {
+    // Scores: first user gets high score, decreasing
+    const maxScore = questionCount;
+    const score = Math.max(1, Math.round(maxScore * (0.5 + seededRandom(i) * 0.5) - i * 0.5));
+    const hoursAgo = 1 + Math.floor(seededRandom(i + 50) * 72); // 1-72 hours ago
+
+    return {
+      user_id: `fake-trivia-${triviaId.slice(0, 8)}-${i}`,
+      nickname: FAKE_NAMES[i % FAKE_NAMES.length],
+      avatar_url: FAKE_AVATARS[i % FAKE_AVATARS.length],
+      score: Math.min(score, maxScore),
+      played_at: new Date(now - hoursAgo * 3600000).toISOString(),
+      rank: 0,
+    };
+  });
+
+  // Sort by score desc
+  entries.sort((a, b) => b.score - a.score || new Date(a.played_at).getTime() - new Date(b.played_at).getTime());
+  entries.forEach((e, i) => e.rank = i + 1);
+
+  return entries;
+}
 
 export interface TriviaLeaderboardEntry {
   user_id: string;
@@ -83,7 +137,7 @@ export function useTriviaLobby(triviaId: string | undefined) {
 
   // Fetch leaderboard - two-step approach to avoid FK join issues
   // Shows only BEST score per user (de-duplicated)
-  const { data: leaderboard = [], isLoading: isLoadingLeaderboard, refetch: refetchLeaderboard } = useQuery({
+  const { data: realLeaderboard = [], isLoading: isLoadingLeaderboard, refetch: refetchLeaderboard } = useQuery({
     queryKey: ["trivia-leaderboard", triviaId],
     queryFn: async () => {
       if (!triviaId) return [];
@@ -191,6 +245,13 @@ export function useTriviaLobby(triviaId: string | undefined) {
     enabled: !!triviaId && !!user?.id,
     ...CACHE_OPTIONS,
   });
+
+  // Merge real leaderboard with fake entries when empty
+  const leaderboard = useMemo(() => {
+    if (realLeaderboard.length > 0) return realLeaderboard;
+    if (!triviaId || !trivia) return [];
+    return generateFakeTriviaLeaderboard(triviaId, trivia.question_count || 10);
+  }, [realLeaderboard, triviaId, trivia]);
 
   // Find user's rank in leaderboard
   const userRank = user?.id

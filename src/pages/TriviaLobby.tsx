@@ -238,7 +238,7 @@ export default function TriviaLobby() {
             <div className="flex items-center gap-2 p-4 border-b border-border">
               <img src={trophy3d} alt="" className="w-5 h-5 object-contain" />
               <h2 className="font-bold text-foreground">ლიდერბორდი</h2>
-              <span className="text-xs text-muted-foreground ml-auto">{leaderboard.length} მოთამაშე</span>
+              <span className="text-xs text-muted-foreground ml-auto">{stats.uniquePlayers || leaderboard.length} მოთამაშე</span>
             </div>
 
             {/* Leaderboard List - scrollable */}
@@ -263,6 +263,7 @@ export default function TriviaLobby() {
                       isCurrentUser ? "bg-primary/10" : ""
                     }`}
                     onClick={() => {
+                      if (entry.user_id.startsWith('fake-trivia-')) return; // Skip fake users
                       if (isCurrentUser) {
                         setExpandedUserId(isExpanded ? null : entry.user_id);
                       } else {
