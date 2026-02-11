@@ -44,6 +44,7 @@ import { useMyRooms } from "@/hooks/useMyRooms";
 import { useMyQuizPosts } from "@/hooks/useSocialFeed";
 import { useMyCollections } from "@/hooks/useCollections";
 import { AuthRequiredModal } from "@/components/shared/AuthRequiredModal";
+import { GuestJoinModal } from "@/components/controller/GuestJoinModal";
 
 import { TeamRightSidebar } from "@/components/team/TeamRightSidebar";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
@@ -270,14 +271,17 @@ function TeamContentV2() {
   const hasTrivias = (myPosts?.length || 0) > 0 || (myCollections?.length || 0) > 0;
   // Guest auth modal
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showGuestJoinModal, setShowGuestJoinModal] = useState(false);
+  const [pendingGuestJoinCode, setPendingGuestJoinCode] = useState<string | null>(null);
   const isGuest = !user;
   
-  // Show auth modal for guests on mount
+  // Show auth modal for guests on mount (but NOT if they have a join code - show guest modal instead)
   useEffect(() => {
-    if (isGuest) {
+    const joinCode = searchParams.get("join");
+    if (isGuest && !joinCode) {
       setShowAuthModal(true);
     }
-  }, [isGuest]);
+  }, [isGuest, searchParams]);
 
   const { totalUnread: unreadRoomMessagesCount } = useUnreadRoomMessages();
   const { unreadCounts: unreadFriendCounts } = useUnreadMessages();
@@ -290,9 +294,10 @@ function TeamContentV2() {
   // Handle join code from URL
   useEffect(() => {
     const joinCode = searchParams.get("join");
-    if (joinCode && user && phase === "idle") {
-      // Important: clear URL params after consuming them.
-      // Otherwise the browser back button can return to /team?join=... and re-trigger auto-join.
+    if (!joinCode || phase !== "idle") return;
+
+    if (user) {
+      // Authenticated user: join directly
       (async () => {
         await enterRoom(joinCode);
         const next = new URLSearchParams(searchParams);
@@ -300,8 +305,45 @@ function TeamContentV2() {
         next.delete("tv");
         setSearchParams(next, { replace: true });
       })();
+    } else if (!showGuestJoinModal && !pendingGuestJoinCode) {
+      // Guest: show name entry modal (only if not already showing)
+      setPendingGuestJoinCode(joinCode);
+      setShowGuestJoinModal(true);
+      setShowAuthModal(false);
     }
-  }, [searchParams, user, phase, enterRoom, setSearchParams]);
+  }, [searchParams, user, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode]);
+
+  // Handle guest joining a room via invite link
+  const handleGuestJoinRoom = async (nickname: string) => {
+    const code = pendingGuestJoinCode;
+    if (!code) return;
+
+    try {
+      // Sign in anonymously to get a real user_id
+      const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+      if (anonError || !anonData.user) {
+        toast.error("შესვლა ვერ მოხერხდა");
+        return;
+      }
+
+      // Update profile nickname (trigger auto-creates profile with random name)
+      // Small delay to let the trigger create the profile first
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      await supabase
+        .from("profiles")
+        .update({ nickname: nickname.trim() })
+        .eq("user_id", anonData.user.id);
+
+      // Close the modal - the useEffect above will re-trigger with the new user 
+      // and auto-join the room
+      setShowGuestJoinModal(false);
+      // Don't clear pendingGuestJoinCode yet - let the URL param handle re-join
+    } catch (error) {
+      console.error("Guest join error:", error);
+      toast.error("ოთახში შესვლა ვერ მოხერხდა");
+    }
+  };
 
   // Handle challenge context from URL - maps all types from ChallengeTypeModal
   useEffect(() => {
@@ -1064,6 +1106,18 @@ function TeamContentV2() {
         message="შედი ანგარიშზე ონლაინ თამაშისთვის"
       />
       
+      {/* Guest Join Modal for invite links */}
+      <GuestJoinModal
+        isOpen={showGuestJoinModal}
+        onJoinAsGuest={handleGuestJoinRoom}
+        onClose={() => {
+          setShowGuestJoinModal(false);
+          setPendingGuestJoinCode(null);
+          setShowAuthModal(true); // Fall back to auth modal
+        }}
+        code={pendingGuestJoinCode || ""}
+      />
+
       {/* PRO Required Modal */}
       <ProRequiredModal
         isOpen={showProModal}
