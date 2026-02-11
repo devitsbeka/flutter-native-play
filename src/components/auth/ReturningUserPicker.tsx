@@ -48,7 +48,7 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
       }}
     >
       <div className="absolute top-6 left-6 safe-top">
-        <MyTriviaLiveLogo responsive />
+        <MyTriviaLiveLogo responsive textColor="light" />
       </div>
 
       <div className="flex items-center justify-center gap-12 md:gap-20">
