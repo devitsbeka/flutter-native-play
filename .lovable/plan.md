@@ -1,55 +1,55 @@
 
 
-## Fix: Admin Avatar Upload, Profile Edit, and Dialog Visibility
+## Auto-Generate AI Avatar on Admin Photo Upload
 
-### Problems Found
+### What Changes
 
-1. **Avatar upload blocked by storage RLS**: The `avatars` bucket only allows users to upload to their own folder (`auth.uid() = foldername`). When an admin uploads to a mascot's folder (e.g., `mascot-id/avatar.png`), the policy rejects it.
+When an admin uploads a photo for a mascot/fake account via the "ავატარი" button in the profile modal, the system will automatically send that photo through the AI avatar generator (the existing `generate-avatar` backend function) to create a semi-realistic 3D rendered avatar with the lavender background -- instead of saving the raw photo.
 
-2. **Profile update blocked by table RLS**: The `profiles` table UPDATE policy only allows `auth.uid() = user_id`. An admin cannot update another user's profile row.
+### How It Works
 
-3. **Edit dialog shows dark overlay but no content**: The `AdminProfileEditor` dialog has z-index and positioning issues causing the content to not render visibly on top of the profile modal.
-
-### Fixes
-
-#### 1. Database Migration: Add Admin RLS Policies
-
-Add two new policies:
-
-**Storage** - Allow admins to upload/update avatars for any user:
-```sql
-CREATE POLICY "Admins can upload avatars"
-  ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'avatars' AND has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Admins can update avatars"
-  ON storage.objects FOR UPDATE
-  USING (bucket_id = 'avatars' AND has_role(auth.uid(), 'admin'));
+```text
+Admin uploads photo
+       |
+       v
+Photo uploaded to storage (temporary)
+       |
+       v
+Get public URL of uploaded photo
+       |
+       v
+Call generate-avatar backend function with that URL
+       |
+       v
+Receive AI-generated avatar (base64)
+       |
+       v
+Upload AI result to storage (overwrite)
+       |
+       v
+Update profile with final AI avatar URL
 ```
 
-**Profiles table** - Allow admins to update any profile:
-```sql
-CREATE POLICY "Admins can update any profile"
-  ON public.profiles FOR UPDATE
-  USING (has_role(auth.uid(), 'admin'));
-```
+### Technical Details
 
-#### 2. Fix AdminProfileEditor Dialog (`src/components/profile/AdminProfileEditor.tsx`)
+**File: `src/components/profile/PlayerProfileModal.tsx`**
 
-The current approach wraps `DialogContent` in a manual `div` with positioning overrides, which conflicts with Radix Dialog's portal behavior. Fix by:
+Modify the `handleAvatarUpload` function (lines 169-205):
 
-- Removing the extra wrapper `div` around `DialogContent`
-- Adding proper z-index classes directly to `DialogContent`
-- Ensuring the overlay and content both render above `z-[100]` (the profile modal)
+1. After uploading the raw photo to storage and getting the public URL, call the `generate-avatar` edge function with that URL
+2. Take the returned base64 AI-generated image, convert it to a blob
+3. Upload the AI-generated image back to storage (overwriting the original)
+4. Update the profile with the final URL
+5. Show appropriate loading state ("Generating AI avatar..." instead of just uploading)
+6. Handle errors gracefully -- if AI generation fails, fall back to the original photo with a warning toast
 
-#### 3. Sync State in AdminProfileEditor
+The flow reuses the existing `generate-avatar` backend function which already has the correct prompt and model configuration for the semi-realistic 3D style with lavender background.
 
-The component initializes state with `useState(currentNickname)` but doesn't update when props change (e.g., when reopening). Add `useEffect` or key-based reset to sync state when the dialog opens with new data.
+**Loading UX**: The upload button will show a spinner with text indicating AI generation is in progress, since the AI step takes a few seconds longer than a simple upload.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| Database migration | Add admin RLS for avatars storage + profiles table |
-| `src/components/profile/AdminProfileEditor.tsx` | Fix dialog rendering, sync state on prop changes |
+| `src/components/profile/PlayerProfileModal.tsx` | Add AI generation step after photo upload in `handleAvatarUpload` |
 
