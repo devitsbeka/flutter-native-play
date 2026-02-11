@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Lock, Loader2 } from "lucide-react";
+import { Plus, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { MyTriviaLiveLogo } from "@/components/shared/MyTriviaLiveLogo";
+import { useNavigate } from "react-router-dom";
 
 interface LastUserData {
   nickname: string;
@@ -20,6 +21,7 @@ interface ReturningUserPickerProps {
 }
 
 export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }: ReturningUserPickerProps) {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,10 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
         background: "linear-gradient(180deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%)",
       }}
     >
-      <div className="absolute top-6 left-6 safe-top">
+      <div className="absolute top-6 left-0 right-0 safe-top flex items-center justify-center px-6">
+        <button onClick={() => navigate(-1)} className="absolute left-6 p-2 text-white/70 hover:text-white transition-colors">
+          <ArrowLeft className="w-6 h-6" />
+        </button>
         <MyTriviaLiveLogo responsive textColor="light" />
       </div>
 
