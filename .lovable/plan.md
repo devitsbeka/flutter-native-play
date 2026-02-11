@@ -1,38 +1,74 @@
 
 
-## Fix: Question Edits Still Not Saving (Stacking Context Bug)
+## Admin Controls for Fake Account Management on Player Profile
 
-### Root Cause
+### Overview
+When an admin views a fake/mascot account's profile modal, they will see additional management controls to:
+1. **Change the account's avatar** (open AvatarModal targeting that user)
+2. **Add a trivia** to that account (open CreateQuizModal with `user_id` override)
+3. **Edit nickname, country, stats** (inline edits)
 
-The `EditQuestionDialog` component's root container has `z-50` (line 80 of EditQuestionDialog.tsx). Inside `EditQuizModal.tsx`, it renders **before** the main save footer (line 616 vs line 656), which also has `z-50`.
+### How It Works
 
-When two sibling elements share the same z-index, DOM order wins -- the later element (main footer) renders on top. The `z-[60]` on the dialog's footer is **trapped** inside its parent's `z-50` stacking context and can never exceed the main footer's `z-50`.
+The `PlayerProfileModal` will detect:
+- Current user is admin (via `useAdminRole`)
+- The viewed profile belongs to a fake account (via `MASCOT_USER_IDS`)
 
-This is why:
-- Icons work (they use a portal rendered at `document.body`, escaping the stacking context)
-- Question text and answers never save (the dialog's save button is covered by the main footer)
+When both conditions are true, an **admin toolbar** appears below the profile header with action buttons.
 
-### Fix
+### Changes
 
-**File: `src/components/social/EditQuestionDialog.tsx`, line 80**
+#### 1. `src/components/profile/PlayerProfileModal.tsx`
+- Import `useAdminRole` and `MASCOT_USER_IDS`
+- Import `CreateQuizModal` (lazy)
+- Add state for `showCreateTrivia`, `showEditNickname`, `showAvatarUpload`
+- When `isAdmin && MASCOT_USER_IDS.has(userId)`, render an admin toolbar with:
+  - **"ავატარის შეცვლა"** (Change Avatar) button -- opens a file picker, uploads to storage, updates `profiles.avatar_url` for that user
+  - **"ტრივიის დამატება"** (Add Trivia) button -- opens `CreateQuizModal` but with an `overrideUserId` prop so the trivia is created under the fake account
+  - **"რედაქტირება"** (Edit) button -- opens an inline edit dialog for nickname, country code, and stats
+- After any change, call `refetch()` to refresh the modal
 
-Change the dialog's root container z-index from `z-50` to `z-[200]`:
+#### 2. `src/components/social/CreateQuizModal.tsx`
+- Add optional `overrideUserId?: string` prop
+- Use `overrideUserId ?? user?.id` when inserting the trivia into `user_quiz_posts`
+- This allows admins to create trivias attributed to fake accounts
 
+#### 3. New: `src/components/profile/AdminProfileEditor.tsx`
+- A small dialog/sheet for editing fake account fields:
+  - Nickname (text input)
+  - Country code (text input or picker)
+  - Avatar upload (file input -> storage upload -> update profile)
+  - Animated avatar URL (text input)
+- Saves changes directly to `profiles` table via admin RLS policies
+
+### Technical Details
+
+**Admin toolbar UI** (shown only for admins viewing fake accounts):
+```text
++------------------------------------------+
+|  [Camera icon] ავატარი  |  [+] ტრივია  |  [Pen] რედაქტირება  |
++------------------------------------------+
 ```
-Before: className="fixed inset-0 z-50 bg-[#7E7ADB]"
-After:  className="fixed inset-0 z-[200] bg-[#7E7ADB]"
-```
 
-This lifts the entire dialog (including its header and footer) above the main modal's footer (`z-50`), ensuring the save button is clickable.
+**Avatar change flow**:
+- File picker opens
+- Image uploaded to Supabase storage bucket (e.g., `avatars/{userId}/avatar.png`)
+- `profiles.avatar_url` updated with the public URL
+- Modal refreshes
 
-### Why This Works
+**Trivia creation flow**:
+- `CreateQuizModal` opens with `overrideUserId` set to the fake account's `user_id`
+- All AI generation and saving works normally, but the `user_id` field points to the fake account
+- On completion, the profile modal's trivia list updates
 
-| Element | Current z-index | Fixed z-index |
-|---------|----------------|---------------|
-| EditQuizModal container | z-[100] | z-[100] (unchanged) |
-| Main save footer | z-50 (within z-[100]) | z-50 (unchanged) |
-| EditQuestionDialog root | z-50 | z-[200] |
-| EditQuestionDialog footer | z-[60] (trapped in z-50) | z-[60] (now inside z-[200], so effective) |
+**RLS consideration**:
+- The existing admin RLS policies on `profiles` and `user_quiz_posts` already allow admin updates (confirmed from memory about edit-access)
+- No new RLS policies needed
 
-One line change, single file.
+### Files Changed
+| File | Change |
+|------|--------|
+| `src/components/profile/PlayerProfileModal.tsx` | Add admin toolbar with avatar, trivia, and edit buttons |
+| `src/components/social/CreateQuizModal.tsx` | Add `overrideUserId` prop |
+| `src/components/profile/AdminProfileEditor.tsx` | New component for editing fake account fields |
 
