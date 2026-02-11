@@ -82,6 +82,7 @@ export function useQuestionQualityReview() {
           .from('questions')
           .select('id')
           .eq('is_active', true)
+          .order('created_at', { ascending: false })
           .range(offset, offset + currentBatchSize - 1);
 
         if (options.categoryId) {

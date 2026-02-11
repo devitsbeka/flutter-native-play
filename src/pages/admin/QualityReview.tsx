@@ -212,7 +212,7 @@ export default function QualityReview() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground">Limit</label>
+              <label className="text-sm text-muted-foreground">Last Added</label>
               <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
                 <SelectTrigger className="w-[100px]">
                   <SelectValue />
@@ -222,6 +222,7 @@ export default function QualityReview() {
                   <SelectItem value="50">50</SelectItem>
                   <SelectItem value="100">100</SelectItem>
                   <SelectItem value="200">200</SelectItem>
+                  <SelectItem value="500">500</SelectItem>
                 </SelectContent>
               </Select>
             </div>
