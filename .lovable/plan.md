@@ -1,35 +1,38 @@
 
 
-## Fix: Question Edits Never Persist
+## Fix: Question Edits Still Not Saving (Stacking Context Bug)
 
 ### Root Cause
-There is a **z-index stacking bug** between two fixed-position footers:
 
-1. **EditQuestionDialog footer** (save button for the question edit) -- has **no z-index**
-2. **EditQuizModal main footer** (save button that writes to DB) -- has **z-50**
+The `EditQuestionDialog` component's root container has `z-50` (line 80 of EditQuestionDialog.tsx). Inside `EditQuizModal.tsx`, it renders **before** the main save footer (line 616 vs line 656), which also has `z-50`.
 
-Both are `position: fixed; bottom: 0`. Because the main footer has `z-50` and the dialog footer has no z-index, the main save button sits **on top of** the dialog's save button. When the user taps "Save" while editing a question, they are unknowingly hitting the main save button, which writes the **unchanged** questions array to the database.
+When two sibling elements share the same z-index, DOM order wins -- the later element (main footer) renders on top. The `z-[60]` on the dialog's footer is **trapped** inside its parent's `z-50` stacking context and can never exceed the main footer's `z-50`.
 
-This is why icons work (they use a separate portal-based picker) but question text and answers never change.
+This is why:
+- Icons work (they use a portal rendered at `document.body`, escaping the stacking context)
+- Question text and answers never save (the dialog's save button is covered by the main footer)
 
-### Fix (single file change)
+### Fix
 
-**File: `src/components/social/EditQuestionDialog.tsx`**
+**File: `src/components/social/EditQuestionDialog.tsx`, line 80**
 
-Add `z-[60]` to the EditQuestionDialog's fixed footer div (line ~161), so it sits above the main modal's `z-50` footer:
+Change the dialog's root container z-index from `z-50` to `z-[200]`:
 
 ```
-Before: className="fixed bottom-0 left-0 right-0 p-5 border-t ..."
-After:  className="fixed bottom-0 left-0 right-0 z-[60] p-5 border-t ..."
+Before: className="fixed inset-0 z-50 bg-[#7E7ADB]"
+After:  className="fixed inset-0 z-[200] bg-[#7E7ADB]"
 ```
 
-This ensures that when the EditQuestionDialog is open, its save button is clickable and triggers the `onSave` callback that updates the questions array in local state. The main save button (which persists to the database) remains usable after the dialog closes.
+This lifts the entire dialog (including its header and footer) above the main modal's footer (`z-50`), ensuring the save button is clickable.
 
-### Summary
+### Why This Works
 
-| What | Status |
-|------|--------|
-| Root cause | Main save button (z-50) covers EditQuestionDialog save button (no z-index) |
-| Fix | Add z-[60] to EditQuestionDialog footer |
-| Files changed | 1 (`EditQuestionDialog.tsx`) |
-| Risk | None -- only affects stacking when the edit dialog is open |
+| Element | Current z-index | Fixed z-index |
+|---------|----------------|---------------|
+| EditQuizModal container | z-[100] | z-[100] (unchanged) |
+| Main save footer | z-50 (within z-[100]) | z-50 (unchanged) |
+| EditQuestionDialog root | z-50 | z-[200] |
+| EditQuestionDialog footer | z-[60] (trapped in z-50) | z-[60] (now inside z-[200], so effective) |
+
+One line change, single file.
+
