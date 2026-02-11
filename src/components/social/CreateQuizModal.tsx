@@ -872,7 +872,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] z-50"
+                className="fixed bottom-0 left-0 right-0 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] z-[201]"
                 style={{ background: "linear-gradient(to top, rgba(76,29,149,0.98) 0%, rgba(76,29,149,0.9) 50%, transparent 100%)" }}
               >
                 <div className="space-y-2 max-w-sm mx-auto">
@@ -1028,11 +1028,11 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex flex-col"
+            className="fixed inset-0 z-[200] flex flex-col"
             style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)" }}
           >
             {/* Fixed Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 safe-top">
+            <div className="fixed top-0 left-0 right-0 z-[201] safe-top">
               <div className="max-w-[700px] md:max-w-[600px] mx-auto w-full flex items-center justify-between px-4 py-3">
                 <button
                   onClick={step === 1 ? handleClose : () => setStep(step - 1)}
