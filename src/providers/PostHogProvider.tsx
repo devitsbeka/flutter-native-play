@@ -40,6 +40,8 @@ function useIdentifyUser() {
   useEffect(() => {
     if (user && profile && identifiedRef.current !== user.id) {
       posthog.identify(user.id, {
+        $name: profile.nickname,
+        $email: user.email ?? undefined,
         nickname: profile.nickname,
         country_code: profile.country_code,
         coins: profile.coins,
