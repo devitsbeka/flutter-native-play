@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Star, CheckCircle, Target, Zap, Calendar, RotateCcw } from "lucide-react";
 import { GameModal, GameModalFooter, GameModalInfoRow } from "@/components/ui/game-modal";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 
 interface CompletedLevelModalProps {
@@ -24,6 +25,7 @@ export function CompletedLevelModal({
   stats,
   onReplay 
 }: CompletedLevelModalProps) {
+  const { t } = useLanguage();
   const accuracy = stats.questionsAnswered > 0 
     ? Math.round((stats.correctAnswers / stats.questionsAnswered) * 100) 
     : 0;
@@ -34,8 +36,8 @@ export function CompletedLevelModal({
       onClose={onClose}
       variant="success"
       icon={<CheckCircle className="w-10 h-10" />}
-      title={`Level ${levelId}`}
-      subtitle="Completed!"
+      title={t("completedLevel.levelTitle").replace("{level}", String(levelId))}
+      subtitle={t("completedLevel.completed")}
       showSparkles
     >
       {/* Stars display */}
@@ -65,19 +67,19 @@ export function CompletedLevelModal({
       <div className="space-y-2 mb-4">
         <GameModalInfoRow
           icon={<Target className="w-5 h-5" />}
-          label="Best Score"
+          label={t("completedLevel.bestScore")}
           value={`${stats.correctAnswers}/${stats.questionsAnswered}`}
           color="text-green-600"
         />
         <GameModalInfoRow
           icon={<CheckCircle className="w-5 h-5" />}
-          label="Accuracy"
+          label={t("completedLevel.accuracy")}
           value={`${accuracy}%`}
           color="text-green-600"
         />
         <GameModalInfoRow
           icon={<Zap className="w-5 h-5" />}
-          label="Points Earned"
+          label={t("completedLevel.pointsEarned")}
           value={stats.pointsEarned}
           color="text-green-600"
         />
@@ -85,7 +87,7 @@ export function CompletedLevelModal({
         {stats.completedAt && (
           <GameModalInfoRow
             icon={<Calendar className="w-5 h-5" />}
-            label="Completed"
+            label={t("completedLevel.completedAt")}
             value={format(new Date(stats.completedAt), "MMM d, yyyy")}
             color="text-green-600"
           />
@@ -103,7 +105,7 @@ export function CompletedLevelModal({
             border: "2px solid #E5E7EB",
           }}
         >
-          Close
+          {t("completedLevel.close")}
         </button>
         {onReplay && (
           <button
@@ -112,7 +114,7 @@ export function CompletedLevelModal({
             style={{ boxShadow: "0 4px 0 rgba(22,163,74,0.5)" }}
           >
             <RotateCcw className="w-4 h-4" />
-            Play Again
+            {t("completedLevel.playAgain")}
           </button>
         )}
       </div>

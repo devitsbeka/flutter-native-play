@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Gamepad2, X, Check, Clock } from "lucide-react";
 import { GameInvitation } from "@/hooks/useGameInvitations";
 import { useSound } from "@/contexts/SoundContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 
@@ -20,6 +21,7 @@ export function GameInviteModal({
   onJoinRoom,
 }: GameInviteModalProps) {
   const { playSound, vibrate } = useSound();
+  const { t } = useLanguage();
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
@@ -166,8 +168,8 @@ export function GameInviteModal({
                 </motion.div>
 
                 {/* Title */}
-                <h2 className="font-display text-xl text-gray-900 mb-1">თამაშის მოწვევა</h2>
-                <p className="text-gray-500 text-sm mb-4">გიწვევს თამაშში!</p>
+                <h2 className="font-display text-xl text-gray-900 mb-1">{t('gameInvite.title')}</h2>
+                <p className="text-gray-500 text-sm mb-4">{t('gameInvite.invitesYou')}</p>
 
                 {/* Sender info - 3D card */}
                 <div 
@@ -188,7 +190,7 @@ export function GameInviteModal({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-gray-800">
-                        {invitation.sender?.nickname || "მეგობარი"}
+                        {invitation.sender?.nickname || t('gameInvite.friend')}
                       </p>
                       {invitation.sender?.country_code && (
                         <span>{getCountryFlag(invitation.sender.country_code)}</span>
@@ -196,7 +198,7 @@ export function GameInviteModal({
                     </div>
                     {invitation.room?.category_name && (
                       <p className="text-gray-500 text-sm">
-                        კატეგორია: {invitation.room.category_name}
+                        {t('gameInvite.category')}: {invitation.room.category_name}
                       </p>
                     )}
                   </div>
@@ -218,7 +220,7 @@ export function GameInviteModal({
                   <span className={`text-sm font-mono font-bold ${timeRemaining < 30 ? "text-red-600" : "text-gray-600"}`}>
                     {formatTime(timeRemaining)}
                   </span>
-                  <span className="text-gray-400 text-sm">დარჩენილია</span>
+                  <span className="text-gray-400 text-sm">{t('gameInvite.remaining')}</span>
                 </div>
 
                 {/* Buttons */}
@@ -230,7 +232,7 @@ export function GameInviteModal({
                     disabled={isDeclining}
                     icon={<X className="w-4 h-4" />}
                   >
-                    უარყოფა
+                    {t('gameInvite.decline')}
                   </ChunkyButton>
                   
                   <ChunkyButton
@@ -240,7 +242,7 @@ export function GameInviteModal({
                     disabled={isAccepting}
                     icon={<Check className="w-4 h-4" />}
                   >
-                    მიღება
+                    {t('gameInvite.accept')}
                   </ChunkyButton>
                 </div>
               </div>

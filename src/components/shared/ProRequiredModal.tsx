@@ -3,17 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useProPurchase } from "@/hooks/useProPurchase";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Capacitor } from "@capacitor/core";
 import type { ProFeature } from "@/hooks/useProGating";
 import crownIcon from "@/assets/icons/crown-2.png";
 
-const FEATURE_MESSAGES: Record<ProFeature, string> = {
-  rooms: "ოთახების შესაქმნელად",
-  trivia: "ტრივიას შესაქმნელად",
-  collection: "კოლექციის შესაქმნელად",
-  avatar: "3D ავატარის შესაქმნელად",
-  animation: "ავატარის ანიმაციისთვის",
-  general: "ამ ფუნქციისთვის",
+const FEATURE_KEYS: Record<ProFeature, string> = {
+  rooms: "proModal.featureRooms",
+  trivia: "proModal.featureTrivia",
+  collection: "proModal.featureCollection",
+  avatar: "proModal.featureAvatar",
+  animation: "proModal.featureAnimation",
+  general: "proModal.featureGeneral",
 };
 
 interface ProRequiredModalProps {
@@ -25,16 +26,15 @@ interface ProRequiredModalProps {
 export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRequiredModalProps) {
   const navigate = useNavigate();
   const { initiateProCheckout, isProcessing } = useProPurchase();
+  const { t } = useLanguage();
 
   const handleUpgrade = async () => {
     if (Capacitor.isNativePlatform()) {
-      // Native: trigger in-app purchase
       const result = await initiateProCheckout("pro");
       if (result.success) {
         onClose();
       }
     } else {
-      // Web: navigate to profile PRO tab
       onClose();
       navigate("/profile?tab=PRO");
     }
@@ -43,7 +43,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[320px] p-0 overflow-hidden bg-gradient-to-b from-purple-500/15 via-background to-background border-purple-500/30">
-        <DialogTitle className="sr-only">PRO ფუნქცია</DialogTitle>
+        <DialogTitle className="sr-only">{t("proModal.dialogTitle")}</DialogTitle>
         
         <div className="flex flex-col items-center px-6 py-8">
           {/* Crown Icon */}
@@ -75,7 +75,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
             transition={{ delay: 0.1 }}
             className="font-display text-xl text-foreground mb-3"
           >
-            PRO ფუნქცია
+            {t("proModal.title")}
           </motion.h2>
 
           {/* Message */}
@@ -85,7 +85,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
             transition={{ delay: 0.15 }}
             className="text-muted-foreground text-center text-sm mb-6"
           >
-            {FEATURE_MESSAGES[feature]} გახდი PRO მომხმარებელი
+            {t(FEATURE_KEYS[feature])} {t("proModal.becomeProSuffix")}
           </motion.p>
 
           {/* CTA Button */}
@@ -104,7 +104,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
               showParticles={true}
               icon={<img src={crownIcon} alt="" className="w-5 h-5 object-contain" />}
             >
-              {isProcessing ? "იტვირთება..." : "გახდი PRO"}
+              {isProcessing ? t("proModal.loading") : t("proModal.becomePro")}
             </ChunkyButton>
           </motion.div>
 
@@ -116,7 +116,7 @@ export function ProRequiredModal({ isOpen, onClose, feature = "general" }: ProRe
             onClick={onClose}
             className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            გაუქმება
+            {t("proModal.cancel")}
           </motion.button>
         </div>
       </DialogContent>

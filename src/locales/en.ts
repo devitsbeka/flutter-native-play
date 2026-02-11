@@ -1125,6 +1125,186 @@ export const en: KaTranslations = {
     badgeBestPrice: "Best Price",
     badgeBestValue: "Best Value",
   },
+
+  // ==========================================
+  // Guest Modal
+  // ==========================================
+  guestModal: {
+    title: "Create an account and continue playing",
+    createAnimatedAvatar: "Create an animated avatar",
+    saveProgress: "Save your progress",
+    unlockAllFeatures: "Unlock all features",
+    letsGo: "Let's Go!",
+  },
+
+  // ==========================================
+  // Auth Modal
+  // ==========================================
+  authModal: {
+    dialogTitle: "Authorization",
+    hello: "Hello!",
+    createAccountSubtitle: "Create an account and join the game for free",
+    defaultMessage: "Sign in required for purchase",
+    usernamePlaceholder: "Username",
+    emailOrUsername: "Email or username",
+    password: "Password",
+    createAccount: "Create Account",
+    signIn: "Sign In",
+    alreadyHaveAccount: "Already have an account?",
+    noAccount: "Don't have an account?",
+    create: "Create",
+    or: "or",
+    takePhoto: "Take Photo",
+    chooseFromGallery: "Choose from Gallery",
+    // Validation
+    usernameRequired: "Username is required",
+    usernameMin: "Min. 3 characters",
+    usernameChars: "Only letters, numbers and _",
+    passwordRequired: "Password is required",
+    passwordMin: "Min. 6 characters",
+    // Toasts
+    usernameTaken: "This username is already taken",
+    userNotFound: "User not found. Make sure you entered correct credentials or register",
+    genericError: "Error, please try again",
+    accountCreated: "Account created!",
+    invalidCredentials: "Invalid credentials",
+    googleSignInFailed: "Google sign-in failed",
+    appleSignInFailed: "Apple sign-in failed",
+  },
+
+  // ==========================================
+  // PRO Modal
+  // ==========================================
+  proModal: {
+    dialogTitle: "PRO Feature",
+    title: "PRO Feature",
+    becomePro: "Go PRO",
+    loading: "Loading...",
+    cancel: "Cancel",
+    featureRooms: "to create rooms",
+    featureTrivia: "to create trivia",
+    featureCollection: "to create collections",
+    featureAvatar: "to create 3D avatar",
+    featureAnimation: "for avatar animation",
+    featureGeneral: "for this feature",
+    becomeProSuffix: "become a PRO user",
+  },
+
+  // ==========================================
+  // Completed Level Modal
+  // ==========================================
+  completedLevel: {
+    levelTitle: "Level {level}",
+    completed: "Completed!",
+    bestScore: "Best Score",
+    accuracy: "Accuracy",
+    pointsEarned: "Points Earned",
+    completedAt: "Completed",
+    close: "Close",
+    playAgain: "Play Again",
+  },
+
+  // ==========================================
+  // Power-Up Detail Modal
+  // ==========================================
+  powerUpDetail: {
+    add: "Add",
+    close: "Close",
+  },
+
+  // ==========================================
+  // Guest Join Modal
+  // ==========================================
+  guestJoin: {
+    title: "Join us!",
+    subtitle: "Enter your name to play",
+    namePlaceholder: "Your name...",
+    joinGame: "Join Game",
+    joining: "Joining...",
+    or: "or",
+    createAccount: "Create an account",
+    createAccountButton: "Create Account",
+    benefitAvatar: "Custom 3D Avatar",
+    benefitRewards: "Daily Rewards",
+    benefitProgress: "Progress Tracking",
+    // Validation
+    minChars: "Minimum 2 characters",
+    maxChars: "Maximum 20 characters",
+    lettersOnly: "Only letters and numbers",
+    reservedName: "This name is reserved",
+  },
+
+  // ==========================================
+  // Controller Waiting
+  // ==========================================
+  controllerWaiting: {
+    waitingForHost: "Waiting for host",
+    nextRoundSoon: "Next round starting soon",
+    waiting: "Waiting...",
+  },
+
+  // ==========================================
+  // Game Invite Modal
+  // ==========================================
+  gameInvite: {
+    title: "Game Invitation",
+    invitesYou: "invites you to play!",
+    friend: "Friend",
+    category: "Category",
+    remaining: "remaining",
+    decline: "Decline",
+    accept: "Accept",
+  },
+
+  // ==========================================
+  // Category Wheel Modal
+  // ==========================================
+  categoryWheel: {
+    spinning: "Spinning...",
+    categoryRevealed: "Category!",
+    choosingCategory: "Choosing Category",
+    gameStarting: "Game starting...",
+  },
+
+  // ==========================================
+  // Play Limit Modal (registered)
+  // ==========================================
+  playLimit: {
+    limitReached: "Play limit reached",
+    becomeProDescription: "Go PRO and play unlimited, create your own trivia and much more.",
+    unlimitedGames: "Unlimited games",
+    exclusiveFeatures: "Exclusive features",
+    becomePro: "Go PRO",
+    freePlayReady: "Free play is ready!",
+    playNow: "Play Now",
+    nextFreePlay: "Next free play: {time}",
+    freePlayInterval: "1 free play every 3 hours",
+  },
+
+  // ==========================================
+  // Notifications Panel
+  // ==========================================
+  notificationsPanel: {
+    activity: "Activity",
+    gamesTab: "Games",
+    socialTab: "Friends",
+    triviaTab: "Trivia",
+    noNotifications: "No notifications",
+    noGamesNotifications: "No game notifications",
+    noSocialNotifications: "No friend notifications",
+    noTriviaNotifications: "No trivia notifications",
+    viewAll: "View All",
+    // Toasts
+    friendRequestAccepted: "Friend request accepted!",
+    friendRequestDeclined: "Request declined",
+    inviteDeclined: "Invitation declined",
+    errorOccurred: "An error occurred",
+    urlCopied: "URL copied! Open trivia in My Trivia to use as cover",
+    copyFailed: "Copy failed",
+    avatarAlreadySet: "Avatar already set!",
+    roomNotFound: "Room no longer found",
+    navigationFailed: "Could not navigate to game",
+  },
 };
 
 export default en;
