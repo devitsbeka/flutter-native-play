@@ -1,65 +1,59 @@
 
-## Open Up Guest Experience + Netflix-Style Returning User Screen
+# Translate All Hardcoded Strings in User-Facing Modals
 
-This is a 3-part feature that removes friction from the guest-to-user funnel and adds a polished returning user experience.
+## Summary
+There are 12 modal/screen components with hardcoded Georgian (and some English) strings that bypass the `t()` translation system. This means they won't adapt when users switch languages.
 
----
+## Scope of Changes
 
-### Part 1: Open Guest Experience (Play 3 Games Freely)
+### Phase 1: Add Translation Keys to `src/locales/ka.ts`
 
-Currently, guests land on the home screen and see a login-first layout with a small "play as guest" prompt at the bottom. Instead, we'll flip this -- guests land directly into the full app experience (avatar, play button, everything) and can play up to 3 games. After 3 games, we show the registration modal.
+Add new translation keys under appropriate sections for all discovered hardcoded strings (~100+ strings total). Key groups to add:
 
-**Changes:**
-- **`src/pages/Index.tsx`**: Remove the guest auth wall. Guests see the same home screen as logged-in users (with the mascot avatar, play button visible and prominent). The "Sign In" and "Registration" buttons move to a subtle top-right corner or side menu instead of being the centerpiece.
-- **`src/hooks/useGuestPlays.ts`**: Already supports 3 guest plays -- no changes needed.
-- **`src/pages/Game.tsx`**: Already checks guest play limits and shows `GuestMaxPlaysModal` -- no changes needed.
-- **`src/components/home/GuestMaxPlaysModal.tsx`**: After 3 plays, this modal already appears asking to register. We'll make the registration flow inside it even simpler (see Part 2).
+- `guestModal.*` - GuestMaxPlaysModal strings
+- `authModal.*` - AuthRequiredModal strings (validation, labels, errors, toasts)
+- `proModal.*` - ProRequiredModal strings
+- `completedLevel.*` - CompletedLevelModal strings (currently in English!)
+- `powerUpDetail.*` - PowerUpDetailModal button labels
+- `guestJoin.*` - GuestJoinModal strings
+- `controllerWaiting.*` - ControllerRoundIntroWaiting strings
+- `gameInvite.*` - GameInviteModal strings
+- `categoryWheel.*` - CategoryWheelModal strings
+- `playLimit.*` - PlayLimitModal registered-user section
+- `notifications.*` - NotificationsPanel strings
+- Extend `spin.*` for LuckySpinModal's remaining hardcoded strings
 
-### Part 2: Dead-Simple Registration From the Modal
+### Phase 2: Update Each Modal Component
 
-When guests hit 3 plays and see the "register to continue" modal, registration should be as frictionless as possible.
+Replace every hardcoded string with `t("key")` calls. Each file needs:
+1. Import `useLanguage` (if not already imported)
+2. Call `const { t } = useLanguage()` in the component
+3. Replace all string literals with `t()` calls
 
-**Changes:**
-- **`src/components/home/GuestMaxPlaysModal.tsx`**: Add an inline registration form directly inside the modal -- just username + password + "Create Account" button, plus Google/Apple OAuth buttons. No need to navigate to `/auth` page at all.
-- The form calls `signUpWithUsername()` directly, so users type a name, a password, tap one button, and they're in.
-- Social login buttons (Google/Apple) are shown prominently as the fastest path.
-- After successful registration, the modal closes and the user can keep playing immediately.
+**Files to modify (12 total):**
 
-### Part 3: Netflix-Style Returning User Screen
+| File | Hardcoded Count | Notes |
+|---|---|---|
+| `GuestMaxPlaysModal.tsx` | 5 strings | Title, benefits, button |
+| `AuthRequiredModal.tsx` | ~20 strings | Validation, labels, toasts, placeholders |
+| `ProRequiredModal.tsx` | ~10 strings | Feature messages, title, buttons |
+| `CompletedLevelModal.tsx` | ~7 strings | All in English - needs Georgian too |
+| `PowerUpDetailModal.tsx` | 2 strings | Button labels only |
+| `GuestJoinModal.tsx` | ~14 strings | Validation, labels, benefits, buttons |
+| `ControllerRoundIntroWaiting.tsx` | 3 strings | Status messages |
+| `GameInviteModal.tsx` | ~7 strings | Title, labels, buttons |
+| `CategoryWheelModal.tsx` | ~5 strings | Phase headers, status text |
+| `PlayLimitModal.tsx` | ~10 strings | PRO upgrade section |
+| `LuckySpinModal.tsx` | 2 strings | Header title, SPIN button |
+| `NotificationsPanel.tsx` | ~8 strings | Header, tabs, empty states, toasts |
 
-When a previously logged-in user returns and their session has expired, instead of showing a blank login form, we show a Netflix-style account picker with their saved avatar and name.
+### Phase 3: Update `src/locales/en.ts` (and other locale files)
 
-**Changes:**
-- **New file: `src/components/auth/ReturningUserPicker.tsx`**: A full-screen component showing:
-  - The user's avatar (circular, large) with their nickname below it
-  - Tapping the avatar shows a password input field to sign back in
-  - A dotted-circle with a "+" icon next to it labeled "Add User" that navigates to the standard `/auth?mode=signup` page
-  - Dark/gradient background for the Netflix feel
-  
-- **`src/pages/Auth.tsx`**: Before showing the login form, check localStorage for saved user data (`lastLoggedInUser`). If found and no active session, show the `ReturningUserPicker` instead of the default form.
+Add English translations for all new keys so other languages inherit proper defaults.
 
-- **`src/contexts/AuthContext.tsx`**: On successful login, save `{ nickname, avatar_url, email_or_username }` to localStorage under `lastLoggedInUser`. On sign-out, do NOT clear this data (so it persists for the Netflix screen).
+## Technical Details
 
----
-
-### Technical Details
-
-**localStorage keys used:**
-- `mytrivia_guest_plays` (existing) -- tracks guest game count
-- `mytrivia_last_user` (new) -- stores `{ nickname, avatar_url, identifier }` for the returning user screen
-- `lastLoginEmail` (existing) -- already used for returning user detection
-
-**Files to create:**
-| File | Purpose |
-|------|---------|
-| `src/components/auth/ReturningUserPicker.tsx` | Netflix-style account picker with avatar, name, password input, and "+ Add User" |
-
-**Files to modify:**
-| File | Change |
-|------|--------|
-| `src/pages/Index.tsx` | Remove guest auth wall -- guests see the full home screen with play button |
-| `src/components/home/GuestMaxPlaysModal.tsx` | Add inline username+password signup form + social login buttons directly in the modal |
-| `src/pages/Auth.tsx` | Check for saved user data and show `ReturningUserPicker` when session is expired |
-| `src/contexts/AuthContext.tsx` | Save user profile data to localStorage on login for the returning user screen |
-
-**No database changes required** -- everything uses existing auth methods and localStorage.
+- All new keys follow existing naming conventions in `ka.ts`
+- Fallback pattern `t("key") || "hardcoded"` already used in some places (e.g., PlayLimitModal line 72) will be replaced with clean `t()` calls
+- The `CompletedLevelModal` is especially important since it's entirely in English right now (e.g., "Best Score", "Play Again", "Close")
+- Toast messages in `AuthRequiredModal` and `NotificationsPanel` also need translation keys
