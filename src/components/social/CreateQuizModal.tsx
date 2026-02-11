@@ -32,6 +32,7 @@ interface CreateQuizModalProps {
   onOpenChange: (open: boolean) => void;
   onQuizCreated?: () => void;
   onSwitchToCollection?: () => void;
+  overrideUserId?: string;
 }
 
 type DifficultyLevel = "mixed" | "easy" | "medium" | "hard";
@@ -145,7 +146,7 @@ const TRIVIA_TOPIC_POOL = [
   { label: "მოდა", icon_slug: "dress" },
 ];
 
-export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection }: CreateQuizModalProps) {
+export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToCollection, overrideUserId }: CreateQuizModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { startCoverGeneration, isGenerating: isGeneratingCover } = useBackgroundGeneration();
@@ -375,7 +376,7 @@ export function CreateQuizModal({ open, onOpenChange, onQuizCreated, onSwitchToC
       const iconSlug = editorQuestions[0]?.iconSlug || null;
 
       const { error } = await supabase.from("user_quiz_posts").insert([{
-        user_id: user.id,
+        user_id: overrideUserId || user.id,
         title,
         subject,
         hashtags,
