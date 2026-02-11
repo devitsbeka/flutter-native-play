@@ -7,6 +7,7 @@ import { usePendingChallenges } from "@/hooks/usePendingChallenges";
 import { useNewContentIndicators } from "@/hooks/useNewContentIndicators";
 import { useNavigationPrefetch } from "@/hooks/useNavigationPrefetch";
 import { toast } from "sonner";
+import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
 
 // Eager preload main route chunks for instant navigation
 const preloadRouteChunks = () => {
@@ -77,15 +78,26 @@ export function UniversalBottomNav({
     }
   };
 
+  const [showGuestModal, setShowGuestModal] = useState(false);
+
   const handleLockedNavClick = () => {
-    toast("დარეგისტრირდი ამ ფუნქციის გასახსნელად! 🔒", {
-      description: "ითამაშე კიდევ რამდენიმე თამაში ან შექმენი ანგარიში",
-    });
+    setShowGuestModal(true);
   };
 
   // Hide nav when requested (e.g., when side menu is open)
   if (hidden) {
-    return null;
+    return (
+      <GuestMaxPlaysModal
+        isOpen={showGuestModal}
+        isBlocking={false}
+        onClose={() => setShowGuestModal(false)}
+        onRegister={() => {
+          setShowGuestModal(false);
+          navigate("/auth?mode=signup");
+        }}
+        onContinuePlaying={() => setShowGuestModal(false)}
+      />
+    );
   }
 
   return (
@@ -242,6 +254,17 @@ export function UniversalBottomNav({
           </div>
         </div>
       </div>
+
+      <GuestMaxPlaysModal
+        isOpen={showGuestModal}
+        isBlocking={false}
+        onClose={() => setShowGuestModal(false)}
+        onRegister={() => {
+          setShowGuestModal(false);
+          navigate("/auth?mode=signup");
+        }}
+        onContinuePlaying={() => setShowGuestModal(false)}
+      />
     </div>
   );
 }
