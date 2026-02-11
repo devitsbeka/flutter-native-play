@@ -27,6 +27,18 @@ export interface GeneratedQuestion {
   isValid: boolean;
   warnings: string[];
   isDuplicate?: boolean;
+  qualityScore?: number;
+  qualityGrade?: 'A' | 'B' | 'C' | 'D';
+  qualityData?: {
+    grammar_score: number;
+    grammar_issues: string[];
+    uniqueness_score: number;
+    uniqueness_issues: string[];
+    confusion_score: number;
+    confusion_issues: string[];
+    recommendations: string[];
+  };
+  isReviewingQuality?: boolean;
 }
 
 export interface Category {
@@ -65,6 +77,7 @@ export default function Flow() {
   const [generatedQuestions, setGeneratedQuestions, clearGeneratedQuestions] = usePersistedState<GeneratedQuestion[]>('flow-generated-questions', []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [isReviewingQuality, setIsReviewingQuality] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [stats, setStats] = useState({ inLib: 0, inProd: 0 });
   const [languageStats, setLanguageStats] = useState<Record<string, { inLib: number; inProd: number }>>({});
@@ -351,6 +364,55 @@ export default function Flow() {
     }
   }, []);
 
+  // Review quality of generated questions using AI
+  const reviewQuestionQuality = useCallback(async (questions: GeneratedQuestion[]) => {
+    if (questions.length === 0) return;
+    setIsReviewingQuality(true);
+    
+    try {
+      const payload = questions.map(q => ({
+        id: q.id,
+        question_text: q.questionText,
+        correct_answer: q.correctAnswer,
+        incorrect_answers: q.incorrectAnswers,
+      }));
+
+      const { data, error } = await supabase.functions.invoke('review-generated-questions', {
+        body: { questions: payload },
+      });
+
+      if (error) {
+        console.error('Quality review error:', error);
+        return;
+      }
+
+      const results = data?.results || [];
+      
+      setGeneratedQuestions(prev => prev.map(q => {
+        const review = results.find((r: any) => r.id === q.id);
+        if (!review) return q;
+        return {
+          ...q,
+          qualityScore: review.overall_score,
+          qualityGrade: review.grade,
+          qualityData: {
+            grammar_score: review.grammar_score,
+            grammar_issues: review.grammar_issues,
+            uniqueness_score: review.uniqueness_score,
+            uniqueness_issues: review.uniqueness_issues,
+            confusion_score: review.confusion_score,
+            confusion_issues: review.confusion_issues,
+            recommendations: review.recommendations,
+          },
+        };
+      }));
+    } catch (err) {
+      console.error('Quality review failed:', err);
+    } finally {
+      setIsReviewingQuality(false);
+    }
+  }, []);
+
   const handleQuestionsGenerated = useCallback(async (questions: GeneratedQuestion[]) => {
     // Check for duplicates before adding to the list
     const checkedQuestions = await checkDuplicates(questions);
@@ -365,7 +427,13 @@ export default function Flow() {
     if (checkedQuestions.length > 0) {
       setFocusedQuestionId(checkedQuestions[0].id);
     }
-  }, [checkDuplicates]);
+
+    // Run quality review in background
+    const nonDuplicates = checkedQuestions.filter(q => !q.isDuplicate);
+    if (nonDuplicates.length > 0) {
+      reviewQuestionQuality(nonDuplicates);
+    }
+  }, [checkDuplicates, reviewQuestionQuality]);
 
   const handleApprove = useCallback((id: string) => {
     setGeneratedQuestions(prev =>
@@ -396,6 +464,52 @@ export default function Flow() {
       q.id === id ? { ...q, ...updates } : q
     ));
   }, []);
+
+  const handleFixQuestion = useCallback(async (id: string) => {
+    const question = generatedQuestions.find(q => q.id === id);
+    if (!question || !question.qualityData) return;
+
+    // Set loading state
+    setGeneratedQuestions(prev => prev.map(q =>
+      q.id === id ? { ...q, isReviewingQuality: true } : q
+    ));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-generated-question', {
+        body: {
+          question_text: question.questionText,
+          correct_answer: question.correctAnswer,
+          incorrect_answers: question.incorrectAnswers,
+          reviewData: question.qualityData,
+          language: question.language,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setGeneratedQuestions(prev => prev.map(q =>
+          q.id === id ? {
+            ...q,
+            questionText: data.fixed.question_text,
+            correctAnswer: data.fixed.correct_answer,
+            incorrectAnswers: data.fixed.incorrect_answers,
+            qualityScore: data.qualityScore,
+            qualityGrade: data.qualityGrade,
+            qualityData: data.qualityData,
+            isReviewingQuality: false,
+          } : q
+        ));
+        toast.success(`Fixed! New score: ${data.qualityScore}%`);
+      }
+    } catch (err) {
+      console.error('Fix question error:', err);
+      toast.error('Failed to fix question');
+      setGeneratedQuestions(prev => prev.map(q =>
+        q.id === id ? { ...q, isReviewingQuality: false } : q
+      ));
+    }
+  }, [generatedQuestions]);
 
   const handleTranslateAll = async () => {
     const approved = generatedQuestions.filter(q => q.status === 'approved' && q.isValid && !q.isDuplicate);
@@ -557,10 +671,10 @@ export default function Flow() {
               <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded hidden md:block">
                 <kbd className="font-mono text-[10px]">Enter</kbd> Approve • <kbd className="font-mono text-[10px]">⌫</kbd> Reject • <kbd className="font-mono text-[10px]">Tab</kbd> Navigate
               </div>
-              {(isCheckingDuplicates || isTranslating) && (
+              {(isCheckingDuplicates || isTranslating || isReviewingQuality) && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  {isTranslating ? 'Translating...' : 'Checking...'}
+                  {isTranslating ? 'Translating...' : isReviewingQuality ? 'Reviewing quality...' : 'Checking...'}
                 </div>
               )}
             </div>
@@ -641,6 +755,8 @@ export default function Flow() {
             onBulkApprove={handleBulkApprove}
             onBulkReject={handleBulkReject}
             onUpdateQuestion={handleUpdateQuestion}
+            onFixQuestion={handleFixQuestion}
+            isReviewingQuality={isReviewingQuality}
             languages={LANGUAGES}
             focusedQuestionId={focusedQuestionId}
             onFocusChange={setFocusedQuestionId}

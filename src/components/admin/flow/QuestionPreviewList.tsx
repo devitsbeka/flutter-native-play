@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Check, X, CheckCheck, XCircle, AlertTriangle, Search, Edit2 } from 'lucide-react';
+import { Check, X, CheckCheck, XCircle, AlertTriangle, Search, Edit2, Loader2, Wrench } from 'lucide-react';
 import { GeneratedQuestion, Category } from '@/pages/admin/Flow';
 import { QUALITY_CONSTANTS } from '@/constants/questionQuality';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,8 @@ interface Props {
   onBulkApprove: (ids: string[]) => void;
   onBulkReject: (ids: string[]) => void;
   onUpdateQuestion: (id: string, updates: Partial<GeneratedQuestion>) => void;
+  onFixQuestion: (id: string) => void;
+  isReviewingQuality?: boolean;
   languages: { code: string; name: string; flag: string }[];
   focusedQuestionId: string | null;
   onFocusChange: (id: string | null) => void;
@@ -37,6 +39,8 @@ export function QuestionPreviewList({
   onBulkApprove,
   onBulkReject,
   onUpdateQuestion,
+  onFixQuestion,
+  isReviewingQuality,
   languages,
   focusedQuestionId,
   onFocusChange,
@@ -278,6 +282,7 @@ export function QuestionPreviewList({
               onEditEnd?.();
             }}
             onUpdate={(updates) => onUpdateQuestion(q.id, updates)}
+            onFixQuestion={() => onFixQuestion(q.id)}
             onFocus={() => onFocusChange(q.id)}
             flag={getFlag(q.language)}
           />
@@ -298,6 +303,7 @@ interface QuestionCardProps {
   onStartEdit: () => void;
   onEndEdit: () => void;
   onUpdate: (updates: Partial<GeneratedQuestion>) => void;
+  onFixQuestion: () => void;
   onFocus: () => void;
   flag: string;
 }
@@ -313,6 +319,7 @@ const QuestionCard = React.memo(function QuestionCard({
   onStartEdit,
   onEndEdit,
   onUpdate,
+  onFixQuestion,
   onFocus,
   flag,
 }: QuestionCardProps) {
@@ -412,6 +419,21 @@ const QuestionCard = React.memo(function QuestionCard({
             )}
             {!question.isValid && !question.isDuplicate && (
               <AlertTriangle className="h-4 w-4 text-amber-500" />
+            )}
+            {/* Quality Score Badge */}
+            {question.qualityScore !== undefined && (
+              <QualityBadge
+                score={question.qualityScore}
+                grade={question.qualityGrade}
+                isLoading={question.isReviewingQuality}
+                onFix={question.qualityScore < 90 ? onFixQuestion : undefined}
+              />
+            )}
+            {question.isReviewingQuality && question.qualityScore === undefined && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Reviewing...
+              </div>
             )}
           </div>
 
@@ -589,6 +611,52 @@ function AnswerInput({ value, onChange, isCorrect = false }: { value: string; on
       )}>
         {value.length}
       </span>
+    </div>
+  );
+}
+
+function QualityBadge({ 
+  score, 
+  grade, 
+  isLoading, 
+  onFix 
+}: { 
+  score: number; 
+  grade?: string; 
+  isLoading?: boolean;
+  onFix?: () => void;
+}) {
+  const colorClass = score >= 90 
+    ? "bg-green-500/20 text-green-600 border-green-500/30" 
+    : score >= 75 
+      ? "bg-yellow-500/20 text-yellow-600 border-yellow-500/30"
+      : score >= 50 
+        ? "bg-orange-500/20 text-orange-600 border-orange-500/30"
+        : "bg-destructive/20 text-destructive border-destructive/30";
+
+  return (
+    <div className="flex items-center gap-1">
+      <span className={cn(
+        "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold border",
+        colorClass
+      )}>
+        {isLoading ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          `${score}%`
+        )}
+      </span>
+      {onFix && !isLoading && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onFix(); }}
+          className="h-6 px-1.5 text-xs gap-1 text-orange-600 hover:text-orange-700 hover:bg-orange-500/10"
+        >
+          <Wrench className="h-3 w-3" />
+          Fix
+        </Button>
+      )}
     </div>
   );
 }
