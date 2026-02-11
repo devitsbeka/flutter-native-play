@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useGame } from "@/contexts/GameContext";
 import { useAuth } from "@/hooks/useAuth";
+import { GuestMaxPlaysModal } from "@/components/home/GuestMaxPlaysModal";
+import { hasReachedGuestPlayLimit, recordGuestPlay } from "@/hooks/useGuestPlays";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSound } from "@/contexts/SoundContext";
 import { useMissions } from "@/hooks/useMissions";
@@ -243,6 +245,8 @@ export function MatchResultScreen() {
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [guestModalBlocking, setGuestModalBlocking] = useState(false);
 
   const isWin = userScore > opponentScore;
   const isDraw = userScore === opponentScore;
@@ -264,6 +268,18 @@ export function MatchResultScreen() {
   };
 
   const handlePlayAgain = () => {
+    // === GUEST CHECK - always show modal for guests ===
+    if (!user) {
+      if (hasReachedGuestPlayLimit()) {
+        setGuestModalBlocking(true);
+        setShowGuestModal(true);
+      } else {
+        setGuestModalBlocking(false);
+        setShowGuestModal(true);
+      }
+      return;
+    }
+
     // Check if user can play another game (lifetime limit for non-PRO)
     // Note: games_played is updated after game completion, so we need to account for the game just played
     const gamesPlayedAfterThisGame = (profile?.games_played || 0) + 1;
@@ -494,7 +510,31 @@ export function MatchResultScreen() {
         }}
       />
 
-      
+      <GuestMaxPlaysModal
+        isOpen={showGuestModal}
+        isBlocking={guestModalBlocking}
+        onClose={() => {
+          setShowGuestModal(false);
+          resetGame();
+          navigate("/");
+        }}
+        onRegister={() => {
+          setShowGuestModal(false);
+          resetGame();
+          navigate("/auth?mode=signup");
+        }}
+        onContinuePlaying={() => {
+          setShowGuestModal(false);
+          const recorded = recordGuestPlay();
+          if (!recorded) {
+            setGuestModalBlocking(true);
+            setShowGuestModal(true);
+            return;
+          }
+          startMatchmaking();
+        }}
+      />
+
       <div 
         className="h-[100dvh] w-full flex flex-col relative overflow-hidden max-w-[700px] mx-auto"
         style={{
