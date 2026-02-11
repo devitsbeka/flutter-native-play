@@ -1,26 +1,35 @@
 
 
-## Fix: Delete Button Hidden and Question Edits Not Applying
+## Fix: Question Edits Never Persist
 
-### Problem 1: Delete Button Hidden Behind Footer
-The Embla carousel viewport sets `overflow: hidden` on its container, which means `overflow-y-auto` on individual `CarouselItem` elements has no effect -- content is simply clipped. The delete button at the bottom of each question card is cut off by the fixed save footer.
+### Root Cause
+There is a **z-index stacking bug** between two fixed-position footers:
 
-**Fix**: Increase the bottom margin on the card itself (`mb-4` to `mb-32`) so the delete button sits well above the footer area, and ensure the carousel content area scrolls properly by removing the ineffective `overflow-y-auto` and using `pt-4` with generous bottom padding.
+1. **EditQuestionDialog footer** (save button for the question edit) -- has **no z-index**
+2. **EditQuizModal main footer** (save button that writes to DB) -- has **z-50**
 
-### Problem 2: Question Edits Not Persisting
-The `onSave` callback in `EditQuestionDialog` uses `editingQuestionIndex` captured in a closure. When React batches the state updates from `onSave` and `onOpenChange(false)` (which sets `editingQuestionIndex` to null), there's a risk of the updater function running with a stale or null index.
+Both are `position: fixed; bottom: 0`. Because the main footer has `z-50` and the dialog footer has no z-index, the main save button sits **on top of** the dialog's save button. When the user taps "Save" while editing a question, they are unknowingly hitting the main save button, which writes the **unchanged** questions array to the database.
 
-**Fix**: Capture `editingQuestionIndex` in a `useRef` so the `onSave` callback always reads the current value, regardless of React batching or closure timing.
+This is why icons work (they use a separate portal-based picker) but question text and answers never change.
 
-### Changes (all in `src/components/social/EditQuizModal.tsx`)
+### Fix (single file change)
 
-1. **Add a ref to track editing index reliably**:
-   - Create `const editingIndexRef = useRef<number | null>(null)`
-   - Keep it in sync: whenever `editingQuestionIndex` changes, update the ref
-   - In the `onSave` callback, read from `editingIndexRef.current` instead of the closure variable
+**File: `src/components/social/EditQuestionDialog.tsx`**
 
-2. **Fix delete button visibility**:
-   - Change the card's bottom margin from `mb-4` to `mb-36` so the delete button clears the fixed footer
-   - Remove `overflow-y-auto` from CarouselItem (it doesn't work with Embla's `overflow: hidden`)
+Add `z-[60]` to the EditQuestionDialog's fixed footer div (line ~161), so it sits above the main modal's `z-50` footer:
 
-3. **Keep `items-start`** from the previous fix so content aligns to the top of the viewport.
+```
+Before: className="fixed bottom-0 left-0 right-0 p-5 border-t ..."
+After:  className="fixed bottom-0 left-0 right-0 z-[60] p-5 border-t ..."
+```
+
+This ensures that when the EditQuestionDialog is open, its save button is clickable and triggers the `onSave` callback that updates the questions array in local state. The main save button (which persists to the database) remains usable after the dialog closes.
+
+### Summary
+
+| What | Status |
+|------|--------|
+| Root cause | Main save button (z-50) covers EditQuestionDialog save button (no z-index) |
+| Fix | Add z-[60] to EditQuestionDialog footer |
+| Files changed | 1 (`EditQuestionDialog.tsx`) |
+| Risk | None -- only affects stacking when the edit dialog is open |
