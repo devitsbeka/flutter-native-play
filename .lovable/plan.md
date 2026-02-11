@@ -1,55 +1,38 @@
 
 
-## Auto-Generate AI Avatar on Admin Photo Upload
+## Mix Mascot + AI-Generated Avatars in VS Screen Slot Animation
+
+### Current Behavior
+The VS screen opponent search animation cycles through only the 8 mascot emoji avatars (`mascot-avatar-1.png` through `mascot-avatar-8.png`). This makes the search look monotonous and doesn't reflect the variety of player avatars in the app.
 
 ### What Changes
+During the "finding opponent" slot machine animation, the cycling avatars will be a shuffled mix of:
+- 8 mascot avatars (local assets, already imported)
+- AI-generated photo-based avatars (fetched from the database at mount)
 
-When an admin uploads a photo for a mascot/fake account via the "ავატარი" button in the profile modal, the system will automatically send that photo through the AI avatar generator (the existing `generate-avatar` backend function) to create a semi-realistic 3D rendered avatar with the lavender background -- instead of saving the raw photo.
-
-### How It Works
-
-```text
-Admin uploads photo
-       |
-       v
-Photo uploaded to storage (temporary)
-       |
-       v
-Get public URL of uploaded photo
-       |
-       v
-Call generate-avatar backend function with that URL
-       |
-       v
-Receive AI-generated avatar (base64)
-       |
-       v
-Upload AI result to storage (overwrite)
-       |
-       v
-Update profile with final AI avatar URL
-```
+This creates a more dynamic, realistic search animation showing both avatar types -- exactly like the reference screenshots.
 
 ### Technical Details
 
-**File: `src/components/profile/PlayerProfileModal.tsx`**
+**File: `src/components/game/VSScreen.tsx`**
 
-Modify the `handleAvatarUpload` function (lines 169-205):
+1. Add a `useEffect` that fetches AI-generated avatar URLs from the `profiles` table on mount:
+   - Query profiles where `avatar_url` contains `avatar_ai` (the AI-generated pattern)
+   - Limit to ~10 results, randomly ordered
+   - Extract just the URLs
 
-1. After uploading the raw photo to storage and getting the public URL, call the `generate-avatar` edge function with that URL
-2. Take the returned base64 AI-generated image, convert it to a blob
-3. Upload the AI-generated image back to storage (overwriting the original)
-4. Update the profile with the final URL
-5. Show appropriate loading state ("Generating AI avatar..." instead of just uploading)
-6. Handle errors gracefully -- if AI generation fails, fall back to the original photo with a warning toast
+2. Create a combined `slotAvatars` array that merges:
+   - The 8 existing mascot imports
+   - The fetched AI avatar URLs (up to 8-10)
+   - Shuffled together randomly
 
-The flow reuses the existing `generate-avatar` backend function which already has the correct prompt and model configuration for the semi-realistic 3D style with lavender background.
+3. The slot cycling logic (lines 136-139) already picks random entries from `slotAvatars`, so it will naturally alternate between mascot and AI avatars once the array is mixed.
 
-**Loading UX**: The upload button will show a spinner with text indicating AI generation is in progress, since the AI step takes a few seconds longer than a simple upload.
+4. Handle the async nature: start with mascot-only avatars, then once the DB fetch completes, merge in the AI ones. Since the animation runs for ~12 cycles over a few seconds, the fetch will complete well before the animation ends.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/profile/PlayerProfileModal.tsx` | Add AI generation step after photo upload in `handleAvatarUpload` |
+| `src/components/game/VSScreen.tsx` | Fetch AI avatar URLs from DB, merge with mascot avatars in slot array |
 
