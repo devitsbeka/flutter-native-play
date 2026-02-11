@@ -60,7 +60,6 @@ export function EditQuestionDialog({
       incorrect_answers: incorrectAnswers,
       icon_slug: iconSlug,
     });
-    onOpenChange(false);
   };
 
   const updateIncorrectAnswer = (index: number, value: string) => {
