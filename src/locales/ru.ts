@@ -956,6 +956,7 @@ export const ru: KaTranslations = {
     adFailed: "Ошибка загрузки рекламы",
     watchFailed: "Попробуйте снова",
     errorOccurred: "Произошла ошибка",
+    spinButton: "КРУТИТЬ",
   },
   gameExtra: {
     prize: "Приз",

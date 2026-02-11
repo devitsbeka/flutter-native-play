@@ -1090,6 +1090,7 @@ export const ka = {
     adFailed: "რეკლამა ვერ ჩაიტვირთა",
     watchFailed: "სცადეთ თავიდან",
     errorOccurred: "შეცდომა მოხდა",
+    spinButton: "SPIN",
   },
 
   // ==========================================

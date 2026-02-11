@@ -177,7 +177,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
             {/* Centered title */}
             <div className="flex-1 text-center px-2">
               <h1 className="font-display text-lg font-bold text-gray-900 truncate">
-                🎰 Lucky Spin!
+                🎰 {t('spin.title')}
               </h1>
             </div>
             
@@ -278,7 +278,7 @@ export function LuckySpinModal({ isOpen, onClose }: LuckySpinModalProps) {
                       whileTap={{ scale: canSpin ? 0.95 : 1, y: canSpin ? 2 : 0 }}
                     >
                       <span className="font-display font-bold text-lg text-amber-600">
-                        {isSpinning ? "..." : result ? "✓" : "SPIN"}
+                        {isSpinning ? "..." : result ? "✓" : t('spin.spinButton')}
                       </span>
                     </motion.button>
                   </div>
