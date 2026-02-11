@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2 } from "lucide-react";
+import { ChevronLeft, UserPlus, Swords, Trophy, Gamepad2, Target, Flame, Check, Clock, Heart, Play, Send, ArrowRight, Users, MoreVertical, UserMinus, Loader2, Camera, Plus, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import iconTrophy from "@/assets/icon-trophy.png";
 import iconTrivia from "@/assets/trivia-buzzer.png";
@@ -12,7 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { MASCOT_USER_IDS } from "@/lib/excludedUsers";
+import { CreateQuizModal } from "@/components/social/CreateQuizModal";
+import { AdminProfileEditor } from "@/components/profile/AdminProfileEditor";
 
 import {
   DropdownMenu,
@@ -69,11 +73,19 @@ const ACHIEVEMENT_ICONS: Record<string, string> = {
 
 export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileModalProps) {
   const { user } = useAuth();
+  const { isAdmin } = useAdminRole();
   const navigate = useNavigate();
   const { data, loading, refetch } = usePlayerProfileData(userId);
   const [addingFriend, setAddingFriend] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingFriend, setDeletingFriend] = useState(false);
+  const [showCreateTrivia, setShowCreateTrivia] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const isMascotAccount = userId ? MASCOT_USER_IDS.has(userId) : false;
+  const showAdminControls = isAdmin && isMascotAccount;
 
   // Non-friends can only see avatar, name, add friend button, and public content
   const canSeePrivateInfo = data?.isFriend || data?.isCurrentUser;
@@ -151,6 +163,45 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
       toast.error("წაშლა ვერ მოხერხდა");
     } finally {
       setDeletingFriend(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${userId}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", userId);
+
+      if (updateError) throw updateError;
+
+      toast.success("ავატარი განახლდა");
+      refetch();
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      toast.error("ავატარის ატვირთვა ვერ მოხერხდა");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -349,6 +400,51 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                       )}
                     </div>
                   )}
+
+                  {/* Admin Toolbar for Mascot Accounts */}
+                  {showAdminControls && (
+                    <div className="flex items-center justify-center gap-2 mt-3 w-full max-w-xs">
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
+                      <ChunkyButton
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Camera className="w-4 h-4" />
+                        )}
+                        <span className="ml-1 text-xs">ავატარი</span>
+                      </ChunkyButton>
+                      <ChunkyButton
+                        onClick={() => setShowCreateTrivia(true)}
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span className="ml-1 text-xs">ტრივია</span>
+                      </ChunkyButton>
+                      <ChunkyButton
+                        onClick={() => setShowEditProfile(true)}
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        <Pencil className="w-4 h-4" />
+                        <span className="ml-1 text-xs">რედაქტირება</span>
+                      </ChunkyButton>
+                    </div>
+                  )}
                 </div>
 
                 {/* Tabs - Trivias and Trophies (both visible to everyone) */}
@@ -537,6 +633,29 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
         </AlertDialogPortal>
       </AlertDialog>
 
+      {/* Admin: Create Trivia Modal */}
+      {showAdminControls && userId && (
+        <CreateQuizModal
+          open={showCreateTrivia}
+          onOpenChange={setShowCreateTrivia}
+          overrideUserId={userId}
+          onQuizCreated={() => refetch()}
+        />
+      )}
+
+      {/* Admin: Edit Profile Dialog */}
+      {showAdminControls && userId && data?.profile && (
+        <AdminProfileEditor
+          open={showEditProfile}
+          onOpenChange={setShowEditProfile}
+          userId={userId}
+          currentNickname={data.profile.nickname}
+          currentCountryCode={data.profile.country_code}
+          currentAvatarUrl={data.profile.avatar_url}
+          currentAnimatedAvatarUrl={data.profile.animated_avatar_url}
+          onSaved={() => refetch()}
+        />
+      )}
     </>
   );
 }
