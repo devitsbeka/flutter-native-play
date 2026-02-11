@@ -6,6 +6,7 @@ import iconTrivia from "@/assets/trivia-buzzer.png";
 import iconCollections from "@/assets/icon-collections.png";
 
 import { ChunkyButton } from "@/components/ui/chunky-button";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
 import { usePlayerProfile as usePlayerProfileData, InteractionLogItem } from "@/hooks/usePlayerProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -542,9 +543,11 @@ export function PlayerProfileModal({ isOpen, onClose, userId }: PlayerProfileMod
                                 onClick={() => handlePlayTrivia(trivia.id)}
                                 className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:bg-accent/50 active:scale-[0.98] transition-all"
                               >
-                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden">
                                   {trivia.cover_image ? (
                                     <img src={trivia.cover_image} alt="" className="w-full h-full object-cover rounded-lg" />
+                                  ) : trivia.icon_slug ? (
+                                    <DynamicIcon slug={trivia.icon_slug} size={32} hideIfEmpty />
                                   ) : (
                                     <Gamepad2 className="w-6 h-6 text-primary" />
                                   )}
