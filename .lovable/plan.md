@@ -1,28 +1,19 @@
 
 
-## Fix: Changes Not Persisting and Icon Preview
+## Fix: Delete Button Hidden Behind Footer
 
-### Root Cause
+### Problem
+The question card content (icon + question text + 4 answers + delete button) is taller than the available screen space between the fixed header and the fixed footer. The `CarouselItem` uses `items-center` which vertically centers content but prevents scrolling, so the delete button at the bottom is permanently hidden behind the save footer.
 
-The save function invalidates `my-quiz-posts` and `quiz-posts-with-profiles`, but does NOT invalidate `trivia-details-with-creator` -- the query used by the `/trivia/:triviaId` detail page the user is viewing. Changes ARE saved to the database, but the UI shows stale cached data.
+### Solution
+Make each `CarouselItem` vertically scrollable so users can scroll down to reach the delete button when the card is taller than the viewport.
 
-### Changes
+### Changes in `src/components/social/EditQuizModal.tsx`
 
-**File: `src/components/social/EditQuizModal.tsx`**
+**Line 469** -- Change the CarouselItem class:
+- From: `flex items-center justify-center px-4 pb-24`
+- To: `flex items-start justify-center px-4 pb-24 overflow-y-auto`
 
-1. Add invalidation for `trivia-details-with-creator` after save so the trivia detail page refetches fresh data
-2. Also invalidate `trivia-leaderboard` and `trivia-stats` for completeness
-3. These invalidations use the quiz ID so the correct cache entry is cleared
+Replacing `items-center` with `items-start` ensures the card starts at the top and the user can scroll down to see the delete button. Adding `overflow-y-auto` enables scrolling within the carousel item when content overflows.
 
-### Technical Details
-
-In the `handleSave` function (around line 163), add:
-
-```text
-queryClient.invalidateQueries({ queryKey: ["trivia-details-with-creator", quiz.id] });
-queryClient.invalidateQueries({ queryKey: ["trivia-leaderboard", quiz.id] });
-queryClient.invalidateQueries({ queryKey: ["trivia-stats", quiz.id] });
-```
-
-This is a 3-line addition. No other changes needed -- the icon updating and question editing logic is already correct in state; the problem is only that the detail page never refetches after save.
-
+This is a single-line class change.
