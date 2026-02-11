@@ -491,6 +491,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                                 {q.icon_slug ? (
                                   <>
                                     <img
+                                      key={q.icon_slug}
                                       src={`https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library/${q.icon_slug}.png`}
                                       alt=""
                                       style={{ width: 80, height: 80 }}
