@@ -4,8 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, HelpCircle, RefreshCw, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { calculateLevel } from "@/utils/levelCalculation";
+import { supabase } from "@/integrations/supabase/client";
+import { shuffleArray } from "@/utils/shuffle";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { VSMatchHelpModal } from "./VSMatchHelpModal";
 import { SmartAvatar } from "@/components/shared/SmartAvatar";
@@ -29,8 +31,8 @@ import mascotAvatar6 from "@/assets/avatars/mascot-avatar-6.png";
 import mascotAvatar7 from "@/assets/avatars/mascot-avatar-7.png";
 import mascotAvatar8 from "@/assets/avatars/mascot-avatar-8.png";
 
-// Slot machine avatars for cycling effect
-const slotAvatars = [
+// Base mascot avatars for cycling effect
+const baseMascotAvatars = [
   mascotAvatar1, mascotAvatar2, mascotAvatar3, mascotAvatar4,
   mascotAvatar5, mascotAvatar6, mascotAvatar7, mascotAvatar8
 ];
@@ -79,8 +81,11 @@ export function VSScreen() {
   const [stakeDeducted, setStakeDeducted] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
+  // Slot avatars: mascots + AI-generated, fetched at mount
+  const [slotAvatars, setSlotAvatars] = useState<string[]>(baseMascotAvatars);
+  
   // Opponent slot state
-  const [currentAvatar, setCurrentAvatar] = useState<string>(slotAvatars[0]);
+  const [currentAvatar, setCurrentAvatar] = useState<string>(baseMascotAvatars[0]);
   const opponentIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Mixed category constant
@@ -108,8 +113,28 @@ export function VSScreen() {
   const currentCategory = categoryPool[currentCategoryIndex];
   const currentVideoUrl = currentCategory ? (CATEGORY_VIDEOS[currentCategory.id] || "") : "";
 
-  // Initialize category pool when categories load - always re-init when categories change
-  // to fix race condition where categories load after stage already moved to "finding-category"
+  // Fetch AI-generated avatar URLs and merge with mascot avatars
+  useEffect(() => {
+    const fetchAiAvatars = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .ilike('avatar_url', '%avatar_ai%')
+        .limit(10);
+      
+      if (data && data.length > 0) {
+        const aiUrls = data
+          .map(p => p.avatar_url)
+          .filter((url): url is string => !!url);
+        if (aiUrls.length > 0) {
+          setSlotAvatars(shuffleArray([...baseMascotAvatars, ...aiUrls]));
+        }
+      }
+    };
+    fetchAiAvatars();
+  }, []);
+
+  // Initialize category pool when categories load
   useEffect(() => {
     if (categories.length > 0 && !categoryPoolSetForStageRef.current) {
       const shuffled = [...categories].sort(() => Math.random() - 0.5);
