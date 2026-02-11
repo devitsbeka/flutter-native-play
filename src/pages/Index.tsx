@@ -459,9 +459,8 @@ export default function Index() {
               <MyTriviaLiveLogo responsive />
             </div>
             
-            {/* Right side: Search button + Notification - Hidden for guests */}
-            {/* Notification icons - Hidden for guests */}
-            {user && (
+            {/* Right side: Search/Notification for users, Sign In for guests */}
+            {user ? (
               <div className="flex items-center gap-1">
                 {/* Search button - visible on all screens */}
                 <SpotlightSearch variant="button" />
@@ -490,32 +489,16 @@ export default function Index() {
                     </motion.div>
                   )}
                 </motion.button>
-                
-                {/* Messages icon with unread badge - TEMPORARILY HIDDEN */}
-                {/* <motion.button
-                  className="relative p-2 rounded-full hover:bg-white/30 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowRoomChatsPanel(true)}
-                >
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
-                  {unreadMessagesCount > 0 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "linear-gradient(180deg, #A855F7 0%, #9333EA 100%)",
-                        boxShadow: "0 2px 4px rgba(168, 85, 247, 0.5)",
-                      }}
-                    >
-                      <span className="text-[9px] font-bold text-white">
-                        {unreadMessagesCount > 9 ? "9+" : unreadMessagesCount}
-                      </span>
-                    </motion.div>
-                  )}
-                </motion.button> */}
               </div>
+            ) : (
+              <motion.button
+                onClick={() => navigate("/auth")}
+                className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-sm"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                შესვლა
+              </motion.button>
             )}
           </div>
         </header>
@@ -546,32 +529,12 @@ export default function Index() {
             {/* ===== CENTER: AVATAR WITH ORBITING BUTTONS ===== */}
            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
             
-            {/* GUEST: Show split layout on desktop, unified panel on mobile */}
+            {/* GUEST: Show avatar + play button (no auth wall) */}
             {!user && (
               <>
-                {/* Desktop: Split layout with auth on left, guest info on right */}
+                {/* Desktop: Guest sees centered avatar with play button */}
                 <motion.div
-                  className="hidden md:flex w-full h-full items-center justify-center pointer-events-auto overflow-y-auto"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, type: "spring" }}
-                >
-                <DesktopGuestSplitLayout
-                    onCreateAccount={handleGuestCreateAccount}
-                    onSignIn={handleGuestSignIn}
-                    onGoogleSignIn={handleGuestGoogleSignIn}
-                    onAppleSignIn={handleGuestAppleSignIn}
-                    onPlayAsGuest={handlePlayClick}
-                    isLoading={isAuthLoading}
-                    guestPlaysRemaining={guestPlaysRemaining}
-                    maxGuestPlays={MAX_GUEST_PLAYS_COUNT}
-                  />
-                </motion.div>
-                
-                {/* Mobile: Guest avatar view mimicking logged-in layout */}
-                <motion.div
-                  className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-                  style={{ marginTop: -75 }}
+                  className="hidden md:flex flex-col items-center justify-center w-full h-full pointer-events-auto"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
@@ -581,77 +544,74 @@ export default function Index() {
                       animate={{ y: [0, -8, 0] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <div 
-                        data-walkthrough="avatar" 
-                        className="pointer-events-auto cursor-pointer"
-                        onClick={() => setShowGuestSignupPrompt(true)}
-                      >
+                      <div className="pointer-events-auto cursor-pointer" onClick={() => navigate("/auth")}>
                         <AvatarCircle 
                           animatedAvatarUrl={guestMascotVideo}
-                          size={238} 
-                          coins={0}
-                          gems={0}
-                          level={1}
-                          xpProgress={0}
-                          xpCurrent={0}
-                          xpTotal={100}
-                          hideStats={true}
-                          showAvatarPrompt={false}
-                          showMascotReminder={false}
+                          size={280} 
+                          coins={0} gems={0} level={1}
+                          xpProgress={0} xpCurrent={0} xpTotal={100}
+                          hideStats showAvatarPrompt={false} showMascotReminder={false}
                           autoPlayInterval={5000}
                         />
                       </div>
                     </motion.div>
                   </div>
-
-                  {/* Guest info section */}
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, type: "spring" }}
-                    className="flex flex-col items-center mt-5 pointer-events-auto"
+                    className="flex flex-col items-center mt-6 pointer-events-auto"
                   >
-                    <button
-                      onClick={() => navigate("/auth")}
-                      className="bg-primary text-primary-foreground rounded-full px-10 py-4 font-bold text-lg shadow-md hover:opacity-90 transition-opacity"
-                    >
-                      შესვლა
-                    </button>
-                    <div className="flex items-center gap-4 mt-4">
-                      <button
-                        onClick={handleGuestGoogleSignIn}
-                        className="w-14 h-14 rounded-2xl bg-background border border-border flex items-center justify-center shadow-sm hover:opacity-80 transition-opacity"
-                        aria-label="Sign in with Google"
-                      >
-                        <svg width="24" height="24" viewBox="0 0 24 24">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                      </button>
-                      <button
-                        onClick={handleGuestAppleSignIn}
-                        className="w-14 h-14 rounded-2xl bg-background border border-border flex items-center justify-center shadow-sm hover:opacity-80 transition-opacity"
-                        aria-label="Sign in with Apple"
-                      >
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" className="text-foreground">
-                          <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                        </svg>
-                      </button>
+                    <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
+                      {t("game.guest")}
+                    </span>
+                    <div className="mt-14">
+                      <DesktopPlayButtonLarge
+                        onClick={handlePlayClick}
+                        playsRemaining={guestPlaysRemaining}
+                        maxPlays={MAX_GUEST_PLAYS_COUNT}
+                        canPlay={guestPlaysRemaining > 0}
+                        isVip={false}
+                        isGuest={true}
+                      />
                     </div>
-                    <p
-                      className="text-base text-gray-600 font-semibold text-center mt-3 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => navigate("/auth?mode=signup")}
+                  </motion.div>
+                </motion.div>
+
+                {/* Mobile: Guest sees avatar with play button (play in bottom nav) */}
+                <motion.div
+                  className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
+                  style={{ marginTop: -5 }}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, type: "spring" }}
+                >
+                  <div className="relative">
+                    <motion.div 
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      რეგისტრაცია
-                    </p>
-                    <div className="flex flex-col items-center" style={{ marginTop: 25 }}>
-                      <p className="text-base text-gray-600 font-medium text-center">
-                        ან ითამაშე როგორც სტუმარმა
-                      </p>
-                      <HandDrawnArrow size={44} color="#9CA3AF" />
-                    </div>
+                      <div className="pointer-events-auto cursor-pointer" onClick={() => navigate("/auth")}>
+                        <AvatarCircle 
+                          animatedAvatarUrl={guestMascotVideo}
+                          size={280} 
+                          coins={0} gems={0} level={1}
+                          xpProgress={0} xpCurrent={0} xpTotal={100}
+                          hideStats showAvatarPrompt={false} showMascotReminder={false}
+                          autoPlayInterval={5000}
+                        />
+                      </div>
+                    </motion.div>
+                  </div>
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                    className="flex flex-col items-center mt-8 pointer-events-auto"
+                  >
+                    <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
+                      {t("game.guest")}
+                    </span>
                   </motion.div>
                 </motion.div>
               </>

@@ -150,6 +150,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, fetchProfile]);
 
+  // Persist last user data to localStorage for returning user screen
+  useEffect(() => {
+    if (user && profile && user.email) {
+      const isRealEmail = !user.email.endsWith('@mytrivia.local');
+      const identifier = isRealEmail ? user.email : profile.nickname;
+      localStorage.setItem('mytrivia_last_user', JSON.stringify({
+        nickname: profile.nickname,
+        avatar_url: profile.avatar_url,
+        animated_avatar_url: profile.animated_avatar_url,
+        identifier,
+      }));
+    }
+  }, [user, profile]);
+
   // Realtime subscription for profile updates (e.g., avatar changes)
   useEffect(() => {
     if (!user) return;
