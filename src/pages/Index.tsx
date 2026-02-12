@@ -498,7 +498,7 @@ export default function Index() {
         </header>
 
         {/* PRO Gift Banner - below header */}
-        <div className="w-full flex justify-center px-4 py-2 relative z-30">
+        <div className="w-full flex justify-center px-4 py-2 relative z-30 lg:pr-[280px]">
           <ProGiftBanner />
         </div>
 
