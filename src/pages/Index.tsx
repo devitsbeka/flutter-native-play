@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -279,6 +280,7 @@ export default function Index() {
     try {
       const { error } = await signUpWithUsername(username, password);
       if (error) throw error;
+      trackSignupCompleted('username', false);
     } finally {
       setIsAuthLoading(false);
     }
