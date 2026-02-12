@@ -226,7 +226,7 @@ export function RoomLobbyV2() {
     const link = getShareLink(currentRoom.room_code);
     const shareData = {
       title: "MyTrivia - შემომიერთდი ოთახში!",
-      text: `შემომიერთდი ტრივიას თამაშში! კოდი: ${currentRoom.room_code}`,
+      text: `შემომიერთდი ტრივიას თამაშში!`,
       url: link,
     };
 
