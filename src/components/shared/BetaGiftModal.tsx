@@ -103,7 +103,7 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
 
   const handleClaim = async () => {
     setClaiming(true);
-    const success = await activateVip("day");
+    const success = await activateVip("10days");
     if (success) {
       // Mark as claimed (one-time)
       if (user) {
@@ -213,7 +213,7 @@ function OfferPhase({
           className="text-gray-600 text-center text-sm leading-relaxed mb-6"
         >
           <span className="font-semibold text-amber-600">
-            საჩუქრად გიგზავნით 24 საათიან PRO-ს.
+            საჩუქრად გიგზავნით 10 დღიან PRO-ს.
           </span>
           <br />
           სასიამოვნო გართობას გისურვებთ!
@@ -231,7 +231,7 @@ function OfferPhase({
         >
           <img src={crownIcon} alt="" className="w-6 h-6 object-contain" />
           <span className="font-display text-sm font-bold text-purple-700">
-            1 დღიანი PRO
+            10 დღიანი PRO
           </span>
         </motion.div>
 
@@ -330,7 +330,7 @@ function SuccessPhase({
           }}
         >
           <Clock className="w-3.5 h-3.5 text-amber-600" strokeWidth={2.5} />
-          <span className="text-xs font-bold text-amber-700">24 საათი</span>
+          <span className="text-xs font-bold text-amber-700">10 დღე</span>
         </motion.div>
 
         {/* Interactive feature clues */}
