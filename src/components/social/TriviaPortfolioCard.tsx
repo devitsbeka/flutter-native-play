@@ -57,7 +57,7 @@ export function TriviaPortfolioCard({
 }: TriviaPortfolioCardProps) {
   const navigate = useNavigate();
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
-  const { isVip, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   
   // Use the trivia's actual cover_gradient or cover_image, fallback to random gradient
   const coverGradient = trivia.coverGradient || getRandomGradient(trivia.id);
@@ -76,7 +76,7 @@ export function TriviaPortfolioCard({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlayed || isVip) {
+    if (isPlayed || isVip || vipLoading) {
       navigate(`/trivia/${trivia.id}`);
     } else {
       setShowPlayLimitModal(true);

@@ -9,13 +9,13 @@ export function useProGating() {
   const [gatedFeature, setGatedFeature] = useState<ProFeature>("general");
 
   const requirePro = useCallback((feature: ProFeature, callback: () => void) => {
-    if (isVip) {
+    if (isVip || loading) {
       callback();
     } else {
       setGatedFeature(feature);
       setShowProModal(true);
     }
-  }, [isVip]);
+  }, [isVip, loading]);
 
   return {
     isVip,

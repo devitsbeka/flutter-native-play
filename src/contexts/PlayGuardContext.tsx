@@ -37,6 +37,7 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
   const {
     canPlay,
     isVip,
+    loading: vipLoading,
     regenPlayAvailable,
     freeGamesExhausted,
     timeUntilNextPlay,
@@ -52,6 +53,8 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
     (onAllow?: () => void) => {
       // Guests are handled separately by each page (Index.tsx)
       if (!user) return true;
+      // Never block while VIP status is still loading
+      if (vipLoading) return true;
 
       if (canPlay) {
         // If user can play but only via regen (free games exhausted), consume the regen
@@ -67,12 +70,13 @@ export function PlayGuardProvider({ children }: { children: React.ReactNode }) {
       setShowModal(true);
       return false;
     },
-    [user, canPlay, freeGamesExhausted, regenPlayAvailable, isVip, useRegenPlay],
+    [user, canPlay, vipLoading, freeGamesExhausted, regenPlayAvailable, isVip, useRegenPlay],
   );
 
   const guardCategoryPlay = useCallback(
     (categoryId: string, levelNumber?: number) => {
       if (!user) return true; // Guests handled by auth gates
+      if (vipLoading) return true; // Never block while VIP status loads
       if (canPlayLevel(categoryId, levelNumber)) return true;
       setShowProModal(true);
       return false;

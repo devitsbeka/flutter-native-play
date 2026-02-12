@@ -241,7 +241,7 @@ export function MatchResultScreen() {
   const { exhaustionInfo } = useTrivia();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { canPlay, isVip, playsRemaining, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { canPlay, isVip, loading: vipLoading, playsRemaining, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
   
   // State for showing PRO upgrade modal when limit reached
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
@@ -283,7 +283,7 @@ export function MatchResultScreen() {
     // Check if user can play another game (lifetime limit for non-PRO)
     // Note: games_played is updated after game completion, so we need to account for the game just played
     const gamesPlayedAfterThisGame = (profile?.games_played || 0) + 1;
-    if (!isVip && gamesPlayedAfterThisGame >= MAX_FREE_PLAYS) {
+    if (!isVip && !vipLoading && gamesPlayedAfterThisGame >= MAX_FREE_PLAYS) {
       setShowPlayLimitModal(true);
       return;
     }
