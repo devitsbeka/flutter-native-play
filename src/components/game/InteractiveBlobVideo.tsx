@@ -169,7 +169,9 @@ export function InteractiveBlobVideo({ iconUrl, iconSlug, videoSrc, isLocked, sh
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover"
+                controls={false}
+                className="w-full h-full object-cover [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-play-button]:hidden [&::-webkit-media-controls-start-playback-button]:hidden"
+                style={{ pointerEvents: 'none' }}
               >
                 {webmSrc && <source src={webmSrc} type="video/webm" />}
                 <source src={videoSrc} type="video/mp4" />

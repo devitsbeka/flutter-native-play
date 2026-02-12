@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowLeft, HelpCircle, RefreshCw, WifiOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTrivia, TriviaQuestion } from "@/hooks/useTrivia";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { supabase } from "@/integrations/supabase/client";
 import { shuffleArray } from "@/utils/shuffle";
@@ -230,7 +231,11 @@ export function VSScreen() {
     };
   }, [stage, categoryPool]);
 
-  // Stage 4: Confetti and transition to ready
+  // Pre-fetch questions ref
+  const prefetchedQuestionsRef = useRef<TriviaQuestion[] | null>(null);
+  const { fetchQuestions: prefetchQuestions } = useTrivia();
+
+  // Stage 4: Confetti, pre-fetch questions, and transition to ready
   useEffect(() => {
     if (stage !== "category-found") return;
 
@@ -242,12 +247,24 @@ export function VSScreen() {
       colors: ["#FFD700", "#FFA500", "#FFFFFF"],
     });
 
+    // Pre-fetch questions in background
+    if (selectedCategory) {
+      prefetchedQuestionsRef.current = null;
+      prefetchQuestions(6, selectedCategory.id, 1, [], false)
+        .then(questions => {
+          if (questions && questions.length > 0) {
+            prefetchedQuestionsRef.current = questions;
+          }
+        })
+        .catch(err => console.warn("Pre-fetch failed, will fetch on play:", err));
+    }
+
     const timer = setTimeout(() => {
       setStage("ready");
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [stage]);
+  }, [stage, selectedCategory, prefetchQuestions]);
 
   // Timeout: if stuck on "finding-category" for 10s, show connection error
   useEffect(() => {
@@ -271,10 +288,10 @@ export function VSScreen() {
     }
   }, [stage, stakeDeducted, deductStake]);
 
-  // Handle start button
+  // Handle start button - pass pre-fetched questions if available
   const handleStart = () => {
     if (selectedCategory) {
-      beginPlaying(selectedCategory.id);
+      beginPlaying(selectedCategory.id, prefetchedQuestionsRef.current || undefined);
     }
   };
 
@@ -287,6 +304,7 @@ export function VSScreen() {
     setStakeDeducted(false);
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
+    prefetchedQuestionsRef.current = null;
     
     // Shuffle category pool for new selection - includes Mixed Category
     if (categories.length > 0) {
