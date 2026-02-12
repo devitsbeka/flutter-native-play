@@ -1,91 +1,48 @@
 
-# Integrate Quality Review into Generation Flow
+# Fix Play Button on Video Blob + Speed Up Mixed Category Start
 
-## Summary
-After questions are generated on /admin/flow, we'll automatically run them through the same AI quality review used on /admin/review. Each question card will display a quality score (0-100%) with color coding, and questions scoring below 90% will show a "Fix it" button that uses the `resolve-question-quality` edge function to improve them.
+## Issue 1: Play Button on Category Video Blob
 
-## How It Works
+The `InteractiveBlobVideo` component renders a `<video>` element that sometimes shows a browser-native play button overlay (visible in the screenshot on the philosophy category blob). This happens because iOS Safari and some browsers display a default play indicator.
 
-1. **Post-Generation Quality Check**: After questions are generated and duplicates are checked, a new step calls the `review-question-quality` edge function to score each question (grammar, uniqueness, clarity).
+**Fix**: Add `controls={false}` attribute explicitly and use CSS `pointer-events: none` + webkit-specific styles to suppress the native play button overlay on the video element.
 
-2. **Quality Score Display**: Each question card in the list shows a colored quality badge:
-   - 90-100%: Green (A grade) -- no action needed
-   - 75-89%: Yellow (B grade) -- "Fix it" button shown
-   - 50-74%: Orange (C grade) -- "Fix it" button shown
-   - 0-49%: Red (D grade) -- "Fix it" button shown
+**File**: `src/components/game/InteractiveBlobVideo.tsx` (line ~167-176)
 
-3. **Fix It Button**: Clicking "Fix it" on a question calls the `resolve-question-quality` edge function with the review data (grammar_issues, uniqueness_issues, etc.), which rewrites the question and re-scores it. The question card updates in-place.
+## Issue 2: Mixed Category Delay When Starting Game
+
+When the user clicks "Play" on the VS screen, `beginPlaying(categoryId)` is called which then fetches questions on-the-fly. For mixed category (`__mixed__`), this triggers a broader query across all categories, making it slower.
+
+**Fix**: Pre-fetch questions during the VS screen animation (while the slot machine is spinning), so by the time the user clicks "Play", questions are already loaded. This eliminates the delay entirely.
+
+**Changes in** `src/components/game/VSScreen.tsx`:
+- When `stage` transitions to `"category-found"`, immediately start pre-fetching questions for the selected category in the background
+- Store pre-fetched questions in a ref
+- Pass pre-fetched questions to `beginPlaying` (or modify `beginPlaying` to accept pre-loaded questions)
+
+**Changes in** `src/contexts/GameContext.tsx`:
+- Add an optional `preloadedQuestions` parameter to `beginPlaying` so it can skip fetching if questions are already available
 
 ## Technical Details
 
-### 1. Extend `GeneratedQuestion` interface (src/pages/admin/Flow.tsx)
+### InteractiveBlobVideo.tsx
+Add to the `<video>` element:
+- `style={{ pointerEvents: 'none' }}` to prevent interaction
+- A CSS class with `webkit-media-controls` overrides to hide the play button
 
-Add quality review fields to the interface:
-```
-qualityScore?: number;        // 0-100
-qualityGrade?: 'A'|'B'|'C'|'D';
-qualityData?: {
-  grammar_score: number;
-  grammar_issues: string[];
-  uniqueness_score: number;
-  uniqueness_issues: string[];
-  confusion_score: number;
-  confusion_issues: string[];
-  recommendations: string[];
-};
-isReviewingQuality?: boolean; // loading state for individual fix
-```
+### VSScreen.tsx
+- Add a `prefetchedQuestionsRef` to store questions fetched during animation
+- In the `category-found` stage effect (line ~234), call `fetchQuestions()` for the selected category
+- Modify `handleStart` to pass pre-fetched questions to `beginPlaying`
 
-### 2. Add quality review step to generation flow (src/pages/admin/Flow.tsx)
-
-After `handleQuestionsGenerated` adds questions to state, a new `reviewQuestionQuality` function will:
-- Take the generated questions (not yet saved to DB, so we can't use question IDs)
-- Call the `review-question-quality` edge function directly with the question data
-- Update each question in state with its quality score
-
-Since the questions aren't in the DB yet, we'll need to modify the approach slightly: instead of calling the existing edge function (which queries the DB), we'll create a lightweight variant that accepts question data directly. However, to avoid creating a new edge function, we can reuse the existing `review-question-quality` by first inserting questions temporarily OR by calling the AI quality check inline from the client side via a new edge function.
-
-**Best approach**: Create a new edge function `review-generated-questions` that accepts raw question data (not DB IDs) and returns quality scores. This reuses the same AI prompt from `review-question-quality`.
-
-### 3. New edge function: `supabase/functions/review-generated-questions/index.ts`
-
-Accepts an array of questions (with text, answers) and returns quality scores for each. Uses the same evaluation prompt and scoring as `review-question-quality` but doesn't need DB access. Processes in batches of 5.
-
-### 4. Add "Fix it" handler (src/pages/admin/Flow.tsx)
-
-A new `handleFixQuestion` function that:
-- Takes a question ID and its quality data
-- Calls `resolve-question-quality`-style logic (but for unsaved questions -- new edge function `fix-generated-question`)
-- Updates the question in local state with improved text and new score
-
-**New edge function**: `supabase/functions/fix-generated-question/index.ts` -- accepts raw question data + review issues, returns fixed question + new score. Same logic as `resolve-question-quality` but works on raw data instead of DB records.
-
-### 5. Update QuestionPreviewList and QuestionCard (src/components/admin/flow/QuestionPreviewList.tsx)
-
-- Add quality score badge next to each question (colored circle with %)
-- Show "Fix it" button for scores below 90%
-- Show spinner while fixing
-- Pass `onFixQuestion` callback down from Flow
-
-### 6. Update `supabase/config.toml`
-
-Register the two new edge functions with `verify_jwt = false`.
+### GameContext.tsx
+- Update `beginPlaying` signature to accept optional pre-loaded questions: `beginPlaying(categoryId: string, preloadedQuestions?: TriviaQuestion[])`
+- If `preloadedQuestions` is provided and non-empty, skip the fetch step entirely
 
 ## File Changes Summary
 
 | File | Change |
 |---|---|
-| `src/pages/admin/Flow.tsx` | Extend GeneratedQuestion interface, add quality review after generation, add fixQuestion handler |
-| `src/components/admin/flow/QuestionPreviewList.tsx` | Show quality score badge, "Fix it" button on each card |
-| `supabase/functions/review-generated-questions/index.ts` | New -- reviews raw question data without DB |
-| `supabase/functions/fix-generated-question/index.ts` | New -- fixes a question and re-scores it |
-| `supabase/config.toml` | Register new functions |
-
-## UX Flow
-
-1. User selects category, clicks "Generate 50"
-2. Questions appear with "Reviewing quality..." indicator
-3. Quality scores populate on each card (e.g., "87%", "95%", "62%")
-4. Questions below 90% show an orange/red "Fix it" button
-5. User clicks "Fix it" on a bad question -- spinner shows, AI fixes it, new score appears
-6. User can then approve/reject as normal
+| `src/components/game/InteractiveBlobVideo.tsx` | Suppress native video play button with CSS |
+| `src/components/game/VSScreen.tsx` | Pre-fetch questions when category is revealed |
+| `src/contexts/GameContext.tsx` | Accept optional pre-loaded questions in `beginPlaying` |
