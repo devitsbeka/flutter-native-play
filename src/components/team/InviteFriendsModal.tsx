@@ -299,10 +299,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
   const handleImportContacts = () => {
     toast.info("კონტაქტების იმპორტი მალე დაემატება");
   };
-  
-  const handleConnectFacebook = () => {
-    toast.info("Facebook მეგობრები მალე დაემატება");
-  };
 
   if (!isOpen) return null;
 
@@ -582,18 +578,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                 <div className="text-left">
                   <p className="font-semibold text-base text-white">კონტაქტების იმპორტი</p>
                   <p className="text-sm text-white/70">მოიწვიე მეგობრები ტელეფონიდან</p>
-                </div>
-              </button>
-              
-              <button
-                onClick={handleConnectFacebook}
-                className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 active:bg-white/20 transition-colors relative z-10`}
-                style={{ touchAction: "manipulation" }}
-              >
-                <FacebookIcon />
-                <div className="text-left">
-                  <p className="font-semibold text-base text-white">Facebook მეგობრები</p>
-                  <p className="text-sm text-white/70">იპოვე მეგობრები Facebook-ზე</p>
                 </div>
               </button>
                 </div>
