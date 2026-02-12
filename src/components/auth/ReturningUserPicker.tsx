@@ -105,8 +105,8 @@ export function ReturningUserPicker({ user, onSignIn, onAddUser, onSwitchUser }:
           transition={{ duration: 0.5, type: "spring", delay: 0.15 }}
           onClick={onAddUser}
         >
-          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-dashed border-white/30 flex items-center justify-center hover:border-white/50 transition-colors">
-            <Plus className="w-12 h-12 md:w-14 md:h-14 text-white/40" />
+          <div className="w-[90px] h-[90px] md:w-28 md:h-28 rounded-full border-4 border-dashed border-white/30 flex items-center justify-center hover:border-white/50 transition-colors">
+            <Plus className="w-8 h-8 md:w-10 md:h-10 text-white/40" />
           </div>
           <h3 className="mt-4 text-lg md:text-xl font-medium text-white/50">
             დამატება
