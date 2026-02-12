@@ -115,7 +115,7 @@ export function RoomLobby() {
     
     const shareData = {
       title: "MyTrivia - მოწვევა",
-      text: `შემოგვიერთდი ტრივია ბრძოლაში! კოდი: ${room.room_code}`,
+      text: `შემოგვიერთდი ტრივია ბრძოლაში!`,
       url: `${window.location.origin}/team?join=${room.room_code}`,
     };
 

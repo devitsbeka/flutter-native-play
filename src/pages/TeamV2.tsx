@@ -305,11 +305,23 @@ function TeamContentV2() {
         next.delete("tv");
         setSearchParams(next, { replace: true });
       })();
-    } else if (!showGuestJoinModal && !pendingGuestJoinCode) {
-      // Guest: show name entry modal (only if not already showing)
+    } else if (!pendingGuestJoinCode) {
+      // Guest: auto-join with anonymous sign-in (no modal)
       setPendingGuestJoinCode(joinCode);
-      setShowGuestJoinModal(true);
-      setShowAuthModal(false);
+      (async () => {
+        const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+        if (anonError || !anonData.user) {
+          toast.error("შესვლა ვერ მოხერხდა");
+          setPendingGuestJoinCode(null);
+          return;
+        }
+        // Wait for profile trigger, then set default nickname
+        await new Promise(resolve => setTimeout(resolve, 800));
+        await supabase.from("profiles")
+          .update({ nickname: "Trivia King" })
+          .eq("user_id", anonData.user.id);
+        // The useEffect will re-trigger with the new user and auto-join
+      })();
     }
   }, [searchParams, user, phase, enterRoom, setSearchParams, showGuestJoinModal, pendingGuestJoinCode]);
 
