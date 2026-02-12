@@ -1,29 +1,16 @@
 
-# Limit Visible Rooms (10 on Mobile, 15 on Desktop/Tablet)
 
-## Problem
-The `useMyRooms` hook accepts a `limit` parameter but never applies it to the final returned results. The filtered/sorted rooms array is returned in full, causing unlimited scrolling.
+# Update Beta Gift from 1-Day to 10-Day PRO
 
-## Solution
-Apply `.slice(0, limit)` to the returned `filteredRooms` in the `useMyRooms` hook, so only the requested number of rooms is shown.
+## Changes
 
-## Technical Details
+All changes are in `src/components/shared/BetaGiftModal.tsx`:
 
-### File: `src/hooks/useMyRooms.ts` (line ~498)
+1. **Update the activation call** (line 106): Change `activateVip("day")` to `activateVip("10days")`
 
-Change the return statement to slice the results:
+2. **Update offer text** (line 216): Change "საჩუქრად გიგზავნით 24 საათიან PRO-ს." to "საჩუქრად გიგზავნით 10 დღიან PRO-ს."
 
-```typescript
-return {
-  rooms: filteredRooms.slice(0, limit),
-  loading,
-  refreshRooms: () => queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] }),
-  filter,
-};
-```
+3. **Update badge text** (line 234): Change "1 დღიანი PRO" to "10 დღიანი PRO"
 
-This single change ensures:
-- Mobile shows max 10 rooms (already set in `MyRoomsSection.tsx` line 61)
-- Desktop/tablet shows max 15 rooms (already set in `MyRoomsSection.tsx` line 61)
-- Search results remain unaffected (search uses its own limit of 200)
-- All other consumers of `useMyRooms` respect their passed `limit` value
+4. **Update success badge** (line 333): Change "24 საათი" to "10 დღე"
+
