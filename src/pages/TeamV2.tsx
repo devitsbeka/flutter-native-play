@@ -764,7 +764,10 @@ function TeamContentV2() {
           <TeamRightSidebar 
             onAcceptInvitation={handleAcceptInvitation}
             onJoinRoom={handleJoinFromInvitation}
-            onOpenTV={() => setShowTVModal(true)}
+            onOpenTV={async () => {
+              const room = await createRoom();
+              if (room) navigate(`/team?room=${room.room_code}&tvMode=true`);
+            }}
             onOpenFriendChat={(friend) => setSelectedChatFriend(friend)}
             activeTab={activeTab}
             onViewAllRooms={() => handleTabChange("rooms")}
