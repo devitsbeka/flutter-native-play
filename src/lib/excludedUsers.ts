@@ -32,6 +32,8 @@ export const MASCOT_USER_IDS = new Set([
   'feccf29c-d308-4240-9086-853316321753', // Testera
   '750ad305-db5f-40bc-b8b3-1411c68024b8', // Lola
   '687e47bc-e90c-4252-95e2-61e3170a892d', // koka
+  '382ae354-8ce0-49e1-8d45-c0a85743fe26', // Bekucha
+  'cbf3c43b-a402-4a0e-8fea-3d079a200d71', // hhjjh
 ]);
 
 /** Fetch admin user IDs from user_roles table */
