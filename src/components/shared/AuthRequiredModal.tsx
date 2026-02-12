@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackSignupCompleted } from "@/lib/analytics";
 import { motion } from "framer-motion";
 import { Lock, User, Loader2, Sparkles, X, Camera, ImagePlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -120,6 +121,7 @@ export function AuthRequiredModal({
           }
           return;
         }
+        trackSignupCompleted('username', false);
         toast.success(t("authModal.accountCreated"));
         localStorage.setItem('lastLoginEmail', username);
         onClose();
