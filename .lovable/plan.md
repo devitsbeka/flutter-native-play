@@ -1,29 +1,26 @@
 
 
-## Remove Test Accounts from Leaderboards
+## Center Gift Banner and Prevent Overlap on Desktop
 
-### What will happen
-The 4 test accounts (Mako, Testera, Lola, koka) will be completely removed from leaderboards and excluded from analytics, just like the existing mascot/fake accounts.
+### Problem
+The PRO gift banner extends too far to the right on desktop, overlapping with the right-side action cards panel (daily rewards, missions, chest, powers).
 
-### Steps
+### Solution
+Two changes:
 
-**1. Add to excluded users list**
-Add these 4 user IDs to the `MASCOT_USER_IDS` set in `src/lib/excludedUsers.ts`:
-- `fb151184-10be-4496-b654-ffcf66de0536` (Mako)
-- `feccf29c-d308-4240-9086-853316321753` (Testera)
-- `750ad305-db5f-40bc-b8b3-1411c68024b8` (Lola)
-- `687e47bc-e90c-4252-95e2-61e3170a892d` (koka)
+**1. Narrow the banner container** (`src/pages/Index.tsx`, line 501)
+- Add a `max-w-[600px]` constraint to the banner wrapper so it stays centered and doesn't extend into the right panel area
+- Change from `w-full` to include proper max-width
 
-This ensures they are excluded from all analytics dashboards.
+**2. Reduce banner max-width** (`src/components/home/ProGiftBanner.tsx`)
+- Change `max-w-[360px] md:max-w-[520px]` to `max-w-[360px] md:max-w-[480px]` to give more breathing room on medium-large screens
+- This ensures the banner fits comfortably in the center column without touching the right-side cards
 
-**2. Remove from leaderboard database**
-Delete their rows from `user_league_data` so the `get_league_leaderboard` RPC no longer returns them. This immediately removes them from all league tiers.
+### Technical Details
 
-**3. Mark profiles as deleted**
-Set their nickname to `[წაშლილი]` (the existing "deleted" convention) so any fallback query path also filters them out.
+**File: `src/pages/Index.tsx` (line 501)**
+- Update the banner container div to: `"w-full flex justify-center px-4 py-2 relative z-30 lg:pr-[280px]"` — this adds right padding on large screens to account for the fixed right panel, keeping the banner visually centered in the remaining space.
 
-### Technical details
-- The `get_league_leaderboard` RPC already filters `nickname != '[წაშლილი]'`, so renaming handles the DB-level filtering
-- The `MASCOT_USER_IDS` set handles frontend analytics exclusion
-- Deleting `user_league_data` rows removes them from cached leaderboard queries immediately after cache refresh
+**File: `src/components/home/ProGiftBanner.tsx` (line 42)**
+- Reduce `md:max-w-[520px]` to `md:max-w-[480px]` for a tighter fit.
 
