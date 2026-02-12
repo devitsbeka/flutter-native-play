@@ -27,6 +27,11 @@ export const MASCOT_USER_IDS = new Set([
   'a1b2c3d4-8888-4000-8000-000000000008', // Kosta
   // Giga (7d75dfbb-...) removed — real user with 9 games and 11k coins
   // Mariam and Davit not found in DB
+  // Test accounts
+  'fb151184-10be-4496-b654-ffcf66de0536', // Mako
+  'feccf29c-d308-4240-9086-853316321753', // Testera
+  '750ad305-db5f-40bc-b8b3-1411c68024b8', // Lola
+  '687e47bc-e90c-4252-95e2-61e3170a892d', // koka
 ]);
 
 /** Fetch admin user IDs from user_roles table */
