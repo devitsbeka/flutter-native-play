@@ -14,12 +14,13 @@ export interface VipSubscription {
   friend_invites_remaining?: number;
 }
 
-export type VipDuration = "day" | "week" | "month";
+export type VipDuration = "day" | "week" | "month" | "10days";
 
 export const VIP_PRICES: Record<VipDuration, number> = {
   day: 3,
   week: 12,
   month: 35,
+  "10days": 0,
 };
 
 // Base benefits for all PRO users
@@ -128,20 +129,15 @@ export function VipProvider({ children }: { children: ReactNode }) {
 
     try {
       const now = new Date();
-      const expiresAt = duration === "day"
-        ? addDays(now, 1)
-        : duration === "week"
-          ? addDays(now, 7)
-          : addMonths(now, 1);
+      const durationDays = duration === "day" ? 1 : duration === "week" ? 7 : duration === "10days" ? 10 : 0;
+      const expiresAt = durationDays > 0
+        ? addDays(now, durationDays)
+        : addMonths(now, 1);
 
       if (subscription) {
         const currentExpiry = new Date(subscription.expires_at);
         const newExpiry = isAfter(currentExpiry, now)
-          ? duration === "day"
-            ? addDays(currentExpiry, 1)
-            : duration === "week"
-              ? addDays(currentExpiry, 7)
-              : addMonths(currentExpiry, 1)
+          ? (durationDays > 0 ? addDays(currentExpiry, durationDays) : addMonths(currentExpiry, 1))
           : expiresAt;
 
         const { error } = await supabase
