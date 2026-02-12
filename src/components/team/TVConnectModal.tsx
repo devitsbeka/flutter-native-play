@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Check, ChevronLeft } from 'lucide-react';
+import { Loader2, Check, ChevronLeft, Monitor, Hash, Smartphone } from 'lucide-react';
 import retroTvIcon from '@/assets/retro-tv-colored.png';
 import { ChunkyButton } from '@/components/ui/chunky-button';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,15 +14,35 @@ interface TVConnectModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type ConnectionStep = 'instructions' | 'code-entry' | 'connected';
+
+const steps = [
+  {
+    icon: Monitor,
+    title: 'გახსენი mytrivia.io/tv',
+    description: 'შენს TV-ის ბრაუზერში გახსენი ეს გვერდი',
+  },
+  {
+    icon: Hash,
+    title: '4-ციფრიანი კოდი გამოჩნდება',
+    description: 'TV ეკრანზე დაინახავ კოდს',
+  },
+  {
+    icon: Smartphone,
+    title: 'შეიყვანე კოდი ტელეფონიდან',
+    description: 'დააკავშირე ტელეფონი TV-სთან',
+  },
+];
+
 export const TVConnectModal: React.FC<TVConnectModalProps> = ({
   open,
   onOpenChange,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [step, setStep] = useState<ConnectionStep>('instructions');
   const [code, setCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
 
   const handleConnect = async () => {
     if (code.length !== 4 || !user) return;
@@ -30,13 +50,11 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
     setIsConnecting(true);
 
     try {
-      // Find TV session with this 4-digit pairing code
       const { data: session, error } = await supabase
         .from('tv_sessions')
         .select('*')
         .eq('tv_pairing_code', code)
         .eq('is_paired', false)
-        // Multiple sessions can share the same 4-digit code; pick the most recent unpaired one.
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -47,7 +65,6 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         return;
       }
 
-      // Update the TV session - pair it with this host (no category/questions yet)
       const { error: updateError } = await supabase
         .from('tv_sessions')
         .update({
@@ -61,14 +78,13 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
         throw updateError;
       }
 
-      setIsConnected(true);
+      setStep('connected');
       toast.success('წარმატებით დაკავშირდა!');
 
-      // Navigate to the host controller page
       setTimeout(() => {
         onOpenChange(false);
         setCode('');
-        setIsConnected(false);
+        setStep('instructions');
         navigate(`/tv/host/${session.id}`);
       }, 1000);
 
@@ -82,9 +98,19 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
 
   const handleClose = () => {
     setCode('');
-    setIsConnected(false);
+    setStep('instructions');
     onOpenChange(false);
   };
+
+  const handleBack = () => {
+    if (step === 'code-entry') {
+      setStep('instructions');
+    } else {
+      handleClose();
+    }
+  };
+
+  const headerTitle = step === 'instructions' ? 'TV-ზე თამაში' : step === 'code-entry' ? 'კოდის შეყვანა' : 'დაკავშირებულია';
 
   if (!open) return null;
 
@@ -100,13 +126,13 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
           {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30 safe-top">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full flex items-center gap-3 px-4 py-3">
-              <button 
-                onClick={handleClose} 
+              <button
+                onClick={handleBack}
                 className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
               >
                 <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
-              <h1 className="text-lg font-bold text-foreground">TV-სთან დაკავშირება</h1>
+              <h1 className="text-lg font-bold text-foreground">{headerTitle}</h1>
             </div>
           </div>
 
@@ -114,7 +140,7 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
           <div className="h-full overflow-y-auto pt-[60px] pb-6 safe-top">
             <div className="max-w-[700px] md:max-w-[520px] mx-auto w-full p-5">
               <AnimatePresence mode="wait">
-                {isConnected ? (
+                {step === 'connected' ? (
                   <motion.div
                     key="connected"
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -132,9 +158,9 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                     <h3 className="text-2xl font-bold text-foreground mb-2">დაკავშირებულია!</h3>
                     <p className="text-muted-foreground">გადამისამართება...</p>
                   </motion.div>
-                ) : (
+                ) : step === 'instructions' ? (
                   <motion.div
-                    key="input"
+                    key="instructions"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -144,6 +170,43 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                       <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
                         <img src={retroTvIcon} alt="TV" className="w-12 h-12 object-contain" />
                       </div>
+                      <p className="text-muted-foreground">
+                        მიჰყევი ნაბიჯებს TV-სთან დასაკავშირებლად
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3 mb-8">
+                      {steps.map((s, i) => (
+                        <div key={i} className="flex items-center gap-4 bg-muted/30 rounded-xl p-4">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-primary">{i + 1}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground text-sm">{s.title}</p>
+                            <p className="text-xs text-muted-foreground">{s.description}</p>
+                          </div>
+                          <s.icon className="w-5 h-5 text-muted-foreground shrink-0" />
+                        </div>
+                      ))}
+                    </div>
+
+                    <ChunkyButton
+                      variant="primary"
+                      className="w-full"
+                      onClick={() => setStep('code-entry')}
+                    >
+                      გაგრძელება
+                    </ChunkyButton>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="code-entry"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="py-6"
+                  >
+                    <div className="text-center mb-8">
                       <p className="text-muted-foreground">
                         შეიყვანე 4-ციფრიანი კოდი რომელიც ნაჩვენებია TV ეკრანზე
                       </p>
@@ -179,12 +242,6 @@ export const TVConnectModal: React.FC<TVConnectModalProps> = ({
                         'დაკავშირება'
                       )}
                     </ChunkyButton>
-
-                    <div className="mt-6 p-4 bg-muted/50 rounded-xl text-center">
-                      <p className="text-sm text-muted-foreground">
-                        ჯერ გახსენი <span className="text-primary font-medium">mytrivia.io/tv</span> შენს TV-ზე
-                      </p>
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
