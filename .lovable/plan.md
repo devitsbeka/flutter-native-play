@@ -1,24 +1,29 @@
 
+# Limit Visible Rooms (10 on Mobile, 15 on Desktop/Tablet)
 
-# Fix ProGiftBanner Position and Text
+## Problem
+The `useMyRooms` hook accepts a `limit` parameter but never applies it to the final returned results. The filtered/sorted rooms array is returned in full, causing unlimited scrolling.
 
-## Changes
+## Solution
+Apply `.slice(0, limit)` to the returned `filteredRooms` in the `useMyRooms` hook, so only the requested number of rooms is shown.
 
-### File: `src/pages/Index.tsx`
+## Technical Details
 
-**Logged-in mobile banner (line 976)**
-- Add negative top margin (`-mt-8`) to move the banner up, away from the power-up buttons
-- Change `mb-2` to `mb-4` for more spacing below
+### File: `src/hooks/useMyRooms.ts` (line ~498)
 
-**Guest mobile banner (line 591)**
-- Same upward shift with `-mt-4` and `mb-4`
+Change the return statement to slice the results:
 
-### File: `src/components/home/ProGiftBanner.tsx`
+```typescript
+return {
+  rooms: filteredRooms.slice(0, limit),
+  loading,
+  refreshRooms: () => queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] }),
+  filter,
+};
+```
 
-**Text update (line 56-58)**
-- Change text from: `გილოცავთ, PRO გაქვს 10 დღის განმავლობაში!`
-- To: `გილოცავთ, თქვენ გაქვთ PRO 10 დღის განმავლობაში.`
-
-**Font size increase (line 56)**
-- Change `text-xs` to `text-sm` (20% larger, from 12px to 14px)
-
+This single change ensures:
+- Mobile shows max 10 rooms (already set in `MyRoomsSection.tsx` line 61)
+- Desktop/tablet shows max 15 rooms (already set in `MyRoomsSection.tsx` line 61)
+- Search results remain unaffected (search uses its own limit of 200)
+- All other consumers of `useMyRooms` respect their passed `limit` value
