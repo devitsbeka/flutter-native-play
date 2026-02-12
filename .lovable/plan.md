@@ -1,36 +1,119 @@
 
 
-# Fix: PRO Users Should Never See "Stop" Modals
+# Integrate Meta (Facebook) Pixel with Full Conversion Tracking
 
-## Problem
-PRO users are seeing play-limit and feature-gate modals that should only appear for free users. The root cause is that several components independently check VIP status but don't account for the loading state -- when `isVip` is still `false` during initial fetch, clicking triggers the modal incorrectly.
+## Overview
+Add the Meta Pixel (ID: `845894748475852`) to MyTrivia with both the base PageView tracking and rich conversion events mapped to Facebook standard + custom events. This gives Facebook full visibility into user behavior for ad optimization.
 
-## Solution
-Apply a consistent pattern across all affected components: if VIP status is still loading, never show a blocking modal. If `isVip` is true, always allow the action.
+## 1. Add Pixel Base Code to `index.html`
+Insert the Meta Pixel snippet (provided by user) into the `<head>` section of `index.html`, right before the closing `</head>` tag. This handles:
+- Pixel initialization
+- Automatic `PageView` tracking on every page load
+- The `<noscript>` fallback image
 
-## Changes
+## 2. Create `src/lib/fbpixel.ts` -- a typed helper module
+A thin wrapper around `window.fbq` that mirrors the existing `src/lib/analytics.ts` pattern. This module will:
+- Declare the `fbq` type on `window`
+- Provide helper functions that fire both **standard** and **custom** Facebook events
+- Be safe to call even if the pixel script hasn't loaded (guards against `fbq` being undefined)
 
-### 1. `src/components/social/TriviaPortfolioCard.tsx`
-- Import `loading` from `usePlayLimit()`
-- In `handlePlayClick`: if `isVip` OR `loading` (VIP not yet determined), navigate directly instead of showing PlayLimitModal
+### Event Mapping (Facebook Standard Events)
 
-### 2. `src/components/social/PlayerFeedItem.tsx`
-- Import `loading` from `usePlayLimit()`
-- In `handlePlayClick`: same fix -- if `isVip` OR `loading`, navigate directly
+| App Event | FB Standard Event | Parameters |
+|-----------|------------------|------------|
+| Signup completed | `CompleteRegistration` | `status: true, content_name: method` |
+| Login completed | (custom) `Login` | `method` |
+| VIP / PRO purchased | `Purchase` | `value, currency` |
+| Shop item purchased | `Purchase` | `value, currency, content_name` |
+| Quiz started | `StartTrial` | `content_name: categoryId` |
+| Quiz completed | `ViewContent` | `content_name: categoryId, value: score` |
+| Power-up purchased | `Purchase` | `value, currency: "coins/gems"` |
 
-### 3. `src/contexts/PlayGuardContext.tsx`
-- Add `loading` from `usePlayLimit()` to the guard check
-- In `guardPlay`: if `loading` is true, allow play (don't block while data loads)
-- In `guardCategoryPlay`: same -- allow while loading
+### Custom Events (via `fbq('trackCustom', ...)`)
 
-### 4. `src/hooks/useProGating.ts`
-- In `requirePro`: if `loading` is true, execute the callback (don't block while VIP status loads)
+| App Event | FB Custom Event | Parameters |
+|-----------|----------------|------------|
+| PVP game started | `PvpGameStarted` | `category_id, opponent` |
+| PVP game finished | `PvpGameFinished` | `result, score` |
+| Quiz abandoned | `QuizAbandoned` | `category_id, level` |
+| Power-up used | `PowerUpUsed` | `type, context` |
+| Category viewed | `CategoryViewed` | `category_id` |
+| Level selected | `LevelSelected` | `category_id, level` |
 
-### 5. `src/components/game/MatchResultScreen.tsx`
-- Already checks `!isVip` correctly, but add `loading` guard so the "play again" button doesn't show the limit modal while VIP data is still loading
+## 3. Add SPA PageView tracking in `PostHogProvider.tsx`
+Since this is an SPA, the base pixel only fires `PageView` on initial load. Add `fbq('track', 'PageView')` alongside the existing PostHog pageview call in `usePageviewTracker()` so every route change is tracked by Facebook too.
 
-## Technical Notes
-- The core fix is: **never show a blocking/gating modal while VIP status is still loading**
-- All 5 locations that independently show PlayLimitModal or ProRequiredModal will be patched
-- The `usePlayLimit` hook already exposes `loading` -- it just isn't being used in most consumers
-- `useCategoryPlayLimit` and `useProGating` both have `loading` available from `useVipStatus`
+## 4. Wire FB events into existing analytics calls in `src/lib/analytics.ts`
+Each existing `track*` function already fires PostHog events. Add a corresponding `fb*` call from the new `fbpixel.ts` module alongside each PostHog call. This keeps all analytics in one place with zero changes to consuming components.
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `index.html` | Add Meta Pixel base code in `<head>` |
+| `src/lib/fbpixel.ts` | **New file** -- typed FB Pixel helper functions |
+| `src/lib/analytics.ts` | Import and call FB helpers alongside PostHog calls |
+| `src/providers/PostHogProvider.tsx` | Add `fbq('track', 'PageView')` on SPA route changes |
+
+## Technical Details
+
+### `src/lib/fbpixel.ts`
+```typescript
+// Type-safe wrapper for fbq
+declare global {
+  interface Window {
+    fbq: (...args: any[]) => void;
+  }
+}
+
+function fbq(...args: any[]) {
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq(...args);
+  }
+}
+
+export function fbTrackPageView() {
+  fbq('track', 'PageView');
+}
+
+export function fbTrackCompleteRegistration(method: string) {
+  fbq('track', 'CompleteRegistration', {
+    content_name: method,
+    status: true,
+  });
+}
+
+export function fbTrackPurchase(value: number, currency: string, contentName?: string) {
+  fbq('track', 'Purchase', {
+    value,
+    currency,
+    content_name: contentName,
+  });
+}
+
+export function fbTrackStartTrial(categoryId: string) {
+  fbq('track', 'StartTrial', { content_name: categoryId });
+}
+
+// ... custom events via fbq('trackCustom', ...)
+```
+
+### Integration in `analytics.ts` (example)
+```typescript
+import { fbTrackCompleteRegistration } from "./fbpixel";
+
+export function trackSignupCompleted(method, hasReferral) {
+  posthog.capture("signup_completed", { ... });
+  fbTrackCompleteRegistration(method);  // <-- added
+}
+```
+
+### SPA PageView in `PostHogProvider.tsx`
+```typescript
+import { fbTrackPageView } from "@/lib/fbpixel";
+
+// Inside usePageviewTracker useEffect:
+posthog.capture("$pageview", { ... });
+fbTrackPageView();  // <-- added
+```
+
