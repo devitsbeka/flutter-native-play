@@ -1,6 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Trophy, Clock, Gift, Gamepad2, X } from "lucide-react";
+import { Clock, X } from "lucide-react";
+import triviaBuzzerIcon from "@/assets/trivia-buzzer-9.png";
+import giftBoxIcon from "@/assets/unboxing-gift-3.png";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { useNavigate } from "react-router-dom";
@@ -15,13 +17,13 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
   
   // Hardcoded challenge data for now
   const challenge = {
-    title: "ითამაშე 10 თამაში",
-    description: "ითამაშე 10 თამაში ამ კვირაში და მიიღე ჯილდო",
+    title: "მოიგე 10 თამაში",
+    description: "მოიგე 10 თამაში დღეში და მიიღე ჯილდო",
     current: 3,
     target: 10,
     rewards: {
-      xp: 500,
-      coins: 100,
+      xp: 800,
+      coins: 1500,
     },
     daysRemaining: 5,
   };
@@ -46,14 +48,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           </button>
           
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-white text-xl">
-              <motion.div 
-                className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
-                animate={{ rotate: [0, -10, 10, -10, 0] }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Trophy className="w-7 h-7" />
-              </motion.div>
+            <DialogTitle className="text-white text-xl text-center">
               კვირის გამოწვევა
             </DialogTitle>
           </DialogHeader>
@@ -63,7 +58,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           {/* Challenge Task */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-              <Gamepad2 className="w-4 h-4" />
+              <img src={triviaBuzzerIcon} alt="" className="w-6 h-6" />
               დავალება
             </div>
             <div className="p-4 rounded-xl bg-muted/50 border border-border">
@@ -93,7 +88,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
           {/* Rewards */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
-              <Gift className="w-4 h-4" />
+              <img src={giftBoxIcon} alt="" className="w-6 h-6" />
               ჯილდო
             </div>
             <div className="flex gap-3">
@@ -122,7 +117,7 @@ export function WeeklyChallengeModal({ open, onOpenChange }: WeeklyChallengeModa
             onClick={handlePlayNow}
             className="w-full"
           >
-            <Gamepad2 className="w-5 h-5 mr-2" />
+            ითამაშე ახლავე
             ითამაშე ახლავე
           </ChunkyButton>
         </div>
