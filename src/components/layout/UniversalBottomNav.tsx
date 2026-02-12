@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Home, Play, Compass, Store, Trophy, Headphones, Plus, Hourglass, Crown, Lock } from "lucide-react";
 import { t } from "@/lib/i18n";
@@ -187,7 +187,7 @@ export function UniversalBottomNav({
                 onClick={handleCenterClick}
                 isPlayButton={showPlayButton}
                 isPlusIcon={false}
-                variant={isVip ? "gold" : canPlay ? "mint" : "exhausted"}
+                variant={isVip ? "gold" : canPlay ? (new Date() < new Date("2026-02-22T23:59:59") ? "gold" : "mint") : "exhausted"}
                 playsRemaining={playsRemaining}
                 maxPlays={maxPlays}
                 isVip={isVip}
@@ -447,9 +447,37 @@ function Hex3DPlayButton({
 
   const colors = colorSchemes[variant];
   const showExhausted = variant === "exhausted" && isPlayButton;
+  const isPromo = !isVip && variant === "gold" && new Date() < new Date("2026-02-22T23:59:59");
+  const [showGlow, setShowGlow] = useState(isPromo);
+
+  useEffect(() => {
+    if (isPromo) {
+      const timer = setTimeout(() => setShowGlow(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPromo]);
 
   return (
     <div className="relative pointer-events-auto">
+      {/* Promo golden glow animation */}
+      {showGlow && (
+        <motion.div
+          className="absolute rounded-full"
+          style={{ inset: -8, zIndex: 55 }}
+          initial={{ opacity: 0.8, scale: 0.95 }}
+          animate={{ 
+            opacity: [0.8, 0.4, 0.8, 0],
+            scale: [0.95, 1.15, 1.05, 1.2],
+          }}
+          transition={{ duration: 2, ease: "easeOut" }}
+          onAnimationComplete={() => setShowGlow(false)}
+        >
+          <div className="w-full h-full rounded-full" style={{
+            background: "radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(251,191,36,0) 70%)",
+            boxShadow: "0 0 30px rgba(251,191,36,0.6), 0 0 60px rgba(251,191,36,0.3)",
+          }} />
+        </motion.div>
+      )}
       {/* Badge above button */}
       {isPlayButton && !isPlusIcon && (
         <motion.div

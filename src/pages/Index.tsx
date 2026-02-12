@@ -61,6 +61,7 @@ import { useRewardTimers } from "@/hooks/useRewardTimers";
 import { useMissions } from "@/hooks/useMissions";
 import { usePlayLimit } from "@/hooks/usePlayLimit";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { ProGiftBanner } from "@/components/home/ProGiftBanner";
 import { WatchAdModal } from "@/components/home/WatchAdModal";
 import { useNotifications } from "@/hooks/useNotifications";
 import { 
@@ -586,6 +587,10 @@ export default function Index() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
                 >
+                  {/* PRO Gift Banner for guests */}
+                  <div className="mb-3 w-full flex justify-center">
+                    <ProGiftBanner />
+                  </div>
                   <div className="relative">
                     <motion.div 
                       animate={{ y: [0, -8, 0] }}
@@ -966,6 +971,11 @@ export default function Index() {
                   </motion.button>
                 </motion.div>
               )}
+
+              {/* PRO Gift Banner for logged-in mobile users */}
+              <div className="mb-2 w-full flex justify-center">
+                <ProGiftBanner />
+              </div>
 
               <div className="relative">
                 {/* Mobile: Show curved action buttons above avatar */}
