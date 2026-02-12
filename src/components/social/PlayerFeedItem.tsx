@@ -73,7 +73,7 @@ export function PlayerFeedItem({
   const [isLoading, setIsLoading] = useState(false);
   const [showPlayLimitModal, setShowPlayLimitModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const { isVip, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
+  const { isVip, loading: vipLoading, regenPlayAvailable, timeUntilNextPlay, useRegenPlay } = usePlayLimit();
 
   const handleAddFriend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -117,8 +117,8 @@ export function PlayerFeedItem({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isPlayed || isVip) {
-      // Already played or PRO user - navigate directly
+    if (isPlayed || isVip || vipLoading) {
+      // Already played, PRO user, or VIP status loading - navigate directly
       if (itemType === 'trivia') {
         navigate(`/trivia/${item.id}`);
       } else {
