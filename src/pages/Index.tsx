@@ -581,7 +581,7 @@ export default function Index() {
                 {/* Mobile: Guest sees avatar with play button (play in bottom nav) */}
                 <motion.div
                   className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-                  style={{ marginTop: -30 }}
+                  style={{ marginTop: -90 }}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
