@@ -495,6 +495,11 @@ export default function Index() {
           </div>
         </header>
 
+        {/* PRO Gift Banner - below header */}
+        <div className="w-full flex justify-center px-4 py-2 relative z-30">
+          <ProGiftBanner />
+        </div>
+
         {/* Content area */}
         <div className="flex-1 flex relative">
           {/* Action Cards - Fixed Right Side Panel (Desktop only) */}
@@ -588,9 +593,8 @@ export default function Index() {
                   transition={{ duration: 0.5, type: "spring" }}
                 >
                   {/* PRO Gift Banner for guests */}
-                  <div className="-mt-4 mb-4 w-full flex justify-center relative z-30">
-                    <ProGiftBanner />
-                  </div>
+
+
                   <div className="relative">
                     <motion.div 
                       animate={{ y: [0, -8, 0] }}
@@ -972,10 +976,8 @@ export default function Index() {
                 </motion.div>
               )}
 
-              {/* PRO Gift Banner for logged-in mobile users */}
-              <div className="-mt-8 mb-4 w-full flex justify-center relative z-30">
-                <ProGiftBanner />
-              </div>
+
+
 
               <div className="relative">
                 {/* Mobile: Show curved action buttons above avatar */}

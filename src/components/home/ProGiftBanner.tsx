@@ -52,14 +52,14 @@ export function ProGiftBanner() {
           boxShadow: "0 4px 16px rgba(251, 191, 36, 0.25), 0 0 20px rgba(251, 191, 36, 0.1)",
         }}
       >
-        <img src={confettiGunIcon} alt="" className="w-7 h-7 flex-shrink-0" />
+        <img src={confettiGunIcon} alt="" className="w-9 h-9 flex-shrink-0" />
         <span className="text-sm font-bold text-amber-900 flex-1 leading-tight">
           გილოცავთ, თქვენ გაქვთ PRO 10 დღის განმავლობაში.
         </span>
         <motion.button
           onClick={handleClaim}
           disabled={claiming}
-          className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white flex-shrink-0"
+          className="px-4 py-2 rounded-xl text-sm font-bold text-white flex-shrink-0"
           style={{
             background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
             boxShadow: "0 2px 8px rgba(217, 119, 6, 0.4)",
