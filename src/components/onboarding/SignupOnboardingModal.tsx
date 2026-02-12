@@ -11,6 +11,7 @@ import confetti from "canvas-confetti";
 import { GameModal } from "@/components/ui/game-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { SECURITY_QUESTIONS } from "@/pages/ForgotPassword";
+import { trackSignupCompleted } from "@/lib/analytics";
 
 // Confetti celebration effect
 const celebrateConfetti = () => {
@@ -247,6 +248,7 @@ export function SignupOnboardingModal() {
         }
       }
       
+      trackSignupCompleted('username', false);
       await new Promise(resolve => setTimeout(resolve, 1500));
       celebrateConfetti();
       toast.success(t("success.accountCreated"));
