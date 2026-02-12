@@ -1,42 +1,23 @@
 
-# Redesign TV Connect Modal with Step-by-Step Instructions
+# Fix Guest Home Screen Layout for Small Viewports
 
-## What Changes
+## Problems
+1. On small mobile screens, the large avatar (280px) pushes the username and auth buttons below the fold, where they get covered by the bottom navigation bar
+2. The default guest name shows "Trivia King" instead of "Guest"
 
-Replace the current TVConnectModal content (which jumps straight to a confusing code input) with a clear step-by-step guide that walks users through the TV play process, followed by the code entry.
+## Changes
 
-## New Flow
+### File: `src/pages/Index.tsx`
 
-The modal will have two screens:
+**1. Rename "Trivia King" to "Guest"**
+- Line 557 (desktop guest): Change `Trivia King` to `Guest`
+- Line 613 (mobile guest): Change `Trivia King` to `Guest`
 
-**Screen 1 - Instructions (new)**
-Three numbered steps explaining what to do:
-1. Open **mytrivia.io/tv** on your TV browser
-2. A 4-digit code will appear on the TV screen
-3. Enter the code below to connect
+**2. Fix mobile guest layout to fit small viewports**
+- Reduce avatar size from `280` to `220` on mobile (line 598)
+- Reduce the top margin offset: change `marginTop: -5` to `marginTop: -30` to shift the whole block upward (line 584)
+- Reduce spacing between avatar and name: change `mt-8` to `mt-3` (line 610)
+- Reduce spacing between name and buttons: change `mt-4` to `mt-3` (line 616)
+- Reduce font size of "Guest" text from `32` to `26` (line 612)
 
-A "Next" button takes the user to Screen 2.
-
-**Screen 2 - Code Entry (existing, slightly refined)**
-The current 4-digit OTP input and "Connect" button, with a back arrow to return to instructions.
-
-**Screen 3 - Connected (existing)**
-The green checkmark success screen, unchanged.
-
-## Technical Details
-
-### File: `src/components/team/TVConnectModal.tsx`
-
-- Add a `step` state: `'instructions' | 'code-entry' | 'connected'`
-- **Instructions screen**: Shows 3 numbered steps with icons (Monitor, Hash, Smartphone) in a vertical list, plus a "Continue" ChunkyButton
-- **Code entry screen**: The existing OTP input and connect button (already built), with header back button returning to instructions
-- **Connected screen**: Unchanged
-- Header title updates per step: "TV-ზე თამაში" for instructions, "კოდის შეყვანა" for code entry
-
-### Step card design
-Each step rendered as a row with:
-- A numbered circle (1, 2, 3) on the left
-- Icon + text on the right
-- Subtle card background (`bg-muted/30 rounded-xl p-4`)
-
-No new files or dependencies needed. Only `TVConnectModal.tsx` is modified.
+These adjustments will ensure the avatar, username, and auth buttons all remain visible above the bottom navigation on screens as small as 320px wide / ~568px tall.
