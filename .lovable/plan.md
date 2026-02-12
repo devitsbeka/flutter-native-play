@@ -1,34 +1,24 @@
 
 
-# Fix ProGiftBanner Visibility (Z-Index Issue)
+# Fix ProGiftBanner Position and Text
 
-## Problem
-The ProGiftBanner is rendered above the avatar in the DOM, but the avatar and its surrounding elements (curved action buttons with `z-20`) visually overlap and cover the banner.
-
-## Fix
+## Changes
 
 ### File: `src/pages/Index.tsx`
 
 **Logged-in mobile banner (line 976)**
-- Add `relative z-30` to the banner wrapper so it renders above the curved action buttons (`z-20`) and the avatar
-
-Change:
-```
-<div className="mb-2 w-full flex justify-center">
-```
-To:
-```
-<div className="mb-2 w-full flex justify-center relative z-30">
-```
+- Add negative top margin (`-mt-8`) to move the banner up, away from the power-up buttons
+- Change `mb-2` to `mb-4` for more spacing below
 
 **Guest mobile banner (line 591)**
-- Same fix: add `relative z-30` to ensure it stays above the guest avatar
+- Same upward shift with `-mt-4` and `mb-4`
 
-Change:
-```
-<div className="mb-3 w-full flex justify-center">
-```
-To:
-```
-<div className="mb-3 w-full flex justify-center relative z-30">
-```
+### File: `src/components/home/ProGiftBanner.tsx`
+
+**Text update (line 56-58)**
+- Change text from: `გილოცავთ, PRO გაქვს 10 დღის განმავლობაში!`
+- To: `გილოცავთ, თქვენ გაქვთ PRO 10 დღის განმავლობაში.`
+
+**Font size increase (line 56)**
+- Change `text-xs` to `text-sm` (20% larger, from 12px to 14px)
+
