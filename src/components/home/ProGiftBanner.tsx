@@ -10,12 +10,15 @@ const PROMO_END_DATE = new Date("2026-02-22T23:59:59");
 
 export function ProGiftBanner() {
   const { user } = useAuth();
-  const { activateVip } = useVipStatus();
+  const { activateVip, isVip, loading } = useVipStatus();
   const navigate = useNavigate();
   const [claiming, setClaiming] = useState(false);
 
   // Check if promo period is over
   if (new Date() > PROMO_END_DATE) return null;
+
+  // Don't show if user is already PRO
+  if (!loading && isVip) return null;
 
   // Check if already claimed
   const cacheKey = user ? `beta_pro_gift_claimed_${user.id}` : null;
