@@ -46,7 +46,7 @@ export function ProGiftBanner() {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.4, type: "spring" }}
-        className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-purple-300/50 w-full max-w-[360px]"
+        className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-purple-300/50 w-full max-w-[360px] md:max-w-[520px]"
         style={{
           background: "linear-gradient(135deg, #D946A8 0%, #A855F7 50%, #7C3AED 100%)",
           boxShadow: "0 4px 16px rgba(168, 85, 247, 0.3), 0 0 20px rgba(168, 85, 247, 0.1)",
