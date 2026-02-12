@@ -46,7 +46,7 @@ export const ka = {
   auth: {
     createAccount: "ანგარიშის შექმნა",
     username: "მომხმარებელი",
-    usernamePlaceholder: "შეიყვანე მომხმარებლის სახელი",
+    usernamePlaceholder: "სახელი",
     password: "პაროლი",
     passwordPlaceholder: "შეიყვანე პაროლი",
     signIn: "შესვლა",
