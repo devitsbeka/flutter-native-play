@@ -1,4 +1,17 @@
 import posthog from "posthog-js";
+import {
+  fbTrackCompleteRegistration,
+  fbTrackLogin,
+  fbTrackPurchase,
+  fbTrackStartTrial,
+  fbTrackViewContent,
+  fbTrackPvpGameStarted,
+  fbTrackPvpGameFinished,
+  fbTrackQuizAbandoned,
+  fbTrackPowerUpUsed,
+  fbTrackCategoryViewed,
+  fbTrackLevelSelected,
+} from "./fbpixel";
 
 // ─── AUTH EVENTS ─────────────────────────────────────────
 
@@ -11,12 +24,14 @@ export function trackSignupCompleted(
     has_referral: hasReferral,
     referrer: document.referrer,
   });
+  fbTrackCompleteRegistration(method);
 }
 
 export function trackLoginCompleted(
   method: "email" | "username" | "google" | "apple"
 ) {
   posthog.capture("login_completed", { method });
+  fbTrackLogin(method);
 }
 
 export function trackAuthFailed(method: string, errorMessage: string) {
@@ -42,6 +57,7 @@ export function trackPvpGameStarted(
     question_count: questionCount,
     opponent_name: opponentName,
   });
+  fbTrackPvpGameStarted(categoryId, opponentName);
 }
 
 export function trackPvpQuestionAnswered(params: {
@@ -75,6 +91,11 @@ export function trackPvpGameFinished(params: {
   streak: number;
 }) {
   const won = params.userScore > params.opponentScore;
+  const result = won
+    ? "win"
+    : params.userScore === params.opponentScore
+      ? "tie"
+      : "loss";
   posthog.capture("pvp_game_finished", {
     category_id: params.categoryId,
     user_score: params.userScore,
@@ -84,13 +105,10 @@ export function trackPvpGameFinished(params: {
     score_percentage: Math.round(
       (params.correctAnswers / params.totalQuestions) * 100
     ),
-    result: won
-      ? "win"
-      : params.userScore === params.opponentScore
-        ? "tie"
-        : "loss",
+    result,
     streak: params.streak,
   });
+  fbTrackPvpGameFinished(result, params.userScore);
 }
 
 // ─── CATEGORY QUIZ EVENTS (CategoryQuizPage) ────────────
@@ -105,6 +123,7 @@ export function trackQuizStarted(
     level_number: levelNumber,
     question_count: questionCount,
   });
+  fbTrackStartTrial(categoryId);
 }
 
 export function trackQuizQuestionAnswered(params: {
@@ -151,6 +170,7 @@ export function trackQuizCompleted(params: {
     unlocked_next_level: params.unlockedNextLevel,
     passed: params.stars >= 1,
   });
+  fbTrackViewContent(params.categoryId, params.score);
 }
 
 export function trackQuizAbandoned(
@@ -165,6 +185,7 @@ export function trackQuizAbandoned(
     questions_answered: questionsAnswered,
     total_questions: totalQuestions,
   });
+  fbTrackQuizAbandoned(categoryId, levelNumber);
 }
 
 // ─── POWER-UP EVENTS ────────────────────────────────────
@@ -179,6 +200,7 @@ export function trackPowerUpUsed(
     context,
     category_id: categoryId,
   });
+  fbTrackPowerUpUsed(powerUpType, context);
 }
 
 export function trackPowerUpPurchased(params: {
@@ -195,6 +217,7 @@ export function trackPowerUpPurchased(params: {
     price: params.price,
     is_bundle: params.isBundle,
   });
+  fbTrackPurchase(params.price, params.currency, params.powerUpType);
 }
 
 // ─── VIP / MONETIZATION ─────────────────────────────────
@@ -209,6 +232,7 @@ export function trackVipPurchased(
     price,
     currency,
   });
+  fbTrackPurchase(price, currency, "vip");
 }
 
 export function trackShopItemPurchased(params: {
@@ -223,6 +247,7 @@ export function trackShopItemPurchased(params: {
     currency: params.currency,
     price: params.price,
   });
+  fbTrackPurchase(params.price, params.currency, params.productType);
 }
 
 // ─── CATEGORY NAVIGATION ────────────────────────────────
@@ -235,6 +260,7 @@ export function trackCategoryViewed(
     category_id: categoryId,
     source,
   });
+  fbTrackCategoryViewed(categoryId);
 }
 
 export function trackLevelSelected(categoryId: string, levelNumber: number) {
@@ -242,4 +268,5 @@ export function trackLevelSelected(categoryId: string, levelNumber: number) {
     category_id: categoryId,
     level_number: levelNumber,
   });
+  fbTrackLevelSelected(categoryId, levelNumber);
 }

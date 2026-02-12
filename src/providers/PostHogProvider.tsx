@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import posthog from "posthog-js";
 import { useAuth } from "@/contexts/AuthContext";
+import { fbTrackPageView } from "@/lib/fbpixel";
 
 const POSTHOG_KEY = "phc_mJKmSyJCq92bAxkvo7NZmdP7UZP79zqmJ7AX9E5vFYA";
 const POSTHOG_HOST = "https://us.i.posthog.com";
@@ -28,6 +29,7 @@ function usePageviewTracker() {
   useEffect(() => {
     // fire on every route change (including first render)
     posthog.capture("$pageview", { $current_url: window.location.href });
+    fbTrackPageView();
     prevPath.current = location.pathname;
   }, [location.pathname, location.search]);
 }
