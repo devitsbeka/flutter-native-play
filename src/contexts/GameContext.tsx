@@ -54,7 +54,7 @@ interface GameState {
 
 interface GameContextType extends GameState {
   startMatchmaking: (categoryId?: string) => Promise<void>;
-  beginPlaying: (categoryId: string) => Promise<void>;
+  beginPlaying: (categoryId: string, preloadedQuestions?: TriviaQuestion[]) => Promise<void>;
   answerQuestion: (answer: string, timeRemaining: number) => void;
   nextQuestion: () => void;
   finishMatch: () => void;
@@ -177,10 +177,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // startMatch is no longer needed - VSScreen handles category selection directly
 
-  const beginPlaying = useCallback(async (categoryId: string) => {
+  const beginPlaying = useCallback(async (categoryId: string, preloadedQuestions?: TriviaQuestion[]) => {
     try {
-      // Try to fetch questions for the selected category
-      let questions = await fetchQuestions(6, categoryId, 1, [], false);
+      // Use preloaded questions if available, otherwise fetch
+      let questions: TriviaQuestion[] | undefined;
+      
+      if (preloadedQuestions && preloadedQuestions.length > 0) {
+        questions = preloadedQuestions;
+      } else {
+        // Try to fetch questions for the selected category
+        questions = await fetchQuestions(6, categoryId, 1, [], false);
+      }
       
       // If no questions for this category, try fetching from all categories
       if (!questions || questions.length === 0) {
