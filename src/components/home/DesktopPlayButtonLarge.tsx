@@ -57,8 +57,8 @@ export function DesktopPlayButtonLarge({
           <div
             className="px-3 py-1 rounded-full text-sm font-bold text-white whitespace-nowrap"
             style={{
-              background: "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)",
-              boxShadow: "0 3px 8px rgba(0,0,0,0.25)",
+              background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
+              boxShadow: "0 3px 8px rgba(217, 119, 6, 0.3)",
             }}
           >
             {playsRemaining}/{maxPlays}
