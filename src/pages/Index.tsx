@@ -554,7 +554,7 @@ export default function Index() {
                     className="flex flex-col items-center mt-6 pointer-events-auto"
                   >
                     <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
-                      Trivia King
+                       Guest
                     </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-4">
@@ -581,7 +581,7 @@ export default function Index() {
                 {/* Mobile: Guest sees avatar with play button (play in bottom nav) */}
                 <motion.div
                   className="md:hidden flex flex-col items-center w-full max-w-[360px] px-4"
-                  style={{ marginTop: -5 }}
+                  style={{ marginTop: -30 }}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, type: "spring" }}
@@ -594,7 +594,7 @@ export default function Index() {
                       <div className="pointer-events-auto cursor-pointer" onClick={() => navigate("/auth")}>
                         <AvatarCircle 
                           animatedAvatarUrl={guestMascotVideo}
-                          size={280} 
+                          size={220} 
                           coins={0} gems={0} level={1}
                           xpProgress={0} xpCurrent={0} xpTotal={100}
                           hideStats showAvatarPrompt={false} showMascotReminder={false}
@@ -607,13 +607,13 @@ export default function Index() {
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, type: "spring" }}
-                    className="flex flex-col items-center mt-8 pointer-events-auto"
+                    className="flex flex-col items-center mt-3 pointer-events-auto"
                   >
-                    <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 32 }}>
-                      Trivia King
+                    <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 26 }}>
+                      Guest
                     </span>
                     {/* Auth buttons */}
-                    <div className="flex items-center gap-3 mt-4">
+                    <div className="flex items-center gap-3 mt-3">
                       <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         შესვლა
                       </motion.button>
