@@ -67,8 +67,8 @@ export function DesktopPlayButton({
           <div
             className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white whitespace-nowrap"
             style={{
-              background: "linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%)",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+              background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
+              boxShadow: "0 2px 4px rgba(217, 119, 6, 0.3)",
             }}
           >
             {playsRemaining}/{maxPlays}
