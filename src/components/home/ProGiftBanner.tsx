@@ -46,14 +46,14 @@ export function ProGiftBanner() {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.4, type: "spring" }}
-        className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-amber-200 w-full max-w-[360px]"
+        className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border border-purple-300/50 w-full max-w-[360px]"
         style={{
-          background: "linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%)",
-          boxShadow: "0 4px 16px rgba(251, 191, 36, 0.25), 0 0 20px rgba(251, 191, 36, 0.1)",
+          background: "linear-gradient(135deg, #D946A8 0%, #A855F7 50%, #7C3AED 100%)",
+          boxShadow: "0 4px 16px rgba(168, 85, 247, 0.3), 0 0 20px rgba(168, 85, 247, 0.1)",
         }}
       >
         <img src={confettiGunIcon} alt="" className="w-9 h-9 flex-shrink-0" />
-        <span className="text-sm font-bold text-amber-900 flex-1 leading-tight">
+        <span className="text-sm font-bold text-white flex-1 leading-tight">
           გილოცავთ, თქვენ გაქვთ PRO 10 დღის განმავლობაში.
         </span>
         <motion.button
@@ -61,8 +61,9 @@ export function ProGiftBanner() {
           disabled={claiming}
           className="px-4 py-2 rounded-xl text-sm font-bold text-white flex-shrink-0"
           style={{
-            background: "linear-gradient(180deg, #FBBF24 0%, #D97706 100%)",
-            boxShadow: "0 2px 8px rgba(217, 119, 6, 0.4)",
+            background: "linear-gradient(180deg, #FFFFFF 0%, #E9D5FF 100%)",
+            boxShadow: "0 2px 8px rgba(124, 58, 237, 0.3)",
+            color: "#7C3AED",
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
