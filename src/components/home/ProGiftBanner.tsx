@@ -53,8 +53,8 @@ export function ProGiftBanner() {
         }}
       >
         <img src={confettiGunIcon} alt="" className="w-7 h-7 flex-shrink-0" />
-        <span className="text-xs font-semibold text-amber-800 flex-1 leading-tight">
-          გილოცავთ, PRO გაქვს 10 დღის განმავლობაში!
+        <span className="text-sm font-bold text-amber-900 flex-1 leading-tight">
+          გილოცავთ, თქვენ გაქვთ PRO 10 დღის განმავლობაში.
         </span>
         <motion.button
           onClick={handleClaim}

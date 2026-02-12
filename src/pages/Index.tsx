@@ -588,7 +588,7 @@ export default function Index() {
                   transition={{ duration: 0.5, type: "spring" }}
                 >
                   {/* PRO Gift Banner for guests */}
-                  <div className="mb-3 w-full flex justify-center relative z-30">
+                  <div className="-mt-4 mb-4 w-full flex justify-center relative z-30">
                     <ProGiftBanner />
                   </div>
                   <div className="relative">
@@ -973,7 +973,7 @@ export default function Index() {
               )}
 
               {/* PRO Gift Banner for logged-in mobile users */}
-              <div className="mb-2 w-full flex justify-center relative z-30">
+              <div className="-mt-8 mb-4 w-full flex justify-center relative z-30">
                 <ProGiftBanner />
               </div>
 
