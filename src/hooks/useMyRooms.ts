@@ -495,7 +495,7 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
   }, [activeRooms, filter, friendIds, searchQuery]);
 
   return {
-    rooms: filteredRooms,
+    rooms: filteredRooms.slice(0, limit),
     loading,
     refreshRooms: () => queryClient.invalidateQueries({ queryKey: [MY_ROOMS_KEY] }),
     filter,
