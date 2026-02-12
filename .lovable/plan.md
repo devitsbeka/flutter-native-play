@@ -1,23 +1,28 @@
 
-# Fix Guest Home Screen Layout for Small Viewports
 
-## Problems
-1. On small mobile screens, the large avatar (280px) pushes the username and auth buttons below the fold, where they get covered by the bottom navigation bar
-2. The default guest name shows "Trivia King" instead of "Guest"
+# Redesign Weekly Challenge Modal
 
 ## Changes
 
-### File: `src/pages/Index.tsx`
+### File: `src/components/challenge/WeeklyChallengeModal.tsx`
 
-**1. Rename "Trivia King" to "Guest"**
-- Line 557 (desktop guest): Change `Trivia King` to `Guest`
-- Line 613 (mobile guest): Change `Trivia King` to `Guest`
+**Header**
+- Remove the trophy icon (the `motion.div` with `Trophy` inside)
+- Keep just the text "კვირის გამოწვევა" centered in the orange gradient header
 
-**2. Fix mobile guest layout to fit small viewports**
-- Reduce avatar size from `280` to `220` on mobile (line 598)
-- Reduce the top margin offset: change `marginTop: -5` to `marginTop: -30` to shift the whole block upward (line 584)
-- Reduce spacing between avatar and name: change `mt-8` to `mt-3` (line 610)
-- Reduce spacing between name and buttons: change `mt-4` to `mt-3` (line 616)
-- Reduce font size of "Guest" text from `32` to `26` (line 612)
+**Task Section (დავალება)**
+- Replace the `Gamepad2` lucide icon with the uploaded trivia buzzer image (`trivia-buzzer-9.png`)
+- Change the challenge title to "მოიგე 10 თამაში"
+- Change the description to "მოიგე 10 თამაში დღეში და მიიღე ჯილდო"
 
-These adjustments will ensure the avatar, username, and auth buttons all remain visible above the bottom navigation on screens as small as 320px wide / ~568px tall.
+**Rewards Section (ჯილდო)**
+- Replace the `Gift` lucide icon with the uploaded gift box image (`unboxing-gift-3.png`)
+- Update XP reward from 500 to 800
+- Update coins reward from 100 to 1500
+
+### Assets to Copy
+- `user-uploads://trivia-buzzer-9.png` to `src/assets/trivia-buzzer-9.png`
+- `user-uploads://unboxing-gift-3.png` to `src/assets/unboxing-gift-3.png`
+
+Both images will be imported as ES6 modules and used as `img` tags (sized ~24px) in place of the current lucide icons next to the section labels.
+
