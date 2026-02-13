@@ -799,6 +799,7 @@ export const es: KaTranslations = {
     nextLevel: "Siguiente nivel",
     levelRewards: "Recompensas del nivel {level}",
     spinTickets: "Boletos de giro",
+    correctAnswers: "respuestas correctas",
   },
   guest: {
     progressNotSaved: "¡Tu progreso no está guardado!",

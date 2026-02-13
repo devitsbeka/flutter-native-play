@@ -930,6 +930,7 @@ export const en: KaTranslations = {
     nextLevel: "Next Level",
     levelRewards: "Level {level} Rewards",
     spinTickets: "Spin Tickets",
+    correctAnswers: "correct answers",
   },
 
   // ==========================================

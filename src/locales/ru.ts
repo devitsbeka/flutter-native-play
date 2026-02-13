@@ -816,6 +816,7 @@ export const ru: KaTranslations = {
     nextLevel: "Следующий уровень",
     levelRewards: "Награды уровня {level}",
     spinTickets: "Билеты на вращение",
+    correctAnswers: "правильных ответов",
   },
   guest: {
     progressNotSaved: "Ваш прогресс не сохранен!",
