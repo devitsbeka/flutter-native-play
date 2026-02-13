@@ -721,73 +721,69 @@ async function getMultiCategoryVSQuestions(
     };
   }
   
-  // Shuffle categories and pick questions with retry logic
-  const shuffledCategories = shuffleArray(categories);
-  const selectedQuestions: FormattedQuestion[] = [];
-  let categoryIndex = 0;
+  // BULK FETCH: Single query across ALL categories instead of per-category sequential queries
   let usedFallbackLocal = false;
   
-  // Try to get one question per category, retry with next category if exhausted
-  while (selectedQuestions.length < count && categoryIndex < shuffledCategories.length) {
-    const cat = shuffledCategories[categoryIndex];
-    
-    let query = supabase
-      .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
-      .eq('is_active', true)
-      .eq('in_production', true)
-      .eq('category_id', cat.id)
-      .eq('language', language);
-    
-    if (excludeIds.length > 0) {
-      query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-    }
-    
-    const { data } = await query.limit(50);
-    
-    if (data && data.length > 0) {
-      const rawQuestions = data as RawQuestion[];
-      const validQuestions = rawQuestions.filter(isValidQuestionLength);
-      if (validQuestions.length > 0) {
-        const randomQ = validQuestions[Math.floor(Math.random() * validQuestions.length)];
-        selectedQuestions.push(formatQuestion(randomQ, cat.name, cat.category_id));
-        // Add to excludeIds to prevent same question in this batch
-        excludeIds.push(randomQ.id);
-      }
-    }
-    
-    categoryIndex++;
+  // Build a single query for all active+production questions in the user's language
+  let bulkQuery = supabase
+    .from('questions')
+    .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url, category_id')
+    .eq('is_active', true)
+    .eq('in_production', true)
+    .eq('language', language);
+  
+  if (excludeIds.length > 0) {
+    bulkQuery = bulkQuery.not('id', 'in', `(${excludeIds.join(',')})`);
   }
   
-  // Global fallback: if still not enough, query across ALL categories
-  if (selectedQuestions.length < count) {
-    usedFallbackLocal = true;
-    const needed = count - selectedQuestions.length;
-    const existingIds = selectedQuestions.map(q => q.id);
+  const { data: allQuestions } = await bulkQuery.limit(200);
+  
+  // Create Map for O(1) category lookups
+  const categoryMap = new Map(categories.map(c => [c.id, c]));
+  
+  const selectedQuestions: FormattedQuestion[] = [];
+  
+  if (allQuestions && allQuestions.length > 0) {
+    const validQuestions = (allQuestions as RawQuestion[]).filter(isValidQuestionLength);
     
-    let fallbackQuery = supabase
-      .from('questions')
-      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url, category_id')
-      .eq('is_active', true)
-      .eq('in_production', true)
-      .eq('language', language);
-    
-    const allExcludeIds = [...new Set([...excludeIds, ...existingIds])];
-    if (allExcludeIds.length > 0) {
-      fallbackQuery = fallbackQuery.not('id', 'in', `(${allExcludeIds.join(',')})`);
+    // Group by category for diversity
+    const byCategory = new Map<string, RawQuestion[]>();
+    for (const q of validQuestions) {
+      const catId = q.category_id || 'unknown';
+      if (!byCategory.has(catId)) byCategory.set(catId, []);
+      byCategory.get(catId)!.push(q);
     }
     
-    const { data: fallbackData } = await fallbackQuery.limit(needed * 3);
+    // Round-robin pick from shuffled categories for diversity
+    const categoryKeys = shuffleArray([...byCategory.keys()]);
+    let roundRobinIndex = 0;
+    const usedIds = new Set<string>();
     
-    if (fallbackData && fallbackData.length > 0) {
-      const validFallback = (fallbackData as RawQuestion[]).filter(isValidQuestionLength);
-      const shuffled = shuffleArray(validFallback).slice(0, needed);
-      
-      // Create Map for O(1) category lookups instead of O(n) .find() calls
-      const categoryMap = new Map(categories.map(c => [c.id, c]));
-      
-      for (const q of shuffled) {
-        const cat = categoryMap.get(q.category_id);
+    while (selectedQuestions.length < count && roundRobinIndex < categoryKeys.length * count) {
+      const catId = categoryKeys[roundRobinIndex % categoryKeys.length];
+      const pool = byCategory.get(catId);
+      if (pool && pool.length > 0) {
+        // Pick a random question from this category's pool
+        const idx = Math.floor(Math.random() * pool.length);
+        const q = pool[idx];
+        if (!usedIds.has(q.id)) {
+          usedIds.add(q.id);
+          const cat = categoryMap.get(q.category_id || '');
+          selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
+          // Remove from pool so we don't pick it again
+          pool.splice(idx, 1);
+        }
+      }
+      roundRobinIndex++;
+    }
+    
+    // If still not enough, pick any remaining valid questions
+    if (selectedQuestions.length < count) {
+      usedFallbackLocal = true;
+      const remaining = validQuestions.filter(q => !usedIds.has(q.id));
+      const shuffledRemaining = shuffleArray(remaining).slice(0, count - selectedQuestions.length);
+      for (const q of shuffledRemaining) {
+        const cat = categoryMap.get(q.category_id || '');
         selectedQuestions.push(formatQuestion(q, cat?.name, cat?.category_id));
       }
     }
