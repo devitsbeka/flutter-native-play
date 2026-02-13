@@ -233,6 +233,7 @@ export function VSScreen() {
 
   // Pre-fetch questions ref
   const prefetchedQuestionsRef = useRef<TriviaQuestion[] | null>(null);
+  const [prefetchReady, setPrefetchReady] = useState(false);
   const { fetchQuestions: prefetchQuestions } = useTrivia();
 
   // Stage 4: Confetti, pre-fetch questions, and transition to ready
@@ -248,6 +249,7 @@ export function VSScreen() {
     });
 
     // Pre-fetch questions in background
+    setPrefetchReady(false);
     if (selectedCategory) {
       prefetchedQuestionsRef.current = null;
       prefetchQuestions(6, selectedCategory.id, 1, [], false)
@@ -255,8 +257,12 @@ export function VSScreen() {
           if (questions && questions.length > 0) {
             prefetchedQuestionsRef.current = questions;
           }
+          setPrefetchReady(true);
         })
-        .catch(err => console.warn("Pre-fetch failed, will fetch on play:", err));
+        .catch(err => {
+          console.warn("Pre-fetch failed, will fetch on play:", err);
+          setPrefetchReady(true); // Still allow start, beginPlaying will fetch
+        });
     }
 
     const timer = setTimeout(() => {
@@ -289,9 +295,15 @@ export function VSScreen() {
   }, [stage, stakeDeducted, deductStake]);
 
   // Handle start button - pass pre-fetched questions if available
-  const handleStart = () => {
-    if (selectedCategory) {
-      beginPlaying(selectedCategory.id, prefetchedQuestionsRef.current || undefined);
+  const [isStarting, setIsStarting] = useState(false);
+  const handleStart = async () => {
+    if (selectedCategory && !isStarting) {
+      setIsStarting(true);
+      try {
+        await beginPlaying(selectedCategory.id, prefetchedQuestionsRef.current || undefined);
+      } finally {
+        setIsStarting(false);
+      }
     }
   };
 
@@ -305,6 +317,8 @@ export function VSScreen() {
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
     prefetchedQuestionsRef.current = null;
+    setPrefetchReady(false);
+    setIsStarting(false);
     
     // Shuffle category pool for new selection - includes Mixed Category
     if (categories.length > 0) {
@@ -321,6 +335,7 @@ export function VSScreen() {
   const isOpponentLocked = stage !== "finding-opponent";
   const isCategoryLocked = stage === "category-found" || stage === "ready";
   const showStartButton = stage === "ready";
+  const startButtonDisabled = !showStartButton || !prefetchReady || isStarting;
   const showCategorySlot = stage === "finding-category" || stage === "category-found" || stage === "ready";
 
   return (
@@ -613,10 +628,10 @@ export function VSScreen() {
             variant="mint"
             size="xl"
             onClick={handleStart}
-            disabled={!showStartButton}
+            disabled={startButtonDisabled}
             className="w-full"
           >
-            {t("game.start")}
+            {isStarting ? "იტვირთება..." : t("game.start")}
           </ChunkyButton>
         </motion.div>
       </div>

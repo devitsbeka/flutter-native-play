@@ -177,7 +177,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // startMatch is no longer needed - VSScreen handles category selection directly
 
+  const isStartingRef = useRef(false);
+  
   const beginPlaying = useCallback(async (categoryId: string, preloadedQuestions?: TriviaQuestion[]) => {
+    if (isStartingRef.current) return;
+    isStartingRef.current = true;
+    
     try {
       // Use preloaded questions if available, otherwise fetch
       let questions: TriviaQuestion[] | undefined;
@@ -251,6 +256,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error fetching questions:", error);
       setState(prev => ({ ...prev, phase: "home" }));
+    } finally {
+      isStartingRef.current = false;
     }
   }, [fetchQuestions]);
 
