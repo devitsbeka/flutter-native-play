@@ -933,6 +933,7 @@ export const ka = {
     nextLevel: "შემდეგი დონე",
     levelRewards: "დონე {level}-ის ჯილდოები",
     spinTickets: "Spin ბილეთები",
+    correctAnswers: "სწორი პასუხი",
   },
 
   // ==========================================
