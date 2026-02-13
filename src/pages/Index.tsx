@@ -207,13 +207,13 @@ export default function Index() {
   const [proGiftDismissed, setProGiftDismissed] = useState(false);
   const [proGiftClaimed, setProGiftClaimed] = useState(false);
 
-  // Auto-open pro gift modal with delay
+  // Auto-open pro gift modal with delay (only after page data is loaded)
   useEffect(() => {
-    if (proGiftEligible && !proGiftClaimed && !proGiftDismissed) {
-      const timer = setTimeout(() => setProGiftModalOpen(true), 1500);
+    if (proGiftEligible && !proGiftClaimed && !proGiftDismissed && !vipLoading) {
+      const timer = setTimeout(() => setProGiftModalOpen(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [proGiftEligible, proGiftClaimed, proGiftDismissed]);
+  }, [proGiftEligible, proGiftClaimed, proGiftDismissed, vipLoading]);
   
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
