@@ -1,79 +1,44 @@
 
 
-## Full Plan: Solo Play + Challenge-a-Friend
+## Fix Challenge Game Screen UI + Remove "ოთახში დაბრუნება" Button
 
-This plan includes ALL parts: allowing solo play in game rooms AND the complete Challenge-a-Friend viral sharing feature.
+### Problem
+1. The challenge game screen (when a friend follows your link) shows a plain white background with basic styling, instead of matching the main game's purple UI
+2. The "ოთახში დაბრუნება" button on the results screen is redundant since the back arrow button already does the same thing
 
----
+### Changes
 
-### Part 1: Allow Solo Play in Game Rooms
+#### 1. Restyle `src/pages/ChallengeLanding.tsx` - Playing Phase
+Replace the plain white playing screen with the same purple game UI used in `QuizGameScreenProd`:
+- Background: `bg-[#7E7ADB]` instead of `bg-background`
+- Add proper header with back button (rounded, white/10 bg), category name (center), and `TimerBadge` component (right)
+- Add `DynamicIcon` overlapping the question card (using `category_icon_slug` from challenge data)
+- Add `QuizProgressDots` between question and answers
+- Style answer buttons area to match main game spacing and layout
+- White text throughout, matching the main game aesthetic
 
-**File: `src/components/team/RoomLobbyV2.tsx`**
-- Change `canStartGame` (line 570) from `participants.length >= (currentRoom.min_players || 2)` to `participants.length >= 1`
-- Update button label (lines 1001-1002) to remove "waiting for players" text since solo play is now allowed
+#### 2. Restyle `src/pages/ChallengeLanding.tsx` - Landing Phase
+- Change from `bg-background` to `bg-[#7E7ADB]` purple background
+- Update text colors to white/white-opacity to match purple theme
 
-**Database migration:**
-```sql
-ALTER TABLE game_rooms ALTER COLUMN min_players SET DEFAULT 1;
-UPDATE game_rooms SET min_players = 1 WHERE min_players = 2;
-```
+#### 3. Restyle `src/pages/ChallengeLanding.tsx` - Results Phase
+- Change from `bg-background` to `bg-[#7E7ADB]` purple background
+- Update score cards and text to use white/purple-themed styling
 
----
+#### 4. Remove "ოთახში დაბრუნება" button from `src/components/team/GameResultsScreenV2.tsx`
+- Remove the `ChunkyButton` with `backToRoom` text in both the host section (around line 617-628) and non-host section (around line 636-644)
+- Keep the back arrow button in the header (line 382-385) which already calls `handleBackToRoom`
 
-### Part 2: Challenge-a-Friend Feature
+### Technical Details
 
-#### Database: 2 New Tables
+**Files to modify:**
+| File | Change |
+|------|--------|
+| `src/pages/ChallengeLanding.tsx` | Apply purple `bg-[#7E7ADB]` theme to all 3 phases, add `TimerBadge`, `DynamicIcon`, `QuizProgressDots` components, match main game layout |
+| `src/components/team/GameResultsScreenV2.tsx` | Remove both "ოთახში დაბრუნება" `ChunkyButton` instances (host + non-host sections) |
 
-**`challenge_links`** -- stores each challenge a user creates after playing
-- `id` (uuid PK), `code` (unique 8-char), `challenger_id` (FK profiles), `challenger_nickname`, `challenger_avatar_url`, `challenger_score`, `total_questions`, `category_name`, `category_icon_slug`, `questions` (jsonb snapshot), `room_id` (nullable), `created_at`, `expires_at` (default now+30d)
-- RLS: anon SELECT (public read), authenticated INSERT for own `challenger_id`
-
-**`challenge_attempts`** -- tracks guest plays
-- `id` (uuid PK), `challenge_link_id` (FK), `player_name`, `player_score`, `user_id` (nullable, linked after signup), `created_at`
-- RLS: anon INSERT + SELECT, authenticated UPDATE own rows
-
-**`generate_challenge_code()`** -- DB function, 8-char alphanumeric code
-
-#### New Files
-
-**`src/pages/ChallengeLanding.tsx`** -- Single page with 3 phases:
-1. **Landing phase**: Fetches challenge by URL code, shows challenger's avatar/score/category, name input, "Start" button -- no auth needed
-2. **Playing phase**: Reuses `QuizQuestionCard` and `QuizAnswerButton` to play the snapshotted questions with timer
-3. **Results phase**: Side-by-side score comparison (challenger vs guest), then inline signup CTA (email + password, name pre-filled) + OAuth buttons. On signup, links `user_id` to the attempt row
-
-**`src/components/challenge/ChallengeShareModal.tsx`** -- Modal triggered from GameResultsScreenV2:
-- Creates a `challenge_links` row with the game's questions snapshot + score
-- Shows generated link
-- "Share" button uses `navigator.share()` for native mobile sharing (WhatsApp, etc.)
-- Fallback: copy-to-clipboard
-
-**`supabase/functions/challenge-og-image/index.ts`** -- Edge function for dynamic social preview images:
-- Accepts challenge code as query param
-- Fetches challenge data, renders an SVG with challenger avatar, score, category
-- Returns PNG for WhatsApp/Facebook/etc. link previews
-
-#### Files to Edit
-
-**`src/App.tsx`** -- Add route:
-- `<Route path="/challenge/:code" element={<ChallengeLanding />} />`
-
-**`src/components/team/GameResultsScreenV2.tsx`** -- Add "Challenge Friends" button:
-- New button in the host's bottom action area (between existing buttons, around line 546-585)
-- Opens `ChallengeShareModal`
-- Passes current game questions, score, category info, and room_id
-
----
-
-### Files Summary
-
-| Action | File |
-|--------|------|
-| Edit | `src/components/team/RoomLobbyV2.tsx` (solo play logic) |
-| Edit | `src/components/team/GameResultsScreenV2.tsx` (challenge button) |
-| Edit | `src/App.tsx` (add /challenge route) |
-| Create | `src/pages/ChallengeLanding.tsx` |
-| Create | `src/components/challenge/ChallengeShareModal.tsx` |
-| Create | `supabase/functions/challenge-og-image/index.ts` |
-| Migration | `challenge_links` + `challenge_attempts` tables, `generate_challenge_code()` function, RLS policies |
-| Migration | `game_rooms.min_players` default change |
-
+**New imports for ChallengeLanding.tsx:**
+- `TimerBadge` from `@/components/game/TimerBadge`
+- `DynamicIcon` from `@/components/shared/DynamicIcon`
+- `QuizProgressDots` from `@/components/ui/quiz-progress-dots`
+- `ArrowLeft` from lucide-react
