@@ -171,10 +171,12 @@ export async function fetchValidQuestions(filters: QuestionFilters = {}): Promis
     // Check correct answer length
     if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
     
-    // Check incorrect answers length
+    // Check incorrect answers exist (need at least 3 for a 4-option quiz)
     const incorrectAnswers = Array.isArray(q.incorrect_answers)
       ? q.incorrect_answers
       : [];
+    
+    if (incorrectAnswers.length < 3) return false;
     
     if (incorrectAnswers.some((a: string) => a.length > ANSWER_MAX_LENGTH)) return false;
     
