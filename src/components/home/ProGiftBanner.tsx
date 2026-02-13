@@ -23,7 +23,7 @@ export function useProGiftEligibility() {
   const alreadyClaimed = cacheKey ? localStorage.getItem(cacheKey) === "true" : false;
 
   // Don't show if: no user yet, expired, already claimed, or already VIP (unless still loading)
-  const eligible = !!user && !isExpired && !alreadyClaimed && (!isVip || loading);
+  const eligible = !!user && !isExpired && !alreadyClaimed && !isVip && !loading;
 
   return { eligible, loading };
 }
