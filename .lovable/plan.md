@@ -1,20 +1,25 @@
 
 
-## Fix Auth Page: Remove Dark Flash and Reduce Password Placeholder Opacity
+## Stop Showing Pro Gift Modal to Existing PRO Users
 
-### Changes
+### Problem
+When a PRO user signs in, the gift modal keeps appearing because:
+1. During VIP status loading, `isVip` is `false`, so `useProGiftEligibility` returns `eligible: true`
+2. The `proGiftDismissed` state in `Index.tsx` is plain React state — it resets every time the page loads or the user navigates back
 
-**File: `src/pages/Auth.tsx`**
+### Solution
+Two small fixes:
 
-1. **Password placeholder opacity (line 356-363)**: Add a custom class to the password input to reduce placeholder opacity to 20%. Change the Input className from `"pl-10"` to `"pl-10 placeholder:opacity-20"` so the dots appear much lighter and don't look like an entered password.
+**File: `src/components/home/ProGiftBanner.tsx`**
+- Change the eligibility check from `(!isVip || loading)` to `!isVip && !loading`
+- This means: only show the gift when we have **confirmed** the user is NOT a VIP (loading must be finished)
+- This prevents the modal from appearing during the brief window while VIP status loads
 
-2. **Background flash fix (line 259)**: The outer div currently uses `bg-gradient-to-b from-background via-background to-primary/10`. To prevent any dark flash during initial render, add an explicit `bg-background` as a base fallback before the gradient kicks in. This ensures the page always starts with the light background color.
-
-### Technical Details
-
-- Line 259: Change the container className to include a solid background fallback
-- Line 362: Add `placeholder:opacity-20` to the password Input's className
+**File: `src/pages/Index.tsx`**
+- Add an extra guard in the `useEffect` that opens the modal: also check `isVip` is false before opening
+- This provides a double safety net so even if eligibility briefly flickers, the modal won't open for existing PRO users
 
 ### Files to Edit
-- `src/pages/Auth.tsx` — 2 small className changes
+- `src/components/home/ProGiftBanner.tsx` — 1 line change in eligibility logic
+- `src/pages/Index.tsx` — add `!isVip` guard to the auto-open effect
 
