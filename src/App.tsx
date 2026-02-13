@@ -106,6 +106,7 @@ const ModalsShowcase = lazy(() => import("./pages/ModalsShowcase"));
 const TVScreensShowcase = lazy(() => import("./pages/TVScreensShowcase"));
 const Docs = lazy(() => import("./pages/Docs"));
 const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
+const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
 
 const App = () => (
   <LanguageProvider>
@@ -204,6 +205,7 @@ const App = () => (
                 <Route path="/tv-showcase" element={<TVScreensShowcase />} />
                 <Route path="/docs" element={<Docs />} />
                 <Route path="/onboarding-preview" element={<OnboardingPreview />} />
+                <Route path="/challenge/:code" element={<ChallengeLanding />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>

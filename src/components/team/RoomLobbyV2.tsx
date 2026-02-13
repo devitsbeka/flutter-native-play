@@ -567,7 +567,7 @@ export function RoomLobbyV2() {
 
   if (!currentRoom) return null;
 
-  const canStartGame = participants.length >= (currentRoom.min_players || 2);
+  const canStartGame = participants.length >= 1;
   const roomGradient = getGradientById(currentRoom?.background_gradient);
   const roomName = currentRoom.room_name || "თამაშის ოთახი";
 
@@ -998,11 +998,9 @@ export function RoomLobbyV2() {
                 >
                   {isStarting 
                     ? "იწყება..." 
-                    : !canStartGame 
-                      ? `ველოდებით ${(currentRoom.min_players || 2) - participants.length} მოთამაშეს`
-                      : needsCategorySelection 
-                        ? "აირჩიე კატეგორია" 
-                        : "თამაშის დაწყება"
+                    : needsCategorySelection 
+                      ? "აირჩიე კატეგორია" 
+                      : "თამაშის დაწყება"
                   }
                 </ChunkyButton>
               );

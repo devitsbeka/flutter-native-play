@@ -190,6 +190,10 @@ verify_jwt = false
 [functions.fix-generated-question]
 verify_jwt = false
 
+# --- CHALLENGE OG IMAGE (public, no auth needed) ---
+[functions.challenge-og-image]
+verify_jwt = false
+
 # --- SEEDING (one-time use, admin only) ---
 [functions.seed-sample-content]
 verify_jwt = false
