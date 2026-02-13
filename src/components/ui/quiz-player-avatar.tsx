@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/utils/avatarUtils";
 
 export type QuizPlayerAvatarState = "default" | "active" | "correct" | "wrong" | "loading";
 export type QuizPlayerAvatarSize = "default" | "large" | "xlarge";
@@ -113,7 +114,8 @@ const QuizPlayerAvatar = React.forwardRef<HTMLDivElement, QuizPlayerAvatarProps>
     }, [animatedAvatarUrl, videoError, videoLoaded]);
 
     const hasAnimatedAvatar = animatedAvatarUrl && !videoError;
-    const displayUrl = avatarUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=player";
+    const resolvedAvatar = resolveAvatarUrl(avatarUrl);
+    const displayUrl = resolvedAvatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=player";
 
     return (
       <motion.div
