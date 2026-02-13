@@ -1,37 +1,38 @@
 
 
-## Convert PRO Gift Banner to Modal with Celebration Animations
+## Delay PRO Gift Modal Until Page Is Fully Rendered
 
-### What Changes
+### Problem
+The gift modal currently opens after a fixed 1.5-second timeout, which can overlap with the page still loading/rendering (data fetching, animations, etc.). Users see the modal pop up before they've had a chance to see the main page content.
 
-1. **Replace inline banner with a modal** -- The current `ProGiftBanner` in the header area becomes a full-screen modal (similar to the existing `BetaGiftModal` design). It auto-opens with a short delay when the user enters the home page.
+### Solution
+Add a "page ready" check before starting the 2-second modal timer. The modal will only open after:
+1. The VIP status has finished loading (`vipLoading === false`)
+2. The user data is available
+3. Then wait an additional 2 seconds before showing the modal
 
-2. **Celebration animations on claim** -- When user clicks "მიიღე":
-   - Canvas confetti burst (already used in BetaGiftModal)
-   - Golden glow animation on the Play button in the bottom nav for 2-3 seconds
-   - Modal closes after success
-
-3. **Floating gift button on dismiss** -- If user closes the modal without claiming, show the existing `FloatingGiftButton` so they can open it later.
+This ensures the main page renders completely first, then the modal appears smoothly.
 
 ### Technical Details
 
-**File: `src/components/home/ProGiftBanner.tsx`**
-- Rename/refactor to `ProGiftModal` -- a Dialog-based modal with offer phase (reusing the same purple gradient style from the banner but in modal form)
-- On claim success: fire `canvas-confetti`, dispatch a custom event `pro-gift-claimed` to trigger play button glow, then close
-- Export `useProGiftEligibility()` hook to check promo date, VIP status, and localStorage claim status
-- On dismiss: call `onDismiss` callback (parent shows floating gift button)
+**File: `src/pages/Index.tsx`** (lines 211-216)
 
-**File: `src/pages/Index.tsx`**
-- Remove the inline `<ProGiftBanner />` div (lines 500-503)
-- Add state management for the ProGiftModal: auto-open on mount with ~1.5s delay, dismissed state shows FloatingGiftButton, claimed state hides everything
-- Import and render `ProGiftModal` and `FloatingGiftButton`
+Update the `useEffect` that auto-opens the modal to also depend on `vipLoading`. Only start the 2-second timer once loading is complete:
 
-**File: `src/components/layout/UniversalBottomNav.tsx`**
-- Listen for `pro-gift-claimed` custom event on window
-- When received, trigger the existing golden glow animation on the Hex3DPlayButton for 2-3 seconds (reuse the `showGlow` state mechanism already built into the component)
+```typescript
+useEffect(() => {
+  if (proGiftEligible && !proGiftClaimed && !proGiftDismissed && !vipLoading) {
+    const timer = setTimeout(() => setProGiftModalOpen(true), 2000);
+    return () => clearTimeout(timer);
+  }
+}, [proGiftEligible, proGiftClaimed, proGiftDismissed, vipLoading]);
+```
+
+Changes:
+- Add `!vipLoading` condition so the timer only starts after data is loaded
+- Increase delay from 1500ms to 2000ms
+- Add `vipLoading` to dependency array
 
 ### Files to Edit
-- `src/components/home/ProGiftBanner.tsx` -- convert to modal component with confetti
-- `src/pages/Index.tsx` -- remove banner, add modal + floating gift button logic
-- `src/components/layout/UniversalBottomNav.tsx` -- add event listener for play button glow trigger
+- `src/pages/Index.tsx` -- update the auto-open useEffect (1 line change)
 
