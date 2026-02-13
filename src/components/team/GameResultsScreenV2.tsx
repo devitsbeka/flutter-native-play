@@ -614,18 +614,6 @@ export function GameResultsScreenV2() {
               გამოწვიე მეგობარი
             </ChunkyButton>
 
-            {/* Back to room - only when no queue */}
-            {queue.length === 0 && (
-              <ChunkyButton
-                variant="secondary"
-                size="lg"
-                className="w-full"
-                onClick={handleBackToRoom}
-                icon={<ArrowLeft className="w-5 h-5" />}
-              >
-                {t("game.backToRoom")}
-              </ChunkyButton>
-            )}
           </>
         ) : (
           <>
@@ -633,15 +621,6 @@ export function GameResultsScreenV2() {
             <div className="text-center py-4 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
               <p className="text-white/70 font-medium">ველოდებით ჰოსტს</p>
             </div>
-            <ChunkyButton
-              variant="secondary"
-              size="lg"
-              className="w-full"
-              onClick={handleBackToRoom}
-              icon={<ArrowLeft className="w-5 h-5" />}
-            >
-              {t("game.backToRoom")}
-            </ChunkyButton>
           </>
         )}
       </motion.div>
