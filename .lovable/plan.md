@@ -1,26 +1,17 @@
 
 
-## Center Gift Banner and Prevent Overlap on Desktop
+## Add Missing Translation Key for LevelUpModal
 
 ### Problem
-The PRO gift banner extends too far to the right on desktop, overlapping with the right-side action cards panel (daily rewards, missions, chest, powers).
+The LevelUpModal displays the raw key `modals.correctAnswers` because this translation key was never added to any locale file.
 
-### Solution
-Two changes:
+### Fix
+Add the `correctAnswers` key to the modals section in both locale files:
 
-**1. Narrow the banner container** (`src/pages/Index.tsx`, line 501)
-- Add a `max-w-[600px]` constraint to the banner wrapper so it stays centered and doesn't extend into the right panel area
-- Change from `w-full` to include proper max-width
+**File: `src/locales/en.ts`** (after line 932, `spinTickets`)
+- Add: `correctAnswers: "correct answers"`
 
-**2. Reduce banner max-width** (`src/components/home/ProGiftBanner.tsx`)
-- Change `max-w-[360px] md:max-w-[520px]` to `max-w-[360px] md:max-w-[480px]` to give more breathing room on medium-large screens
-- This ensures the banner fits comfortably in the center column without touching the right-side cards
+**File: `src/locales/ka.ts`** (after line 935, `spinTickets`)
+- Add: `correctAnswers: "სწორი პასუხი"`
 
-### Technical Details
-
-**File: `src/pages/Index.tsx` (line 501)**
-- Update the banner container div to: `"w-full flex justify-center px-4 py-2 relative z-30 lg:pr-[280px]"` — this adds right padding on large screens to account for the fixed right panel, keeping the banner visually centered in the remaining space.
-
-**File: `src/components/home/ProGiftBanner.tsx` (line 42)**
-- Reduce `md:max-w-[520px]` to `md:max-w-[480px]` for a tighter fit.
-
+This will make the LevelUpModal display "20 სწორი პასუხი" in Georgian instead of "20 modals.correctAnswers".
