@@ -89,26 +89,74 @@ export function useReturnGiftEligibility(): boolean {
   return eligible;
 }
 
+const POWER_UP_NAMES: Record<string, string> = {
+  "5050": "50/50",
+  "freeze": "გაყინვა",
+  "replace": "შეცვლა",
+  "time-drain": "დროის წართმევა",
+};
+
 export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalProps) {
   const { user } = useAuth();
   const { activateVip } = useVipStatus();
   const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase>("offer");
   const [claiming, setClaiming] = useState(false);
+  const [grantedPowerUp, setGrantedPowerUp] = useState<string | null>(null);
 
   // Reset phase when modal reopens
   useEffect(() => {
-    if (isOpen) setPhase("offer");
+    if (isOpen) {
+      setPhase("offer");
+      setGrantedPowerUp(null);
+    }
   }, [isOpen]);
 
   const handleClaim = async () => {
     setClaiming(true);
     const success = await activateVip("10days");
-    if (success) {
+    if (success && user) {
       // Mark as claimed (one-time)
-      if (user) {
-        localStorage.setItem(`${GIFT_CLAIMED_KEY}_${user.id}`, "true");
+      localStorage.setItem(`${GIFT_CLAIMED_KEY}_${user.id}`, "true");
+
+      // Grant 150 coins
+      try {
+        await supabase.rpc("update_user_currency", {
+          p_user_id: user.id,
+          p_coins_delta: 150,
+        });
+      } catch (e) {
+        console.error("Failed to grant coins:", e);
       }
+
+      // Grant 1 random power-up
+      const types = ["5050", "freeze", "replace", "time-drain"];
+      const randomType = types[Math.floor(Math.random() * types.length)];
+      setGrantedPowerUp(randomType);
+      try {
+        // Try update first, then insert if no row exists
+        const { data: existing } = await supabase
+          .from("user_power_ups")
+          .select("quantity")
+          .eq("user_id", user.id)
+          .eq("power_up_type", randomType)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("user_power_ups")
+            .update({ quantity: (existing.quantity ?? 0) + 1 })
+            .eq("user_id", user.id)
+            .eq("power_up_type", randomType);
+        } else {
+          await supabase
+            .from("user_power_ups")
+            .insert({ user_id: user.id, power_up_type: randomType, quantity: 1 });
+        }
+      } catch (e) {
+        console.error("Failed to grant power-up:", e);
+      }
+
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, zIndex: 9999 });
       setTimeout(() => {
         confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.65 }, zIndex: 9999 });
@@ -149,6 +197,7 @@ export function BetaGiftModal({ isOpen, onDismiss, onClaimed }: BetaGiftModalPro
             <SuccessPhase
               onClose={handleClose}
               onFeatureClick={handleFeatureClick}
+              grantedPowerUp={grantedPowerUp}
             />
           )}
         </AnimatePresence>
@@ -272,9 +321,11 @@ function OfferPhase({
 function SuccessPhase({
   onClose,
   onFeatureClick,
+  grantedPowerUp,
 }: {
   onClose: () => void;
   onFeatureClick: (path: string) => void;
+  grantedPowerUp: string | null;
 }) {
   return (
     <motion.div
@@ -331,6 +382,33 @@ function SuccessPhase({
         >
           <Clock className="w-3.5 h-3.5 text-amber-600" strokeWidth={2.5} />
           <span className="text-xs font-bold text-amber-700">10 დღე</span>
+        </motion.div>
+
+        {/* Rewards earned */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="w-full flex gap-2 mb-5"
+        >
+          <div
+            className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl"
+            style={{ background: "rgba(251,191,36,0.15)" }}
+          >
+            <span className="text-lg">🪙</span>
+            <span className="text-sm font-bold text-amber-700">+150 მონეტა</span>
+          </div>
+          {grantedPowerUp && (
+            <div
+              className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl"
+              style={{ background: "rgba(124,58,237,0.12)" }}
+            >
+              <span className="text-lg">⚡</span>
+              <span className="text-sm font-bold text-purple-700">
+                +1 {POWER_UP_NAMES[grantedPowerUp] ?? grantedPowerUp}
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Interactive feature clues */}
