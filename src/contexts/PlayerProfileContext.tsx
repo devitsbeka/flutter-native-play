@@ -4,6 +4,8 @@ import { useVipBenefitsAutoGrant } from "@/hooks/useVipBenefitsAutoGrant";
 import { BetaGiftModal, useReturnGiftEligibility } from "@/components/shared/BetaGiftModal";
 import { FloatingGiftButton } from "@/components/shared/FloatingGiftButton";
 import { AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { useVipStatus } from "@/hooks/useVipStatus";
 
 interface PlayerProfileContextType {
   openProfile: (userId: string) => void;
@@ -27,6 +29,8 @@ export function usePlayerProfile() {
 
 export function PlayerProfileProvider({ children }: { children: React.ReactNode }) {
   const [currentProfileUserId, setCurrentProfileUserId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { isVip, loading: vipLoading } = useVipStatus();
 
   // Auto-grant VIP daily power-ups on login
   useVipBenefitsAutoGrant();
@@ -35,15 +39,30 @@ export function PlayerProfileProvider({ children }: { children: React.ReactNode 
   const isEligible = useReturnGiftEligibility();
   const [giftModalOpen, setGiftModalOpen] = useState(false);
   const [pendingGift, setPendingGift] = useState(false);
-  const [giftClaimed, setGiftClaimed] = useState(false);
+  const [giftClaimed, setGiftClaimed] = useState(() => {
+    try {
+      if (!user) return false;
+      return localStorage.getItem(`returnee_gift_claimed_${user.id}`) === "true";
+    } catch {
+      return false;
+    }
+  });
 
-  // Auto-open modal when eligible (with delay)
+  // Sync giftClaimed when user changes
   React.useEffect(() => {
-    if (isEligible && !giftClaimed) {
+    if (user) {
+      const claimed = localStorage.getItem(`returnee_gift_claimed_${user.id}`) === "true";
+      setGiftClaimed(claimed);
+    }
+  }, [user?.id]);
+
+  // Auto-open modal when eligible (with delay) — NEVER for VIP users
+  React.useEffect(() => {
+    if (isEligible && !giftClaimed && !isVip && !vipLoading) {
       const timer = setTimeout(() => setGiftModalOpen(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [isEligible, giftClaimed]);
+  }, [isEligible, giftClaimed, isVip, vipLoading]);
 
   const handleGiftDismiss = useCallback(() => {
     setGiftModalOpen(false);
