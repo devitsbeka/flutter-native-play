@@ -1,51 +1,61 @@
 
 
-## Fix Gift Modal for PRO Users + Add Real Rewards
+## Auto-Generate AI Avatar Before Animating
 
 ### Problem
-1. The BetaGiftModal keeps appearing for PRO/admin users despite the VIP check, because:
-   - The `giftClaimed` state in `PlayerProfileContext` is plain React state (`useState(false)`) that resets on every page refresh
-   - There may be a race condition where `vipLoading` is still true when the eligibility check runs
-2. When clicking "მიიღე საჩუქარი", the modal only activates VIP status but does not grant any tangible rewards (coins, power-ups)
+When a user has a raw photo (not AI-generated), clicking "Animate" sends the raw photo directly to `animate-avatar`. This animates the original unprocessed image instead of first generating our styled AI avatar (semi-realistic 3D with lavender background) and then animating that.
+
+### Solution
+Modify the `animateAvatar` function in `AvatarModal.tsx` to detect whether the current avatar is already AI-generated. If not, first run it through `generate-avatar` to create our styled version, save it as the profile avatar, and then animate the resulting AI image.
+
+### Detection Logic
+Check the `avatar_generations` table for a record matching the current `profile.avatar_url` with `is_current = true`. If no such record exists, or if the current avatar URL doesn't match any AI-generated entry, the photo is a raw upload that needs AI generation first.
 
 ### Changes
 
-#### 1. Fix VIP guard in `PlayerProfileContext.tsx`
-- Add `isVip` and `vipLoading` checks to the auto-open effect so the modal never opens for PRO users
-- Read `giftClaimed` initial state from localStorage so it persists across refreshes
+**File: `src/components/home/AvatarModal.tsx`**
 
-#### 2. Harden `useReturnGiftEligibility` in `BetaGiftModal.tsx`
-- The hook already checks `isVip`, but ensure it also handles the edge case where `vipLoading` completes after the initial check by watching for VIP status changes
+Update the `animateAvatar` function (lines 530-622):
 
-#### 3. Add real rewards to `BetaGiftModal` claim handler
-When user clicks "მიიღე საჩუქარი", in addition to activating 10-day VIP:
-- Grant 150 coins (same as level-up milestone) via `update_user_currency` RPC
-- Grant 1 random power-up (from freeze, 5050, replace, time-drain) via `user_power_ups` table upsert
-- Show the rewards in the success phase UI (coin icon + power-up icon)
+1. Before calling `animate-avatar`, check if current avatar is in the `avatar_generations` table
+2. If NOT found (raw photo):
+   - Show toast: "AI ავატარი გენერირდება..."
+   - Call `generate-avatar` with the current `profile.avatar_url`
+   - Save the result to storage and `avatar_generations` table (reuse existing `saveAvatar` logic)
+   - Update the profile's `avatar_url` to the new AI-generated image
+   - Then proceed to animate the AI-generated image
+3. If found (already AI-generated):
+   - Proceed directly to animate as before
+
+### Flow
+
+```text
+User clicks "Animate"
+       |
+       v
+Is current avatar in avatar_generations?
+       |
+  NO --+-- YES
+  |         |
+  v         v
+generate-avatar    animate-avatar
+  |                (existing flow)
+  v
+Save AI avatar
+  |
+  v
+animate-avatar
+(with AI image)
+```
 
 ### Technical Details
 
 | File | Change |
 |------|--------|
-| `src/contexts/PlayerProfileContext.tsx` | Add VIP guard to auto-open effect; persist `giftClaimed` to localStorage |
-| `src/components/shared/BetaGiftModal.tsx` | Grant 150 coins + 1 random power-up in `handleClaim`; show reward items in success phase |
+| `src/components/home/AvatarModal.tsx` | Modify `animateAvatar` to first generate AI avatar if current photo is raw |
 
-**PlayerProfileContext.tsx changes:**
-- Import `useAuth` and `useVipStatus`
-- Initialize `giftClaimed` from localStorage: `useState(() => user ? localStorage.getItem(key) === 'true' : false)`
-- Update auto-open effect: `if (isEligible && !giftClaimed && !isVip && !vipLoading)`
-- On claim, write to localStorage
-
-**BetaGiftModal.tsx `handleClaim` additions:**
-```
-// After activateVip succeeds:
-// 1. Grant coins
-await supabase.rpc("update_user_currency", { p_user_id: user.id, p_coins_delta: 150 });
-// 2. Grant random power-up
-const types = ["5050", "freeze", "replace", "time-drain"];
-const randomType = types[Math.floor(Math.random() * types.length)];
-// Upsert into user_power_ups
-```
-
-**BetaGiftModal.tsx success phase:**
-- Add reward display section showing "+150 coins" and "+1 [power-up name]" with icons (same style as LevelUpModal rewards)
+The `animateAvatar` function will:
+1. Query `avatar_generations` for a record where `avatar_url = profile.avatar_url` and `is_current = true`
+2. If no record found, call `generate-avatar`, save result (upload to storage, insert into `avatar_generations`, update profile), then continue
+3. Use the AI-generated URL (whether newly created or existing) as input to `animate-avatar`
+4. Update toast messages to reflect the two-step process when needed (e.g., "Generating AI avatar first..." then "Now animating...")
