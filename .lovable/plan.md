@@ -1,44 +1,41 @@
 
 
-## Fix Challenge Game Screen UI + Remove "ოთახში დაბრუნება" Button
+## Beautify Challenge Share Modal
 
-### Problem
-1. The challenge game screen (when a friend follows your link) shows a plain white background with basic styling, instead of matching the main game's purple UI
-2. The "ოთახში დაბრუნება" button on the results screen is redundant since the back arrow button already does the same thing
+### Changes to `src/components/challenge/ChallengeShareModal.tsx`
 
-### Changes
+**1. Copy uploaded icon to assets**
+- Copy `user-uploads://dance-floor-3.png` to `src/assets/dance-floor-3.png`
+- Import it as the header icon
 
-#### 1. Restyle `src/pages/ChallengeLanding.tsx` - Playing Phase
-Replace the plain white playing screen with the same purple game UI used in `QuizGameScreenProd`:
-- Background: `bg-[#7E7ADB]` instead of `bg-background`
-- Add proper header with back button (rounded, white/10 bg), category name (center), and `TimerBadge` component (right)
-- Add `DynamicIcon` overlapping the question card (using `category_icon_slug` from challenge data)
-- Add `QuizProgressDots` between question and answers
-- Style answer buttons area to match main game spacing and layout
-- White text throughout, matching the main game aesthetic
+**2. Pink/purple gradient background**
+- Replace `bg-card border-border` with a gradient background: `bg-gradient-to-b from-[#7E7ADB] to-[#C471ED]` (purple to pink)
+- White text throughout for contrast
+- Remove border, add subtle shadow
 
-#### 2. Restyle `src/pages/ChallengeLanding.tsx` - Landing Phase
-- Change from `bg-background` to `bg-[#7E7ADB]` purple background
-- Update text colors to white/white-opacity to match purple theme
+**3. Header: icon + title (no emoji)**
+- Remove the emoji from the title
+- Add the `dance-floor-3.png` icon (size ~40px) before the title text "გამოიწვიე მეგობრები"
+- Layout: icon and text centered horizontally
 
-#### 3. Restyle `src/pages/ChallengeLanding.tsx` - Results Phase
-- Change from `bg-background` to `bg-[#7E7ADB]` purple background
-- Update score cards and text to use white/purple-themed styling
+**4. Add subtitle text**
+- Below the title, add a small muted line: "მოაწყვე შეჯიბრი მეგობრებს შორის"
+- Styled as `text-sm text-white/70`
 
-#### 4. Remove "ოთახში დაბრუნება" button from `src/components/team/GameResultsScreenV2.tsx`
-- Remove the `ChunkyButton` with `backToRoom` text in both the host section (around line 617-628) and non-host section (around line 636-644)
-- Keep the back arrow button in the header (line 382-385) which already calls `handleBackToRoom`
+**5. Remove URL field**
+- Delete the link display section (the `bg-muted` row showing the URL)
+- Keep the two action buttons (Share + Copy Link)
 
-### Technical Details
+**6. Score display restyle**
+- Update score card to use `bg-white/15 border-white/20` to match gradient theme
+- Text colors: white for score, `white/70` for labels
 
-**Files to modify:**
+**7. Share text cleanup**
+- Remove emoji from `shareData.title` (replace with plain text)
+
+### Files
 | File | Change |
 |------|--------|
-| `src/pages/ChallengeLanding.tsx` | Apply purple `bg-[#7E7ADB]` theme to all 3 phases, add `TimerBadge`, `DynamicIcon`, `QuizProgressDots` components, match main game layout |
-| `src/components/team/GameResultsScreenV2.tsx` | Remove both "ოთახში დაბრუნება" `ChunkyButton` instances (host + non-host sections) |
+| `src/assets/dance-floor-3.png` | New file (copied from upload) |
+| `src/components/challenge/ChallengeShareModal.tsx` | Gradient bg, icon header, remove URL field, add subtitle, remove emojis |
 
-**New imports for ChallengeLanding.tsx:**
-- `TimerBadge` from `@/components/game/TimerBadge`
-- `DynamicIcon` from `@/components/shared/DynamicIcon`
-- `QuizProgressDots` from `@/components/ui/quiz-progress-dots`
-- `ArrowLeft` from lucide-react
