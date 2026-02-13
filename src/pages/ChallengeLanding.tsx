@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,7 @@ import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-b
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
-import { Loader2, Play, Trophy, ArrowRight } from "lucide-react";
+import { Loader2, Play, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -53,6 +53,7 @@ export default function ChallengeLanding() {
   // Game state
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playerScore, setPlayerScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerStates, setAnswerStates] = useState<Record<string, QuizAnswerState>>({});
   const [timeRemaining, setTimeRemaining] = useState(TIME_PER_QUESTION);
@@ -86,7 +87,6 @@ export default function ChallengeLanding() {
         questions,
       } as ChallengeData);
 
-      // Pre-shuffle answers for all questions
       const shuffled = questions.map((q) =>
         shuffleAnswers(q.correct_answer, q.incorrect_answers as string[])
       );
@@ -130,6 +130,7 @@ export default function ChallengeLanding() {
       const isCorrect = answer === currentQuestion.correct_answer;
       if (isCorrect) {
         setPlayerScore((s) => s + 1);
+        setCorrectCount((c) => c + 1);
       }
 
       const states: Record<string, QuizAnswerState> = {};
@@ -195,7 +196,7 @@ export default function ChallengeLanding() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -203,7 +204,7 @@ export default function ChallengeLanding() {
 
   if (error || !challenge) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="text-center">
           <p className="text-xl font-bold text-foreground mb-2">😔 ჩელენჯი ვერ მოიძებნა</p>
           <p className="text-muted-foreground">ბმული არასწორია ან ვადაგასულია</p>
@@ -215,7 +216,7 @@ export default function ChallengeLanding() {
   // ============ LANDING PHASE ============
   if (phase === "landing") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -240,7 +241,10 @@ export default function ChallengeLanding() {
           <div className="text-center p-5 rounded-2xl bg-primary/10 border border-primary/20">
             <p className="text-sm text-muted-foreground mb-1">დასამარცხებელი შედეგი</p>
             <p className="text-4xl font-bold text-primary">
-              {challenge.challenger_score}/{challenge.total_questions}
+              {challenge.challenger_score} ქულა
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              ({challenge.total_questions} კითხვა)
             </p>
             {challenge.category_name && (
               <p className="text-sm text-muted-foreground mt-2">{challenge.category_name}</p>
@@ -280,7 +284,7 @@ export default function ChallengeLanding() {
     const progressPercent = (timeRemaining / TIME_PER_QUESTION) * 100;
 
     return (
-      <div className="min-h-screen flex flex-col p-4 pt-8">
+      <div className="min-h-screen flex flex-col p-4 pt-8 bg-background">
         {/* Progress info */}
         <div className="text-center mb-4">
           <span className="text-sm font-medium text-muted-foreground">
@@ -327,7 +331,7 @@ export default function ChallengeLanding() {
     const tied = playerScore === challenge.challenger_score;
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

@@ -58,6 +58,8 @@ export function GameResultsScreenV2() {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [challengeQuestions, setChallengeQuestions] = useState<any[]>([]);
+  const [myCorrectAnswers, setMyCorrectAnswers] = useState<number | undefined>(undefined);
+  const hasAutoOpenedChallenge = useRef(false);
 
   // Sort participants by score and assign ranks
   const rankedParticipants: RankedParticipant[] = [...participants]
@@ -208,6 +210,34 @@ export function GameResultsScreenV2() {
       updateStats();
     }
   }, [user, profile, myScore, myRank, isWin, currentRoom, updateProfile, rankedParticipants, addCoins, participants]);
+
+  // Auto-open challenge share modal
+  useEffect(() => {
+    if (hasAutoOpenedChallenge.current || !currentRoom?.current_game_id || !user) return;
+    hasAutoOpenedChallenge.current = true;
+
+    const fetchAndOpen = async () => {
+      // Fetch questions
+      const { data: qData } = await supabase
+        .from("room_questions")
+        .select("question_text, correct_answer, incorrect_answers, icon_slug")
+        .eq("game_id", currentRoom.current_game_id!)
+        .order("question_index");
+      setChallengeQuestions(qData || []);
+
+      // Fetch correct answer count
+      const { count } = await supabase
+        .from("player_answers")
+        .select("*", { count: "exact", head: true })
+        .eq("room_id", currentRoom.id)
+        .eq("user_id", user.id)
+        .eq("is_correct", true);
+      setMyCorrectAnswers(count ?? undefined);
+
+      setShowChallengeModal(true);
+    };
+    fetchAndOpen();
+  }, [currentRoom, user]);
 
   const handleBackToRoom = () => {
     continueInRoom();
@@ -578,18 +608,7 @@ export function GameResultsScreenV2() {
               variant="gold"
               size="lg"
               className="w-full"
-              onClick={async () => {
-                // Fetch questions for this game to snapshot
-                if (currentRoom?.current_game_id) {
-                  const { data } = await supabase
-                    .from("room_questions")
-                    .select("question_text, correct_answer, incorrect_answers, icon_slug")
-                    .eq("game_id", currentRoom.current_game_id)
-                    .order("question_index");
-                  setChallengeQuestions(data || []);
-                }
-                setShowChallengeModal(true);
-              }}
+              onClick={() => setShowChallengeModal(true)}
               icon={<Share2 className="w-5 h-5" />}
             >
               გამოწვიე მეგობარი
@@ -646,6 +665,7 @@ export function GameResultsScreenV2() {
         onOpenChange={setShowChallengeModal}
         score={myScore}
         totalQuestions={currentRoom?.total_questions || challengeQuestions.length}
+        correctAnswers={myCorrectAnswers}
         categoryName={currentRoom?.category_name}
         categoryIconSlug={null}
         roomId={currentRoom?.id}

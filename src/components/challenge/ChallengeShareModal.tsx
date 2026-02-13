@@ -19,6 +19,7 @@ interface ChallengeShareModalProps {
   onOpenChange: (open: boolean) => void;
   score: number;
   totalQuestions: number;
+  correctAnswers?: number;
   categoryName?: string | null;
   categoryIconSlug?: string | null;
   roomId?: string | null;
@@ -30,6 +31,7 @@ export function ChallengeShareModal({
   onOpenChange,
   score,
   totalQuestions,
+  correctAnswers,
   categoryName,
   categoryIconSlug,
   roomId,
@@ -123,7 +125,10 @@ export function ChallengeShareModal({
           {/* Score display */}
           <div className="text-center p-4 rounded-xl bg-primary/10 border border-primary/20">
             <p className="text-sm text-muted-foreground mb-1">შენი შედეგი</p>
-            <p className="text-3xl font-bold text-primary">{score}/{totalQuestions}</p>
+            <p className="text-3xl font-bold text-primary">{score} ქულა</p>
+            {correctAnswers !== undefined && (
+              <p className="text-sm text-muted-foreground mt-1">({correctAnswers} სწორი პასუხი)</p>
+            )}
             {categoryName && (
               <p className="text-sm text-muted-foreground mt-1">{categoryName}</p>
             )}
