@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { toast } from "sonner";
-import { Share2, Copy, Check, Loader2, Link } from "lucide-react";
+import { Share2, Copy, Check, Loader2 } from "lucide-react";
+import danceFloorIcon from "@/assets/dance-floor-3.png";
 
 interface ChallengeQuestion {
   question_text: string;
@@ -79,7 +80,7 @@ export function ChallengeShareModal({
     if (!challengeUrl) return;
 
     const shareData = {
-      title: "🎯 შეგიძლია დამამარცხო?",
+      title: "შეგიძლია დამამარცხო?",
       text: `${profile?.nickname || "მოთამაშემ"} მოაგროვა ${score}/${totalQuestions} ქულა${categoryName ? ` - ${categoryName}` : ""}. შეგიძლია დაამარცხო?`,
       url: challengeUrl,
     };
@@ -88,7 +89,6 @@ export function ChallengeShareModal({
       try {
         await navigator.share(shareData);
       } catch (err) {
-        // User cancelled share - not an error
         if ((err as Error).name !== "AbortError") {
           console.error("Share failed:", err);
         }
@@ -105,7 +105,6 @@ export function ChallengeShareModal({
     toast.success("ბმული დაკოპირდა!");
   };
 
-  // Auto-create when modal opens
   useEffect(() => {
     if (open && !challengeUrl && !isCreating && questions.length > 0) {
       createChallengeLink();
@@ -114,62 +113,59 @@ export function ChallengeShareModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm mx-auto bg-card border-border rounded-2xl">
+      <DialogContent className="max-w-sm mx-auto bg-gradient-to-b from-[#7E7ADB] to-[#C471ED] border-none rounded-2xl shadow-2xl">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-bold text-foreground">
-            🎯 გამოწვიე მეგობარი
-          </DialogTitle>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-2 justify-center">
+              <img src={danceFloorIcon} alt="" className="w-10 h-10" />
+              <DialogTitle className="text-xl font-bold text-white">
+                გამოიწვიე მეგობრები
+              </DialogTitle>
+            </div>
+            <p className="text-sm text-white/70">მოაწყვე შეჯიბრი მეგობრებს შორის</p>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
           {/* Score display */}
-          <div className="text-center p-4 rounded-xl bg-primary/10 border border-primary/20">
-            <p className="text-sm text-muted-foreground mb-1">შენი შედეგი</p>
-            <p className="text-3xl font-bold text-primary">{score} ქულა</p>
+          <div className="text-center p-4 rounded-xl bg-white/15 border border-white/20">
+            <p className="text-sm text-white/70 mb-1">შენი შედეგი</p>
+            <p className="text-3xl font-bold text-white">{score} ქულა</p>
             {correctAnswers !== undefined && (
-              <p className="text-sm text-muted-foreground mt-1">({correctAnswers} სწორი პასუხი)</p>
+              <p className="text-sm text-white/70 mt-1">({correctAnswers} სწორი პასუხი)</p>
             )}
             {categoryName && (
-              <p className="text-sm text-muted-foreground mt-1">{categoryName}</p>
+              <p className="text-sm text-white/70 mt-1">{categoryName}</p>
             )}
           </div>
 
           {isCreating ? (
             <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              <span className="ml-2 text-muted-foreground">ბმული იქმნება...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+              <span className="ml-2 text-white/70">ბმული იქმნება...</span>
             </div>
           ) : challengeUrl ? (
-            <>
-              {/* Link display */}
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted border border-border">
-                <Link className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <span className="text-sm text-foreground truncate flex-1">{challengeUrl}</span>
-              </div>
+            <div className="space-y-2">
+              <ChunkyButton
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handleShare}
+                icon={<Share2 className="w-5 h-5" />}
+              >
+                გაუზიარე მეგობრებს
+              </ChunkyButton>
 
-              {/* Action buttons */}
-              <div className="space-y-2">
-                <ChunkyButton
-                  variant="primary"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleShare}
-                  icon={<Share2 className="w-5 h-5" />}
-                >
-                  გაუზიარე მეგობრებს
-                </ChunkyButton>
-
-                <ChunkyButton
-                  variant="secondary"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleCopy}
-                  icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                >
-                  {copied ? "დაკოპირდა!" : "ბმულის კოპირება"}
-                </ChunkyButton>
-              </div>
-            </>
+              <ChunkyButton
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                onClick={handleCopy}
+                icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              >
+                {copied ? "დაკოპირდა!" : "ბმულის კოპირება"}
+              </ChunkyButton>
+            </div>
           ) : null}
         </div>
       </DialogContent>
