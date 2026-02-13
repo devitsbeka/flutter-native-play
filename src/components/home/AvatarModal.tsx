@@ -534,13 +534,66 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
     }
 
     setIsAnimating(true);
-    toast.info(t("avatar.startingAnimation"), { duration: 5000 });
 
     try {
-      // Start the animation
+      // Check if the current avatar is already AI-generated
+      const { data: existingGen } = await supabase
+        .from('avatar_generations')
+        .select('id, avatar_url')
+        .eq('user_id', user.id)
+        .eq('is_current', true)
+        .single();
+
+      let imageUrlToAnimate = profile.avatar_url;
+
+      // If no AI-generated record exists for this avatar, generate one first
+      if (!existingGen) {
+        toast.info("AI ავატარი გენერირდება...", { duration: 10000 });
+
+        // Call generate-avatar with the current raw photo
+        const { data: genData, error: genError } = await supabase.functions.invoke("generate-avatar", {
+          body: { imageUrl: profile.avatar_url },
+        });
+
+        if (genError) throw new Error(genError.message);
+        if (!genData?.success || !genData?.avatarUrl) throw new Error(genData?.error || "Failed to generate AI avatar");
+
+        // Save the AI-generated avatar (same logic as saveAvatar)
+        const response = await fetch(genData.avatarUrl);
+        const blob = await response.blob();
+        const fileName = `${user.id}/avatar_${Date.now()}.png`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, blob, { upsert: true, contentType: 'image/png' });
+
+        if (uploadError) throw new Error(`Failed to save AI avatar: ${uploadError.message}`);
+
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        const aiAvatarUrl = urlData.publicUrl;
+
+        // Update avatar_generations table
+        await supabase.from('avatar_generations').update({ is_current: false }).eq('user_id', user.id);
+        await supabase.from('avatar_generations').insert({
+          user_id: user.id,
+          avatar_url: aiAvatarUrl,
+          source_image_url: profile.avatar_url,
+          is_current: true,
+        });
+
+        // Update profile to use AI avatar
+        await updateProfile({ avatar_url: aiAvatarUrl });
+
+        imageUrlToAnimate = aiAvatarUrl;
+        toast.success("AI ავატარი შეიქმნა! ახლა ანიმაცია იწყება...", { duration: 3000 });
+      }
+
+      // Now animate the AI-generated avatar
+      toast.info(t("avatar.startingAnimation"), { duration: 5000 });
+
       const { data, error } = await supabase.functions.invoke("animate-avatar", {
         body: { 
-          imageUrl: profile.avatar_url,
+          imageUrl: imageUrlToAnimate,
           userId: user.id
         },
       });
