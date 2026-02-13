@@ -63,8 +63,7 @@ export function ChallengeShareModal({
 
       if (error) throw error;
 
-      const baseUrl = window.location.origin;
-      const url = `${baseUrl}/challenge/${data.code}`;
+      const url = `https://mytrivia.io/challenge/${data.code}`;
       setChallengeUrl(url);
     } catch (err) {
       console.error("Failed to create challenge link:", err);
