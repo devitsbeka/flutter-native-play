@@ -9,7 +9,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useRoomCategoryQueue } from "@/hooks/useRoomCategoryQueue";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2, Gift } from "lucide-react";
+import { ChallengeShareModal } from "@/components/challenge/ChallengeShareModal";
+import { ArrowLeft, Star, Crown, Shuffle, Library, ChevronRight, Loader2, Gift, Share2 } from "lucide-react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import trophyWinIcon from "@/assets/icons/trophy-win.png";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,8 @@ export function GameResultsScreenV2() {
 
   const [isStartingRematch, setIsStartingRematch] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [challengeQuestions, setChallengeQuestions] = useState<any[]>([]);
 
   // Sort participants by score and assign ranks
   const rankedParticipants: RankedParticipant[] = [...participants]
@@ -570,6 +573,28 @@ export function GameResultsScreenV2() {
               {isStartingRematch ? t("game.starting") : "კატეგორიის დამატება"}
             </ChunkyButton>
 
+            {/* Challenge Friends button */}
+            <ChunkyButton
+              variant="gold"
+              size="lg"
+              className="w-full"
+              onClick={async () => {
+                // Fetch questions for this game to snapshot
+                if (currentRoom?.current_game_id) {
+                  const { data } = await supabase
+                    .from("room_questions")
+                    .select("question_text, correct_answer, incorrect_answers, icon_slug")
+                    .eq("game_id", currentRoom.current_game_id)
+                    .order("question_index");
+                  setChallengeQuestions(data || []);
+                }
+                setShowChallengeModal(true);
+              }}
+              icon={<Share2 className="w-5 h-5" />}
+            >
+              გამოწვიე მეგობარი
+            </ChunkyButton>
+
             {/* Back to room - only when no queue */}
             {queue.length === 0 && (
               <ChunkyButton
@@ -613,6 +638,18 @@ export function GameResultsScreenV2() {
         showQueueOption={true}
         roomGradient={currentRoom?.background_gradient || undefined}
         excludeTriviaId={currentRoom?.user_trivia_id}
+      />
+
+      {/* Challenge Share Modal */}
+      <ChallengeShareModal
+        open={showChallengeModal}
+        onOpenChange={setShowChallengeModal}
+        score={myScore}
+        totalQuestions={currentRoom?.total_questions || challengeQuestions.length}
+        categoryName={currentRoom?.category_name}
+        categoryIconSlug={null}
+        roomId={currentRoom?.id}
+        questions={challengeQuestions}
       />
       </div>
     </div>

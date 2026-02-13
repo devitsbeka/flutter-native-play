@@ -333,6 +333,97 @@ export type Database = {
           },
         ]
       }
+      challenge_attempts: {
+        Row: {
+          challenge_link_id: string
+          created_at: string
+          id: string
+          player_name: string
+          player_score: number
+          user_id: string | null
+        }
+        Insert: {
+          challenge_link_id: string
+          created_at?: string
+          id?: string
+          player_name: string
+          player_score?: number
+          user_id?: string | null
+        }
+        Update: {
+          challenge_link_id?: string
+          created_at?: string
+          id?: string
+          player_name?: string
+          player_score?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_attempts_challenge_link_id_fkey"
+            columns: ["challenge_link_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_links: {
+        Row: {
+          category_icon_slug: string | null
+          category_name: string | null
+          challenger_avatar_url: string | null
+          challenger_id: string
+          challenger_nickname: string
+          challenger_score: number
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          questions: Json
+          room_id: string | null
+          total_questions: number
+        }
+        Insert: {
+          category_icon_slug?: string | null
+          category_name?: string | null
+          challenger_avatar_url?: string | null
+          challenger_id: string
+          challenger_nickname: string
+          challenger_score?: number
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          questions?: Json
+          room_id?: string | null
+          total_questions?: number
+        }
+        Update: {
+          category_icon_slug?: string | null
+          category_name?: string | null
+          challenger_avatar_url?: string | null
+          challenger_id?: string
+          challenger_nickname?: string
+          challenger_score?: number
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          questions?: Json
+          room_id?: string | null
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_links_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -3649,6 +3740,7 @@ export type Database = {
     }
     Functions: {
       format_display_name: { Args: { full_name: string }; Returns: string }
+      generate_challenge_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       generate_room_code: { Args: never; Returns: string }
       get_category_question_counts: {
