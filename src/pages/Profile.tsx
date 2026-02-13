@@ -67,13 +67,13 @@ export default function Profile() {
             loop 
             muted 
             playsInline
-            className="fixed inset-0 w-full h-full object-cover -z-10"
+            className="fixed inset-0 w-full h-full object-cover -z-10 bg-secondary"
           >
             <source src="/videos/floating-blob.webm" type="video/webm" />
             <source src="/videos/floating-blob.mp4" type="video/mp4" />
           </video>
           {/* Gradient Overlay */}
-          <div className="fixed inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/50 -z-10" />
+          <div className="fixed inset-0 bg-gradient-to-b from-background/10 via-transparent to-background/20 -z-10" />
 
           {/* Page Header with Back Button - Sticky */}
           <PageHeader title={t("profile.title")} />
