@@ -1,38 +1,33 @@
 
 
-## Delay PRO Gift Modal Until Page Is Fully Rendered
+## Fix Broken Avatars in Game Screens
 
 ### Problem
-The gift modal currently opens after a fixed 1.5-second timeout, which can overlap with the page still loading/rendering (data fetching, animations, etc.). Users see the modal pop up before they've had a chance to see the main page content.
+The `QuizPlayerAvatar` component renders avatar images using a raw `<img>` tag without resolving local asset paths. When `profile.avatar_url` contains a path like `/src/assets/avatars/mascot-avatar-3.png`, the browser cannot load it, resulting in a broken image icon (as seen in your screenshot on the game playing screen).
+
+### Root Cause
+The `QuizPlayerAvatar` component in `src/components/ui/quiz-player-avatar.tsx` (line 178) uses `avatarUrl` directly in an `<img src>` without calling `resolveAvatarUrl()` from the avatar utilities. Other components like `SafeAvatar`, `AvatarWithFrame`, and `ResolvedAvatarImage` already handle this correctly.
 
 ### Solution
-Add a "page ready" check before starting the 2-second modal timer. The modal will only open after:
-1. The VIP status has finished loading (`vipLoading === false`)
-2. The user data is available
-3. Then wait an additional 2 seconds before showing the modal
-
-This ensures the main page renders completely first, then the modal appears smoothly.
+Add `resolveAvatarUrl()` to the `QuizPlayerAvatar` component so it properly resolves local asset paths to bundled URLs.
 
 ### Technical Details
 
-**File: `src/pages/Index.tsx`** (lines 211-216)
+**File: `src/components/ui/quiz-player-avatar.tsx`**
 
-Update the `useEffect` that auto-opens the modal to also depend on `vipLoading`. Only start the 2-second timer once loading is complete:
-
+1. Import `resolveAvatarUrl` from `@/utils/avatarUtils`
+2. Resolve the `avatarUrl` prop before using it:
 ```typescript
-useEffect(() => {
-  if (proGiftEligible && !proGiftClaimed && !proGiftDismissed && !vipLoading) {
-    const timer = setTimeout(() => setProGiftModalOpen(true), 2000);
-    return () => clearTimeout(timer);
-  }
-}, [proGiftEligible, proGiftClaimed, proGiftDismissed, vipLoading]);
+const resolvedAvatarUrl = resolveAvatarUrl(avatarUrl);
 ```
+3. Update `displayUrl` (line 116) to use `resolvedAvatarUrl` instead of `avatarUrl`
+4. Add an `onError` handler to the `<img>` tag that falls back to a default avatar if the resolved URL also fails
 
-Changes:
-- Add `!vipLoading` condition so the timer only starts after data is loaded
-- Increase delay from 1500ms to 2000ms
-- Add `vipLoading` to dependency array
+### Affected Screens
+This fix automatically repairs avatars on all screens using `QuizPlayerAvatar`:
+- Solo game screen (`QuizGameScreenProd.tsx`) -- the screen in your screenshot
+- Multiplayer game screen (`MultiplayerGameScreen.tsx`)
+- Category quiz page (`CategoryQuizPage.tsx`)
 
 ### Files to Edit
-- `src/pages/Index.tsx` -- update the auto-open useEffect (1 line change)
-
+- `src/components/ui/quiz-player-avatar.tsx` -- add URL resolution + error handling (single file fix)
