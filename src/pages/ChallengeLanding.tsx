@@ -1,13 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { QuizQuestionCard } from "@/components/ui/quiz-question-card";
 import { QuizAnswerButton, QuizAnswerState } from "@/components/ui/quiz-answer-button";
+import { QuizProgressDots } from "@/components/ui/quiz-progress-dots";
+import { TimerBadge } from "@/components/game/TimerBadge";
+import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
-import { Loader2, Play, ArrowRight } from "lucide-react";
+import { Loader2, Play, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -65,6 +68,9 @@ export default function ChallengeLanding() {
   // Results state
   const [attemptSaved, setAttemptSaved] = useState(false);
 
+  // Track answer history for progress dots
+  const [answerHistory, setAnswerHistory] = useState<("correct" | "wrong" | null)[]>([]);
+
   // Fetch challenge data
   useEffect(() => {
     if (!code) return;
@@ -113,6 +119,7 @@ export default function ChallengeLanding() {
   const handleTimeUp = useCallback(() => {
     if (!currentQuestion || isAnswered) return;
     setIsAnswered(true);
+    setAnswerHistory(prev => [...prev, "wrong"]);
     const states: Record<string, QuizAnswerState> = {};
     currentAnswers.forEach((a) => {
       states[a] = a === currentQuestion.correct_answer ? "correct" : "disabled";
@@ -132,6 +139,7 @@ export default function ChallengeLanding() {
         setPlayerScore((s) => s + 1);
         setCorrectCount((c) => c + 1);
       }
+      setAnswerHistory(prev => [...prev, isCorrect ? "correct" : "wrong"]);
 
       const states: Record<string, QuizAnswerState> = {};
       currentAnswers.forEach((a) => {
@@ -196,18 +204,18 @@ export default function ChallengeLanding() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-[#7E7ADB]">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
       </div>
     );
   }
 
   if (error || !challenge) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#7E7ADB]">
         <div className="text-center">
-          <p className="text-xl font-bold text-foreground mb-2">😔 ჩელენჯი ვერ მოიძებნა</p>
-          <p className="text-muted-foreground">ბმული არასწორია ან ვადაგასულია</p>
+          <p className="text-xl font-bold text-white mb-2">😔 ჩელენჯი ვერ მოიძებნა</p>
+          <p className="text-white/60">ბმული არასწორია ან ვადაგასულია</p>
         </div>
       </div>
     );
@@ -216,7 +224,7 @@ export default function ChallengeLanding() {
   // ============ LANDING PHASE ============
   if (phase === "landing") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#7E7ADB]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -228,26 +236,26 @@ export default function ChallengeLanding() {
               <SafeAvatar
                 avatarUrl={challenge.challenger_avatar_url}
                 fallback={challenge.challenger_nickname.charAt(0)}
-                className="w-20 h-20"
+                className="w-20 h-20 border-2 border-white/30"
               />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-white">
               {challenge.challenger_nickname}
             </h1>
-            <p className="text-muted-foreground">გიწვევს ჩელენჯში!</p>
+            <p className="text-white/70">გიწვევს ჩელენჯში!</p>
           </div>
 
           {/* Score to beat */}
-          <div className="text-center p-5 rounded-2xl bg-primary/10 border border-primary/20">
-            <p className="text-sm text-muted-foreground mb-1">დასამარცხებელი შედეგი</p>
-            <p className="text-4xl font-bold text-primary">
+          <div className="text-center p-5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <p className="text-sm text-white/60 mb-1">დასამარცხებელი შედეგი</p>
+            <p className="text-4xl font-bold text-white">
               {challenge.challenger_score} ქულა
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-white/60 mt-1">
               ({challenge.total_questions} კითხვა)
             </p>
             {challenge.category_name && (
-              <p className="text-sm text-muted-foreground mt-2">{challenge.category_name}</p>
+              <p className="text-sm text-white/60 mt-2">{challenge.category_name}</p>
             )}
           </div>
 
@@ -257,7 +265,7 @@ export default function ChallengeLanding() {
               placeholder="შეიყვანე სახელი"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
-              className="text-center text-lg h-12"
+              className="text-center text-lg h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40"
               maxLength={20}
               onKeyDown={(e) => e.key === "Enter" && handleStart()}
             />
@@ -284,42 +292,83 @@ export default function ChallengeLanding() {
     const progressPercent = (timeRemaining / TIME_PER_QUESTION) * 100;
 
     return (
-      <div className="min-h-screen flex flex-col p-4 pt-8 bg-background">
-        {/* Progress info */}
-        <div className="text-center mb-4">
-          <span className="text-sm font-medium text-muted-foreground">
-            {currentIndex + 1} / {challenge.questions.length}
-          </span>
-        </div>
+      <div className="w-full h-[100dvh] bg-[#7E7ADB] overflow-hidden">
+        <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
+          {/* Safe area padding */}
+          <div className="pt-[env(safe-area-inset-top)]" />
 
-        {/* Question */}
-        <div className="flex-shrink-0">
-          <QuizQuestionCard
-            questionText={currentQuestion.question_text}
-            progressPercent={progressPercent}
-            timerSeconds={timeRemaining}
-            timerMaxSeconds={TIME_PER_QUESTION}
-          />
-        </div>
-
-        {/* Answers */}
-        <div className="flex-1 flex flex-col justify-center gap-3 mt-4">
-          {currentAnswers.map((answer, index) => (
-            <motion.div
-              key={`${currentIndex}-${index}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.08 }}
+          {/* Header: Back | Category | Timer */}
+          <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 flex-shrink-0">
+            <button
+              onClick={() => window.history.back()}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
-              <QuizAnswerButton
-                label={ANSWER_LABELS[index]}
-                text={answer}
-                state={answerStates[answer] || "default"}
-                onClick={() => handleAnswer(answer)}
-                disabled={isAnswered}
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </button>
+            
+            <span className="text-white font-bold text-base truncate max-w-[160px] text-center">
+              {challenge.category_name || "ჩელენჯი"}
+            </span>
+            
+            <TimerBadge 
+              seconds={timeRemaining} 
+              maxSeconds={TIME_PER_QUESTION}
+              compact
+            />
+          </div>
+
+          {/* Question Card with Overlapping Icon */}
+          <div className="px-4 flex-shrink-0 -mt-1 mb-0 relative">
+            {/* Category Icon overlapping card */}
+            <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+              <DynamicIcon 
+                slug={currentQuestion.icon_slug || challenge.category_icon_slug || undefined}
+                size={64}
+                className="drop-shadow-lg"
+                hideIfEmpty={true}
               />
-            </motion.div>
-          ))}
+            </div>
+
+            <QuizQuestionCard
+              questionText={currentQuestion.question_text}
+              progressPercent={progressPercent}
+              timerSeconds={timeRemaining}
+              timerMaxSeconds={TIME_PER_QUESTION}
+              reserveTopSpace={true}
+            />
+          </div>
+
+          {/* Progress Dots */}
+          <div className="flex justify-center py-2 flex-shrink-0">
+            <QuizProgressDots
+              total={challenge.questions.length}
+              current={currentIndex}
+              results={answerHistory}
+            />
+          </div>
+
+          {/* Answers */}
+          <div className="flex-1 flex flex-col justify-start gap-3 px-4 overflow-y-auto">
+            {currentAnswers.map((answer, index) => (
+              <motion.div
+                key={`${currentIndex}-${index}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.08 }}
+              >
+                <QuizAnswerButton
+                  label={ANSWER_LABELS[index]}
+                  text={answer}
+                  state={answerStates[answer] || "default"}
+                  onClick={() => handleAnswer(answer)}
+                  disabled={isAnswered}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Bottom safe area */}
+          <div className="pb-[env(safe-area-inset-bottom)]" />
         </div>
       </div>
     );
@@ -331,7 +380,7 @@ export default function ChallengeLanding() {
     const tied = playerScore === challenge.challenger_score;
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#7E7ADB]">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -347,7 +396,7 @@ export default function ChallengeLanding() {
             >
               {won ? "🏆" : tied ? "🤝" : "😤"}
             </motion.div>
-            <h1 className="text-2xl font-bold text-foreground">
+            <h1 className="text-2xl font-bold text-white">
               {won ? "გაიმარჯვე!" : tied ? "ფრე!" : "ვერ დაამარცხე!"}
             </h1>
           </div>
@@ -355,21 +404,21 @@ export default function ChallengeLanding() {
           {/* Side by side scores */}
           <div className="grid grid-cols-2 gap-3">
             {/* Player (you) */}
-            <div className={`p-4 rounded-xl text-center border ${won ? "bg-primary/10 border-primary/30" : "bg-muted border-border"}`}>
-              <p className="text-sm text-muted-foreground mb-1 truncate">{playerName}</p>
-              <p className={`text-3xl font-bold ${won ? "text-primary" : "text-foreground"}`}>
+            <div className={`p-4 rounded-xl text-center border ${won ? "bg-white/20 border-white/30" : "bg-white/10 border-white/15"}`}>
+              <p className="text-sm text-white/60 mb-1 truncate">{playerName}</p>
+              <p className={`text-3xl font-bold ${won ? "text-white" : "text-white/80"}`}>
                 {playerScore}
               </p>
-              <p className="text-xs text-muted-foreground">/{challenge.total_questions}</p>
+              <p className="text-xs text-white/50">/{challenge.total_questions}</p>
             </div>
 
             {/* Challenger */}
-            <div className={`p-4 rounded-xl text-center border ${!won && !tied ? "bg-primary/10 border-primary/30" : "bg-muted border-border"}`}>
-              <p className="text-sm text-muted-foreground mb-1 truncate">{challenge.challenger_nickname}</p>
-              <p className={`text-3xl font-bold ${!won && !tied ? "text-primary" : "text-foreground"}`}>
+            <div className={`p-4 rounded-xl text-center border ${!won && !tied ? "bg-white/20 border-white/30" : "bg-white/10 border-white/15"}`}>
+              <p className="text-sm text-white/60 mb-1 truncate">{challenge.challenger_nickname}</p>
+              <p className={`text-3xl font-bold ${!won && !tied ? "text-white" : "text-white/80"}`}>
                 {challenge.challenger_score}
               </p>
-              <p className="text-xs text-muted-foreground">/{challenge.total_questions}</p>
+              <p className="text-xs text-white/50">/{challenge.total_questions}</p>
             </div>
           </div>
 
@@ -384,7 +433,7 @@ export default function ChallengeLanding() {
             >
               გაწევრიანდი უფასოდ
             </ChunkyButton>
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-xs text-white/50">
               დარეგისტრირდი რომ შეინახო შედეგი და გამოწვიო მეგობრები
             </p>
           </div>
