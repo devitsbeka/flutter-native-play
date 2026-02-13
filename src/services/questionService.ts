@@ -143,6 +143,8 @@ function isValidQuestionLength(q: RawQuestion): boolean {
   if (q.question_text.length > QUESTION_MAX_LENGTH) return false;
   if (q.correct_answer.length > ANSWER_MAX_LENGTH) return false;
   const incorrects = parseIncorrectAnswers(q.incorrect_answers);
+  // Reject questions with fewer than 3 incorrect answers (need 4 total options)
+  if (incorrects.length < 3) return false;
   if (incorrects.some(a => a.length > ANSWER_MAX_LENGTH)) return false;
   return true;
 }
