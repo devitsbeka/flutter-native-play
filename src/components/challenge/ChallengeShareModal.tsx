@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChunkyButton } from "@/components/ui/chunky-button";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,16 +104,15 @@ export function ChallengeShareModal({
     toast.success("ბმული დაკოპირდა!");
   };
 
-  // Auto-create on open
-  const handleOpenChange = (newOpen: boolean) => {
-    if (newOpen && !challengeUrl && !isCreating) {
+  // Auto-create when modal opens
+  useEffect(() => {
+    if (open && !challengeUrl && !isCreating && questions.length > 0) {
       createChallengeLink();
     }
-    onOpenChange(newOpen);
-  };
+  }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm mx-auto bg-card border-border rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-foreground">
