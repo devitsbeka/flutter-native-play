@@ -69,6 +69,16 @@ interface AvatarGeneration {
 export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
   const { user, profile, updateProfile } = useAuth();
   const { isVip } = useVipStatus();
+
+  // Detect if current avatar is a preset mascot/bot avatar
+  const isCurrentAvatarMascot = (() => {
+    const url = profile?.avatar_url;
+    if (!url) return true; // No avatar = treat as mascot
+    if (DEFAULT_AVATAR_PATHS.some(p => url.includes(p) || p.includes(url))) return true;
+    if (DEFAULT_AVATARS.some(b => url === b)) return true;
+    if (/mascot-avatar-\d+/.test(url) || /bot-avatar-\d+/.test(url)) return true;
+    return false;
+  })();
   const navigate = useNavigate();
   const [step, setStep] = useState<"gallery" | "upload" | "camera" | "generating" | "preview">("gallery");
   const [generations, setGenerations] = useState<AvatarGeneration[]>([]);
@@ -638,8 +648,12 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             </div>
             <p className="text-sm text-muted-foreground">{t("avatar.currentAvatar")}</p>
             
-            {/* Animate Avatar Button - PRO gated */}
-            {profile?.avatar_url && (
+            {/* Animate Avatar Button - PRO gated, only for user-uploaded photos */}
+            {isCurrentAvatarMascot ? (
+              <p className="mt-2 text-xs text-center text-muted-foreground max-w-[220px]">
+                {t("avatar.uploadEncouragement")}
+              </p>
+            ) : profile?.avatar_url && (
               isVip ? (
                 <motion.button
                   onClick={animateAvatar}
@@ -661,7 +675,6 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                   )}
                 </motion.button>
               ) : (
-                // Non-PRO: Show locked animation button
                 <motion.button
                   onClick={() => {
                     onClose();

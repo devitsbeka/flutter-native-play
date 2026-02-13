@@ -468,6 +468,7 @@ export const ru: KaTranslations = {
     stillProcessing: "Еще обрабатывается... ({time} мин)",
     animationTakingLong: "Анимация занимает больше времени. Попробуйте позже.",
     startingAnimation: "Начинаем анимацию... Займет 1-2 минуты!",
+    uploadEncouragement: "📸 Загрузите своё фото и оживите профиль!",
   },
   errors: {
     generic: "Что-то пошло не так",

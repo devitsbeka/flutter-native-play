@@ -537,6 +537,7 @@ export const en: KaTranslations = {
     stillProcessing: "Still processing... ({time} min)",
     animationTakingLong: "Animation is taking longer than expected. Please try again later.",
     startingAnimation: "Starting animation... Will take 1-2 minutes!",
+    uploadEncouragement: "📸 Upload your photo and bring your profile to life!",
   },
 
   // ==========================================

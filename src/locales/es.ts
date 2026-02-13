@@ -461,6 +461,7 @@ export const es: KaTranslations = {
     stillProcessing: "Aún procesando... ({time} min)",
     animationTakingLong: "La animación está tardando más de lo esperado. Intenta más tarde.",
     startingAnimation: "Iniciando animación... ¡Tardará 1-2 minutos!",
+    uploadEncouragement: "📸 ¡Sube tu foto y dale vida a tu perfil!",
   },
   errors: {
     generic: "Algo salió mal",
