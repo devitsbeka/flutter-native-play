@@ -209,11 +209,11 @@ export default function Index() {
 
   // Auto-open pro gift modal with delay (only after page data is loaded)
   useEffect(() => {
-    if (proGiftEligible && !proGiftClaimed && !proGiftDismissed && !vipLoading) {
+    if (proGiftEligible && !proGiftClaimed && !proGiftDismissed && !vipLoading && !isVip) {
       const timer = setTimeout(() => setProGiftModalOpen(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [proGiftEligible, proGiftClaimed, proGiftDismissed, vipLoading]);
+  }, [proGiftEligible, proGiftClaimed, proGiftDismissed, vipLoading, isVip]);
   
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
