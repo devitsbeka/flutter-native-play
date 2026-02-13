@@ -256,7 +256,7 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col p-6 bg-gradient-to-b from-background via-background to-primary/10 relative z-10">
+    <div className="min-h-screen flex flex-col p-6 bg-background bg-gradient-to-b from-background via-background to-primary/10 relative z-10">
       {/* Back Button */}
       <motion.button
         initial={{ opacity: 0, x: -20 }}
@@ -359,7 +359,7 @@ export default function Auth() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
+                className="pl-10 placeholder:opacity-20"
               />
             </div>
             {errors.password && (
