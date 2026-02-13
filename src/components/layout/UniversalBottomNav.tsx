@@ -457,6 +457,16 @@ function Hex3DPlayButton({
     }
   }, [isPromo]);
 
+  // Listen for pro-gift-claimed event to trigger glow
+  useEffect(() => {
+    const handler = () => {
+      setShowGlow(true);
+      setTimeout(() => setShowGlow(false), 3000);
+    };
+    window.addEventListener("pro-gift-claimed", handler);
+    return () => window.removeEventListener("pro-gift-claimed", handler);
+  }, []);
+
   return (
     <div className="relative pointer-events-auto">
       {/* Promo golden glow animation */}
