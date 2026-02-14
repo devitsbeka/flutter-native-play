@@ -12,8 +12,19 @@ const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
 const DemoPlayerContent: React.FC = () => {
   const { phase, countdownValue, currentQuestionIndex, timeRemaining, players, questions, playerAnswer, playerAnswerCorrect, startGame, submitAnswer } = useDemoGame();
+  const isAutostart = React.useMemo(() => new URLSearchParams(window.location.search).get('autostart') === 'true', []);
 
   const tamuna = players.find(p => p.id === 'p3');
+
+  // Auto-select answer after 1.5s when autostart is enabled
+  React.useEffect(() => {
+    if (!isAutostart || phase !== 'playing' || playerAnswer !== null) return;
+    const question = questions[currentQuestionIndex];
+    const timer = setTimeout(() => {
+      submitAnswer(question.correct_answer);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [isAutostart, phase, currentQuestionIndex, playerAnswer, questions, submitAnswer]);
 
   if (phase === 'idle') return <PlayerIdleScreen onStart={startGame} />;
   if (phase === 'countdown') return <PlayerCountdownScreen value={countdownValue} />;
