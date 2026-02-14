@@ -1,48 +1,34 @@
 
 
-## Fix: Challenge Scores, Room Sorting & Start Button Logic
+## Handle Image Questions: Hide Text and Icon, Show "Image Question" Label
 
-### Issue 1: Challenge scores show wrong value (1 vs 751)
+### Problem
+Currently, image-based questions display both the image AND the full question text (plus the icon), which is confusing. The user wants image questions to show only the image with a simple label indicating it's an image question -- no question text, no icon.
 
-The challenger's score is saved as total points (e.g., 751 — including time bonuses), but the friend's `player_score` is saved as a simple correct-answer count (e.g., 1). This makes the comparison meaningless.
+### Changes
 
-**Fix in `ChallengeLanding.tsx`:** Calculate a proper point-based score for the challenge player, matching the host's scoring system. Instead of incrementing `playerScore` by 1 per correct answer, calculate points with a time bonus (same formula used in the multiplayer game: base points + time bonus).
+#### 1. Admin Preview Panel (`QuestionPreviewPanel.tsx`)
+- When the question has an `image_url`, hide the `DynamicIcon` / icon area above the card
+- Pass `hideQuestionText={true}` to `QuizQuestionCard` when an image is present (this prop already exists)
+- The `QuizQuestionCard` already supports `imageUrl` and `hideQuestionText` props, so this is straightforward
 
-The scoring formula will match the room game: ~100 base points + up to ~50 bonus points based on remaining time per correct answer. This way both scores are comparable.
+#### 2. Demo TV Gameplay (`SampleDemoTV.tsx`)
+- When a question has an `image_url`, skip rendering the `DynamicIcon` and pass `hideQuestionText={true}` plus the `imageUrl` to `QuizQuestionCard`
+- Currently the demo questions don't have `image_url` fields, but the logic should be in place for when they do
 
-### Issue 2: Host sees new room first in list
-
-The sorting in `useMyRooms.ts` already prioritizes "MY recently created rooms (within 5 min)" at Priority 1. However, after 5 minutes the room drops in priority. We will extend this window to include rooms with recent `last_activity_at` when the host owns them, ensuring rooms the host just interacted with stay near the top.
-
-**Fix in `useMyRooms.ts`:** Broaden the "my new room" priority to also include rooms where `last_activity_at` is very recent (within 10 minutes) and the user is the host.
-
-### Issue 3: Bottom button shows "აირჩიე კატეგორია" instead of "თამაშის დაწყება"
-
-Currently, the logic forces "აირჩიე კატეგორია" whenever `justReturnedFromResults && !madeNewSelection`, even if the queue has items ready to play. The user wants: if there's at least one category/trivia/queue item selected, always show the start button. The + button in the category picker section above already handles adding more categories.
-
-**Fix in `RoomLobbyV2.tsx`:** Change the `needsCategorySelection` logic so it only shows "აირჩიე კატეგორია" when there is truly no content (no queue items, no category, no trivia). Remove the `justReturnedFromResults` override when content exists.
-
----
-
-### Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/pages/ChallengeLanding.tsx` | Calculate point-based score instead of correct-count for `playerScore` |
-| `src/hooks/useMyRooms.ts` | Extend "my new room" priority window for host's active rooms |
-| `src/components/team/RoomLobbyV2.tsx` | Fix bottom button logic: show "თამაშის დაწყება" when queue/category exists |
+#### 3. `QuizQuestionCard` Enhancement
+- When `hideQuestionText` is true and the card has an image, add a small translucent label overlay or text below the image saying "სურათიანი კითხვა" (image question) so it's clear what type of question it is
 
 ### Technical Details
 
-**Score calculation (ChallengeLanding.tsx):**
-```typescript
-// Per correct answer: base 100 + time bonus (up to 50 based on time remaining)
-const timeBonus = Math.round((timeRemaining / TIME_PER_QUESTION) * 50);
-setPlayerScore(s => s + 100 + timeBonus);
-```
+**`QuestionPreviewPanel.tsx`** (lines ~80-100):
+- Wrap the icon rendering in a condition: only show `DynamicIcon` if `!question.image_url`
+- Add `hideQuestionText={!!question.image_url}` to the `QuizQuestionCard` props
 
-**Button logic fix (RoomLobbyV2.tsx line ~981):**
-```typescript
-// Only show "აირჩიე კატეგორია" when there's truly nothing to play
-const needsCategorySelection = !hasContent;
-```
+**`SampleDemoTV.tsx`** (lines ~109-122):
+- Conditionally render the `DynamicIcon` block only when `!question.image_url`
+- Pass `imageUrl={question.image_url}` and `hideQuestionText={!!question.image_url}` to `QuizQuestionCard`
+- Set `reserveTopSpace` based on whether there's no image (only reserve space when showing icon)
+
+**`quiz-question-card.tsx`**:
+- When `hideQuestionText` is true and `hasImage` is true, render a small centered label "სურათიანი კითხვა" below the image area instead of the question text block, so users understand it's an image-based question
