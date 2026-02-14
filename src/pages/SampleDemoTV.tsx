@@ -145,7 +145,7 @@ const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart
     </motion.div>
     <div className="flex gap-8 mb-10">
       {players.map((p, i) => (
-        <motion.div key={p.id} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.15 }} className="flex flex-col items-center">
+        <motion.div key={p.id} initial={{ opacity: 0, scale: 0, y: 30 }} animate={{ opacity: 1, scale: [0, 1.2, 1], y: 0 }} transition={{ delay: 0.5 + i * 0.4, duration: 0.5, ease: "backOut" }} className="flex flex-col items-center">
           <DemoAvatar player={p} className="w-32 h-32 ring-4 ring-purple-400 border-2 border-white" />
           <span className="text-white mt-3 font-medium text-lg">{p.nickname}</span>
         </motion.div>
