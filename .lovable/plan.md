@@ -1,37 +1,26 @@
 
 
-## Fix: Rotation Overlay Appearing During Sign-Up/Sign-In
+## Beautify "დავიწყოთ" Button + Make Card Clickable
 
-### Root Cause
-The CSS media query for landscape detection is:
-```css
-@media screen and (orientation: landscape) and (max-height: 500px)
-```
+### Changes
 
-When a user taps an input field (username, password), the **virtual keyboard** opens and reduces the visible viewport height. Once the height drops below the width, the browser reports `orientation: landscape` even though the phone is physically in portrait mode. This triggers the "please rotate" overlay, blocking the form.
+**File: `src/components/home/GuestSignupPromptModal.tsx`**
 
-### Fix
+1. **Button styling**: Replace `variant="success"` with `variant="primary"` and add custom gradient + glow classes:
+   - Pink-to-purple gradient background: `bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500`
+   - Animated glow effect using a pulsing box-shadow (via inline style or a wrapper with `animate-pulse` shadow)
+   - Sparkle icon remains, text stays "დავიწყოთ!"
 
-**File: `src/index.css` (line 354)**
+2. **Glow animation**: Add a subtle pulsing glow around the button using framer-motion's `animate` on the wrapper div, cycling box-shadow opacity for a breathing glow effect in pink/purple tones.
 
-Update the media query to also require a minimum width that would only be true for an actually rotated phone (not a portrait phone with keyboard open). A portrait phone typically has a width of 320-430px, while a landscape phone has 600px+.
+3. **Make entire card clickable**: Wrap the entire modal content (benefits list + button area) in a clickable container that triggers `handleStart` on click, so tapping anywhere on the card starts onboarding. The close (X) button will use `e.stopPropagation()` to remain independent.
 
-Change:
-```css
-@media screen and (orientation: landscape) and (max-height: 500px)
-```
-To:
-```css
-@media screen and (orientation: landscape) and (max-height: 500px) and (min-width: 600px)
-```
+### Technical Details
 
-This ensures the overlay only shows when the device is genuinely in landscape mode (width >= 600px) and not when a keyboard simply shrinks the viewport height.
+| Change | Detail |
+|--------|--------|
+| Button variant | Switch from `variant="success"` to custom styling via `className` overrides on the ChunkyButton |
+| Gradient | `bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500` applied via className override |
+| Glow | Framer-motion wrapper with animated `boxShadow` cycling between `0 0 20px rgba(168,85,247,0.4)` and `0 0 40px rgba(236,72,153,0.6)` |
+| Card clickable | Add `onClick={handleStart}` and `cursor-pointer` to the parent content wrapper inside GameModal |
 
-### Why This Works
-- Portrait phone with keyboard open: width ~375px, height ~300px -- `min-width: 600px` fails, overlay hidden
-- Landscape phone: width ~800px, height ~375px -- all conditions pass, overlay shown
-
-### Files Changed
-| File | Change |
-|------|--------|
-| `src/index.css` | Add `and (min-width: 600px)` to the landscape media query on line 354 |
