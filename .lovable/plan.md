@@ -1,18 +1,30 @@
 
 
-## Decrease Gaps Between Like/Save and Play Button
+## Fix Challenge Screen: Icon Position and Results Screen
 
-### Problem
-The like and save buttons with their counts are spaced too far apart (gap-6) and use large icons/text, causing them to crowd into the play button area.
+### Problem 1: Icon Overlaps Header
+The category icon on the playing screen uses `-top-12` positioning, placing it too high and covering the header title bar.
+
+### Problem 2: Results Screen Text and Icon
+- Currently shows "😤" emoji -- replace with the uploaded angry-boy.png image
+- Change "ვერ დაამარცხე!" to "ამჯერად დამარცხდი!"
 
 ### Changes
 
-**File: `src/components/social/TriviaPortfolioCard.tsx`**
+**1. Copy asset**
+- Copy `user-uploads://angry-boy.png` to `src/assets/icons/angry-boy.png`
 
-1. **Reduce gap between like and save buttons**: Change `gap-6` to `gap-3` on the stats container (line ~139).
-2. **Reduce icon sizes**: Change icon images from `w-[26px] h-[26px]` to `w-5 h-5` (lines ~146, ~157).
-3. **Reduce count text size**: Change `text-[17px]` to `text-sm` on the count spans (lines ~149, ~160).
-4. **Reduce inner gaps**: Change `gap-1.5` to `gap-1` on individual like/save button containers.
+**2. File: `src/pages/ChallengeLanding.tsx`**
 
-These changes will make the stats section more compact, giving proper breathing room before the play button.
+**Icon position fix (line ~323):**
+- Change `-top-12` to `-top-4` so the icon sits properly at the top of the question card without overlapping the header
 
+**Results screen updates (lines ~390-401):**
+- Import `angry-boy.png` at the top of the file
+- Replace the lose emoji "😤" with an `<img>` tag using the angry-boy icon (sized ~w-16 h-16)
+- Change lose text from "ვერ დაამარცხე!" to "ამჯერად დამარცხდი!"
+
+### Technical Details
+- The icon overlap is caused by `absolute -top-12` which places the 64px icon 48px above the card container, right into the header area
+- Changing to `-top-4` keeps the overlapping aesthetic but prevents header collision
+- The angry-boy.png will be imported as an ES6 module for proper bundling
