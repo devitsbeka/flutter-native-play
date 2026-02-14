@@ -88,7 +88,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       <motion.div
         ref={ref}
         className={cn(
-          "relative w-full rounded-2xl overflow-hidden",
+          "relative w-full rounded-2xl overflow-hidden flex flex-col",
           isFrozen && "ring-4 ring-cyan-400/50",
           className
         )}
@@ -233,8 +233,8 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             // Reduce top padding if we have media (no need for icon space)
             hasMedia && "pt-4",
             !hasMedia && hasTopBadges && !reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-14 [@media(max-height:600px)]:pt-12",
-            !hasMedia && hasTopBadges && reserveTopSpace && "pt-20 [@media(max-height:700px)]:pt-16 [@media(max-height:600px)]:pt-12",
-            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-12 [@media(max-height:700px)]:pt-10 [@media(max-height:600px)]:pt-8"
+            !hasMedia && hasTopBadges && reserveTopSpace && "pt-24 [@media(max-height:700px)]:pt-20 [@media(max-height:600px)]:pt-14",
+            !hasMedia && !hasTopBadges && reserveTopSpace && "pt-16 [@media(max-height:700px)]:pt-12 [@media(max-height:600px)]:pt-10"
           )}>
             {isLoading ? (
               <div className="space-y-2 w-full">
@@ -253,6 +253,9 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
             )}
           </div>
         )}
+
+        {/* Spacer to push progress bar to bottom */}
+        <div className="flex-1" />
 
         {/* Progress bar at bottom */}
         <div className="h-2 bg-gray-200 w-full">
