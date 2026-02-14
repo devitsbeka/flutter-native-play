@@ -1,39 +1,51 @@
 
 
-## Tighten Guest Play Limit: Block After 5 Plays
+## Fix: Missing Admin Read Access for User Analytics
 
-### Current Behavior
-- Guests can play up to **10 games** before being blocked
-- After every game (plays 1-9), a dismissible registration modal appears that users can close and keep playing
-- Only at play 10 does the modal become blocking (non-dismissible)
+### Root Cause
+The User Deep Dive analytics modal shows incorrect data (Return Visits = 0, estimated Time Spent, etc.) because several database tables are missing admin SELECT policies. When an admin opens another user's profile, the Row Level Security (RLS) blocks reading their data from these tables:
 
-### New Behavior
-- Reduce the limit from 10 to **5 games**
-- Plays 1-2: no modal, guest plays freely
-- Plays 3-4: dismissible modal appears encouraging sign-up, but guest can close and continue
-- Play 5+: **blocking modal** -- guest must sign in or register to continue playing
+| Table | Has Admin Read Policy? | Effect on Analytics |
+|-------|----------------------|---------------------|
+| `game_sessions` | No -- only own sessions | Return Visits missing PvP game dates, totalMatchmaking = 0 |
+| `user_daily_plays` | No -- only own data | Daily play chart empty |
+| `room_match_history` | No -- participants only | Room game history missing |
+| `game_plays` | Yes | Works correctly |
+| `user_sessions` | Yes | Works correctly (though often empty on mobile) |
 
-### Changes
+### Fix
 
-**File: `src/hooks/useGuestPlays.ts`**
-- Change `MAX_GUEST_PLAYS` from `10` to `5`
+**Database Migration**: Add admin SELECT policies to the 3 tables missing them:
 
-**File: `src/pages/Game.tsx`**
-- Update the guest check logic so the first 2 plays are free (no modal), plays 3-4 show a dismissible modal, and play 5+ is blocking
-- Current logic shows the modal after every play (playsUsed > 0). Change the threshold so the dismissible interstitial only appears after 2+ plays
+```sql
+-- Allow admins to read all game_sessions
+CREATE POLICY "Admins can view all game sessions"
+  ON public.game_sessions FOR SELECT
+  USING (has_role(auth.uid(), 'admin'));
 
-### Technical Details
+-- Allow admins to read all user_daily_plays
+CREATE POLICY "Admins can view all daily plays"
+  ON public.user_daily_plays FOR SELECT
+  USING (has_role(auth.uid(), 'admin'));
 
-| File | Change |
-|------|--------|
-| `src/hooks/useGuestPlays.ts` | `MAX_GUEST_PLAYS = 5` (line 5) |
-| `src/pages/Game.tsx` | Change `guestData.playsUsed > 0` to `guestData.playsUsed >= 2` so first 2 games have no interruption, then plays 3-4 get a dismissible prompt, play 5 is hard-blocked |
+-- Allow admins to read all room_match_history
+CREATE POLICY "Admins can view all room match history"
+  ON public.room_match_history FOR SELECT
+  USING (has_role(auth.uid(), 'admin'));
+```
 
-### Summary
+**No code changes needed** -- the UserDetailModal.tsx code already queries these tables correctly. The data was simply being blocked by RLS.
 
-| Plays | Experience |
-|-------|-----------|
-| 1-2 | Play freely, no modal |
-| 3-4 | Dismissible sign-up modal before each game, can close and continue |
-| 5+ | Blocking modal, must register to play |
+### Expected Result After Fix
+For the "fatima" user example (59 games across Feb 13-14):
+- **Return Visits**: 2 (instead of 0)
+- **Total Matchmaking**: 59 (instead of 0)
+- **Time Spent**: Accurate from session data when available
+- **Daily Plays chart**: Will show actual daily activity
+- **Room History tab**: Will show actual room games
+
+### Files Changed
+| Change | Detail |
+|--------|--------|
+| Database migration | Add 3 RLS policies for admin read access |
 
