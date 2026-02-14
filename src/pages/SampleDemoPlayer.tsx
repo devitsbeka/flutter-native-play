@@ -120,7 +120,16 @@ const DemoPlayerContent: React.FC = () => {
   );
 };
 
-const PlayerIdleScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => (
+const PlayerIdleScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('autostart') === 'true') {
+      const timer = setTimeout(() => onStart(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [onStart]);
+
+  return (
   <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-6">
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
       <h1 className="text-3xl font-bold text-white font-display mb-2">MyTrivia</h1>
@@ -133,7 +142,8 @@ const PlayerIdleScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => (
     </motion.button>
     <p className="text-purple-400 text-sm mt-4">ან გახსენი /sampledemotv სხვა ტაბში</p>
   </div>
-);
+  );
+};
 
 const PlayerCountdownScreen: React.FC<{ value: number }> = ({ value }) => {
   const display = value === 0 ? 'GO!' : value;

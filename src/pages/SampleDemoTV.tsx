@@ -142,7 +142,16 @@ const DemoTVContent: React.FC = () => {
   );
 };
 
-const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart, players }) => (
+const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart, players }) => {
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('autostart') === 'true') {
+      const timer = setTimeout(() => onStart(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [onStart]);
+
+  return (
   <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-8">
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
       <MyTriviaLiveLogo size="xl" textColor="light" className="justify-center mb-3" />
@@ -160,7 +169,8 @@ const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart
       დაწყება
     </ChunkyButton>
   </div>
-);
+  );
+};
 
 const CountdownScreen: React.FC<{ value: number }> = ({ value }) => {
   const display = value === 0 ? 'GO!' : value;
