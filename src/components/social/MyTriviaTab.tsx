@@ -1276,6 +1276,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
         <FeatureOnboardingCarousel
           onNavigateToTab={onNavigateToTab}
           onComplete={() => setHasSeenOnboarding(true)}
+          onCreateTrivia={onCreateQuiz}
         />
       );
     }

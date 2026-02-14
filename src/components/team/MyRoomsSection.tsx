@@ -216,6 +216,7 @@ export function MyRoomsSection({
             <FeatureOnboardingCarousel 
               onNavigateToTab={onNavigateToTab}
               onComplete={() => setHasSeenOnboarding(true)}
+              onCreateRoom={onCreateRoom}
             />
           </motion.div>
         ) : (
