@@ -1,80 +1,48 @@
 
 
-## Sample Demo: TV + Player Synchronized Experience
+## Fix: Challenge Scores, Room Sorting & Start Button Logic
 
-### Overview
-Two new pages that showcase a complete TV trivia game experience with hardcoded data. Both pages sync via the browser's `BroadcastChannel` API -- open `/sampledemotv` on a big screen and `/sampledemoplayer` on a phone/tab, click "Start" on either, and they proceed together through the full game flow.
+### Issue 1: Challenge scores show wrong value (1 vs 751)
 
-### Players
-- **ირაკლი** (host), **გიო**, **თამუნა**, **მაკა**
+The challenger's score is saved as total points (e.g., 751 — including time bonuses), but the friend's `player_score` is saved as a simple correct-answer count (e.g., 1). This makes the comparison meaningless.
 
-### Questions (5 from ქართული ლიტერატურა)
-Real questions from the database, hardcoded into the demo:
-1. ვინ დაწერა „ვეფხისტყაოსანი"? (შოთა რუსთაველი)
-2. რომელ ქალაქში დაიბადა ნიკოლოზ ბარათაშვილი? (თბილისი)
-3. რომელ ეპოქაში მოღვაწეობდა სულხან-საბა ორბელიანი? (XVII-XVIII საუკუნე)
-4. როდის დაიბადა მიხეილ ჯავახიშვილი? (1880 წელი)
-5. ვის უწოდეს „ფშაველ-ხევსურთა ბრძენკაცი"? (ვაჟა-ფშაველა)
+**Fix in `ChallengeLanding.tsx`:** Calculate a proper point-based score for the challenge player, matching the host's scoring system. Instead of incrementing `playerScore` by 1 per correct answer, calculate points with a time bonus (same formula used in the multiplayer game: base points + time bonus).
 
-### Game Flow (automated after "Start")
+The scoring formula will match the room game: ~100 base points + up to ~50 bonus points based on remaining time per correct answer. This way both scores are comparable.
 
-```text
-[Start Button] --> [Countdown 3-2-1] --> [Q1 15s + reveal] --> [Q2] --> ... --> [Q5] --> [Leaderboard]
-```
+### Issue 2: Host sees new room first in list
 
-Each question:
-- 15-second timer counts down
-- AI players "answer" at random times (some correct, some wrong)
-- After timer expires: 3-second reveal phase showing correct answer
-- Then auto-advance to next question
+The sorting in `useMyRooms.ts` already prioritizes "MY recently created rooms (within 5 min)" at Priority 1. However, after 5 minutes the room drops in priority. We will extend this window to include rooms with recent `last_activity_at` when the host owns them, ensuring rooms the host just interacted with stay near the top.
 
-### Sync Mechanism
-- Uses `BroadcastChannel('demo-game-sync')` -- zero backend, works across tabs in the same browser
-- Messages: `{ type: 'start' }`, `{ type: 'tick', questionIndex, timeRemaining, phase }` 
-- One tab becomes the "driver" (whichever clicks Start first); the other follows
+**Fix in `useMyRooms.ts`:** Broaden the "my new room" priority to also include rooms where `last_activity_at` is very recent (within 10 minutes) and the user is the host.
 
-### What each page shows
+### Issue 3: Bottom button shows "აირჩიე კატეგორია" instead of "თამაშის დაწყება"
 
-**`/sampledemotv`** -- TV Display experience:
-- Start screen with "დაწყება" button and 4 player avatars
-- Countdown (3, 2, 1, დაიწყო!)
-- Question screen using the same visual layout as `TVQuestionScreenV4` (question card, 2x2 answers, player status bar with avatars moving between waiting/correct/wrong zones)
-- Reveal phase highlighting correct answer in green
-- Final leaderboard using the same podium layout as `TVResultsScreen`
+Currently, the logic forces "აირჩიე კატეგორია" whenever `justReturnedFromResults && !madeNewSelection`, even if the queue has items ready to play. The user wants: if there's at least one category/trivia/queue item selected, always show the start button. The + button in the category picker section above already handles adding more categories.
 
-**`/sampledemoplayer`** -- Player phone experience:
-- Start screen with "მოემზადე" waiting state
-- Same countdown
-- Mobile answer buttons (tap to select) -- the viewer plays as **თამუნა**
-- After selecting, shows correct/incorrect feedback
-- Final score summary
+**Fix in `RoomLobbyV2.tsx`:** Change the `needsCategorySelection` logic so it only shows "აირჩიე კატეგორია" when there is truly no content (no queue items, no category, no trivia). Remove the `justReturnedFromResults` override when content exists.
 
-### Winner
-Predetermined scoring makes **მაკა** win (she gets 4/5 correct with fast times), followed by ირაკლი (3/5), თამუნა (player-controlled), გიო (2/5).
-
-### Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/contexts/DemoGameContext.tsx` | Shared state manager with BroadcastChannel sync, game loop logic, hardcoded questions/players, AI answer simulation |
-| `src/pages/SampleDemoTV.tsx` | TV display page reusing existing TV visual components (countdown, question layout, results podium) |
-| `src/pages/SampleDemoPlayer.tsx` | Mobile player page showing answer buttons, timer, score |
+---
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Add 2 routes: `/sampledemotv` and `/sampledemoplayer` (lazy loaded, outside SplashScreen wrapper for instant load) |
+| `src/pages/ChallengeLanding.tsx` | Calculate point-based score instead of correct-count for `playerScore` |
+| `src/hooks/useMyRooms.ts` | Extend "my new room" priority window for host's active rooms |
+| `src/components/team/RoomLobbyV2.tsx` | Fix bottom button logic: show "თამაშის დაწყება" when queue/category exists |
 
 ### Technical Details
 
-**DemoGameContext** manages:
-- Phase state machine: `idle` -> `countdown` -> `playing` -> `reveal` -> (loop) -> `results`
-- Timer (15s per question, 1s ticks)
-- AI player answers (randomized timing, predetermined correctness pattern)
-- Score calculation (base 100 pts + time bonus up to 150 pts for correct answers)
-- BroadcastChannel for cross-tab sync (driver/follower pattern)
+**Score calculation (ChallengeLanding.tsx):**
+```typescript
+// Per correct answer: base 100 + time bonus (up to 50 based on time remaining)
+const timeBonus = Math.round((timeRemaining / TIME_PER_QUESTION) * 50);
+setPlayerScore(s => s + 100 + timeBonus);
+```
 
-**No database calls** -- everything is hardcoded. No Supabase, no auth required. Pure client-side demo.
-
-**Route placement** -- Routes will be added outside the `SplashScreen` wrapper (like existing `/tv-showcase`) so they load instantly without the app preloader.
+**Button logic fix (RoomLobbyV2.tsx line ~981):**
+```typescript
+// Only show "აირჩიე კატეგორია" when there's truly nothing to play
+const needsCategorySelection = !hasContent;
+```
