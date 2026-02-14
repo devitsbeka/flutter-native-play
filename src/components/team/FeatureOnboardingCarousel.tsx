@@ -14,6 +14,7 @@ interface FeatureTooltip {
   title: string;
   description: string;
   targetTab: string;
+  actionLabel?: string;
 }
 
 const FEATURE_TOOLTIPS: FeatureTooltip[] = [
@@ -23,6 +24,7 @@ const FEATURE_TOOLTIPS: FeatureTooltip[] = [
     title: "ოთახები",
     description: "შექმენი სათამაშო ოთახი, აირჩიე რას ითამაშებთ, და მოიწვიე მეგობრები სათამაშოდ. თამაში TV-ზეც შესაძლებელია",
     targetTab: "rooms",
+    actionLabel: "+ ოთახი",
   },
   {
     id: "my-trivia",
@@ -30,6 +32,7 @@ const FEATURE_TOOLTIPS: FeatureTooltip[] = [
     title: "ჩემი ტრივია",
     description: "შექმენი შენი Trivia, გამოაქვეყნე ან შექმენი My Trivia Party მეგობრებთან ერთად სათამაშოდ, შენი კითხვებით / შენი პასუხებით",
     targetTab: "my-content",
+    actionLabel: "+ ტრივია",
   },
   {
     id: "explore",
@@ -37,6 +40,7 @@ const FEATURE_TOOLTIPS: FeatureTooltip[] = [
     title: "აღმოაჩინე",
     description: "ითამაშე სხვა მოთამაშეების მიერ შექმნილი Trivia სხვადასხვა თემაზე",
     targetTab: "explore",
+    actionLabel: "აღმოაჩინე",
   },
 ];
 
@@ -44,12 +48,16 @@ interface FeatureOnboardingCarouselProps {
   onNavigateToTab?: (tab: string) => void;
   onComplete?: () => void;
   showAllCards?: boolean; // For preview page
+  onCreateRoom?: () => void;
+  onCreateTrivia?: () => void;
 }
 
 export function FeatureOnboardingCarousel({ 
   onNavigateToTab, 
   onComplete,
-  showAllCards = false 
+  showAllCards = false,
+  onCreateRoom,
+  onCreateTrivia,
 }: FeatureOnboardingCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -65,6 +73,12 @@ export function FeatureOnboardingCarousel({
     return () => clearInterval(interval);
   }, [showAllCards, isPaused]);
 
+  const getActionForTooltip = useCallback((tooltip: FeatureTooltip) => {
+    if (tooltip.id === "rooms" && onCreateRoom) return onCreateRoom;
+    if (tooltip.id === "my-trivia" && onCreateTrivia) return onCreateTrivia;
+    return undefined;
+  }, [onCreateRoom, onCreateTrivia]);
+
   const handleCardClick = useCallback((tooltip: FeatureTooltip) => {
     // Mark onboarding as seen
     localStorage.setItem(ONBOARDING_KEY, "true");
@@ -73,6 +87,19 @@ export function FeatureOnboardingCarousel({
     onNavigateToTab?.(tooltip.targetTab);
     onComplete?.();
   }, [onNavigateToTab, onComplete]);
+
+  const handleAction = useCallback((tooltip: FeatureTooltip) => {
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    const action = getActionForTooltip(tooltip);
+    if (action) {
+      action();
+      onComplete?.();
+    } else {
+      // For explore, just navigate
+      onNavigateToTab?.(tooltip.targetTab);
+      onComplete?.();
+    }
+  }, [getActionForTooltip, onNavigateToTab, onComplete]);
 
   const handleDotClick = (index: number) => {
     setCurrentIndex(index);
@@ -89,6 +116,7 @@ export function FeatureOnboardingCarousel({
             key={tooltip.id} 
             tooltip={tooltip} 
             onClick={() => handleCardClick(tooltip)}
+            onAction={() => handleAction(tooltip)}
             index={index}
           />
         ))}
@@ -112,6 +140,7 @@ export function FeatureOnboardingCarousel({
           <FeatureCard 
             tooltip={currentTooltip} 
             onClick={() => handleCardClick(currentTooltip)}
+            onAction={() => handleAction(currentTooltip)}
             index={currentIndex}
           />
         </motion.div>
@@ -139,10 +168,11 @@ export function FeatureOnboardingCarousel({
 interface FeatureCardProps {
   tooltip: FeatureTooltip;
   onClick: () => void;
+  onAction?: () => void;
   index: number;
 }
 
-function FeatureCard({ tooltip, onClick, index }: FeatureCardProps) {
+function FeatureCard({ tooltip, onClick, onAction, index }: FeatureCardProps) {
   return (
     <button
       onClick={onClick}
@@ -191,6 +221,31 @@ function FeatureCard({ tooltip, onClick, index }: FeatureCardProps) {
             <p className="text-sm text-muted-foreground leading-relaxed">
               {tooltip.description}
             </p>
+
+            {/* Glowing CTA Button */}
+            {tooltip.actionLabel && (
+              <motion.div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction?.();
+                }}
+                animate={{
+                  boxShadow: [
+                    "0 0 12px hsl(var(--primary) / 0.3)",
+                    "0 0 28px hsl(var(--primary) / 0.6)",
+                    "0 0 12px hsl(var(--primary) / 0.3)",
+                  ],
+                  scale: [1, 1.03, 1],
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="mt-1 w-full py-3 rounded-xl text-center font-bold text-white text-base cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary)), hsl(280, 80%, 60%))",
+                }}
+              >
+                {tooltip.actionLabel}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
