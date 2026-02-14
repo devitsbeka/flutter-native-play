@@ -606,7 +606,7 @@ export default function ContentManager() {
       </div>
 
       {/* Column 3: Preview & Edit */}
-      <div className="flex-1 flex flex-col bg-muted/20">
+      <div className="flex-1 flex flex-col bg-muted/20 sticky top-0 h-screen overflow-hidden">
         {selectedQuestion ? (
           <>
             {/* Question Details Header */}
@@ -691,6 +691,7 @@ export default function ContentManager() {
                       correctAnswer={selectedQuestion.correct_answer}
                       incorrectAnswers={selectedQuestion.incorrect_answers}
                       difficulty={selectedQuestion.difficulty}
+                      iconSlug={selectedQuestion.icon_slug || undefined}
                     />
                   </div>
                 </div>
