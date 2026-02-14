@@ -139,31 +139,31 @@ export function TriviaPortfolioCard({
       <div className="p-3 bg-card relative z-10">
         <div className="flex items-center justify-between">
           {/* Stats - Like and Save */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
             {/* Like Button */}
             <button 
               onClick={handleLikeClick}
-              className="flex items-center gap-1.5 transition-all"
+              className="flex items-center gap-1 transition-all"
             >
               <img 
                 src={purpleHeartIcon} 
                 alt="Like" 
-                className={`w-[26px] h-[26px] object-contain transition-all ${isLiked ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                className={`w-5 h-5 object-contain transition-all ${isLiked ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
-              <span className={cn("text-[17px] font-medium", isLiked ? "text-foreground" : "text-muted-foreground")}>{trivia.likesCount || 0}</span>
+              <span className={cn("text-sm font-medium", isLiked ? "text-foreground" : "text-muted-foreground")}>{trivia.likesCount || 0}</span>
             </button>
             
             {/* Save/Bookmark Button */}
             <button 
               onClick={handleSaveClick}
-              className="flex items-center gap-1.5 transition-all"
+              className="flex items-center gap-1 transition-all"
             >
               <img 
                 src={bookmark3dIcon} 
                 alt="Save" 
-                className={`w-[26px] h-[26px] object-contain transition-all ${isSaved ? 'opacity-100' : 'opacity-60 grayscale'}`}
+                className={`w-5 h-5 object-contain transition-all ${isSaved ? 'opacity-100' : 'opacity-60 grayscale'}`}
               />
-              <span className={cn("text-[17px] font-medium", isSaved ? "text-foreground" : "text-muted-foreground")}>{trivia.savesCount || 0}</span>
+              <span className={cn("text-sm font-medium", isSaved ? "text-foreground" : "text-muted-foreground")}>{trivia.savesCount || 0}</span>
             </button>
           </div>
           
