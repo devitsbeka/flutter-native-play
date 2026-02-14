@@ -1,30 +1,18 @@
 
 
-## Make Preview Icon Clickable to Change Question Icon
+## Decrease Gaps Between Like/Save and Play Button
 
-### Overview
-Make the icon in the phone mockup preview clickable so you can quickly change a question's icon without opening the full edit form. Clicking the icon will open a popover with the existing `IconPicker` component, and selecting a new icon will save it directly to the database.
+### Problem
+The like and save buttons with their counts are spaced too far apart (gap-6) and use large icons/text, causing them to crowd into the play button area.
 
 ### Changes
 
-**File: `src/pages/admin/ContentManager.tsx`**
+**File: `src/components/social/TriviaPortfolioCard.tsx`**
 
-1. **Add state for icon picker popover**: Add a `showPreviewIconPicker` boolean state.
+1. **Reduce gap between like and save buttons**: Change `gap-6` to `gap-3` on the stats container (line ~139).
+2. **Reduce icon sizes**: Change icon images from `w-[26px] h-[26px]` to `w-5 h-5` (lines ~146, ~157).
+3. **Reduce count text size**: Change `text-[17px]` to `text-sm` on the count spans (lines ~149, ~160).
+4. **Reduce inner gaps**: Change `gap-1.5` to `gap-1` on individual like/save button containers.
 
-2. **Add `isEditable` and `onIconClick` props** to the `QuestionMockupPreview` component (line ~690):
-   - `isEditable={true}`
-   - `onIconClick={() => setShowPreviewIconPicker(true)}`
+These changes will make the stats section more compact, giving proper breathing room before the play button.
 
-3. **Add a Popover with `IconPicker`** below the `QuestionMockupPreview` component:
-   - Wrap the preview in a `Popover` from Radix UI
-   - The popover content will contain the existing `IconPicker` component
-   - When an icon is selected, call `updateQuestion(selectedQuestion.id, { icon_slug: slug })` to save directly to the database
-   - Close the popover after selection
-
-### How It Works
-- The `QuestionMockupPreview` component already has built-in support for `isEditable` and `onIconClick` -- it shows a pencil overlay on hover
-- Clicking the icon opens a popover with the full icon search/picker
-- Selecting an icon saves it immediately and updates the preview
-
-### No New Files
-All changes are in `ContentManager.tsx` only, reusing existing `IconPicker` and `Popover` components.
