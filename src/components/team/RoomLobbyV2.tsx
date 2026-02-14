@@ -977,8 +977,8 @@ export function RoomLobbyV2() {
             // Show different button based on context
             (() => {
               const hasContent = queue.length > 0 || currentRoom.category_id || currentRoom.user_trivia_id;
-              // When returned from game results AND haven't made a new selection, show "აირჩიე კატეგორია"
-              const needsCategorySelection = (justReturnedFromResults && !madeNewSelection) || !hasContent;
+              // Only show "აირჩიე კატეგორია" when there's truly nothing to play
+              const needsCategorySelection = !hasContent;
               
               const handleStartOrPick = () => {
                 if (needsCategorySelection) {

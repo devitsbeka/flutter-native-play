@@ -463,11 +463,14 @@ export function useMyRooms(options?: UseMyRoomsOptions) {
       if (aHasTV && !bHasTV) return -1;
       if (bHasTV && !aHasTV) return 1;
 
-      // Priority 1: MY recently created rooms (within 5 min)
+      // Priority 1: MY recently created or recently active rooms (within 10 min)
+      const tenMinutesAgo = now - 10 * 60 * 1000;
       const aIsMyNew = a.is_host && a.status === "waiting" &&
-        new Date(a.created_at).getTime() > fiveMinutesAgo;
+        (new Date(a.created_at).getTime() > fiveMinutesAgo ||
+         new Date(a.last_activity_at || a.created_at).getTime() > tenMinutesAgo);
       const bIsMyNew = b.is_host && b.status === "waiting" &&
-        new Date(b.created_at).getTime() > fiveMinutesAgo;
+        (new Date(b.created_at).getTime() > fiveMinutesAgo ||
+         new Date(b.last_activity_at || b.created_at).getTime() > tenMinutesAgo);
       if (aIsMyNew && !bIsMyNew) return -1;
       if (bIsMyNew && !aIsMyNew) return 1;
 
