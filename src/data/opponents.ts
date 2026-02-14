@@ -53,7 +53,7 @@ export const countries = [
   { code: "IT", name: "Italy", flag: "🇮🇹" },
   { code: "ES", name: "Spain", flag: "🇪🇸" },
   { code: "TR", name: "Turkey", flag: "🇹🇷" },
-  { code: "RU", name: "Russia", flag: "🇷🇺" },
+  
   { code: "UA", name: "Ukraine", flag: "🇺🇦" },
   { code: "AM", name: "Armenia", flag: "🇦🇲" },
   { code: "AZ", name: "Azerbaijan", flag: "🇦🇿" },
@@ -69,7 +69,7 @@ const countryWeights = [
   { code: "IT", weight: 2 },
   { code: "ES", weight: 2 },
   { code: "TR", weight: 4 },
-  { code: "RU", weight: 3 },
+  
   { code: "UA", weight: 2 },
   { code: "AM", weight: 2 },
   { code: "AZ", weight: 2 },

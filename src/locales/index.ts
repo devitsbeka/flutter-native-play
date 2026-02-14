@@ -2,7 +2,7 @@
 
 import { ka, type KaTranslations } from './ka';
 import { en } from './en';
-import { ru } from './ru';
+
 import { es } from './es';
 import { fr } from './fr';
 import { de } from './de';
@@ -25,7 +25,6 @@ import { az } from './az';
 export const translations: Record<string, KaTranslations> = {
   ka,
   en,
-  ru,
   es,
   fr,
   de,
@@ -49,7 +48,7 @@ export const translations: Record<string, KaTranslations> = {
 export const LANGUAGES = [
   { code: 'ka', name: 'Georgian', nativeName: 'ქართული', flag: '🇬🇪', region: 'ge' },
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸', region: 'global' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺', region: 'ru' },
+  
   { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸', region: 'es' },
   { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', region: 'fr' },
   { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', region: 'de' },
@@ -88,4 +87,4 @@ export const DEFAULT_LANGUAGE = 'ka';
 
 // Re-export types
 export type { KaTranslations };
-export { ka, en, ru, es, fr, de, it, pt, tr, pl, nl, uk, ja, ko, zh, ar, hi, he, sv, az };
+export { ka, en, es, fr, de, it, pt, tr, pl, nl, uk, ja, ko, zh, ar, hi, he, sv, az };

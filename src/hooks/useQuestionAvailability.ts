@@ -203,7 +203,6 @@ export function useQuestionAvailability() {
     const languageNames: Record<string, string> = {
       'ka': 'ქართულ',
       'en': 'ინგლისურ',
-      'ru': 'რუსულ',
     };
     
     const langName = languageNames[language] || language;
@@ -287,7 +286,6 @@ export function useQuestionAvailability() {
     const languageNames: Record<string, string> = {
       'ka': 'ქართულ',
       'en': 'ინგლისურ',
-      'ru': 'რუსულ',
     };
     
     const langName = languageNames[language] || language;

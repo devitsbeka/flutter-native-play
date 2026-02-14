@@ -22,7 +22,7 @@ const REGIONS = [
 const LANGUAGE_REGIONS: Record<string, string> = {
   ka: "europe",
   en: "americas",
-  ru: "europe",
+  
   es: "europe",
   fr: "europe",
   de: "europe",

@@ -15,7 +15,7 @@ interface CountrySelectModalProps {
 }
 
 // Priority countries to show at top
-const priorityCountries = ['ge', 'us', 'de', 'uk', 'ru', 'tr', 'fr', 'it', 'es'];
+const priorityCountries = ['ge', 'us', 'de', 'uk', 'tr', 'fr', 'it', 'es'];
 
 export function CountrySelectModal({ isOpen, onClose, currentCountryCode }: CountrySelectModalProps) {
   const [searchQuery, setSearchQuery] = useState("");

@@ -113,7 +113,7 @@ export function PalantirAnalyticsWidget() {
   };
 
   const fetchLanguageBuckets = async () => {
-    const languages = ['ka', 'en', 'ru', 'de', 'fr'];
+    const languages = ['ka', 'en', 'de', 'fr'];
     const buckets: LanguageBucket[] = [];
 
     for (const lang of languages) {
@@ -179,7 +179,7 @@ export function PalantirAnalyticsWidget() {
       const regionStats: Record<string, RegionalActivity> = {};
       
       // Initialize all predefined regions
-      const predefinedRegions = ['ge', 'us', 'ru', 'de', 'uk'];
+      const predefinedRegions = ['ge', 'us', 'de', 'uk'];
       predefinedRegions.forEach(region => {
         regionStats[region] = {
           region,
