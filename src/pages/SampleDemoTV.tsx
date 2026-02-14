@@ -124,9 +124,9 @@ const DemoTVContent: React.FC = () => {
             reserveTopSpace={!(question as any).image_url}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
+        <div className="grid grid-cols-2 gap-4 min-h-0">
           {question.options.map((option, index) => (
-            <div key={index} style={{ maxHeight: '200px' }}>
+            <div key={index} style={{ maxHeight: '125px' }}>
               <QuizAnswerButton
                 state={isReveal ? (option === question.correct_answer ? 'correct' : 'disabled') : 'default'}
                 label={GEORGIAN_LABELS[index]}
