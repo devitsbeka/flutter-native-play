@@ -53,7 +53,7 @@ export interface Category {
 const LANGUAGES = [
   { code: 'ka', name: 'Georgian', flag: '🇬🇪' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
+  
   { code: 'es', name: 'Spanish', flag: '🇪🇸' },
   { code: 'fr', name: 'French', flag: '🇫🇷' },
   { code: 'pt-br', name: 'Portuguese', flag: '🇧🇷' },
