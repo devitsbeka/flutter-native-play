@@ -2,13 +2,11 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DemoGameProvider, useDemoGame } from '@/contexts/DemoGameContext';
 import { Check, X } from 'lucide-react';
-
-const OPTION_COLORS = [
-  'from-blue-500 to-blue-600',
-  'from-green-500 to-green-600',
-  'from-yellow-500 to-yellow-600',
-  'from-red-500 to-red-600',
-];
+import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
+import { QuizAnswerButton, QuizAnswerState } from '@/components/ui/quiz-answer-button';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { TimerBadge } from '@/components/game/TimerBadge';
+import { QuizProgressDots } from '@/components/ui/quiz-progress-dots';
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -23,84 +21,101 @@ const DemoPlayerContent: React.FC = () => {
 
   const question = questions[currentQuestionIndex];
   const isReveal = phase === 'reveal';
+  const timerPercent = (timeRemaining / 15) * 100;
+
+  const getAnswerState = (option: string): QuizAnswerState => {
+    if (!isReveal && playerAnswer === null) return 'default';
+    if (!isReveal && playerAnswer === option) return 'selected';
+    if (!isReveal && playerAnswer !== null) return 'disabled';
+    if (option === question.correct_answer) return 'correct';
+    if (playerAnswer === option && !playerAnswerCorrect) return 'wrong';
+    return 'disabled';
+  };
+
+  const progressResults = questions.map((_, i) => {
+    if (i > currentQuestionIndex) return undefined;
+    if (i === currentQuestionIndex && !isReveal) return undefined;
+    return undefined;
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-white">
-          <p className="text-sm text-purple-300">კითხვა {currentQuestionIndex + 1}/{questions.length}</p>
-          <p className="font-bold">📚 ქართული ლიტერატურა</p>
+    <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
+      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
+        <div className="pt-[env(safe-area-inset-top)]" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-3 py-1 mb-2 flex-shrink-0">
+          <span className="text-white font-bold text-base truncate max-w-[200px]">
+            📚 ქართული ლიტერატურა
+          </span>
+          <TimerBadge seconds={timeRemaining} maxSeconds={15} compact />
         </div>
-        <div className="bg-white/20 rounded-xl px-4 py-2">
-          <span className="text-white font-bold text-xl">{timeRemaining}s</span>
+
+        {/* Score */}
+        <div className="text-center mb-2 flex-shrink-0">
+          <span className="text-white/60 text-sm">ქულა: </span>
+          <span className="text-white font-bold">{tamuna?.score || 0}</span>
         </div>
+
+        {/* Question Card with Icon */}
+        <div className="px-4 flex-shrink-0 -mt-1 mb-0 relative">
+          {!(question as any).image_url && (
+            <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+              <DynamicIcon 
+                slug={question.icon_slug}
+                size={64}
+                className="drop-shadow-lg"
+              />
+            </div>
+          )}
+          <QuizQuestionCard
+            questionText={question.question_text}
+            imageUrl={(question as any).image_url}
+            hideQuestionText={!!(question as any).image_url}
+            progressPercent={Math.max(0, Math.min(100, timerPercent))}
+            reserveTopSpace={!(question as any).image_url}
+          />
+        </div>
+
+        {/* Progress Dots */}
+        <div className="flex justify-center py-2 flex-shrink-0">
+          <QuizProgressDots
+            total={questions.length}
+            current={currentQuestionIndex}
+            results={progressResults as any}
+          />
+        </div>
+
+        {/* Answer Buttons */}
+        <div className="flex-1 px-4 mt-0 flex flex-col gap-3 overflow-y-auto min-h-0 pb-2">
+          {question.options.map((option, index) => (
+            <div key={`${currentQuestionIndex}-${index}`} className="flex-shrink-0 w-full">
+              <QuizAnswerButton
+                label={GEORGIAN_LABELS[index]}
+                text={option}
+                state={getAnswerState(option)}
+                onClick={() => submitAnswer(option)}
+                disabled={playerAnswer !== null || isReveal}
+                showLabel={true}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Feedback */}
+        <AnimatePresence>
+          {playerAnswer && !isReveal && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="px-4 pb-2 text-center flex-shrink-0">
+              <p className="text-white text-lg font-medium">
+                {playerAnswerCorrect ? '✅ სწორია!' : '❌ არასწორია'}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="pb-[env(safe-area-inset-bottom)]" />
       </div>
-
-      {/* Score */}
-      <div className="text-center mb-3">
-        <span className="text-purple-300 text-sm">ქულა: </span>
-        <span className="text-white font-bold">{tamuna?.score || 0}</span>
-      </div>
-
-      {/* Question */}
-      <motion.div className="bg-white/10 backdrop-blur rounded-2xl p-4 mb-4"
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="text-white text-lg font-semibold text-center">{question.question_text}</p>
-      </motion.div>
-
-      {/* Answer Buttons */}
-      <div className="flex-1 flex flex-col gap-3">
-        {question.options.map((option, index) => {
-          const isSelected = playerAnswer === option;
-          const isCorrectOption = option === question.correct_answer;
-          let bgClass = `bg-gradient-to-r ${OPTION_COLORS[index]}`;
-          let extraClass = '';
-
-          if (isReveal) {
-            if (isCorrectOption) {
-              bgClass = 'bg-gradient-to-r from-green-400 to-green-600 ring-4 ring-green-300';
-            } else if (isSelected && !playerAnswerCorrect) {
-              bgClass = 'bg-gradient-to-r from-red-400 to-red-600 ring-4 ring-red-300';
-            } else {
-              bgClass = 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-50';
-            }
-          } else if (isSelected) {
-            extraClass = 'ring-4 ring-white scale-[0.98]';
-          }
-
-          const disabled = playerAnswer !== null || isReveal;
-
-          return (
-            <motion.button
-              key={index}
-              onClick={() => submitAnswer(option)}
-              disabled={disabled}
-              className={`w-full p-4 rounded-2xl text-white font-bold text-left flex items-center gap-3 transition-all ${bgClass} ${extraClass} ${disabled && !isReveal && !isSelected ? 'opacity-70' : ''}`}
-              whileTap={!disabled ? { scale: 0.95 } : {}}
-            >
-              <span className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                {GEORGIAN_LABELS[index]}
-              </span>
-              <span className="flex-1">{option}</span>
-              {isReveal && isCorrectOption && <Check className="w-6 h-6 text-white" />}
-              {isReveal && isSelected && !playerAnswerCorrect && !isCorrectOption && <X className="w-6 h-6 text-white" />}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Feedback */}
-      <AnimatePresence>
-        {playerAnswer && !isReveal && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="mt-4 text-center">
-            <p className="text-white text-lg font-medium">
-              {playerAnswerCorrect ? '✅ სწორია!' : '❌ არასწორია'}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
