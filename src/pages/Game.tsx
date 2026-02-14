@@ -47,7 +47,7 @@ function GameContent() {
       const guestData = getGuestPlays();
 
       // If guest has played before, show interstitial modal (dismissable)
-      if (guestData.playsUsed > 0) {
+      if (guestData.playsUsed >= 2) {
         setShowGuestModal(true);
         setGuestModalBlocking(false);
         return; // Wait for user to dismiss or register
