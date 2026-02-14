@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DemoGameProvider, useDemoGame, DEMO_QUESTIONS } from '@/contexts/DemoGameContext';
+import { MyTriviaLiveLogo } from '@/components/shared/MyTriviaLiveLogo';
+import { ChunkyButton } from '@/components/ui/chunky-button';
 import { Check, X, Clock, Crown, Sparkles } from 'lucide-react';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
@@ -138,21 +140,20 @@ const DemoTVContent: React.FC = () => {
 const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart, players }) => (
   <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-8">
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-      <h1 className="text-5xl font-bold text-white font-display mb-2">MyTrivia</h1>
+      <MyTriviaLiveLogo size="xl" textColor="light" className="justify-center mb-3" />
       <p className="text-purple-300 text-xl">ქართული ლიტერატურა</p>
     </motion.div>
-    <div className="flex gap-6 mb-10">
+    <div className="flex gap-8 mb-10">
       {players.map((p, i) => (
         <motion.div key={p.id} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.15 }} className="flex flex-col items-center">
-          <DemoAvatar player={p} className="w-16 h-16 ring-3 ring-purple-400 border-2 border-white" />
-          <span className="text-white mt-2 font-medium">{p.nickname}</span>
+          <DemoAvatar player={p} className="w-32 h-32 ring-4 ring-purple-400 border-2 border-white" />
+          <span className="text-white mt-3 font-medium text-lg">{p.nickname}</span>
         </motion.div>
       ))}
     </div>
-    <motion.button onClick={onStart} className="px-12 py-4 bg-gradient-to-r from-green-400 to-green-600 text-white text-2xl font-bold rounded-2xl shadow-xl hover:scale-105 transition-transform"
-      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+    <ChunkyButton onClick={onStart} variant="success" size="lg" className="text-2xl px-12">
       დაწყება
-    </motion.button>
+    </ChunkyButton>
   </div>
 );
 
