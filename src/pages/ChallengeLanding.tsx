@@ -11,6 +11,7 @@ import { ChunkyButton } from "@/components/ui/chunky-button";
 import { Input } from "@/components/ui/input";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Play, ArrowRight, ArrowLeft } from "lucide-react";
+import angryBoyIcon from "@/assets/icons/angry-boy.png";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -320,7 +321,7 @@ export default function ChallengeLanding() {
           {/* Question Card with Overlapping Icon */}
           <div className="px-4 flex-shrink-0 -mt-1 mb-0 relative">
             {/* Category Icon overlapping card */}
-            <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+            <div className="absolute left-1/2 -translate-x-1/2 -top-4 z-20">
               <DynamicIcon 
                 slug={currentQuestion.icon_slug || challenge.category_icon_slug || undefined}
                 size={64}
@@ -394,10 +395,10 @@ export default function ChallengeLanding() {
               transition={{ type: "spring", delay: 0.2 }}
               className="text-5xl mb-3"
             >
-              {won ? "🏆" : tied ? "🤝" : "😤"}
+              {won ? "🏆" : tied ? "🤝" : <img src={angryBoyIcon} alt="Defeat" className="w-16 h-16 mx-auto" />}
             </motion.div>
             <h1 className="text-2xl font-bold text-white">
-              {won ? "გაიმარჯვე!" : tied ? "ფრე!" : "ვერ დაამარცხე!"}
+              {won ? "გაიმარჯვე!" : tied ? "ფრე!" : "ამჯერად დამარცხდი!"}
             </h1>
           </div>
 
