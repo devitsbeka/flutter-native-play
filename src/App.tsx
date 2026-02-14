@@ -107,6 +107,8 @@ const TVScreensShowcase = lazy(() => import("./pages/TVScreensShowcase"));
 const Docs = lazy(() => import("./pages/Docs"));
 const OnboardingPreview = lazy(() => import("./pages/OnboardingPreview"));
 const ChallengeLanding = lazy(() => import("./pages/ChallengeLanding"));
+const SampleDemoTV = lazy(() => import("./pages/SampleDemoTV"));
+const SampleDemoPlayer = lazy(() => import("./pages/SampleDemoPlayer"));
 
 const App = () => (
   <LanguageProvider>
@@ -206,6 +208,8 @@ const App = () => (
                 <Route path="/docs" element={<Docs />} />
                 <Route path="/onboarding-preview" element={<OnboardingPreview />} />
                 <Route path="/challenge/:code" element={<ChallengeLanding />} />
+                <Route path="/sampledemotv" element={<SampleDemoTV />} />
+                <Route path="/sampledemoplayer" element={<SampleDemoPlayer />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>
