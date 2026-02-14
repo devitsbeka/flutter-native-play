@@ -1,12 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
+import men1Video from '@/assets/demo/men-1.mp4';
+import men2Video from '@/assets/demo/men-2.mp4';
+import woman1Video from '@/assets/demo/woman-1.mp4';
+import woman2Video from '@/assets/demo/woman-2.mp4';
 
 // === HARDCODED DATA ===
 
 export const DEMO_PLAYERS = [
-  { id: 'p1', nickname: 'ირაკლი', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=irakli', score: 0, isHost: true, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
-  { id: 'p2', nickname: 'გიო', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=gio', score: 0, isHost: false, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
-  { id: 'p3', nickname: 'თამუნა', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tamuna', score: 0, isHost: false, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
-  { id: 'p4', nickname: 'მაკა', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=maka', score: 0, isHost: false, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
+  { id: 'p1', nickname: 'ირაკლი', avatar_url: null as string | null, avatar_video: men1Video, score: 0, isHost: true, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
+  { id: 'p2', nickname: 'გიო', avatar_url: null as string | null, avatar_video: men2Video, score: 0, isHost: false, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
+  { id: 'p3', nickname: 'თამუნა', avatar_url: null as string | null, avatar_video: woman1Video, score: 0, isHost: false, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
+  { id: 'p4', nickname: 'მაკა', avatar_url: null as string | null, avatar_video: woman2Video, score: 0, isHost: false, hasAnswered: false, lastAnswerCorrect: null as boolean | null, currentAnswer: null as string | null, answerTime: null as number | null },
 ];
 
 export const DEMO_QUESTIONS = [
