@@ -463,7 +463,7 @@ async function getTVQuestions(
     query = query.not('id', 'in', `(${excludeIds.join(',')})`);
   }
   
-  let { data: questions } = await query.limit(50);
+  let { data: questions } = await query;
   
   // If not enough, reset tracker
   if (!questions || questions.length < count) {
@@ -477,8 +477,7 @@ async function getTVQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid)
-      .limit(50);
+      .eq('category_id', categoryUuid);
     
     questions = resetQuestions || [];
   }
@@ -496,8 +495,7 @@ async function getTVQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid)
-      .limit(count * 3);
+      .eq('category_id', categoryUuid);
     
     questions = finalQuestions || [];
   }
@@ -615,7 +613,7 @@ async function getSingleCategoryVSQuestions(
     query = query.not('id', 'in', `(${excludeIds.join(',')})`);
   }
   
-  let { data: questions } = await query.limit(count * 3);
+  let { data: questions } = await query;
   
   // If not enough, clear exclusions and retry
   if (!questions || questions.length < count) {
@@ -629,8 +627,7 @@ async function getSingleCategoryVSQuestions(
       .eq('is_active', true)
       .eq('in_production', true)
       .eq('language', language)
-      .eq('category_id', categoryUuid)
-      .limit(count * 3);
+      .eq('category_id', categoryUuid);
     
     questions = resetQuestions || [];
   }
@@ -738,7 +735,7 @@ async function getMultiCategoryVSQuestions(
     bulkQuery = bulkQuery.not('id', 'in', `(${excludeIds.join(',')})`);
   }
   
-  const { data: allQuestions } = await bulkQuery.limit(200);
+  const { data: allQuestions } = await bulkQuery.limit(1000);
   
   // Create Map for O(1) category lookups
   const categoryMap = new Map(categories.map(c => [c.id, c]));
