@@ -1,41 +1,27 @@
 
-## Remove Russian Language and Flag from the App
 
-### Overview
-Remove all references to Russian as a supported language throughout the application. This includes the language selector, admin panels, analytics, opponent data, and country priority lists.
+## Fix Content Manager: Sticky Preview + Show Icons
 
-### Files to Change
+### Problem
+1. The phone mockup preview in Column 3 doesn't show the question's icon -- it always shows "?" because `iconSlug` is never passed to `QuestionMockupPreview`.
+2. The entire right column scrolls with the page content, so when you scroll through questions in Column 2 and click one, the preview scrolls out of view.
 
-**1. `src/locales/index.ts`**
-- Remove `import { ru } from './ru'` 
-- Remove `ru` from the `translations` record
-- Remove the Russian entry from the `LANGUAGES` array (line 52)
-- Remove `ru` from the bottom re-export line
+### Changes
 
-**2. `src/components/layout/LanguageSelectorModal.tsx`**
-- Remove `ru: "europe"` from the `LANGUAGE_REGIONS` mapping
+**File: `src/pages/admin/ContentManager.tsx`**
 
-**3. `src/pages/admin/Flow.tsx`**
-- Remove `{ code: 'ru', name: 'Russian', flag: '\u{1F1F7}\u{1F1FA}' }` from the admin language list
+1. **Pass `iconSlug` to `QuestionMockupPreview`** (around line 689-694):
+   - Add `iconSlug={selectedQuestion.icon_slug || undefined}` to the `QuestionMockupPreview` component so the icon renders in the phone mockup instead of "?".
 
-**4. `src/data/opponents.ts`**
-- Remove `{ code: "RU", name: "Russia", flag: "\u{1F1F7}\u{1F1FA}" }` from opponent countries
-- Remove `{ code: "RU", weight: 3 }` from weighted countries
-
-**5. `src/components/admin/PalantirAnalyticsWidget.tsx`**
-- Remove `'ru'` from the `languages` array in `fetchLanguageBuckets`
-- Remove `'ru'` from the `predefinedRegions` array
-
-**6. `src/components/profile/CountrySelectModal.tsx`**
-- Remove `'ru'` from the `priorityCountries` array
-
-**7. `src/hooks/useQuestionAvailability.ts`**
-- Remove `'ru': '\u10E0\u10E3\u10E1\u10E3\u10DA'` from both language name maps (lines 206 and 290)
-
-### Not Changing (timezone mapping)
-- `src/hooks/useSessionTracker.ts` and `src/hooks/useUserPresence.ts` map `Europe/Moscow` timezone to region `'ru'` -- these are for detecting where users connect from, not for language support. They stay as-is since users from that timezone still exist.
+2. **Make Column 3 sticky with internal scroll** (line 609):
+   - Change the Column 3 wrapper from `flex-1 flex flex-col bg-muted/20` to `flex-1 flex flex-col bg-muted/20 sticky top-0 h-screen overflow-hidden`.
+   - The question content area (line 658, `flex-1 p-6 overflow-auto`) already has `overflow-auto` so internal scrolling will work once the parent is height-constrained.
 
 ### Summary
-- 7 files modified
-- No database changes
-- The `src/locales/ru.ts` file can remain on disk (unused) -- removing the import is sufficient
+| Change | Detail |
+|--------|--------|
+| `ContentManager.tsx` line ~689 | Pass `iconSlug` prop to phone preview |
+| `ContentManager.tsx` line ~609 | Make Column 3 sticky with `h-screen` and `overflow-hidden` |
+
+Two small edits, no new files, no database changes.
+
