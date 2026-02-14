@@ -120,7 +120,7 @@ const DemoTVContent: React.FC = () => {
             imageUrl={(question as any).image_url}
             hideQuestionText={!!(question as any).image_url}
             progressPercent={Math.max(0, Math.min(100, timerPercent))}
-            className="w-full"
+            className="w-full min-h-[150px]"
             reserveTopSpace={!(question as any).image_url}
           />
         </div>
