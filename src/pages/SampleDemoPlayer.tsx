@@ -39,8 +39,8 @@ const DemoPlayerContent: React.FC = () => {
   });
 
   return (
-    <div className="w-full h-full bg-[#7E7ADB] overflow-hidden">
-      <div className="w-full h-full flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
+    <div className="w-full min-h-screen bg-[#7E7ADB] overflow-hidden">
+      <div className="w-full min-h-screen flex flex-col max-w-[700px] md:max-w-[520px] mx-auto">
         <div className="pt-[env(safe-area-inset-top)]" />
 
         {/* Header */}
