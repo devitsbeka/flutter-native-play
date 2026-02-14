@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DemoGameProvider, useDemoGame, DEMO_QUESTIONS } from '@/contexts/DemoGameContext';
 import { Check, X, Clock, Crown, Sparkles } from 'lucide-react';
+import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
 import { QuizQuestionCard } from '@/components/ui/quiz-question-card';
@@ -104,11 +105,17 @@ const DemoTVContent: React.FC = () => {
       <motion.div className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col min-h-0"
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <div className="relative flex justify-center mb-3 flex-shrink-0 pt-6">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
+            <DynamicIcon 
+              slug={question.icon_slug}
+              className="w-24 h-24 drop-shadow-lg"
+            />
+          </div>
           <QuizQuestionCard
             questionText={question.question_text}
             progressPercent={Math.max(0, Math.min(100, timerPercent))}
             className="w-full"
-            reserveTopSpace={false}
+            reserveTopSpace={true}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
