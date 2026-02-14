@@ -23,6 +23,7 @@ import { TVSetupInline } from "./TVSetupInline";
 import { GradientPicker } from "./GradientPicker";
 import { InviteFriendsModal } from "./InviteFriendsModal";
 import { getGradientById } from "@/config/roomGradients";
+import { ChallengeResultsSection } from "./ChallengeResultsSection";
 import { getCategoryIconSlug } from "@/data/categoryIconMap";
 import { Switch } from "@/components/ui/switch";
 import { CategoryPickerSection } from "./CategoryPickerSection";
@@ -955,6 +956,9 @@ export function RoomLobbyV2() {
             onResendInvitation={handleResendInvitation}
           />
         </div>
+
+        {/* Challenge Results */}
+        <ChallengeResultsSection roomId={currentRoom.id} />
 
         {/* Invite Friends Modal */}
         <InviteFriendsModal

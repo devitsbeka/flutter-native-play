@@ -50,6 +50,7 @@ function shuffleAnswers(correct: string, incorrect: string[]): string[] {
 export default function ChallengeLanding() {
   const { code } = useParams<{ code: string }>();
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
+  const [roomCode, setRoomCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("landing");
@@ -94,6 +95,16 @@ export default function ChallengeLanding() {
         ...data,
         questions,
       } as ChallengeData);
+
+      // Fetch room code if challenge has a room_id
+      if (data.room_id) {
+        const { data: room } = await supabase
+          .from("game_rooms")
+          .select("room_code")
+          .eq("id", data.room_id)
+          .single();
+        if (room) setRoomCode(room.room_code);
+      }
 
       const shuffled = questions.map((q) =>
         shuffleAnswers(q.correct_answer, q.incorrect_answers as string[])
@@ -199,8 +210,20 @@ export default function ChallengeLanding() {
         player_name: playerName.trim(),
         player_score: playerScore,
       })
-      .then(({ error }) => {
-        if (error) console.error("Failed to save attempt:", error);
+      .select("id")
+      .single()
+      .then(({ data: attemptData, error }) => {
+        if (error) {
+          console.error("Failed to save attempt:", error);
+        } else if (attemptData) {
+          // Store attempt info for post-registration linking
+          localStorage.setItem("pending_challenge_link", JSON.stringify({
+            attemptId: attemptData.id,
+            challengeLinkId: challenge.id,
+            playerScore,
+            roomCode,
+          }));
+        }
       });
   }, [phase, attemptSaved, challenge, playerName, playerScore]);
 
@@ -430,7 +453,10 @@ export default function ChallengeLanding() {
               variant="primary"
               size="xl"
               className="w-full"
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => {
+                const returnTo = roomCode ? `/team?join=${roomCode}` : "/team";
+                window.location.href = `/auth?mode=signup&returnTo=${encodeURIComponent(returnTo)}`;
+              }}
               icon={<ArrowRight className="w-5 h-5" />}
             >
               გაწევრიანდი უფასოდ

@@ -291,6 +291,29 @@ function TeamContentV2() {
   );
   const unreadMessagesCount = unreadRoomMessagesCount + unreadFriendMessagesCount;
 
+  // Link pending challenge attempt to user after registration
+  useEffect(() => {
+    if (!user) return;
+    const pending = localStorage.getItem("pending_challenge_link");
+    if (!pending) return;
+
+    try {
+      const { attemptId } = JSON.parse(pending);
+      if (attemptId) {
+        supabase
+          .from("challenge_attempts")
+          .update({ user_id: user.id })
+          .eq("id", attemptId)
+          .then(({ error }) => {
+            if (error) console.error("Failed to link challenge attempt:", error);
+          });
+      }
+    } catch (e) {
+      console.error("Error parsing pending challenge:", e);
+    }
+    localStorage.removeItem("pending_challenge_link");
+  }, [user]);
+
   // Handle join code from URL
   useEffect(() => {
     const joinCode = searchParams.get("join");
