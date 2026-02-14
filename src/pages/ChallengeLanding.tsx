@@ -149,7 +149,9 @@ export default function ChallengeLanding() {
 
       const isCorrect = answer === currentQuestion.correct_answer;
       if (isCorrect) {
-        setPlayerScore((s) => s + 1);
+        const timeBonus = Math.round((timeRemaining / TIME_PER_QUESTION) * 50);
+        const earnedPoints = 100 + timeBonus;
+        setPlayerScore((s) => s + earnedPoints);
         setCorrectCount((c) => c + 1);
       }
       setAnswerHistory(prev => [...prev, isCorrect ? "correct" : "wrong"]);
