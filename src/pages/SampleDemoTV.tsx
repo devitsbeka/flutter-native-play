@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DemoGameProvider, useDemoGame, DEMO_QUESTIONS } from '@/contexts/DemoGameContext';
-import { SafeAvatar } from '@/components/shared/SafeAvatar';
 import { Check, X, Clock, Crown, Sparkles } from 'lucide-react';
 import { QuizAnswerButton } from '@/components/ui/quiz-answer-button';
 import { TimerBadge } from '@/components/game/TimerBadge';
@@ -10,6 +9,28 @@ import confetti from 'canvas-confetti';
 import goldMedal from '@/assets/trophy-gold.png';
 import silverMedal from '@/assets/trophy-silver.png';
 import bronzeMedal from '@/assets/trophy-bronze.png';
+
+// Video avatar component for demo players
+const DemoAvatar: React.FC<{ player: any; className?: string }> = ({ player, className = '' }) => {
+  if (player.avatar_video) {
+    return (
+      <video
+        src={player.avatar_video}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className={`rounded-full object-cover ${className}`}
+      />
+    );
+  }
+  // Fallback to text initial
+  return (
+    <div className={`rounded-full bg-purple-600 flex items-center justify-center text-white font-bold ${className}`}>
+      {player.nickname.charAt(0)}
+    </div>
+  );
+};
 
 const GEORGIAN_LABELS = ['ა', 'ბ', 'გ', 'დ'];
 
@@ -39,7 +60,7 @@ const DemoTVContent: React.FC = () => {
           <AnimatePresence>
             {wrongPlayers.map(p => (
               <motion.div key={p.id} className="relative" initial={{ scale: 0, x: 50 }} animate={{ scale: 1, x: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', bounce: 0.5 }} layout>
-                <SafeAvatar avatarUrl={p.avatar_url} fallback={p.nickname} className="w-10 h-10 ring-3 ring-red-400 border-2 border-white" fallbackClassName="bg-red-500 text-white font-bold text-sm" />
+                <DemoAvatar player={p} className="w-10 h-10 ring-3 ring-red-400 border-2 border-white" />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white"><X className="w-3 h-3 text-white" /></div>
               </motion.div>
             ))}
@@ -50,7 +71,7 @@ const DemoTVContent: React.FC = () => {
           <AnimatePresence mode="popLayout">
             {waitingPlayers.map(p => (
               <motion.div key={p.id} className="relative" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} layout>
-                <SafeAvatar avatarUrl={p.avatar_url} fallback={p.nickname} className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white" fallbackClassName="bg-yellow-500 text-white font-bold text-sm" />
+                <DemoAvatar player={p} className="w-10 h-10 ring-3 ring-yellow-400 border-2 border-white" />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white"><Clock className="w-3 h-3 text-white" /></div>
               </motion.div>
             ))}
@@ -61,7 +82,7 @@ const DemoTVContent: React.FC = () => {
           <AnimatePresence>
             {correctPlayers.map(p => (
               <motion.div key={p.id} className="relative" initial={{ scale: 0, x: -50 }} animate={{ scale: 1, x: 0 }} exit={{ scale: 0 }} transition={{ type: 'spring', bounce: 0.5 }} layout>
-                <SafeAvatar avatarUrl={p.avatar_url} fallback={p.nickname} className="w-10 h-10 ring-3 ring-green-400 border-2 border-white" fallbackClassName="bg-green-500 text-white font-bold text-sm" />
+                <DemoAvatar player={p} className="w-10 h-10 ring-3 ring-green-400 border-2 border-white" />
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white"><Check className="w-3 h-3 text-white" /></div>
               </motion.div>
             ))}
@@ -116,7 +137,7 @@ const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart
     <div className="flex gap-6 mb-10">
       {players.map((p, i) => (
         <motion.div key={p.id} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.15 }} className="flex flex-col items-center">
-          <SafeAvatar avatarUrl={p.avatar_url} fallback={p.nickname} className="w-16 h-16 ring-3 ring-purple-400 border-2 border-white" fallbackClassName="bg-purple-600 text-white font-bold" />
+          <DemoAvatar player={p} className="w-16 h-16 ring-3 ring-purple-400 border-2 border-white" />
           <span className="text-white mt-2 font-medium">{p.nickname}</span>
         </motion.div>
       ))}
@@ -179,9 +200,8 @@ const ResultsScreen: React.FC<{ players: any[] }> = ({ players }) => {
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6 + displayIndex * 0.2, type: 'spring' }} className="mb-1.5">
                 <img src={actualRank === 0 ? goldMedal : actualRank === 1 ? silverMedal : bronzeMedal} alt="medal" className="w-12 h-12 object-contain" />
               </motion.div>
-              <SafeAvatar avatarUrl={player.avatar_url} fallback={player.nickname}
-                className={`${actualRank === 0 ? 'w-20 h-20 ring-yellow-400' : 'w-[68px] h-[68px]'} ring-4 ${actualRank === 1 ? 'ring-gray-400' : actualRank === 2 ? 'ring-orange-400' : 'ring-yellow-400'}`}
-                fallbackClassName="bg-purple-600 text-white text-xl" />
+              <DemoAvatar player={player}
+                className={`${actualRank === 0 ? 'w-20 h-20 ring-yellow-400' : 'w-[68px] h-[68px]'} ring-4 ${actualRank === 1 ? 'ring-gray-400' : actualRank === 2 ? 'ring-orange-400' : 'ring-yellow-400'}`} />
               <p className="text-white font-bold text-lg mt-2">{player.nickname}</p>
               <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} ქულა</p>
               <div className={`w-24 ${actualRank === 0 ? 'h-28' : actualRank === 1 ? 'h-20' : 'h-14'} bg-gradient-to-t ${getPodiumColor(actualRank)} rounded-t-xl flex items-center justify-center`}>
@@ -197,7 +217,7 @@ const ResultsScreen: React.FC<{ players: any[] }> = ({ players }) => {
           {sorted.slice(3).map((p, i) => (
             <div key={p.id} className="bg-white/10 backdrop-blur rounded-xl p-3 flex items-center gap-3 mb-2">
               <span className="text-purple-400 font-bold w-6">{i + 4}</span>
-              <SafeAvatar avatarUrl={p.avatar_url} fallback={p.nickname} className="w-8 h-8" fallbackClassName="bg-purple-600 text-white text-sm" />
+              <DemoAvatar player={p} className="w-8 h-8" />
               <span className="text-white flex-1">{p.nickname}</span>
               <span className="text-purple-300 font-semibold">{p.score}</span>
             </div>
