@@ -205,7 +205,7 @@ export function GameModal({
               transition={{ delay: 0.15 }}
             >
               {/* Centered content wrapper with max-width for tablet/desktop */}
-              <div className="flex-1 flex flex-col justify-center w-full max-w-xl mx-auto py-6">
+              <div className="flex-1 flex flex-col w-full max-w-xl mx-auto py-6">
                 {/* Background sparkles */}
                 {showSparkles && (
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
