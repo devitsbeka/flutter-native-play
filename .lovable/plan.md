@@ -1,26 +1,39 @@
 
 
-## Beautify "დავიწყოთ" Button + Make Card Clickable
+## Tighten Guest Play Limit: Block After 5 Plays
+
+### Current Behavior
+- Guests can play up to **10 games** before being blocked
+- After every game (plays 1-9), a dismissible registration modal appears that users can close and keep playing
+- Only at play 10 does the modal become blocking (non-dismissible)
+
+### New Behavior
+- Reduce the limit from 10 to **5 games**
+- Plays 1-2: no modal, guest plays freely
+- Plays 3-4: dismissible modal appears encouraging sign-up, but guest can close and continue
+- Play 5+: **blocking modal** -- guest must sign in or register to continue playing
 
 ### Changes
 
-**File: `src/components/home/GuestSignupPromptModal.tsx`**
+**File: `src/hooks/useGuestPlays.ts`**
+- Change `MAX_GUEST_PLAYS` from `10` to `5`
 
-1. **Button styling**: Replace `variant="success"` with `variant="primary"` and add custom gradient + glow classes:
-   - Pink-to-purple gradient background: `bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500`
-   - Animated glow effect using a pulsing box-shadow (via inline style or a wrapper with `animate-pulse` shadow)
-   - Sparkle icon remains, text stays "დავიწყოთ!"
-
-2. **Glow animation**: Add a subtle pulsing glow around the button using framer-motion's `animate` on the wrapper div, cycling box-shadow opacity for a breathing glow effect in pink/purple tones.
-
-3. **Make entire card clickable**: Wrap the entire modal content (benefits list + button area) in a clickable container that triggers `handleStart` on click, so tapping anywhere on the card starts onboarding. The close (X) button will use `e.stopPropagation()` to remain independent.
+**File: `src/pages/Game.tsx`**
+- Update the guest check logic so the first 2 plays are free (no modal), plays 3-4 show a dismissible modal, and play 5+ is blocking
+- Current logic shows the modal after every play (playsUsed > 0). Change the threshold so the dismissible interstitial only appears after 2+ plays
 
 ### Technical Details
 
-| Change | Detail |
-|--------|--------|
-| Button variant | Switch from `variant="success"` to custom styling via `className` overrides on the ChunkyButton |
-| Gradient | `bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500` applied via className override |
-| Glow | Framer-motion wrapper with animated `boxShadow` cycling between `0 0 20px rgba(168,85,247,0.4)` and `0 0 40px rgba(236,72,153,0.6)` |
-| Card clickable | Add `onClick={handleStart}` and `cursor-pointer` to the parent content wrapper inside GameModal |
+| File | Change |
+|------|--------|
+| `src/hooks/useGuestPlays.ts` | `MAX_GUEST_PLAYS = 5` (line 5) |
+| `src/pages/Game.tsx` | Change `guestData.playsUsed > 0` to `guestData.playsUsed >= 2` so first 2 games have no interruption, then plays 3-4 get a dismissible prompt, play 5 is hard-blocked |
+
+### Summary
+
+| Plays | Experience |
+|-------|-----------|
+| 1-2 | Play freely, no modal |
+| 3-4 | Dismissible sign-up modal before each game, can close and continue |
+| 5+ | Blocking modal, must register to play |
 
