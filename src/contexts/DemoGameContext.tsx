@@ -52,21 +52,23 @@ export const DEMO_QUESTIONS = [
 ];
 
 // Predetermined AI answer patterns: [questionIndex][playerId] = { correct: boolean, answerDelay: seconds }
+const QUESTION_DURATION = 4; // seconds per question (fast-paced)
+
 const AI_ANSWER_PATTERNS: Record<string, { correct: boolean; delay: number }[]> = {
   // ირაკლი: 3/5 correct
   p1: [
-    { correct: true, delay: 4 }, { correct: true, delay: 6 }, { correct: false, delay: 8 },
-    { correct: true, delay: 5 }, { correct: false, delay: 7 },
+    { correct: true, delay: 1.5 }, { correct: true, delay: 2 }, { correct: false, delay: 2.5 },
+    { correct: true, delay: 1.8 }, { correct: false, delay: 2.2 },
   ],
   // გიო: 2/5 correct
   p2: [
-    { correct: false, delay: 9 }, { correct: true, delay: 7 }, { correct: false, delay: 5 },
-    { correct: false, delay: 10 }, { correct: true, delay: 6 },
+    { correct: false, delay: 2.8 }, { correct: true, delay: 2.3 }, { correct: false, delay: 1.5 },
+    { correct: false, delay: 3 }, { correct: true, delay: 2 },
   ],
   // მაკა: 4/5 correct (winner)
   p4: [
-    { correct: true, delay: 3 }, { correct: true, delay: 4 }, { correct: true, delay: 3 },
-    { correct: true, delay: 2 }, { correct: false, delay: 8 },
+    { correct: true, delay: 1 }, { correct: true, delay: 1.2 }, { correct: true, delay: 1 },
+    { correct: true, delay: 0.8 }, { correct: false, delay: 2.5 },
   ],
 };
 
@@ -92,7 +94,7 @@ export const DemoGameProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [phase, setPhase] = useState<DemoPhase>('idle');
   const [countdownValue, setCountdownValue] = useState(3);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(15);
+  const [timeRemaining, setTimeRemaining] = useState(4);
   const [players, setPlayers] = useState(DEMO_PLAYERS.map(p => ({ ...p, score: 0, hasAnswered: false, lastAnswerCorrect: null, currentAnswer: null, answerTime: null })));
   const [playerAnswer, setPlayerAnswer] = useState<string | null>(null);
   const [playerAnswerCorrect, setPlayerAnswerCorrect] = useState<boolean | null>(null);
@@ -153,13 +155,13 @@ export const DemoGameProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const calculateScore = (timeLeft: number): number => {
-    return 100 + Math.round((timeLeft / 15) * 150); // base 100 + up to 150 time bonus
+    return 100 + Math.round((timeLeft / QUESTION_DURATION) * 150); // base 100 + up to 150 time bonus
   };
 
   const startQuestion = useCallback((qIndex: number) => {
     setPhase('playing');
     setCurrentQuestionIndex(qIndex);
-    setTimeRemaining(15);
+    setTimeRemaining(QUESTION_DURATION);
     setPlayerAnswer(null);
     setPlayerAnswerCorrect(null);
 
@@ -183,7 +185,7 @@ export const DemoGameProvider: React.FC<{ children: ReactNode }> = ({ children }
       const timer = setTimeout(() => {
         setPlayers(prev => prev.map(p => {
           if (p.id !== pid) return p;
-          const timeLeft = 15 - pattern.delay;
+          const timeLeft = QUESTION_DURATION - pattern.delay;
           const question = DEMO_QUESTIONS[qIndex];
           const answer = pattern.correct
             ? question.correct_answer
@@ -203,7 +205,7 @@ export const DemoGameProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Start countdown timer
     if (timerRef.current) clearInterval(timerRef.current);
-    let remaining = 15;
+    let remaining = QUESTION_DURATION;
     timerRef.current = setInterval(() => {
       remaining--;
       setTimeRemaining(remaining);
@@ -212,7 +214,7 @@ export const DemoGameProvider: React.FC<{ children: ReactNode }> = ({ children }
         timerRef.current = null;
         // Enter reveal phase
         setPhase('reveal');
-        // Auto-advance after 3 seconds
+        // Auto-advance after 2 seconds
         setTimeout(() => {
           const nextQ = qIndex + 1;
           if (nextQ < DEMO_QUESTIONS.length) {
@@ -220,7 +222,7 @@ export const DemoGameProvider: React.FC<{ children: ReactNode }> = ({ children }
           } else {
             setPhase('results');
           }
-        }, 3000);
+        }, 2000);
       }
     }, 1000);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
