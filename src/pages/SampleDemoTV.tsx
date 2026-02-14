@@ -139,11 +139,11 @@ const DemoTVContent: React.FC = () => {
 
 const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart, players }) => (
   <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex flex-col items-center justify-center p-8">
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8" style={{ marginTop: '-150px' }}>
+    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
       <MyTriviaLiveLogo size="xl" textColor="light" className="justify-center mb-3" />
       <p className="text-purple-300 text-xl">ქართული ლიტერატურა</p>
     </motion.div>
-    <div className="flex gap-8 mb-10">
+    <div className="flex gap-8 mb-16">
       {players.map((p, i) => (
         <motion.div key={p.id} initial={{ opacity: 0, scale: 0, y: 30 }} animate={{ opacity: 1, scale: [0, 1.2, 1], y: 0 }} transition={{ delay: 0.5 + i * 0.4, duration: 0.5, ease: "backOut" }} className="flex flex-col items-center">
           <DemoAvatar player={p} className="w-32 h-32 ring-4 ring-purple-400 border-2 border-white" />
