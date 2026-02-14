@@ -107,17 +107,21 @@ const DemoTVContent: React.FC = () => {
       <motion.div className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col min-h-0"
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <div className="relative flex justify-center mb-3 flex-shrink-0 pt-6">
-          <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
-            <DynamicIcon 
-              slug={question.icon_slug}
-              className="w-24 h-24 drop-shadow-lg"
-            />
-          </div>
+          {!(question as any).image_url && (
+            <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20 w-24 h-24">
+              <DynamicIcon 
+                slug={question.icon_slug}
+                className="w-24 h-24 drop-shadow-lg"
+              />
+            </div>
+          )}
           <QuizQuestionCard
             questionText={question.question_text}
+            imageUrl={(question as any).image_url}
+            hideQuestionText={!!(question as any).image_url}
             progressPercent={Math.max(0, Math.min(100, timerPercent))}
             className="w-full"
-            reserveTopSpace={true}
+            reserveTopSpace={!(question as any).image_url}
           />
         </div>
         <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">

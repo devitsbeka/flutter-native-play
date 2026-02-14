@@ -216,6 +216,15 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           </div>
         )}
 
+        {/* Image question label */}
+        {hideQuestionText && hasImage && (
+          <div className="px-5 py-3 flex items-center justify-center">
+            <p className="text-center text-sm font-medium text-[#2A2550]/60">
+              სურათიანი კითხვა
+            </p>
+          </div>
+        )}
+
         {/* Question Text - hide for image-only mode */}
         {!hideQuestionText && (
           <div className={cn(
