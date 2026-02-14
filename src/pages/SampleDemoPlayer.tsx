@@ -123,10 +123,7 @@ const DemoPlayerContent: React.FC = () => {
 const PlayerIdleScreen: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('autostart') === 'true') {
-      const timer = setTimeout(() => onStart(), 500);
-      return () => clearTimeout(timer);
-    }
+    if (params.get('autostart') === 'true') onStart();
   }, [onStart]);
 
   return (
