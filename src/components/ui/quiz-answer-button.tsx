@@ -107,23 +107,23 @@ const QuizAnswerButton = React.forwardRef<HTMLButtonElement, QuizAnswerButtonPro
         />
         
         {/* Main Face */}
-        <div
-          className="relative flex items-center h-full min-h-[60px] [@media(max-height:700px)]:min-h-[52px] [@media(max-height:600px)]:min-h-[48px] py-2.5 [@media(max-height:700px)]:py-2 [@media(max-height:600px)]:py-1.5 rounded-2xl transition-transform duration-100"
-          style={{
-            background: styles.faceBg,
-            transform: `translateY(${isPressed ? 2 : 0}px)`,
-            boxShadow: `inset 0 2px 0 rgba(255,255,255,0.4)`,
-          }}
-        >
-          {/* Label Badge */}
-          {showLabel && state !== "next" && (
-            <div
-              className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base self-start mt-1"
-              style={{
-                background: styles.labelBg,
-                color: styles.labelText,
-              }}
-            >
+          <div
+            className="relative flex items-center h-full min-h-[60px] [@media(max-height:700px)]:min-h-[52px] [@media(max-height:600px)]:min-h-[48px] py-2.5 [@media(max-height:700px)]:py-2 [@media(max-height:600px)]:py-1.5 rounded-2xl transition-transform duration-100"
+            style={{
+              background: styles.faceBg,
+              transform: `translateY(${isPressed ? 2 : 0}px)`,
+              boxShadow: `inset 0 2px 0 rgba(255,255,255,0.4)`,
+            }}
+          >
+            {/* Label Badge */}
+            {showLabel && state !== "next" && (
+              <div
+                className="flex items-center justify-center w-9 h-9 ml-3 rounded-xl font-bold text-base"
+                style={{
+                  background: styles.labelBg,
+                  color: styles.labelText,
+                }}
+              >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : showIcon ? (
