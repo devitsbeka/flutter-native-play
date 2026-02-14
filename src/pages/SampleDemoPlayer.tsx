@@ -60,7 +60,7 @@ const DemoPlayerContent: React.FC = () => {
         {/* Question Card with Icon */}
         <div className="px-4 flex-shrink-0 -mt-1 mb-0 relative">
           {!(question as any).image_url && (
-            <div className="absolute left-1/2 -translate-x-1/2 -top-12 z-20">
+            <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-20">
               <DynamicIcon 
                 slug={question.icon_slug}
                 size={64}
