@@ -56,6 +56,7 @@ import { QuestionMockupPreview } from '@/components/admin/QuestionMockupPreview'
 import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview';
 import { IconPicker } from '@/components/admin/IconPicker';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CATEGORY_ID_TO_ICON } from '@/data/categoryIconMap';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,6 +97,9 @@ export default function ContentManager() {
   // Search
   const [categorySearch, setCategorySearch] = useState('');
   const [questionSearch, setQuestionSearch] = useState('');
+  
+  // Preview icon picker
+  const [showPreviewIconPicker, setShowPreviewIconPicker] = useState(false);
   
   // Category question counts (fetched separately)
   const [questionCounts, setQuestionCounts] = useState<Record<string, { total: number; production: number }>>({});
@@ -687,13 +691,35 @@ export default function ContentManager() {
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">ვიზუალი</label>
                   <div className="flex justify-center">
-                    <QuestionMockupPreview
-                      question={selectedQuestion.question_text}
-                      correctAnswer={selectedQuestion.correct_answer}
-                      incorrectAnswers={selectedQuestion.incorrect_answers}
-                      difficulty={selectedQuestion.difficulty}
-                      iconSlug={selectedQuestion.icon_slug || selectedCategory?.icon_slug || CATEGORY_ID_TO_ICON[selectedCategory?.category_id || ''] || undefined}
-                    />
+                    <Popover open={showPreviewIconPicker} onOpenChange={setShowPreviewIconPicker}>
+                      <PopoverTrigger asChild>
+                        <div>
+                          <QuestionMockupPreview
+                            question={selectedQuestion.question_text}
+                            correctAnswer={selectedQuestion.correct_answer}
+                            incorrectAnswers={selectedQuestion.incorrect_answers}
+                            difficulty={selectedQuestion.difficulty}
+                            iconSlug={selectedQuestion.icon_slug || selectedCategory?.icon_slug || CATEGORY_ID_TO_ICON[selectedCategory?.category_id || ''] || undefined}
+                            isEditable={true}
+                            onIconClick={() => setShowPreviewIconPicker(true)}
+                          />
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-0" side="left" align="start">
+                        <div className="p-3 border-b border-border/50">
+                          <p className="text-sm font-medium">აიკონის შეცვლა</p>
+                        </div>
+                        <div className="max-h-[400px] overflow-auto">
+                          <IconPicker
+                            value={selectedQuestion.icon_slug || undefined}
+                            onChange={async (slug) => {
+                              await updateQuestion(selectedQuestion.id, { icon_slug: slug });
+                              setShowPreviewIconPicker(false);
+                            }}
+                          />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>
