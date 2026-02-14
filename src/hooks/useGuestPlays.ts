@@ -2,7 +2,7 @@
 // Tracks how many times a guest has played before requiring registration
 
 const GUEST_PLAYS_KEY = "mytrivia_guest_plays";
-const MAX_GUEST_PLAYS = 10;
+const MAX_GUEST_PLAYS = 5;
 
 export interface GuestPlaysData {
   playsUsed: number;
