@@ -33,6 +33,7 @@ export const useSessionTracker = () => {
   const exitPageRef = useRef<string>(location.pathname);
   const isEndingRef = useRef(false);
   const hasStartedRef = useRef(false);
+  const trackedUserIdRef = useRef<string | null>(null);
 
   const getUserId = useCallback(() => {
     return user?.id || getGuestSessionId();
@@ -64,6 +65,7 @@ export const useSessionTracker = () => {
     hasStartedRef.current = true;
 
     const userId = getUserId();
+    trackedUserIdRef.current = userId;
     const ua = parseUserAgent();
     const countryCode = getCountryCode();
     const now = new Date().toISOString();
@@ -98,11 +100,33 @@ export const useSessionTracker = () => {
       }
 
       sessionIdRef.current = data.id;
-      logger.debug('Session started:', data.id);
+      logger.debug('Session started:', data.id, 'as', userId);
     } catch {
       // Silent fail
     }
   }, [getUserId, getCountryCode, location.pathname]);
+
+  // Re-link session when auth identity changes (guest → authenticated)
+  useEffect(() => {
+    if (!user?.id || !sessionIdRef.current) return;
+    // If session was started under a guest ID, update it to the real user
+    if (trackedUserIdRef.current && trackedUserIdRef.current !== user.id) {
+      const oldId = trackedUserIdRef.current;
+      trackedUserIdRef.current = user.id;
+      
+      supabase
+        .from('user_sessions')
+        .update({ user_id: user.id })
+        .eq('id', sessionIdRef.current)
+        .then(({ error }) => {
+          if (error) {
+            logger.debug('Session identity merge failed:', error.message);
+          } else {
+            logger.debug('Session identity merged:', oldId, '→', user.id);
+          }
+        });
+    }
+  }, [user?.id]);
 
   // End the current session
   const endSession = useCallback(async () => {

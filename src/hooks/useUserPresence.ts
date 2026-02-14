@@ -78,6 +78,7 @@ export const useUserPresence = () => {
   const isUpdatingRef = useRef(false);
   const currentRoomIdRef = useRef<string | null>(null);
   const pathnameRef = useRef(location.pathname);
+  const trackedPresenceIdRef = useRef<string | null>(null);
   pathnameRef.current = location.pathname;
 
   // Check if we can make authenticated requests
@@ -128,6 +129,8 @@ export const useUserPresence = () => {
       if (error) {
         // Silent fail - don't spam console
         logger.debug('Presence update failed:', error.message);
+      } else {
+        trackedPresenceIdRef.current = userId;
       }
     } catch {
       // Silent fail
@@ -135,6 +138,24 @@ export const useUserPresence = () => {
       isUpdatingRef.current = false;
     }
   }, [user?.id, canMakeRequest]);
+
+  // Re-link presence when auth identity changes (guest → authenticated)
+  useEffect(() => {
+    if (!user?.id) return;
+    const oldId = trackedPresenceIdRef.current;
+    if (oldId && oldId !== user.id && oldId.startsWith('guest_')) {
+      // Delete old guest presence row, then create authenticated one
+      supabase
+        .from('user_presence')
+        .delete()
+        .eq('user_id', oldId)
+        .then(() => {
+          trackedPresenceIdRef.current = user.id;
+          updatePresence('online');
+          logger.debug('Presence identity merged:', oldId, '→', user.id);
+        });
+    }
+  }, [user?.id, updatePresence]);
 
   // Set room-specific presence (called when entering/exiting a room)
   const setRoomPresence = useCallback(async (roomId: string | null) => {
