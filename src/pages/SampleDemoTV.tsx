@@ -145,10 +145,7 @@ const DemoTVContent: React.FC = () => {
 const IdleScreen: React.FC<{ onStart: () => void; players: any[] }> = ({ onStart, players }) => {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('autostart') === 'true') {
-      const timer = setTimeout(() => onStart(), 500);
-      return () => clearTimeout(timer);
-    }
+    if (params.get('autostart') === 'true') onStart();
   }, [onStart]);
 
   return (
