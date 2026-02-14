@@ -1,27 +1,26 @@
 
 
-## Fix Content Manager: Sticky Preview + Show Icons
+## Show Icons on All Question Previews
 
 ### Problem
-1. The phone mockup preview in Column 3 doesn't show the question's icon -- it always shows "?" because `iconSlug` is never passed to `QuestionMockupPreview`.
-2. The entire right column scrolls with the page content, so when you scroll through questions in Column 2 and click one, the preview scrolls out of view.
+Questions without a personal `icon_slug` show "?" in the phone mockup preview. The user wants every question to display an icon.
+
+### Solution
+When a question has no `icon_slug`, fall back to the category's default icon using the existing `CATEGORY_ID_TO_ICON` mapping from `src/data/categoryIconMap.ts`.
 
 ### Changes
 
 **File: `src/pages/admin/ContentManager.tsx`**
 
-1. **Pass `iconSlug` to `QuestionMockupPreview`** (around line 689-694):
-   - Add `iconSlug={selectedQuestion.icon_slug || undefined}` to the `QuestionMockupPreview` component so the icon renders in the phone mockup instead of "?".
+1. Add import for `CATEGORY_ID_TO_ICON` from `@/data/categoryIconMap`.
+2. Update the `iconSlug` prop on `QuestionMockupPreview` (line 694) to:
+   ```
+   iconSlug={selectedQuestion.icon_slug || CATEGORY_ID_TO_ICON[selectedCategory?.category_id || ''] || undefined}
+   ```
 
-2. **Make Column 3 sticky with internal scroll** (line 609):
-   - Change the Column 3 wrapper from `flex-1 flex flex-col bg-muted/20` to `flex-1 flex flex-col bg-muted/20 sticky top-0 h-screen overflow-hidden`.
-   - The question content area (line 658, `flex-1 p-6 overflow-auto`) already has `overflow-auto` so internal scrolling will work once the parent is height-constrained.
+This way:
+- If the question has its own `icon_slug` -- use it
+- Otherwise, use the category's mapped icon (e.g., "microscope" for science, "globe" for geography)
+- Only show "?" if neither exists (which shouldn't happen given the 45 mapped categories)
 
-### Summary
-| Change | Detail |
-|--------|--------|
-| `ContentManager.tsx` line ~689 | Pass `iconSlug` prop to phone preview |
-| `ContentManager.tsx` line ~609 | Make Column 3 sticky with `h-screen` and `overflow-hidden` |
-
-Two small edits, no new files, no database changes.
-
+One file, one line change, no database modifications.
