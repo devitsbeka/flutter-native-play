@@ -56,7 +56,7 @@ const DemoTVContent: React.FC = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 p-4 flex flex-col overflow-hidden relative">
       {/* Player Status Bar */}
-      <motion.div className="flex justify-between items-center w-full mb-3 flex-shrink-0 px-4"
+      <motion.div className="flex justify-between items-center max-w-4xl mx-auto w-full mb-3 flex-shrink-0 px-6"
         initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Wrong */}
         <div className="flex gap-2 min-w-[60px] justify-start">
@@ -94,7 +94,7 @@ const DemoTVContent: React.FC = () => {
       </motion.div>
 
       {/* Top info row */}
-      <div className="flex items-center justify-between px-2 mb-3 flex-shrink-0">
+      <div className="flex items-center justify-between max-w-4xl mx-auto w-full px-6 mb-3 flex-shrink-0">
         <div className="flex items-center gap-2 text-white font-bold text-lg">
           <span>📚 ქართული ლიტერატურა</span>
           <span className="text-white/60 font-medium">-</span>
