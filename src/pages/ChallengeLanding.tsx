@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { SafeAvatar } from "@/components/shared/SafeAvatar";
 import { Loader2, Play, ArrowRight, ArrowLeft } from "lucide-react";
 import angryBoyIcon from "@/assets/icons/angry-boy.png";
+import confettiPopperIcon from "@/assets/icons/confetti-popper.png";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -395,10 +396,10 @@ export default function ChallengeLanding() {
               transition={{ type: "spring", delay: 0.2 }}
               className="text-5xl mb-3"
             >
-              {won ? "🏆" : tied ? "🤝" : <img src={angryBoyIcon} alt="Defeat" className="w-16 h-16 mx-auto" />}
+              {won ? <img src={confettiPopperIcon} alt="Win" className="w-16 h-16 mx-auto" /> : tied ? "🤝" : <img src={angryBoyIcon} alt="Defeat" className="w-16 h-16 mx-auto" />}
             </motion.div>
             <h1 className="text-2xl font-bold text-white">
-              {won ? "გაიმარჯვე!" : tied ? "ფრე!" : "ამჯერად დამარცხდი!"}
+              {won ? "შენ მოიგე!" : tied ? "ფრე!" : "ამჯერად დამარცხდი!"}
             </h1>
           </div>
 
