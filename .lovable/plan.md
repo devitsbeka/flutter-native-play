@@ -1,53 +1,41 @@
 
-## Fix Question Repetition: Add Database-Level Randomization
+## Remove Russian Language and Flag from the App
 
-### Problem
-Users see repeated questions despite having thousands available. The root cause is that all Supabase queries return rows in deterministic order (insertion order), so the same "first N" rows are always fetched. Frontend shuffling only randomizes **within** that same subset.
+### Overview
+Remove all references to Russian as a supported language throughout the application. This includes the language selector, admin panels, analytics, opponent data, and country priority lists.
 
-Additionally, VS/Mixed mode caps fetches at `.limit(200)`, meaning only 200 of potentially 8,000+ questions are ever considered.
+### Files to Change
 
-### Solution
-Replace all `.limit(N)` calls with a two-step approach: fetch with no artificial limit (Supabase default 1000 is sufficient), then shuffle and pick on the client. This ensures every question in the pool has an equal chance of being selected.
+**1. `src/locales/index.ts`**
+- Remove `import { ru } from './ru'` 
+- Remove `ru` from the `translations` record
+- Remove the Russian entry from the `LANGUAGES` array (line 52)
+- Remove `ru` from the bottom re-export line
 
-For the multi-category VS/Mixed mode specifically, remove the `.limit(200)` cap so the full pool is available for round-robin selection.
+**2. `src/components/layout/LanguageSelectorModal.tsx`**
+- Remove `ru: "europe"` from the `LANGUAGE_REGIONS` mapping
 
-### Changes
+**3. `src/pages/admin/Flow.tsx`**
+- Remove `{ code: 'ru', name: 'Russian', flag: '\u{1F1F7}\u{1F1FA}' }` from the admin language list
 
-**File: `src/services/questionService.ts`**
+**4. `src/data/opponents.ts`**
+- Remove `{ code: "RU", name: "Russia", flag: "\u{1F1F7}\u{1F1FA}" }` from opponent countries
+- Remove `{ code: "RU", weight: 3 }` from weighted countries
 
-1. **Category Mode (lines 319-333)**: Remove `.limit()` from primary query -- let it return all matching questions in the level range (typically 50-200), then shuffle client-side. The exclusion filter already narrows results.
+**5. `src/components/admin/PalantirAnalyticsWidget.tsx`**
+- Remove `'ru'` from the `languages` array in `fetchLanguageBuckets`
+- Remove `'ru'` from the `predefinedRegions` array
 
-2. **Category Mode Fallback 1 (lines 338-354)**: Same -- remove limit from the full-level-range fallback query.
+**6. `src/components/profile/CountrySelectModal.tsx`**
+- Remove `'ru'` from the `priorityCountries` array
 
-3. **TV Mode (line 466)**: Change `.limit(50)` to no limit (or `.limit(500)`) so more of the category pool is available.
+**7. `src/hooks/useQuestionAvailability.ts`**
+- Remove `'ru': '\u10E0\u10E3\u10E1\u10E3\u10DA'` from both language name maps (lines 206 and 290)
 
-4. **TV Mode Fallback (line 481)**: Same -- increase limit from 50.
+### Not Changing (timezone mapping)
+- `src/hooks/useSessionTracker.ts` and `src/hooks/useUserPresence.ts` map `Europe/Moscow` timezone to region `'ru'` -- these are for detecting where users connect from, not for language support. They stay as-is since users from that timezone still exist.
 
-5. **Single-category VS Mode (line 618)**: Change `.limit(count * 3)` to `.limit(500)` to pull from a much larger pool.
-
-6. **Single-category VS Fallback (line 633)**: Same increase.
-
-7. **Multi-category VS/Mixed Mode (line 741)**: Change `.limit(200)` to `.limit(1000)` (Supabase max default) so the round-robin draws from the entire question bank.
-
-### Technical Details
-
-| Location | Current Limit | New Limit | Why |
-|----------|--------------|-----------|-----|
-| Category primary query (line 333) | No explicit limit (default 1000) | Keep as-is | Already good |
-| Category fallback (line 353) | No explicit limit | Keep as-is | Already good |
-| TV primary (line 466) | `.limit(50)` | Remove limit | 50 is too small, causes early repeats |
-| TV fallback (line 481) | `.limit(50)` | Remove limit | Same reason |
-| TV final fallback (line 500) | `.limit(count * 3)` | Remove limit | Same reason |
-| Single-cat VS (line 618) | `.limit(count * 3)` | Remove limit | count*3 = ~30, too small |
-| Single-cat VS fallback (line 633) | `.limit(count * 3)` | Remove limit | Same |
-| Multi-cat VS/Mixed (line 741) | `.limit(200)` | `.limit(1000)` | 200 is only ~2.5% of 8000+ questions |
-
-### What This Fixes
-- Questions are selected from the **full available pool** (up to 1000 per query) instead of just the first 50-200
-- Combined with the existing Fisher-Yates shuffle, every question has an equal probability of being chosen
-- The localStorage tracking still prevents repeats until exhaustion -- this change just ensures the initial fetch covers the whole pool
-
-### What This Does NOT Change
-- The localStorage-based seen/asked tracking stays the same
-- The exhaustion detection and reset logic stays the same
-- No database changes needed
+### Summary
+- 7 files modified
+- No database changes
+- The `src/locales/ru.ts` file can remain on disk (unused) -- removing the import is sufficient
