@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import men1Video from '@/assets/demo/men-1.mp4';
-import men2Video from '@/assets/demo/men-2.mp4';
+import men1Video from '@/assets/m1.mp4';
+import men2Video from '@/assets/m2.mp4';
 import woman1Video from '@/assets/demo/woman-1.mp4';
 import woman2Video from '@/assets/demo/woman-2.mp4';
 
