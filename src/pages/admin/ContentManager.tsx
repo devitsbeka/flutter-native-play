@@ -57,6 +57,7 @@ import { CategoryMockupPreview } from '@/components/admin/CategoryMockupPreview'
 import { IconPicker } from '@/components/admin/IconPicker';
 import { DynamicIcon } from '@/components/shared/DynamicIcon';
 import { cn } from '@/lib/utils';
+import { CATEGORY_ID_TO_ICON } from '@/data/categoryIconMap';
 import { supabase } from '@/integrations/supabase/client';
 
 const DIFFICULTIES = [
@@ -691,7 +692,7 @@ export default function ContentManager() {
                       correctAnswer={selectedQuestion.correct_answer}
                       incorrectAnswers={selectedQuestion.incorrect_answers}
                       difficulty={selectedQuestion.difficulty}
-                      iconSlug={selectedQuestion.icon_slug || undefined}
+                      iconSlug={selectedQuestion.icon_slug || selectedCategory?.icon_slug || CATEGORY_ID_TO_ICON[selectedCategory?.category_id || ''] || undefined}
                     />
                   </div>
                 </div>
