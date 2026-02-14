@@ -126,14 +126,15 @@ const DemoTVContent: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
           {question.options.map((option, index) => (
-            <QuizAnswerButton
-              key={index}
-              state={isReveal ? (option === question.correct_answer ? 'correct' : 'disabled') : 'default'}
-              label={GEORGIAN_LABELS[index]}
-              text={option}
-              disabled
-              className="w-full h-full"
-            />
+            <div key={index} style={{ maxHeight: '200px' }}>
+              <QuizAnswerButton
+                state={isReveal ? (option === question.correct_answer ? 'correct' : 'disabled') : 'default'}
+                label={GEORGIAN_LABELS[index]}
+                text={option}
+                disabled
+                className="w-full h-full"
+              />
+            </div>
           ))}
         </div>
       </motion.div>
