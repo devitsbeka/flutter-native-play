@@ -1,23 +1,35 @@
 
-## Fix "გააცოცხლე ავატარი" Button: Centering, Padding, and Color
+## Directly Trigger Animation from "გააცოცხლე ავატარი" Button
 
-### File: `src/components/home/AvatarCircle.tsx` (lines 401-417)
+### What it does now
+Clicking "გააცოცხლე ავატარი" opens the full Avatar Modal. The user then has to find and click the animate button inside that modal. This is unnecessary friction.
 
-### Changes
+### What it will do
+1. Clicking the button will **directly start the animation process** without opening the modal
+2. The button will **hide immediately** after being clicked (no double-click possible)
+3. Before starting, it will **check `has_face_photo`** on the profile -- if false, show a toast message asking to upload a photo with a face
+4. If face is detected, call the `animate-avatar` edge function and poll for results, all inline from `Index.tsx`
 
-1. **Blue/Pink gradient** (instead of purple):
-   - From: `linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)`
-   - To: `linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #3B82F6 100%)` (pink -> violet -> blue)
+### Technical approach
 
-2. **Shadow to match** new colors:
-   - From: `0 4px 14px rgba(168, 85, 247, 0.45), 0 2px 6px rgba(232, 121, 249, 0.3)`
-   - To: `0 4px 14px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(236, 72, 153, 0.3)`
+**File: `src/pages/Index.tsx`**
 
-3. **Proper centering** -- add `justify-center` and increase right padding:
-   - From: `px-5 py-2`
-   - To: `px-6 py-2`
+1. Add a new state: `const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false)`
+2. Create a `handleAnimateFromHome` async function that:
+   - Checks `profile.has_face_photo === true` -- if not, shows toast: "გთხოვთ ატვირთოთ ფოტო სახით" (Please upload a photo with a face)
+   - Sets `isAnimatingFromHome = true` (this hides the button)
+   - Shows toast: "ანიმაცია იწყება... 1-2 წუთი დასჭირდება"
+   - Calls `supabase.functions.invoke("animate-avatar", { body: { imageUrl, userId } })`
+   - Polls for completion (same logic as in AvatarModal)
+   - On success: refreshes profile, shows confetti
+   - On error: resets `isAnimatingFromHome = false` so user can retry
+3. Update `showAnimatePrompt` to also check `!isAnimatingFromHome`
+4. Change all three `onAnimateClick` callbacks from `() => openAvatarModal()` to `() => handleAnimateFromHome()`
 
-4. **Ensure true centering** -- the button already has `left-1/2 -translate-x-1/2` which should center it. The visual offset in the screenshot may be caused by the content not being centered inside. Adding `justify-center` to the flex container will fix this.
+**File: `src/components/home/AvatarCircle.tsx`**
+- No changes needed -- it already accepts `onAnimateClick` callback and conditionally renders via `showAnimatePrompt`
 
-### Technical Summary
-One file, lines 401-417. Four inline style/class tweaks.
+### Summary
+- One file changed: `src/pages/Index.tsx`
+- Add ~60 lines for the animate handler + polling logic
+- Button disappears on click, face validation before generation, no modal needed
