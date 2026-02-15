@@ -353,7 +353,7 @@ export default function Index() {
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
-
+  const showAnimatePrompt = !!profile?.avatar_url && profile.avatar_url.includes('avatar_ai') && !profile?.animated_avatar_url;
   return (
     <>
       {/* Onboarding modals */}
@@ -826,6 +826,8 @@ export default function Index() {
                         xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                         hideStats={!user}
                         showAvatarPrompt={false}
+                        showAnimatePrompt={showAnimatePrompt}
+                        onAnimateClick={() => openAvatarModal()}
                         showMascotReminder={!!user && !profile?.avatar_url}
                         userId={user?.id}
                       />
@@ -912,6 +914,8 @@ export default function Index() {
                       xpCurrent={levelInfo.xpInCurrentLevel}
                       xpTotal={levelInfo.xpNeededForNextLevel}
                       showAvatarPrompt={false}
+                      showAnimatePrompt={showAnimatePrompt}
+                      onAnimateClick={() => openAvatarModal()}
                       showMascotReminder={!!user && !profile?.avatar_url}
                       userId={user?.id}
                     />
@@ -1193,6 +1197,8 @@ export default function Index() {
                       xpTotal={user ? levelInfo.xpNeededForNextLevel : 100}
                       hideStats={!user}
                       showAvatarPrompt={false}
+                      showAnimatePrompt={showAnimatePrompt}
+                      onAnimateClick={() => openAvatarModal()}
                       showMascotReminder={!!user && !profile?.avatar_url}
                       userId={user?.id}
                     />

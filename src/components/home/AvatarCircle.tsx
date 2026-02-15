@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import iconCoin from "@/assets/icons/icon-coin.png";
 import iconGem from "@/assets/icons/icon-gem.png";
+import aiSparkleIcon from "@/assets/icons/ai-sparkle.png";
 import { resolveAvatarUrl } from "@/utils/avatarUtils";
 import { SinglePlayVideo } from "@/components/shared/SinglePlayVideo";
 import guestWelcomeVideo from "@/assets/guest-welcome-avatar.mp4";
@@ -34,6 +35,8 @@ interface AvatarCircleProps {
   hideStats?: boolean;
   showAvatarPrompt?: boolean; // Show sparkle badge to prompt user to create animated avatar
   showMascotReminder?: boolean; // Show mascot video as reminder to set avatar
+  showAnimatePrompt?: boolean; // Show "გააცოცხლე ავატარი" pill button
+  onAnimateClick?: () => void; // Callback when animate button is tapped
   userId?: string; // User ID for localStorage tracking
   autoPlayInterval?: number; // Auto-replay video every N ms (e.g. 5000 for 5s)
 }
@@ -51,6 +54,8 @@ export function AvatarCircle({
   hideStats = false,
   showAvatarPrompt = false,
   showMascotReminder = false,
+  showAnimatePrompt = false,
+  onAnimateClick,
   userId,
   autoPlayInterval,
 }: AvatarCircleProps) {
@@ -389,6 +394,29 @@ export function AvatarCircle({
         )}
       </div>
 
+
+      {/* "გააცოცხლე ავატარი" animate prompt button - above level badge */}
+      {showAnimatePrompt && !hideStats && (
+        <motion.button
+          className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full pointer-events-auto"
+          style={{
+            bottom: 38,
+            background: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
+            boxShadow: "0 4px 12px rgba(124, 58, 237, 0.4), 0 2px 4px rgba(0,0,0,0.1)",
+            border: "2px solid rgba(255,255,255,0.3)",
+          }}
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          whileTap={{ scale: 0.92 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAnimateClick?.();
+          }}
+        >
+          <img src={aiSparkleIcon} alt="" className="w-4 h-4" />
+          <span className="text-white text-xs font-bold whitespace-nowrap">გააცოცხლე ავატარი</span>
+        </motion.button>
+      )}
 
       {/* Level badge at bottom center - 3D chunky purple style with particles */}
       {!hideStats && (
