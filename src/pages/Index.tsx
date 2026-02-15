@@ -42,6 +42,7 @@ import adFreeIcon from "@/assets/icons/icon-ad-free.png";
 import gemIcon from "@/assets/icons/icon-gem.png";
 import coinIcon from "@/assets/icons/icon-coin.png";
 import defaultGuestAvatar from "@/assets/guest-avatar.png";
+import handGestureIcon from "@/assets/icons/hand-gesture.png";
 import defaultGuestAvatarAnimated from "@/assets/guest-avatar-animated.mp4";
 import guestMascotVideo from "@/assets/guest-welcome-avatar.mp4";
 import { useAvatarModal } from "@/contexts/AvatarModalContext";
@@ -610,9 +611,9 @@ export default function Index() {
                     transition={{ delay: 0.3, type: "spring" }}
                     className="flex flex-col items-center mt-6 pointer-events-auto"
                   >
-                    <span className="font-sans text-gray-800 capitalize font-black" style={{ fontSize: 28 }}>
-                       Guest
-                    </span>
+                    <span className="font-sans text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 28 }}>
+                       <img src={handGestureIcon} alt="" className="w-8 h-8" /> გამარჯობა!
+                     </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-4">
                       <motion.button onClick={() => navigate("/auth")} className="px-5 py-2.5 rounded-full bg-white border border-border shadow-md text-sm font-semibold text-foreground" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -669,8 +670,8 @@ export default function Index() {
                     transition={{ delay: 0.3, type: "spring" }}
                     className="flex flex-col items-center mt-3 pointer-events-auto"
                   >
-                    <span className="font-slackey text-gray-800 capitalize font-black" style={{ fontSize: 26 }}>
-                      Guest
+                    <span className="font-slackey text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 26 }}>
+                      <img src={handGestureIcon} alt="" className="w-7 h-7" /> გამარჯობა!
                     </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-3">
