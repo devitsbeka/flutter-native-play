@@ -1,65 +1,32 @@
 
 
-## Enhance Quality Review: Issues-Only Mode and Source Selection
+## Add "გააცოცხლე ავატარი" Button on Main Page
 
-### Problem
-Currently, every time you open Quality Review you must run a full AI review to see results. There's no way to:
-1. Choose between reviewing only the **last N added** questions vs **all** questions in a category
-2. Quickly see questions that **already have known issues** from previous reviews without re-running AI
+### What It Does
+When a logged-in user has a photo-based avatar (face photo that went through AI generation) but does NOT yet have an animated video avatar, a small floating button appears just above the level badge at the bottom of the avatar circle. The button shows a sparkle icon + "გააცოცხლე ავატარი" text, and tapping it opens the avatar modal to trigger the animation flow.
 
-### Solution
+### Conditions to Show
+- User is logged in
+- User has an `avatar_url` that contains `avatar_ai` (meaning it's a photo-based AI-generated avatar, not a mascot/bot icon)
+- User does NOT have an `animated_avatar_url` (no animation generated yet)
 
-#### 1. Add "Source" filter: Last Added vs All
-Replace the current "Last Added" selector (which is really just a limit) with a two-part control:
-- **Source** dropdown: "Last Added" or "All"
-- **Count** dropdown (only visible when "Last Added" is selected): 20, 50, 100, 200, 500
+### Changes
 
-When "All" is selected, no limit is applied (uses a high limit like 1000).
+#### 1. `src/components/home/AvatarCircle.tsx`
+- Add a new prop: `onAnimateClick?: () => void` -- callback when the animate button is tapped
+- Add a new prop: `showAnimatePrompt?: boolean` -- controls visibility of the button
+- Render a small pill-shaped button positioned just above the level badge (absolute positioning, z-30), containing the uploaded sparkle icon + "გააცოცხლე ავატარი" text
+- The button has a purple gradient background, rounded-full, with a subtle pulse animation to draw attention
+- Copy the uploaded sparkle image (`user-uploads://ai-sparkle-3.png`) to `src/assets/icons/ai-sparkle.png`
 
-#### 2. Add "Show Saved Issues" button
-Add a new button alongside "Run Review" that loads questions from the database that already have `ai_review_grade` of B, C, or D -- questions with existing issues that need attention. This skips the AI call entirely and just queries the DB.
+#### 2. `src/pages/Index.tsx`
+- Compute `showAnimatePrompt` condition: `!!profile?.avatar_url && profile.avatar_url.includes('avatar_ai') && !profile?.animated_avatar_url`
+- Pass `showAnimatePrompt` and `onAnimateClick={() => openAvatarModal()}` to all 3 AvatarCircle instances (mobile, tablet, desktop)
 
-### Technical Changes
-
-#### File: `src/pages/admin/QualityReview.tsx`
-
-**New state:**
-- `sourceMode`: `"last-added"` | `"all"` (default: `"last-added"`)
-
-**New "Load Issues" function:**
-- Query `questions` table where `ai_review_grade IN ('B', 'C', 'D')` and `is_active = true`
-- Apply category and production filters
-- Apply source/limit filters
-- Order by `created_at DESC`
-- Map the stored `ai_review_data` JSON + `ai_review_score` + `ai_review_grade` into `ReviewResult[]` format
-- Set results directly without calling the edge function
-
-**UI changes:**
-- Add "Source" dropdown with "Last Added" / "All" options
-- Show "Count" dropdown only when source is "Last Added"
-- Add "Show Issues" button (outline style) next to "Run Review"
-- "Run Review" does full AI analysis as before
-- "Show Issues" loads pre-existing problematic questions from DB instantly
-
-#### File: `src/hooks/useQuestionQualityReview.ts`
-
-**Add `loadSavedIssues` function:**
-- Accepts same `ReviewOptions` plus the source mode
-- Queries DB directly for questions with `ai_review_grade` in B/C/D
-- Reconstructs `ReviewResult` objects from stored `ai_review_data`
-- Sets results and summary without invoking the edge function
-
-### UI Layout (Filters row)
-```
-Category | Status | Source [Last Added v] | Count [200 v] | Sort By
-                          [All        v]   (hidden when All)
-```
-
-### Button area
-```
-[Show Issues]  [Run Review]
-```
-
-- **Show Issues**: Instantly loads questions with existing B/C/D grades from DB
-- **Run Review**: Full AI-powered review (existing behavior)
+### Button Design
+- Small pill: sparkle icon (16x16) + "გააცოცხლე ავატარი" text (xs, bold, white)
+- Background: purple gradient (matching the app theme)
+- Positioned horizontally centered, just above the level badge
+- Gentle scale pulse animation to attract attention
+- On tap: opens the avatar modal where the user can trigger animation generation
 
