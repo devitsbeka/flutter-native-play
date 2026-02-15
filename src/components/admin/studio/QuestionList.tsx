@@ -137,7 +137,11 @@ export function QuestionList({
                   
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium line-clamp-2 leading-snug">
-                      {question.question_text}
+                      {question.image_url ? (
+                        <span className="text-blue-600 italic">🖼 სურათი</span>
+                      ) : (
+                        question.question_text
+                      )}
                     </p>
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <QuestionTypeIndicator type={type} />
