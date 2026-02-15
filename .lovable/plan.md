@@ -1,28 +1,34 @@
 
 
-## Make Bronze League Trophy More Distinctly Bronze
+## Add Bronze Variant to "ნახე რეიტინგი" Button
 
 ### Problem
-The Bronze (Tier 1) and Gold (Tier 3) league trophies in the badge row look too similar in color. Both use sepia-based CSS filters with close hue-rotation values (-10 vs +15 degrees), making them nearly indistinguishable.
+The Bronze league button uses the `"gold"` variant (line 48 in `Leaderboards.tsx`):
+```
+const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "gold";
+```
+There's no `"bronze"` variant in ChunkyButton, so Bronze falls back to Gold -- making them identical.
 
 ### Fix
 
-**File: `src/components/leaderboard/LeagueBadgeRow.tsx`** -- Update the Bronze filter (Tier 1)
+**1. `src/components/ui/chunky-button.tsx`** -- Add a `bronze` variant
 
-Current bronze filter:
+- Add `"bronze"` to the variant type union on line 6
+- Add bronze color definition after the gold block (after line 128), using warm copper/brown tones:
+  - Face gradient: from `#CD7F32` (classic bronze) via `#A0522D` (sienna) to `#8B4513` (saddle brown)
+  - Depth/border/stroke: darker browns (`#6B3410`, `#7B3F1A`, `#4A2508`)
+  - Glow: warm bronze `rgba(205, 127, 50, 0.5)`
+
+**2. `src/pages/Leaderboards.tsx`** -- Use `"bronze"` for tier 1 (line 48)
+
+Change:
 ```
-sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.85)
+const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "gold";
+```
+To:
+```
+const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "bronze";
 ```
 
-New bronze filter with a stronger brown/copper shift, lower saturation and darker tone to clearly differentiate from gold:
-```
-sepia(1) saturate(2) hue-rotate(-25deg) brightness(0.7) contrast(1.1)
-```
-
-Key changes:
-- **hue-rotate from -10 to -25 degrees** -- pushes further toward brown/copper, away from gold
-- **saturate from 3 to 2** -- less vivid yellow, more muted earthy bronze
-- **brightness from 0.85 to 0.7** -- darker overall, bronze is naturally darker than gold
-- **Added contrast(1.1)** -- makes the bronze details pop more despite lower brightness
-
-This is a one-line change in a single file.
+### Result
+Each league will have a distinct button color: copper-brown for Bronze, gray for Silver, and gold for Gold.
