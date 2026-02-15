@@ -4,7 +4,7 @@ import leagueTrophy from "@/assets/league-trophy.png";
 
 // CSS filter styles for each league tier color (tier 1 uses original image)
 const LEAGUE_FILTERS: Record<number, string> = {
-  1: "none", // Original gold trophy - no filter
+  1: "sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.85)", // Bronze (warm copper/brown)
   2: "saturate(0) brightness(1.1) contrast(0.95)", // Silver (grayscale with brightness)
   3: "sepia(1) saturate(5) hue-rotate(15deg) brightness(1.05)", // Gold
   4: "sepia(1) saturate(3) hue-rotate(170deg) brightness(1.1)", // Diamond (cyan/blue)
