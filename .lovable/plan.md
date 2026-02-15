@@ -1,46 +1,28 @@
 
 
-## Fix: "სხვადასხვა" (Mixed) Category Not Starting in VS Game
+## Make Bronze League Trophy More Distinctly Bronze
 
 ### Problem
-When the slot machine lands on "სხვადასხვა" (Mixed), the game never starts. The Start button either stays disabled or the game shows an error and returns to home.
-
-### Root Cause
-The Mixed category fetches questions from ALL categories using `getMultiCategoryVSQuestions`. This function excludes previously-seen questions using a NOT IN filter with up to **5,000 UUIDs** (each 36 characters long). The resulting query parameter is ~180KB, which exceeds Supabase URL length limits. The query silently fails and returns 0 questions.
-
-Other categories work fine because they use `getCategoryQuestions`, which tracks only ~500 IDs per category.
+The Bronze (Tier 1) and Gold (Tier 3) league trophies in the badge row look too similar in color. Both use sepia-based CSS filters with close hue-rotation values (-10 vs +15 degrees), making them nearly indistinguishable.
 
 ### Fix
 
-**File: `src/services/questionService.ts`** -- `getMultiCategoryVSQuestions` function (around line 706)
+**File: `src/components/leaderboard/LeagueBadgeRow.tsx`** -- Update the Bronze filter (Tier 1)
 
-1. **Cap the exclude list** before building the query. Limit to the **200 most recent** seen IDs instead of all 5,000. This keeps the query well under URL limits while still providing variety.
-2. If the capped query still returns fewer than needed, **retry without any exclusions** as a fallback (already partially handled, but needs to be more robust).
-
-```text
-Before (line ~706):
-  let excludeIds = wasReset ? [] : [...seenIds];
-
-After:
-  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
-  const MAX_EXCLUDE_IN_QUERY = 200;
-  let excludeIds = wasReset ? [] : seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
+Current bronze filter:
+```
+sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.85)
 ```
 
-3. Apply the same fix to `getSingleCategoryVSQuestions` (line ~602-613) for consistency, since it also uses `getSeenQuestionIds()`:
-
-```text
-Before (line ~582):
-  let excludeIds = [...seenIds];
-
-After:
-  const MAX_EXCLUDE_IN_QUERY = 200;
-  let excludeIds = seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
+New bronze filter with a stronger brown/copper shift, lower saturation and darker tone to clearly differentiate from gold:
+```
+sepia(1) saturate(2) hue-rotate(-25deg) brightness(0.7) contrast(1.1)
 ```
 
-### Impact
-- Fixes the "never starts" bug for სხვადასხვა category
-- Minor trade-off: users may see a recently-seen question sooner (from the excluded 4800), but since we still exclude the 200 most recent, short-term variety is maintained
-- No database changes needed
-- Single file change
+Key changes:
+- **hue-rotate from -10 to -25 degrees** -- pushes further toward brown/copper, away from gold
+- **saturate from 3 to 2** -- less vivid yellow, more muted earthy bronze
+- **brightness from 0.85 to 0.7** -- darker overall, bronze is naturally darker than gold
+- **Added contrast(1.1)** -- makes the bronze details pop more despite lower brightness
 
+This is a one-line change in a single file.
