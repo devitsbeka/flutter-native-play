@@ -19,6 +19,7 @@ export interface Profile {
   best_streak: number;
   coins: number;
   gems: number;
+  has_face_photo: boolean | null;
 }
 
 interface AuthContextType {

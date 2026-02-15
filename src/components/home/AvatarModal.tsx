@@ -373,8 +373,8 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         is_current: true,
       });
 
-      // Update profile
-      await updateProfile({ avatar_url: finalUrl });
+      // Update profile - AI-generated avatar implies face was present
+      await updateProfile({ avatar_url: finalUrl, has_face_photo: true } as any);
 
       toast.success(t("avatar.avatarSaved"));
       onClose();
@@ -413,6 +413,13 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
         .getPublicUrl(fileName);
 
       await updateProfile({ avatar_url: urlData.publicUrl });
+
+      // Detect face in background (non-blocking)
+      if (user) {
+        supabase.functions.invoke("detect-face", {
+          body: { imageUrl: urlData.publicUrl, userId: user.id },
+        }).catch(err => console.warn("Face detection failed:", err));
+      }
 
       toast.success(t("avatar.avatarSaved"));
       onClose();
@@ -504,10 +511,12 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
       const canonicalPath = BUNDLED_TO_CANONICAL[avatarBundledUrl] || avatarBundledUrl;
       
       // Update profile - clear animated_avatar_url since default avatars don't have animations
+      // Mascots are not faces, so set has_face_photo to false
       const result = await updateProfile({ 
         avatar_url: canonicalPath,
-        animated_avatar_url: null 
-      });
+        animated_avatar_url: null,
+        has_face_photo: false,
+      } as any);
       
       if (result?.error) {
         throw result.error;
