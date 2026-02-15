@@ -45,7 +45,7 @@ const TROPHY_SIZES = {
 
 // League-colored "ნახე რეიტინგი" button that opens ratings
 const AnimatedLeagueBadge = ({ tier, onClick }: { tier: number; onClick?: () => void }) => {
-  const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "gold";
+  const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "bronze";
   
   return (
     <ChunkyButton 
