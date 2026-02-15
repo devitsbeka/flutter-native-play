@@ -1097,7 +1097,17 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <img src={generatedAvatar} alt="Generated Avatar" className="w-full h-full object-cover" />
+            <img 
+              src={generatedAvatar} 
+              alt="Generated Avatar" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to uploaded image if generated URL fails to load
+                if (uploadedImage) {
+                  e.currentTarget.src = uploadedImage;
+                }
+              }}
+            />
           </motion.div>
           <p className="text-sm text-muted-foreground text-center">{t("avatar.avatarReady")}</p>
           <div className="flex flex-col gap-2 w-full">
@@ -1109,7 +1119,7 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
                 setGeneratedAvatar(null);
                 setUploadedImage(null);
               }}
-              disabled={isLoading}
+              disabled={isLoading || isAnimating}
               className="w-full"
               icon={<img src={iconScissors} alt="" className="w-5 h-5 object-contain shrink-0" />}
             >
@@ -1119,33 +1129,46 @@ export function AvatarModal({ isOpen, onClose }: AvatarModalProps) {
               variant="success"
               size="md"
               onClick={() => saveAvatar()}
-              disabled={isLoading}
+              disabled={isLoading || isAnimating}
               className="w-full"
               icon={isLoading ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
             >
               {t("avatar.useAsProfile")}
             </ChunkyButton>
+            
+            {/* Animate button - save + animate in one tap */}
+            {isVip ? (
+              <ChunkyButton
+                variant="primary"
+                size="md"
+                onClick={async () => {
+                  await saveAvatar();
+                  animateAvatar();
+                }}
+                disabled={isLoading || isAnimating}
+                className="w-full"
+                icon={isAnimating ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
+              >
+                {isAnimating ? t("avatar.animating") : "გააცოცხლე ✨"}
+              </ChunkyButton>
+            ) : (
+              <ChunkyButton
+                variant="outline"
+                size="md"
+                onClick={() => {
+                  onClose();
+                  navigate("/profile?tab=PRO");
+                }}
+                className="w-full"
+                icon={<Lock className="w-4 h-4 shrink-0" />}
+              >
+                <span className="flex items-center gap-1.5">
+                  გააცოცხლე (PRO)
+                  <Crown className="w-3.5 h-3.5 text-amber-500" />
+                </span>
+              </ChunkyButton>
+            )}
           </div>
-          
-          {/* Animation Hint for PRO users */}
-          {isVip && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="w-full p-3 rounded-xl bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/30"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                  <Play className="w-4 h-4 text-accent" fill="currentColor" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-medium">შეგიძლია გააცოცხლო!</p>
-                  <p className="text-xs text-muted-foreground">შენახვის შემდეგ ანიმაცია ხელმისაწვდომია</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
       );
     }
