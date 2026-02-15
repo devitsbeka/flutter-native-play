@@ -612,7 +612,7 @@ export default function Index() {
                     className="flex flex-col items-center mt-6 pointer-events-auto"
                   >
                     <span className="font-sans text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 28 }}>
-                       <img src={handGestureIcon} alt="" className="w-8 h-8" /> გამარჯობა!
+                       <motion.img src={handGestureIcon} alt="" className="w-8 h-8" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> გამარჯობა!
                      </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-4">
@@ -671,7 +671,7 @@ export default function Index() {
                     className="flex flex-col items-center mt-3 pointer-events-auto"
                   >
                     <span className="font-slackey text-gray-800 font-black flex items-center gap-2" style={{ fontSize: 26 }}>
-                      <img src={handGestureIcon} alt="" className="w-7 h-7" /> გამარჯობა!
+                      <motion.img src={handGestureIcon} alt="" className="w-7 h-7" animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2, ease: "easeInOut" }} style={{ transformOrigin: "70% 80%" }} /> გამარჯობა!
                     </span>
                     {/* Auth buttons */}
                     <div className="flex items-center gap-3 mt-3">
