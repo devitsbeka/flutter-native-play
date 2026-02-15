@@ -1,34 +1,28 @@
 
-## Fix: Newly Created Trivia Should Appear Selected in Room
 
-### Problem
-When users click "+ შექმენი" from the "ჩემი ტრივია" picker inside the room creation flow, the trivia gets created and saved to the database, but it does not appear as the selected trivia in the room creation UI. The selection mode is set to "create" instead of "my-trivias", so the "ჩემი ტრივია" card doesn't show the newly created trivia as selected.
+## Fix: Silver League Badge Button and "შენი ლიგა" Visibility
 
-### Solution
-After `handleBlindTriviaReady` saves the trivia, also set `challengeTrivia` with the new trivia's ID and title, and use `selectionMode = "my-trivias"` instead of `"create"`. This way:
-- The trivia appears selected in the "ჩემი ტრივია" section visually
-- Room creation uses the "my-trivias" path which properly links to the trivia via `user_trivia_id`
-- The `createdTriviaId` fallback path (the "create" mode) is no longer needed for this flow
+### Issue 1: Silver badge button has bronze/gold colors
+The "ნახე რეიტინგი" button on the Silver league page uses `variant="gold"` as its base, then tries to override with gray CSS classes. However, the ChunkyButton renders its 3D depth/border effects using **inline styles** from the gold variant (amber/bronze colors), which the CSS class override cannot overwrite. This makes the silver button look like it has a bronze border.
 
-### Changes
+**Fix:** Add a dedicated `"silver"` variant to the ChunkyButton component with proper gray/silver depth colors, and use it in the AnimatedLeagueBadge for tier 2.
 
-#### File: `src/components/team/CreateRoomPage.tsx`
+#### File: `src/components/ui/chunky-button.tsx`
+- Add `"silver"` to the variant type union
+- Add silver variant styles with gray gradient face, gray depth/border colors matching a proper silver look
 
-**In `handleBlindTriviaReady` (around lines 550-555):**
+#### File: `src/pages/Leaderboards.tsx`
+- Update `AnimatedLeagueBadge` to use `variant="silver"` for tier 2 instead of `variant="outline"` with className overrides
+- Remove the `silverStyle` className hack
 
-Replace:
-```typescript
-setCreatedTriviaId(newTrivia.id);
-setCustomTriviaQuestions(questions);
-setCustomTriviaTitle(title);
-setCustomTriviaSubject(subject);
-setSelectionMode("create");
-```
+---
 
-With:
-```typescript
-setChallengeTrivia({ id: newTrivia.id, title, type: "trivia" });
-setSelectionMode("my-trivias");
-```
+### Issue 2: "შენი ლიგა" text not visible enough
+The label currently uses `text-white` with a light text shadow. On the silver/light backgrounds, this is hard to read.
 
-This makes the newly created trivia behave exactly like selecting an existing trivia from the picker -- it shows up as the selected item in the pink "ჩემი ტრივია" card and creates the room using the established "my-trivias" flow which correctly sets `user_trivia_id` and `game_mode`.
+**Fix:** Change text color to a darker shade and increase text shadow intensity for better contrast on all league backgrounds.
+
+#### File: `src/pages/Leaderboards.tsx`
+- Change `text-white` to `text-white` with a stronger, darker text shadow (e.g., `0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)`)
+- Apply this to all three instances of "შენი ლიგა" (mobile collapsed, mobile expanded, tablet/desktop)
+
