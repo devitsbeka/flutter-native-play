@@ -1,43 +1,23 @@
 
+## Fix "გააცოცხლე ავატარი" Button: Centering, Padding, and Color
 
-## Restyle "გააცოცხლე ავატარი" Button
+### File: `src/components/home/AvatarCircle.tsx` (lines 401-417)
 
-### What changes
-One file: `src/components/home/AvatarCircle.tsx`, lines 398-418.
+### Changes
 
-### Current
-- Purple gradient (`#A855F7` to `#7C3AED`), small padding (`px-3 py-1.5`), positioned off-center-ish
+1. **Blue/Pink gradient** (instead of purple):
+   - From: `linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)`
+   - To: `linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #3B82F6 100%)` (pink -> violet -> blue)
 
-### New style
-- **Pink/purple gradient** matching a warmer tone: `linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)` (pink-to-purple)
-- **Centered**: already uses `left-1/2 -translate-x-1/2`, just need to confirm no offset
-- **Better padding**: increase to `px-5 py-2` so text has proper breathing room
-- **Text size**: bump from `text-xs` to `text-sm` for readability
+2. **Shadow to match** new colors:
+   - From: `0 4px 14px rgba(168, 85, 247, 0.45), 0 2px 6px rgba(232, 121, 249, 0.3)`
+   - To: `0 4px 14px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(236, 72, 153, 0.3)`
 
-### Exact changes in `src/components/home/AvatarCircle.tsx`
+3. **Proper centering** -- add `justify-center` and increase right padding:
+   - From: `px-5 py-2`
+   - To: `px-6 py-2`
 
-**Line 401** - Update className padding:
-```
-px-3 py-1.5  -->  px-5 py-2
-```
+4. **Ensure true centering** -- the button already has `left-1/2 -translate-x-1/2` which should center it. The visual offset in the screenshot may be caused by the content not being centered inside. Adding `justify-center` to the flex container will fix this.
 
-**Line 404** - Update gradient:
-```
-"linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)"
--->
-"linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)"
-```
-
-**Line 405** - Update shadow to include pink glow:
-```
-"0 4px 12px rgba(124, 58, 237, 0.4), 0 2px 4px rgba(0,0,0,0.1)"
--->
-"0 4px 14px rgba(168, 85, 247, 0.45), 0 2px 6px rgba(232, 121, 249, 0.3)"
-```
-
-**Line 417** - Bump text size:
-```
-text-xs  -->  text-sm
-```
-
-One file, four small tweaks.
+### Technical Summary
+One file, lines 401-417. Four inline style/class tweaks.
