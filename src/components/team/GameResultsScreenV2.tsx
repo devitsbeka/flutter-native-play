@@ -598,9 +598,9 @@ export function GameResultsScreenV2() {
               className="w-full"
               onClick={() => setShowCategoryPicker(true)}
               disabled={isStartingRematch}
-              icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+              icon={<ChevronRight className="w-5 h-5" />}
             >
-              {isStartingRematch ? t("game.starting") : "კატეგორიის დამატება"}
+              კატეგორიის დამატება
             </ChunkyButton>
 
             {/* Challenge Friends button */}
