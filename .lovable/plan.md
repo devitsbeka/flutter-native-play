@@ -1,33 +1,29 @@
 
-## Fix Image Question Layout to Fit Viewport Without Scrolling
+## Show Image Questions Clearly in Admin List
 
 ### Problem
-Image-based questions waste vertical space in two ways:
-1. The image container is too tall (`h-52` = 208px)
-2. A redundant label "სურათიანი კითხვა" takes up extra space below the image
-
-This causes the 4th answer button to be pushed below the viewport, requiring scrolling.
+In the admin question list, image-based questions display their `question_text` just like regular text questions. Since image questions hide the text from users (only the image is shown), admins can't easily tell which questions are image-only. The admin needs a clear visual indicator.
 
 ### Changes
 
-#### 1. Remove "სურათიანი კითხვა" label (`quiz-question-card.tsx`)
-- Delete the entire "Image question label" block that shows when `hideQuestionText && hasImage`
-- This removes unnecessary vertical space
+#### File: `src/components/admin/studio/QuestionList.tsx`
+- On line 139-141, where the question text is displayed, add a condition: if the question has an `image_url` (and `hideQuestionText` behavior applies), show **"სურათი"** in a styled/muted format instead of the question text
+- This makes it immediately obvious which questions are image-only in the list
 
-#### 2. Reduce image height (`quiz-question-card.tsx`)
-- Change image container from `h-52` (208px) to `h-36` (144px)
-- This gives enough space to show the image clearly while leaving room for all 4 answers
-- Also reduce video container from `h-44` to `h-36` for consistency
-
-#### 3. Reduce padding when image is shown (`quiz-question-card.tsx`)
-- When `hideQuestionText` is true and there's an image, minimize bottom padding since there's no text below the image — just go straight to progress bar
+#### File: `src/components/admin/studio/QuestionPreviewPanel.tsx`
+- In the preview panel's question details section, for image questions, also label them as "სურათი" so the admin sees consistent labeling
 
 ### Technical Details
 
-**File: `src/components/ui/quiz-question-card.tsx`**
+**QuestionList.tsx (line 139-141)** - Replace the question text rendering:
+```tsx
+<p className="text-sm font-medium line-clamp-2 leading-snug">
+  {question.image_url ? (
+    <span className="text-blue-600 italic">სურათი</span>
+  ) : (
+    question.question_text
+  )}
+</p>
+```
 
-- Lines 219-225: Remove the "სურათიანი კითხვა" label block entirely
-- Line 104: Change `h-52` to `h-36` for image container
-- Line 118: Change `h-44` to `h-36` for video container
-
-These changes apply globally across all game modes (single player, multiplayer, TV) since they all use the same `QuizQuestionCard` component with `hideQuestionText={!!imageUrl}`.
+This way, image questions will show a blue "სურათი" label in the list, making it instantly clear which questions rely on images rather than text.
