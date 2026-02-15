@@ -1,29 +1,61 @@
 
-## Show Image Questions Clearly in Admin List
+
+## Fix Avatar Preview and Add Animate Button
 
 ### Problem
-In the admin question list, image-based questions display their `question_text` just like regular text questions. Since image questions hide the text from users (only the image is shown), admins can't easily tell which questions are image-only. The admin needs a clear visual indicator.
+When a user uploads a photo or takes a selfie and the AI generates an avatar, the preview step shows a broken/striped image instead of the generated avatar. Additionally, users who want to animate their avatar have to save first, go back to the gallery, and then find the animate button separately -- this breaks the flow.
 
 ### Changes
 
-#### File: `src/components/admin/studio/QuestionList.tsx`
-- On line 139-141, where the question text is displayed, add a condition: if the question has an `image_url` (and `hideQuestionText` behavior applies), show **"სურათი"** in a styled/muted format instead of the question text
-- This makes it immediately obvious which questions are image-only in the list
+#### File: `src/components/home/AvatarModal.tsx` -- Preview Step (lines 1091-1151)
 
-#### File: `src/components/admin/studio/QuestionPreviewPanel.tsx`
-- In the preview panel's question details section, for image questions, also label them as "სურათი" so the admin sees consistent labeling
+1. **Fix broken avatar display**: Add an `onError` handler on the preview image that retries loading or shows a fallback. Also add a loading state for the image to avoid showing the broken striped circle.
+
+2. **Replace the passive animation hint with an actionable "Animate" button**: Instead of just telling users "you can animate after saving", add a real button that:
+   - First saves the avatar (same as "გამოყენება")
+   - Then immediately triggers `animateAvatar()` 
+   - This gives users a seamless "save + animate" one-tap experience
+
+3. **Update button layout**: The preview step will have three actions:
+   - "თავიდან" (Retry) -- regenerate
+   - "გამოყენება" (Use as profile) -- save only
+   - "გააცოცხლე" (Animate) -- save and animate (PRO only, replaces the passive hint card)
 
 ### Technical Details
 
-**QuestionList.tsx (line 139-141)** - Replace the question text rendering:
+**Preview step image fix** -- add `onError` fallback and loading state:
 ```tsx
-<p className="text-sm font-medium line-clamp-2 leading-snug">
-  {question.image_url ? (
-    <span className="text-blue-600 italic">სურათი</span>
-  ) : (
-    question.question_text
-  )}
-</p>
+<img 
+  src={generatedAvatar} 
+  alt="Generated Avatar" 
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    // Fallback to uploaded image if generated URL fails
+    if (uploadedImage) {
+      e.currentTarget.src = uploadedImage;
+    }
+  }}
+/>
 ```
 
-This way, image questions will show a blue "სურათი" label in the list, making it instantly clear which questions rely on images rather than text.
+**Replace hint card with animate button** -- for PRO users, show a real ChunkyButton that saves then animates:
+```tsx
+{isVip && (
+  <ChunkyButton
+    variant="primary"
+    size="md"
+    onClick={async () => {
+      await saveAvatar();
+      animateAvatar();
+    }}
+    disabled={isLoading || isAnimating}
+    className="w-full"
+    icon={<Sparkles className="w-4 h-4" />}
+  >
+    {isAnimating ? "ანიმაცია..." : "გააცოცხლე ✨"}
+  </ChunkyButton>
+)}
+```
+
+For non-PRO users, show a locked animate button that navigates to PRO page (same pattern as the gallery step).
+
