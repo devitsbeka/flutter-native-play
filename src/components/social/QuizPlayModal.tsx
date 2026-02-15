@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCcw, Share2, ChevronRight, ChevronLeft, Coins, Star, Heart, Bookmark, Play } from "lucide-react";
 import purpleHeartIcon from "@/assets/icons/purple-heart.webp";
@@ -56,6 +57,7 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
   const [gameComplete, setGameComplete] = useState(false);
   const [shuffledAnswers, setShuffledAnswers] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(15);
+  const queryClient = useQueryClient();
   const [results, setResults] = useState<("correct" | "wrong" | null)[]>([]);
   
   // Collection multi-round state
@@ -194,6 +196,11 @@ export function QuizPlayModal({ open, onOpenChange, post, collectionPosts, retur
             post_id: postId,
             score: score ?? 0,
           });
+          
+          // Invalidate trivia queries so leaderboard shows all players
+          queryClient.invalidateQueries({ queryKey: ["trivia-leaderboard", postId] });
+          queryClient.invalidateQueries({ queryKey: ["trivia-stats", postId] });
+          queryClient.invalidateQueries({ queryKey: ["trivia-user-play", postId] });
           
           // Send notification to trivia creator
           const { data: postData } = await supabase
