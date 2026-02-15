@@ -558,14 +558,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </div>
                 )}
 
-                {/* Divider - Only show if not in pre-room mode or if there are friends */}
-                {(!isPreRoomMode || acceptedFriends.length > 0) && (
-                  <div className={`flex items-center gap-3 ${narrow}`}>
-                    <div className="flex-1 h-px bg-primary-foreground/25" />
-                    <span className="text-xs text-primary-foreground/90 font-semibold">ან მოწვევა</span>
-                    <div className="flex-1 h-px bg-primary-foreground/25" />
-                  </div>
-                )}
 
 
                 {/* Divider */}
