@@ -1,48 +1,43 @@
 
 
-## Fix: Auto-Detect Face for Existing Avatars
+## Restyle "გააცოცხლე ავატარი" Button
 
-### Problem
-The "გააცოცხლე ავატარი" button requires `has_face_photo = true`, but Nana's photo was uploaded **before** the detect-face feature was added. The database still shows `has_face_photo = false`. The detect-face function exists and works, but was never called for this photo.
+### What changes
+One file: `src/components/home/AvatarCircle.tsx`, lines 398-418.
 
-### Solution
-Add a one-time auto-detection effect on the main page: when a user has a storage-based avatar, no animated avatar, and `has_face_photo` is not yet `true`, automatically call the `detect-face` function to backfill the value. Then refresh the profile so the button appears immediately.
+### Current
+- Purple gradient (`#A855F7` to `#7C3AED`), small padding (`px-3 py-1.5`), positioned off-center-ish
 
-### File: `src/pages/Index.tsx`
+### New style
+- **Pink/purple gradient** matching a warmer tone: `linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)` (pink-to-purple)
+- **Centered**: already uses `left-1/2 -translate-x-1/2`, just need to confirm no offset
+- **Better padding**: increase to `px-5 py-2` so text has proper breathing room
+- **Text size**: bump from `text-xs` to `text-sm` for readability
 
-Add a `useEffect` that runs when the profile loads:
+### Exact changes in `src/components/home/AvatarCircle.tsx`
 
-```typescript
-// Auto-detect face for existing avatars that haven't been checked yet
-useEffect(() => {
-  if (
-    user &&
-    profile?.avatar_url &&
-    profile.avatar_url.includes('supabase.co/storage') &&
-    profile.has_face_photo !== true &&
-    !profile.animated_avatar_url
-  ) {
-    supabase.functions.invoke("detect-face", {
-      body: { imageUrl: profile.avatar_url, userId: user.id },
-    }).then(() => {
-      // Refresh profile to pick up the updated has_face_photo value
-      refreshProfile();
-    }).catch(err => console.warn("Auto face detection failed:", err));
-  }
-}, [user?.id, profile?.avatar_url]);
+**Line 401** - Update className padding:
+```
+px-3 py-1.5  -->  px-5 py-2
 ```
 
-This ensures:
-- Runs once when the profile loads
-- Only triggers for storage-based avatars that haven't been checked
-- Refreshes the profile after detection so the button appears without page reload
-- Silently catches errors (non-blocking)
-- Won't re-trigger once `has_face_photo` is set to `true` or `false` (we guard with `!== true` so it runs once for `false`/`null`, then after the update it won't run again on next render if result is `true`)
+**Line 404** - Update gradient:
+```
+"linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)"
+-->
+"linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)"
+```
 
-**Note:** To prevent repeated calls if the face detection returns `false` (e.g., a flower photo), we'll track it with a ref so it only runs once per session.
+**Line 405** - Update shadow to include pink glow:
+```
+"0 4px 12px rgba(124, 58, 237, 0.4), 0 2px 4px rgba(0,0,0,0.1)"
+-->
+"0 4px 14px rgba(168, 85, 247, 0.45), 0 2px 6px rgba(232, 121, 249, 0.3)"
+```
 
-### Technical Detail
-We need access to `refreshProfile` -- need to verify it exists in the auth context. If not, we'll use a local state trigger or call `supabase.from('profiles').select()` directly to update local state.
+**Line 417** - Bump text size:
+```
+text-xs  -->  text-sm
+```
 
-One file changed, one `useEffect` added.
-
+One file, four small tweaks.
