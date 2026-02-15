@@ -398,11 +398,11 @@ export function AvatarCircle({
       {/* "გააცოცხლე ავატარი" animate prompt button - above level badge */}
       {showAnimatePrompt && !hideStats && (
         <motion.button
-          className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-5 py-2 rounded-full pointer-events-auto"
+          className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-1.5 px-6 py-2 rounded-full pointer-events-auto"
           style={{
             bottom: 38,
-            background: "linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)",
-            boxShadow: "0 4px 14px rgba(168, 85, 247, 0.45), 0 2px 6px rgba(232, 121, 249, 0.3)",
+            background: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #3B82F6 100%)",
+            boxShadow: "0 4px 14px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(236, 72, 153, 0.3)",
             border: "2px solid rgba(255,255,255,0.3)",
           }}
           animate={{ scale: [1, 1.06, 1] }}
