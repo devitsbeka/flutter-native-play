@@ -1,30 +1,34 @@
 
-## Fix: Both Buttons Showing Loading State
+## Fix: Newly Created Trivia Should Appear Selected in Room
 
 ### Problem
-On the multiplayer results screen (`GameResultsScreenV2.tsx`), when the host clicks "გაგრძელება" (Continue), both the Continue button AND the "კატეგორიის დამატება" (Add Category) button show a loading spinner. This is because both buttons share the same `isStartingRematch` state for their `disabled` and `icon` props.
+When users click "+ შექმენი" from the "ჩემი ტრივია" picker inside the room creation flow, the trivia gets created and saved to the database, but it does not appear as the selected trivia in the room creation UI. The selection mode is set to "create" instead of "my-trivias", so the "ჩემი ტრივია" card doesn't show the newly created trivia as selected.
 
-### Fix
+### Solution
+After `handleBlindTriviaReady` saves the trivia, also set `challengeTrivia` with the new trivia's ID and title, and use `selectionMode = "my-trivias"` instead of `"create"`. This way:
+- The trivia appears selected in the "ჩემი ტრივია" section visually
+- Room creation uses the "my-trivias" path which properly links to the trivia via `user_trivia_id`
+- The `createdTriviaId` fallback path (the "create" mode) is no longer needed for this flow
 
-#### File: `src/components/team/GameResultsScreenV2.tsx` (lines 594-604)
+### Changes
 
-The "კატეგორიის დამატება" button should:
-- Still be **disabled** while a rematch is starting (to prevent double actions) -- this is correct
-- But NOT show the loading spinner icon -- it should keep its normal chevron icon
+#### File: `src/components/team/CreateRoomPage.tsx`
 
-Change line 601 from:
-```tsx
-icon={isStartingRematch ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+**In `handleBlindTriviaReady` (around lines 550-555):**
+
+Replace:
+```typescript
+setCreatedTriviaId(newTrivia.id);
+setCustomTriviaQuestions(questions);
+setCustomTriviaTitle(title);
+setCustomTriviaSubject(subject);
+setSelectionMode("create");
 ```
-to:
-```tsx
-icon={<ChevronRight className="w-5 h-5" />}
+
+With:
+```typescript
+setChallengeTrivia({ id: newTrivia.id, title, type: "trivia" });
+setSelectionMode("my-trivias");
 ```
 
-Similarly, update the button text on line 603 to always show the normal text (not the "loading" text):
-```tsx
-კატეგორიის დამატება
-```
-(This line already shows the correct text when not loading, but the ternary currently shows `t("game.starting")` during loading -- remove that.)
-
-This way, only the button that was actually clicked shows the loading state.
+This makes the newly created trivia behave exactly like selecting an existing trivia from the picker -- it shows up as the selected item in the pink "ჩემი ტრივია" card and creates the room using the established "my-trivias" flow which correctly sets `user_trivia_id` and `game_mode`.
