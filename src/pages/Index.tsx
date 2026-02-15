@@ -52,6 +52,7 @@ import { DesktopGuestSplitLayout } from "@/components/home/DesktopGuestSplitLayo
 import { GuestSignupPromptModal } from "@/components/home/GuestSignupPromptModal";
 import { lovable } from "@/integrations/lovable";
 
+import { toast } from "@/hooks/use-toast";
 import { t } from "@/lib/i18n";
 import { formatCompactNumber } from "@/lib/utils";
 import { UniversalBottomNav } from "@/components/layout/UniversalBottomNav";
@@ -201,6 +202,7 @@ export default function Index() {
   const [showNotEnoughCoinsModal, setShowNotEnoughCoinsModal] = useState(false);
   const [showRoomChatsPanel, setShowRoomChatsPanel] = useState(false);
   const [showGuestSignupPrompt, setShowGuestSignupPrompt] = useState(false);
+  const [isAnimatingFromHome, setIsAnimatingFromHome] = useState(false);
   const { totalUnread: unreadMessagesCount } = useUnreadRoomMessages();
 
   // Pro Gift Modal state
@@ -372,10 +374,78 @@ export default function Index() {
     }
   }, []);
 
+  // Handle direct animation from home button
+  const handleAnimateFromHome = useCallback(async () => {
+    if (!user || !profile) return;
+    
+    if (!profile.has_face_photo) {
+      toast({ title: "გთხოვთ ატვირთოთ ფოტო სახით", description: "ანიმაციისთვის საჭიროა ფოტო, რომელზეც სახე ჩანს" });
+      return;
+    }
+    
+    setIsAnimatingFromHome(true);
+    toast({ title: "ანიმაცია იწყება...", description: "1-2 წუთი დასჭირდება" });
+    
+    try {
+      const imageUrl = profile.avatar_url;
+      const { data, error } = await supabase.functions.invoke("animate-avatar", {
+        body: { imageUrl, userId: user.id },
+      });
+      
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || "Animation failed");
+      }
+      
+      const { statusUrl, responseUrl } = data;
+      
+      // Poll for completion
+      const pollInterval = setInterval(async () => {
+        try {
+          const { data: pollData, error: pollError } = await supabase.functions.invoke("animate-avatar", {
+            body: { userId: user.id, statusUrl, responseUrl },
+          });
+          
+          if (pollError) {
+            console.error("Poll error:", pollError);
+            return;
+          }
+          
+          if (pollData?.success && pollData?.videoUrl) {
+            clearInterval(pollInterval);
+            await fetchProfile(user.id);
+            toast({ title: "✨ ანიმაცია მზადაა!" });
+            // Trigger confetti
+            try {
+              const confetti = (await import("canvas-confetti")).default;
+              confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } catch {}
+          } else if (pollData?.error) {
+            clearInterval(pollInterval);
+            setIsAnimatingFromHome(false);
+            toast({ title: "ანიმაცია ვერ მოხერხდა", description: pollData.error, variant: "destructive" });
+          }
+        } catch (e) {
+          console.error("Polling error:", e);
+        }
+      }, 5000);
+      
+      // Timeout after 3 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setIsAnimatingFromHome(false);
+      }, 180000);
+      
+    } catch (err: any) {
+      console.error("Animation error:", err);
+      setIsAnimatingFromHome(false);
+      toast({ title: "ანიმაცია ვერ მოხერხდა", description: err.message, variant: "destructive" });
+    }
+  }, [user, profile, fetchProfile]);
+
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
-  const showAnimatePrompt = !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
+  const showAnimatePrompt = !isAnimatingFromHome && !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
   return (
     <>
       {/* Onboarding modals */}
@@ -849,7 +919,7 @@ export default function Index() {
                         hideStats={!user}
                         showAvatarPrompt={false}
                         showAnimatePrompt={showAnimatePrompt}
-                        onAnimateClick={() => openAvatarModal()}
+                        onAnimateClick={() => handleAnimateFromHome()}
                         showMascotReminder={!!user && !profile?.avatar_url}
                         userId={user?.id}
                       />
@@ -937,7 +1007,7 @@ export default function Index() {
                       xpTotal={levelInfo.xpNeededForNextLevel}
                       showAvatarPrompt={false}
                       showAnimatePrompt={showAnimatePrompt}
-                      onAnimateClick={() => openAvatarModal()}
+                      onAnimateClick={() => handleAnimateFromHome()}
                       showMascotReminder={!!user && !profile?.avatar_url}
                       userId={user?.id}
                     />
@@ -1220,7 +1290,7 @@ export default function Index() {
                       hideStats={!user}
                       showAvatarPrompt={false}
                       showAnimatePrompt={showAnimatePrompt}
-                      onAnimateClick={() => openAvatarModal()}
+                      onAnimateClick={() => handleAnimateFromHome()}
                       showMascotReminder={!!user && !profile?.avatar_url}
                       userId={user?.id}
                     />
