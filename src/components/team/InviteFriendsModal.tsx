@@ -567,20 +567,6 @@ export function InviteFriendsModal({ isOpen, onClose, inviteLink, roomId, roomCo
                   </div>
                 )}
 
-                {/* Import & Connect Section */}
-                <div className={`space-y-2 ${narrow}`}>
-              <button
-                onClick={handleImportContacts}
-                className={`w-full flex items-center gap-4 p-4 ${lobbyGlassCard} hover:bg-white/15 active:bg-white/20 transition-colors relative z-10`}
-                style={{ touchAction: "manipulation" }}
-              >
-                <ContactsIcon />
-                <div className="text-left">
-                  <p className="font-semibold text-base text-white">კონტაქტების იმპორტი</p>
-                  <p className="text-sm text-white/70">მოიწვიე მეგობრები ტელეფონიდან</p>
-                </div>
-              </button>
-                </div>
 
                 {/* Divider */}
                 <div className={`flex items-center gap-3 ${narrow}`}>
