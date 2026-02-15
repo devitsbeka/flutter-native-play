@@ -23,6 +23,7 @@ export interface ReviewOptions {
   questionIds?: string[];
   onlyProduction?: boolean;
   limit?: number;
+  sourceMode?: 'last-added' | 'all';
 }
 
 export interface ReviewSummary {
@@ -272,6 +273,73 @@ export function useQuestionQualityReview() {
     }
   }, [results]);
 
+  const loadSavedIssues = useCallback(async (options: ReviewOptions) => {
+    setReviewing(true);
+    setResults([]);
+    setSummary({ A: 0, B: 0, C: 0, D: 0 });
+
+    try {
+      let query = supabase
+        .from('questions')
+        .select('id, question_text, correct_answer, incorrect_answers, ai_review_data, ai_review_grade, ai_review_score')
+        .eq('is_active', true)
+        .in('ai_review_grade', ['B', 'C', 'D'])
+        .order('created_at', { ascending: false });
+
+      if (options.categoryId) {
+        query = query.eq('category_id', options.categoryId);
+      }
+      if (options.onlyProduction) {
+        query = query.eq('in_production', true);
+      }
+
+      const queryLimit = options.sourceMode === 'all' ? 1000 : (options.limit || 50);
+      query = query.limit(queryLimit);
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      const mappedResults: ReviewResult[] = (data || []).map((q) => {
+        const reviewData = (q.ai_review_data as Record<string, any>) || {};
+        const incorrectAnswers = Array.isArray(q.incorrect_answers)
+          ? (q.incorrect_answers as string[])
+          : [];
+
+        return {
+          id: q.id,
+          question_text: q.question_text,
+          correct_answer: q.correct_answer,
+          incorrect_answers: incorrectAnswers,
+          overall_score: q.ai_review_score || 0,
+          grade: (q.ai_review_grade || 'D') as ReviewResult['grade'],
+          grammar_score: reviewData.grammar_score ?? 100,
+          grammar_issues: reviewData.grammar_issues ?? [],
+          uniqueness_score: reviewData.uniqueness_score ?? 100,
+          uniqueness_issues: reviewData.uniqueness_issues ?? [],
+          confusion_score: reviewData.confusion_score ?? 100,
+          confusion_issues: reviewData.confusion_issues ?? [],
+          recommendations: reviewData.recommendations ?? [],
+        };
+      });
+
+      setResults(mappedResults);
+      setSummary({
+        A: mappedResults.filter(r => r.grade === 'A').length,
+        B: mappedResults.filter(r => r.grade === 'B').length,
+        C: mappedResults.filter(r => r.grade === 'C').length,
+        D: mappedResults.filter(r => r.grade === 'D').length,
+      });
+
+      toast.success(`Loaded ${mappedResults.length} questions with issues`);
+    } catch (error) {
+      console.error('Load saved issues error:', error);
+      toast.error('Failed to load saved issues');
+    } finally {
+      setReviewing(false);
+    }
+  }, []);
+
   const clearResults = useCallback(() => {
     setResults([]);
     setSummary({ A: 0, B: 0, C: 0, D: 0 });
@@ -288,6 +356,7 @@ export function useQuestionQualityReview() {
     summary,
     resolvedIds,
     startReview,
+    loadSavedIssues,
     moveToLibrary,
     resolveQuestions,
     clearResults,
