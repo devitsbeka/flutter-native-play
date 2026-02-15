@@ -353,7 +353,7 @@ export default function Index() {
   const gamesWon = profile?.games_won || 0;
   const currentStreak = profile?.current_streak || 0;
   const levelInfo = calculateLevel(profile?.total_points || 0);
-  const showAnimatePrompt = !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && !profile?.animated_avatar_url;
+  const showAnimatePrompt = !!profile?.avatar_url && profile.avatar_url.includes('supabase.co/storage') && profile.has_face_photo === true && !profile?.animated_avatar_url;
   return (
     <>
       {/* Onboarding modals */}

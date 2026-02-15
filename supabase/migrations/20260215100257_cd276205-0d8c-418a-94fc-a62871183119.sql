@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN has_face_photo boolean DEFAULT false;

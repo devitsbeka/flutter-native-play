@@ -197,3 +197,7 @@ verify_jwt = false
 # --- SEEDING (one-time use, admin only) ---
 [functions.seed-sample-content]
 verify_jwt = false
+
+# --- FACE DETECTION (requires auth) ---
+[functions.detect-face]
+verify_jwt = true
