@@ -579,7 +579,9 @@ async function getSingleCategoryVSQuestions(
   
   // Get seen question IDs
   const seenIds = getSeenQuestionIds();
-  let excludeIds = [...seenIds];
+  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
+  const MAX_EXCLUDE_IN_QUERY = 200;
+  let excludeIds = seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
   
   // Get total available in this category
   const { count: totalCount } = await supabase
@@ -703,7 +705,9 @@ async function getMultiCategoryVSQuestions(
   }
   
   // Get fresh exclude list after potential reset
-  let excludeIds = wasReset ? [] : [...seenIds];
+  // Cap excludeIds to prevent oversized query URLs (5000 UUIDs = ~180KB, exceeds limits)
+  const MAX_EXCLUDE_IN_QUERY = 200;
+  let excludeIds = wasReset ? [] : seenIds.slice(-MAX_EXCLUDE_IN_QUERY);
   
   // Get all active categories
   const { data: categories } = await supabase
