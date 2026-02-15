@@ -21,7 +21,8 @@ import {
   FileText,
   BookOpen,
   Wand2,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,7 +36,8 @@ const gradeConfig = {
 export default function QualityReview() {
   const [categoryId, setCategoryId] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'production' | 'library'>('production');
-  const [limit, setLimit] = useState<number>(50);
+  const [sourceMode, setSourceMode] = useState<'last-added' | 'all'>('last-added');
+  const [limit, setLimit] = useState<number>(200);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'grade' | 'score'>('grade');
@@ -49,6 +51,7 @@ export default function QualityReview() {
     summary,
     resolvedIds,
     startReview, 
+    loadSavedIssues,
     moveToLibrary, 
     resolveQuestions,
     clearResults 
@@ -102,7 +105,19 @@ export default function QualityReview() {
     startReview({
       categoryId: categoryId === 'all' ? undefined : categoryId,
       onlyProduction: statusFilter === 'production',
-      limit,
+      limit: sourceMode === 'all' ? 1000 : limit,
+      sourceMode,
+    });
+  };
+
+  const handleShowIssues = () => {
+    clearResults();
+    setSelectedIds(new Set());
+    loadSavedIssues({
+      categoryId: categoryId === 'all' ? undefined : categoryId,
+      onlyProduction: statusFilter === 'production',
+      limit: sourceMode === 'all' ? 1000 : limit,
+      sourceMode,
     });
   };
 
@@ -168,14 +183,25 @@ export default function QualityReview() {
           <h1 className="text-2xl font-bold">Quality Review</h1>
           <p className="text-muted-foreground text-sm">AI-powered question quality analysis</p>
         </div>
-        <Button 
-          onClick={handleStartReview} 
-          disabled={reviewing || resolving}
-          className="gap-2"
-        >
-          <Play className="h-4 w-4" />
-          {reviewing ? 'Reviewing...' : 'Run Review'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={handleShowIssues} 
+            disabled={reviewing || resolving}
+            className="gap-2"
+          >
+            <AlertCircle className="h-4 w-4" />
+            Show Issues
+          </Button>
+          <Button 
+            onClick={handleStartReview} 
+            disabled={reviewing || resolving}
+            className="gap-2"
+          >
+            <Play className="h-4 w-4" />
+            {reviewing ? 'Reviewing...' : 'Run Review'}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -212,20 +238,35 @@ export default function QualityReview() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm text-muted-foreground">Last Added</label>
-              <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
-                <SelectTrigger className="w-[100px]">
+              <label className="text-sm text-muted-foreground">Source</label>
+              <Select value={sourceMode} onValueChange={(v) => setSourceMode(v as 'last-added' | 'all')}>
+                <SelectTrigger className="w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                  <SelectItem value="200">200</SelectItem>
-                  <SelectItem value="500">500</SelectItem>
+                  <SelectItem value="last-added">Last Added</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {sourceMode === 'last-added' && (
+              <div className="space-y-1.5">
+                <label className="text-sm text-muted-foreground">Count</label>
+                <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                    <SelectItem value="200">200</SelectItem>
+                    <SelectItem value="500">500</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="text-sm text-muted-foreground">Sort By</label>
