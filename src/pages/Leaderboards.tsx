@@ -43,12 +43,23 @@ const TROPHY_SIZES = {
   mobile: 100,
 };
 
-// League badge using ChunkyButton gold variant
-const AnimatedLeagueBadge = ({ tier: _tier }: { tier: number }) => (
-  <ChunkyButton variant="gold" size="sm" className="pointer-events-none">
-    შენი ლიგა
-  </ChunkyButton>
-);
+// League-colored "ნახე რეიტინგი" button that opens ratings
+const AnimatedLeagueBadge = ({ tier, onClick }: { tier: number; onClick?: () => void }) => {
+  const variant = tier === 3 ? "gold" : tier === 2 ? "outline" : "gold";
+  const silverStyle = tier === 2 ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 border-gray-400 shadow-md" : "";
+  const bronzeStyle = tier === 1 ? "bg-gradient-to-b from-amber-600 to-amber-800 text-white border-amber-700 shadow-md" : "";
+  
+  return (
+    <ChunkyButton 
+      variant={variant} 
+      size="sm" 
+      onClick={onClick}
+      className={tier === 2 ? silverStyle : tier === 1 ? bronzeStyle : ""}
+    >
+      ნახე რეიტინგი
+    </ChunkyButton>
+  );
+};
 
 export default function Leaderboards() {
   const { user } = useAuth();
@@ -260,25 +271,18 @@ export default function Leaderboards() {
           isFullscreen={!isExpanded}
         />
         
-        {/* Floating "See Rankings" button with badge when collapsed */}
+        {/* "ნახე რეიტინგი" button + "შენი ლიგა" label when collapsed */}
         {!isExpanded && (
-          <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-            <button 
-              onClick={() => setIsExpanded(true)}
-              className="bg-background/90 backdrop-blur-sm rounded-full px-6 py-3 
-                         shadow-lg border border-border/30 active:scale-95 transition-transform"
-            >
-              <span className="text-sm font-medium text-foreground">
-                ნახე რეიტინგი
+          <div className="fixed top-[140px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5">
+            <AnimatedLeagueBadge tier={activeTier} onClick={() => setIsExpanded(true)} />
+            {activeTier === userTier && (
+              <span 
+                className="text-xs font-bold text-white"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+              >
+                შენი ლიგა
               </span>
-            </button>
-          </div>
-        )}
-        
-        {/* "შენი ლიგა" badge positioned at top, below league nav */}
-        {!isExpanded && activeTier === userTier && (
-          <div className="fixed top-[140px] left-1/2 -translate-x-1/2 z-20">
-            <AnimatedLeagueBadge tier={userTier} />
+            )}
           </div>
         )}
 
@@ -477,29 +481,21 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
           </div>
         </div>
         
-        {/* "შენი ლიგა" badge positioned at top, below league nav */}
-        {activeTier === userTier && (
-          <div className="flex justify-center mt-4">
-            <AnimatedLeagueBadge tier={userTier} />
-          </div>
-        )}
+        {/* "ნახე რეიტინგი" button + "შენი ლიგა" label */}
+        <div className="flex justify-center mt-4 flex-col items-center gap-1.5">
+          <AnimatedLeagueBadge tier={activeTier} onClick={() => setIsModalOpen(true)} />
+          {activeTier === userTier && (
+            <span 
+              className="text-xs font-bold text-white"
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+            >
+              შენი ლიგა
+            </span>
+          )}
+        </div>
         
         {/* Spacer - trophies visible in background */}
         <div className="flex-1" />
-        
-        {/* View Rating button at bottom with "შენი ლიგა" label */}
-        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-background/90 backdrop-blur-sm rounded-full px-10 py-4 
-                       shadow-lg border border-border/30 active:scale-95 transition-transform
-                       hover:bg-background"
-          >
-            <span className="text-lg font-semibold text-foreground">
-              {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
-            </span>
-          </button>
-        </div>
       </div>
       
       {/* Rating Modal */}
@@ -640,29 +636,21 @@ function TabletLeaderboards({
           </div>
         </div>
         
-        {/* "შენი ლიგა" badge positioned at top, below league nav */}
-        {currentTier === userTier && (
-          <div className="flex justify-center mt-4">
-            <AnimatedLeagueBadge tier={userTier} />
-          </div>
-        )}
+        {/* "ნახე რეიტინგი" button + "შენი ლიგა" label */}
+        <div className="flex justify-center mt-4 flex-col items-center gap-1.5">
+          <AnimatedLeagueBadge tier={currentTier} onClick={() => setIsModalOpen(true)} />
+          {currentTier === userTier && (
+            <span 
+              className="text-xs font-bold text-white"
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+            >
+              შენი ლიგა
+            </span>
+          )}
+        </div>
         
         {/* Spacer - trophy is already visible in the background */}
         <div className="flex-1" />
-        
-        {/* View Rating button at bottom with "შენი ლიგა" label */}
-        <div className="absolute bottom-[45px] left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-background/90 backdrop-blur-sm rounded-full px-8 py-4 
-                       shadow-lg border border-border/30 active:scale-95 transition-transform
-                       hover:bg-background"
-          >
-            <span className="text-base font-semibold text-foreground">
-              {language === 'ka' ? 'ნახე რეიტინგი' : 'View Rating'}
-            </span>
-          </button>
-        </div>
       </div>
       
       {/* Rating Modal */}
