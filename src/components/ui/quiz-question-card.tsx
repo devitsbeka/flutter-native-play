@@ -101,7 +101,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
       >
         {/* Image for Image Trivia questions */}
         {hasImage && !hasVideo && !hasAudio && (
-          <div className="w-full h-52 overflow-hidden bg-gray-100 flex items-start justify-center">
+          <div className="w-full h-36 overflow-hidden bg-gray-100 flex items-start justify-center">
             <img 
               src={imageUrl!} 
               alt="Question" 
@@ -115,7 +115,7 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
         
         {/* Video for Video Trivia questions */}
         {hasVideo && (
-          <div className="w-full h-44 overflow-hidden bg-black rounded-t-2xl">
+          <div className="w-full h-36 overflow-hidden bg-black rounded-t-2xl">
             <video 
               src={videoUrl!}
               className="w-full h-full object-cover"
@@ -216,14 +216,6 @@ const QuizQuestionCard = React.forwardRef<HTMLDivElement, QuizQuestionCardProps>
           </div>
         )}
 
-        {/* Image question label */}
-        {hideQuestionText && hasImage && (
-          <div className="px-5 py-3 flex items-center justify-center">
-            <p className="text-center text-sm font-medium text-[#2A2550]/60">
-              სურათიანი კითხვა
-            </p>
-          </div>
-        )}
 
         {/* Question Text - hide for image-only mode */}
         {!hideQuestionText && (
