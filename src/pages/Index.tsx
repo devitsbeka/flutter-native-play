@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { trackSignupCompleted } from "@/lib/analytics";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +19,7 @@ import { MissionsModal } from "@/components/home/MissionsModal";
 import { LevelInfoModal } from "@/components/home/LevelInfoModal";
 import { NotEnoughCoinsModal } from "@/components/home/NotEnoughCoinsModal";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { calculateLevel } from "@/utils/levelCalculation";
 import { PowerUpBadge } from "@/components/game/PowerUpBadge";
@@ -217,6 +218,26 @@ export default function Index() {
   
   // Guest play tracking
   const guestPlaysRemaining = !user ? getGuestPlaysRemaining() : 0;
+
+  // Auto-detect face for existing avatars that haven't been checked yet
+  const faceDetectRanRef = useRef(false);
+  useEffect(() => {
+    if (
+      faceDetectRanRef.current ||
+      !user ||
+      !profile?.avatar_url ||
+      !profile.avatar_url.includes('supabase.co/storage') ||
+      profile.has_face_photo === true ||
+      profile.animated_avatar_url
+    ) return;
+
+    faceDetectRanRef.current = true;
+    supabase.functions.invoke("detect-face", {
+      body: { imageUrl: profile.avatar_url, userId: user.id },
+    }).then(() => {
+      fetchProfile(user.id);
+    }).catch(err => console.warn("Auto face detection failed:", err));
+  }, [user?.id, profile?.avatar_url, profile?.has_face_photo, profile?.animated_avatar_url, fetchProfile]);
   
   // Auth loading state for GuestWelcomePanel
   const [isAuthLoading, setIsAuthLoading] = useState(false);
