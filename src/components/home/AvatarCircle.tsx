@@ -398,11 +398,11 @@ export function AvatarCircle({
       {/* "გააცოცხლე ავატარი" animate prompt button - above level badge */}
       {showAnimatePrompt && !hideStats && (
         <motion.button
-          className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-full pointer-events-auto"
+          className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-5 py-2 rounded-full pointer-events-auto"
           style={{
             bottom: 38,
-            background: "linear-gradient(135deg, #A855F7 0%, #7C3AED 100%)",
-            boxShadow: "0 4px 12px rgba(124, 58, 237, 0.4), 0 2px 4px rgba(0,0,0,0.1)",
+            background: "linear-gradient(135deg, #E879F9 0%, #A855F7 50%, #7C3AED 100%)",
+            boxShadow: "0 4px 14px rgba(168, 85, 247, 0.45), 0 2px 6px rgba(232, 121, 249, 0.3)",
             border: "2px solid rgba(255,255,255,0.3)",
           }}
           animate={{ scale: [1, 1.06, 1] }}
@@ -414,7 +414,7 @@ export function AvatarCircle({
           }}
         >
           <img src={aiSparkleIcon} alt="" className="w-4 h-4" />
-          <span className="text-white text-xs font-bold whitespace-nowrap">გააცოცხლე ავატარი</span>
+          <span className="text-white text-sm font-bold whitespace-nowrap">გააცოცხლე ავატარი</span>
         </motion.button>
       )}
 
