@@ -548,11 +548,8 @@ export function CreateRoomPage({ onClose, challengeUserId, defaultChallengeType,
     queryClient.invalidateQueries({ queryKey: ["my-recent-trivias-widget"] });
 
     // 6. Store the new trivia ID for room creation & set state
-    setCreatedTriviaId(newTrivia.id);
-    setCustomTriviaQuestions(questions);
-    setCustomTriviaTitle(title);
-    setCustomTriviaSubject(subject);
-    setSelectionMode("create");
+    setChallengeTrivia({ id: newTrivia.id, title, type: "trivia" });
+    setSelectionMode("my-trivias");
     
     toast({
       title: "✨ ტრივია მზადაა!",
