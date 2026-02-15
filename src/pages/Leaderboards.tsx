@@ -45,16 +45,13 @@ const TROPHY_SIZES = {
 
 // League-colored "ნახე რეიტინგი" button that opens ratings
 const AnimatedLeagueBadge = ({ tier, onClick }: { tier: number; onClick?: () => void }) => {
-  const variant = tier === 3 ? "gold" : tier === 2 ? "outline" : "gold";
-  const silverStyle = tier === 2 ? "bg-gradient-to-b from-gray-300 to-gray-400 text-gray-800 border-gray-400 shadow-md" : "";
-  const bronzeStyle = tier === 1 ? "bg-gradient-to-b from-amber-600 to-amber-800 text-white border-amber-700 shadow-md" : "";
+  const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "gold";
   
   return (
     <ChunkyButton 
       variant={variant} 
       size="sm" 
       onClick={onClick}
-      className={tier === 2 ? silverStyle : tier === 1 ? bronzeStyle : ""}
     >
       ნახე რეიტინგი
     </ChunkyButton>
@@ -278,7 +275,7 @@ export default function Leaderboards() {
             {activeTier === userTier && (
               <span 
                 className="text-xs font-bold text-white"
-                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+                style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)' }}
               >
                 შენი ლიგა
               </span>
@@ -487,7 +484,7 @@ function DesktopLeaderboards({ userTier, region }: { userTier: number; region?: 
           {activeTier === userTier && (
             <span 
               className="text-xs font-bold text-white"
-              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+              style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)' }}
             >
               შენი ლიგა
             </span>
@@ -642,7 +639,7 @@ function TabletLeaderboards({
           {currentTier === userTier && (
             <span 
               className="text-xs font-bold text-white"
-              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+              style={{ textShadow: '0 1px 6px rgba(0,0,0,0.8), 0 0 2px rgba(0,0,0,0.5)' }}
             >
               შენი ლიგა
             </span>
