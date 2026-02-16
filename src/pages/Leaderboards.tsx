@@ -83,6 +83,7 @@ export default function Leaderboards() {
 
   const [showFixedBar, setShowFixedBar] = useState(true);
   const userRowRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Sync carousel with viewingTier (mobile only)
   useEffect(() => {
@@ -110,19 +111,33 @@ export default function Leaderboards() {
     }
   }, [carouselApi, userTier, viewingTier]);
 
-  // Use IntersectionObserver to detect when user's row is visible
+  // Use IntersectionObserver to detect when user's row is visible within scroll container
   useEffect(() => {
-    if (!userEntry || !isExpanded) return;
+    if (!userEntry || !isExpanded) {
+      setShowFixedBar(false);
+      return;
+    }
+
+    const scrollRoot = scrollContainerRef.current;
+    if (!scrollRoot) {
+      setShowFixedBar(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         setShowFixedBar(!entry.isIntersecting);
       },
-      { root: null, rootMargin: "0px 0px -200px 0px", threshold: 0 }
+      { root: scrollRoot, threshold: 0.1 }
     );
 
     const currentRef = userRowRef.current;
-    if (currentRef) observer.observe(currentRef);
+    if (currentRef) {
+      observer.observe(currentRef);
+    } else {
+      // User row not rendered yet, show bar
+      setShowFixedBar(true);
+    }
     return () => {
       if (currentRef) observer.unobserve(currentRef);
     };
@@ -313,7 +328,7 @@ export default function Leaderboards() {
                 </button>
 
                 {/* Full scrollable list */}
-                <div className="flex-1 overflow-y-auto px-3 pb-32">
+                <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-3 pb-4">
                   {isLoading && leaderboard.length === 0 ? (
                     // Show skeleton rows while loading
                     Array.from({ length: 10 }).map((_, i) => (
@@ -360,46 +375,46 @@ export default function Leaderboards() {
                     })
                   )}
                 </div>
+
+                {/* Sticky User Position Bar - inside bottom sheet */}
+                <AnimatePresence>
+                  {userEntry && !isLeagueLocked && showFixedBar && (
+                    <motion.div
+                      className="sticky bottom-0 left-0 right-0 z-10 px-3 py-2 bg-background/95 backdrop-blur-lg border-t border-border/30"
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 20, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <button
+                        onClick={() => {
+                          userRowRef.current?.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                          });
+                        }}
+                        className="w-full text-left cursor-pointer active:scale-[0.98] transition-transform"
+                      >
+                        <LeaguePlayerRow
+                          entry={userEntry}
+                          isCurrentUser={true}
+                          index={0}
+                          previousRank={previousRank}
+                          shouldAnimate={false}
+                          totalPlayers={leaderboard.length}
+                          isPromotionZone={(viewingTier ?? userTier) < 5 && userEntry.rank <= 10}
+                          isDemotionZone={(viewingTier ?? userTier) > 1 && userEntry.rank > leaderboard.length - 10}
+                          isFixed={true}
+                        />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </>
           )}
         </AnimatePresence>
       </div>
-
-      {/* Fixed User Position Bar (Mobile only) - Only in expanded mode */}
-      <AnimatePresence>
-        {isExpanded && userEntry && !isLeagueLocked && showFixedBar && (
-          <motion.div
-            className="fixed bottom-28 left-0 right-0 z-40 px-4 lg:hidden"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <button
-              onClick={() => {
-                userRowRef.current?.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
-                });
-              }}
-              className="w-full text-left bg-background/95 backdrop-blur-lg rounded-2xl shadow-xl border border-border/50 cursor-pointer active:scale-[0.98] transition-transform"
-            >
-              <LeaguePlayerRow
-                entry={userEntry}
-                isCurrentUser={true}
-                index={0}
-                previousRank={previousRank}
-                shouldAnimate={false}
-                totalPlayers={leaderboard.length}
-                isPromotionZone={(viewingTier ?? userTier) < 5 && userEntry.rank <= 10}
-                isDemotionZone={(viewingTier ?? userTier) > 1 && userEntry.rank > leaderboard.length - 10}
-                isFixed={true}
-              />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
     </MainLayout>
   );
