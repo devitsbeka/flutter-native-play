@@ -250,8 +250,10 @@ export function useTriviaLobby(triviaId: string | undefined) {
   const leaderboard = useMemo(() => {
     if (realLeaderboard.length > 0) return realLeaderboard;
     if (!triviaId || !trivia) return [];
+    // Don't show fake entries on the creator's own trivia
+    if (user?.id && trivia.user_id === user.id) return [];
     return generateFakeTriviaLeaderboard(triviaId, trivia.question_count || 10);
-  }, [realLeaderboard, triviaId, trivia]);
+  }, [realLeaderboard, triviaId, trivia, user?.id]);
 
   // Find user's rank in leaderboard
   const userRank = user?.id
