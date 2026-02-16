@@ -556,7 +556,7 @@ export const ru: KaTranslations = {
     global: "Мировой",
     us: "США",
     uk: "Великобритания",
-    ru: "Россия",
+    
     de: "Германия",
     fr: "Франция",
     es: "Испания",

@@ -649,7 +649,7 @@ export const en: KaTranslations = {
     global: "Global",
     us: "United States",
     uk: "United Kingdom",
-    ru: "Russia",
+    
     de: "Germany",
     fr: "France",
     es: "Spain",

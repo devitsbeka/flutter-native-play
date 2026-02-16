@@ -27,7 +27,7 @@ export const ko: KaTranslations = {
   avatar: { ...en.avatar, title: "내 아바타", currentAvatar: "현재 아바타", myAvatars: "내 아바타", createNew: "새로 만들기", takeSelfie: "셀피", uploadPhoto: "업로드", avatarReady: "아바타 완성!", avatarSaved: "아바타 저장! 🎉" },
   onboarding: { ...en.onboarding, welcomeTitle: "안녕하세요! 👋", startAdventure: "모험 시작!", createAvatar: "아바타 만들기", takePhoto: "사진 찍기", avatarReady: "아바타 완성!", useThis: "이것 사용", walkthroughSkip: "건너뛰기", walkthroughNext: "다음", walkthroughDone: "시작!" },
   category: { ...en.category, leaderboard: "순위", map: "지도", chooseLevel: "레벨 선택", notFound: "찾을 수 없음" },
-  countries: { ...en.countries, ge: "조지아", global: "전 세계", us: "미국", uk: "영국", ru: "러시아", de: "독일", fr: "프랑스", es: "스페인", it: "이탈리아", tr: "터키" },
+  countries: { ...en.countries, ge: "조지아", global: "전 세계", us: "미국", uk: "영국", de: "독일", fr: "프랑스", es: "스페인", it: "이탈리아", tr: "터키" },
   help: { ...en.help, title: "도움말", faq: "FAQ", guide: "가이드" },
   guest: { ...en.guest, progressNotSaved: "진행 상황이 저장되지 않았습니다!", levels: "레벨", stars: "별" },
   legal: { ...en.legal, privacyPolicy: "개인정보", termsOfService: "이용약관" },

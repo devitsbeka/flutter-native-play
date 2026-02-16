@@ -27,7 +27,7 @@ export const pl: KaTranslations = {
   avatar: { ...en.avatar, title: "Twój avatar", currentAvatar: "Aktualny avatar", myAvatars: "Moje avatary", createNew: "Utwórz nowy", takeSelfie: "Selfie", uploadPhoto: "Prześlij", avatarReady: "Avatar gotowy!", avatarSaved: "Avatar zapisany! 🎉" },
   onboarding: { ...en.onboarding, welcomeTitle: "Cześć! 👋", startAdventure: "Rozpocznij przygodę!", createAvatar: "Utwórz avatar", takePhoto: "Zrób zdjęcie", avatarReady: "Avatar gotowy!", useThis: "Użyj tego", walkthroughSkip: "Pomiń", walkthroughNext: "Dalej", walkthroughDone: "Zaczynamy!" },
   category: { ...en.category, leaderboard: "Ranking", map: "Mapa", chooseLevel: "Wybierz poziom", notFound: "Nie znaleziono" },
-  countries: { ...en.countries, ge: "Gruzja", global: "Światowy", us: "USA", uk: "Wielka Brytania", ru: "Rosja", de: "Niemcy", fr: "Francja", es: "Hiszpania", it: "Włochy", tr: "Turcja" },
+  countries: { ...en.countries, ge: "Gruzja", global: "Światowy", us: "USA", uk: "Wielka Brytania", de: "Niemcy", fr: "Francja", es: "Hiszpania", it: "Włochy", tr: "Turcja" },
   help: { ...en.help, title: "Pomoc", faq: "FAQ", guide: "Przewodnik" },
   guest: { ...en.guest, progressNotSaved: "Postęp nie zapisany!", levels: "poziomy", stars: "gwiazdki" },
   legal: { ...en.legal, privacyPolicy: "Prywatność", termsOfService: "Regulamin" },
