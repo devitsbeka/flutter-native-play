@@ -96,6 +96,7 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [userTrivias, setUserTrivias] = useState<UserTrivia[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
   const [voters, setVoters] = useState<{ id: string; nickname: string; avatar_url: string | null }[]>([]);
   const [players, setPlayers] = useState<{ player_id: string; nickname: string; avatar_url: string | null }[]>([]);
   
@@ -239,19 +240,35 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
     }
   }, [showTriviaPicker, userTrivias.length, userId]);
 
-  const handleSelectCategory = async (category: Category) => {
-    setLoading(true);
-    const success = await submitSuggestion({
-      sourceType: 'category',
-      categoryId: category.category_id,
-      categoryName: category.name,
-      iconSlug: category.icon_slug,
+  const toggleCategorySelection = (categoryId: string) => {
+    setSelectedCategoryIds(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
     });
+  };
+
+  const handleSubmitSelectedCategories = async () => {
+    setLoading(true);
+    let successCount = 0;
+    for (const catId of selectedCategoryIds) {
+      const category = categories.find(c => c.category_id === catId);
+      if (!category) continue;
+      const success = await submitSuggestion({
+        sourceType: 'category',
+        categoryId: category.category_id,
+        categoryName: category.name,
+        iconSlug: category.icon_slug,
+      });
+      if (success) successCount++;
+    }
     setLoading(false);
+    setSelectedCategoryIds(new Set());
     setShowCategoryPicker(false);
     
-    if (success) {
-      toast.success(`${category.name} შემოთავაზებულია!`);
+    if (successCount > 0) {
+      toast.success(`${successCount} კატეგორია შემოთავაზებულია!`);
     } else {
       toast.error('შემოთავაზება ვერ მოხერხდა');
     }
@@ -336,36 +353,86 @@ export const ControllerPollScreen: React.FC<ControllerPollScreenProps> = ({
   if (effectivePollPhase === 'suggest') {
     // Category picker modal
     if (showCategoryPicker) {
+      const alreadySuggestedIds = new Set(
+        mySuggestions
+          .filter(s => s.source_type === 'category')
+          .map(s => s.category_id)
+          .filter(Boolean)
+      );
+
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
-          <div className="max-w-xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">აირჩიე კატეგორია</h2>
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-24 flex flex-col">
+          <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-white">აირჩიე კატეგორიები</h2>
+                {selectedCategoryIds.size > 0 && (
+                  <p className="text-sm text-green-300 mt-1">არჩეულია: {selectedCategoryIds.size}</p>
+                )}
+              </div>
               <button 
-                onClick={() => setShowCategoryPicker(false)}
+                onClick={() => { setShowCategoryPicker(false); setSelectedCategoryIds(new Set()); }}
                 className="p-2 rounded-full bg-white/10"
               >
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
             
-            <div className="space-y-2 max-h-[70vh] overflow-y-auto">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleSelectCategory(category)}
-                  disabled={loading}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20 hover:border-purple-400 transition-all"
-                >
-                  {category.icon_slug ? (
-                    <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
-                  ) : (
-                    <span className="text-2xl">{category.icon}</span>
-                  )}
-                  <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-                  <ChevronRight className="w-5 h-5 text-purple-300" />
-                </button>
-              ))}
+            <div className="space-y-2 flex-1 overflow-y-auto min-h-0 pb-4">
+              {categories.map((category) => {
+                const isAlreadySuggested = alreadySuggestedIds.has(category.category_id);
+                const isSelected = selectedCategoryIds.has(category.category_id);
+                
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => !isAlreadySuggested && toggleCategorySelection(category.category_id)}
+                    disabled={isAlreadySuggested}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      isAlreadySuggested
+                        ? 'bg-white/5 border-white/10 opacity-40 cursor-not-allowed'
+                        : isSelected
+                        ? 'bg-green-500/20 border-green-400'
+                        : 'bg-white/10 border-white/20 hover:border-purple-400'
+                    }`}
+                  >
+                    {category.icon_slug ? (
+                      <QuizCategoryIcon iconSlug={category.icon_slug} size={40} className="w-10 h-10" />
+                    ) : (
+                      <span className="text-2xl">{category.icon}</span>
+                    )}
+                    <span className="flex-1 text-left font-medium text-white">{category.name}</span>
+                    {isAlreadySuggested ? (
+                      <span className="text-xs text-purple-400">უკვე დამატებულია</span>
+                    ) : isSelected ? (
+                      <Check className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <div className="w-5 h-5 rounded border-2 border-white/30" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sticky bottom submit button */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-50">
+            <div className="max-w-xl mx-auto">
+              <ChunkyButton
+                variant="primary"
+                className="w-full"
+                onClick={handleSubmitSelectedCategories}
+                disabled={selectedCategoryIds.size === 0 || loading}
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <Play className="w-5 h-5 mr-2" />
+                )}
+                {selectedCategoryIds.size === 0
+                  ? 'აირჩიე კატეგორიები'
+                  : `დამატება (${selectedCategoryIds.size})`}
+              </ChunkyButton>
             </div>
           </div>
         </div>

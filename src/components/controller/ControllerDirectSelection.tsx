@@ -5,7 +5,7 @@ import {
   User, 
   Play, 
   X, 
-  ChevronRight, 
+  ChevronRight,
   Sparkles,
   Crown,
   ArrowLeft,
@@ -57,6 +57,7 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   const [loading, setLoading] = useState(false);
   const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(null);
   const [pendingTriviaId, setPendingTriviaId] = useState<string | null>(null);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(new Set());
 
   // Use the TV session queue hook
   const { queue, addCategoryToQueue, removeFromQueue, hasQueue } = useTVSessionQueue(sessionId, roomId);
@@ -89,38 +90,46 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     }
   }, [showTriviaPicker, userTrivias.length, userId]);
 
-  const handleSelectCategory = async (category: Category) => {
-    // Immediately mark as pending to prevent double-clicks
-    setPendingCategoryId(category.category_id);
-    
-    // Check if this category is already in the queue
-    const alreadyInQueue = queue.some(
-      (item) => item.source_type === 'category' && item.category_id === category.category_id
-    );
-    
-    if (alreadyInQueue) {
-      toast.error(`${category.name} უკვე არჩეულია!`);
-      setPendingCategoryId(null);
-      setShowCategoryPicker(false);
-      return;
-    }
-    
+  const toggleCategorySelection = (categoryId: string) => {
+    setSelectedCategoryIds(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  };
+
+  const handleSubmitSelectedCategories = async () => {
     setLoading(true);
-    try {
-      // Add to queue using hook
-      await addCategoryToQueue({
-        id: category.category_id,
-        name: category.name,
-        icon_slug: category.icon_slug,
-      });
-      toast.success(`${category.name} დაემატა!`);
-    } catch (error) {
-      console.error('Error adding category:', error);
-      toast.error('დამატება ვერ მოხერხდა');
+    let successCount = 0;
+    for (const catId of selectedCategoryIds) {
+      const category = categories.find(c => c.category_id === catId);
+      if (!category) continue;
+      // Check not already in queue
+      const alreadyInQueue = queue.some(
+        (item) => item.source_type === 'category' && item.category_id === category.category_id
+      );
+      if (alreadyInQueue) continue;
+      try {
+        await addCategoryToQueue({
+          id: category.category_id,
+          name: category.name,
+          icon_slug: category.icon_slug,
+        });
+        successCount++;
+      } catch (error) {
+        console.error('Error adding category:', error);
+      }
     }
     setLoading(false);
-    setPendingCategoryId(null);
+    setSelectedCategoryIds(new Set());
     setShowCategoryPicker(false);
+    
+    if (successCount > 0) {
+      toast.success(`${successCount} კატეგორია დაემატა!`);
+    } else {
+      toast.error('დამატება ვერ მოხერხდა');
+    }
   };
 
   const handleSelectTrivia = async (trivia: UserTrivia) => {
@@ -154,10 +163,8 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         : 0;
 
       // STRICT HOST POLICY: Block host if non-blind OR if blind but already played
-      // Host knows answers in both cases and should skip this round
       const hostKnowsAnswers = !trivia.is_blind || (trivia.is_blind && (trivia.plays_count || 0) > 0);
       
-      // Fetch user profile for suggester info (only needed if host knows answers)
       let suggesterInfo: { nickname: string | null; avatar_url: string | null } = { nickname: null, avatar_url: null };
       if (hostKnowsAnswers) {
         const { data: profile } = await supabase
@@ -168,8 +175,6 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
         suggesterInfo = profile || { nickname: null, avatar_url: null };
       }
 
-      // Insert directly into tv_session_queue for user trivia
-      // Set suggester if host knows answers (non-blind OR already played blind trivia)
       const { error } = await supabase.from('tv_session_queue').insert({
         session_id: sessionId,
         position: nextPosition,
@@ -204,13 +209,11 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
   };
 
   const handleStartGame = () => {
-    // Simplified check - only verify queue has items, don't block on hasQueue loading state
     if (queue.length === 0) {
       toast.error('აირჩიე მინიმუმ 1 კატეგორია');
       return;
     }
     
-    // Pass the first queue item directly to avoid stale state issues in parent
     const firstQueued = queue[0];
     onStartGame({
       categoryId: firstQueued.category_id || undefined,
@@ -218,37 +221,45 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
     });
   };
 
-  // Category picker modal
+  // Category picker modal - multi-select
   if (showCategoryPicker) {
+    const alreadyInQueueIds = new Set(
+      queue.filter(item => item.source_type === 'category').map(item => item.category_id).filter(Boolean)
+    );
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
-        <div className="max-w-xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">აირჩიე კატეგორია</h2>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 pb-24 flex flex-col">
+        <div className="max-w-xl mx-auto w-full flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between mb-4 shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-white">აირჩიე კატეგორიები</h2>
+              {selectedCategoryIds.size > 0 && (
+                <p className="text-sm text-green-300 mt-1">არჩეულია: {selectedCategoryIds.size}</p>
+              )}
+            </div>
             <button 
-              onClick={() => setShowCategoryPicker(false)}
+              onClick={() => { setShowCategoryPicker(false); setSelectedCategoryIds(new Set()); }}
               className="p-2 rounded-full bg-white/10"
             >
               <X className="w-5 h-5 text-white" />
             </button>
           </div>
           
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-2 flex-1 overflow-y-auto min-h-0 pb-4">
             {categories.map((category) => {
-              const isSelected = queue.some(
-                (item) => item.source_type === 'category' && item.category_id === category.category_id
-              );
-              const isPending = pendingCategoryId === category.category_id;
-              const isDisabled = loading || isSelected || isPending;
+              const isAlreadyInQueue = alreadyInQueueIds.has(category.category_id);
+              const isSelected = selectedCategoryIds.has(category.category_id);
               
               return (
                 <button
                   key={category.id}
-                  onClick={() => !isDisabled && handleSelectCategory(category)}
-                  disabled={isDisabled}
+                  onClick={() => !isAlreadyInQueue && toggleCategorySelection(category.category_id)}
+                  disabled={isAlreadyInQueue}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                    isSelected || isPending
-                      ? 'bg-white/5 border-green-400/50 opacity-60 cursor-not-allowed' 
+                    isAlreadyInQueue
+                      ? 'bg-white/5 border-white/10 opacity-40 cursor-not-allowed'
+                      : isSelected
+                      ? 'bg-green-500/20 border-green-400'
                       : 'bg-white/10 border-white/20 hover:border-purple-400'
                   }`}
                 >
@@ -258,14 +269,33 @@ export const ControllerDirectSelection: React.FC<ControllerDirectSelectionProps>
                     <span className="text-2xl">{category.icon}</span>
                   )}
                   <span className="flex-1 text-left font-medium text-white">{category.name}</span>
-                  {isSelected ? (
+                  {isAlreadyInQueue ? (
+                    <span className="text-xs text-purple-400">უკვე დამატებულია</span>
+                  ) : isSelected ? (
                     <Check className="w-5 h-5 text-green-400" />
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-purple-300" />
+                    <div className="w-5 h-5 rounded border-2 border-white/30" />
                   )}
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Sticky bottom submit button */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-purple-900 via-purple-900/95 to-transparent z-50">
+          <div className="max-w-xl mx-auto">
+            <ChunkyButton
+              variant="primary"
+              className="w-full"
+              onClick={handleSubmitSelectedCategories}
+              disabled={selectedCategoryIds.size === 0 || loading}
+            >
+              <Play className="w-5 h-5 mr-2" />
+              {selectedCategoryIds.size === 0
+                ? 'აირჩიე კატეგორიები'
+                : `დამატება (${selectedCategoryIds.size})`}
+            </ChunkyButton>
           </div>
         </div>
       </div>
