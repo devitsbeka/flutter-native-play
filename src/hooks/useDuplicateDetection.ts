@@ -7,6 +7,8 @@ export interface DuplicateResult {
   existingId: string;
   similarity: number;
   existingQuestion: string;
+  matchType: 'answer' | 'text';
+  correctAnswer?: string;
 }
 
 export interface DuplicateScanResult {
@@ -37,11 +39,12 @@ interface ProcessedQuestion {
   normalized: string;
   keywords: Set<string>;
   length: number;
+  correctAnswer: string;
+  categoryId: string;
 }
 
 /**
  * Optimized similarity calculation using pre-computed values
- * Avoids repeated normalization and keyword extraction
  */
 function calculateSimilarityOptimized(
   norm1: string,
@@ -52,14 +55,12 @@ function calculateSimilarityOptimized(
   if (norm1 === norm2) return 1;
   if (norm1.length === 0 || norm2.length === 0) return 0;
   
-  // Check if one contains the other
   if (norm1.includes(norm2) || norm2.includes(norm1)) {
     const shorter = Math.min(norm1.length, norm2.length);
     const longer = Math.max(norm1.length, norm2.length);
     return shorter / longer;
   }
   
-  // Word-based similarity (Jaccard index) with pre-computed sets
   if (keywords1.size === 0 || keywords2.size === 0) return 0;
   
   let intersectionCount = 0;
@@ -74,29 +75,31 @@ function calculateSimilarityOptimized(
 /**
  * Pre-process questions for efficient batch comparison
  */
-function preprocessQuestions(questions: { id: string; question_text: string }[]): ProcessedQuestion[] {
+function preprocessQuestions(questions: { id: string; question_text: string; correct_answer: string; category_id: string }[]): ProcessedQuestion[] {
   return questions.map(q => ({
     id: q.id,
     originalText: q.question_text,
     normalized: normalizeText(q.question_text),
     keywords: extractKeywords(q.question_text),
-    length: q.question_text.length
+    length: q.question_text.length,
+    correctAnswer: q.correct_answer,
+    categoryId: q.category_id,
   }));
 }
 
 /**
- * Paginated fetch to bypass Supabase's 1000-row default limit
+ * Paginated fetch to bypass the 1000-row default limit
  */
-async function fetchAllQuestions(categoryId?: string): Promise<{ id: string; question_text: string; category_id: string }[]> {
+async function fetchAllQuestions(categoryId?: string): Promise<{ id: string; question_text: string; correct_answer: string; category_id: string }[]> {
   const PAGE_SIZE = 1000;
-  let allData: { id: string; question_text: string; category_id: string }[] = [];
+  let allData: { id: string; question_text: string; correct_answer: string; category_id: string }[] = [];
   let page = 0;
   let hasMore = true;
 
   while (hasMore) {
     let query = supabase
       .from('questions')
-      .select('id, question_text, category_id')
+      .select('id, question_text, correct_answer, category_id')
       .eq('is_active', true);
 
     if (categoryId) {
@@ -136,25 +139,19 @@ export function useDuplicateDetection() {
     setScanResult(null);
 
     try {
-      // Fetch ALL existing questions using paginated fetch
       const existingQuestions = await fetchAllQuestions(categoryId);
 
-      // Pre-process existing questions - O(n)
-      const processedExisting = preprocessQuestions(
-        (existingQuestions || []).map(q => ({ id: q.id, question_text: q.question_text }))
-      );
+      const processedExisting = preprocessQuestions(existingQuestions);
 
       const duplicates: DuplicateResult[] = [];
       const lengthFilterThreshold = similarityThreshold * 0.5;
 
-      // Pre-process new questions
       for (const newQ of questions) {
         const newNormalized = normalizeText(newQ.question_text);
         const newKeywords = extractKeywords(newQ.question_text);
         const newLength = newQ.question_text.length;
 
         for (const existingQ of processedExisting) {
-          // Early exit: length-based filtering
           const lengthRatio = Math.min(newLength, existingQ.length) / Math.max(newLength, existingQ.length);
           if (lengthRatio < lengthFilterThreshold) continue;
 
@@ -171,8 +168,9 @@ export function useDuplicateDetection() {
               existingId: existingQ.id,
               existingQuestion: existingQ.originalText,
               similarity,
+              matchType: 'text',
             });
-            break; // Only report first match per new question
+            break;
           }
         }
       }
@@ -200,40 +198,65 @@ export function useDuplicateDetection() {
 
   const scanDatabaseForDuplicates = useCallback(async (
     categoryId?: string,
-    similarityThreshold: number = 0.8
+    similarityThreshold: number = 0.7
   ): Promise<DuplicateScanResult> => {
     setScanning(true);
     setScanResult(null);
 
     try {
-      // Fetch ALL questions using paginated fetch
       const questions = await fetchAllQuestions(categoryId);
-
-      // Pre-process all questions once - O(n)
-      const processed = preprocessQuestions(
-        questions.map(q => ({ id: q.id, question_text: q.question_text }))
-      );
+      const processed = preprocessQuestions(questions);
 
       const duplicates: DuplicateResult[] = [];
-      const checkedPairs = new Set<string>();
+
+      // ========== LAYER 1: Answer-based matching (O(n)) ==========
+      // Group questions by (category_id + normalized correct_answer)
+      const answerGroups = new Map<string, ProcessedQuestion[]>();
+      for (const q of processed) {
+        const normalizedAnswer = q.correctAnswer.toLowerCase().trim();
+        // Skip very short answers (likely generic: "კი", "არა", etc.)
+        if (normalizedAnswer.length < 3) continue;
+        const key = `${q.categoryId}::${normalizedAnswer}`;
+        if (!answerGroups.has(key)) {
+          answerGroups.set(key, []);
+        }
+        answerGroups.get(key)!.push(q);
+      }
+
+      // Track IDs already flagged via answer match to avoid double-reporting
+      const answerMatchedIds = new Set<string>();
+
+      for (const [, group] of answerGroups) {
+        if (group.length < 2) continue;
+        // Flag all pairs in the group — first question is the "anchor"
+        const anchor = group[0];
+        for (let i = 1; i < group.length; i++) {
+          const dup = group[i];
+          duplicates.push({
+            questionText: anchor.originalText,
+            existingId: dup.id,
+            existingQuestion: dup.originalText,
+            similarity: 1,
+            matchType: 'answer',
+            correctAnswer: anchor.correctAnswer,
+          });
+          answerMatchedIds.add(anchor.id);
+          answerMatchedIds.add(dup.id);
+        }
+      }
+
+      // ========== LAYER 2: Text similarity for remaining questions ==========
+      const remaining = processed.filter(q => !answerMatchedIds.has(q.id));
       const lengthFilterThreshold = similarityThreshold * 0.5;
 
-      // O(n²) comparisons but with optimizations
-      for (let i = 0; i < processed.length; i++) {
-        const q1 = processed[i];
-        
-        for (let j = i + 1; j < processed.length; j++) {
-          const q2 = processed[j];
-          
-          const pairKey = `${q1.id}-${q2.id}`;
-          if (checkedPairs.has(pairKey)) continue;
-          checkedPairs.add(pairKey);
+      for (let i = 0; i < remaining.length; i++) {
+        const q1 = remaining[i];
+        for (let j = i + 1; j < remaining.length; j++) {
+          const q2 = remaining[j];
 
-          // Early exit: length-based filtering
           const lengthRatio = Math.min(q1.length, q2.length) / Math.max(q1.length, q2.length);
           if (lengthRatio < lengthFilterThreshold) continue;
 
-          // Use pre-computed values for similarity
           const similarity = calculateSimilarityOptimized(
             q1.normalized,
             q1.keywords,
@@ -247,13 +270,20 @@ export function useDuplicateDetection() {
               existingId: q2.id,
               existingQuestion: q2.originalText,
               similarity,
+              matchType: 'text',
             });
           }
         }
       }
 
+      // Sort: answer matches first, then by similarity descending
+      duplicates.sort((a, b) => {
+        if (a.matchType !== b.matchType) return a.matchType === 'answer' ? -1 : 1;
+        return b.similarity - a.similarity;
+      });
+
       const result: DuplicateScanResult = {
-        totalChecked: questions?.length || 0,
+        totalChecked: questions.length,
         duplicatesFound: duplicates.length,
         duplicates,
       };
@@ -266,9 +296,11 @@ export function useDuplicateDetection() {
           description: 'დუბლიკატები არ მოიძებნა',
         });
       } else {
+        const answerCount = duplicates.filter(d => d.matchType === 'answer').length;
+        const textCount = duplicates.filter(d => d.matchType === 'text').length;
         toast({
           title: 'სკანირება დასრულდა',
-          description: `ნაპოვნია ${duplicates.length} პოტენციური დუბლიკატი`,
+          description: `ნაპოვნია ${duplicates.length} დუბლიკატი (${answerCount} პასუხით, ${textCount} ტექსტით)`,
           variant: 'destructive',
         });
       }
