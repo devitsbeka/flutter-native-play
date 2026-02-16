@@ -118,12 +118,11 @@ export const TVQuestionScreenV4: React.FC = () => {
             {wrongPlayers.map((player) => (
               <motion.div 
                 key={player.id}
-                className="relative"
+                className="relative flex flex-col items-center"
                 initial={{ scale: 0, x: 50 }}
                 animate={{ scale: 1, x: 0 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
-                
               >
                 <SafeAvatar 
                   avatarUrl={player.avatar_url}
@@ -134,6 +133,9 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
                   <X className="w-3 h-3 text-white" />
                 </div>
+                {isReveal && (
+                  <span className="text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1">{Math.round(player.score)}</span>
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
@@ -145,7 +147,7 @@ export const TVQuestionScreenV4: React.FC = () => {
             {waitingPlayers.map((player) => (
               <motion.div 
                 key={player.id}
-                className="relative"
+                className="relative flex flex-col items-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
@@ -166,6 +168,9 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center border-2 border-white z-20">
                   <Clock className="w-3 h-3 text-white" />
                 </div>
+                {isReveal && (
+                  <span className="text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1 relative z-10">{Math.round(player.score)}</span>
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
@@ -177,12 +182,11 @@ export const TVQuestionScreenV4: React.FC = () => {
             {correctPlayers.map((player) => (
               <motion.div 
                 key={player.id}
-                className="relative"
+                className="relative flex flex-col items-center"
                 initial={{ scale: 0, x: -50 }}
                 animate={{ scale: 1, x: 0 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
-                
               >
                 <SafeAvatar 
                   avatarUrl={player.avatar_url}
@@ -193,6 +197,9 @@ export const TVQuestionScreenV4: React.FC = () => {
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
                   <Check className="w-3 h-3 text-white" />
                 </div>
+                {isReveal && (
+                  <span className="text-[10px] font-bold text-white bg-black/40 px-1.5 py-0.5 rounded-full mt-1">{Math.round(player.score)}</span>
+                )}
               </motion.div>
             ))}
           </AnimatePresence>
