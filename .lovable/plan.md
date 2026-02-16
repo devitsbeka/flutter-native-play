@@ -1,38 +1,15 @@
 
+## Add Icon Picker to Admin Create Question Modal
 
-## Fix: Show Relevant Onboarding Cards Per Tab
+### What Changes
+Add the existing `QuestionIconPicker` component to the "Create Question" form in Question Studio, so admins can set an icon when adding a new question (not just when editing).
 
-### Problem
-The onboarding carousel always shows all 3 cards (Rooms, Trivia, Explore) regardless of which tab the user is on. So when you're on the "My Trivia" tab, you see the Rooms card with "+ ოთახი" button, and vice versa. This is confusing -- each tab should prioritize its own relevant card.
+### File: `src/components/admin/studio/CreateQuestionModal.tsx`
 
-### Fix
+1. **Import** `QuestionIconPicker` from `@/components/social/QuestionIconPicker`
+2. **Add `icon_slug` state** to the form object (default: `''`)
+3. **Reset** `icon_slug` in `resetForm()`
+4. **Render** the `QuestionIconPicker` above the question text field in the form, centered, using the `large` and `creatorMode` props (same pattern as `EditQuestionDialog`)
+5. **Pass** `icon_slug` to the submitted `questionData` in `handleSubmit`
 
-**File: `src/components/team/FeatureOnboardingCarousel.tsx`**
-
-Add a new optional prop `contextTab` to the component that tells the carousel which tab it's being shown in. Then filter and reorder the cards so the relevant card comes first:
-
-- When `contextTab === "rooms"` -- show Rooms card first, then Trivia, then Explore
-- When `contextTab === "my-content"` -- show Trivia card first, then Rooms, then Explore
-- Default (no context) -- keep current order
-
-**File: `src/components/team/MyRoomsSection.tsx`**
-
-Pass `contextTab="rooms"` to the `FeatureOnboardingCarousel`.
-
-**File: `src/components/social/MyTriviaTab.tsx`**
-
-Pass `contextTab="my-content"` to the `FeatureOnboardingCarousel`.
-
-### Technical Details
-
-In `FeatureOnboardingCarousel.tsx`:
-
-1. Add `contextTab?: string` to `FeatureOnboardingCarouselProps`
-2. Inside the component, compute a filtered/reordered tooltip list:
-   - If `contextTab === "rooms"`: put the rooms card first
-   - If `contextTab === "my-content"`: put the trivia card first
-   - Otherwise: keep original order
-3. Use this reordered list instead of `FEATURE_TOOLTIPS` for rendering
-
-This way each tab opens with its most relevant card visible and the CTA button matches what the user would expect.
-
+The icon picker will appear at the top of the form (after category selection), allowing the admin to pick a 3D icon before or after filling in the question text. Since this is a creation flow, `creatorMode` will be enabled to skip anti-spoiler filtering.
