@@ -2,7 +2,7 @@
 export const countryCoordinates: Record<string, { lat: number; lon: number; name: string }> = {
   ge: { lat: 42.3154, lon: 43.3569, name: 'საქართველო' },
   us: { lat: 37.0902, lon: -95.7129, name: 'აშშ' },
-  ru: { lat: 61.5240, lon: 105.3188, name: 'რუსეთი' },
+  
   de: { lat: 51.1657, lon: 10.4515, name: 'გერმანია' },
   uk: { lat: 55.3781, lon: -3.4360, name: 'გაერთიანებული სამეფო' },
   gb: { lat: 55.3781, lon: -3.4360, name: 'გაერთიანებული სამეფო' },

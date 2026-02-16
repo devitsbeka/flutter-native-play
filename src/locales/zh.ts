@@ -27,7 +27,7 @@ export const zh: KaTranslations = {
   avatar: { ...en.avatar, title: "你的头像", currentAvatar: "当前头像", myAvatars: "我的头像", createNew: "创建新的", takeSelfie: "自拍", uploadPhoto: "上传", avatarReady: "头像完成!", avatarSaved: "头像已保存! 🎉" },
   onboarding: { ...en.onboarding, welcomeTitle: "你好! 👋", startAdventure: "开始冒险!", createAvatar: "创建头像", takePhoto: "拍照", avatarReady: "头像完成!", useThis: "使用这个", walkthroughSkip: "跳过", walkthroughNext: "下一步", walkthroughDone: "开始!" },
   category: { ...en.category, leaderboard: "排行榜", map: "地图", chooseLevel: "选择等级", notFound: "未找到" },
-  countries: { ...en.countries, ge: "格鲁吉亚", global: "全球", us: "美国", uk: "英国", ru: "俄罗斯", de: "德国", fr: "法国", es: "西班牙", it: "意大利", tr: "土耳其" },
+  countries: { ...en.countries, ge: "格鲁吉亚", global: "全球", us: "美国", uk: "英国", de: "德国", fr: "法国", es: "西班牙", it: "意大利", tr: "土耳其" },
   help: { ...en.help, title: "帮助", faq: "常见问题", guide: "指南" },
   guest: { ...en.guest, progressNotSaved: "进度未保存!", levels: "等级", stars: "星星" },
   legal: { ...en.legal, privacyPolicy: "隐私", termsOfService: "条款" },

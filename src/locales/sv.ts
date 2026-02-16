@@ -27,7 +27,7 @@ export const sv: KaTranslations = {
   avatar: { ...en.avatar, title: "Din avatar", currentAvatar: "Nuvarande avatar", myAvatars: "Mina avatarer", createNew: "Skapa ny", takeSelfie: "Selfie", uploadPhoto: "Ladda upp", avatarReady: "Avatar klar!", avatarSaved: "Avatar sparad! 🎉" },
   onboarding: { ...en.onboarding, welcomeTitle: "Hej! 👋", startAdventure: "Starta äventyret!", createAvatar: "Skapa avatar", takePhoto: "Ta foto", avatarReady: "Avatar klar!", useThis: "Använd denna", walkthroughSkip: "Hoppa över", walkthroughNext: "Nästa", walkthroughDone: "Nu kör vi!" },
   category: { ...en.category, leaderboard: "Rankning", map: "Karta", chooseLevel: "Välj nivå", notFound: "Hittades inte" },
-  countries: { ...en.countries, ge: "Georgien", global: "Global", us: "USA", uk: "Storbritannien", ru: "Ryssland", de: "Tyskland", fr: "Frankrike", es: "Spanien", it: "Italien", tr: "Turkiet" },
+  countries: { ...en.countries, ge: "Georgien", global: "Global", us: "USA", uk: "Storbritannien", de: "Tyskland", fr: "Frankrike", es: "Spanien", it: "Italien", tr: "Turkiet" },
   help: { ...en.help, title: "Hjälp", faq: "FAQ", guide: "Guide" },
   guest: { ...en.guest, progressNotSaved: "Framsteg inte sparat!", levels: "nivåer", stars: "stjärnor" },
   legal: { ...en.legal, privacyPolicy: "Integritet", termsOfService: "Villkor" },

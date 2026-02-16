@@ -27,7 +27,7 @@ export const nl: KaTranslations = {
   avatar: { ...en.avatar, title: "Jouw avatar", currentAvatar: "Huidige avatar", myAvatars: "Mijn avatars", createNew: "Nieuwe maken", takeSelfie: "Selfie", uploadPhoto: "Upload", avatarReady: "Avatar klaar!", avatarSaved: "Avatar opgeslagen! 🎉" },
   onboarding: { ...en.onboarding, welcomeTitle: "Hallo! 👋", startAdventure: "Start avontuur!", createAvatar: "Maak avatar", takePhoto: "Foto maken", avatarReady: "Avatar klaar!", useThis: "Gebruik dit", walkthroughSkip: "Overslaan", walkthroughNext: "Volgende", walkthroughDone: "Laten we gaan!" },
   category: { ...en.category, leaderboard: "Ranglijst", map: "Kaart", chooseLevel: "Kies niveau", notFound: "Niet gevonden" },
-  countries: { ...en.countries, ge: "Georgië", global: "Wereldwijd", us: "VS", uk: "VK", ru: "Rusland", de: "Duitsland", fr: "Frankrijk", es: "Spanje", it: "Italië", tr: "Turkije" },
+  countries: { ...en.countries, ge: "Georgië", global: "Wereldwijd", us: "VS", uk: "VK", de: "Duitsland", fr: "Frankrijk", es: "Spanje", it: "Italië", tr: "Turkije" },
   help: { ...en.help, title: "Help", faq: "FAQ", guide: "Handleiding" },
   guest: { ...en.guest, progressNotSaved: "Voortgang niet opgeslagen!", levels: "niveaus", stars: "sterren" },
   legal: { ...en.legal, privacyPolicy: "Privacy", termsOfService: "Voorwaarden" },

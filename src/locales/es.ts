@@ -539,7 +539,7 @@ export const es: KaTranslations = {
     global: "Global",
     us: "Estados Unidos",
     uk: "Reino Unido",
-    ru: "Rusia",
+    
     de: "Alemania",
     fr: "Francia",
     es: "España",
