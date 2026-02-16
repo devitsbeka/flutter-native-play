@@ -1,61 +1,55 @@
 
 
-## Fix: Duplicate Scanner Not Finding Real Duplicates
+## Fix: "უპს" Screen Appearing After Adding/Deleting Questions
 
 ### Root Cause
 
-The current duplicate scanner uses **Jaccard keyword similarity** (comparing shared words between questions). This fundamentally fails for Georgian trivia because:
+Two problems combine to trigger the error:
 
-- Two questions can ask the **exact same fact** with completely different wording
-- Example: "რომელ წელს აიღეს კონსტანტინოპოლი ოსმალებმა?" vs "რა წელს დაეცა კონსტანტინოპოლი ოსმალების ხელში?" -- same answer (1453), same category, clearly duplicates, but the keyword overlap is low
-- The database has **4,538 duplicate pairs** where questions share the same correct answer within the same category, but the scanner misses most of them
+1. **`resolveCategoryUuid` uses `.single()`** (line 195-206 in `questionService.ts`): If the database query has any transient issue, `.single()` throws an error and returns `null`. This `null` flows into `getCategoryQuestions(undefined!, ...)`, causing `.eq('category_id', undefined)` to return 0 results, which triggers the "უპს" error screen.
 
-### Solution: Answer-Aware Duplicate Detection
+2. **No guard against undefined `categoryUuid`** (line 251): The code calls `getCategoryQuestions(categoryUuid!, ...)` without checking if `categoryUuid` resolved successfully. If it's `undefined`, all subsequent queries silently return empty results.
 
-Add a **two-layer detection approach**:
+3. **Stale question tracker**: When questions are deleted from the database, their IDs remain in `localStorage` tracker as "seen". While the fallback logic eventually clears the tracker, the initial count/validation may miscalculate exhaustion in edge cases.
 
-1. **Layer 1 -- Answer Match (new)**: If two questions in the same category have the exact same `correct_answer` (and the answer is 3+ characters), they are flagged as likely duplicates. This alone catches the majority of missed duplicates.
+### Fix
 
-2. **Layer 2 -- Text Similarity (existing, improved)**: Keep the current Jaccard keyword comparison as a secondary check for questions with different answers but similar text.
+**File: `src/services/questionService.ts`**
 
-### Technical Changes
+1. Change `resolveCategoryUuid` to use `.maybeSingle()` instead of `.single()` (prevents PostgREST errors when 0 rows returned)
 
-**File: `src/hooks/useDuplicateDetection.ts`**
+2. Add a null guard in `getQuestions` before calling `getCategoryQuestions`: if `categoryUuid` is null/undefined, return an empty result with a clear error log instead of passing `undefined` to all queries
 
-1. Update `fetchAllQuestions` to also fetch `correct_answer` and `category_id` fields
-2. Update `scanDatabaseForDuplicates` to:
-   - First, group questions by `category_id + correct_answer`
-   - Any group with 2+ questions = automatic duplicate (skip expensive text comparison)
-   - Then run the existing text similarity check only on remaining unpaired questions
-   - This makes the scan both **faster** (skips O(n^2) for obvious matches) and **more accurate**
-3. Update `DuplicateResult` interface to include `matchType: 'answer' | 'text'` so the UI can show why it was flagged
+3. In `getCategoryQuestions`, add a defensive check at the top: if `categoryUuid` is falsy, return empty result immediately
 
-**File: `src/pages/admin/DuplicateScanner.tsx`**
+4. Clean stale IDs from the tracker: when Fallback 2 runs and fetches all questions for a category, intersect the tracker's seen IDs with the actual question IDs from the database, removing any stale (deleted) IDs
 
-4. Show match type badge: "იგივე პასუხი" (Same Answer) in orange, or "მსგავსი ტექსტი" (Similar Text) in yellow
-5. Show the correct answer for answer-matched pairs so the admin can quickly verify
-6. Lower the default threshold slider from 80% to 70% for the text similarity layer (to catch more edge cases)
+### Technical Details
 
-### How the improved scan works
-
-```text
-9,101 active questions
-        |
-        v
-  Group by (category_id + correct_answer)
-        |
-        +---> Groups with 2+ questions --> Flag as "Same Answer" duplicates
-        |
-        +---> Remaining questions --> Run Jaccard text similarity (existing logic)
-        |
-        v
-  Combined results, sorted by match type then similarity
+**Change 1 -- `.maybeSingle()` (line 198):**
+```typescript
+const { data, error } = await supabase
+  .from('categories')
+  .select('id')
+  .eq('category_id', slugOrUuid)
+  .maybeSingle();  // was .single()
 ```
 
-### Expected Impact
+**Change 2 -- Null guard in `getQuestions` (line 248-251):**
+```typescript
+if (!categoryUuid) {
+  console.error('[questionService] Could not resolve category:', ctx.categorySlug);
+  return { questions: [], exhausted: false, language, categoryUuid: undefined };
+}
+```
 
-- Current scanner finds ~0-20 duplicates at 80% threshold
-- New scanner will find **4,500+ duplicate pairs** from answer matching alone
-- Much faster scan since answer grouping is O(n) vs O(n^2) text comparison
-- No false positives for answer-based matches (same answer + same category is a definitive signal)
+**Change 3 -- Defensive check in `getCategoryQuestions` (top of function):**
+```typescript
+if (!categoryUuid) {
+  return { questions: [], exhausted: true, language, exhaustionInfo: { totalAvailable: 0, totalSeen: 0, wasReset: false, usedFallback: false } };
+}
+```
+
+**Change 4 -- Stale tracker cleanup (inside Fallback 2 block, after fetching all questions):**
+After Fallback 2 fetches ALL valid question IDs for the category, intersect the tracker with actual IDs to remove stale references to deleted questions. This prevents tracker inflation from affecting future plays.
 
