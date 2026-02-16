@@ -601,7 +601,46 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "room_participants", filter: `room_id=eq.${roomId}` },
-        () => fetchParticipants(roomId)
+        async (payload) => {
+          fetchParticipants(roomId);
+          
+          // Check if all playing participants have finished → mark room completed
+          if (payload.eventType === "UPDATE" && (payload.new as any).status === "finished") {
+            const { data: allParticipants } = await supabase
+              .from("room_participants")
+              .select("status, user_id")
+              .eq("room_id", roomId);
+            
+            if (allParticipants && allParticipants.length > 0) {
+              // Get room to check host_is_observer
+              const { data: roomCheck } = await supabase
+                .from("game_rooms")
+                .select("host_user_id, host_is_observer, status")
+                .eq("id", roomId)
+                .maybeSingle();
+              
+              // Only proceed if the room is still "playing"
+              if (roomCheck && roomCheck.status === "playing") {
+                const activePlayers = allParticipants.filter(p => {
+                  // Skip observer host
+                  if (roomCheck.host_is_observer && p.user_id === roomCheck.host_user_id) return false;
+                  return true;
+                });
+                
+                const allFinished = activePlayers.every(p => p.status === "finished");
+                
+                if (allFinished) {
+                  console.log(`[MP] All ${activePlayers.length} players finished - marking room completed`);
+                  await supabase
+                    .from("game_rooms")
+                    .update({ status: "completed", completed_at: new Date().toISOString() })
+                    .eq("id", roomId)
+                    .eq("status", "playing"); // Prevent double-update race
+                }
+              }
+            }
+          }
+        }
       )
       .subscribe((status) => {
         // When subscription is ready, do an initial fetch to ensure we have latest data
@@ -1400,12 +1439,13 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
     const isLastQuestion = state.currentQuestionIndex >= state.questions.length - 1;
     
     if (isLastQuestion) {
-      // Mark game as completed
-      if (state.currentRoom && isHost) {
+      // Mark THIS player as finished (not the whole room)
+      if (state.currentRoom && user) {
         await supabase
-          .from("game_rooms")
-          .update({ status: "completed", completed_at: new Date().toISOString() })
-          .eq("id", state.currentRoom.id);
+          .from("room_participants")
+          .update({ status: "finished" })
+          .eq("room_id", state.currentRoom.id)
+          .eq("user_id", user.id);
       }
       
       // Wait for score to propagate (increased from 200ms to allow observer bonus to sync)
@@ -1419,7 +1459,7 @@ export function MultiplayerProviderV2({ children }: { children: React.ReactNode 
         opponentAnswers: {},
       }));
     }
-  }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, isHost]);
+  }, [state.currentQuestionIndex, state.questions.length, state.currentRoom, user]);
 
   // Exit room (UI only - stay as participant)
   const exitRoom = useCallback(() => {
