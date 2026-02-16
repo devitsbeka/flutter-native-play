@@ -1,33 +1,61 @@
 
 
-## Multi-Select Category Picker with Icons
+## Fix: Duplicate Scanner Not Finding Real Duplicates
 
-### What Changes
+### Root Cause
 
-**File: `src/components/controller/ControllerPollScreen.tsx`**
+The current duplicate scanner uses **Jaccard keyword similarity** (comparing shared words between questions). This fundamentally fails for Georgian trivia because:
 
-Currently, clicking "ბიბლიოთეკიდან" opens a category list where tapping any category immediately submits it as a suggestion and closes the picker. To add more, the user must go back and tap "ბიბლიოთეკიდან" again. This is tedious.
+- Two questions can ask the **exact same fact** with completely different wording
+- Example: "რომელ წელს აიღეს კონსტანტინოპოლი ოსმალებმა?" vs "რა წელს დაეცა კონსტანტინოპოლი ოსმალების ხელში?" -- same answer (1453), same category, clearly duplicates, but the keyword overlap is low
+- The database has **4,538 duplicate pairs** where questions share the same correct answer within the same category, but the scanner misses most of them
 
-### New Behavior
+### Solution: Answer-Aware Duplicate Detection
 
-1. **Multi-select mode**: Tapping a category toggles it (selected/unselected) with a visual checkmark indicator instead of immediately submitting
-2. **Selected count badge**: Show how many categories are selected at the top (e.g., "არჩეულია: 3")
-3. **"ხმის მიცემის დაწყება" button**: A sticky bottom button that submits ALL selected categories at once. The button shows the count (e.g., "დამატება (3)"). Disabled when nothing is selected.
-4. **Already-suggested categories**: Categories that are already in the suggestions list are shown as disabled/greyed out so the user can't double-add them
-5. **Category icons**: Already present in the list via `QuizCategoryIcon` -- no changes needed here, icons are already showing
+Add a **two-layer detection approach**:
 
-### Technical Details
+1. **Layer 1 -- Answer Match (new)**: If two questions in the same category have the exact same `correct_answer` (and the answer is 3+ characters), they are flagged as likely duplicates. This alone catches the majority of missed duplicates.
 
-**State changes in `ControllerPollScreen.tsx`:**
-- Add `selectedCategoryIds: Set<string>` state to track multi-selection
-- Replace `handleSelectCategory(category)` single-submit with a toggle function that adds/removes from the set
-- Add new `handleSubmitSelectedCategories()` that loops through selected IDs, calls `submitSuggestion()` for each, then closes the picker
-- Filter out already-suggested category IDs (from `mySuggestions`) to show them as disabled
+2. **Layer 2 -- Text Similarity (existing, improved)**: Keep the current Jaccard keyword comparison as a secondary check for questions with different answers but similar text.
 
-**UI changes in the category picker section (lines 338-372):**
-- Each category row gets a checkbox/checkmark indicator on the right side instead of `ChevronRight`
-- Selected rows get highlighted border (e.g., `border-green-400 bg-green-500/20`)
-- Bottom sticky bar with submit button replacing the close-on-tap behavior
-- The X close button at top remains for cancelling without adding
+### Technical Changes
 
-**Same changes apply to `ControllerDirectSelection.tsx`** which has an identical category picker pattern (lines 222-267). Both files will get the multi-select treatment.
+**File: `src/hooks/useDuplicateDetection.ts`**
+
+1. Update `fetchAllQuestions` to also fetch `correct_answer` and `category_id` fields
+2. Update `scanDatabaseForDuplicates` to:
+   - First, group questions by `category_id + correct_answer`
+   - Any group with 2+ questions = automatic duplicate (skip expensive text comparison)
+   - Then run the existing text similarity check only on remaining unpaired questions
+   - This makes the scan both **faster** (skips O(n^2) for obvious matches) and **more accurate**
+3. Update `DuplicateResult` interface to include `matchType: 'answer' | 'text'` so the UI can show why it was flagged
+
+**File: `src/pages/admin/DuplicateScanner.tsx`**
+
+4. Show match type badge: "იგივე პასუხი" (Same Answer) in orange, or "მსგავსი ტექსტი" (Similar Text) in yellow
+5. Show the correct answer for answer-matched pairs so the admin can quickly verify
+6. Lower the default threshold slider from 80% to 70% for the text similarity layer (to catch more edge cases)
+
+### How the improved scan works
+
+```text
+9,101 active questions
+        |
+        v
+  Group by (category_id + correct_answer)
+        |
+        +---> Groups with 2+ questions --> Flag as "Same Answer" duplicates
+        |
+        +---> Remaining questions --> Run Jaccard text similarity (existing logic)
+        |
+        v
+  Combined results, sorted by match type then similarity
+```
+
+### Expected Impact
+
+- Current scanner finds ~0-20 duplicates at 80% threshold
+- New scanner will find **4,500+ duplicate pairs** from answer matching alone
+- Much faster scan since answer grouping is O(n) vs O(n^2) text comparison
+- No false positives for answer-based matches (same answer + same category is a definitive signal)
+
