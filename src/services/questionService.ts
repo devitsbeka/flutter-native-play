@@ -284,17 +284,17 @@ async function getCategoryQuestions(
   const minLevel = Math.max(1, levelNumber - 3);
   const maxLevel = Math.min(20, levelNumber + 5);
   
-  // FIX: Get TOTAL available in ENTIRE CATEGORY (not just level range)
-  // This is critical for proper exhaustion tracking
-  const { count: totalCategoryCount } = await supabase
+  // FIX: Count only VALID questions for exhaustion detection
+  // Fetch minimal data and filter client-side since Supabase can't filter by length()
+  const { data: allCategoryQs } = await supabase
     .from('questions')
-    .select('id', { count: 'exact', head: true })
+    .select('id, question_text, correct_answer, incorrect_answers')
     .eq('is_active', true)
     .eq('in_production', true)
     .eq('language', language)
     .eq('category_id', categoryUuid);
   
-  const totalAvailable = totalCategoryCount || 0;
+  const totalAvailable = (allCategoryQs || []).filter(q => isValidQuestionLength(q as RawQuestion)).length;
   
   // FIX: Get seen questions for ENTIRE CATEGORY (not level-specific)
   // This prevents questions from repeating when playing different levels
@@ -303,10 +303,10 @@ async function getCategoryQuestions(
   // Combine category-seen with any additional exclusions
   let excludeIds = [...new Set([...categorySeenIds, ...(additionalExcludeIds || [])])];
   
-  // Check category-wide exhaustion (not level-specific)
-  const categoryExhausted = categorySeenIds.length >= totalAvailable;
+  // Check category-wide exhaustion using VALID question count
+  const categoryExhausted = categorySeenIds.length >= totalAvailable && totalAvailable > 0;
   
-  if (categoryExhausted && totalAvailable > 0) {
+  if (categoryExhausted) {
     // Category pool exhausted - clear tracking and start fresh
     clearCategorySeen(categoryUuid);
     wasReset = true;
@@ -371,9 +371,38 @@ async function getCategoryQuestions(
     questions = resetQuestions || [];
   }
   
-  // Fallback 3: If STILL empty (truly no questions in category), return empty gracefully
-  if (!questions || questions.length === 0) {
-    console.warn(`[questionService] No questions available for category ${categoryUuid} in language ${language}`);
+  // FIX: Apply validation BEFORE empty check
+  // This ensures we detect when all remaining questions are invalid
+  let rawQuestions = (questions || []) as RawQuestion[];
+  let validQuestions = rawQuestions
+    .filter(isValidQuestionLength)
+    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  
+  // FIX: If we got raw questions but 0 valid ones, the tracker is stuck on invalid questions
+  // Clear tracker and retry one final time
+  if (validQuestions.length === 0 && rawQuestions.length > 0 && !wasReset) {
+    console.log(`[questionService] All ${rawQuestions.length} fetched questions were invalid, clearing tracker and retrying...`);
+    clearCategorySeen(categoryUuid);
+    wasReset = true;
+    exhausted = true;
+    
+    const { data: retryQuestions } = await supabase
+      .from('questions')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, level_number, icon_slug, image_url, video_url, audio_url')
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language)
+      .eq('category_id', categoryUuid);
+    
+    rawQuestions = (retryQuestions || []) as RawQuestion[];
+    validQuestions = rawQuestions
+      .filter(isValidQuestionLength)
+      .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  }
+  
+  // Truly no valid questions in this category
+  if (validQuestions.length === 0) {
+    console.warn(`[questionService] No valid questions for category ${categoryUuid} in language ${language}`);
     return {
       questions: [],
       exhausted: true,
@@ -387,12 +416,6 @@ async function getCategoryQuestions(
       categoryUuid,
     };
   }
-  
-  // Filter by length and format
-  const rawQuestions = (questions || []) as RawQuestion[];
-  const validQuestions = rawQuestions
-    .filter(isValidQuestionLength)
-    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
   
   // Shuffle and select
   const selected = shuffleArray(validQuestions).slice(0, count);
@@ -500,9 +523,37 @@ async function getTVQuestions(
     questions = finalQuestions || [];
   }
   
-  // If STILL empty (truly no questions in this category), return empty gracefully
-  if (!questions || questions.length === 0) {
-    console.warn(`[TV Mode] No questions available for category ${categoryUuid} in language ${language}`);
+  // FIX: Apply validation BEFORE empty check
+  let rawQuestions = (questions || []) as RawQuestion[];
+  let validQuestions = rawQuestions
+    .filter(isValidQuestionLength)
+    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  
+  // If 0 valid after filtering but raw existed, retry without exclusions
+  if (validQuestions.length === 0 && rawQuestions.length > 0 && !wasReset) {
+    console.log(`[TV Mode] All fetched questions invalid, clearing tracker and retrying...`);
+    clearCategoryAskedQuestions(trackerKey);
+    clearSeenQuestions();
+    wasReset = true;
+    exhausted = true;
+    
+    const { data: retryQuestions } = await supabase
+      .from('questions')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language)
+      .eq('category_id', categoryUuid);
+    
+    rawQuestions = (retryQuestions || []) as RawQuestion[];
+    validQuestions = rawQuestions
+      .filter(isValidQuestionLength)
+      .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  }
+  
+  // Truly no valid questions
+  if (validQuestions.length === 0) {
+    console.warn(`[TV Mode] No valid questions for category ${categoryUuid} in language ${language}`);
     return {
       questions: [],
       exhausted: true,
@@ -516,12 +567,6 @@ async function getTVQuestions(
       categoryUuid,
     };
   }
-  
-  // Filter by length and format
-  const rawQuestions = (questions || []) as RawQuestion[];
-  const validQuestions = rawQuestions
-    .filter(isValidQuestionLength)
-    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
   
   // Shuffle and select
   const selected = shuffleArray(validQuestions).slice(0, count);
@@ -634,7 +679,35 @@ async function getSingleCategoryVSQuestions(
     questions = resetQuestions || [];
   }
   
-  if (!questions || questions.length === 0) {
+  // FIX: Apply validation BEFORE empty check
+  let rawQuestions = (questions || []) as RawQuestion[];
+  let validQuestions = rawQuestions
+    .filter(isValidQuestionLength)
+    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  
+  // If 0 valid after filtering but raw existed, retry without exclusions
+  if (validQuestions.length === 0 && rawQuestions.length > 0 && !wasReset) {
+    console.log(`[VS Single] All fetched questions invalid, clearing tracker and retrying...`);
+    clearSeenQuestions();
+    wasReset = true;
+    exhausted = true;
+    
+    const { data: retryQuestions } = await supabase
+      .from('questions')
+      .select('id, question_text, correct_answer, incorrect_answers, difficulty, icon_slug, image_url, video_url, audio_url')
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language)
+      .eq('category_id', categoryUuid);
+    
+    rawQuestions = (retryQuestions || []) as RawQuestion[];
+    validQuestions = rawQuestions
+      .filter(isValidQuestionLength)
+      .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
+  }
+  
+  // Truly no valid questions
+  if (validQuestions.length === 0) {
     return {
       questions: [],
       exhausted: true,
@@ -643,12 +716,6 @@ async function getSingleCategoryVSQuestions(
       categoryUuid,
     };
   }
-  
-  // Filter, format, and select
-  const rawQuestions = questions as RawQuestion[];
-  const validQuestions = rawQuestions
-    .filter(isValidQuestionLength)
-    .map(q => formatQuestion(q, categoryInfo?.name, categoryInfo?.slug));
   
   const selected = shuffleArray(validQuestions).slice(0, count);
   
