@@ -231,12 +231,6 @@ export const TVQuestionScreenV4: React.FC = () => {
         >
           {/* Left 50%: Question text + Image */}
           <div className="w-1/2 pr-4 flex flex-col justify-center">
-            {/* Question text card */}
-            <div className="bg-white rounded-2xl p-4 mb-4 shadow-lg">
-              <p className="text-xl font-semibold text-center text-[#2A2550]">
-                {currentQuestion.question_text}
-              </p>
-            </div>
             {/* Image */}
             <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-lg">
               <img 
