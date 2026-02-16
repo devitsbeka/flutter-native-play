@@ -20,6 +20,7 @@ import {
 import { QuestionTypeSelector } from './QuestionTypeSelector';
 import { MediaPreview } from './MediaPreview';
 import { QuestionType, CategoryWithCounts } from '@/hooks/useQuestionStudio';
+import { QuestionIconPicker } from '@/components/social/QuestionIconPicker';
 
 interface CreateQuestionModalProps {
   open: boolean;
@@ -57,6 +58,7 @@ export function CreateQuestionModal({
     incorrect_answers: ['', '', ''],
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
     media_url: '',
+    icon_slug: '',
   });
 
   const resetForm = () => {
@@ -69,6 +71,7 @@ export function CreateQuestionModal({
       incorrect_answers: ['', '', ''],
       difficulty: 'medium',
       media_url: '',
+      icon_slug: '',
     });
   };
 
@@ -107,6 +110,11 @@ export function CreateQuestionModal({
         incorrect_answers: validIncorrect,
         difficulty: form.difficulty,
       };
+
+      // Add icon slug if selected
+      if (form.icon_slug) {
+        questionData.icon_slug = form.icon_slug;
+      }
 
       // Add media URL based on type
       if (selectedType === 'image') {
@@ -181,6 +189,16 @@ export function CreateQuestionModal({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Icon Picker */}
+            <div className="flex justify-center">
+              <QuestionIconPicker
+                selectedSlug={form.icon_slug || null}
+                onSelect={(slug) => setForm(f => ({ ...f, icon_slug: slug || '' }))}
+                large
+                creatorMode
+              />
             </div>
 
             {/* Media URL (for non-text types) */}
