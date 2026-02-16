@@ -23,15 +23,17 @@ const TVJoinContent: React.FC = () => {
   // Hard switch: QR should pass sessionId; manual entry uses 4-digit TV code.
   const initialCode = urlSessionId || querySessionId || urlCode || queryCode || '';
   
-  const { phase, sessionId, questions, leaveSession, myPlayerId, players, refetchSessionData } = useTVGame();
+  const { phase, sessionId, questions, leaveSession, myPlayerId, players, refetchSessionData, currentQuestionIndex } = useTVGame();
   const [isJoined, setIsJoined] = useState(false);
 
-  // Auto-redirect to home when game is idle for 60s
-  useIdleTimeout(phase, () => {
+  // Auto-redirect to home when game is idle for 120s
+  // Use composite value (phase + question index) so every new question resets the timer
+  // This prevents false idle detection during long question rounds
+  useIdleTimeout(`${phase}-${currentQuestionIndex}`, () => {
     console.log('[TVJoin] Idle timeout — leaving session');
     leaveSession();
     navigate('/', { replace: true });
-  });
+  }, 120_000);
 
   // Find current player from players array
   const myPlayer = players.find(p => p.id === myPlayerId);
