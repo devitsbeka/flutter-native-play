@@ -123,7 +123,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 animate={{ scale: 1, x: 0 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
-                layout
+                
               >
                 <SafeAvatar 
                   avatarUrl={player.avatar_url}
@@ -140,16 +140,15 @@ export const TVQuestionScreenV4: React.FC = () => {
         </div>
 
         {/* Waiting Players (Yellow) - CENTER - only show players who haven't answered */}
-        <div className="flex gap-2 justify-center flex-1">
-          <AnimatePresence mode="popLayout">
+        <div className="flex gap-2 justify-center flex-1 min-w-0">
+          <AnimatePresence mode="sync">
             {waitingPlayers.map((player) => (
               <motion.div 
                 key={player.id}
                 className="relative"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
               >
                 {/* Subtle outer glow */}
                 <div 
@@ -183,7 +182,7 @@ export const TVQuestionScreenV4: React.FC = () => {
                 animate={{ scale: 1, x: 0 }}
                 exit={{ scale: 0 }}
                 transition={{ type: "spring", bounce: 0.5 }}
-                layout
+                
               >
                 <SafeAvatar 
                   avatarUrl={player.avatar_url}
