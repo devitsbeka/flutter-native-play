@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 export default function DuplicateScanner() {
   const [categoryId, setCategoryId] = useState<string>('all');
-  const [threshold, setThreshold] = useState([80]);
+  const [threshold, setThreshold] = useState([70]);
   const { scanning, scanResult, setScanResult, scanDatabaseForDuplicates, clearScanResult } = useDuplicateDetection();
   const { categories } = useAdminCategories();
   const { deleteQuestion } = useAdminQuestions();
@@ -104,6 +104,9 @@ export default function DuplicateScanner() {
   const allSelected = scanResult && scanResult.duplicates.length > 0 && 
     selectedIds.size === scanResult.duplicates.length;
 
+  const answerDupCount = scanResult?.duplicates.filter(d => d.matchType === 'answer').length ?? 0;
+  const textDupCount = scanResult?.duplicates.filter(d => d.matchType === 'text').length ?? 0;
+
   return (
     <ScrollArea className="h-full">
       <div className="p-6 space-y-6">
@@ -123,7 +126,7 @@ export default function DuplicateScanner() {
           <CardHeader>
             <CardTitle>სკანირების პარამეტრები</CardTitle>
             <CardDescription>
-              აირჩიეთ კატეგორია და მსგავსების ზღვარი დუბლიკატების მოსაძებნად
+              სკანერი პირველ რიგში პოულობს კითხვებს იგივე პასუხით (იმავე კატეგორიაში), შემდეგ ტექსტის მსგავსებით
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -146,7 +149,7 @@ export default function DuplicateScanner() {
               </div>
 
               <div className="space-y-2">
-                <Label>მსგავსების ზღვარი: {threshold[0]}%</Label>
+                <Label>ტექსტის მსგავსების ზღვარი: {threshold[0]}%</Label>
                 <Slider
                   value={threshold}
                   onValueChange={setThreshold}
@@ -156,7 +159,7 @@ export default function DuplicateScanner() {
                   className="mt-2"
                 />
                 <p className="text-xs text-muted-foreground">
-                  მაღალი ზღვარი = ზუსტი დუბლიკატები, დაბალი = მსგავსი კითხვებიც
+                  ეხება მხოლოდ ტექსტის მსგავსებას. პასუხის დამთხვევა ყოველთვის ფიქსირდება.
                 </p>
               </div>
             </div>
@@ -190,14 +193,26 @@ export default function DuplicateScanner() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>შედეგები</span>
-                <div className="flex items-center gap-2 text-sm font-normal">
+                <div className="flex items-center gap-2 text-sm font-normal flex-wrap">
                   <span className="text-muted-foreground">
                     შემოწმდა: {scanResult.totalChecked}
                   </span>
                   {scanResult.duplicatesFound > 0 ? (
-                    <Badge variant="destructive">
-                      {scanResult.duplicatesFound} დუბლიკატი
-                    </Badge>
+                    <>
+                      <Badge variant="destructive">
+                        {scanResult.duplicatesFound} დუბლიკატი
+                      </Badge>
+                      {answerDupCount > 0 && (
+                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                          {answerDupCount} პასუხით
+                        </Badge>
+                      )}
+                      {textDupCount > 0 && (
+                        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                          {textDupCount} ტექსტით
+                        </Badge>
+                      )}
+                    </>
                   ) : (
                     <Badge variant="secondary">დუბლიკატები არ მოიძებნა</Badge>
                   )}
@@ -249,7 +264,11 @@ export default function DuplicateScanner() {
                   {scanResult.duplicates.map((dup, idx) => (
                     <div
                       key={idx}
-                      className="p-4 rounded-lg border border-destructive/20 bg-destructive/5"
+                      className={`p-4 rounded-lg border ${
+                        dup.matchType === 'answer' 
+                          ? 'border-orange-500/30 bg-orange-500/5' 
+                          : 'border-destructive/20 bg-destructive/5'
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 flex-1">
@@ -259,11 +278,22 @@ export default function DuplicateScanner() {
                             className="mt-1"
                           />
                           <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <AlertTriangle className="h-4 w-4 text-destructive" />
-                              <span className="text-sm font-medium text-destructive">
-                                {Math.round(dup.similarity * 100)}% მსგავსება
-                              </span>
+                              {dup.matchType === 'answer' ? (
+                                <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                                  იგივე პასუხი
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                                  მსგავსი ტექსტი ({Math.round(dup.similarity * 100)}%)
+                                </Badge>
+                              )}
+                              {dup.correctAnswer && (
+                                <span className="text-xs text-muted-foreground">
+                                  პასუხი: <span className="font-medium text-foreground">{dup.correctAnswer}</span>
+                                </span>
+                              )}
                             </div>
                             
                             <div className="space-y-2">
