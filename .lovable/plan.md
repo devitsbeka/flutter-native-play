@@ -1,34 +1,22 @@
 
-
-## Add Bronze Variant to "ნახე რეიტინგი" Button
+## Fix: Filter Dropdown Gets Stuck When Switching Tabs
 
 ### Problem
-The Bronze league button uses the `"gold"` variant (line 48 in `Leaderboards.tsx`):
-```
-const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "gold";
-```
-There's no `"bronze"` variant in ChunkyButton, so Bronze falls back to Gold -- making them identical.
+When a user opens the filter/sort dropdown on one tab (e.g., "ოთახები") and then switches to another tab (e.g., "ჩემი ტრივია"), the dropdown remains visually stuck on screen. This happens because the `DropdownMenu` uses `modal={false}`, which means Radix doesn't automatically close it when focus leaves. When the tab switches, the old `UnifiedFiltersBar` unmounts but the dropdown portal may not clean up properly.
 
 ### Fix
 
-**1. `src/components/ui/chunky-button.tsx`** -- Add a `bronze` variant
+**File: `src/pages/TeamV2.tsx`** -- Add a unique `key` prop to each `UnifiedFiltersBar` instance
 
-- Add `"bronze"` to the variant type union on line 6
-- Add bronze color definition after the gold block (after line 128), using warm copper/brown tones:
-  - Face gradient: from `#CD7F32` (classic bronze) via `#A0522D` (sienna) to `#8B4513` (saddle brown)
-  - Depth/border/stroke: darker browns (`#6B3410`, `#7B3F1A`, `#4A2508`)
-  - Glow: warm bronze `rgba(205, 127, 50, 0.5)`
+Adding `key={activeTab}` to the sticky filter bar container forces React to fully unmount and remount the filter bar (including any open dropdown portals) whenever the active tab changes.
 
-**2. `src/pages/Leaderboards.tsx`** -- Use `"bronze"` for tier 1 (line 48)
+Change the wrapper div (line 694):
+```
+Before:
+<div id="sticky-filter-bar" className="sticky top-0 z-30 ...">
 
-Change:
-```
-const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "gold";
-```
-To:
-```
-const variant = tier === 3 ? "gold" : tier === 2 ? "silver" : "bronze";
+After:
+<div key={activeTab} id="sticky-filter-bar" className="sticky top-0 z-30 ...">
 ```
 
-### Result
-Each league will have a distinct button color: copper-brown for Bronze, gray for Silver, and gold for Gold.
+This is a one-line, single-attribute change. When the tab switches, React will destroy the old filter bar DOM tree (including any open Radix dropdown portals) and create a fresh one, preventing the stuck dropdown.
