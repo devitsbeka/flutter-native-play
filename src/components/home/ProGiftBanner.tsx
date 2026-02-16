@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useVipStatus } from "@/hooks/useVipStatus";
+import { supabase } from "@/integrations/supabase/client";
 import confettiGunIcon from "@/assets/confetti-gun-2.png";
 import confetti from "canvas-confetti";
 import {
@@ -17,15 +18,40 @@ const PROMO_END_DATE = new Date("2026-02-22T23:59:59");
 export function useProGiftEligibility() {
   const { user } = useAuth();
   const { isVip, loading } = useVipStatus();
+  const [eligible, setEligible] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  const isExpired = new Date() > PROMO_END_DATE;
-  const cacheKey = user ? `beta_pro_gift_claimed_${user.id}` : null;
-  const alreadyClaimed = cacheKey ? localStorage.getItem(cacheKey) === "true" : false;
+  useEffect(() => {
+    if (!user || loading) {
+      setChecking(false);
+      return;
+    }
 
-  // Don't show if: no user yet, expired, already claimed, or already VIP (unless still loading)
-  const eligible = !!user && !isExpired && !alreadyClaimed && !isVip && !loading;
+    const isExpired = new Date() > PROMO_END_DATE;
+    const cacheKey = `beta_pro_gift_claimed_${user.id}`;
+    const alreadyClaimed = localStorage.getItem(cacheKey) === "true";
 
-  return { eligible, loading };
+    if (isExpired || alreadyClaimed || isVip) {
+      setEligible(false);
+      setChecking(false);
+      return;
+    }
+
+    // Check if user has exhausted all 5 free plays
+    const checkPlays = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("games_played")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      setEligible((profile?.games_played ?? 0) >= 5);
+      setChecking(false);
+    };
+    checkPlays();
+  }, [user, isVip, loading]);
+
+  return { eligible, loading: loading || checking };
 }
 
 interface ProGiftModalProps {

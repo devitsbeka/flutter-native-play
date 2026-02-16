@@ -79,7 +79,7 @@ export function useReturnGiftEligibility(): boolean {
         .eq("user_id", user.id)
         .single();
 
-      if (profile && (profile.games_played ?? 0) >= 1) {
+      if (profile && (profile.games_played ?? 0) >= 5) {
         setEligible(true);
       }
     };
