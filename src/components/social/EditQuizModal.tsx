@@ -13,6 +13,7 @@ import { CoverImagePicker } from "./CoverImagePicker";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { EditQuestionDialog } from "./EditQuestionDialog";
 import { hasAnswerInQuestion } from "@/utils/questionValidation";
+import { IconOnboardingTooltip } from "@/components/shared/IconOnboardingTooltip";
 import { validateIconKeyword } from "@/utils/iconAnswerValidation";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 
@@ -513,6 +514,7 @@ export function EditQuizModal({ quiz, isOpen, onClose }: EditQuizModalProps) {
                               {missingIcon && !hasCriticalIssue && (
                                 <span className="text-xs text-yellow-200/80 font-medium">აიკონის დამატება</span>
                               )}
+                              {index === 0 && !q.icon_slug && <IconOnboardingTooltip />}
                             </div>
                             
                             {/* Question Text - Tappable to edit */}
