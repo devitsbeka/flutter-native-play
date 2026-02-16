@@ -217,6 +217,7 @@ export function MyRoomsSection({
               onNavigateToTab={onNavigateToTab}
               onComplete={() => setHasSeenOnboarding(true)}
               onCreateRoom={onCreateRoom}
+              contextTab="rooms"
             />
           </motion.div>
         ) : (

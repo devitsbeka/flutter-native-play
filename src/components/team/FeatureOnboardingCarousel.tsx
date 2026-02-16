@@ -50,6 +50,7 @@ interface FeatureOnboardingCarouselProps {
   showAllCards?: boolean; // For preview page
   onCreateRoom?: () => void;
   onCreateTrivia?: () => void;
+  contextTab?: string;
 }
 
 export function FeatureOnboardingCarousel({ 
@@ -58,20 +59,31 @@ export function FeatureOnboardingCarousel({
   showAllCards = false,
   onCreateRoom,
   onCreateTrivia,
+  contextTab,
 }: FeatureOnboardingCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Reorder tooltips based on context tab
+  const orderedTooltips = (() => {
+    if (!contextTab) return FEATURE_TOOLTIPS;
+    const priorityId = contextTab === "rooms" ? "rooms" : contextTab === "my-content" ? "my-trivia" : null;
+    if (!priorityId) return FEATURE_TOOLTIPS;
+    const priority = FEATURE_TOOLTIPS.find(t => t.id === priorityId);
+    if (!priority) return FEATURE_TOOLTIPS;
+    return [priority, ...FEATURE_TOOLTIPS.filter(t => t.id !== priorityId)];
+  })();
 
   // Auto-rotate every 4 seconds
   useEffect(() => {
     if (showAllCards || isPaused) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % FEATURE_TOOLTIPS.length);
+      setCurrentIndex((prev) => (prev + 1) % orderedTooltips.length);
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [showAllCards, isPaused]);
+  }, [showAllCards, isPaused, orderedTooltips.length]);
 
   const getActionForTooltip = useCallback((tooltip: FeatureTooltip) => {
     if (tooltip.id === "rooms" && onCreateRoom) return onCreateRoom;
@@ -111,7 +123,7 @@ export function FeatureOnboardingCarousel({
   if (showAllCards) {
     return (
       <div className="flex flex-col gap-6">
-        {FEATURE_TOOLTIPS.map((tooltip, index) => (
+        {orderedTooltips.map((tooltip, index) => (
           <FeatureCard 
             key={tooltip.id} 
             tooltip={tooltip} 
@@ -124,7 +136,7 @@ export function FeatureOnboardingCarousel({
     );
   }
 
-  const currentTooltip = FEATURE_TOOLTIPS[currentIndex];
+  const currentTooltip = orderedTooltips[currentIndex];
 
   return (
     <div className="flex flex-col items-center gap-4 py-4 px-4">
@@ -148,7 +160,7 @@ export function FeatureOnboardingCarousel({
 
       {/* Dot indicators */}
       <div className="flex gap-2">
-        {FEATURE_TOOLTIPS.map((_, index) => (
+        {orderedTooltips.map((_, index) => (
           <button
             key={index}
             onClick={() => handleDotClick(index)}

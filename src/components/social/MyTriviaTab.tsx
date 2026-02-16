@@ -1277,6 +1277,7 @@ export function MyTriviaTab({ onCreateQuiz, onCreateCollection, onContinueDraft,
           onNavigateToTab={onNavigateToTab}
           onComplete={() => setHasSeenOnboarding(true)}
           onCreateTrivia={onCreateQuiz}
+          contextTab="my-content"
         />
       );
     }
