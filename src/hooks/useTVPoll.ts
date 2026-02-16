@@ -896,6 +896,21 @@ export function useTVPoll({ sessionId, userId, nickname, avatarUrl, isHost = fal
       totalRounds: topN,
       activePlayerCount: expectedCount,
     });
+
+    // CRITICAL FIX: Delete position 0 queue item since its category is now playing
+    // Without this, startNextRoundFromQueueIfAny would pick position 0 again (same category)
+    const { error: deleteQueueError } = await supabase
+      .from('tv_session_queue')
+      .delete()
+      .eq('session_id', sessionId)
+      .eq('position', 0);
+
+    if (deleteQueueError) {
+      console.warn('[finalizePollAndStartGame] ⚠️ Failed to delete position 0 queue item:', deleteQueueError);
+    } else {
+      console.log('[finalizePollAndStartGame] ✅ Deleted position 0 queue item (first category consumed)');
+    }
+
     tvLog('[useTVPoll] ✅ Poll finalized and game started directly in countdown');
     return true;
   }, [sessionId, suggestions]);

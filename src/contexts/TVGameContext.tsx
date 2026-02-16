@@ -684,6 +684,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!isHostRef.current) return;
 
     checkInProgressRef.current = true;
+    checkInProgressSinceRef.current = Date.now();
 
     try {
       const current = stateRef.current;
@@ -756,6 +757,7 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.error('[AutoAdvance] Exception:', err);
     } finally {
       checkInProgressRef.current = false;
+      checkInProgressSinceRef.current = 0;
     }
   }, [advanceToReveal]);
 
@@ -1276,13 +1278,26 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Runs every 5 seconds during question phase to catch stuck timers
   // This handles cases where the host's timer paused (screen locked) and
   // the visibility change event didn't fire or was missed
+  // SAFETY: Force-resets stuck refs (checkInProgressRef, hasAdvancedRef)
   // ============================================================================
+  const checkInProgressSinceRef = useRef<number>(0); // Timestamp when checkInProgressRef was set to true
+
   useEffect(() => {
     if (!isHost) return;
     if (state.phase !== 'question') return;
     if (!state.sessionId) return;
     
     const heartbeatCheck = async () => {
+      // SAFETY: Force-reset checkInProgressRef if it's been stuck for >5 seconds
+      if (checkInProgressRef.current && checkInProgressSinceRef.current > 0) {
+        const stuckDuration = Date.now() - checkInProgressSinceRef.current;
+        if (stuckDuration > 5000) {
+          console.log('[Heartbeat] ⚠️ checkInProgressRef stuck for', Math.round(stuckDuration / 1000), 's — force-resetting');
+          checkInProgressRef.current = false;
+          checkInProgressSinceRef.current = 0;
+        }
+      }
+
       const { data: session } = await supabase
         .from('tv_sessions')
         .select('question_start_time, status')
@@ -1294,9 +1309,19 @@ export const TVGameProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const startTime = new Date(session.question_start_time).getTime();
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       
-      // If more than QUESTION_TIME + 5 seconds have passed, force advance
-      if (elapsed > QUESTION_TIME + 5) {
-        console.log('[Heartbeat] ⚠️ Game stuck! Elapsed:', elapsed, 'seconds. Forcing advance.');
+      // If more than QUESTION_TIME + 10 seconds have passed, force advance
+      // This is a stuck-game RECOVERY path — bypass all guards
+      if (elapsed > QUESTION_TIME + 10) {
+        console.log('[Heartbeat] ⚠️ Game stuck! Elapsed:', elapsed, 'seconds. Force-resetting guards and advancing.');
+        // Reset ALL blocking refs before forcing advance
+        hasAdvancedRef.current = false;
+        checkInProgressRef.current = false;
+        checkInProgressSinceRef.current = 0;
+        advanceToReveal('heartbeat stuck recovery (force)');
+      } else if (elapsed > QUESTION_TIME + 5) {
+        console.log('[Heartbeat] ⚠️ Game overdue! Elapsed:', elapsed, 'seconds. Attempting advance.');
+        // Reset hasAdvancedRef since this is a recovery path
+        hasAdvancedRef.current = false;
         advanceToReveal('heartbeat stuck recovery');
       }
     };
