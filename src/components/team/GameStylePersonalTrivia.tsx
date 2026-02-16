@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import useEmblaCarousel from "embla-carousel-react";
 import { useTriviaDrafts } from "@/hooks/useTriviaDrafts";
+import { IconOnboardingTooltip } from "@/components/shared/IconOnboardingTooltip";
 
 const ICON_STORAGE_URL = "https://sqwpzezkhpqkdyltvsim.supabase.co/storage/v1/object/public/icon-library";
 
@@ -1044,6 +1045,7 @@ export function GameStylePersonalTrivia({
                             </>
                           )}
                         </button>
+                        {index === 0 && !question.iconSlug && <IconOnboardingTooltip />}
                       </div>
 
                       {/* Question Text - Editable */}
