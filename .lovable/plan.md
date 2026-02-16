@@ -1,24 +1,44 @@
 
 
-## Fix: Jumpy Avatars on TV Question Screen
+## Two Fixes: Round Leaderboard + "დრო ამოიწურა" Message
 
-### Problem
-When a new question appears, all player avatars reset to the center "waiting" zone with yellow indicators. As players answer, avatars animate to left (wrong) or right (correct). The jumping happens because:
+### Fix 1: Show Leaderboard with Points After Every Round
 
-1. **`layout` prop on every avatar** triggers Framer Motion's layout animation system, which measures and animates position changes every render -- causing small continuous shifts
-2. **`AnimatePresence mode="popLayout"`** on the center zone removes elements from document flow instantly during exit, causing remaining avatars to jump sideways before the exit animation completes
-3. **`flex-1` on the center zone** means its width dynamically shrinks/grows as the left/right zones gain players, shifting the center position of remaining avatars
+Currently, the TV screen (`TVLobby.tsx`) maps both `results` and `completed` phases to `TVResultsScreenV2`, which shows a final game-over podium. There is no intermediate round-end leaderboard between rounds.
 
-### Fix
+**Changes:**
+
+**File: `src/pages/TVLobby.tsx`**
+- When in `reveal` phase AND it's the last question of the round (i.e., `currentQuestionIndex === questions.length - 1`), show a dedicated round leaderboard instead of `TVQuestionScreenV4`
+- Alternatively, enhance the existing `TVRevealScreenV2` (which already has `TVLeaderboardPanel`) to be used during reveal phase on the TV screen, showing player scores prominently
+
+**Better approach:** Since the `reveal` phase already triggers on TV after each question, modify `TVQuestionScreenV4` (which is shown during reveal on TV per line 107) to display player avatars with their current scores below them during the reveal phase. This way after every question players can see the running score, and especially after the last question of each round they see the standings before transitioning to the next round.
 
 **File: `src/components/tv/TVQuestionScreenV4.tsx`**
+- During the `reveal` phase, show each player's score below their avatar in all three zones (correct, wrong, waiting)
+- Add a small score label (e.g., the player's total score) beneath each avatar circle
+- This gives a running leaderboard feel throughout the round without needing a separate screen
 
-1. **Remove `layout` prop** from all three zones' `motion.div` elements (lines 127, 153, 186). This stops Framer Motion from continuously measuring and animating position changes.
+### Fix 2: Show "დრო ამოიწურა" Instead of "არასწორია" When Time Runs Out
 
-2. **Change center zone `AnimatePresence mode="popLayout"` to `mode="sync"`** (line 144). This prevents the instant-removal-from-flow behavior that causes the remaining avatars to jump left when one exits.
+The issue is in `ControllerReveal.tsx` (the phone controller screen shown to players during reveal). Currently line 133 shows only `სწორია!` or `არასწორია!` without checking if the player actually answered or timed out.
 
-3. **Give the center waiting zone a stable width** by adding `min-w-0` and centering with `items-center` instead of relying on `flex-1` which causes width fluctuation. Use absolute positioning or fixed min-width for the left/right zones so the center doesn't reflow.
+The `TVHostController.tsx` (line 823) already handles this correctly with `didAnswer` check, but `ControllerReveal.tsx` does not.
 
-4. **Use simpler exit animations** for waiting players: fade out only (no scale) to reduce visual jitter during transitions.
+**File: `src/components/controller/ControllerReveal.tsx`**
+- At lines 125-134, add a `didAnswer` check: if `myAnswer === null` (and no captured answer), show "დრო ამოიწურა!" with gray styling (like TVHostController does) instead of "არასწორია!"
+- Use a gray icon (Clock) and gray text color for timeout, keeping red X and "არასწორია!" only for actual wrong answers
 
-These changes ensure avatars appear centered and stable when a new question loads, and smoothly fade out (rather than jump) when a player answers.
+---
+
+### Technical Details
+
+**TVQuestionScreenV4.tsx changes (score display during reveal):**
+- Below each `SafeAvatar` in the wrong, waiting, and correct player zones, add a small score badge showing `player.score`
+- Only show during `phase === 'reveal'` to keep the question phase clean
+- Style: small white text on semi-transparent background, positioned below the avatar
+
+**ControllerReveal.tsx changes (timeout message):**
+- Line 104-107: Add `didAnswer` logic similar to TVHostController
+- Line 127-133: Add Clock icon + gray styling for timeout case
+- Line 132-133: Three-way conditional: `didAnswer ? (isCorrect ? 'სწორია!' : 'არასწორია!') : 'დრო ამოიწურა!'`
