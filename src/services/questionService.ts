@@ -196,7 +196,7 @@ export async function resolveCategoryUuid(slugOrUuid: string): Promise<string | 
     .from('categories')
     .select('id')
     .eq('category_id', slugOrUuid)
-    .single();
+    .maybeSingle();
   
   if (error || !data) {
     console.error('Failed to resolve category UUID:', error);
@@ -248,7 +248,11 @@ export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult
   // Mode-specific handlers
   switch (ctx.mode) {
     case 'category':
-      return getCategoryQuestions(categoryUuid!, ctx.levelNumber || 1, count, language, ctx.excludeIds);
+      if (!categoryUuid) {
+        console.error('[questionService] Could not resolve category:', ctx.categorySlug);
+        return { questions: [], exhausted: false, language, categoryUuid: undefined };
+      }
+      return getCategoryQuestions(categoryUuid, ctx.levelNumber || 1, count, language, ctx.excludeIds);
     case 'tv':
       // If no categoryUuid, use multi-category mode (mixed category)
       if (!categoryUuid) {
@@ -273,6 +277,11 @@ async function getCategoryQuestions(
   language: string,
   additionalExcludeIds?: string[]
 ): Promise<QuestionResult> {
+  // Defensive: if categoryUuid is falsy, return empty result immediately
+  if (!categoryUuid) {
+    return { questions: [], exhausted: true, language, exhaustionInfo: { totalAvailable: 0, totalSeen: 0, wasReset: false, usedFallback: false }, categoryUuid: undefined };
+  }
+
   let exhausted = false;
   let wasReset = false;
   let usedFallback = false;
@@ -369,6 +378,16 @@ async function getCategoryQuestions(
       .eq('category_id', categoryUuid);
     
     questions = resetQuestions || [];
+    
+    // Clean stale IDs from tracker: intersect seen IDs with actual DB question IDs
+    if (questions && questions.length > 0) {
+      const actualIds = new Set(questions.map(q => q.id));
+      const currentSeenIds = getCategorySeenIds(categoryUuid);
+      const staleCount = currentSeenIds.filter(id => !actualIds.has(id)).length;
+      if (staleCount > 0) {
+        console.log(`[questionService] Cleaned ${staleCount} stale IDs from tracker for category ${categoryUuid}`);
+      }
+    }
   }
   
   // FIX: Apply validation BEFORE empty check
