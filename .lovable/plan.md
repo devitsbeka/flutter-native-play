@@ -1,51 +1,57 @@
 
 
-## The Problem
+# TV Mode Bug Fixes: Stuck Questions, Guest Disconnects, Category Repetition
 
-When you delete or edit questions in a category and then try to play it, you see the "უპს!" error screen saying no questions are available.
+## Issues Found
 
-## Root Cause
+### Issue 1: Game Stuck on Question (Host Needs Refresh)
 
-The question fetching system has a mismatch between how it counts "available" questions and what it actually serves:
+**Root Cause:** The heartbeat recovery check (runs every 5 seconds) compares elapsed time against `QUESTION_TIME + 5` but only fires `advanceToReveal`, which has a guard: `if (current.phase !== 'question') return`. The problem is that `advanceToReveal` checks `stateRef.current.phase`, but when the host's timer interval pauses (screen lock, tab switch, CPU throttle), the local `phase` may still be `'question'` while the `hasAdvancedRef` got set to `true` from a previous partial execution, or the `checkInProgressRef` gets stuck as `true` from a failed async call that never hit the `finally` block. Once either ref is stuck, all advancement paths are permanently blocked.
 
-- **Total count**: Counts ALL active questions in the category (e.g., 150)
-- **Actually playable**: Only questions with text under 70 characters AND answers under 20 characters are served (e.g., only 100 of 150)
-- **Seen tracker**: Records IDs of played (valid) questions
+**Fix:**
+- Add a safety reset for `checkInProgressRef` in the heartbeat: if it's been `true` for more than 5 seconds, force it to `false`
+- In the heartbeat, bypass the `hasAdvancedRef` guard since this is a stuck-game recovery path -- reset it before calling `advanceToReveal`
+- Add a maximum staleness check: if `questionStartedAtRef` is set and more than `QUESTION_TIME + 10` seconds have passed, force-advance regardless of ref states
 
-What happens:
-1. You play through all ~100 valid questions over multiple sessions
-2. The tracker has 100 IDs marked as "seen"
-3. The system checks: "Are 100 seen >= 150 total?" -- No, so it thinks there are still questions left
-4. It queries DB excluding the 100 seen IDs, gets back 50 "invalid" questions (text too long)
-5. The length validation filter removes all 50 -- result: 0 playable questions
-6. You see the error screen
+### Issue 2: Guests Getting Kicked / Difficulty Rejoining
 
-Deleting/editing questions makes this worse because it changes the total count and can trigger this state sooner.
+**Root Cause:** Two issues combine:
+1. The `useIdleTimeout` hook in `TVJoin.tsx` fires after 60 seconds if the `phase` value hasn't changed. During long question rounds (10 questions x 15s each = 150s+), the phase stays as `'question'` the entire time. But the idle timeout watches the `phase` string -- since it remains `'question'` throughout, the 60-second timer fires and calls `leaveSession()` + navigates to `/`.
+2. Once kicked, guests must scan QR or re-enter the code because there's no session persistence in localStorage for the guest's current session.
 
-## The Fix
+**Fix:**
+- Change the idle timeout `watchValue` in `TVJoin.tsx` from just `phase` to a composite value that includes `currentQuestionIndex`. This way, every new question resets the 60s timer. The phase + question index combination changes frequently during gameplay, preventing false idle detection.
+- Additionally, increase the timeout to 120 seconds for extra safety margin.
 
-### 1. Count only valid questions for exhaustion detection
-Instead of counting ALL questions, count only those that pass the length validation (question text <= 70 chars, answers <= 20 chars, at least 3 incorrect answers). This way the tracker accurately knows when the valid pool is exhausted.
+### Issue 3: First Category Repeats Instead of Playing Next Category
 
-### 2. Filter invalid questions at the database level
-Add length constraints directly to the SQL queries so invalid questions are never fetched in the first place, reducing unnecessary data transfer and making counts accurate.
+**Root Cause:** In `finalizePollAndStartGame` (useTVPoll.ts), the queue is built with ALL top suggestions at positions 0, 1, 2, etc. The first suggestion's questions are loaded directly and the session goes to countdown. However, **the queue item at position 0 is never consumed/deleted**. When round 1 ends and `startNextRoundFromQueueIfAny` runs, it queries `.order('position', { ascending: true }).limit(1)` and gets position 0 again -- the same category that just played.
+
+**Fix:**
+- After inserting the queue items and successfully starting countdown with the first category's questions, delete the position 0 item from `tv_session_queue`. This way, when `startNextRoundFromQueueIfAny` runs after round 1, it picks position 1 (the actual second category).
 
 ---
 
-## Technical Details
+## Technical Changes
 
-**File: `src/services/questionService.ts`**
+### File: `src/contexts/TVGameContext.tsx`
 
-In `getCategoryQuestions()`:
-- Change the `totalAvailable` count query (line ~289) to include length filters: `.lte('question_text', 70 chars)` -- Since Supabase doesn't support `length()` in queries, we'll fetch IDs only and filter client-side, then use the filtered count for exhaustion detection
-- Alternative: add a helper that counts valid questions by fetching minimal data and filtering
-- After Fallback 2 (line ~363), apply `isValidQuestionLength` BEFORE the empty check, not after
-- Move the `validQuestions` filter (line ~393) before the "return empty" check (line ~375) so the system can detect when all remaining questions are invalid and reset the tracker
+**Issue 1 fix -- Heartbeat stuck recovery (lines ~1280-1307):**
+- Add a timestamp tracker for when `checkInProgressRef` was set to `true`
+- In the heartbeat interval, if `checkInProgressRef` has been `true` for >5s, force-reset it
+- Reset `hasAdvancedRef` before calling `advanceToReveal` in the stuck recovery path
+- Increase the staleness threshold to `QUESTION_TIME + 10` for absolute forced recovery
 
-**Key change in the flow:**
-```
-Current:  fetch → check if 0 → filter invalid → return (could be 0!)
-Fixed:    fetch → filter invalid → check if 0 → if 0, clear tracker and retry → return
-```
+### File: `src/pages/TVJoin.tsx`
 
-This ensures the exhaustion reset happens when valid questions run out, not just when all questions run out.
+**Issue 2 fix -- Idle timeout false trigger (line ~37):**
+- Change `useIdleTimeout(phase, ...)` to `useIdleTimeout(`${phase}-${currentQuestionIndex}`, ...)`
+- Pull `currentQuestionIndex` from the `useTVGame()` context (already available via `questions` array, but need the index directly)
+- Increase timeout from 60s to 120s
+
+### File: `src/hooks/useTVPoll.ts`
+
+**Issue 3 fix -- Queue item not consumed (after line ~731):**
+- After the batch insert of queue items and after successfully starting countdown with the first category, delete the first queue item (position 0) from `tv_session_queue`
+- This ensures `startNextRoundFromQueueIfAny` picks the next unplayed category
+
