@@ -40,6 +40,7 @@ export interface QuestionContext {
   mode: 'category' | 'vs' | 'tv';
   categorySlug?: string;      // e.g., "science", "history"
   categoryUuid?: string;      // UUID from database
+  categoryName?: string;      // Pre-resolved category name (avoids extra DB lookup)
   levelNumber?: number;       // For category mode level progression
   count?: number;             // Number of questions needed (default: 5-10)
   excludeIds?: string[];      // Additional IDs to exclude
@@ -252,7 +253,7 @@ export async function getQuestions(ctx: QuestionContext): Promise<QuestionResult
         console.error('[questionService] Could not resolve category:', ctx.categorySlug);
         return { questions: [], exhausted: false, language, categoryUuid: undefined };
       }
-      return getCategoryQuestions(categoryUuid, ctx.levelNumber || 1, count, language, ctx.excludeIds);
+      return getCategoryQuestions(categoryUuid, ctx.levelNumber || 1, count, language, ctx.excludeIds, ctx.categoryName);
     case 'tv':
       // If no categoryUuid, use multi-category mode (mixed category)
       if (!categoryUuid) {
@@ -275,7 +276,8 @@ async function getCategoryQuestions(
   levelNumber: number,
   count: number,
   language: string,
-  additionalExcludeIds?: string[]
+  additionalExcludeIds?: string[],
+  preResolvedCategoryName?: string
 ): Promise<QuestionResult> {
   // Defensive: if categoryUuid is falsy, return empty result immediately
   if (!categoryUuid) {
@@ -286,24 +288,27 @@ async function getCategoryQuestions(
   let wasReset = false;
   let usedFallback = false;
   
-  // Get category info
-  const categoryInfo = await getCategoryInfo(categoryUuid);
-  
   // Expand level range for variety
   const minLevel = Math.max(1, levelNumber - 3);
   const maxLevel = Math.min(20, levelNumber + 5);
   
-  // FIX: Count only VALID questions for exhaustion detection
-  // Fetch minimal data and filter client-side since Supabase can't filter by length()
-  const { data: allCategoryQs } = await supabase
-    .from('questions')
-    .select('id, question_text, correct_answer, incorrect_answers')
-    .eq('is_active', true)
-    .eq('in_production', true)
-    .eq('language', language)
-    .eq('category_id', categoryUuid);
+  // Run category info + exhaustion count in PARALLEL
+  // Skip category info lookup if name was pre-resolved
+  const [categoryInfo, countResult] = await Promise.all([
+    preResolvedCategoryName 
+      ? Promise.resolve({ name: preResolvedCategoryName, slug: '', icon: '', totalLevels: 0 })
+      : getCategoryInfo(categoryUuid),
+    // Use lightweight COUNT query instead of fetching all rows
+    supabase
+      .from('questions')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .eq('in_production', true)
+      .eq('language', language)
+      .eq('category_id', categoryUuid),
+  ]);
   
-  const totalAvailable = (allCategoryQs || []).filter(q => isValidQuestionLength(q as RawQuestion)).length;
+  const totalAvailable = countResult.count || 0;
   
   // FIX: Get seen questions for ENTIRE CATEGORY (not level-specific)
   // This prevents questions from repeating when playing different levels
