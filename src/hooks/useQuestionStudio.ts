@@ -160,7 +160,8 @@ export const useQuestionStudio = () => {
       }
       
       if (questionSearch.trim()) {
-        countQuery = countQuery.ilike('question_text', `%${questionSearch.trim()}%`);
+        const term = questionSearch.trim();
+        countQuery = countQuery.or(`question_text.ilike.%${term}%,correct_answer.ilike.%${term}%,incorrect_answers::text.ilike.%${term}%`);
       }
 
       // Apply type filter
@@ -208,7 +209,8 @@ export const useQuestionStudio = () => {
       }
 
       if (questionSearch.trim()) {
-        dataQuery = dataQuery.ilike('question_text', `%${questionSearch.trim()}%`);
+        const term = questionSearch.trim();
+        dataQuery = dataQuery.or(`question_text.ilike.%${term}%,correct_answer.ilike.%${term}%,incorrect_answers::text.ilike.%${term}%`);
       }
 
       // Apply type filter
