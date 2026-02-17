@@ -1,68 +1,62 @@
 
+## Fix: Prevent Animating Raw Photos Directly
 
-## Fix: Answer-based Search Not Working in Content Manager
+### Problem
+When the user clicks the "გააცოცხლე ავატარი" (Animate Avatar) button on the home page, the code in `Index.tsx` sends `profile.avatar_url` directly to `animate-avatar` without checking whether it's a raw photo or an AI-generated avatar. This results in animating the unprocessed selfie instead of first generating a styled 3D avatar.
 
-### Root Cause
-The `incorrect_answers::text` type casting syntax works in raw SQL but **does not work** in Supabase PostgREST's `.or()` filter. PostgREST silently ignores or fails the cast, so searching by incorrect answers never matches anything. This affects both the Content Manager (`useAdminQuestions.ts`) and the Question Studio (`useQuestionStudio.ts`).
+The `AvatarModal` already has the correct logic (lines 548-598): it checks `avatar_generations` for an existing AI avatar and generates one first if needed. But `handleAnimateFromHome` in `Index.tsx` skips this entirely.
 
 ### Solution
-Create a database function (RPC) that performs the search in raw SQL where `::text` casting works properly, then call it from both hooks instead of using `.or()` filters.
+Update `handleAnimateFromHome` in `src/pages/Index.tsx` to mirror the same logic from `AvatarModal.animateAvatar()`:
 
-### Step 1: Create a database function
+1. Check `avatar_generations` for an existing AI-generated avatar marked as `is_current`
+2. If none exists, call `generate-avatar` first to create the AI-styled version
+3. Upload the result, update `avatar_generations` and `profile.avatar_url`
+4. Only then pass the AI avatar URL to `animate-avatar`
 
-A new SQL function `search_questions` that accepts a search term, optional category ID, pagination params, and returns matching questions plus a total count.
+### Technical Details
 
-```sql
-CREATE OR REPLACE FUNCTION search_questions(
-  p_search text DEFAULT NULL,
-  p_category_id uuid DEFAULT NULL,
-  p_limit int DEFAULT 50,
-  p_offset int DEFAULT 0
-)
-RETURNS TABLE(
-  id uuid, category_id uuid, question_text text, correct_answer text,
-  incorrect_answers jsonb, difficulty text, level_number int,
-  is_active boolean, in_production boolean, icon_slug text,
-  image_url text, video_url text, audio_url text,
-  created_at timestamptz, updated_at timestamptz,
-  total_count bigint
-)
-LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    q.id, q.category_id, q.question_text, q.correct_answer,
-    q.incorrect_answers, q.difficulty, q.level_number,
-    q.is_active, q.in_production, q.icon_slug,
-    q.image_url, q.video_url, q.audio_url,
-    q.created_at, q.updated_at,
-    COUNT(*) OVER() AS total_count
-  FROM questions q
-  WHERE
-    (p_category_id IS NULL OR q.category_id = p_category_id)
-    AND (
-      p_search IS NULL
-      OR q.question_text ILIKE '%' || p_search || '%'
-      OR q.correct_answer ILIKE '%' || p_search || '%'
-      OR q.incorrect_answers::text ILIKE '%' || p_search || '%'
-    )
-  ORDER BY q.created_at DESC
-  LIMIT p_limit OFFSET p_offset;
-END;
-$$;
+**File: `src/pages/Index.tsx`** (around lines 388-393)
+
+Before the `animate-avatar` call, add the same avatar generation check:
+
+```typescript
+const handleAnimateFromHome = useCallback(async () => {
+  // ... existing face check ...
+
+  try {
+    let imageUrl = profile.avatar_url;
+
+    // Check if current avatar has an AI-generated version
+    const { data: existingGen } = await supabase
+      .from('avatar_generations')
+      .select('id, avatar_url')
+      .eq('user_id', user.id)
+      .eq('is_current', true)
+      .single();
+
+    if (!existingGen) {
+      // Generate AI avatar first
+      toast({ title: "AI ავატარი გენერირდება..." });
+      const { data: genData, error: genError } = await supabase.functions.invoke("generate-avatar", {
+        body: { imageUrl: profile.avatar_url },
+      });
+      if (genError || !genData?.success) throw new Error(...);
+
+      // Upload, save to avatar_generations, update profile
+      // ... (same pattern as AvatarModal) ...
+      imageUrl = aiAvatarUrl;
+    } else {
+      imageUrl = existingGen.avatar_url;
+    }
+
+    // Now animate the AI-generated avatar (not the raw photo)
+    const { data, error } = await supabase.functions.invoke("animate-avatar", {
+      body: { imageUrl, userId: user.id },
+    });
+    // ... rest of polling logic stays the same ...
+  }
+});
 ```
 
-### Step 2: Update `useAdminQuestions.ts`
-
-Replace the two separate queries (count + data) with a single `supabase.rpc('search_questions', {...})` call when a search term is present. When there's no search, keep the existing `.from('questions')` query for efficiency.
-
-### Step 3: Update `useQuestionStudio.ts`
-
-Apply the same RPC-based search approach for consistency -- use `search_questions` when a search term is active.
-
-### Why This Works
-- Raw SQL inside a database function supports `::text` casting on JSONB columns
-- Single query instead of two (count + data) since `COUNT(*) OVER()` provides both
-- No change to the UI -- search input and behavior remain identical
-
+Only one file needs to change: `src/pages/Index.tsx`.
