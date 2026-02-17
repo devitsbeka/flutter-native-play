@@ -64,7 +64,7 @@ export const TVResultsScreen: React.FC = () => {
   const podiumOrder = [1, 0, 2].map(i => podiumPlayers[i]).filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 overflow-hidden relative flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4 overflow-hidden relative flex flex-col">
       {/* Background sparkles - reduced to 10 */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -116,7 +116,7 @@ export const TVResultsScreen: React.FC = () => {
       </motion.div>
 
       {/* Podium */}
-      <div className="flex items-end justify-center gap-3 mb-4 flex-1">
+      <div className="flex items-end justify-center gap-3 mb-2 flex-shrink-0">
         {podiumOrder.map((player, displayIndex) => {
           if (!player) return null;
           const actualRank = sortedPlayers.indexOf(player);
@@ -165,7 +165,7 @@ export const TVResultsScreen: React.FC = () => {
               <p className="text-purple-300 font-semibold text-sm mb-2">{player.score} ქულა</p>
 
               {/* Podium block */}
-              <div className={`w-24 ${actualRank === 0 ? 'h-28' : actualRank === 1 ? 'h-20' : 'h-14'} bg-gradient-to-t ${getPodiumColor(actualRank)} rounded-t-xl flex items-center justify-center`}>
+              <div className={`w-24 ${actualRank === 0 ? 'h-20' : actualRank === 1 ? 'h-14' : 'h-10'} bg-gradient-to-t ${getPodiumColor(actualRank)} rounded-t-xl flex items-center justify-center`}>
                 <span className="text-white text-3xl font-bold">{actualRank + 1}</span>
               </div>
             </motion.div>
@@ -179,14 +179,14 @@ export const TVResultsScreen: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="max-w-4xl mx-auto flex-shrink-0"
+          className="max-w-4xl mx-auto flex-1 min-h-0 overflow-y-auto"
         >
-          <h3 className="text-purple-300 text-base mb-3 text-center">დანარჩენი მოთამაშეები</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <h3 className="text-purple-300 text-base mb-2 text-center">დანარჩენი მოთამაშეები</h3>
+          <div className="grid grid-cols-3 gap-2">
             {otherPlayers.map((player, index) => (
               <div
                 key={player.id}
-                className="bg-white/10 backdrop-blur rounded-xl p-3 flex items-center gap-3"
+                className="bg-white/10 backdrop-blur rounded-xl p-2 flex items-center gap-2"
               >
                 <span className="text-purple-400 font-bold w-6 text-base">{index + 4}</span>
                 <SafeAvatar 
