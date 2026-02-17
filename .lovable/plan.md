@@ -1,30 +1,33 @@
 
 
-## Fix: Enable Answer-Based Search in Question Studio
+## Add Image Question Indicators in Content Manager
 
 ### Problem
-The search in the Question Studio admin page only matches against `question_text`. The previous fix was applied to a different hook (`useAdminQuestions.ts`), but the Question Studio uses its own hook (`useQuestionStudio.ts`) which was never updated.
+When browsing questions in the Content Manager, there's no visual distinction between text questions and image questions. This makes it confusing for admins -- they don't know whether a question needs an icon or if it's an image question that already has its own visual.
 
-### Solution
-Update two places in `src/hooks/useQuestionStudio.ts` where the search filter is applied (the count query and the data query) to use Supabase's `.or()` filter instead of `.ilike()`, matching the same pattern already used in `useAdminQuestions.ts`.
+### Changes
+
+**1. Update `AdminQuestion` interface** (`src/hooks/useAdminQuestions.ts`)
+- Add `image_url`, `video_url`, and `audio_url` optional fields to the interface so the Content Manager can detect media questions.
+
+**2. Question List (Column 2)** (`src/pages/admin/ContentManager.tsx`, lines 508-569)
+- For image questions: show a thumbnail + "suraTi" label instead of the question text, similar to what QuestionList.tsx already does.
+- Hide the DynamicIcon (3D icon) for image questions since they don't need one.
+- Add a small image/video/audio type badge next to the difficulty badge.
+
+**3. Question Detail Panel (Column 3)** (`src/pages/admin/ContentManager.tsx`, lines 662-724)
+- For image questions: replace the "Question Text" section with the image preview.
+- Hide the icon picker in the preview mockup for image questions (since they don't use icons).
+- Pass `imageUrl`, `hideQuestionText` props to `QuestionMockupPreview` if it supports them, or show the image inline.
+- Add a clear badge like "suraTiani kiTxva -- ar saWiroebs ikons" (Image question -- no icon needed).
 
 ### Technical Details
 
-**File: `src/hooks/useQuestionStudio.ts`**
+**File: `src/hooks/useAdminQuestions.ts`**
+- Add to `AdminQuestion` interface: `image_url?: string | null`, `video_url?: string | null`, `audio_url?: string | null`
 
-Replace the search filter on both the count query (line 163) and data query (line 211) from:
-```
-.ilike('question_text', '%search%')
-```
-to:
-```
-.or('question_text.ilike.%search%,correct_answer.ilike.%search%,incorrect_answers::text.ilike.%search%')
-```
-
-This will allow searching questions by:
-- Question text
-- Correct answer
-- Any of the incorrect answers
-
-No other files need to change -- the UI already passes the search term correctly.
+**File: `src/pages/admin/ContentManager.tsx`**
+- Column 2 question items: wrap question text display in a conditional -- if `image_url` exists, show a thumbnail and "suraTi" label instead
+- Column 3 detail: conditionally show image preview, hide icon picker for image questions
+- Add `Image` icon import from lucide-react
 
