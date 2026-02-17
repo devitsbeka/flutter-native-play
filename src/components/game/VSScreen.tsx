@@ -16,7 +16,6 @@ import { useCategories } from "@/hooks/useCategories";
 import { CATEGORY_VIDEOS } from "@/config/videoConfig";
 import confetti from "canvas-confetti";
 import { InteractiveBlobVideo } from "./InteractiveBlobVideo";
-import { useGameStake } from "@/hooks/useGameStake";
 import { REWARDS } from "@/config/rewardConfig";
 
 import coinIcon from "@/assets/icons/icon-coin.png";
@@ -73,13 +72,11 @@ export function VSScreen() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { categories } = useCategories();
-  const { stakeAmount, deductStake, canPlay } = useGameStake();
   const { startMatchmaking } = useGame();
   
   // Game stage state
   const [stage, setStage] = useState<GameStage>("finding-opponent");
   const [showHelpModal, setShowHelpModal] = useState(false);
-  const [stakeDeducted, setStakeDeducted] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
   // Slot avatars: mascots + AI-generated, fetched at mount
@@ -280,16 +277,6 @@ export function VSScreen() {
     return () => clearTimeout(timeout);
   }, [stage]);
 
-  // Deduct stake when opponent is found (commit to game)
-  useEffect(() => {
-    if (stage === "opponent-found" && !stakeDeducted) {
-      deductStake().then(success => {
-        if (success) {
-          setStakeDeducted(true);
-        }
-      });
-    }
-  }, [stage, stakeDeducted, deductStake]);
 
   // Handle start button - pass pre-fetched questions if available
   const [isStarting, setIsStarting] = useState(false);
@@ -310,7 +297,6 @@ export function VSScreen() {
     setStage("finding-opponent");
     setSelectedCategory(null);
     setCurrentCategoryIndex(0);
-    setStakeDeducted(false);
     setConnectionError(false);
     categoryPoolSetForStageRef.current = false;
     prefetchedQuestionsRef.current = null;

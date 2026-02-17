@@ -9,8 +9,8 @@
 export const REWARDS = {
   // ===== GAME STAKE SYSTEM =====
   GAME_STAKE: 500,           // Entry fee per game (1 gem value)
-  GAME_WIN_REWARD: 1000,     // Winner gets stake × 2
-  GAME_DRAW_REFUND: 250,     // Half stake back on draw
+  GAME_WIN_REWARD: 500,      // Winner gets +500 (post-game)
+  GAME_DRAW_REFUND: 0,       // No coin change on draw
   GAME_LOSE_REWARD: 0,       // Loser already paid stake
 
   // ===== PLAY REGENERATION SYSTEM =====
