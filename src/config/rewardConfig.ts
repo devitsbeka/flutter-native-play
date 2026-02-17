@@ -71,7 +71,7 @@ export const REWARDS = {
   GEM_TO_COINS_RATE: 500,    // 1 gem = 500 coins
 
   // ===== NEW PLAYER STARTING BALANCE =====
-  NEW_PLAYER_COINS: 1500,    // 3 free games to learn
+  NEW_PLAYER_COINS: 3000,    // 6 free games to learn
   NEW_PLAYER_GEMS: 3,        // 1500 coins value (3 more games)
 
   // ===== POWER-UP PRICES (coins) =====

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ALTER COLUMN coins SET DEFAULT 3000;
