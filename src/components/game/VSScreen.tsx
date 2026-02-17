@@ -335,7 +335,7 @@ export function VSScreen() {
   const isOpponentLocked = stage !== "finding-opponent";
   const isCategoryLocked = stage === "category-found" || stage === "ready";
   const showStartButton = stage === "ready";
-  const startButtonDisabled = !showStartButton || !prefetchReady || isStarting;
+  const startButtonDisabled = !showStartButton || isStarting;
   const showCategorySlot = stage === "finding-category" || stage === "category-found" || stage === "ready";
 
   return (
