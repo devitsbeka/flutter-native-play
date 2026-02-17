@@ -162,18 +162,47 @@ Deno.serve(async (req) => {
       level = 1, 
       count = 5, 
       topic,
-      existingQuestions = [],
       coveredTopics = []
     } = await req.json();
 
-    if (!category) {
+    if (!category || !categoryId) {
       return new Response(
         JSON.stringify({ error: "კატეგორიის ინფორმაცია აკლია" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Generating ${count} Georgian trivia questions for category: ${category} (${categoryId}), level: ${level}, topic: ${topic || 'none'}, excluding ${existingQuestions.length} existing questions, ${coveredTopics.length} covered topics`);
+    // Server-side: fetch ALL existing questions from DB (no client dependency)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    // Look up the actual UUID for this category_id string
+    const { data: catRow } = await supabaseClient
+      .from("categories")
+      .select("id")
+      .eq("category_id", categoryId)
+      .single();
+
+    const categoryUuid = catRow?.id;
+    if (!categoryUuid) {
+      return new Response(
+        JSON.stringify({ error: "კატეგორია ვერ მოიძებნა" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: dbQuestions } = await supabaseClient
+      .from("questions")
+      .select("question_text, correct_answer")
+      .eq("category_id", categoryUuid)
+      .eq("is_active", true)
+      .limit(1000);
+
+    const existingTexts = (dbQuestions || []).map(q => q.question_text);
+    const existingAnswers = new Set((dbQuestions || []).map(q => q.correct_answer.trim().toLowerCase()));
+
+    console.log(`Generating ${count} questions for ${category} (${categoryId}). DB has ${existingTexts.length} existing questions, ${existingAnswers.size} unique answers, ${coveredTopics.length} covered topics`);
 
     const difficulty = level <= 5 ? "მარტივი" : level <= 15 ? "საშუალო" : "რთული";
     const difficultyEn = level <= 5 ? "easy" : level <= 15 ? "medium" : "hard";
@@ -201,7 +230,7 @@ ${coveredTopics.map((t: string, i: number) => `${i + 1}. ${t}`).join('\n')}
       : '';
 
     // Fallback: raw question exclusion (only used when no topic fingerprint)
-    const exclusionList = existingQuestions.slice(0, 50);
+    const exclusionList = existingTexts.slice(0, 50);
     const exclusionSection = coveredTopics.length === 0 && exclusionList.length > 0 
       ? `
 🚫 უკვე არსებული კითხვები - არ გაიმეორო ან მსგავსი არ შექმნა!
@@ -210,6 +239,18 @@ ${exclusionList.map((q: string, i: number) => `${i + 1}. ${q}`).join('\n')}
 ⚠️ ზემოთ ჩამოთვლილი კითხვები უკვე არსებობს მონაცემთა ბაზაში. 
 შექმენი სრულიად ახალი და განსხვავებული კითხვები!
 არ გაიმეორო იგივე თემები, პიროვნებები ან მოვლენები!
+`
+      : '';
+
+    // Answer exclusion list - prevent same-fact questions
+    const existingAnswersList = [...existingAnswers].slice(0, 200);
+    const answerExclusionSection = existingAnswersList.length > 0
+      ? `
+🚫🚫🚫 უკვე არსებული პასუხები - ეს ფაქტები უკვე დაფარულია!
+არ შექმნა კითხვა რომლის სწორი პასუხი იქნება ქვემოთ ჩამოთვლილი:
+${existingAnswersList.join(', ')}
+
+⚠️ თუ რომელიმე ზემოთ ჩამოთვლილი სიტყვა/ფრაზა შენი კითხვის სწორ პასუხს ემთხვევა - ეს კითხვა უკვე არსებობს!
 `
       : '';
 
@@ -261,6 +302,7 @@ ${topicExclusionSection}
 
 ${topicFingerprintSection}
 ${exclusionSection}
+${answerExclusionSection}
 
 🚨🚨🚨 სავალდებულო სიგრძის ლიმიტები - კრიტიკულად მნიშვნელოვანი!
 
@@ -432,22 +474,30 @@ ${iconKeywordMappings}
     const batchDeduped = removeDuplicatesFromBatch(validQuestions, SIMILARITY_THRESHOLD);
     console.log(`Step 2 - Batch deduplication: ${validQuestions.length} -> ${batchDeduped.length} questions`);
 
-    // Step 3: Filter against existing database questions using semantic similarity
-    const existingTexts = existingQuestions as string[];
-    const uniqueQuestions = batchDeduped.filter((q: any) => {
+    // Step 3: Answer-based dedup (catches same-fact questions)
+    const answerDeduped = batchDeduped.filter((q: any) => {
+      const answer = (q.correct_answer || '').trim().toLowerCase();
+      if (answer.length >= 3 && existingAnswers.has(answer)) {
+        console.log(`Filtered same-answer duplicate: "${q.question.substring(0, 40)}..." -> answer: "${q.correct_answer}"`);
+        return false;
+      }
+      return true;
+    });
+    console.log(`Step 3 - Answer dedup: ${batchDeduped.length} -> ${answerDeduped.length} questions`);
+
+    // Step 4: Filter against existing database questions using text similarity
+    const uniqueQuestions = answerDeduped.filter((q: any) => {
       const isSimilar = isSimilarToExisting(q.question, existingTexts, SIMILARITY_THRESHOLD);
       if (isSimilar) {
-        console.log(`Filtered duplicate: "${q.question.substring(0, 50)}..."`);
+        console.log(`Filtered text duplicate: "${q.question.substring(0, 50)}..."`);
       }
       return !isSimilar;
     });
 
-    console.log(`Step 3 - DB deduplication: ${batchDeduped.length} -> ${uniqueQuestions.length} questions`);
+    console.log(`Step 4 - Text dedup: ${answerDeduped.length} -> ${uniqueQuestions.length} questions`);
 
-    // Step 4: Georgian Grammar Verification
-    console.log("Step 4 - Verifying Georgian grammar...");
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Step 5: Georgian Grammar Verification
+    console.log("Step 5 - Verifying Georgian grammar...");
     
     const grammarVerifiedQuestions = await Promise.all(
       uniqueQuestions.map(async (q: any) => {
@@ -494,8 +544,8 @@ ${iconKeywordMappings}
       })
     );
 
-    // Step 5: FACT CHECK (strict) - reject questions with wrong correct answers / unreliable facts
-    console.log("Step 5 - Fact-checking questions...");
+    // Step 6: FACT CHECK (strict) - reject questions with wrong correct answers / unreliable facts
+    console.log("Step 6 - Fact-checking questions...");
     const { results: fcResults } = await factCheckQuestions({
       req,
       items: grammarVerifiedQuestions.map((q: any) => ({
