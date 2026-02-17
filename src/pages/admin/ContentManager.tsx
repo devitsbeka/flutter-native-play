@@ -12,7 +12,10 @@ import {
   HelpCircle,
   MoreHorizontal,
   FileText,
-  ChevronLeft
+  ChevronLeft,
+  Image,
+  Video,
+  Headphones,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -507,6 +510,8 @@ export default function ContentManager() {
           <div className="p-1">
             {filteredQuestions.map((question) => {
               const cat = categories.find(c => c.id === question.category_id);
+              const isMediaQuestion = !!(question.image_url || question.video_url || question.audio_url);
+              const mediaType = question.image_url ? 'image' : question.video_url ? 'video' : question.audio_url ? 'audio' : null;
               return (
                 <button
                   key={question.id}
@@ -519,17 +524,46 @@ export default function ContentManager() {
                     !question.is_active && "opacity-50"
                   )}
                 >
-                  <DynamicIcon 
-                    slug={question.icon_slug || undefined}
-                    categoryId={cat?.category_id}
-                    size={18}
-                    className="shrink-0 mt-0.5"
-                    fallbackEmoji={cat?.icon}
-                  />
+                  {isMediaQuestion ? (
+                    question.image_url ? (
+                      <div className="w-[18px] h-[18px] rounded shrink-0 mt-0.5 overflow-hidden bg-muted">
+                        <img src={question.image_url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="shrink-0 mt-0.5">
+                        {mediaType === 'video' ? <Video className="h-[18px] w-[18px] text-red-500" /> : <Headphones className="h-[18px] w-[18px] text-purple-500" />}
+                      </div>
+                    )
+                  ) : (
+                    <DynamicIcon 
+                      slug={question.icon_slug || undefined}
+                      categoryId={cat?.category_id}
+                      size={18}
+                      className="shrink-0 mt-0.5"
+                      fallbackEmoji={cat?.icon}
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium leading-snug line-clamp-2">
-                      {question.question_text}
-                    </p>
+                    {isMediaQuestion ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn(
+                          "text-[9px] px-1 py-0.5 rounded font-medium flex items-center gap-0.5",
+                          selectedQuestionId === question.id 
+                            ? "bg-primary-foreground/20"
+                            : mediaType === 'image' ? "bg-blue-100 text-blue-600" : mediaType === 'video' ? "bg-red-100 text-red-600" : "bg-purple-100 text-purple-600"
+                        )}>
+                          {mediaType === 'image' ? <Image className="h-2.5 w-2.5" /> : mediaType === 'video' ? <Video className="h-2.5 w-2.5" /> : <Headphones className="h-2.5 w-2.5" />}
+                          {mediaType === 'image' ? 'სურათი' : mediaType === 'video' ? 'ვიდეო' : 'აუდიო'}
+                        </span>
+                        <p className="text-[10px] text-muted-foreground truncate flex-1">
+                          {question.correct_answer}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs font-medium leading-snug line-clamp-2">
+                        {question.question_text}
+                      </p>
+                    )}
                     <div className="flex items-center gap-1 mt-1">
                       {!selectedCategoryId && cat && (
                         <span className={cn(
@@ -662,11 +696,56 @@ export default function ContentManager() {
             {/* Question Content */}
             <div className="flex-1 p-6 overflow-auto">
               <div className="max-w-xl mx-auto space-y-6">
-                {/* Question Text */}
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">კითხვა</label>
-                  <p className="mt-1 text-sm font-medium leading-relaxed">{selectedQuestion.question_text}</p>
-                </div>
+                {/* Media indicator badge */}
+                {(() => {
+                  const isMedia = !!(selectedQuestion.image_url || selectedQuestion.video_url || selectedQuestion.audio_url);
+                  if (!isMedia) return null;
+                  const mediaLabel = selectedQuestion.image_url ? 'სურათიანი კითხვა' : selectedQuestion.video_url ? 'ვიდეო კითხვა' : 'აუდიო კითხვა';
+                  return (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      {selectedQuestion.image_url ? <Image className="h-4 w-4 text-blue-500" /> : selectedQuestion.video_url ? <Video className="h-4 w-4 text-red-500" /> : <Headphones className="h-4 w-4 text-purple-500" />}
+                      <div>
+                        <p className="text-xs font-medium">{mediaLabel}</p>
+                        <p className="text-[10px] text-muted-foreground">არ საჭიროებს აიკონს ან ტექსტურ კითხვას</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Question Text or Media Preview */}
+                {selectedQuestion.image_url ? (
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">სურათი</label>
+                    <div className="mt-2 rounded-lg overflow-hidden bg-muted/50 border border-border/50">
+                      <img src={selectedQuestion.image_url} alt="Question" className="w-full max-h-48 object-contain" />
+                    </div>
+                  </div>
+                ) : selectedQuestion.video_url ? (
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">ვიდეო</label>
+                    <div className="mt-2 rounded-lg overflow-hidden bg-muted/50 border border-border/50 p-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Video className="h-4 w-4" />
+                        <span className="truncate">{selectedQuestion.video_url}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : selectedQuestion.audio_url ? (
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">აუდიო</label>
+                    <div className="mt-2 rounded-lg overflow-hidden bg-muted/50 border border-border/50 p-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Headphones className="h-4 w-4" />
+                        <span className="truncate">{selectedQuestion.audio_url}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">კითხვა</label>
+                    <p className="mt-1 text-sm font-medium leading-relaxed">{selectedQuestion.question_text}</p>
+                  </div>
+                )}
 
                 {/* Answers */}
                 <div>
@@ -687,41 +766,43 @@ export default function ContentManager() {
                   </div>
                 </div>
 
-                {/* Preview */}
-                <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">ვიზუალი</label>
-                  <div className="flex justify-center">
-                    <Popover open={showPreviewIconPicker} onOpenChange={setShowPreviewIconPicker}>
-                      <PopoverTrigger asChild>
-                        <div>
-                          <QuestionMockupPreview
-                            question={selectedQuestion.question_text}
-                            correctAnswer={selectedQuestion.correct_answer}
-                            incorrectAnswers={selectedQuestion.incorrect_answers}
-                            difficulty={selectedQuestion.difficulty}
-                            iconSlug={selectedQuestion.icon_slug || selectedCategory?.icon_slug || CATEGORY_ID_TO_ICON[selectedCategory?.category_id || ''] || undefined}
-                            isEditable={true}
-                            onIconClick={() => setShowPreviewIconPicker(true)}
-                          />
-                        </div>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80 p-0" side="left" align="start">
-                        <div className="p-3 border-b border-border/50">
-                          <p className="text-sm font-medium">აიკონის შეცვლა</p>
-                        </div>
-                        <div className="max-h-[400px] overflow-auto">
-                          <IconPicker
-                            value={selectedQuestion.icon_slug || undefined}
-                            onChange={async (slug) => {
-                              await updateQuestion(selectedQuestion.id, { icon_slug: slug });
-                              setShowPreviewIconPicker(false);
-                            }}
-                          />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                {/* Preview - hide icon picker for media questions */}
+                {!selectedQuestion.image_url && !selectedQuestion.video_url && !selectedQuestion.audio_url ? (
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 block">ვიზუალი</label>
+                    <div className="flex justify-center">
+                      <Popover open={showPreviewIconPicker} onOpenChange={setShowPreviewIconPicker}>
+                        <PopoverTrigger asChild>
+                          <div>
+                            <QuestionMockupPreview
+                              question={selectedQuestion.question_text}
+                              correctAnswer={selectedQuestion.correct_answer}
+                              incorrectAnswers={selectedQuestion.incorrect_answers}
+                              difficulty={selectedQuestion.difficulty}
+                              iconSlug={selectedQuestion.icon_slug || selectedCategory?.icon_slug || CATEGORY_ID_TO_ICON[selectedCategory?.category_id || ''] || undefined}
+                              isEditable={true}
+                              onIconClick={() => setShowPreviewIconPicker(true)}
+                            />
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-0" side="left" align="start">
+                          <div className="p-3 border-b border-border/50">
+                            <p className="text-sm font-medium">აიკონის შეცვლა</p>
+                          </div>
+                          <div className="max-h-[400px] overflow-auto">
+                            <IconPicker
+                              value={selectedQuestion.icon_slug || undefined}
+                              onChange={async (slug) => {
+                                await updateQuestion(selectedQuestion.id, { icon_slug: slug });
+                                setShowPreviewIconPicker(false);
+                              }}
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             </div>
           </>
