@@ -1,41 +1,35 @@
 
 
-## Fix: Russian Flag Still Appearing via Timezone Detection
+## Add Answer Search to Question Studio
 
 ### Problem
+The search in the Question Studio admin panel only matches against `question_text`. Searching for an answer string (e.g., a correct or incorrect answer) returns no results.
 
-The Russian flag appears in the admin panel because the timezone-to-country detection in `src/hooks/useUserPresence.ts` maps `Europe/Moscow` to `ru`. When a user has this timezone, the system stores `ru` as their `country_code` in the presence table, and the admin panel renders the corresponding flag from flagcdn.
+### Solution
+Extend the search filter in `src/hooks/useAdminQuestions.ts` to also match against `correct_answer` and the `incorrect_answers` array, using Supabase's `.or()` filter.
 
-### Root Cause
+### Technical Details
 
-**File: `src/hooks/useUserPresence.ts`, line 44:**
+**File: `src/hooks/useAdminQuestions.ts`**
+
+Two places need updating (the count query on line 44 and the data query on line 71):
+
+**Current code (both places):**
 ```
-'Europe/Moscow': 'ru',
+query = query.ilike('question_text', `%${normalizedSearch}%`);
 ```
 
-This is the only remaining place where the `ru` country code can be assigned to users.
+**New code (both places):**
+```
+query = query.or(
+  `question_text.ilike.%${normalizedSearch}%,correct_answer.ilike.%${normalizedSearch}%,incorrect_answers::text.ilike.%${normalizedSearch}%`
+);
+```
 
-### Additional Leftover: Edge Functions
+This uses Supabase's `.or()` to match the search term against:
+1. `question_text` -- the question itself
+2. `correct_answer` -- the correct answer
+3. `incorrect_answers::text` -- casts the JSON array to text for substring matching
 
-Two backend functions still list Russian in their language maps (used for question translation/generation):
-- `supabase/functions/translate-questions/index.ts` (line 7): `'ru': 'Russian'`
-- `supabase/functions/generate-multilang-trivia/index.ts` (line 8): `'ru': 'Russian'`
-
-These don't cause the flag issue but are leftover references that should also be cleaned up for consistency.
-
-### Proposed Changes
-
-**1. `src/hooks/useUserPresence.ts`**
-- Change `'Europe/Moscow': 'ru'` to `'Europe/Moscow': 'ge'` (default to Georgia, matching the app's default behavior for new registrations)
-
-**2. `supabase/functions/translate-questions/index.ts`**
-- Remove the `'ru': 'Russian (Русский)'` entry from the language map
-
-**3. `supabase/functions/generate-multilang-trivia/index.ts`**
-- Remove the `'ru': 'Russian (Русский)'` entry from the language map
-
-**4. `supabase/functions/fix-generated-question/index.ts`**
-- Remove the `lang === 'ru' ? 'Russian'` fallback from the language name resolution
-
-These are all small, safe changes -- removing dead references to a language the app no longer supports.
+No database changes needed. Single file edit, two lines changed.
 
