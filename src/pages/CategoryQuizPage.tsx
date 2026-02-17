@@ -249,10 +249,12 @@ export default function CategoryQuizPage() {
           setDbCategory(categoryData);
         }
         
-        // Use unified questionService
+        // Use unified questionService - pass pre-resolved category data to skip redundant DB lookups
         const result = await getQuestions({
           mode: 'category',
           categorySlug: categoryId,
+          categoryUuid: categoryData?.id,
+          categoryName: categoryData?.name,
           levelNumber,
           count: 5,
           excludeIds: questionIds,
