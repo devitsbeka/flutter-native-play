@@ -1,37 +1,35 @@
 
 
-## Fix: 50/50 Power-Up Shows Only Correct Answer
+## Fix: "დაწყება" Button Stays Disabled After Category Is Shown
 
 ### Problem
 
-The 50/50 power-up always tries to hide 2 wrong answers. On true/false questions (which only have 1 wrong answer), it hides that single wrong answer, leaving only the correct answer visible -- effectively giving away the answer for free.
+After the category slot machine lands, the stage transitions to "ready" after a fixed 400ms delay, which makes the "დაწყება" button visible. However, the button remains **disabled** until `prefetchReady` becomes `true` -- which depends on a network request to fetch questions. If that request takes longer than 400ms (common on slow connections), the user sees a visible but unclickable button with no indication of why.
 
-The same bug exists in two places:
-- `src/pages/CategoryQuizPage.tsx` (solo/category quiz)
-- `src/contexts/GameContext.tsx` (multiplayer/duel quiz)
+### Root Cause
 
-### Solution
+Line 338 in `src/components/game/VSScreen.tsx`:
+```
+const startButtonDisabled = !showStartButton || !prefetchReady || isStarting;
+```
 
-Two-part fix:
+The `prefetchReady` flag blocks the button even though the game can still work without pre-fetched questions (the `beginPlaying` function fetches them as a fallback).
 
-1. **Disable 50/50 on true/false questions** -- Since true/false only has 2 answers, removing 1 wrong answer would still reveal the correct one. The 50/50 power-up should be grayed out/disabled for these questions.
+### Fix
 
-2. **Safety guard in the logic** -- Even for 4-answer questions, always keep at least 1 wrong answer visible. Change `slice(0, 2)` to `slice(0, Math.min(2, wrongAnswers.length - 1))` so there's always at least 1 wrong answer remaining.
+**File: `src/components/game/VSScreen.tsx`**
 
-### Technical Details
+1. **Remove `prefetchReady` from the disabled condition** -- The button should always be clickable once the stage is "ready". Pre-fetched questions are an optimization, not a requirement.
 
-**File: `src/pages/CategoryQuizPage.tsx`**
+2. **Show loading state in button text** -- If user clicks before prefetch completes, show "იტვირთება..." (Loading) text. The existing `isStarting` state already handles this since `beginPlaying` is async.
 
-- In `powerUpsForUI` (line ~728): add a condition to disable the 50/50 button when the current question is true/false
-- In the 50/50 switch case (line ~686): change `slice(0, 2)` to `slice(0, Math.min(2, wrongAnswers.length - 1))` as a safety net
+### Change
 
-**File: `src/contexts/GameContext.tsx`**
+Line 338:
+```
+Before: const startButtonDisabled = !showStartButton || !prefetchReady || isStarting;
+After:  const startButtonDisabled = !showStartButton || isStarting;
+```
 
-- In the "fifty-fifty" switch case (line ~300): same safety fix -- change `slice(0, 2)` to `slice(0, Math.min(2, shuffled.length - 1))`
+This is a single-line change. The button will be clickable immediately when the category is revealed. If the user clicks before prefetch finishes, `beginPlaying` will fetch questions on its own (this fallback already exists), and the button shows "იტვირთება..." during that time via the `isStarting` state.
 
-### Result
-
-- True/false questions: 50/50 button appears disabled (grayed out) -- users cannot waste a power-up on it
-- 4-answer questions: works as before (hides 2 wrong, leaves 1 wrong + 1 correct)
-- 3-answer questions (if any): hides 1 wrong, leaves 1 wrong + 1 correct
-- No scenario ever reveals only the correct answer
