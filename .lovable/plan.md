@@ -1,81 +1,51 @@
 
 
-## Problem Analysis
+## Strengthen Fact-Checking to Eliminate Factual Errors
 
-The current question generation pipeline (`generate-category-trivia`) has a fundamental flaw: **the AI doesn't know what topics already exist in your database**. Here's why duplicates keep appearing:
+### Root Cause
 
-1. **Only 50 question texts are sent as exclusions** (line 188), but categories have 220-370+ questions
-2. Even when sent, the AI sees raw question strings -- it doesn't understand the underlying **facts/topics** being tested
-3. The Jaccard text similarity filter (0.55 threshold) catches obvious text overlaps but misses semantic duplicates like "When did Kartli adopt Christianity?" vs "In which century did Georgia become Christian?" -- same fact, different words
-4. The AI generates from the same "common knowledge" pool every time with no topic-level steering
+The current pipeline generates questions with `google/gemini-2.5-flash` and fact-checks them with `google/gemini-3-flash-preview` at a 0.85 confidence threshold. Flash models are fast but prone to confidently confirming incorrect facts, especially for niche Georgian trivia. The checker and generator share the same "knowledge gaps."
 
-## Solution: Topic-Aware Generation Pipeline
+### Solution: Dual-Model Cross-Validation
 
-### Core Idea
-Before generating, extract a compact **topic fingerprint** of all existing questions in the category using AI summarization, then feed that as a structured exclusion list. This replaces the current "paste 50 raw questions" approach.
+Use **two different model families** for fact-checking. A question only passes if **both** models agree it's correct with high confidence. This catches cases where one model's blind spots are covered by the other.
 
-### Step 1: New Edge Function `extract-category-topics`
-- Fetches ALL question texts for a category (up to 500)
-- Calls AI to compress them into a list of ~50-80 **topic labels** (e.g., "Kartli Christianity adoption - 4th century", "Tamar Mepe - first queen", "Tbilisi founding - 458 AD")
-- Returns a compact topic list that fits easily in a prompt
+### Changes
 
-### Step 2: Update `generate-category-trivia` Prompt Strategy
-- Replace the raw 50-question exclusion list with the topic fingerprint
-- Add explicit instruction: "Here are topics already covered. Generate questions about COMPLETELY DIFFERENT facts"
-- Increase temperature slightly (0.95) for more creative output
-- Add a "topic_hint" field in the prompt asking AI to suggest what NEW subtopic each question covers
+**File: `supabase/functions/_shared/factCheck.ts`**
 
-### Step 3: Update `AiGenerator.tsx` (Flow Page)
-- Before generating, call `extract-category-topics` once to get the topic fingerprint
-- Pass the fingerprint to each `generate-category-trivia` batch call
-- Cache the fingerprint during a generation session so multiple batches share the same exclusion context
+1. Raise default `minConfidence` from `0.85` to `0.95`
+2. Add a second verification pass using `openai/gpt-5-mini` (different model family than the Gemini generator/checker)
+3. A question passes only if BOTH models mark it as `pass: true` above the confidence threshold
+4. Log which model rejected a question and why, for debugging
 
-## Technical Details
+**File: `supabase/functions/generate-category-trivia/index.ts`**
 
-### New Edge Function: `extract-category-topics`
+1. Pass `minConfidence: 0.95` explicitly to `factCheckQuestions`
+2. Add a prompt instruction to the generator: only use well-established, widely-documented facts -- avoid obscure or disputed claims
+
+### Technical Details
+
+Updated `factCheckQuestions` logic:
 
 ```
-Input: { categoryId: string }
-Process:
-  1. SELECT question_text, correct_answer FROM questions 
-     WHERE category_id = X AND is_active = true AND language = 'ka'
-     LIMIT 500
-  2. Call AI: "Summarize these questions into a list of distinct facts/topics being tested. 
-     Return as JSON array of short topic labels (max 15 words each)."
-Output: { topics: string[], count: number }
+Pass 1: google/gemini-2.5-pro (upgraded from flash) -> results1
+Pass 2: openai/gpt-5-mini (cross-family check)      -> results2
+
+Final: question passes ONLY if results1[i].pass AND results2[i].pass
+       AND both have confidence >= 0.95
 ```
 
-### Updated `generate-category-trivia` Prompt Changes
+The two passes run in parallel (`Promise.all`) so there's no extra latency -- just one additional API call per batch.
 
-Replace the current exclusion section (lines 188-197):
-```
-Current: "არსებული კითხვები: [50 raw question texts]"
+### Why This Works
 
-New: "უკვე დაფარული თემები (არ გაიმეორო!):
-1. თბილისის დაარსება - 458 წ.
-2. ქართლის გაქრისტიანება - IV საუკუნე
-3. თამარ მეფე - პირველი დედოფალი
-... (50-80 topics)
+- Gemini and GPT have different training data and knowledge bases
+- If a fact is wrong, it's unlikely both model families will agree it's correct at 95%+ confidence
+- Upgrading the primary checker from flash to pro also improves single-model accuracy
+- The 0.95 threshold means "if not near-certain, reject" -- better to lose a valid question than ship a wrong one
 
-შექმენი კითხვები რომლებიც ეხება სრულიად ახალ ფაქტებს, 
-პიროვნებებს, მოვლენებს ან თარიღებს!"
-```
+### Files to Edit
 
-### Updated `AiGenerator.tsx` Flow
-
-```
-1. User clicks "Generate"
-2. Call extract-category-topics(categoryId) -> topicFingerprint
-3. For each batch:
-   - Call generate-category-trivia({ ..., coveredTopics: topicFingerprint })
-4. Existing text-similarity dedup remains as safety net
-```
-
-### Files to Create
-- `supabase/functions/extract-category-topics/index.ts` -- new edge function
-
-### Files to Modify
-- `supabase/functions/generate-category-trivia/index.ts` -- accept `coveredTopics` param, restructure prompt
-- `src/pages/admin/import/AiGenerator.tsx` -- call topic extraction before generation
-- `supabase/config.toml` -- register new function
-
+- `supabase/functions/_shared/factCheck.ts` -- add dual-model cross-validation, raise threshold
+- `supabase/functions/generate-category-trivia/index.ts` -- pass higher confidence, add "verified facts only" prompt instruction
