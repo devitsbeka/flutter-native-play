@@ -1,62 +1,81 @@
 
-## Fix: Prevent Animating Raw Photos Directly
 
-### Problem
-When the user clicks the "გააცოცხლე ავატარი" (Animate Avatar) button on the home page, the code in `Index.tsx` sends `profile.avatar_url` directly to `animate-avatar` without checking whether it's a raw photo or an AI-generated avatar. This results in animating the unprocessed selfie instead of first generating a styled 3D avatar.
+## Problem Analysis
 
-The `AvatarModal` already has the correct logic (lines 548-598): it checks `avatar_generations` for an existing AI avatar and generates one first if needed. But `handleAnimateFromHome` in `Index.tsx` skips this entirely.
+The current question generation pipeline (`generate-category-trivia`) has a fundamental flaw: **the AI doesn't know what topics already exist in your database**. Here's why duplicates keep appearing:
 
-### Solution
-Update `handleAnimateFromHome` in `src/pages/Index.tsx` to mirror the same logic from `AvatarModal.animateAvatar()`:
+1. **Only 50 question texts are sent as exclusions** (line 188), but categories have 220-370+ questions
+2. Even when sent, the AI sees raw question strings -- it doesn't understand the underlying **facts/topics** being tested
+3. The Jaccard text similarity filter (0.55 threshold) catches obvious text overlaps but misses semantic duplicates like "When did Kartli adopt Christianity?" vs "In which century did Georgia become Christian?" -- same fact, different words
+4. The AI generates from the same "common knowledge" pool every time with no topic-level steering
 
-1. Check `avatar_generations` for an existing AI-generated avatar marked as `is_current`
-2. If none exists, call `generate-avatar` first to create the AI-styled version
-3. Upload the result, update `avatar_generations` and `profile.avatar_url`
-4. Only then pass the AI avatar URL to `animate-avatar`
+## Solution: Topic-Aware Generation Pipeline
 
-### Technical Details
+### Core Idea
+Before generating, extract a compact **topic fingerprint** of all existing questions in the category using AI summarization, then feed that as a structured exclusion list. This replaces the current "paste 50 raw questions" approach.
 
-**File: `src/pages/Index.tsx`** (around lines 388-393)
+### Step 1: New Edge Function `extract-category-topics`
+- Fetches ALL question texts for a category (up to 500)
+- Calls AI to compress them into a list of ~50-80 **topic labels** (e.g., "Kartli Christianity adoption - 4th century", "Tamar Mepe - first queen", "Tbilisi founding - 458 AD")
+- Returns a compact topic list that fits easily in a prompt
 
-Before the `animate-avatar` call, add the same avatar generation check:
+### Step 2: Update `generate-category-trivia` Prompt Strategy
+- Replace the raw 50-question exclusion list with the topic fingerprint
+- Add explicit instruction: "Here are topics already covered. Generate questions about COMPLETELY DIFFERENT facts"
+- Increase temperature slightly (0.95) for more creative output
+- Add a "topic_hint" field in the prompt asking AI to suggest what NEW subtopic each question covers
 
-```typescript
-const handleAnimateFromHome = useCallback(async () => {
-  // ... existing face check ...
+### Step 3: Update `AiGenerator.tsx` (Flow Page)
+- Before generating, call `extract-category-topics` once to get the topic fingerprint
+- Pass the fingerprint to each `generate-category-trivia` batch call
+- Cache the fingerprint during a generation session so multiple batches share the same exclusion context
 
-  try {
-    let imageUrl = profile.avatar_url;
+## Technical Details
 
-    // Check if current avatar has an AI-generated version
-    const { data: existingGen } = await supabase
-      .from('avatar_generations')
-      .select('id, avatar_url')
-      .eq('user_id', user.id)
-      .eq('is_current', true)
-      .single();
+### New Edge Function: `extract-category-topics`
 
-    if (!existingGen) {
-      // Generate AI avatar first
-      toast({ title: "AI ავატარი გენერირდება..." });
-      const { data: genData, error: genError } = await supabase.functions.invoke("generate-avatar", {
-        body: { imageUrl: profile.avatar_url },
-      });
-      if (genError || !genData?.success) throw new Error(...);
-
-      // Upload, save to avatar_generations, update profile
-      // ... (same pattern as AvatarModal) ...
-      imageUrl = aiAvatarUrl;
-    } else {
-      imageUrl = existingGen.avatar_url;
-    }
-
-    // Now animate the AI-generated avatar (not the raw photo)
-    const { data, error } = await supabase.functions.invoke("animate-avatar", {
-      body: { imageUrl, userId: user.id },
-    });
-    // ... rest of polling logic stays the same ...
-  }
-});
+```
+Input: { categoryId: string }
+Process:
+  1. SELECT question_text, correct_answer FROM questions 
+     WHERE category_id = X AND is_active = true AND language = 'ka'
+     LIMIT 500
+  2. Call AI: "Summarize these questions into a list of distinct facts/topics being tested. 
+     Return as JSON array of short topic labels (max 15 words each)."
+Output: { topics: string[], count: number }
 ```
 
-Only one file needs to change: `src/pages/Index.tsx`.
+### Updated `generate-category-trivia` Prompt Changes
+
+Replace the current exclusion section (lines 188-197):
+```
+Current: "არსებული კითხვები: [50 raw question texts]"
+
+New: "უკვე დაფარული თემები (არ გაიმეორო!):
+1. თბილისის დაარსება - 458 წ.
+2. ქართლის გაქრისტიანება - IV საუკუნე
+3. თამარ მეფე - პირველი დედოფალი
+... (50-80 topics)
+
+შექმენი კითხვები რომლებიც ეხება სრულიად ახალ ფაქტებს, 
+პიროვნებებს, მოვლენებს ან თარიღებს!"
+```
+
+### Updated `AiGenerator.tsx` Flow
+
+```
+1. User clicks "Generate"
+2. Call extract-category-topics(categoryId) -> topicFingerprint
+3. For each batch:
+   - Call generate-category-trivia({ ..., coveredTopics: topicFingerprint })
+4. Existing text-similarity dedup remains as safety net
+```
+
+### Files to Create
+- `supabase/functions/extract-category-topics/index.ts` -- new edge function
+
+### Files to Modify
+- `supabase/functions/generate-category-trivia/index.ts` -- accept `coveredTopics` param, restructure prompt
+- `src/pages/admin/import/AiGenerator.tsx` -- call topic extraction before generation
+- `supabase/config.toml` -- register new function
+
