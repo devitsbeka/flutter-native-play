@@ -39,7 +39,7 @@ serve(async (req) => {
     }
 
     const lang = language || 'ka';
-    const langName = lang === 'ka' ? 'Georgian' : lang === 'en' ? 'English' : lang === 'ru' ? 'Russian' : lang;
+    const langName = lang === 'ka' ? 'Georgian' : lang === 'en' ? 'English' : lang;
 
     // Fix the question
     const fixPrompt = `You are a ${langName} language trivia question expert. Your task is to fix this question to achieve A-grade quality (90%+ score).
