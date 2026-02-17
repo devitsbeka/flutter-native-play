@@ -5,7 +5,7 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 const LANGUAGE_NAMES: Record<string, string> = {
   'ka': 'Georgian (ქართული)',
   'en': 'English',
-  'ru': 'Russian (Русский)',
+  
   'es': 'Spanish (Español)',
   'fr': 'French (Français)',
   'pt-br': 'Portuguese (Português)',

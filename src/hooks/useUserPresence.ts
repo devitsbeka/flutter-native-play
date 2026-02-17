@@ -41,7 +41,7 @@ const detectCountryFromTimezone = (): string | null => {
       'Europe/London': 'gb',
       'Europe/Berlin': 'de',
       'Europe/Paris': 'fr',
-      'Europe/Moscow': 'ru',
+      'Europe/Moscow': 'ge',
       'Asia/Tokyo': 'jp',
       'Asia/Seoul': 'kr',
       'Asia/Shanghai': 'cn',
