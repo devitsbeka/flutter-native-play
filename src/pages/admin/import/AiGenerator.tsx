@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Sparkles, Loader2, AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Sparkles, Loader2, AlertTriangle, Search } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { useAdminCategories } from '@/hooks/useAdminCategories';
 import { useAdminQuestions } from '@/hooks/useAdminQuestions';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +26,9 @@ export function AiGenerator() {
   const [count, setCount] = useState(10);
   const [topic, setTopic] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState('');
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [useResearch, setUseResearch] = useState(true);
   const [parsedQuestions, setParsedQuestions] = useState<SelectableParsedQuestion[]>([]);
   const [importing, setImporting] = useState(false);
   const [duplicatesFound, setDuplicatesFound] = useState(0);
@@ -47,34 +52,64 @@ export function AiGenerator() {
     setGenerating(true);
     setParsedQuestions([]);
     setDuplicatesFound(0);
+    setGenerationProgress(0);
 
     try {
-      // Step 1: Extract topic fingerprint from existing questions
-      toast({
-        title: 'თემების ანალიზი...',
-        description: 'არსებული კითხვების თემატიკა მუშავდება',
-      });
+      // Step 1: Extract topic fingerprint
+      setGenerationStatus('თემების ანალიზი...');
+      setGenerationProgress(10);
 
       let coveredTopics: string[] = [];
+      let existingAnswers: string[] = [];
       try {
         const { data: topicData, error: topicError } = await supabase.functions.invoke('extract-category-topics', {
           body: { categoryId: selectedCategory },
         });
         if (!topicError && topicData?.topics) {
           coveredTopics = topicData.topics;
-          console.log(`Extracted ${coveredTopics.length} covered topics from ${topicData.questionsAnalyzed} questions`);
+          existingAnswers = topicData.existingAnswers || [];
+          console.log(`Extracted ${coveredTopics.length} covered topics, ${existingAnswers.length} existing answers`);
         }
       } catch (topicErr) {
-        console.warn('Topic extraction failed, falling back to raw exclusion:', topicErr);
+        console.warn('Topic extraction failed:', topicErr);
       }
 
-      // Generate questions in batches of 5 (server handles all DB dedup now)
+      // Step 2: Research phase (if enabled)
+      let researchedFacts: any[] = [];
+      if (useResearch) {
+        setGenerationStatus('ახალი ფაქტების მოძიება...');
+        setGenerationProgress(30);
+
+        try {
+          const { data: researchData, error: researchError } = await supabase.functions.invoke('research-category-facts', {
+            body: {
+              category: selectedCategoryData.name,
+              coveredTopics,
+              existingAnswers,
+              count: Math.max(count + 10, 25), // Request extra to account for filtering
+            },
+          });
+          if (!researchError && researchData?.facts) {
+            researchedFacts = researchData.facts;
+            console.log(`Researched ${researchedFacts.length} fresh facts`);
+          }
+        } catch (researchErr) {
+          console.warn('Research failed, falling back to standard generation:', researchErr);
+        }
+      }
+
+      setGenerationProgress(50);
+      setGenerationStatus('კითხვების გენერირება...');
+
+      // Generate questions - if we have researched facts, do it in one call
       const allQuestions: SelectableParsedQuestion[] = [];
       const seenQuestions = new Set<string>();
-      const batches = Math.ceil(count / 5);
+      const batches = researchedFacts.length > 0 ? 1 : Math.ceil(count / 5);
       let totalDuplicates = 0;
 
       for (let i = 0; i < batches; i++) {
+        setGenerationProgress(50 + Math.round((i / batches) * 40));
+        
         const { data, error } = await supabase.functions.invoke('generate-category-trivia', {
           body: {
             category: selectedCategoryData.name,
@@ -82,7 +117,8 @@ export function AiGenerator() {
             categoryDescription: selectedCategoryData.description,
             difficulty,
             topic: topic || undefined,
-            coveredTopics, // Pass topic fingerprint
+            coveredTopics,
+            researchedFacts: researchedFacts.length > 0 ? researchedFacts : undefined,
           },
         });
 
@@ -121,17 +157,21 @@ export function AiGenerator() {
         // Stop if we have enough unique questions
         if (allQuestions.length >= count) break;
       }
+      setGenerationProgress(95);
+      setGenerationStatus('დასრულება...');
 
       // Trim to requested count
       const finalQuestions = allQuestions.slice(0, count);
       setParsedQuestions(finalQuestions);
       setDuplicatesFound(totalDuplicates);
+      setGenerationProgress(100);
 
+      const researchNote = researchedFacts.length > 0 ? ` (${researchedFacts.length} ახალი ფაქტიდან)` : '';
       toast({
         title: 'წარმატება',
         description: totalDuplicates > 0 
-          ? `${finalQuestions.length} უნიკალური კითხვა გენერირდა (${totalDuplicates} დუბლიკატი გაფილტრდა)`
-          : `${finalQuestions.length} კითხვა გენერირდა`,
+          ? `${finalQuestions.length} უნიკალური კითხვა გენერირდა${researchNote} (${totalDuplicates} დუბლიკატი გაფილტრდა)`
+          : `${finalQuestions.length} კითხვა გენერირდა${researchNote}`,
       });
     } catch (err: any) {
       console.error('Error generating questions:', err);
@@ -142,6 +182,8 @@ export function AiGenerator() {
       });
     } finally {
       setGenerating(false);
+      setGenerationStatus('');
+      setGenerationProgress(0);
     }
   };
 
@@ -271,6 +313,19 @@ export function AiGenerator() {
             />
           </div>
 
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                ვებ კვლევა (ახალი ფაქტები)
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                AI მოიძიებს ახალ, ნაკლებად ცნობილ ფაქტებს კითხვების გენერაციამდე
+              </p>
+            </div>
+            <Switch checked={useResearch} onCheckedChange={setUseResearch} />
+          </div>
+
           <div>
             <Label>კითხვების რაოდენობა: {count}</Label>
             <Slider
@@ -283,11 +338,21 @@ export function AiGenerator() {
             />
           </div>
 
+          {generating && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{generationStatus}</span>
+                <span className="text-muted-foreground">{generationProgress}%</span>
+              </div>
+              <Progress value={generationProgress} className="h-2" />
+            </div>
+          )}
+
           <Button onClick={handleGenerate} disabled={generating || !selectedCategory} className="w-full">
             {generating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                გენერირება...
+                {generationStatus || 'გენერირება...'}
               </>
             ) : (
               <>
